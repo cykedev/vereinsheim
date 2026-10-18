@@ -1,80 +1,47 @@
 {
  "name": "E · Entwurf mit Starterliste (Ringteiler)",
  "reach": {
-  "start@USER": "→ /competitions/:id/ranking",
-  "schedule@USER": "→ /competitions/:id/ranking",
-  "standings@USER": "nicht gefunden",
-  "ranking@USER": "ok",
-  "playoffs@USER": "ok",
-  "participants@USER": "→ /",
-  "audit-log@USER": "→ /competitions/:id/ranking",
-  "series@USER": "→ /",
-  "start@ADMIN": "→ /competitions/:id/ranking",
-  "schedule@ADMIN": "→ /competitions/:id/ranking",
-  "standings@ADMIN": "nicht gefunden",
-  "ranking@ADMIN": "ok",
-  "playoffs@ADMIN": "ok",
-  "participants@ADMIN": "ok",
-  "series@ADMIN": "ok",
   "audit-log@ADMIN": "ok",
+  "audit-log@USER": "→ /competitions/:id/ranking",
+  "participants@ADMIN": "ok",
+  "participants@USER": "→ /",
   "pdf/ranking@ADMIN": "200",
   "pdf/ranking@USER": "200",
   "pdf/starter-list@ADMIN": "200",
-  "pdf/starter-list@USER": "403"
+  "pdf/starter-list@USER": "403",
+  "playoffs@ADMIN": "ok",
+  "playoffs@USER": "ok",
+  "ranking@ADMIN": "ok",
+  "ranking@USER": "ok",
+  "schedule@ADMIN": "→ /competitions/:id/ranking",
+  "schedule@USER": "→ /competitions/:id/ranking",
+  "series@ADMIN": "ok",
+  "series@USER": "→ /",
+  "standings@ADMIN": "nicht gefunden",
+  "standings@USER": "nicht gefunden",
+  "start@ADMIN": "→ /competitions/:id/ranking",
+  "start@USER": "→ /competitions/:id/ranking"
  },
  "pages": {
-  "ranking@USER@1280": [
-   "PDF exportieren",
-   "Zurück",
-   "E · Entwurf mit Starterliste (Ringteiler)",
-   "Luftgewehr · Rangliste",
-   "03.05.2026",
-   "Ringteiler",
-   "10 Schuss",
-   "Noch keine Ergebnisse erfasst"
-  ],
-  "playoffs@USER@1280": [
-   "Spielplan & Tabelle",
-   "Zurück",
-   "E · Entwurf mit Starterliste (Ringteiler)",
-   "Luftgewehr · Playoffs",
-   "Die Playoffs wurden noch nicht gestartet."
-  ],
-  "ranking@USER@390": [
-   "E · Entwurf mit Starterliste (Ringteiler)",
-   "Luftgewehr · Rangliste",
-   "03.05.2026",
-   "Ringteiler",
-   "10 Schuss",
-   "Noch keine Ergebnisse erfasst"
-  ],
-  "playoffs@USER@390": [
-   "E · Entwurf mit Starterliste (Ringteiler)",
-   "Luftgewehr · Playoffs",
-   "Die Playoffs wurden noch nicht gestartet."
-  ],
-  "ranking@ADMIN@1280": [
-   "Teilnehmer",
-   "Serien erfassen",
-   "Bearbeiten",
-   "PDF exportieren",
-   "Zurück",
-   "E · Entwurf mit Starterliste (Ringteiler)",
-   "Luftgewehr · Rangliste",
-   "03.05.2026",
-   "Ringteiler",
-   "10 Schuss",
-   "Noch keine Ergebnisse erfasst"
-  ],
-  "playoffs@ADMIN@1280": [
+  "audit-log@ADMIN@1280": [
    "Teilnehmer",
    "Spielplan & Tabelle",
+   "Playoffs",
    "Zurück",
    "E · Entwurf mit Starterliste (Ringteiler)",
-   "Luftgewehr · Playoffs",
-   "Playoffs noch nicht gestartet",
-   "Top 8 von 8 Teilnehmern qualifizieren sich für das Viertelfinale.",
-   "Playoffs starten"
+   "Luftgewehr · Protokoll",
+   "Wettbewerb angelegt",
+   "E · Entwurf mit Starterliste (Ringteiler)",
+   "Prüfung Sportleitung · 03.05.2026, 10:01",
+   "Details"
+  ],
+  "audit-log@ADMIN@390": [
+   "E · Entwurf mit Starterliste (Ringteiler)",
+   "Luftgewehr · Protokoll",
+   "Wettbewerb angelegt",
+   "E · Entwurf mit Starterliste (Ringteiler)",
+   "Prüfung Sportleitung · 03.05.2026, 10:01",
+   "Details"
   ],
   "participants@ADMIN@1280": [
    "Starterliste drucken",
@@ -145,45 +112,6 @@
    "Traun, Vera",
    "Würm, Yasmin"
   ],
-  "ranking@ADMIN@390": [
-   "E · Entwurf mit Starterliste (Ringteiler)",
-   "Luftgewehr · Rangliste",
-   "03.05.2026",
-   "Ringteiler",
-   "10 Schuss",
-   "Noch keine Ergebnisse erfasst"
-  ],
-  "playoffs@ADMIN@390": [
-   "E · Entwurf mit Starterliste (Ringteiler)",
-   "Luftgewehr · Playoffs",
-   "Playoffs noch nicht gestartet",
-   "Top 8 von 8 Teilnehmern qualifizieren sich für das Viertelfinale.",
-   "Playoffs starten"
-  ],
-  "series@ADMIN@1280": [
-   "Teilnehmer",
-   "Rangliste",
-   "Zurück",
-   "E · Entwurf mit Starterliste (Ringteiler)",
-   "Luftgewehr · Serien erfassen",
-   "Altmühl, Hannes",
-   "Noch kein Ergebnis",
-   "Amper, Hannes",
-   "Noch kein Ergebnis",
-   "Eiche, Florian",
-   "Noch kein Ergebnis",
-   "Mangfall, Yasmin",
-   "Noch kein Ergebnis",
-   "Mangfall, Mara",
-   "Noch kein Ergebnis",
-   "Traun, Mara",
-   "Noch kein Ergebnis",
-   "Traun, Vera",
-   "Noch kein Ergebnis",
-   "Würm, Yasmin",
-   "Noch kein Ergebnis",
-   "0 von 8 Ergebnissen erfasst"
-  ],
   "participants@ADMIN@390": [
    "E · Entwurf mit Starterliste (Ringteiler)",
    "Luftgewehr · Teilnehmerverwaltung",
@@ -249,17 +177,97 @@
    "Traun, Vera",
    "Würm, Yasmin"
   ],
-  "audit-log@ADMIN@1280": [
+  "playoffs@ADMIN@1280": [
    "Teilnehmer",
    "Spielplan & Tabelle",
-   "Playoffs",
    "Zurück",
    "E · Entwurf mit Starterliste (Ringteiler)",
-   "Luftgewehr · Protokoll",
-   "Wettbewerb angelegt",
+   "Luftgewehr · Playoffs",
+   "Playoffs noch nicht gestartet",
+   "Top 8 von 8 Teilnehmern qualifizieren sich für das Viertelfinale.",
+   "Playoffs starten"
+  ],
+  "playoffs@ADMIN@390": [
    "E · Entwurf mit Starterliste (Ringteiler)",
-   "Prüfung Sportleitung · 03.05.2026, 10:01",
-   "Details"
+   "Luftgewehr · Playoffs",
+   "Playoffs noch nicht gestartet",
+   "Top 8 von 8 Teilnehmern qualifizieren sich für das Viertelfinale.",
+   "Playoffs starten"
+  ],
+  "playoffs@USER@1280": [
+   "Spielplan & Tabelle",
+   "Zurück",
+   "E · Entwurf mit Starterliste (Ringteiler)",
+   "Luftgewehr · Playoffs",
+   "Die Playoffs wurden noch nicht gestartet."
+  ],
+  "playoffs@USER@390": [
+   "E · Entwurf mit Starterliste (Ringteiler)",
+   "Luftgewehr · Playoffs",
+   "Die Playoffs wurden noch nicht gestartet."
+  ],
+  "ranking@ADMIN@1280": [
+   "Teilnehmer",
+   "Serien erfassen",
+   "Bearbeiten",
+   "PDF exportieren",
+   "Zurück",
+   "E · Entwurf mit Starterliste (Ringteiler)",
+   "Luftgewehr · Rangliste",
+   "03.05.2026",
+   "Ringteiler",
+   "10 Schuss",
+   "Noch keine Ergebnisse erfasst"
+  ],
+  "ranking@ADMIN@390": [
+   "E · Entwurf mit Starterliste (Ringteiler)",
+   "Luftgewehr · Rangliste",
+   "03.05.2026",
+   "Ringteiler",
+   "10 Schuss",
+   "Noch keine Ergebnisse erfasst"
+  ],
+  "ranking@USER@1280": [
+   "PDF exportieren",
+   "Zurück",
+   "E · Entwurf mit Starterliste (Ringteiler)",
+   "Luftgewehr · Rangliste",
+   "03.05.2026",
+   "Ringteiler",
+   "10 Schuss",
+   "Noch keine Ergebnisse erfasst"
+  ],
+  "ranking@USER@390": [
+   "E · Entwurf mit Starterliste (Ringteiler)",
+   "Luftgewehr · Rangliste",
+   "03.05.2026",
+   "Ringteiler",
+   "10 Schuss",
+   "Noch keine Ergebnisse erfasst"
+  ],
+  "series@ADMIN@1280": [
+   "Teilnehmer",
+   "Rangliste",
+   "Zurück",
+   "E · Entwurf mit Starterliste (Ringteiler)",
+   "Luftgewehr · Serien erfassen",
+   "Altmühl, Hannes",
+   "Noch kein Ergebnis",
+   "Amper, Hannes",
+   "Noch kein Ergebnis",
+   "Eiche, Florian",
+   "Noch kein Ergebnis",
+   "Mangfall, Yasmin",
+   "Noch kein Ergebnis",
+   "Mangfall, Mara",
+   "Noch kein Ergebnis",
+   "Traun, Mara",
+   "Noch kein Ergebnis",
+   "Traun, Vera",
+   "Noch kein Ergebnis",
+   "Würm, Yasmin",
+   "Noch kein Ergebnis",
+   "0 von 8 Ergebnissen erfasst"
   ],
   "series@ADMIN@390": [
    "E · Entwurf mit Starterliste (Ringteiler)",
@@ -281,14 +289,6 @@
    "Würm, Yasmin",
    "Noch kein Ergebnis",
    "0 von 8 Ergebnissen erfasst"
-  ],
-  "audit-log@ADMIN@390": [
-   "E · Entwurf mit Starterliste (Ringteiler)",
-   "Luftgewehr · Protokoll",
-   "Wettbewerb angelegt",
-   "E · Entwurf mit Starterliste (Ringteiler)",
-   "Prüfung Sportleitung · 03.05.2026, 10:01",
-   "Details"
   ]
  },
  "pdfs": {

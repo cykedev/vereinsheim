@@ -1,76 +1,47 @@
 {
  "name": "L-BO5-0 · L0 Entwurf ohne Teilnehmer (Best-of-5)",
  "reach": {
-  "start@USER": "→ /competitions/:id/schedule",
-  "schedule@USER": "ok",
-  "standings@USER": "nicht gefunden",
-  "ranking@USER": "nicht gefunden",
-  "playoffs@USER": "ok",
-  "participants@USER": "→ /",
-  "series@USER": "→ /",
-  "audit-log@USER": "→ /competitions/:id/schedule",
-  "start@ADMIN": "→ /competitions/:id/schedule",
-  "schedule@ADMIN": "ok",
-  "standings@ADMIN": "nicht gefunden",
-  "playoffs@ADMIN": "ok",
-  "ranking@ADMIN": "nicht gefunden",
-  "participants@ADMIN": "ok",
-  "series@ADMIN": "→ /competitions/:id/schedule",
   "audit-log@ADMIN": "ok",
+  "audit-log@USER": "→ /competitions/:id/schedule",
+  "participants@ADMIN": "ok",
+  "participants@USER": "→ /",
+  "pdf/playoffs@ADMIN": "404",
+  "pdf/playoffs@USER": "404",
   "pdf/schedule@ADMIN": "200",
   "pdf/schedule@USER": "200",
-  "pdf/playoffs@ADMIN": "404",
-  "pdf/playoffs@USER": "404"
+  "playoffs@ADMIN": "ok",
+  "playoffs@USER": "ok",
+  "ranking@ADMIN": "nicht gefunden",
+  "ranking@USER": "nicht gefunden",
+  "schedule@ADMIN": "ok",
+  "schedule@USER": "ok",
+  "series@ADMIN": "→ /competitions/:id/schedule",
+  "series@USER": "→ /",
+  "standings@ADMIN": "nicht gefunden",
+  "standings@USER": "nicht gefunden",
+  "start@ADMIN": "→ /competitions/:id/schedule",
+  "start@USER": "→ /competitions/:id/schedule"
  },
  "pages": {
-  "schedule@USER@1280": [
+  "audit-log@ADMIN@1280": [
+   "Teilnehmer",
+   "Spielplan & Tabelle",
    "Playoffs",
    "Zurück",
    "L-BO5-0 · L0 Entwurf ohne Teilnehmer (Best-of-5)",
-   "Luftgewehr · Spielplan & Tabelle",
-   "Noch kein Spielplan generiert."
-  ],
-  "schedule@USER@390": [
+   "Luftgewehr · Protokoll",
+   "Wettbewerb angelegt",
    "L-BO5-0 · L0 Entwurf ohne Teilnehmer (Best-of-5)",
-   "Luftgewehr · Spielplan & Tabelle",
-   "Noch kein Spielplan generiert."
+   "Prüfung Sportleitung · 26.03.2026, 09:01",
+   "Details"
   ],
-  "playoffs@USER@1280": [
-   "Spielplan & Tabelle",
-   "Zurück",
+  "audit-log@ADMIN@390": [
    "L-BO5-0 · L0 Entwurf ohne Teilnehmer (Best-of-5)",
-   "Luftgewehr · Playoffs",
-   "Die Playoffs wurden noch nicht gestartet."
-  ],
-  "playoffs@USER@390": [
+   "Luftgewehr · Protokoll",
+   "Wettbewerb angelegt",
    "L-BO5-0 · L0 Entwurf ohne Teilnehmer (Best-of-5)",
-   "Luftgewehr · Playoffs",
-   "Die Playoffs wurden noch nicht gestartet."
-  ],
-  "schedule@ADMIN@1280": [
-   "Teilnehmer",
-   "Playoffs",
-   "Spielplan generieren",
-   "Zurück",
-   "L-BO5-0 · L0 Entwurf ohne Teilnehmer (Best-of-5)",
-   "Luftgewehr · Spielplan & Tabelle",
-   "Noch kein Spielplan generiert."
-  ],
-  "schedule@ADMIN@390": [
-   "L-BO5-0 · L0 Entwurf ohne Teilnehmer (Best-of-5)",
-   "Luftgewehr · Spielplan & Tabelle",
-   "Noch kein Spielplan generiert."
-  ],
-  "playoffs@ADMIN@1280": [
-   "Teilnehmer",
-   "Spielplan & Tabelle",
-   "Zurück",
-   "L-BO5-0 · L0 Entwurf ohne Teilnehmer (Best-of-5)",
-   "Luftgewehr · Playoffs",
-   "Playoffs noch nicht gestartet",
-   "Zu wenige aktive Teilnehmer für Playoffs (mind. 8 erforderlich).",
-   "Playoffs starten",
-   "Mindestens 8 aktive Teilnehmer erforderlich."
+   "Prüfung Sportleitung · 26.03.2026, 09:01",
+   "Details"
   ],
   "participants@ADMIN@1280": [
    "Spielplan & Tabelle",
@@ -140,14 +111,6 @@
    "Eingeschrieben (0)",
    "Noch keine Teilnehmer eingeschrieben"
   ],
-  "playoffs@ADMIN@390": [
-   "L-BO5-0 · L0 Entwurf ohne Teilnehmer (Best-of-5)",
-   "Luftgewehr · Playoffs",
-   "Playoffs noch nicht gestartet",
-   "Zu wenige aktive Teilnehmer für Playoffs (mind. 8 erforderlich).",
-   "Playoffs starten",
-   "Mindestens 8 aktive Teilnehmer erforderlich."
-  ],
   "participants@ADMIN@390": [
    "L-BO5-0 · L0 Entwurf ohne Teilnehmer (Best-of-5)",
    "Luftgewehr · Teilnehmerverwaltung",
@@ -213,25 +176,62 @@
    "Eingeschrieben (0)",
    "Noch keine Teilnehmer eingeschrieben"
   ],
-  "audit-log@ADMIN@1280": [
+  "playoffs@ADMIN@1280": [
    "Teilnehmer",
    "Spielplan & Tabelle",
+   "Zurück",
+   "L-BO5-0 · L0 Entwurf ohne Teilnehmer (Best-of-5)",
+   "Luftgewehr · Playoffs",
+   "Playoffs noch nicht gestartet",
+   "Zu wenige aktive Teilnehmer für Playoffs (mind. 8 erforderlich).",
+   "Playoffs starten",
+   "Mindestens 8 aktive Teilnehmer erforderlich."
+  ],
+  "playoffs@ADMIN@390": [
+   "L-BO5-0 · L0 Entwurf ohne Teilnehmer (Best-of-5)",
+   "Luftgewehr · Playoffs",
+   "Playoffs noch nicht gestartet",
+   "Zu wenige aktive Teilnehmer für Playoffs (mind. 8 erforderlich).",
+   "Playoffs starten",
+   "Mindestens 8 aktive Teilnehmer erforderlich."
+  ],
+  "playoffs@USER@1280": [
+   "Spielplan & Tabelle",
+   "Zurück",
+   "L-BO5-0 · L0 Entwurf ohne Teilnehmer (Best-of-5)",
+   "Luftgewehr · Playoffs",
+   "Die Playoffs wurden noch nicht gestartet."
+  ],
+  "playoffs@USER@390": [
+   "L-BO5-0 · L0 Entwurf ohne Teilnehmer (Best-of-5)",
+   "Luftgewehr · Playoffs",
+   "Die Playoffs wurden noch nicht gestartet."
+  ],
+  "schedule@ADMIN@1280": [
+   "Teilnehmer",
+   "Playoffs",
+   "Spielplan generieren",
+   "Zurück",
+   "L-BO5-0 · L0 Entwurf ohne Teilnehmer (Best-of-5)",
+   "Luftgewehr · Spielplan & Tabelle",
+   "Noch kein Spielplan generiert."
+  ],
+  "schedule@ADMIN@390": [
+   "L-BO5-0 · L0 Entwurf ohne Teilnehmer (Best-of-5)",
+   "Luftgewehr · Spielplan & Tabelle",
+   "Noch kein Spielplan generiert."
+  ],
+  "schedule@USER@1280": [
    "Playoffs",
    "Zurück",
    "L-BO5-0 · L0 Entwurf ohne Teilnehmer (Best-of-5)",
-   "Luftgewehr · Protokoll",
-   "Wettbewerb angelegt",
-   "L-BO5-0 · L0 Entwurf ohne Teilnehmer (Best-of-5)",
-   "Prüfung Sportleitung · 26.03.2026, 09:01",
-   "Details"
+   "Luftgewehr · Spielplan & Tabelle",
+   "Noch kein Spielplan generiert."
   ],
-  "audit-log@ADMIN@390": [
+  "schedule@USER@390": [
    "L-BO5-0 · L0 Entwurf ohne Teilnehmer (Best-of-5)",
-   "Luftgewehr · Protokoll",
-   "Wettbewerb angelegt",
-   "L-BO5-0 · L0 Entwurf ohne Teilnehmer (Best-of-5)",
-   "Prüfung Sportleitung · 26.03.2026, 09:01",
-   "Details"
+   "Luftgewehr · Spielplan & Tabelle",
+   "Noch kein Spielplan generiert."
   ]
  },
  "pdfs": {

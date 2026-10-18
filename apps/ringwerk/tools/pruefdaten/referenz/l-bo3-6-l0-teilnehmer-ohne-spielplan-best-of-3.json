@@ -1,108 +1,47 @@
 {
  "name": "L-BO3-6 · L0 Teilnehmer ohne Spielplan (Best-of-3)",
  "reach": {
-  "start@USER": "→ /competitions/:id/schedule",
-  "schedule@USER": "ok",
-  "standings@USER": "nicht gefunden",
-  "ranking@USER": "nicht gefunden",
-  "playoffs@USER": "ok",
-  "participants@USER": "→ /",
-  "series@USER": "→ /",
-  "audit-log@USER": "→ /competitions/:id/schedule",
-  "start@ADMIN": "→ /competitions/:id/schedule",
-  "schedule@ADMIN": "ok",
-  "standings@ADMIN": "nicht gefunden",
-  "playoffs@ADMIN": "ok",
-  "ranking@ADMIN": "nicht gefunden",
-  "participants@ADMIN": "ok",
-  "series@ADMIN": "→ /competitions/:id/schedule",
   "audit-log@ADMIN": "ok",
+  "audit-log@USER": "→ /competitions/:id/schedule",
+  "participants@ADMIN": "ok",
+  "participants@USER": "→ /",
+  "pdf/playoffs@ADMIN": "404",
+  "pdf/playoffs@USER": "404",
   "pdf/schedule@ADMIN": "200",
   "pdf/schedule@USER": "200",
-  "pdf/playoffs@ADMIN": "404",
-  "pdf/playoffs@USER": "404"
+  "playoffs@ADMIN": "ok",
+  "playoffs@USER": "ok",
+  "ranking@ADMIN": "nicht gefunden",
+  "ranking@USER": "nicht gefunden",
+  "schedule@ADMIN": "ok",
+  "schedule@USER": "ok",
+  "series@ADMIN": "→ /competitions/:id/schedule",
+  "series@USER": "→ /",
+  "standings@ADMIN": "nicht gefunden",
+  "standings@USER": "nicht gefunden",
+  "start@ADMIN": "→ /competitions/:id/schedule",
+  "start@USER": "→ /competitions/:id/schedule"
  },
  "pages": {
-  "schedule@USER@1280": [
+  "audit-log@ADMIN@1280": [
+   "Teilnehmer",
+   "Spielplan & Tabelle",
    "Playoffs",
    "Zurück",
    "L-BO3-6 · L0 Teilnehmer ohne Spielplan (Best-of-3)",
-   "Luftpistole · Spielplan & Tabelle",
-   "Noch kein Spielplan generiert.",
-   "Tabelle",
-   "Pl. | Name | Begegn. | Siege | Satzdiff. | Satzverhältnis | Direktvergleich",
-   "1 | Kiefer, Anja | 0 | 0 | 0 | 0:0 | offen",
-   "1 | Lech, Tilda | 0 | 0 | 0 | 0:0 | offen",
-   "1 | Pappel, Paul | 0 | 0 | 0 | 0:0 | offen",
-   "1 | Saalach, Jonas | 0 | 0 | 0 | 0:0 | offen",
-   "1 | Traun, Olga | 0 | 0 | 0 | 0:0 | offen",
-   "1 | Vils, Karin | 0 | 0 | 0 | 0:0 | offen"
-  ],
-  "schedule@USER@390": [
+   "Luftpistole · Protokoll",
+   "Wettbewerb angelegt",
    "L-BO3-6 · L0 Teilnehmer ohne Spielplan (Best-of-3)",
-   "Luftpistole · Spielplan & Tabelle",
-   "Noch kein Spielplan generiert.",
-   "Tabelle",
-   "Pl. | Name | Siege",
-   "1 | Kiefer, Anja | 0",
-   "1 | Lech, Tilda | 0",
-   "1 | Pappel, Paul | 0",
-   "1 | Saalach, Jonas | 0",
-   "1 | Traun, Olga | 0",
-   "1 | Vils, Karin | 0"
+   "Prüfung Sportleitung · 18.02.2026, 09:01",
+   "Details"
   ],
-  "playoffs@USER@1280": [
-   "Spielplan & Tabelle",
-   "Zurück",
+  "audit-log@ADMIN@390": [
    "L-BO3-6 · L0 Teilnehmer ohne Spielplan (Best-of-3)",
-   "Luftpistole · Playoffs",
-   "Die Playoffs wurden noch nicht gestartet."
-  ],
-  "playoffs@USER@390": [
+   "Luftpistole · Protokoll",
+   "Wettbewerb angelegt",
    "L-BO3-6 · L0 Teilnehmer ohne Spielplan (Best-of-3)",
-   "Luftpistole · Playoffs",
-   "Die Playoffs wurden noch nicht gestartet."
-  ],
-  "schedule@ADMIN@1280": [
-   "Teilnehmer",
-   "Playoffs",
-   "Spielplan generieren",
-   "Zurück",
-   "L-BO3-6 · L0 Teilnehmer ohne Spielplan (Best-of-3)",
-   "Luftpistole · Spielplan & Tabelle",
-   "Noch kein Spielplan generiert.",
-   "Tabelle",
-   "Pl. | Name | Begegn. | Siege | Satzdiff. | Satzverhältnis | Direktvergleich",
-   "1 | Kiefer, Anja | 0 | 0 | 0 | 0:0 | offen",
-   "1 | Lech, Tilda | 0 | 0 | 0 | 0:0 | offen",
-   "1 | Pappel, Paul | 0 | 0 | 0 | 0:0 | offen",
-   "1 | Saalach, Jonas | 0 | 0 | 0 | 0:0 | offen",
-   "1 | Traun, Olga | 0 | 0 | 0 | 0:0 | offen",
-   "1 | Vils, Karin | 0 | 0 | 0 | 0:0 | offen"
-  ],
-  "schedule@ADMIN@390": [
-   "L-BO3-6 · L0 Teilnehmer ohne Spielplan (Best-of-3)",
-   "Luftpistole · Spielplan & Tabelle",
-   "Noch kein Spielplan generiert.",
-   "Tabelle",
-   "Pl. | Name | Siege",
-   "1 | Kiefer, Anja | 0",
-   "1 | Lech, Tilda | 0",
-   "1 | Pappel, Paul | 0",
-   "1 | Saalach, Jonas | 0",
-   "1 | Traun, Olga | 0",
-   "1 | Vils, Karin | 0"
-  ],
-  "playoffs@ADMIN@1280": [
-   "Teilnehmer",
-   "Spielplan & Tabelle",
-   "Zurück",
-   "L-BO3-6 · L0 Teilnehmer ohne Spielplan (Best-of-3)",
-   "Luftpistole · Playoffs",
-   "Playoffs noch nicht gestartet",
-   "Zu wenige aktive Teilnehmer für Playoffs (mind. 8 erforderlich).",
-   "Playoffs starten",
-   "Mindestens 8 aktive Teilnehmer erforderlich."
+   "Prüfung Sportleitung · 18.02.2026, 09:01",
+   "Details"
   ],
   "participants@ADMIN@1280": [
    "Spielplan & Tabelle",
@@ -173,14 +112,6 @@
    "olga.traun@example.test",
    "Vils, Karin"
   ],
-  "playoffs@ADMIN@390": [
-   "L-BO3-6 · L0 Teilnehmer ohne Spielplan (Best-of-3)",
-   "Luftpistole · Playoffs",
-   "Playoffs noch nicht gestartet",
-   "Zu wenige aktive Teilnehmer für Playoffs (mind. 8 erforderlich).",
-   "Playoffs starten",
-   "Mindestens 8 aktive Teilnehmer erforderlich."
-  ],
   "participants@ADMIN@390": [
    "L-BO3-6 · L0 Teilnehmer ohne Spielplan (Best-of-3)",
    "Luftpistole · Teilnehmerverwaltung",
@@ -247,25 +178,94 @@
    "olga.traun@example.test",
    "Vils, Karin"
   ],
-  "audit-log@ADMIN@1280": [
+  "playoffs@ADMIN@1280": [
    "Teilnehmer",
    "Spielplan & Tabelle",
+   "Zurück",
+   "L-BO3-6 · L0 Teilnehmer ohne Spielplan (Best-of-3)",
+   "Luftpistole · Playoffs",
+   "Playoffs noch nicht gestartet",
+   "Zu wenige aktive Teilnehmer für Playoffs (mind. 8 erforderlich).",
+   "Playoffs starten",
+   "Mindestens 8 aktive Teilnehmer erforderlich."
+  ],
+  "playoffs@ADMIN@390": [
+   "L-BO3-6 · L0 Teilnehmer ohne Spielplan (Best-of-3)",
+   "Luftpistole · Playoffs",
+   "Playoffs noch nicht gestartet",
+   "Zu wenige aktive Teilnehmer für Playoffs (mind. 8 erforderlich).",
+   "Playoffs starten",
+   "Mindestens 8 aktive Teilnehmer erforderlich."
+  ],
+  "playoffs@USER@1280": [
+   "Spielplan & Tabelle",
+   "Zurück",
+   "L-BO3-6 · L0 Teilnehmer ohne Spielplan (Best-of-3)",
+   "Luftpistole · Playoffs",
+   "Die Playoffs wurden noch nicht gestartet."
+  ],
+  "playoffs@USER@390": [
+   "L-BO3-6 · L0 Teilnehmer ohne Spielplan (Best-of-3)",
+   "Luftpistole · Playoffs",
+   "Die Playoffs wurden noch nicht gestartet."
+  ],
+  "schedule@ADMIN@1280": [
+   "Teilnehmer",
+   "Playoffs",
+   "Spielplan generieren",
+   "Zurück",
+   "L-BO3-6 · L0 Teilnehmer ohne Spielplan (Best-of-3)",
+   "Luftpistole · Spielplan & Tabelle",
+   "Noch kein Spielplan generiert.",
+   "Tabelle",
+   "Pl. | Name | Begegn. | Siege | Satzdiff. | Satzverhältnis | Direktvergleich",
+   "1 | Kiefer, Anja | 0 | 0 | 0 | 0:0 | offen",
+   "1 | Lech, Tilda | 0 | 0 | 0 | 0:0 | offen",
+   "1 | Pappel, Paul | 0 | 0 | 0 | 0:0 | offen",
+   "1 | Saalach, Jonas | 0 | 0 | 0 | 0:0 | offen",
+   "1 | Traun, Olga | 0 | 0 | 0 | 0:0 | offen",
+   "1 | Vils, Karin | 0 | 0 | 0 | 0:0 | offen"
+  ],
+  "schedule@ADMIN@390": [
+   "L-BO3-6 · L0 Teilnehmer ohne Spielplan (Best-of-3)",
+   "Luftpistole · Spielplan & Tabelle",
+   "Noch kein Spielplan generiert.",
+   "Tabelle",
+   "Pl. | Name | Siege",
+   "1 | Kiefer, Anja | 0",
+   "1 | Lech, Tilda | 0",
+   "1 | Pappel, Paul | 0",
+   "1 | Saalach, Jonas | 0",
+   "1 | Traun, Olga | 0",
+   "1 | Vils, Karin | 0"
+  ],
+  "schedule@USER@1280": [
    "Playoffs",
    "Zurück",
    "L-BO3-6 · L0 Teilnehmer ohne Spielplan (Best-of-3)",
-   "Luftpistole · Protokoll",
-   "Wettbewerb angelegt",
-   "L-BO3-6 · L0 Teilnehmer ohne Spielplan (Best-of-3)",
-   "Prüfung Sportleitung · 18.02.2026, 09:01",
-   "Details"
+   "Luftpistole · Spielplan & Tabelle",
+   "Noch kein Spielplan generiert.",
+   "Tabelle",
+   "Pl. | Name | Begegn. | Siege | Satzdiff. | Satzverhältnis | Direktvergleich",
+   "1 | Kiefer, Anja | 0 | 0 | 0 | 0:0 | offen",
+   "1 | Lech, Tilda | 0 | 0 | 0 | 0:0 | offen",
+   "1 | Pappel, Paul | 0 | 0 | 0 | 0:0 | offen",
+   "1 | Saalach, Jonas | 0 | 0 | 0 | 0:0 | offen",
+   "1 | Traun, Olga | 0 | 0 | 0 | 0:0 | offen",
+   "1 | Vils, Karin | 0 | 0 | 0 | 0:0 | offen"
   ],
-  "audit-log@ADMIN@390": [
+  "schedule@USER@390": [
    "L-BO3-6 · L0 Teilnehmer ohne Spielplan (Best-of-3)",
-   "Luftpistole · Protokoll",
-   "Wettbewerb angelegt",
-   "L-BO3-6 · L0 Teilnehmer ohne Spielplan (Best-of-3)",
-   "Prüfung Sportleitung · 18.02.2026, 09:01",
-   "Details"
+   "Luftpistole · Spielplan & Tabelle",
+   "Noch kein Spielplan generiert.",
+   "Tabelle",
+   "Pl. | Name | Siege",
+   "1 | Kiefer, Anja | 0",
+   "1 | Lech, Tilda | 0",
+   "1 | Pappel, Paul | 0",
+   "1 | Saalach, Jonas | 0",
+   "1 | Traun, Olga | 0",
+   "1 | Vils, Karin | 0"
   ]
  },
  "pdfs": {

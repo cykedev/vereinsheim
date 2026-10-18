@@ -1,81 +1,47 @@
 {
  "name": "R · leerer Wettbewerb (Event)",
  "reach": {
-  "start@USER": "→ /competitions/:id/ranking",
-  "schedule@USER": "→ /competitions/:id/ranking",
-  "standings@USER": "nicht gefunden",
-  "ranking@USER": "ok",
-  "playoffs@USER": "ok",
-  "participants@USER": "→ /",
-  "audit-log@USER": "→ /competitions/:id/ranking",
-  "series@USER": "→ /",
-  "start@ADMIN": "→ /competitions/:id/ranking",
-  "schedule@ADMIN": "→ /competitions/:id/ranking",
-  "standings@ADMIN": "nicht gefunden",
-  "ranking@ADMIN": "ok",
-  "playoffs@ADMIN": "ok",
-  "participants@ADMIN": "ok",
-  "series@ADMIN": "ok",
   "audit-log@ADMIN": "ok",
+  "audit-log@USER": "→ /competitions/:id/ranking",
+  "participants@ADMIN": "ok",
+  "participants@USER": "→ /",
   "pdf/ranking@ADMIN": "200",
   "pdf/ranking@USER": "200",
   "pdf/starter-list@ADMIN": "200",
-  "pdf/starter-list@USER": "403"
+  "pdf/starter-list@USER": "403",
+  "playoffs@ADMIN": "ok",
+  "playoffs@USER": "ok",
+  "ranking@ADMIN": "ok",
+  "ranking@USER": "ok",
+  "schedule@ADMIN": "→ /competitions/:id/ranking",
+  "schedule@USER": "→ /competitions/:id/ranking",
+  "series@ADMIN": "ok",
+  "series@USER": "→ /",
+  "standings@ADMIN": "nicht gefunden",
+  "standings@USER": "nicht gefunden",
+  "start@ADMIN": "→ /competitions/:id/ranking",
+  "start@USER": "→ /competitions/:id/ranking"
  },
  "pages": {
-  "ranking@USER@1280": [
-   "PDF exportieren",
-   "Zurück",
-   "R · leerer Wettbewerb (Event)",
-   "Luftgewehr · Rangliste",
-   "02.07.2026",
-   "Ringteiler",
-   "10 Schuss",
-   "Noch keine Ergebnisse erfasst"
-  ],
-  "playoffs@USER@1280": [
-   "Spielplan & Tabelle",
-   "Zurück",
-   "R · leerer Wettbewerb (Event)",
-   "Luftgewehr · Playoffs",
-   "Die Playoffs wurden noch nicht gestartet."
-  ],
-  "ranking@USER@390": [
-   "R · leerer Wettbewerb (Event)",
-   "Luftgewehr · Rangliste",
-   "02.07.2026",
-   "Ringteiler",
-   "10 Schuss",
-   "Noch keine Ergebnisse erfasst"
-  ],
-  "playoffs@USER@390": [
-   "R · leerer Wettbewerb (Event)",
-   "Luftgewehr · Playoffs",
-   "Die Playoffs wurden noch nicht gestartet."
-  ],
-  "ranking@ADMIN@1280": [
-   "Teilnehmer",
-   "Serien erfassen",
-   "Bearbeiten",
-   "PDF exportieren",
-   "Zurück",
-   "R · leerer Wettbewerb (Event)",
-   "Luftgewehr · Rangliste",
-   "02.07.2026",
-   "Ringteiler",
-   "10 Schuss",
-   "Noch keine Ergebnisse erfasst"
-  ],
-  "playoffs@ADMIN@1280": [
+  "audit-log@ADMIN@1280": [
    "Teilnehmer",
    "Spielplan & Tabelle",
+   "Playoffs",
    "Zurück",
    "R · leerer Wettbewerb (Event)",
-   "Luftgewehr · Playoffs",
-   "Playoffs noch nicht gestartet",
-   "Zu wenige aktive Teilnehmer für Playoffs (mind. 8 erforderlich).",
-   "Playoffs starten",
-   "Mindestens 8 aktive Teilnehmer erforderlich."
+   "Luftgewehr · Protokoll",
+   "Wettbewerb angelegt",
+   "R · leerer Wettbewerb (Event)",
+   "Prüfung Sportleitung · 02.07.2026, 10:01",
+   "Details"
+  ],
+  "audit-log@ADMIN@390": [
+   "R · leerer Wettbewerb (Event)",
+   "Luftgewehr · Protokoll",
+   "Wettbewerb angelegt",
+   "R · leerer Wettbewerb (Event)",
+   "Prüfung Sportleitung · 02.07.2026, 10:01",
+   "Details"
   ],
   "participants@ADMIN@1280": [
    "Starterliste drucken",
@@ -146,33 +112,6 @@
    "Eingeschrieben (0)",
    "Noch keine Teilnehmer eingeschrieben"
   ],
-  "ranking@ADMIN@390": [
-   "R · leerer Wettbewerb (Event)",
-   "Luftgewehr · Rangliste",
-   "02.07.2026",
-   "Ringteiler",
-   "10 Schuss",
-   "Noch keine Ergebnisse erfasst"
-  ],
-  "playoffs@ADMIN@390": [
-   "R · leerer Wettbewerb (Event)",
-   "Luftgewehr · Playoffs",
-   "Playoffs noch nicht gestartet",
-   "Zu wenige aktive Teilnehmer für Playoffs (mind. 8 erforderlich).",
-   "Playoffs starten",
-   "Mindestens 8 aktive Teilnehmer erforderlich."
-  ],
-  "series@ADMIN@1280": [
-   "Teilnehmer",
-   "Rangliste",
-   "Zurück",
-   "R · leerer Wettbewerb (Event)",
-   "Luftgewehr · Serien erfassen",
-   "Noch keine Teilnehmer eingeschrieben",
-   "Ohne Teilnehmer gibt es keine Serien zu erfassen.",
-   "Teilnehmer einschreiben",
-   "0 von 0 Ergebnissen erfasst"
-  ],
   "participants@ADMIN@390": [
    "R · leerer Wettbewerb (Event)",
    "Luftgewehr · Teilnehmerverwaltung",
@@ -238,17 +177,86 @@
    "Eingeschrieben (0)",
    "Noch keine Teilnehmer eingeschrieben"
   ],
-  "audit-log@ADMIN@1280": [
+  "playoffs@ADMIN@1280": [
    "Teilnehmer",
    "Spielplan & Tabelle",
-   "Playoffs",
    "Zurück",
    "R · leerer Wettbewerb (Event)",
-   "Luftgewehr · Protokoll",
-   "Wettbewerb angelegt",
+   "Luftgewehr · Playoffs",
+   "Playoffs noch nicht gestartet",
+   "Zu wenige aktive Teilnehmer für Playoffs (mind. 8 erforderlich).",
+   "Playoffs starten",
+   "Mindestens 8 aktive Teilnehmer erforderlich."
+  ],
+  "playoffs@ADMIN@390": [
    "R · leerer Wettbewerb (Event)",
-   "Prüfung Sportleitung · 02.07.2026, 10:01",
-   "Details"
+   "Luftgewehr · Playoffs",
+   "Playoffs noch nicht gestartet",
+   "Zu wenige aktive Teilnehmer für Playoffs (mind. 8 erforderlich).",
+   "Playoffs starten",
+   "Mindestens 8 aktive Teilnehmer erforderlich."
+  ],
+  "playoffs@USER@1280": [
+   "Spielplan & Tabelle",
+   "Zurück",
+   "R · leerer Wettbewerb (Event)",
+   "Luftgewehr · Playoffs",
+   "Die Playoffs wurden noch nicht gestartet."
+  ],
+  "playoffs@USER@390": [
+   "R · leerer Wettbewerb (Event)",
+   "Luftgewehr · Playoffs",
+   "Die Playoffs wurden noch nicht gestartet."
+  ],
+  "ranking@ADMIN@1280": [
+   "Teilnehmer",
+   "Serien erfassen",
+   "Bearbeiten",
+   "PDF exportieren",
+   "Zurück",
+   "R · leerer Wettbewerb (Event)",
+   "Luftgewehr · Rangliste",
+   "02.07.2026",
+   "Ringteiler",
+   "10 Schuss",
+   "Noch keine Ergebnisse erfasst"
+  ],
+  "ranking@ADMIN@390": [
+   "R · leerer Wettbewerb (Event)",
+   "Luftgewehr · Rangliste",
+   "02.07.2026",
+   "Ringteiler",
+   "10 Schuss",
+   "Noch keine Ergebnisse erfasst"
+  ],
+  "ranking@USER@1280": [
+   "PDF exportieren",
+   "Zurück",
+   "R · leerer Wettbewerb (Event)",
+   "Luftgewehr · Rangliste",
+   "02.07.2026",
+   "Ringteiler",
+   "10 Schuss",
+   "Noch keine Ergebnisse erfasst"
+  ],
+  "ranking@USER@390": [
+   "R · leerer Wettbewerb (Event)",
+   "Luftgewehr · Rangliste",
+   "02.07.2026",
+   "Ringteiler",
+   "10 Schuss",
+   "Noch keine Ergebnisse erfasst"
+  ],
+  "series@ADMIN@1280": [
+   "Teilnehmer",
+   "Rangliste",
+   "Zurück",
+   "R · leerer Wettbewerb (Event)",
+   "Luftgewehr · Serien erfassen",
+   "Noch keine Teilnehmer eingeschrieben",
+   "Ohne Teilnehmer gibt es keine Serien zu erfassen.",
+   "Teilnehmer einschreiben",
+   "0 von 0 Ergebnissen erfasst"
   ],
   "series@ADMIN@390": [
    "R · leerer Wettbewerb (Event)",
@@ -257,14 +265,6 @@
    "Ohne Teilnehmer gibt es keine Serien zu erfassen.",
    "Teilnehmer einschreiben",
    "0 von 0 Ergebnissen erfasst"
-  ],
-  "audit-log@ADMIN@390": [
-   "R · leerer Wettbewerb (Event)",
-   "Luftgewehr · Protokoll",
-   "Wettbewerb angelegt",
-   "R · leerer Wettbewerb (Event)",
-   "Prüfung Sportleitung · 02.07.2026, 10:01",
-   "Details"
   ]
  },
  "pdfs": {

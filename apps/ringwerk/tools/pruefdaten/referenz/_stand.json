@@ -2,5 +2,6 @@
   "checksum": "09938829678b741939e8874f553a21061ad4e3318aedbdcd7bb870c50345e990",
   "database": "ringwerk_pruef",
   "commit": "28f34bd1",
-  "competitions": 92
+  "competitions": 92,
+  "build": "unbekannt"
 }

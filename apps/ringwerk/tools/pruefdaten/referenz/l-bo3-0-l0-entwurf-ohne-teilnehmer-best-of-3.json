@@ -1,76 +1,47 @@
 {
  "name": "L-BO3-0 · L0 Entwurf ohne Teilnehmer (Best-of-3)",
  "reach": {
-  "start@USER": "→ /competitions/:id/schedule",
-  "schedule@USER": "ok",
-  "standings@USER": "nicht gefunden",
-  "ranking@USER": "nicht gefunden",
-  "playoffs@USER": "ok",
-  "participants@USER": "→ /",
-  "series@USER": "→ /",
-  "audit-log@USER": "→ /competitions/:id/schedule",
-  "start@ADMIN": "→ /competitions/:id/schedule",
-  "schedule@ADMIN": "ok",
-  "standings@ADMIN": "nicht gefunden",
-  "ranking@ADMIN": "nicht gefunden",
-  "playoffs@ADMIN": "ok",
-  "participants@ADMIN": "ok",
-  "series@ADMIN": "→ /competitions/:id/schedule",
   "audit-log@ADMIN": "ok",
+  "audit-log@USER": "→ /competitions/:id/schedule",
+  "participants@ADMIN": "ok",
+  "participants@USER": "→ /",
+  "pdf/playoffs@ADMIN": "404",
+  "pdf/playoffs@USER": "404",
   "pdf/schedule@ADMIN": "200",
   "pdf/schedule@USER": "200",
-  "pdf/playoffs@ADMIN": "404",
-  "pdf/playoffs@USER": "404"
+  "playoffs@ADMIN": "ok",
+  "playoffs@USER": "ok",
+  "ranking@ADMIN": "nicht gefunden",
+  "ranking@USER": "nicht gefunden",
+  "schedule@ADMIN": "ok",
+  "schedule@USER": "ok",
+  "series@ADMIN": "→ /competitions/:id/schedule",
+  "series@USER": "→ /",
+  "standings@ADMIN": "nicht gefunden",
+  "standings@USER": "nicht gefunden",
+  "start@ADMIN": "→ /competitions/:id/schedule",
+  "start@USER": "→ /competitions/:id/schedule"
  },
  "pages": {
-  "schedule@USER@1280": [
+  "audit-log@ADMIN@1280": [
+   "Teilnehmer",
+   "Spielplan & Tabelle",
    "Playoffs",
    "Zurück",
    "L-BO3-0 · L0 Entwurf ohne Teilnehmer (Best-of-3)",
-   "Luftpistole · Spielplan & Tabelle",
-   "Noch kein Spielplan generiert."
-  ],
-  "playoffs@USER@1280": [
-   "Spielplan & Tabelle",
-   "Zurück",
+   "Luftpistole · Protokoll",
+   "Wettbewerb angelegt",
    "L-BO3-0 · L0 Entwurf ohne Teilnehmer (Best-of-3)",
-   "Luftpistole · Playoffs",
-   "Die Playoffs wurden noch nicht gestartet."
+   "Prüfung Sportleitung · 16.02.2026, 09:01",
+   "Details"
   ],
-  "schedule@USER@390": [
+  "audit-log@ADMIN@390": [
    "L-BO3-0 · L0 Entwurf ohne Teilnehmer (Best-of-3)",
-   "Luftpistole · Spielplan & Tabelle",
-   "Noch kein Spielplan generiert."
-  ],
-  "playoffs@USER@390": [
+   "Luftpistole · Protokoll",
+   "Wettbewerb angelegt",
    "L-BO3-0 · L0 Entwurf ohne Teilnehmer (Best-of-3)",
-   "Luftpistole · Playoffs",
-   "Die Playoffs wurden noch nicht gestartet."
-  ],
-  "schedule@ADMIN@1280": [
-   "Teilnehmer",
-   "Playoffs",
-   "Spielplan generieren",
-   "Zurück",
-   "L-BO3-0 · L0 Entwurf ohne Teilnehmer (Best-of-3)",
-   "Luftpistole · Spielplan & Tabelle",
-   "Noch kein Spielplan generiert."
-  ],
-  "schedule@ADMIN@390": [
-   "L-BO3-0 · L0 Entwurf ohne Teilnehmer (Best-of-3)",
-   "Luftpistole · Spielplan & Tabelle",
-   "Noch kein Spielplan generiert."
-  ],
-  "playoffs@ADMIN@1280": [
-   "Teilnehmer",
-   "Spielplan & Tabelle",
-   "Zurück",
-   "L-BO3-0 · L0 Entwurf ohne Teilnehmer (Best-of-3)",
-   "Luftpistole · Playoffs",
-   "Playoffs noch nicht gestartet",
-   "Zu wenige aktive Teilnehmer für Playoffs (mind. 8 erforderlich).",
-   "Playoffs starten",
-   "Mindestens 8 aktive Teilnehmer erforderlich."
+   "Prüfung Sportleitung · 16.02.2026, 09:01",
+   "Details"
   ],
   "participants@ADMIN@1280": [
    "Spielplan & Tabelle",
@@ -140,14 +111,6 @@
    "Eingeschrieben (0)",
    "Noch keine Teilnehmer eingeschrieben"
   ],
-  "playoffs@ADMIN@390": [
-   "L-BO3-0 · L0 Entwurf ohne Teilnehmer (Best-of-3)",
-   "Luftpistole · Playoffs",
-   "Playoffs noch nicht gestartet",
-   "Zu wenige aktive Teilnehmer für Playoffs (mind. 8 erforderlich).",
-   "Playoffs starten",
-   "Mindestens 8 aktive Teilnehmer erforderlich."
-  ],
   "participants@ADMIN@390": [
    "L-BO3-0 · L0 Entwurf ohne Teilnehmer (Best-of-3)",
    "Luftpistole · Teilnehmerverwaltung",
@@ -213,25 +176,62 @@
    "Eingeschrieben (0)",
    "Noch keine Teilnehmer eingeschrieben"
   ],
-  "audit-log@ADMIN@1280": [
+  "playoffs@ADMIN@1280": [
    "Teilnehmer",
    "Spielplan & Tabelle",
+   "Zurück",
+   "L-BO3-0 · L0 Entwurf ohne Teilnehmer (Best-of-3)",
+   "Luftpistole · Playoffs",
+   "Playoffs noch nicht gestartet",
+   "Zu wenige aktive Teilnehmer für Playoffs (mind. 8 erforderlich).",
+   "Playoffs starten",
+   "Mindestens 8 aktive Teilnehmer erforderlich."
+  ],
+  "playoffs@ADMIN@390": [
+   "L-BO3-0 · L0 Entwurf ohne Teilnehmer (Best-of-3)",
+   "Luftpistole · Playoffs",
+   "Playoffs noch nicht gestartet",
+   "Zu wenige aktive Teilnehmer für Playoffs (mind. 8 erforderlich).",
+   "Playoffs starten",
+   "Mindestens 8 aktive Teilnehmer erforderlich."
+  ],
+  "playoffs@USER@1280": [
+   "Spielplan & Tabelle",
+   "Zurück",
+   "L-BO3-0 · L0 Entwurf ohne Teilnehmer (Best-of-3)",
+   "Luftpistole · Playoffs",
+   "Die Playoffs wurden noch nicht gestartet."
+  ],
+  "playoffs@USER@390": [
+   "L-BO3-0 · L0 Entwurf ohne Teilnehmer (Best-of-3)",
+   "Luftpistole · Playoffs",
+   "Die Playoffs wurden noch nicht gestartet."
+  ],
+  "schedule@ADMIN@1280": [
+   "Teilnehmer",
+   "Playoffs",
+   "Spielplan generieren",
+   "Zurück",
+   "L-BO3-0 · L0 Entwurf ohne Teilnehmer (Best-of-3)",
+   "Luftpistole · Spielplan & Tabelle",
+   "Noch kein Spielplan generiert."
+  ],
+  "schedule@ADMIN@390": [
+   "L-BO3-0 · L0 Entwurf ohne Teilnehmer (Best-of-3)",
+   "Luftpistole · Spielplan & Tabelle",
+   "Noch kein Spielplan generiert."
+  ],
+  "schedule@USER@1280": [
    "Playoffs",
    "Zurück",
    "L-BO3-0 · L0 Entwurf ohne Teilnehmer (Best-of-3)",
-   "Luftpistole · Protokoll",
-   "Wettbewerb angelegt",
-   "L-BO3-0 · L0 Entwurf ohne Teilnehmer (Best-of-3)",
-   "Prüfung Sportleitung · 16.02.2026, 09:01",
-   "Details"
+   "Luftpistole · Spielplan & Tabelle",
+   "Noch kein Spielplan generiert."
   ],
-  "audit-log@ADMIN@390": [
+  "schedule@USER@390": [
    "L-BO3-0 · L0 Entwurf ohne Teilnehmer (Best-of-3)",
-   "Luftpistole · Protokoll",
-   "Wettbewerb angelegt",
-   "L-BO3-0 · L0 Entwurf ohne Teilnehmer (Best-of-3)",
-   "Prüfung Sportleitung · 16.02.2026, 09:01",
-   "Details"
+   "Luftpistole · Spielplan & Tabelle",
+   "Noch kein Spielplan generiert."
   ]
  },
  "pdfs": {

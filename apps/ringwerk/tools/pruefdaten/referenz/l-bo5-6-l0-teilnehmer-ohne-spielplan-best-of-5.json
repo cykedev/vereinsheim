@@ -1,108 +1,47 @@
 {
  "name": "L-BO5-6 · L0 Teilnehmer ohne Spielplan (Best-of-5)",
  "reach": {
-  "start@USER": "→ /competitions/:id/schedule",
-  "schedule@USER": "ok",
-  "standings@USER": "nicht gefunden",
-  "ranking@USER": "nicht gefunden",
-  "playoffs@USER": "ok",
-  "participants@USER": "→ /",
-  "series@USER": "→ /",
-  "audit-log@USER": "→ /competitions/:id/schedule",
-  "start@ADMIN": "→ /competitions/:id/schedule",
-  "schedule@ADMIN": "ok",
-  "standings@ADMIN": "nicht gefunden",
-  "ranking@ADMIN": "nicht gefunden",
-  "playoffs@ADMIN": "ok",
-  "series@ADMIN": "→ /competitions/:id/schedule",
-  "participants@ADMIN": "ok",
   "audit-log@ADMIN": "ok",
+  "audit-log@USER": "→ /competitions/:id/schedule",
+  "participants@ADMIN": "ok",
+  "participants@USER": "→ /",
+  "pdf/playoffs@ADMIN": "404",
+  "pdf/playoffs@USER": "404",
   "pdf/schedule@ADMIN": "200",
   "pdf/schedule@USER": "200",
-  "pdf/playoffs@ADMIN": "404",
-  "pdf/playoffs@USER": "404"
+  "playoffs@ADMIN": "ok",
+  "playoffs@USER": "ok",
+  "ranking@ADMIN": "nicht gefunden",
+  "ranking@USER": "nicht gefunden",
+  "schedule@ADMIN": "ok",
+  "schedule@USER": "ok",
+  "series@ADMIN": "→ /competitions/:id/schedule",
+  "series@USER": "→ /",
+  "standings@ADMIN": "nicht gefunden",
+  "standings@USER": "nicht gefunden",
+  "start@ADMIN": "→ /competitions/:id/schedule",
+  "start@USER": "→ /competitions/:id/schedule"
  },
  "pages": {
-  "schedule@USER@1280": [
+  "audit-log@ADMIN@1280": [
+   "Teilnehmer",
+   "Spielplan & Tabelle",
    "Playoffs",
    "Zurück",
    "L-BO5-6 · L0 Teilnehmer ohne Spielplan (Best-of-5)",
-   "Luftgewehr · Spielplan & Tabelle",
-   "Noch kein Spielplan generiert.",
-   "Tabelle",
-   "Pl. | Name | Begegn. | Siege | Satzdiff. | Satzverhältnis | Direktvergleich",
-   "1 | Buche, Rita | 0 | 0 | 0 | 0:0 | offen",
-   "1 | Fichte, Mara | 0 | 0 | 0 | 0:0 | offen",
-   "1 | Isar, Anja | 0 | 0 | 0 | 0:0 | offen",
-   "1 | Isar, Mara | 0 | 0 | 0 | 0:0 | offen",
-   "1 | Pappel, Paul | 0 | 0 | 0 | 0:0 | offen",
-   "1 | Traun, Olga | 0 | 0 | 0 | 0:0 | offen"
-  ],
-  "schedule@USER@390": [
+   "Luftgewehr · Protokoll",
+   "Wettbewerb angelegt",
    "L-BO5-6 · L0 Teilnehmer ohne Spielplan (Best-of-5)",
-   "Luftgewehr · Spielplan & Tabelle",
-   "Noch kein Spielplan generiert.",
-   "Tabelle",
-   "Pl. | Name | Siege",
-   "1 | Buche, Rita | 0",
-   "1 | Fichte, Mara | 0",
-   "1 | Isar, Anja | 0",
-   "1 | Isar, Mara | 0",
-   "1 | Pappel, Paul | 0",
-   "1 | Traun, Olga | 0"
+   "Prüfung Sportleitung · 28.03.2026, 09:01",
+   "Details"
   ],
-  "playoffs@USER@1280": [
-   "Spielplan & Tabelle",
-   "Zurück",
+  "audit-log@ADMIN@390": [
    "L-BO5-6 · L0 Teilnehmer ohne Spielplan (Best-of-5)",
-   "Luftgewehr · Playoffs",
-   "Die Playoffs wurden noch nicht gestartet."
-  ],
-  "playoffs@USER@390": [
+   "Luftgewehr · Protokoll",
+   "Wettbewerb angelegt",
    "L-BO5-6 · L0 Teilnehmer ohne Spielplan (Best-of-5)",
-   "Luftgewehr · Playoffs",
-   "Die Playoffs wurden noch nicht gestartet."
-  ],
-  "schedule@ADMIN@1280": [
-   "Teilnehmer",
-   "Playoffs",
-   "Spielplan generieren",
-   "Zurück",
-   "L-BO5-6 · L0 Teilnehmer ohne Spielplan (Best-of-5)",
-   "Luftgewehr · Spielplan & Tabelle",
-   "Noch kein Spielplan generiert.",
-   "Tabelle",
-   "Pl. | Name | Begegn. | Siege | Satzdiff. | Satzverhältnis | Direktvergleich",
-   "1 | Buche, Rita | 0 | 0 | 0 | 0:0 | offen",
-   "1 | Fichte, Mara | 0 | 0 | 0 | 0:0 | offen",
-   "1 | Isar, Anja | 0 | 0 | 0 | 0:0 | offen",
-   "1 | Isar, Mara | 0 | 0 | 0 | 0:0 | offen",
-   "1 | Pappel, Paul | 0 | 0 | 0 | 0:0 | offen",
-   "1 | Traun, Olga | 0 | 0 | 0 | 0:0 | offen"
-  ],
-  "schedule@ADMIN@390": [
-   "L-BO5-6 · L0 Teilnehmer ohne Spielplan (Best-of-5)",
-   "Luftgewehr · Spielplan & Tabelle",
-   "Noch kein Spielplan generiert.",
-   "Tabelle",
-   "Pl. | Name | Siege",
-   "1 | Buche, Rita | 0",
-   "1 | Fichte, Mara | 0",
-   "1 | Isar, Anja | 0",
-   "1 | Isar, Mara | 0",
-   "1 | Pappel, Paul | 0",
-   "1 | Traun, Olga | 0"
-  ],
-  "playoffs@ADMIN@1280": [
-   "Teilnehmer",
-   "Spielplan & Tabelle",
-   "Zurück",
-   "L-BO5-6 · L0 Teilnehmer ohne Spielplan (Best-of-5)",
-   "Luftgewehr · Playoffs",
-   "Playoffs noch nicht gestartet",
-   "Zu wenige aktive Teilnehmer für Playoffs (mind. 8 erforderlich).",
-   "Playoffs starten",
-   "Mindestens 8 aktive Teilnehmer erforderlich."
+   "Prüfung Sportleitung · 28.03.2026, 09:01",
+   "Details"
   ],
   "participants@ADMIN@1280": [
    "Spielplan & Tabelle",
@@ -176,26 +115,6 @@
    "Traun, Olga",
    "olga.traun@example.test"
   ],
-  "playoffs@ADMIN@390": [
-   "L-BO5-6 · L0 Teilnehmer ohne Spielplan (Best-of-5)",
-   "Luftgewehr · Playoffs",
-   "Playoffs noch nicht gestartet",
-   "Zu wenige aktive Teilnehmer für Playoffs (mind. 8 erforderlich).",
-   "Playoffs starten",
-   "Mindestens 8 aktive Teilnehmer erforderlich."
-  ],
-  "audit-log@ADMIN@1280": [
-   "Teilnehmer",
-   "Spielplan & Tabelle",
-   "Playoffs",
-   "Zurück",
-   "L-BO5-6 · L0 Teilnehmer ohne Spielplan (Best-of-5)",
-   "Luftgewehr · Protokoll",
-   "Wettbewerb angelegt",
-   "L-BO5-6 · L0 Teilnehmer ohne Spielplan (Best-of-5)",
-   "Prüfung Sportleitung · 28.03.2026, 09:01",
-   "Details"
-  ],
   "participants@ADMIN@390": [
    "L-BO5-6 · L0 Teilnehmer ohne Spielplan (Best-of-5)",
    "Luftgewehr · Teilnehmerverwaltung",
@@ -265,13 +184,94 @@
    "Traun, Olga",
    "olga.traun@example.test"
   ],
-  "audit-log@ADMIN@390": [
+  "playoffs@ADMIN@1280": [
+   "Teilnehmer",
+   "Spielplan & Tabelle",
+   "Zurück",
    "L-BO5-6 · L0 Teilnehmer ohne Spielplan (Best-of-5)",
-   "Luftgewehr · Protokoll",
-   "Wettbewerb angelegt",
+   "Luftgewehr · Playoffs",
+   "Playoffs noch nicht gestartet",
+   "Zu wenige aktive Teilnehmer für Playoffs (mind. 8 erforderlich).",
+   "Playoffs starten",
+   "Mindestens 8 aktive Teilnehmer erforderlich."
+  ],
+  "playoffs@ADMIN@390": [
    "L-BO5-6 · L0 Teilnehmer ohne Spielplan (Best-of-5)",
-   "Prüfung Sportleitung · 28.03.2026, 09:01",
-   "Details"
+   "Luftgewehr · Playoffs",
+   "Playoffs noch nicht gestartet",
+   "Zu wenige aktive Teilnehmer für Playoffs (mind. 8 erforderlich).",
+   "Playoffs starten",
+   "Mindestens 8 aktive Teilnehmer erforderlich."
+  ],
+  "playoffs@USER@1280": [
+   "Spielplan & Tabelle",
+   "Zurück",
+   "L-BO5-6 · L0 Teilnehmer ohne Spielplan (Best-of-5)",
+   "Luftgewehr · Playoffs",
+   "Die Playoffs wurden noch nicht gestartet."
+  ],
+  "playoffs@USER@390": [
+   "L-BO5-6 · L0 Teilnehmer ohne Spielplan (Best-of-5)",
+   "Luftgewehr · Playoffs",
+   "Die Playoffs wurden noch nicht gestartet."
+  ],
+  "schedule@ADMIN@1280": [
+   "Teilnehmer",
+   "Playoffs",
+   "Spielplan generieren",
+   "Zurück",
+   "L-BO5-6 · L0 Teilnehmer ohne Spielplan (Best-of-5)",
+   "Luftgewehr · Spielplan & Tabelle",
+   "Noch kein Spielplan generiert.",
+   "Tabelle",
+   "Pl. | Name | Begegn. | Siege | Satzdiff. | Satzverhältnis | Direktvergleich",
+   "1 | Buche, Rita | 0 | 0 | 0 | 0:0 | offen",
+   "1 | Fichte, Mara | 0 | 0 | 0 | 0:0 | offen",
+   "1 | Isar, Anja | 0 | 0 | 0 | 0:0 | offen",
+   "1 | Isar, Mara | 0 | 0 | 0 | 0:0 | offen",
+   "1 | Pappel, Paul | 0 | 0 | 0 | 0:0 | offen",
+   "1 | Traun, Olga | 0 | 0 | 0 | 0:0 | offen"
+  ],
+  "schedule@ADMIN@390": [
+   "L-BO5-6 · L0 Teilnehmer ohne Spielplan (Best-of-5)",
+   "Luftgewehr · Spielplan & Tabelle",
+   "Noch kein Spielplan generiert.",
+   "Tabelle",
+   "Pl. | Name | Siege",
+   "1 | Buche, Rita | 0",
+   "1 | Fichte, Mara | 0",
+   "1 | Isar, Anja | 0",
+   "1 | Isar, Mara | 0",
+   "1 | Pappel, Paul | 0",
+   "1 | Traun, Olga | 0"
+  ],
+  "schedule@USER@1280": [
+   "Playoffs",
+   "Zurück",
+   "L-BO5-6 · L0 Teilnehmer ohne Spielplan (Best-of-5)",
+   "Luftgewehr · Spielplan & Tabelle",
+   "Noch kein Spielplan generiert.",
+   "Tabelle",
+   "Pl. | Name | Begegn. | Siege | Satzdiff. | Satzverhältnis | Direktvergleich",
+   "1 | Buche, Rita | 0 | 0 | 0 | 0:0 | offen",
+   "1 | Fichte, Mara | 0 | 0 | 0 | 0:0 | offen",
+   "1 | Isar, Anja | 0 | 0 | 0 | 0:0 | offen",
+   "1 | Isar, Mara | 0 | 0 | 0 | 0:0 | offen",
+   "1 | Pappel, Paul | 0 | 0 | 0 | 0:0 | offen",
+   "1 | Traun, Olga | 0 | 0 | 0 | 0:0 | offen"
+  ],
+  "schedule@USER@390": [
+   "L-BO5-6 · L0 Teilnehmer ohne Spielplan (Best-of-5)",
+   "Luftgewehr · Spielplan & Tabelle",
+   "Noch kein Spielplan generiert.",
+   "Tabelle",
+   "Pl. | Name | Siege",
+   "1 | Buche, Rita | 0",
+   "1 | Fichte, Mara | 0",
+   "1 | Isar, Anja | 0",
+   "1 | Isar, Mara | 0",
+   "1 | Pappel, Paul | 0",
+   "1 | Traun, Olga | 0"
   ]
  },
  "pdfs": {

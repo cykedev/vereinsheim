@@ -1,91 +1,45 @@
 {
  "name": "R · leerer Wettbewerb (Saison)",
  "reach": {
-  "start@USER": "→ /competitions/:id/standings",
-  "standings@USER": "ok",
-  "schedule@USER": "nicht gefunden",
-  "ranking@USER": "nicht gefunden",
-  "playoffs@USER": "ok",
-  "participants@USER": "→ /",
-  "series@USER": "→ /",
-  "audit-log@USER": "nicht gefunden",
-  "start@ADMIN": "→ /competitions/:id/standings",
-  "standings@ADMIN": "ok",
-  "schedule@ADMIN": "nicht gefunden",
-  "ranking@ADMIN": "nicht gefunden",
-  "playoffs@ADMIN": "ok",
-  "participants@ADMIN": "ok",
-  "series@ADMIN": "ok",
   "audit-log@ADMIN": "ok",
+  "audit-log@USER": "nicht gefunden",
+  "participants@ADMIN": "ok",
+  "participants@USER": "→ /",
   "pdf/standings@ADMIN": "200",
-  "pdf/standings@USER": "200"
+  "pdf/standings@USER": "200",
+  "playoffs@ADMIN": "ok",
+  "playoffs@USER": "ok",
+  "ranking@ADMIN": "nicht gefunden",
+  "ranking@USER": "nicht gefunden",
+  "schedule@ADMIN": "nicht gefunden",
+  "schedule@USER": "nicht gefunden",
+  "series@ADMIN": "ok",
+  "series@USER": "→ /",
+  "standings@ADMIN": "ok",
+  "standings@USER": "ok",
+  "start@ADMIN": "→ /competitions/:id/standings",
+  "start@USER": "→ /competitions/:id/standings"
  },
  "pages": {
-  "standings@USER@1280": [
-   "PDF exportieren",
-   "Zurück",
-   "R · leerer Wettbewerb (Saison)",
-   "Luftgewehr · Rangliste",
-   "01.01.2026 – 30.09.2026",
-   "Ringteiler",
-   "10 Schuss",
-   "Mindest: 5 Serien",
-   "Noch keine Serien erfasst"
-  ],
-  "playoffs@USER@1280": [
-   "Spielplan & Tabelle",
-   "Zurück",
-   "R · leerer Wettbewerb (Saison)",
-   "Luftgewehr · Playoffs",
-   "Die Playoffs wurden noch nicht gestartet."
-  ],
-  "playoffs@USER@390": [
-   "R · leerer Wettbewerb (Saison)",
-   "Luftgewehr · Playoffs",
-   "Die Playoffs wurden noch nicht gestartet."
-  ],
-  "standings@USER@390": [
-   "R · leerer Wettbewerb (Saison)",
-   "Luftgewehr · Rangliste",
-   "01.01.2026 – 30.09.2026",
-   "Ringteiler",
-   "10 Schuss",
-   "Mindest: 5 Serien",
-   "Noch keine Serien erfasst"
-  ],
-  "standings@ADMIN@1280": [
-   "Teilnehmer",
-   "Serien erfassen",
-   "Bearbeiten",
-   "PDF exportieren",
-   "Zurück",
-   "R · leerer Wettbewerb (Saison)",
-   "Luftgewehr · Rangliste",
-   "01.01.2026 – 30.09.2026",
-   "Ringteiler",
-   "10 Schuss",
-   "Mindest: 5 Serien",
-   "Noch keine Serien erfasst"
-  ],
-  "playoffs@ADMIN@1280": [
+  "audit-log@ADMIN@1280": [
    "Teilnehmer",
    "Spielplan & Tabelle",
+   "Playoffs",
    "Zurück",
    "R · leerer Wettbewerb (Saison)",
-   "Luftgewehr · Playoffs",
-   "Playoffs noch nicht gestartet",
-   "Zu wenige aktive Teilnehmer für Playoffs (mind. 8 erforderlich).",
-   "Playoffs starten",
-   "Mindestens 8 aktive Teilnehmer erforderlich."
-  ],
-  "standings@ADMIN@390": [
+   "Luftgewehr · Protokoll",
+   "Wettbewerb angelegt",
    "R · leerer Wettbewerb (Saison)",
-   "Luftgewehr · Rangliste",
-   "01.01.2026 – 30.09.2026",
-   "Ringteiler",
-   "10 Schuss",
-   "Mindest: 5 Serien",
-   "Noch keine Serien erfasst"
+   "Prüfung Sportleitung · 04.07.2026, 10:01",
+   "Details"
+  ],
+  "audit-log@ADMIN@390": [
+   "R · leerer Wettbewerb (Saison)",
+   "Luftgewehr · Protokoll",
+   "Wettbewerb angelegt",
+   "R · leerer Wettbewerb (Saison)",
+   "Prüfung Sportleitung · 04.07.2026, 10:01",
+   "Details"
   ],
   "participants@ADMIN@1280": [
    "Serien erfassen",
@@ -155,37 +109,6 @@
    "Eingeschrieben (0)",
    "Noch keine Teilnehmer eingeschrieben"
   ],
-  "playoffs@ADMIN@390": [
-   "R · leerer Wettbewerb (Saison)",
-   "Luftgewehr · Playoffs",
-   "Playoffs noch nicht gestartet",
-   "Zu wenige aktive Teilnehmer für Playoffs (mind. 8 erforderlich).",
-   "Playoffs starten",
-   "Mindestens 8 aktive Teilnehmer erforderlich."
-  ],
-  "series@ADMIN@1280": [
-   "Teilnehmer",
-   "Rangliste",
-   "Zurück",
-   "R · leerer Wettbewerb (Saison)",
-   "Luftgewehr · Serien erfassen",
-   "Noch keine Teilnehmer eingeschrieben",
-   "Ohne Teilnehmer gibt es keine Serien zu erfassen.",
-   "Teilnehmer einschreiben",
-   "0 Serien erfasst"
-  ],
-  "audit-log@ADMIN@1280": [
-   "Teilnehmer",
-   "Spielplan & Tabelle",
-   "Playoffs",
-   "Zurück",
-   "R · leerer Wettbewerb (Saison)",
-   "Luftgewehr · Protokoll",
-   "Wettbewerb angelegt",
-   "R · leerer Wettbewerb (Saison)",
-   "Prüfung Sportleitung · 04.07.2026, 10:01",
-   "Details"
-  ],
   "participants@ADMIN@390": [
    "R · leerer Wettbewerb (Saison)",
    "Luftgewehr · Teilnehmerverwaltung",
@@ -251,6 +174,48 @@
    "Eingeschrieben (0)",
    "Noch keine Teilnehmer eingeschrieben"
   ],
+  "playoffs@ADMIN@1280": [
+   "Teilnehmer",
+   "Spielplan & Tabelle",
+   "Zurück",
+   "R · leerer Wettbewerb (Saison)",
+   "Luftgewehr · Playoffs",
+   "Playoffs noch nicht gestartet",
+   "Zu wenige aktive Teilnehmer für Playoffs (mind. 8 erforderlich).",
+   "Playoffs starten",
+   "Mindestens 8 aktive Teilnehmer erforderlich."
+  ],
+  "playoffs@ADMIN@390": [
+   "R · leerer Wettbewerb (Saison)",
+   "Luftgewehr · Playoffs",
+   "Playoffs noch nicht gestartet",
+   "Zu wenige aktive Teilnehmer für Playoffs (mind. 8 erforderlich).",
+   "Playoffs starten",
+   "Mindestens 8 aktive Teilnehmer erforderlich."
+  ],
+  "playoffs@USER@1280": [
+   "Spielplan & Tabelle",
+   "Zurück",
+   "R · leerer Wettbewerb (Saison)",
+   "Luftgewehr · Playoffs",
+   "Die Playoffs wurden noch nicht gestartet."
+  ],
+  "playoffs@USER@390": [
+   "R · leerer Wettbewerb (Saison)",
+   "Luftgewehr · Playoffs",
+   "Die Playoffs wurden noch nicht gestartet."
+  ],
+  "series@ADMIN@1280": [
+   "Teilnehmer",
+   "Rangliste",
+   "Zurück",
+   "R · leerer Wettbewerb (Saison)",
+   "Luftgewehr · Serien erfassen",
+   "Noch keine Teilnehmer eingeschrieben",
+   "Ohne Teilnehmer gibt es keine Serien zu erfassen.",
+   "Teilnehmer einschreiben",
+   "0 Serien erfasst"
+  ],
   "series@ADMIN@390": [
    "R · leerer Wettbewerb (Saison)",
    "Luftgewehr · Serien erfassen",
@@ -259,13 +224,48 @@
    "Teilnehmer einschreiben",
    "0 Serien erfasst"
   ],
-  "audit-log@ADMIN@390": [
+  "standings@ADMIN@1280": [
+   "Teilnehmer",
+   "Serien erfassen",
+   "Bearbeiten",
+   "PDF exportieren",
+   "Zurück",
    "R · leerer Wettbewerb (Saison)",
-   "Luftgewehr · Protokoll",
-   "Wettbewerb angelegt",
+   "Luftgewehr · Rangliste",
+   "01.01.2026 – 30.09.2026",
+   "Ringteiler",
+   "10 Schuss",
+   "Mindest: 5 Serien",
+   "Noch keine Serien erfasst"
+  ],
+  "standings@ADMIN@390": [
    "R · leerer Wettbewerb (Saison)",
-   "Prüfung Sportleitung · 04.07.2026, 10:01",
-   "Details"
+   "Luftgewehr · Rangliste",
+   "01.01.2026 – 30.09.2026",
+   "Ringteiler",
+   "10 Schuss",
+   "Mindest: 5 Serien",
+   "Noch keine Serien erfasst"
+  ],
+  "standings@USER@1280": [
+   "PDF exportieren",
+   "Zurück",
+   "R · leerer Wettbewerb (Saison)",
+   "Luftgewehr · Rangliste",
+   "01.01.2026 – 30.09.2026",
+   "Ringteiler",
+   "10 Schuss",
+   "Mindest: 5 Serien",
+   "Noch keine Serien erfasst"
+  ],
+  "standings@USER@390": [
+   "R · leerer Wettbewerb (Saison)",
+   "Luftgewehr · Rangliste",
+   "01.01.2026 – 30.09.2026",
+   "Ringteiler",
+   "10 Schuss",
+   "Mindest: 5 Serien",
+   "Noch keine Serien erfasst"
   ]
  },
  "pdfs": {
