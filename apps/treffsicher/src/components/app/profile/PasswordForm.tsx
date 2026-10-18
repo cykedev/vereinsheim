@@ -10,7 +10,7 @@ import { Input } from "@vereinsheim/ui/input"
 import { Label } from "@vereinsheim/ui/label"
 import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from "@vereinsheim/lib/auth/validation"
 
-export function AccountPasswordForm() {
+export function PasswordForm() {
   const [showPasswords, setShowPasswords] = useState(false)
   const [signingOut, setSigningOut] = useState(false)
   const [state, formAction, pending] = useActionState<ActionResult | null, FormData>(

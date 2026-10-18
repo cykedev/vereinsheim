@@ -1,33 +1,6 @@
-import type { Metadata } from "next"
-import { redirect } from "next/navigation"
-import { getAuthSession } from "@/lib/auth-helpers"
-import { AccountPasswordForm } from "@/components/app/account/AccountPasswordForm"
-import { Card, CardContent, CardHeader, CardTitle } from "@vereinsheim/ui/card"
-import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
+import { permanentRedirect } from "next/navigation"
 
-export const metadata: Metadata = {
-  title: "Konto",
-}
-
-export default async function AccountPage() {
-  const session = await getAuthSession()
-  if (!session) redirect("/login")
-
-  return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Konto"
-        description="Ändere dein Passwort. Nach dem Speichern wirst du aus Sicherheitsgründen abgemeldet."
-      />
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Passwort ändern</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <AccountPasswordForm />
-        </CardContent>
-      </Card>
-    </div>
-  )
+// „Konto“ heißt jetzt „Profil“; alte Lesezeichen landen dort
+export default function AccountPage() {
+  permanentRedirect("/profile")
 }
