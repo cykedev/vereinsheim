@@ -13,6 +13,9 @@ Format: Datum | Fehler | Regel die ihn verhindert
 
 ## Offen
 
+| 2026-10-18 | Zwei Aufbauten des Prüfbestands unterschieden sich nur in der Seite der Finalisten: `advanceRound` liest die Halbfinals mit `findMany` ohne `orderBy` und setzt `winners[0]` als A; die physische Zeilenfolge (Autovacuum, Statistik) entscheidet | Wo die Reihenfolge gelesener Zeilen Daten festlegt (Seite, Setzung), immer `orderBy`; Reproduzierbarkeit per Prüfsumme über zwei Läufe prüfen (`pruefdaten --erwartet`) |
+| 2026-10-18 | `pg` liest Prismas `timestamp` ohne Zeitzone in der Zone des Rechners; die Prüfsumme hing am Rechner, an der Zeitumstellung fallen zwei Zeiten zusammen | In Werkzeugen mit rohem `pg` Zeitstempel als Text lesen (Type-Parser 1114/1184) |
+
 <!-- 2026-10-15 (Rückzug sperrt Playoff-Start): 1 Eintrag direkt nach vault/conventions.md §9 (Mocks filtern nach der Bedingung); ENFORCE durch die Fixture in seeding.test.ts. -->
 <!-- 2026-10-03 (Neu generieren): 1 Eintrag direkt nach vault/conventions.md §9 (Prüfen und Löschen in einer Transaktion). -->
 <!-- 2026-10-03 (A/B-Ausgleich): 2 Einträge direkt nach vault/conventions.md §9 (Mutation gegen Eigenschaftstests; UI-Pfade an der UI prüfen). -->
