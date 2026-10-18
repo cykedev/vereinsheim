@@ -13,16 +13,16 @@ import type { SavePlayoffDuelResultInput } from "../types"
 import { computeDuelOutcome, storedDuelOutcome } from "./duelOutcome"
 import {
   addExtraDuel,
-  deleteNextRound,
-  hasNextRoundDuels,
   matchWinner,
+  NEXT_ROUND_LOCKED,
+  NextRoundLockedError,
   persistDuelResult,
 } from "./duelMutations"
 
 /**
  * Speichert das Ergebnis eines Playoff-Einzel-Duells.
- * Aktualisiert den Siegstand und schließt den PlayoffMatch ab wenn nötig.
- * Bei abgeschlossenem PlayoffMatch: erstellt automatisch die nächste Runde.
+ * Aktualisiert den Siegstand und schließt den PlayoffMatch ab wenn nötig. Ändert eine Korrektur den Ausgang, entfernt
+ * sie die ganze nächste Runde (sie wird über `advanceRound` neu gesetzt).
  * Bei Finale-Gleichstand: erstellt ein Sudden-Death-Duell.
  * Bei VF/HF-Unentschieden: legt automatisch das nächste Duell an.
  */
@@ -90,13 +90,6 @@ export async function savePlayoffDuelResult(
   const finaleTeilerNeeded =
     isFinal && finaleNeedsTeiler(finalePrimary, finaleTiebreaker1, finaleTiebreaker2)
 
-  // Korrektur nur erlaubt wenn Folge-Runde noch keine Duelle hat
-  if (isCorrection && !isFinal && (await hasNextRoundDuels(match))) {
-    return {
-      error: "Korrektur nicht möglich — in der nächsten Runde wurden bereits Duelle gespielt.",
-    }
-  }
-
   // Finale: Kette primary → tb1 → tb2; VF/HF: Ringteiler-Berechnung
   const computed = await computeDuelOutcome(
     match,
@@ -132,8 +125,16 @@ export async function savePlayoffDuelResult(
   if (outcome === "A") newWinsA++
   else if (outcome === "B") newWinsB++
 
-  const matchComplete =
-    outcome !== "DRAW" && isPlayoffMatchComplete(newWinsA, newWinsB, match.round, requiredWins)
+  // Entschieden ist das Match nach den Siegen, nicht nach diesem Duell: Wird ein Duell eines entschiedenen Matches zum
+  // Unentschieden korrigiert, bleibt es entschieden, solange die Siege reichen
+  const matchComplete = isPlayoffMatchComplete(newWinsA, newWinsB, match.round, requiredWins)
+  const enough = isFinal ? 1 : requiredWins
+  if (newWinsA >= enough && newWinsB >= enough) {
+    return { error: "Korrektur nicht möglich — danach hätten beide Seiten genug Siege." }
+  }
+  // Ändert die Korrektur den Ausgang (anderer Sieger oder wieder offen), gilt die Folge-Runde nicht mehr
+  const winnerBefore = matchWinner(match, match.winsA, match.winsB, wasMatchComplete)
+  const winnerAfter = matchWinner(match, newWinsA, newWinsB, matchComplete)
   const saveTeiler = !isFinal || finaleTeilerNeeded
   const teilerA = saveTeiler ? (input.teilerA ?? null) : null
   const teilerB = saveTeiler ? (input.teilerB ?? null) : null
@@ -146,6 +147,10 @@ export async function savePlayoffDuelResult(
       newWinsA,
       newWinsB,
       matchComplete,
+      nextRound:
+        isCorrection && !isFinal
+          ? { match, removeNextRound: winnerBefore !== winnerAfter }
+          : undefined,
       a: {
         participantId: match.participantAId,
         totalRings: input.totalRingsA,
@@ -160,6 +165,7 @@ export async function savePlayoffDuelResult(
       },
     })
   } catch (error) {
+    if (error instanceof NextRoundLockedError) return { error: `Korrektur ${NEXT_ROUND_LOCKED}` }
     const msg = error instanceof Error ? error.message : String(error)
     console.error("Fehler beim Speichern des Playoff-Ergebnisses:", msg)
     return { error: "Ergebnis konnte nicht gespeichert werden." }
@@ -198,13 +204,6 @@ export async function savePlayoffDuelResult(
       // VF/HF-Unentschieden → nächstes Duell automatisch anlegen
       await addExtraDuel(match.id, false)
     }
-  }
-
-  // Ändert die Korrektur den Ausgang (anderer Sieger oder wieder offen), gilt die Folge-Runde nicht mehr
-  const winnerBefore = matchWinner(match, match.winsA, match.winsB, wasMatchComplete)
-  const winnerAfter = matchWinner(match, newWinsA, newWinsB, matchComplete)
-  if (isCorrection && !isFinal && winnerBefore !== winnerAfter) {
-    await deleteNextRound(match)
   }
 
   // The playoffs route is refreshed client-side via router.refresh(); only the

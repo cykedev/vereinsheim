@@ -15,6 +15,15 @@ const MATCHES_PER_ROUND: Record<Exclude<PlayoffRound, "FINAL">, number> = {
   SEMI_FINAL: 2,
 }
 
+const PREVIOUS_ROUND: Record<
+  Exclude<PlayoffRound, "FINAL">,
+  Exclude<PlayoffRound, "FINAL"> | null
+> = {
+  EIGHTH_FINAL: null,
+  QUARTER_FINAL: "EIGHTH_FINAL",
+  SEMI_FINAL: "QUARTER_FINAL",
+}
+
 const ROUND_NAME: Record<Exclude<PlayoffRound, "FINAL">, string> = {
   EIGHTH_FINAL: "Achtelfinale",
   QUARTER_FINAL: "Viertelfinale",
@@ -77,8 +86,7 @@ export async function advanceRound(competitionId: string): Promise<ActionResult>
 }
 
 /**
- * Nach Abschluss eines PlayoffMatch: prüft ob alle Matches der Runde done sind.
- * Falls ja → nächste Runde erstellen.
+ * Legt die nächste Runde an, wenn alle Matches der Runde abgeschlossen sind (aus `advanceRound`).
  * Bei FINAL → keine weitere Runde.
  * Liefert eine Meldung für den User, wenn der Runde eine Paarung fehlt, sonst null.
  */
@@ -105,10 +113,18 @@ async function handleMatchCompletion(
   const allComplete = allMatchesInRound.every((m) => m.status === "COMPLETED")
   if (!allComplete) return null
 
-  // Eine Runde mit fehlender Paarung (Bestand aus einer Korrektur, die nur einen Teil der Folge-Runde entfernt hat) gibt
-  // keine vollständige nächste Runde; ohne diese Prüfung entstünde ein Finale mit einem Teilnehmer
+  // Fehlt der Runde eine Paarung, gibt es keine vollständige nächste Runde; ohne diese Prüfung entstünde etwa ein Finale
+  // mit einem Teilnehmer. Die Meldung nennt den Weg, die Runde aus der vorigen neu zu setzen
   if (allMatchesInRound.length !== MATCHES_PER_ROUND[round]) {
-    return `Im ${ROUND_NAME[round]} fehlt eine Paarung. Die nächste Runde lässt sich so nicht anlegen.`
+    const previous = PREVIOUS_ROUND[round]
+    const hasPrevious =
+      previous !== null &&
+      (await db.playoffMatch.count({ where: { competitionId, round: previous } })) > 0
+    return hasPrevious
+      ? `Im ${ROUND_NAME[round]} fehlt eine Paarung, so lässt sich die nächste Runde nicht anlegen. Abhilfe: Im ` +
+          `${ROUND_NAME[round]} alle Duelle löschen. Dann im ${ROUND_NAME[previous]} das letzte Duell eines Matches ` +
+          `löschen und neu eintragen. Danach „${ROUND_NAME[round]} anlegen“.`
+      : `Im ${ROUND_NAME[round]} fehlt eine Paarung, so lässt sich die nächste Runde nicht anlegen.`
   }
 
   const winners = allMatchesInRound.map((m) =>

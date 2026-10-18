@@ -4,8 +4,19 @@ import { db } from "@/lib/db"
 import { getAuthSession, canManage } from "@/lib/auth-helpers"
 import type { ActionResult } from "@/lib/types"
 import { revalidatePublicPdf } from "@/lib/competitions/publicPdfCache"
-import { determineFinaleRoundWinner, determinePlayoffDuelWinner } from "../calculatePlayoffs"
-import { deleteNextRound, hasNextRoundDuels } from "./duelMutations"
+import {
+  determineFinaleRoundWinner,
+  determinePlayoffDuelWinner,
+  isPlayoffMatchComplete,
+  requiredWinsFromBestOf,
+} from "../calculatePlayoffs"
+import {
+  deleteNextRound,
+  hasNextRoundDuels,
+  matchWinner,
+  NEXT_ROUND_LOCKED,
+  NextRoundLockedError,
+} from "./duelMutations"
 
 /**
  * Löscht das letzte Duell einer Playoff-Paarung (inkl. Ergebnisse).
@@ -28,7 +39,9 @@ export async function deleteLastPlayoffDuel(duelId: string): Promise<ActionResul
           round: true,
           winsA: true,
           winsB: true,
+          status: true,
           competitionId: true,
+          competition: { select: { playoffBestOf: true } },
           participantAId: true,
           participantA: { select: { firstName: true, lastName: true } },
           participantBId: true,
@@ -60,13 +73,6 @@ export async function deleteLastPlayoffDuel(duelId: string): Promise<ActionResul
     return { error: "Nur das letzte Duell kann gelöscht werden." }
   }
 
-  // Löschen nur erlaubt wenn Folge-Runde noch keine Duelle hat
-  if (!isFinal && (await hasNextRoundDuels(match))) {
-    return {
-      error: "Löschen nicht möglich — in der nächsten Runde wurden bereits Duelle gespielt.",
-    }
-  }
-
   // Siege-Korrektur wenn Duell bereits abgeschlossen war
   let deltaWinsA = 0
   let deltaWinsB = 0
@@ -96,21 +102,36 @@ export async function deleteLastPlayoffDuel(duelId: string): Promise<ActionResul
   }
   // Note: deleteLastPlayoffDuel loads no competition ruleset — finale scoring mode fallback is fine
 
-  await db.$transaction(async (tx) => {
-    await tx.playoffDuelResult.deleteMany({ where: { duelId: duel.id } })
-    await tx.playoffDuel.delete({ where: { id: duel.id } })
-    await tx.playoffMatch.update({
-      where: { id: match.id },
-      data: {
-        winsA: match.winsA + deltaWinsA,
-        winsB: match.winsB + deltaWinsB,
-        status: "PENDING",
-      },
-    })
+  // Ohne das Duell entscheiden die übrigen Siege; ändert sich der Ausgang, gilt die Folge-Runde nicht mehr
+  const newWinsA = match.winsA + deltaWinsA
+  const newWinsB = match.winsB + deltaWinsB
+  const requiredWins = requiredWinsFromBestOf(match.competition.playoffBestOf)
+  const complete = isPlayoffMatchComplete(newWinsA, newWinsB, match.round, requiredWins)
+  const outcomeChanged =
+    matchWinner(match, match.winsA, match.winsB, match.status === "COMPLETED") !==
+    matchWinner(match, newWinsA, newWinsB, complete)
 
-    // Das Match ist danach offen: Die Folge-Runde gilt nicht mehr
-    if (!isFinal) await deleteNextRound(match, tx)
-  })
+  try {
+    await db.$transaction(
+      async (tx) => {
+        // Löschen nur erlaubt, solange die Folge-Runde keine Duelle hat (in derselben Transaktion wie das Entfernen)
+        if (!isFinal && (await hasNextRoundDuels(match, tx))) throw new NextRoundLockedError()
+        await tx.playoffDuelResult.deleteMany({ where: { duelId: duel.id } })
+        await tx.playoffDuel.delete({ where: { id: duel.id } })
+        await tx.playoffMatch.update({
+          where: { id: match.id },
+          data: { winsA: newWinsA, winsB: newWinsB, status: complete ? "COMPLETED" : "PENDING" },
+        })
+        if (!isFinal && outcomeChanged) await deleteNextRound(match, tx)
+      },
+      { isolationLevel: "Serializable" }
+    )
+  } catch (error) {
+    if (error instanceof NextRoundLockedError) return { error: `Löschen ${NEXT_ROUND_LOCKED}` }
+    const msg = error instanceof Error ? error.message : String(error)
+    console.error("Fehler beim Löschen des Playoff-Duells:", msg)
+    return { error: "Duell konnte nicht gelöscht werden." }
+  }
 
   const deletedResultA = duel.results.find((r) => r.participantId === match.participantAId)
   const deletedResultB = duel.results.find((r) => r.participantId === match.participantBId)

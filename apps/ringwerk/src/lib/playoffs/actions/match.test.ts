@@ -14,7 +14,9 @@ vi.mock("@/lib/auth-helpers", () => ({
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }))
 vi.mock("@/lib/competitions/publicPdfCache", () => ({ revalidatePublicPdf: vi.fn() }))
 vi.mock("@/lib/playoffs/queries", () => ({ getSeedingStandings: vi.fn().mockResolvedValue([]) }))
-vi.mock("@/lib/db", () => ({ db: { playoffMatch: { findMany, create, createMany } } }))
+vi.mock("@/lib/db", () => ({
+  db: { playoffMatch: { findMany, create, createMany, count: vi.fn().mockResolvedValue(4) } },
+}))
 
 import { advanceRound } from "./match"
 
@@ -66,12 +68,13 @@ describe("advanceRound: Finale", () => {
   })
 
   it("meldet eine unvollständige Runde, statt ein Finale mit nur einem Teilnehmer anzulegen", async () => {
-    // ein Halbfinale fehlt (Bestand aus einer Korrektur vor der Regel für ganze Runden)
+    // der Runde fehlt ein Halbfinale
     findMany.mockImplementation((args: { where: { round?: string }; orderBy?: unknown }) =>
       rowsLikePostgres(args).then((rows) => rows.slice(0, 1))
     )
     const result = await advanceRound("c1")
-    expect(result).toMatchObject({ error: expect.stringContaining("fehlt") })
+    expect(result).toMatchObject({ error: expect.stringContaining("fehlt eine Paarung") })
+    expect(result).toMatchObject({ error: expect.stringContaining("Halbfinale anlegen") })
     expect(create).not.toHaveBeenCalled()
   })
 })

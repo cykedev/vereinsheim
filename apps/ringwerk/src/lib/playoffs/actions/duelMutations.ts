@@ -19,12 +19,23 @@ function nextRoundFilter(match: MatchScope) {
   return { competitionId: match.competitionId, round: getNextRound(match.round)! }
 }
 
+type PlayoffMatchClient = Pick<Prisma.TransactionClient, "playoffMatch">
+
+/** Korrektur oder Löschung gesperrt: In der Folge-Runde ist schon ein Duell angelegt. */
+export class NextRoundLockedError extends Error {}
+
+export const NEXT_ROUND_LOCKED =
+  "nicht möglich — in der nächsten Runde wurden bereits Duelle angelegt."
+
 /**
  * Prüft, ob in der Folge-Runde schon ein Duell angelegt ist. Liefert true, wenn eine Korrektur oder Löschung deshalb
- * gesperrt ist. Nur für Nicht-Finale-Runden aufrufen.
+ * gesperrt ist. Nur für Nicht-Finale-Runden aufrufen; in der Transaktion, die danach schreibt.
  */
-export async function hasNextRoundDuels(match: MatchScope): Promise<boolean> {
-  const nextMatchWithDuels = await db.playoffMatch.findFirst({
+export async function hasNextRoundDuels(
+  match: MatchScope,
+  client: PlayoffMatchClient
+): Promise<boolean> {
+  const nextMatchWithDuels = await client.playoffMatch.findFirst({
     where: { ...nextRoundFilter(match), duels: { some: {} } },
   })
   return nextMatchWithDuels !== null
@@ -43,12 +54,12 @@ export function matchWinner(
 
 /**
  * Entfernt die ganze Folge-Runde, nachdem sich der Ausgang eines Matches geändert hat; sie wird danach über „… anlegen“
- * neu gesetzt. Matches mit Duellen bleiben (die Sperre `hasNextRoundDuels` verhindert, dass es sie gibt). In einer
- * Transaktion mit deren Client aufrufen.
+ * neu gesetzt. Matches mit Duellen bleiben (die Sperre `hasNextRoundDuels` in derselben Transaktion verhindert, dass es
+ * sie gibt).
  */
 export async function deleteNextRound(
   match: MatchScope,
-  client: Pick<Prisma.TransactionClient, "playoffMatch"> = db
+  client: PlayoffMatchClient
 ): Promise<void> {
   if (match.round === "FINAL") return
   await client.playoffMatch.deleteMany({
@@ -86,6 +97,11 @@ interface DuelResultSide {
 }
 
 interface PersistDuelResultArgs {
+  /**
+   * Korrektur außerhalb des Finales: sperrt, wenn die Folge-Runde Duelle hat (`NextRoundLockedError`), und entfernt sie
+   * mit `removeNextRound`, wenn sich der Ausgang des Matches ändert
+   */
+  nextRound?: { match: MatchScope; removeNextRound: boolean }
   duelId: string
   matchId: string
   recordedByUserId: string
@@ -97,11 +113,14 @@ interface PersistDuelResultArgs {
 }
 
 /**
- * Persistiert beide Duell-Ergebnisse, markiert das Duell als abgeschlossen und
- * aktualisiert Siegstand + Match-Status — alles in einer Transaktion.
+ * Persistiert beide Duell-Ergebnisse, markiert das Duell als abgeschlossen und aktualisiert Siegstand + Match-Status;
+ * bei einer Korrektur zuerst die Sperre der Folge-Runde, zuletzt ihr Entfernen. Alles in einer serialisierbaren
+ * Transaktion: Ein Abbruch dazwischen lässt keinen alten Sieger in der Folge-Runde stehen, und ein Duell, das dort
+ * zur selben Zeit angelegt wird, lässt die Transaktion scheitern statt eine halbe Runde zu hinterlassen.
  */
 export async function persistDuelResult(args: PersistDuelResultArgs): Promise<void> {
-  const { duelId, matchId, recordedByUserId, newWinsA, newWinsB, matchComplete, a, b } = args
+  const { duelId, matchId, recordedByUserId, newWinsA, newWinsB, matchComplete, a, b, nextRound } =
+    args
 
   const upsertSide = (
     tx: Parameters<Parameters<typeof db.$transaction>[0]>[0],
@@ -126,26 +145,34 @@ export async function persistDuelResult(args: PersistDuelResultArgs): Promise<vo
       },
     })
 
-  await db.$transaction(async (tx) => {
-    // Ergebnisse für beide Teilnehmer upserten
-    // Finale ohne Teiler: teiler + ringteiler bleiben null
-    await upsertSide(tx, a)
-    await upsertSide(tx, b)
+  await db.$transaction(
+    async (tx) => {
+      if (nextRound && (await hasNextRoundDuels(nextRound.match, tx)))
+        throw new NextRoundLockedError()
 
-    // Duell als abgeschlossen markieren
-    await tx.playoffDuel.update({
-      where: { id: duelId },
-      data: { isCompleted: true },
-    })
+      // Ergebnisse für beide Teilnehmer upserten
+      // Finale ohne Teiler: teiler + ringteiler bleiben null
+      await upsertSide(tx, a)
+      await upsertSide(tx, b)
 
-    // Siege-Stand und Match-Status aktualisieren
-    await tx.playoffMatch.update({
-      where: { id: matchId },
-      data: {
-        winsA: newWinsA,
-        winsB: newWinsB,
-        status: matchComplete ? "COMPLETED" : "PENDING",
-      },
-    })
-  })
+      // Duell als abgeschlossen markieren
+      await tx.playoffDuel.update({
+        where: { id: duelId },
+        data: { isCompleted: true },
+      })
+
+      // Siege-Stand und Match-Status aktualisieren
+      await tx.playoffMatch.update({
+        where: { id: matchId },
+        data: {
+          winsA: newWinsA,
+          winsB: newWinsB,
+          status: matchComplete ? "COMPLETED" : "PENDING",
+        },
+      })
+
+      if (nextRound?.removeNextRound) await deleteNextRound(nextRound.match, tx)
+    },
+    { isolationLevel: "Serializable" }
+  )
 }
