@@ -4,12 +4,8 @@ import { db } from "@/lib/db"
 import { getAuthSession, canManage } from "@/lib/auth-helpers"
 import type { ActionResult } from "@/lib/types"
 import { revalidatePublicPdf } from "@/lib/competitions/publicPdfCache"
-import {
-  determineFinaleRoundWinner,
-  determinePlayoffDuelWinner,
-  getNextRound,
-} from "../calculatePlayoffs"
-import { hasNextRoundDuels } from "./duelMutations"
+import { determineFinaleRoundWinner, determinePlayoffDuelWinner } from "../calculatePlayoffs"
+import { deleteNextRound, hasNextRoundDuels } from "./duelMutations"
 
 /**
  * Löscht das letzte Duell einer Playoff-Paarung (inkl. Ergebnisse).
@@ -112,27 +108,8 @@ export async function deleteLastPlayoffDuel(duelId: string): Promise<ActionResul
       },
     })
 
-    // Leere Folge-Runden-Matches kaskadenweise löschen
-    if (!isFinal) {
-      const nextRound = getNextRound(match.round)!
-      const emptyNextMatches = await tx.playoffMatch.findMany({
-        where: {
-          competitionId: match.competitionId,
-          round: nextRound,
-          duels: { none: {} },
-          OR: [
-            { participantAId: match.participantAId },
-            { participantAId: match.participantBId },
-            { participantBId: match.participantAId },
-            { participantBId: match.participantBId },
-          ],
-        },
-        select: { id: true },
-      })
-      for (const m of emptyNextMatches) {
-        await tx.playoffMatch.delete({ where: { id: m.id } })
-      }
-    }
+    // Das Match ist danach offen: Die Folge-Runde gilt nicht mehr
+    if (!isFinal) await deleteNextRound(match, tx)
   })
 
   const deletedResultA = duel.results.find((r) => r.participantId === match.participantAId)

@@ -9,6 +9,18 @@ import { revalidatePublicPdf } from "@/lib/competitions/publicPdfCache"
 import { createNextRoundMatchups, getNextRound } from "../calculatePlayoffs"
 import type { PlayoffRound } from "../types"
 
+const MATCHES_PER_ROUND: Record<Exclude<PlayoffRound, "FINAL">, number> = {
+  EIGHTH_FINAL: 8,
+  QUARTER_FINAL: 4,
+  SEMI_FINAL: 2,
+}
+
+const ROUND_NAME: Record<Exclude<PlayoffRound, "FINAL">, string> = {
+  EIGHTH_FINAL: "Achtelfinale",
+  QUARTER_FINAL: "Viertelfinale",
+  SEMI_FINAL: "Halbfinale",
+}
+
 /**
  * Setzt manuell die nächste Runde an, wenn alle Matches der aktuellen Runde abgeschlossen sind.
  * Nur Admin.
@@ -56,7 +68,8 @@ export async function advanceRound(competitionId: string): Promise<ActionResult>
     return { error: "Noch nicht alle Matches der aktuellen Runde abgeschlossen." }
   }
 
-  await handleMatchCompletion(currentRoundMatches[0].id, competitionId, roundToAdvance)
+  const problem = await handleMatchCompletion(competitionId, roundToAdvance)
+  if (problem) return { error: problem }
 
   revalidatePath(`/competitions/${competitionId}/playoffs`)
   revalidatePublicPdf(competitionId)
@@ -67,13 +80,13 @@ export async function advanceRound(competitionId: string): Promise<ActionResult>
  * Nach Abschluss eines PlayoffMatch: prüft ob alle Matches der Runde done sind.
  * Falls ja → nächste Runde erstellen.
  * Bei FINAL → keine weitere Runde.
+ * Liefert eine Meldung für den User, wenn der Runde eine Paarung fehlt, sonst null.
  */
 async function handleMatchCompletion(
-  matchId: string,
   competitionId: string,
   round: PlayoffRound
-): Promise<void> {
-  if (round === "FINAL") return
+): Promise<string | null> {
+  if (round === "FINAL") return null
 
   const allMatchesInRound = await db.playoffMatch.findMany({
     where: { competitionId, round },
@@ -90,7 +103,13 @@ async function handleMatchCompletion(
   })
 
   const allComplete = allMatchesInRound.every((m) => m.status === "COMPLETED")
-  if (!allComplete) return
+  if (!allComplete) return null
+
+  // Eine Runde mit fehlender Paarung (Bestand aus einer Korrektur, die nur einen Teil der Folge-Runde entfernt hat) gibt
+  // keine vollständige nächste Runde; ohne diese Prüfung entstünde ein Finale mit einem Teilnehmer
+  if (allMatchesInRound.length !== MATCHES_PER_ROUND[round]) {
+    return `Im ${ROUND_NAME[round]} fehlt eine Paarung. Die nächste Runde lässt sich so nicht anlegen.`
+  }
 
   const winners = allMatchesInRound.map((m) =>
     m.winsA > m.winsB ? m.participantAId : m.participantBId
@@ -107,7 +126,7 @@ async function handleMatchCompletion(
         participantBId: winners[1],
       },
     })
-    return
+    return null
   }
 
   // Re-Seeding nach Original-Gruppenrang — Gruppentabelle des Liga-Formats (Best-of: Best-of-
@@ -125,4 +144,5 @@ async function handleMatchCompletion(
       participantBId: m.participantBId,
     })),
   })
+  return null
 }

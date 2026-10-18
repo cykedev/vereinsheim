@@ -64,4 +64,14 @@ describe("advanceRound: Finale", () => {
       data: { competitionId: "c1", round: "FINAL", participantAId: "p1", participantBId: "p4" },
     })
   })
+
+  it("meldet eine unvollständige Runde, statt ein Finale mit nur einem Teilnehmer anzulegen", async () => {
+    // ein Halbfinale fehlt (Bestand aus einer Korrektur vor der Regel für ganze Runden)
+    findMany.mockImplementation((args: { where: { round?: string }; orderBy?: unknown }) =>
+      rowsLikePostgres(args).then((rows) => rows.slice(0, 1))
+    )
+    const result = await advanceRound("c1")
+    expect(result).toMatchObject({ error: expect.stringContaining("fehlt") })
+    expect(create).not.toHaveBeenCalled()
+  })
 })

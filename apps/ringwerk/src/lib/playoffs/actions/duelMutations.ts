@@ -1,3 +1,4 @@
+import type { Prisma } from "@/generated/prisma/client"
 import { db } from "@/lib/db"
 import { getNextRound } from "../calculatePlayoffs"
 import type { PlayoffRound } from "../types"
@@ -10,46 +11,49 @@ interface MatchScope {
   participantBId: string
 }
 
-/** WHERE-Filter für Folge-Runden-Matches derselben beiden Teilnehmer. */
-function nextRoundParticipantsFilter(nextRound: PlayoffRound, match: MatchScope) {
-  return {
-    competitionId: match.competitionId,
-    round: nextRound,
-    OR: [
-      { participantAId: match.participantAId },
-      { participantAId: match.participantBId },
-      { participantBId: match.participantAId },
-      { participantBId: match.participantBId },
-    ],
-  }
+/**
+ * WHERE-Filter für die ganze Folge-Runde. Sie entsteht aus allen Siegern der Runde neu nach Rang
+ * (`createNextRoundMatchups`); ein anderer Sieger kann jede ihrer Paarungen ändern, nicht nur die eigene.
+ */
+function nextRoundFilter(match: MatchScope) {
+  return { competitionId: match.competitionId, round: getNextRound(match.round)! }
 }
 
 /**
- * Prüft, ob in der direkten Folge-Runde derselben Teilnehmer bereits ein Match
- * mit gespielten Duellen existiert. Liefert true, wenn eine Korrektur/Löschung
- * deshalb gesperrt ist. Nur für Nicht-Finale-Runden aufrufen.
+ * Prüft, ob in der Folge-Runde schon ein Duell angelegt ist. Liefert true, wenn eine Korrektur oder Löschung deshalb
+ * gesperrt ist. Nur für Nicht-Finale-Runden aufrufen.
  */
 export async function hasNextRoundDuels(match: MatchScope): Promise<boolean> {
-  const nextRound = getNextRound(match.round)!
   const nextMatchWithDuels = await db.playoffMatch.findFirst({
-    where: { ...nextRoundParticipantsFilter(nextRound, match), duels: { some: {} } },
+    where: { ...nextRoundFilter(match), duels: { some: {} } },
   })
   return nextMatchWithDuels !== null
 }
 
+/** Sieger eines Matches, oder null, solange es nicht abgeschlossen ist. */
+export function matchWinner(
+  match: Pick<MatchScope, "participantAId" | "participantBId">,
+  winsA: number,
+  winsB: number,
+  complete: boolean
+): string | null {
+  if (!complete) return null
+  return winsA > winsB ? match.participantAId : match.participantBId
+}
+
 /**
- * Löscht leere Folge-Runden-Matches (ohne Duelle) nach Ergebnis-Revert.
+ * Entfernt die ganze Folge-Runde, nachdem sich der Ausgang eines Matches geändert hat; sie wird danach über „… anlegen“
+ * neu gesetzt. Matches mit Duellen bleiben (die Sperre `hasNextRoundDuels` verhindert, dass es sie gibt). In einer
+ * Transaktion mit deren Client aufrufen.
  */
-export async function cascadeDeleteEmptyNextRound(match: MatchScope): Promise<void> {
+export async function deleteNextRound(
+  match: MatchScope,
+  client: Pick<Prisma.TransactionClient, "playoffMatch"> = db
+): Promise<void> {
   if (match.round === "FINAL") return
-  const nextRound = getNextRound(match.round)!
-  const emptyNextMatches = await db.playoffMatch.findMany({
-    where: { ...nextRoundParticipantsFilter(nextRound, match), duels: { none: {} } },
-    select: { id: true },
+  await client.playoffMatch.deleteMany({
+    where: { ...nextRoundFilter(match), duels: { none: {} } },
   })
-  for (const m of emptyNextMatches) {
-    await db.playoffMatch.delete({ where: { id: m.id } })
-  }
 }
 
 /**

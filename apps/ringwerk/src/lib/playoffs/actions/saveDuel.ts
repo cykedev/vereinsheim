@@ -13,8 +13,9 @@ import type { SavePlayoffDuelResultInput } from "../types"
 import { computeDuelOutcome, storedDuelOutcome } from "./duelOutcome"
 import {
   addExtraDuel,
-  cascadeDeleteEmptyNextRound,
+  deleteNextRound,
   hasNextRoundDuels,
+  matchWinner,
   persistDuelResult,
 } from "./duelMutations"
 
@@ -199,9 +200,11 @@ export async function savePlayoffDuelResult(
     }
   }
 
-  // Wenn Korrektur ein abgeschlossenes Match wieder öffnet → leere Folge-Runden-Matches löschen
-  if (isCorrection && wasMatchComplete && !matchComplete && !isFinal) {
-    await cascadeDeleteEmptyNextRound(match)
+  // Ändert die Korrektur den Ausgang (anderer Sieger oder wieder offen), gilt die Folge-Runde nicht mehr
+  const winnerBefore = matchWinner(match, match.winsA, match.winsB, wasMatchComplete)
+  const winnerAfter = matchWinner(match, newWinsA, newWinsB, matchComplete)
+  if (isCorrection && !isFinal && winnerBefore !== winnerAfter) {
+    await deleteNextRound(match)
   }
 
   // The playoffs route is refreshed client-side via router.refresh(); only the

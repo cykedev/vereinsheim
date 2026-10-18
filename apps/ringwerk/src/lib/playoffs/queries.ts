@@ -3,7 +3,11 @@ import {
   getBestOfStandingsForCompetition,
   getStandingsForCompetition,
 } from "@/lib/standings/queries"
-import { determineFinaleRoundWinner, determinePlayoffDuelWinner } from "./calculatePlayoffs"
+import {
+  determineFinaleRoundWinner,
+  determinePlayoffDuelWinner,
+  getNextRound,
+} from "./calculatePlayoffs"
 import { involvesWithdrawn } from "@/lib/standings/withdrawn"
 import type { SeedingRow } from "./bracketSeeding"
 import type { PlayoffBracketData, PlayoffDuelItem, PlayoffMatchItem, PlayoffRound } from "./types"
@@ -145,33 +149,13 @@ export async function getPlayoffBracket(competitionId: string): Promise<PlayoffB
 
   const base = matches.map(mapMatchItem)
 
-  // canCorrect: FINAL immer; alle anderen Runden nur wenn Folge-Runde noch keine Duelle hat
-  const qfIdsWithDuels = new Set(
-    base
-      .filter((m) => m.round === "QUARTER_FINAL" && m.duels.length > 0)
-      .flatMap((m) => [m.participantA.id, m.participantB.id])
-  )
-  const sfIdsWithDuels = new Set(
-    base
-      .filter((m) => m.round === "SEMI_FINAL" && m.duels.length > 0)
-      .flatMap((m) => [m.participantA.id, m.participantB.id])
-  )
-  const finalIdsWithDuels = new Set(
-    base
-      .filter((m) => m.round === "FINAL" && m.duels.length > 0)
-      .flatMap((m) => [m.participantA.id, m.participantB.id])
-  )
-
+  // canCorrect: FINAL immer; jede andere Runde, solange in der ganzen Folge-Runde kein Duell angelegt ist (sie entsteht
+  // aus allen Siegern neu nach Rang, eine Korrektur kann jede ihrer Paarungen ändern)
+  const roundHasDuels = (round: PlayoffRound) =>
+    base.some((m) => m.round === round && m.duels.length > 0)
   const mapped = base.map((m) => ({
     ...m,
-    canCorrect:
-      m.round === "FINAL"
-        ? true
-        : m.round === "SEMI_FINAL"
-          ? !finalIdsWithDuels.has(m.participantA.id) && !finalIdsWithDuels.has(m.participantB.id)
-          : m.round === "QUARTER_FINAL"
-            ? !sfIdsWithDuels.has(m.participantA.id) && !sfIdsWithDuels.has(m.participantB.id)
-            : !qfIdsWithDuels.has(m.participantA.id) && !qfIdsWithDuels.has(m.participantB.id),
+    canCorrect: m.round === "FINAL" ? true : !roundHasDuels(getNextRound(m.round)!),
   }))
 
   return {
