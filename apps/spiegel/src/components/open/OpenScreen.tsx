@@ -10,7 +10,7 @@ import { groupView } from "@vereinsheim/shot-ui/geometry"
 import { MiniTarget } from "@vereinsheim/shot-ui/target/MiniTarget"
 import { Button } from "@vereinsheim/ui/button"
 
-import { DecisionDialog } from "@/components/shell/DecisionDialog"
+import { DecisionDialog } from "@vereinsheim/ui/design2/decision-dialog"
 import { Page } from "@vereinsheim/ui/design2/page"
 import { notMine } from "@/lib/admin/consequences"
 import { confirmFirstCard, rejectFirstCard } from "@/lib/first-card-actions"

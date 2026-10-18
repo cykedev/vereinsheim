@@ -9,7 +9,7 @@ import { Button } from "@vereinsheim/ui/button"
 import { Segmented } from "@vereinsheim/ui/design2/segmented"
 import { Input } from "@vereinsheim/ui/input"
 import { Label } from "@vereinsheim/ui/label"
-import { DecisionDialog } from "@/components/shell/DecisionDialog"
+import { DecisionDialog } from "@vereinsheim/ui/design2/decision-dialog"
 import { disciplineChange, type DisciplineMapping } from "@/lib/admin/consequences"
 import { saveDiscipline } from "@/lib/admin/discipline-actions"
 import {

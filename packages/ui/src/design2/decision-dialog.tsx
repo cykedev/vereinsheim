@@ -9,9 +9,24 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@vereinsheim/ui/alert-dialog"
+} from "../ui/alert-dialog"
 
-import type { Decision } from "@/lib/admin/consequences"
+/** eine Entscheidung in Alltagsworten; die Texte stehen je App an einer Stelle (`consequences.ts`) */
+export interface Decision {
+  title: string
+  /** worum es geht: wer, welche Nummer, welches Gerät, wie viele Scheiben */
+  about: string
+  /** was vorher zu prüfen ist; fehlt, wenn es nichts zu prüfen gibt */
+  check?: string
+  /** was dann passiert */
+  happens: string[]
+  /** was ausdrücklich nicht passiert */
+  notHappening: string[]
+  /** wie es zurückgeht (oder dass es nicht geht) */
+  undo: string
+  confirmLabel: string
+  destructive: boolean
+}
 
 /**
  * Der Inhalt eines Entscheids: worum es geht, was vorher zu prüfen ist, was passiert, was nicht, und wie es
@@ -53,7 +68,7 @@ function Section({ title, lines, marker }: { title: string; lines: string[]; mar
 
 /**
  * Jede Aktion mit Folgen fragt hierüber (Regel „Kein Knopf ohne Folge“, `vault/conventions.md` §10). Die Texte kommen
- * aus `src/lib/admin/consequences.ts`. Der Fokus steht zuerst auf „Abbrechen“; der ganze Inhalt ist als Beschreibung
+ * aus den Folgen der App (`consequences.ts`). Der Fokus steht zuerst auf „Abbrechen“; der ganze Inhalt ist als Beschreibung
  * mit dem Dialog verknüpft.
  */
 export function DecisionDialog({

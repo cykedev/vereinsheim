@@ -9,7 +9,7 @@ import { Segmented } from "@vereinsheim/ui/design2/segmented"
 import { FieldError } from "@vereinsheim/ui/field-error"
 import { Input } from "@vereinsheim/ui/input"
 import { Label } from "@vereinsheim/ui/label"
-import { DecisionDialog } from "@/components/shell/DecisionDialog"
+import { DecisionDialog } from "@vereinsheim/ui/design2/decision-dialog"
 import { BRIDGE_STATUS_TEXT } from "@/lib/admin/bridge-status"
 import {
   bridgeRemove,

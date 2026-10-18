@@ -5,7 +5,7 @@ import { useState, useTransition } from "react"
 import { getErrorMessage } from "@vereinsheim/lib/forms/fieldErrors"
 import { Button } from "@vereinsheim/ui/button"
 
-import { DecisionDialog } from "@/components/shell/DecisionDialog"
+import { DecisionDialog } from "@vereinsheim/ui/design2/decision-dialog"
 import { Page } from "@vereinsheim/ui/design2/page"
 import { cardPurgeNow } from "@/lib/admin/consequences"
 import { purgeCardNow, restoreCard } from "@/lib/trash-actions"

@@ -15,7 +15,7 @@ import { Label } from "@vereinsheim/ui/label"
 import type { ActionResult } from "@/lib/types"
 import type { UserSummary } from "@/lib/users/queries"
 import type { Role } from "@/lib/users/rules"
-import { DecisionDialog } from "@/components/shell/DecisionDialog"
+import { DecisionDialog } from "@vereinsheim/ui/design2/decision-dialog"
 import { accountChange, accountChangesOf, type Decision } from "@/lib/admin/consequences"
 
 import { AdminHelp } from "./AdminHelp"

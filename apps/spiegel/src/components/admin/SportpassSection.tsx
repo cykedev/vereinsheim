@@ -6,7 +6,7 @@ import { useState, useTransition } from "react"
 import { getErrorMessage } from "@vereinsheim/lib/forms/fieldErrors"
 import { Button } from "@vereinsheim/ui/button"
 
-import { DecisionDialog } from "@/components/shell/DecisionDialog"
+import { DecisionDialog } from "@vereinsheim/ui/design2/decision-dialog"
 import { consentConfirm, consentReject, consentRemove, notMineLift } from "@/lib/admin/consequences"
 import { confirmConsent, liftNotMine, rejectConsent, removeConsent } from "@/lib/consent/actions"
 import type { AdminConsentRow } from "@/lib/consent/queries"

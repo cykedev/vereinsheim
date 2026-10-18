@@ -5,6 +5,8 @@
 // Semikolons, die Wörter des Users statt der des Codes (Sportpassnummer, zurückweisen, wieder zulassen, Spiegel holt).
 // Ein Test hält die alten Wörter fern (`consequences.test.ts`, „Schreibregeln“).
 
+import type { Decision } from "@vereinsheim/ui/design2/decision-dialog"
+
 /**
  * Was in keinem sichtbaren Text stehen darf: Semikolons und die alten Wörter des Codes, auch „Rangliste“ (in der
  * Oberfläche „Liste“). Die Tests der Dialoge, Erklärungen, Zustände und der Übersicht prüfen dagegen.
@@ -12,21 +14,7 @@
 export const OLD_WORDS =
   /;|SportpassI[Dd]|Sportpass-ID|\bMeldung|\bAblage|[Kk]oppe?l|Rückstau|[Nn]achlad|[Nn]achgelad|Grabstein|[Ss]perre|[Rr]angliste/
 
-export interface Decision {
-  title: string
-  /** worum es geht: wer, welche Nummer, welches Gerät, wie viele Scheiben */
-  about: string
-  /** was vorher zu prüfen ist; fehlt, wenn es nichts zu prüfen gibt */
-  check?: string
-  /** was dann passiert */
-  happens: string[]
-  /** was ausdrücklich nicht passiert */
-  notHappening: string[]
-  /** wie es zurückgeht (oder dass es nicht geht) */
-  undo: string
-  confirmLabel: string
-  destructive: boolean
-}
+export type { Decision }
 
 const scheiben = (n: number) => (n === 1 ? "1 Scheibe" : `${n} Scheiben`)
 
