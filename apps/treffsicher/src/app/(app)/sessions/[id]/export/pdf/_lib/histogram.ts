@@ -1,5 +1,5 @@
 import { parseShotValue } from "@/lib/sessions/shots"
-import { shotBucketColors } from "./constants"
+import { SCORE_HEX, scoreKey } from "@vereinsheim/ui/design2/score-colors"
 
 export function buildShotHistogramBuckets(
   shots: string[],
@@ -24,7 +24,8 @@ export function buildShotHistogramBuckets(
     return {
       label: String(ring),
       value: counts[ring],
-      colorHex: shotBucketColors[index],
+      // Ringwert-Farben wie am Bildschirm (10 rot, 9 gold, 8 türkis, ≤ 7 violett); das PDF kennt keine CSS-Variablen
+      colorHex: SCORE_HEX[scoreKey(ring)],
     }
   })
 }
