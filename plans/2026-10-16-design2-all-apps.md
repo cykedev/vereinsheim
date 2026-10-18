@@ -43,13 +43,12 @@ um** (Teile T und G) und läuft eine Weile produktiv. **Ringwerk folgt zuletzt**
 Releases und dem Abgleich aus Teil R vor jedem Release. Danach das Gate über drei Apps (E) und die Durchsicht nach
 drei Ebenen (F), die zuerst misst und dann einen eigenen Plan bekommt.
 
-**Reihenfolge:** 0 → A → R → T → G → W → E → F. **Jeder Teil endet grün und ist ein Merge-Punkt** (ff-only nach
-`main` mit User-OK). `/implement` läuft je Teil (`/implement plans/2026-10-16-design2-all-apps.md` mit dem Teil als
+**Reihenfolge:** 0 → A → R → T → G → W → E → F. **Jeder Teil endet grün und ist ein Merge-Punkt** (ff-only in
+einen eigenen Integrationsbranch mit User-OK, nicht nach `main`; nur Fast-Forward oder Rebase, keine Merge-Commits). `/implement` läuft je Teil (`/implement plans/2026-10-16-design2-all-apps.md` mit dem Teil als
 Argument); jeder Teil ist so geschrieben, dass eine frische Sitzung ihn mit den Docs aus „Required Docs“ allein
 umsetzen kann.
 
-**Vor Teil 0:** `main` in diesen Branch geholt (18. Oktober 2026, `git merge main` ohne Konflikte; die App merged in
-diesem Worktree nicht selbst). `main` war um 68 Commits weiter, darunter `feat/spiegel-kleinkram` (`isAdminPath`, `JUMP_BAR`, „jede Regel einmal“ im Fachkern),
+**Vor Teil 0:** Branch auf `main` rebased (18. Oktober 2026, ohne Konflikte). `main` war um 68 Commits weiter, darunter `feat/spiegel-kleinkram` (`isAdminPath`, `JUMP_BAR`, „jede Regel einmal“ im Fachkern),
 Disziplinen im Admin von Spiegel samt Wertung je Disziplin, eine Scheibe je Probe-Block und die Rekorde R10/R11.
 Die betroffenen Tasks unten sind darauf schon angepasst (A4, A6, A12, G1, G3).
 
@@ -607,5 +606,5 @@ Ringwerk `pruefen:vergleichen` ohne Abweichung.
 2. Sichtprüfung im Browser je Teil: 390 × 844 und 1280 × 900, hell und dunkel, Bildschirmfotos an den User.
 3. Nach Teil T, W und E: `tools/stack-e2e/run.sh` mit den echten Images (Schriften kommen aus `next/font`, kein Abruf
    zur Laufzeit).
-4. `/validate` und `/review` je Teil, Merge nach `main` nur mit User-OK; Ringwerk-Releases nur nach „Ringwerk: Betrieb
+4. `/validate` und `/review` je Teil, Merge in den Integrationsbranch nur mit User-OK; Ringwerk-Releases nur nach „Ringwerk: Betrieb
    sichern“.
