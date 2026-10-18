@@ -10,6 +10,7 @@ import { Browser, type Page } from "@vereinsheim/pruefen/browser"
 import { pdfPages, pdfText } from "@vereinsheim/pruefen/pdf"
 
 import type { BracketRound, Recording } from "./compare"
+import { SESSION_COOKIE } from "./echt"
 import { normalizePdfText, normalizeStarterNumbers, pageLines } from "./normalize"
 import {
   COMPETITION_PAGES,
@@ -31,10 +32,13 @@ export interface Credentials {
   password: string
 }
 
+/** Anmeldung je Rolle: Konto mit Passwort (Prüfbestand) oder eine fertige Sitzung (echte Daten, `echt.ts`) */
+export type SignIn = Credentials | { token: string }
+
 export interface CaptureOptions {
   base: string
   inventory: Inventory
-  credentials: Record<Role, Credentials>
+  sessions: Partial<Record<Role, SignIn>>
   publicPassword: string | null
   /** Ordner für Bilder (lokal, nicht im Repository) */
   imageDir: string
@@ -62,6 +66,25 @@ export async function login(page: Page, base: string, { email, password }: Crede
   await page.goto(`${base}/`, READY)
   if (status !== 200 || (await page.ev<string>("location.pathname")) !== "/")
     throw new Error(`Anmeldung als ${email} gescheitert (${status})`)
+}
+
+/** Sitzung als Cookie setzen und prüfen, dass sie gilt */
+async function useToken(browser: Browser, page: Page, base: string, token: string) {
+  await browser.send("Storage.setCookies", {
+    cookies: [
+      {
+        name: SESSION_COOKIE,
+        value: token,
+        domain: new URL(base).hostname,
+        path: "/",
+        httpOnly: true,
+        sameSite: "Lax",
+      },
+    ],
+  })
+  await page.viewport(1280, 900)
+  await page.goto(`${base}/`, READY)
+  if ((await page.ev<string>("location.pathname")) !== "/") throw new Error("Sitzung gilt nicht")
 }
 
 /** wohin eine Adresse führt: „ok“ oder „→ <Pfad>“ mit `:id` statt der Kennung des Wettbewerbs */
@@ -101,7 +124,7 @@ const BRACKET = `(() => {
  * (`animate-pulse`) und streamen den Inhalt nach. Fertig ist die Seite ohne Platzhalter und mit gleichem Text über drei
  * Lesungen im Abstand von 150 ms.
  */
-async function stableText(page: Page): Promise<string> {
+export async function stableText(page: Page): Promise<string> {
   const read = () =>
     page.ev<{ text: string; loading: boolean }>(
       `({ text: $("main")?.innerText ?? "", loading: !!$("main .animate-pulse") })`
@@ -206,15 +229,18 @@ export async function captureAll(options: CaptureOptions): Promise<Map<string, R
 
   const browsers: Browser[] = []
   try {
-    const cookies = {} as Record<Role, string>
+    const cookies: Partial<Record<Role, string>> = {}
     const counter = { done: 0 }
     const work: Promise<void>[] = []
     let total = 0
-    for (const role of ROLES) {
+    const roles = ROLES.filter((role) => options.sessions[role])
+    for (const role of roles) {
       const browser = await Browser.launch()
       browsers.push(browser)
       const first = await browser.newPage()
-      await login(first, base, options.credentials[role])
+      const signIn = options.sessions[role]!
+      if ("token" in signIn) await useToken(browser, first, base, signIn.token)
+      else await login(first, base, signIn)
       cookies[role] = await first.cookieHeader()
 
       const jobs: PageJob[] = GLOBAL_PAGES.map((p) => ({
@@ -251,24 +277,26 @@ export async function captureAll(options: CaptureOptions): Promise<Map<string, R
 
     // PDFs: als ADMIN mit Inhalt, als USER nur, ob es kommt
     let pdfCount = 0
+    if (!cookies.ADMIN) throw new Error("ohne Admin keine PDFs")
     const participants = await fetchPdf(base, { path: "/api/participants/pdf" }, cookies.ADMIN)
     global.reach["pdf/participants@ADMIN"] = String(participants.status)
     if (participants.pdf)
       savePdf(global, "participants", participants.pdf, path.join(options.imageDir, GLOBAL_KEY))
-    global.reach["pdf/participants@USER"] = String(
-      (await fetchPdf(base, { path: "/api/participants/pdf" }, cookies.USER)).status
-    )
+    if (cookies.USER)
+      global.reach["pdf/participants@USER"] = String(
+        (await fetchPdf(base, { path: "/api/participants/pdf" }, cookies.USER)).status
+      )
     for (const c of competitions) {
       const rec = recordings.get(c.key)!
       const imageBase = path.join(options.imageDir, c.key)
       for (const target of pdfTargets(c, options.publicPassword)) {
-        const admin = await fetchPdf(base, target, cookies.ADMIN)
+        const admin = await fetchPdf(base, target, cookies.ADMIN!)
         rec.reach[`pdf/${target.name}${target.anonymous ? "" : "@ADMIN"}`] = String(admin.status)
         if (admin.pdf) {
           savePdf(rec, target.name, admin.pdf, imageBase)
           pdfCount++
         }
-        if (!target.anonymous)
+        if (!target.anonymous && cookies.USER)
           rec.reach[`pdf/${target.name}@USER`] = String(
             (await fetchPdf(base, target, cookies.USER)).status
           )

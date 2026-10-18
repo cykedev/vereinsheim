@@ -12,6 +12,7 @@
 //   … --nur <wort>                                   nur Wettbewerbe, deren Schlüssel das Wort enthält
 
 import { execSync } from "node:child_process"
+import { randomBytes } from "node:crypto"
 import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs"
 import path from "node:path"
 
@@ -21,9 +22,17 @@ import { startServer } from "@vereinsheim/pruefen/server"
 
 import { PRUEF_ACCOUNTS, PRUEF_PUBLIC_PASSWORD_ENV } from "./pruefdaten/accounts"
 import { pruefDatabaseUrl } from "./pruefdaten/db"
+import { runFlows } from "./pruefen-ringwerk/ablaeufe"
 import { bestandChecksum } from "./pruefen-ringwerk/bestand"
-import { captureAll, type Credentials } from "./pruefen-ringwerk/capture"
+import { captureAll, type Credentials, type SignIn } from "./pruefen-ringwerk/capture"
 import { compareAll, swapTableRows } from "./pruefen-ringwerk/compare"
+import {
+  changedTables,
+  echtAccounts,
+  sessionToken,
+  tableFingerprint,
+} from "./pruefen-ringwerk/echt"
+import { phaseCounts, phaseReport } from "./pruefen-ringwerk/phases"
 import { findingsMarkdown, writeSideBySide } from "./pruefen-ringwerk/report"
 import { readStore, writeStore } from "./pruefen-ringwerk/store"
 import { readInventory, type Role } from "./pruefen-ringwerk/targets"
@@ -45,6 +54,8 @@ const REFERENCE = ECHT
 const REFERENCE_IMAGES = path.join(REPORTS, ECHT ? "ringwerk-echt" : "ringwerk-referenz", "bilder")
 const PORT = 3010
 const BASE = `http://localhost:${PORT}`
+/** Secret des eigenen Servers: Mit ihm stellt `--echt` die Sitzungen aus */
+const SECRET = randomBytes(32).toString("hex")
 
 function readAppEnv(): Record<string, string | undefined> {
   const env: Record<string, string> = {}
@@ -68,7 +79,7 @@ const commit = () => execSync("git rev-parse --short HEAD", { cwd: APP_DIR }).to
 
 async function withServer<T>(url: string, run: () => Promise<T>): Promise<T> {
   process.env.DATABASE_URL = url
-  const server = await startServer({ app: "ringwerk", port: PORT, out })
+  const server = await startServer({ app: "ringwerk", port: PORT, secret: SECRET, out })
   try {
     return await run()
   } finally {
@@ -76,7 +87,17 @@ async function withServer<T>(url: string, run: () => Promise<T>): Promise<T> {
   }
 }
 
-/** Anmeldedaten: im Prüfbestand die Prüfkonten aus `.env`, bei echten Daten eigene Sitzungen (`echt.ts`) */
+/** Sitzungen an der Kopie der echten Daten: ausgestellt für das älteste aktive Konto je Rolle (`echt.ts`) */
+async function echtSessions(url: string): Promise<Partial<Record<Role, SignIn>>> {
+  const sessions: Partial<Record<Role, SignIn>> = {}
+  for (const account of await echtAccounts(url))
+    sessions[account.role] = { token: await sessionToken(account, SECRET) }
+  if (!sessions.ADMIN) throw new Error("kein aktives Admin-Konto in der Dev-Datenbank")
+  if (!sessions.USER) out("Hinweis: kein aktives Mitgliedskonto, aufgenommen nur als Admin")
+  return sessions
+}
+
+/** Anmeldedaten im Prüfbestand: die Prüfkonten aus `.env` */
 function pruefCredentials(env: Record<string, string | undefined>): Record<Role, Credentials> {
   const pick = (role: Role) => {
     const account = PRUEF_ACCOUNTS.find((a) => a.role === role)!
@@ -91,12 +112,13 @@ async function capture(url: string, env: Record<string, string | undefined>, ima
   const inventory = await readInventory(url)
   out(`Datenbank ${inventory.database}: ${inventory.competitions.length} Wettbewerbe`)
   const checksum = ECHT ? null : await bestandChecksum(url)
+  const prints = ECHT ? await tableFingerprint(url) : null
   rmSync(imageDir, { recursive: true, force: true })
   const recordings = await withServer(url, async () =>
     captureAll({
       base: BASE,
       inventory,
-      credentials: pruefCredentials(env),
+      sessions: ECHT ? await echtSessions(url) : pruefCredentials(env),
       publicPassword: ECHT ? null : (env[PRUEF_PUBLIC_PASSWORD_ENV] ?? null),
       imageDir,
       only: option("--nur"),
@@ -104,6 +126,12 @@ async function capture(url: string, env: Record<string, string | undefined>, ima
     })
   )
   // Die Aufnahme liest nur; ändert sich der Bestand dabei, stimmt der Ausgangsstand nicht
+  if (prints) {
+    const changed = changedTables(prints, await tableFingerprint(url))
+    if (changed.length > 0)
+      throw new Error(`Die Dev-Datenbank hat sich geändert: ${changed.join(", ")}`)
+    out("Dev-Datenbank unverändert (jede Tabelle, Disziplinen ohne updatedAt)")
+  }
   if (checksum !== null) {
     const after = await bestandChecksum(url)
     if (after !== checksum)
@@ -121,6 +149,14 @@ async function aufnehmen(url: string, env: Record<string, string | undefined>) {
   )
   out(`Ausgangsstand: ${recordings.size} Dateien unter ${path.relative(process.cwd(), REFERENCE)}`)
   out(`Bilder unter ${path.relative(process.cwd(), REFERENCE_IMAGES)}`)
+  if (ECHT) {
+    const file = path.join(REPORTS, "ringwerk-echt", "phasen.md")
+    writeFileSync(
+      file,
+      phaseReport(await phaseCounts(url), await phaseCounts(pruefDatabaseUrl(env)))
+    )
+    out(`Phasen: ${path.relative(process.cwd(), file)}`)
+  }
 }
 
 async function vergleichen(url: string, env: Record<string, string | undefined>): Promise<boolean> {
@@ -178,7 +214,17 @@ async function main() {
     // Gegenprobe: grün ist hier der Fehler
     if (has("--gegenprobe") ? ok : !ok) process.exitCode = 1
   } else if (has("--ablaeufe")) {
-    throw new Error("--ablaeufe folgt")
+    if (ECHT) throw new Error("--ablaeufe schreibt und läuft nur auf der Prüfdatenbank")
+    const ok = await runFlows({
+      url,
+      env,
+      base: BASE,
+      withServer,
+      reports: REPORTS,
+      only: option("--nur"),
+      out,
+    })
+    if (!ok) process.exitCode = 1
   } else {
     out(
       "Aufruf: --aufnehmen | --vergleichen [--gegenprobe] | --ablaeufe, dazu --echt, --nur <wort>"

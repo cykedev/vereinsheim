@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest"
 
 import { withoutDisciplineStamp } from "./bestand"
+import { changedTables } from "./echt"
+import { featuresOf, phaseReport, type CompetitionFacts } from "./phases"
 import { compareAll, lineDiff, swapTableRows, type Recording } from "./compare"
 import { dataTokenizer, normalizePdfText, normalizeStarterNumbers, pageLines } from "./normalize"
 import { pdfTargets, withKeys, type CompetitionRow } from "./targets"
@@ -221,5 +223,111 @@ describe("Bestand", () => {
       withoutDisciplineStamp(line("2026-10-18 09:34:40.202"))
     )
     expect(withoutDisciplineStamp(line("x"))).toContain('"name":"Luftgewehr"')
+  })
+})
+
+const league = (over: Partial<CompetitionFacts>): CompetitionFacts => ({
+  type: "LEAGUE",
+  status: "ACTIVE",
+  leagueFormat: "DOUBLE_ROUND_ROBIN",
+  groupBestOf: null,
+  scoringMode: "RINGTEILER",
+  targetValueType: null,
+  teamSize: null,
+  teamScoring: null,
+  seasonSortMode: null,
+  isPublic: false,
+  hasPassword: false,
+  participants: 6,
+  withdrawn: 0,
+  matchups: 30,
+  completed: 0,
+  byes: 0,
+  walkovers: 0,
+  secondLeg: 15,
+  secondLegCompleted: 0,
+  playoffs: {},
+  finalSuddenDeath: false,
+  series: 0,
+  withSeries: 0,
+  ...over,
+})
+
+describe("Phasen", () => {
+  const phase = (over: Partial<CompetitionFacts>) => featuresOf(league(over)).at(-1)
+
+  it("ordnet die Gruppenphase ein", () => {
+    expect(phase({ matchups: 0, participants: 0 })).toBe("Liga Hin/Rück · L0 ohne Teilnehmer")
+    expect(phase({})).toBe("Liga Hin/Rück · L1 Spielplan, kein Ergebnis")
+    expect(phase({ completed: 3 })).toBe("Liga Hin/Rück · L2 Hinrunde läuft")
+    expect(phase({ completed: 17, secondLegCompleted: 2 })).toBe(
+      "Liga Hin/Rück · L3 Rückrunde läuft"
+    )
+    expect(phase({ completed: 28, walkovers: 2 })).toBe("Liga Hin/Rück · L4 Gruppenphase fertig")
+  })
+
+  it("ordnet die Playoffs nach Größe und jüngster Runde ein", () => {
+    expect(phase({ completed: 30, playoffs: { QUARTER_FINAL: [4, 2] } })).toBe(
+      "Liga Hin/Rück · L5 Viertelfinale mitten"
+    )
+    expect(phase({ completed: 30, playoffs: { QUARTER_FINAL: [4, 4], SEMI_FINAL: [2, 2] } })).toBe(
+      "Liga Hin/Rück · L5 Viertelfinale, jetzt Halbfinale fertig, nicht weitergeschaltet"
+    )
+    expect(phase({ playoffs: { SEMI_FINAL: [2, 2], FINAL: [1, 1] }, finalSuddenDeath: true })).toBe(
+      "Liga Hin/Rück · L6 Finale in der Verlängerung"
+    )
+    expect(phase({ status: "ARCHIVED", playoffs: { FINAL: [1, 1] } })).toBe(
+      "Liga Hin/Rück · L7 Ende mit Playoffs"
+    )
+  })
+
+  it("nennt Freilos, Kampflos, Rückzug und Veröffentlichung", () => {
+    const f = featuresOf(
+      league({ byes: 3, walkovers: 1, withdrawn: 1, isPublic: true, hasPassword: true })
+    )
+    expect(f).toEqual(
+      expect.arrayContaining([
+        "Liga: Freilos",
+        "Liga: Kampflos",
+        "Rückzug",
+        "öffentlich mit Passwort",
+      ])
+    )
+  })
+
+  it("Bericht nennt, was nur die echten Daten haben", () => {
+    const report = phaseReport(
+      new Map([
+        ["a", 1],
+        ["b", 2],
+      ]),
+      new Map([
+        ["a", 3],
+        ["c", 1],
+      ])
+    )
+    expect(report).toContain(
+      "## Nur in den echten Daten (deckt der Prüfbestand nicht ab)\n\n| Merkmal"
+    )
+    expect(report).toContain("| b | 2 | 0 |")
+    expect(report).toContain("| c | 0 | 1 |")
+  })
+})
+
+describe("echte Daten nur lesend", () => {
+  it("meldet jede Tabelle mit anderem Fingerabdruck", () => {
+    expect(
+      changedTables(
+        new Map([
+          ["A", "1:x"],
+          ["B", "2:y"],
+        ]),
+        new Map([
+          ["A", "1:x"],
+          ["B", "3:z"],
+          ["C", "0:-"],
+        ])
+      )
+    ).toEqual(["B", "C"])
   })
 })
