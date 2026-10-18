@@ -4,12 +4,8 @@ import { db } from "@/lib/db"
 import { getAuthSession, canManage } from "@/lib/auth-helpers"
 import type { ActionResult } from "@/lib/types"
 import { revalidatePublicPdf } from "@/lib/competitions/publicPdfCache"
-import {
-  determineFinaleRoundWinner,
-  determinePlayoffDuelWinner,
-  isPlayoffMatchComplete,
-  requiredWinsFromBestOf,
-} from "../calculatePlayoffs"
+import { isPlayoffMatchComplete, requiredWinsFromBestOf } from "../calculatePlayoffs"
+import { storedDuelOutcome } from "./duelOutcome"
 import {
   deleteNextRound,
   hasNextRoundDuels,
@@ -20,7 +16,7 @@ import {
 
 /**
  * Löscht das letzte Duell einer Playoff-Paarung (inkl. Ergebnisse).
- * Nur möglich solange keine Folge-Runde angesetzt wurde.
+ * Nur möglich, solange in der nächsten Runde kein Duell angelegt ist.
  */
 export async function deleteLastPlayoffDuel(duelId: string): Promise<ActionResult> {
   const session = await getAuthSession()
@@ -41,7 +37,14 @@ export async function deleteLastPlayoffDuel(duelId: string): Promise<ActionResul
           winsB: true,
           status: true,
           competitionId: true,
-          competition: { select: { playoffBestOf: true } },
+          competition: {
+            select: {
+              playoffBestOf: true,
+              finalePrimary: true,
+              finaleTiebreaker1: true,
+              finaleTiebreaker2: true,
+            },
+          },
           participantAId: true,
           participantA: { select: { firstName: true, lastName: true } },
           participantBId: true,
@@ -73,34 +76,27 @@ export async function deleteLastPlayoffDuel(duelId: string): Promise<ActionResul
     return { error: "Nur das letzte Duell kann gelöscht werden." }
   }
 
-  // Siege-Korrektur wenn Duell bereits abgeschlossen war
+  // Siege-Korrektur wenn Duell bereits abgeschlossen war: derselbe Ausgang, mit dem es gezählt wurde (im Finale samt
+  // Stichkriterien)
   let deltaWinsA = 0
   let deltaWinsB = 0
   if (duel.isCompleted) {
     const oldResultA = duel.results.find((r) => r.participantId === match.participantAId)
     const oldResultB = duel.results.find((r) => r.participantId === match.participantBId)
     if (oldResultA && oldResultB) {
-      let oldOutcome: "A" | "B" | "DRAW"
-      if (isFinal) {
-        oldOutcome = determineFinaleRoundWinner(
-          oldResultA.totalRings.toNumber(),
-          oldResultB.totalRings.toNumber()
-        )
-      } else {
-        oldOutcome = determinePlayoffDuelWinner(
-          oldResultA.ringteiler?.toNumber() ?? 0,
-          oldResultA.totalRings.toNumber(),
-          oldResultA.teiler?.toNumber() ?? 0,
-          oldResultB.ringteiler?.toNumber() ?? 0,
-          oldResultB.totalRings.toNumber(),
-          oldResultB.teiler?.toNumber() ?? 0
-        )
-      }
+      const { finalePrimary, finaleTiebreaker1, finaleTiebreaker2 } = match.competition
+      const oldOutcome = storedDuelOutcome(
+        oldResultA,
+        oldResultB,
+        isFinal,
+        finalePrimary,
+        finaleTiebreaker1 ?? null,
+        finaleTiebreaker2 ?? null
+      )
       if (oldOutcome === "A") deltaWinsA = -1
       else if (oldOutcome === "B") deltaWinsB = -1
     }
   }
-  // Note: deleteLastPlayoffDuel loads no competition ruleset — finale scoring mode fallback is fine
 
   // Ohne das Duell entscheiden die übrigen Siege; ändert sich der Ausgang, gilt die Folge-Runde nicht mehr
   const newWinsA = match.winsA + deltaWinsA

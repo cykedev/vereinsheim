@@ -80,6 +80,9 @@ export async function savePlayoffDuelResult(
 
   const isCorrection = duel.isCompleted
   const match = duel.playoffMatch
+  if (!isCorrection && match.status === "COMPLETED") {
+    return { error: "Das Match ist schon entschieden, ein weiteres Duell zählt nicht." }
+  }
   const isFinal = match.round === "FINAL"
   const wasMatchComplete = match.status === "COMPLETED"
   const finalePrimary = match.competition.finalePrimary
@@ -194,7 +197,7 @@ export async function savePlayoffDuelResult(
   })
 
   // Nach der Transaktion: Folge-Aktionen
-  if (outcome === "DRAW" && !isCorrection) {
+  if (outcome === "DRAW" && !isCorrection && !matchComplete) {
     if (isFinal) {
       // Finale-Gleichstand → Sudden-Death-Duell anlegen (wenn finaleHasSuddenDeath)
       if (finaleHasSuddenDeath) {

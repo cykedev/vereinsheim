@@ -51,7 +51,7 @@ const { store, computeDuelOutcome, storedDuelOutcome, getAuthSession, db, tx } =
       }),
       update: vi.fn(async () => ({})),
     },
-    playoffDuel: { update: vi.fn(), delete: vi.fn() },
+    playoffDuel: { update: vi.fn(), delete: vi.fn(), deleteMany: vi.fn() },
     playoffDuelResult: { upsert: vi.fn(), deleteMany: vi.fn() },
   }
   const db = {
@@ -287,6 +287,7 @@ describe("Korrektur im Halbfinale und im Finale", () => {
 describe("letztes Duell im Viertelfinale löschen", () => {
   it("öffnet das Match wieder (3:2 → 2:2): die ganze nächste Runde fällt weg", async () => {
     bracket()
+    storedDuelOutcome.mockReturnValue("A")
     expect(await deleteLastPlayoffDuel("d5")).toEqual({ success: true })
     expect(roundIds("SEMI_FINAL")).toEqual([])
     expect(tx.playoffMatch.update).toHaveBeenCalledWith(
@@ -297,6 +298,7 @@ describe("letztes Duell im Viertelfinale löschen", () => {
   it("die übrigen Siege entscheiden noch (3:2 → 3:1): Match bleibt fertig, die nächste Runde bleibt", async () => {
     bracket()
     db.playoffDuel.findUnique.mockResolvedValue(lastDuel({ winner: "B" }))
+    storedDuelOutcome.mockReturnValue("B")
     expect(await deleteLastPlayoffDuel("d5")).toEqual({ success: true })
     expect(tx.playoffMatch.update).toHaveBeenCalledWith(
       expect.objectContaining({ data: { winsA: 3, winsB: 1, status: "COMPLETED" } })
@@ -310,5 +312,99 @@ describe("letztes Duell im Viertelfinale löschen", () => {
     expect(result).toMatchObject({ error: expect.stringContaining("nächsten Runde") })
     expect(tx.playoffDuel.delete).not.toHaveBeenCalled()
     expect(roundIds("SEMI_FINAL")).toEqual(["s1", "s2"])
+  })
+})
+
+describe("Finale löschen und neue Eingaben", () => {
+  it("Löschen im Finale zählt das Duell mit der Wertung des Finales zurück (Stichkriterien)", async () => {
+    bracket({ final: true, finalDuels: 1 })
+    const duel = lastDuel({ matchId: "f", round: "FINAL", a: "p1", b: "p3", winsA: 1, winsB: 0 })
+    duel.playoffMatch.competition.finaleTiebreaker1 = "TEILER" as never
+    db.playoffDuel.findUnique.mockResolvedValue(duel)
+    storedDuelOutcome.mockReturnValue("A")
+    expect(await deleteLastPlayoffDuel("d5")).toEqual({ success: true })
+    expect(storedDuelOutcome).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      true,
+      "RINGS",
+      "TEILER",
+      null
+    )
+    expect(tx.playoffMatch.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { winsA: 0, winsB: 0, status: "PENDING" } })
+    )
+  })
+
+  it("lehnt ein weiteres Duell in einem entschiedenen Match ab", async () => {
+    bracket()
+    const duel = lastDuel()
+    db.playoffDuel.findUnique.mockResolvedValue({ ...duel, isCompleted: false, results: [] })
+    computeDuelOutcome.mockResolvedValue({ ringteilerA: 15, ringteilerB: 20, outcome: "B" })
+    const result = await savePlayoffDuelResult({
+      duelId: "d5",
+      totalRingsA: 95,
+      teilerA: 10,
+      totalRingsB: 95,
+      teilerB: 10,
+    })
+    expect(result).toMatchObject({ error: expect.stringContaining("schon entschieden") })
+    expect(db.$transaction).not.toHaveBeenCalled()
+  })
+
+  it("entscheidet ein Match: offene Duelle dieses Matches fallen weg", async () => {
+    bracket()
+    const duel = lastDuel({ winsA: 2, winsB: 2 })
+    duel.playoffMatch.status = "PENDING"
+    db.playoffDuel.findUnique.mockResolvedValue({ ...duel, isCompleted: false, results: [] })
+    computeDuelOutcome.mockResolvedValue({ ringteilerA: 10, ringteilerB: 20, outcome: "A" })
+    expect(
+      await savePlayoffDuelResult({
+        duelId: "d5",
+        totalRingsA: 98,
+        teilerA: 5,
+        totalRingsB: 90,
+        teilerB: 30,
+      })
+    ).toEqual({
+      success: true,
+    })
+    expect(tx.playoffDuel.deleteMany).toHaveBeenCalledWith({
+      where: { playoffMatchId: "q1", isCompleted: false },
+    })
+  })
+
+  it("ein neues Unentschieden lässt das Match offen und legt das nächste Duell an", async () => {
+    bracket()
+    const duel = lastDuel({ winsA: 2, winsB: 2 })
+    duel.playoffMatch.status = "PENDING"
+    db.playoffDuel.findUnique.mockResolvedValue({ ...duel, isCompleted: false, results: [] })
+    db.playoffDuel.findFirst.mockResolvedValue({ duelNumber: 5 })
+    computeDuelOutcome.mockResolvedValue({ ringteilerA: 15, ringteilerB: 15, outcome: "DRAW" })
+    expect(
+      await savePlayoffDuelResult({
+        duelId: "d5",
+        totalRingsA: 95,
+        teilerA: 10,
+        totalRingsB: 95,
+        teilerB: 10,
+      })
+    ).toEqual({
+      success: true,
+    })
+    expect(tx.playoffMatch.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { winsA: 2, winsB: 2, status: "PENDING" } })
+    )
+    expect(db.playoffDuel.create).toHaveBeenCalledWith({
+      data: { playoffMatchId: "q1", duelNumber: 6, isSuddenDeath: false },
+    })
+  })
+
+  it("schreibt in einer serialisierbaren Transaktion", async () => {
+    bracket()
+    await correct("B")
+    expect(db.$transaction).toHaveBeenCalledWith(expect.any(Function), {
+      isolationLevel: "Serializable",
+    })
   })
 })

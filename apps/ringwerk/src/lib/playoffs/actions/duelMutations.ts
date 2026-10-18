@@ -170,6 +170,11 @@ export async function persistDuelResult(args: PersistDuelResultArgs): Promise<vo
           status: matchComplete ? "COMPLETED" : "PENDING",
         },
       })
+      // ein entschiedenes Match hat keine offenen Duelle mehr (etwa das nach einem Unentschieden angelegte, dessen
+      // Duell danach zum Sieg korrigiert wurde)
+      if (matchComplete) {
+        await tx.playoffDuel.deleteMany({ where: { playoffMatchId: matchId, isCompleted: false } })
+      }
 
       if (nextRound?.removeNextRound) await deleteNextRound(nextRound.match, tx)
     },

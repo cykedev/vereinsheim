@@ -122,8 +122,8 @@ async function handleMatchCompletion(
       (await db.playoffMatch.count({ where: { competitionId, round: previous } })) > 0
     return hasPrevious
       ? `Im ${ROUND_NAME[round]} fehlt eine Paarung, so lässt sich die nächste Runde nicht anlegen. Abhilfe: Im ` +
-          `${ROUND_NAME[round]} alle Duelle löschen. Dann im ${ROUND_NAME[previous]} das letzte Duell eines Matches ` +
-          `löschen und neu eintragen. Danach „${ROUND_NAME[round]} anlegen“.`
+          `${ROUND_NAME[round]} alle Duelle löschen. Dann im ${ROUND_NAME[previous]} in einem Match das entscheidende ` +
+          `(letzte) Duell löschen und neu eintragen. Danach „${ROUND_NAME[round]} anlegen“.`
       : `Im ${ROUND_NAME[round]} fehlt eine Paarung, so lässt sich die nächste Runde nicht anlegen.`
   }
 

@@ -40,6 +40,20 @@ export function storedDuelOutcome(
       finaleTiebreaker2
     )
   }
+  // dieselbe Regel wie `computeDuelOutcome`: im Finale die Kette des Finales, sonst Ringteiler, Ringe, Teiler
+  if (isFinal) {
+    return determineFinaleRoundWinner(
+      oldResultA.totalRings.toNumber(),
+      oldResultB.totalRings.toNumber(),
+      finalePrimary,
+      oldResultA.ringteiler?.toNumber() ?? 0,
+      oldResultA.teiler?.toNumber() ?? 0,
+      oldResultB.ringteiler?.toNumber() ?? 0,
+      oldResultB.teiler?.toNumber() ?? 0,
+      finaleTiebreaker1,
+      finaleTiebreaker2
+    )
+  }
   return determinePlayoffDuelWinner(
     oldResultA.ringteiler?.toNumber() ?? 0,
     oldResultA.totalRings.toNumber(),
