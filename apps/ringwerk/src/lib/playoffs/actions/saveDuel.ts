@@ -4,26 +4,16 @@ import { db } from "@/lib/db"
 import { getAuthSession, canManage } from "@/lib/auth-helpers"
 import type { ActionResult } from "@/lib/types"
 import { revalidatePublicPdf } from "@/lib/competitions/publicPdfCache"
-import {
-  finaleNeedsTeiler,
-  isPlayoffMatchComplete,
-  requiredWinsFromBestOf,
-} from "../calculatePlayoffs"
+import { finaleNeedsTeiler } from "../calculatePlayoffs"
 import type { SavePlayoffDuelResultInput } from "../types"
-import { computeDuelOutcome, storedDuelOutcome } from "./duelOutcome"
-import {
-  addExtraDuel,
-  matchWinner,
-  NEXT_ROUND_LOCKED,
-  NextRoundLockedError,
-  persistDuelResult,
-} from "./duelMutations"
+import { computeDuelOutcome } from "./duelOutcome"
+import { playoffFailureMessage, recordDuelResult } from "./duelMutations"
 
 /**
- * Speichert das Ergebnis eines Playoff-Einzel-Duells.
- * Aktualisiert den Siegstand und schließt den PlayoffMatch ab wenn nötig. Ändert eine Korrektur den Ausgang, entfernt
- * sie die ganze nächste Runde (sie wird über `advanceRound` neu gesetzt).
- * Bei Finale-Gleichstand: erstellt ein Sudden-Death-Duell.
+ * Speichert das Ergebnis eines Playoff-Einzel-Duells (neu oder als Korrektur).
+ * Siegstand und Status zählt `recordDuelResult` in der Transaktion aus den Duellen. Ändert eine Korrektur den Ausgang,
+ * entfällt die ganze nächste Runde (sie wird über `advanceRound` neu gesetzt).
+ * Finale offen ohne offenes Duell: Sudden-Death-Duell (mit `finaleHasSuddenDeath`).
  * Bei VF/HF-Unentschieden: legt automatisch das nächste Duell an.
  */
 export async function savePlayoffDuelResult(
@@ -78,20 +68,18 @@ export async function savePlayoffDuelResult(
 
   if (!duel) return { error: "Duell nicht gefunden." }
 
-  const isCorrection = duel.isCompleted
   const match = duel.playoffMatch
-  if (!isCorrection && match.status === "COMPLETED") {
-    return { error: "Das Match ist schon entschieden, ein weiteres Duell zählt nicht." }
-  }
   const isFinal = match.round === "FINAL"
-  const wasMatchComplete = match.status === "COMPLETED"
-  const finalePrimary = match.competition.finalePrimary
-  const finaleTiebreaker1 = match.competition.finaleTiebreaker1 ?? null
-  const finaleTiebreaker2 = match.competition.finaleTiebreaker2 ?? null
-  const finaleHasSuddenDeath = match.competition.finaleHasSuddenDeath ?? true
-  const requiredWins = requiredWinsFromBestOf(match.competition.playoffBestOf)
+  const rules = {
+    playoffBestOf: match.competition.playoffBestOf,
+    finalePrimary: match.competition.finalePrimary,
+    finaleTiebreaker1: match.competition.finaleTiebreaker1 ?? null,
+    finaleTiebreaker2: match.competition.finaleTiebreaker2 ?? null,
+    finaleHasSuddenDeath: match.competition.finaleHasSuddenDeath,
+  }
   const finaleTeilerNeeded =
-    isFinal && finaleNeedsTeiler(finalePrimary, finaleTiebreaker1, finaleTiebreaker2)
+    isFinal &&
+    finaleNeedsTeiler(rules.finalePrimary, rules.finaleTiebreaker1, rules.finaleTiebreaker2)
 
   // Finale: Kette primary → tb1 → tb2; VF/HF: Ringteiler-Berechnung
   const computed = await computeDuelOutcome(
@@ -99,61 +87,25 @@ export async function savePlayoffDuelResult(
     input,
     isFinal,
     finaleTeilerNeeded,
-    finalePrimary,
-    finaleTiebreaker1,
-    finaleTiebreaker2
+    rules.finalePrimary,
+    rules.finaleTiebreaker1,
+    rules.finaleTiebreaker2
   )
   if ("error" in computed) return { error: computed.error }
   const { ringteilerA, ringteilerB, outcome } = computed
 
-  // Siege neu berechnen: bei Korrektur alten Outcome subtrahieren, neuen addieren
-  let newWinsA = match.winsA
-  let newWinsB = match.winsB
-  if (isCorrection) {
-    const oldResultA = duel.results.find((r) => r.participantId === match.participantAId)
-    const oldResultB = duel.results.find((r) => r.participantId === match.participantBId)
-    if (oldResultA && oldResultB) {
-      const oldOutcome = storedDuelOutcome(
-        oldResultA,
-        oldResultB,
-        isFinal,
-        finalePrimary,
-        finaleTiebreaker1,
-        finaleTiebreaker2
-      )
-      if (oldOutcome === "A") newWinsA--
-      else if (oldOutcome === "B") newWinsB--
-    }
-  }
-  if (outcome === "A") newWinsA++
-  else if (outcome === "B") newWinsB++
-
-  // Entschieden ist das Match nach den Siegen, nicht nach diesem Duell: Wird ein Duell eines entschiedenen Matches zum
-  // Unentschieden korrigiert, bleibt es entschieden, solange die Siege reichen
-  const matchComplete = isPlayoffMatchComplete(newWinsA, newWinsB, match.round, requiredWins)
-  const enough = isFinal ? 1 : requiredWins
-  if (newWinsA >= enough && newWinsB >= enough) {
-    return { error: "Korrektur nicht möglich — danach hätten beide Seiten genug Siege." }
-  }
-  // Ändert die Korrektur den Ausgang (anderer Sieger oder wieder offen), gilt die Folge-Runde nicht mehr
-  const winnerBefore = matchWinner(match, match.winsA, match.winsB, wasMatchComplete)
-  const winnerAfter = matchWinner(match, newWinsA, newWinsB, matchComplete)
   const saveTeiler = !isFinal || finaleTeilerNeeded
   const teilerA = saveTeiler ? (input.teilerA ?? null) : null
   const teilerB = saveTeiler ? (input.teilerB ?? null) : null
 
+  // Siegstand, Status, nächstes Duell und Folge-Runde ergeben sich in der Transaktion aus den Duellen
   try {
-    await persistDuelResult({
+    await recordDuelResult({
       duelId: input.duelId,
-      matchId: match.id,
+      match,
+      rules,
       recordedByUserId: session.user.id,
-      newWinsA,
-      newWinsB,
-      matchComplete,
-      nextRound:
-        isCorrection && !isFinal
-          ? { match, removeNextRound: winnerBefore !== winnerAfter }
-          : undefined,
+      outcome,
       a: {
         participantId: match.participantAId,
         totalRings: input.totalRingsA,
@@ -166,47 +118,28 @@ export async function savePlayoffDuelResult(
         teiler: teilerB,
         ringteiler: ringteilerB,
       },
+      audit: (isCorrection) => ({
+        eventType: isCorrection ? "PLAYOFF_RESULT_CORRECTED" : "PLAYOFF_RESULT_ENTERED",
+        entityType: "PLAYOFF_DUEL",
+        entityId: input.duelId,
+        userId: session.user.id,
+        competitionId: match.competitionId,
+        details: {
+          duelId: input.duelId,
+          matchId: match.id,
+          round: match.round,
+          duelNumber: duel.duelNumber,
+          nameA: `${match.participantA.firstName} ${match.participantA.lastName}`,
+          nameB: `${match.participantB.firstName} ${match.participantB.lastName}`,
+          totalRingsA: input.totalRingsA,
+          teilerA,
+          totalRingsB: input.totalRingsB,
+          teilerB,
+        },
+      }),
     })
   } catch (error) {
-    if (error instanceof NextRoundLockedError) return { error: `Korrektur ${NEXT_ROUND_LOCKED}` }
-    const msg = error instanceof Error ? error.message : String(error)
-    console.error("Fehler beim Speichern des Playoff-Ergebnisses:", msg)
-    return { error: "Ergebnis konnte nicht gespeichert werden." }
-  }
-
-  await db.auditLog.create({
-    data: {
-      eventType: isCorrection ? "PLAYOFF_RESULT_CORRECTED" : "PLAYOFF_RESULT_ENTERED",
-      entityType: "PLAYOFF_DUEL",
-      entityId: input.duelId,
-      userId: session.user.id,
-      competitionId: match.competitionId,
-      details: {
-        duelId: input.duelId,
-        matchId: match.id,
-        round: match.round,
-        duelNumber: duel.duelNumber,
-        nameA: `${match.participantA.firstName} ${match.participantA.lastName}`,
-        nameB: `${match.participantB.firstName} ${match.participantB.lastName}`,
-        totalRingsA: input.totalRingsA,
-        teilerA,
-        totalRingsB: input.totalRingsB,
-        teilerB,
-      },
-    },
-  })
-
-  // Nach der Transaktion: Folge-Aktionen
-  if (outcome === "DRAW" && !isCorrection && !matchComplete) {
-    if (isFinal) {
-      // Finale-Gleichstand → Sudden-Death-Duell anlegen (wenn finaleHasSuddenDeath)
-      if (finaleHasSuddenDeath) {
-        await addExtraDuel(match.id, true)
-      }
-    } else {
-      // VF/HF-Unentschieden → nächstes Duell automatisch anlegen
-      await addExtraDuel(match.id, false)
-    }
+    return { error: playoffFailureMessage(error, "Ergebnis konnte nicht gespeichert werden.") }
   }
 
   // The playoffs route is refreshed client-side via router.refresh(); only the

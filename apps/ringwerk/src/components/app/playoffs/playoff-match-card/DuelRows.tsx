@@ -97,7 +97,7 @@ export function DuelRows({ match, canManage, config, card }: Props) {
             ) : (
               <>
                 <span className="flex-1" />
-                {canManage && duel.id === nextPendingDuel?.id && (
+                {canManage && duel.id === nextPendingDuel?.id && match.status !== "COMPLETED" && (
                   <>
                     <PlayoffDuelResultDialog
                       duel={duel}

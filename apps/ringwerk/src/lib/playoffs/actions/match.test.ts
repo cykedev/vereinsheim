@@ -14,9 +14,14 @@ vi.mock("@/lib/auth-helpers", () => ({
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }))
 vi.mock("@/lib/competitions/publicPdfCache", () => ({ revalidatePublicPdf: vi.fn() }))
 vi.mock("@/lib/playoffs/queries", () => ({ getSeedingStandings: vi.fn().mockResolvedValue([]) }))
-vi.mock("@/lib/db", () => ({
-  db: { playoffMatch: { findMany, create, createMany, count: vi.fn().mockResolvedValue(4) } },
-}))
+const { transaction } = vi.hoisted(() => ({ transaction: vi.fn() }))
+vi.mock("@/lib/db", () => {
+  const playoffMatch = { findMany, create, createMany, count: vi.fn().mockResolvedValue(4) }
+  transaction.mockImplementation((fn: (tx: { playoffMatch: typeof playoffMatch }) => unknown) =>
+    fn({ playoffMatch })
+  )
+  return { db: { playoffMatch, $transaction: transaction } }
+})
 
 import { advanceRound } from "./match"
 
@@ -61,6 +66,9 @@ describe("advanceRound: Finale", () => {
 
   it("setzt den Sieger des oberen Halbfinales als A, unabhängig von der Zeilenfolge", async () => {
     expect(await advanceRound("c1")).toEqual({ success: true })
+    expect(transaction).toHaveBeenCalledWith(expect.any(Function), {
+      isolationLevel: "Serializable",
+    })
     expect(create).toHaveBeenCalledTimes(1)
     expect(create).toHaveBeenCalledWith({
       data: { competitionId: "c1", round: "FINAL", participantAId: "p1", participantBId: "p4" },

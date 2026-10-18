@@ -22,8 +22,8 @@ vi.mock("@/lib/auth-helpers", () => ({
 }))
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn(), revalidateTag: vi.fn() }))
 vi.mock("@/lib/competitions/publicPdfCache", () => ({ revalidatePublicPdf: vi.fn() }))
-vi.mock("@/lib/db", () => ({
-  db: {
+vi.mock("@/lib/db", () => {
+  const db = {
     competition: { findUnique: m.competitionFindUnique },
     competitionParticipant: { findMany: m.competitionParticipantFindMany },
     matchup: { findMany: m.matchupFindMany, count: m.matchupCount },
@@ -34,8 +34,11 @@ vi.mock("@/lib/db", () => ({
       createMany: m.playoffMatchCreateMany,
     },
     auditLog: { create: m.auditLogCreate },
-  },
-}))
+    // die Transaktion bekommt dieselben Delegates
+    $transaction: (fn: (tx: unknown) => unknown) => fn(db),
+  }
+  return { db }
+})
 
 import { startPlayoffs } from "./start"
 import { advanceRound } from "./match"
