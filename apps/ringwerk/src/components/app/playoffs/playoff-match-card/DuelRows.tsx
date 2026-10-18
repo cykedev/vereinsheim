@@ -97,20 +97,22 @@ export function DuelRows({ match, canManage, config, card }: Props) {
             ) : (
               <>
                 <span className="flex-1" />
-                {canManage && duel.id === nextPendingDuel?.id && match.status !== "COMPLETED" && (
+                {canManage && duel.id === nextPendingDuel?.id && (
                   <>
-                    <PlayoffDuelResultDialog
-                      duel={duel}
-                      participantA={match.participantA}
-                      participantB={match.participantB}
-                      isCorrection={false}
-                      isFinalMatch={isFinal}
-                      scoringType={scoringType}
-                      shotsPerSeries={shotsPerSeries}
-                      finalePrimary={finalePrimary}
-                      finaleTiebreaker1={finaleTiebreaker1}
-                      finaleTiebreaker2={finaleTiebreaker2}
-                    />
+                    {match.status !== "COMPLETED" && (
+                      <PlayoffDuelResultDialog
+                        duel={duel}
+                        participantA={match.participantA}
+                        participantB={match.participantB}
+                        isCorrection={false}
+                        isFinalMatch={isFinal}
+                        scoringType={scoringType}
+                        shotsPerSeries={shotsPerSeries}
+                        finalePrimary={finalePrimary}
+                        finaleTiebreaker1={finaleTiebreaker1}
+                        finaleTiebreaker2={finaleTiebreaker2}
+                      />
+                    )}
                     {match.canCorrect && duel.id === lastDuelId && (
                       <Button
                         variant="ghost"

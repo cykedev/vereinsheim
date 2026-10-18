@@ -2,14 +2,13 @@
 
 import { revalidatePath } from "next/cache"
 import type { Prisma } from "@/generated/prisma/client"
-import { db } from "@/lib/db"
 import { getAuthSession, canManage } from "@/lib/auth-helpers"
 import type { ActionResult } from "@/lib/types"
 import { getSeedingStandings } from "@/lib/playoffs/queries"
 import { revalidatePublicPdf } from "@/lib/competitions/publicPdfCache"
 import { createNextRoundMatchups, getNextRound } from "../calculatePlayoffs"
 import type { PlayoffRound } from "../types"
-import { playoffFailureMessage } from "./duelMutations"
+import { playoffFailureMessage, serializable } from "./duelMutations"
 
 const MATCHES_PER_ROUND: Record<Exclude<PlayoffRound, "FINAL">, number> = {
   EIGHTH_FINAL: 8,
@@ -41,54 +40,52 @@ export async function advanceRound(competitionId: string): Promise<ActionResult>
   if (!session) return { error: "Nicht angemeldet." }
   if (!canManage(session.user.role)) return { error: "Keine Berechtigung." }
 
-  // Lesen und Anlegen in einer serialisierbaren Transaktion: Eine Korrektur, die zur selben Zeit die Runde ändert, lässt
-  // eine der beiden scheitern, statt die nächste Runde aus alten Siegern zu setzen
+  // Lesen und Anlegen in einer serialisierbaren Transaktion: Ändert eine Korrektur zur selben Zeit die Runde, bricht
+  // Postgres eine der beiden ab und sie läuft mit dem neuen Stand noch einmal, statt die nächste Runde aus alten Siegern
+  // zu setzen
   let problem: string | null
   try {
-    problem = await db.$transaction(
-      async (tx) => {
-        const matches = await tx.playoffMatch.findMany({
-          where: { competitionId },
-          select: {
-            id: true,
-            round: true,
-            status: true,
-            winsA: true,
-            winsB: true,
-            participantAId: true,
-            participantBId: true,
-          },
-          orderBy: [{ createdAt: "asc" }, { id: "asc" }],
-        })
+    problem = await serializable(async (tx) => {
+      const matches = await tx.playoffMatch.findMany({
+        where: { competitionId },
+        select: {
+          id: true,
+          round: true,
+          status: true,
+          winsA: true,
+          winsB: true,
+          participantAId: true,
+          participantBId: true,
+        },
+        orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+      })
 
-        if (matches.length === 0) return "Keine Playoffs gefunden."
+      if (matches.length === 0) return "Keine Playoffs gefunden."
 
-        // Höchste Runde ohne Folge-Runde ermitteln
-        const hasEF = matches.some((m) => m.round === "EIGHTH_FINAL")
-        const hasQF = matches.some((m) => m.round === "QUARTER_FINAL")
-        const hasSF = matches.some((m) => m.round === "SEMI_FINAL")
-        const hasFinal = matches.some((m) => m.round === "FINAL")
+      // Höchste Runde ohne Folge-Runde ermitteln
+      const hasEF = matches.some((m) => m.round === "EIGHTH_FINAL")
+      const hasQF = matches.some((m) => m.round === "QUARTER_FINAL")
+      const hasSF = matches.some((m) => m.round === "SEMI_FINAL")
+      const hasFinal = matches.some((m) => m.round === "FINAL")
 
-        let roundToAdvance: PlayoffRound | null = null
-        if (hasEF && !hasQF) {
-          roundToAdvance = "EIGHTH_FINAL"
-        } else if (hasQF && !hasSF) {
-          roundToAdvance = "QUARTER_FINAL"
-        } else if (hasSF && !hasFinal) {
-          roundToAdvance = "SEMI_FINAL"
-        }
+      let roundToAdvance: PlayoffRound | null = null
+      if (hasEF && !hasQF) {
+        roundToAdvance = "EIGHTH_FINAL"
+      } else if (hasQF && !hasSF) {
+        roundToAdvance = "QUARTER_FINAL"
+      } else if (hasSF && !hasFinal) {
+        roundToAdvance = "SEMI_FINAL"
+      }
 
-        if (!roundToAdvance) return "Keine Runde zum Anlegen der nächsten Runde."
+      if (!roundToAdvance) return "Keine Runde zum Anlegen der nächsten Runde."
 
-        const currentRoundMatches = matches.filter((m) => m.round === roundToAdvance)
-        if (!currentRoundMatches.every((m) => m.status === "COMPLETED")) {
-          return "Noch nicht alle Matches der aktuellen Runde abgeschlossen."
-        }
+      const currentRoundMatches = matches.filter((m) => m.round === roundToAdvance)
+      if (!currentRoundMatches.every((m) => m.status === "COMPLETED")) {
+        return "Noch nicht alle Matches der aktuellen Runde abgeschlossen."
+      }
 
-        return handleMatchCompletion(tx, competitionId, roundToAdvance)
-      },
-      { isolationLevel: "Serializable" }
-    )
+      return handleMatchCompletion(tx, competitionId, roundToAdvance)
+    })
   } catch (error) {
     return {
       error: playoffFailureMessage(error, "Die nächste Runde konnte nicht angelegt werden."),

@@ -19,15 +19,10 @@ export async function deleteLastPlayoffDuel(duelId: string): Promise<ActionResul
     where: { id: duelId },
     select: {
       id: true,
-      duelNumber: true,
-      isCompleted: true,
       playoffMatch: {
         select: {
           id: true,
           round: true,
-          winsA: true,
-          winsB: true,
-          status: true,
           competitionId: true,
           competition: {
             select: {
@@ -44,22 +39,12 @@ export async function deleteLastPlayoffDuel(duelId: string): Promise<ActionResul
           participantB: { select: { firstName: true, lastName: true } },
         },
       },
-      results: {
-        select: {
-          participantId: true,
-          totalRings: true,
-          teiler: true,
-          ringteiler: true,
-        },
-      },
     },
   })
 
   if (!duel) return { error: "Duell nicht gefunden." }
 
   const match = duel.playoffMatch
-  const deletedResultA = duel.results.find((r) => r.participantId === match.participantAId)
-  const deletedResultB = duel.results.find((r) => r.participantId === match.participantBId)
 
   // Prüfungen (letztes Duell, Folge-Runde ohne Duelle), Siegstand und Folge-Runde in der Transaktion
   try {
@@ -73,26 +58,30 @@ export async function deleteLastPlayoffDuel(duelId: string): Promise<ActionResul
         finaleTiebreaker2: match.competition.finaleTiebreaker2 ?? null,
         finaleHasSuddenDeath: match.competition.finaleHasSuddenDeath,
       },
-      audit: () => ({
-        eventType: "PLAYOFF_DUEL_DELETED",
-        entityType: "PLAYOFF_DUEL",
-        entityId: duel.id,
-        userId: session.user.id,
-        competitionId: match.competitionId,
-        details: {
-          duelId: duel.id,
-          matchId: match.id,
-          round: match.round,
-          duelNumber: duel.duelNumber,
-          nameA: `${match.participantA.firstName} ${match.participantA.lastName}`,
-          nameB: `${match.participantB.firstName} ${match.participantB.lastName}`,
-          wasCompleted: duel.isCompleted,
-          totalRingsA: deletedResultA?.totalRings.toNumber() ?? null,
-          teilerA: deletedResultA?.teiler?.toNumber() ?? null,
-          totalRingsB: deletedResultB?.totalRings.toNumber() ?? null,
-          teilerB: deletedResultB?.teiler?.toNumber() ?? null,
-        },
-      }),
+      audit: (deleted) => {
+        const resultA = deleted.results.find((r) => r.participantId === match.participantAId)
+        const resultB = deleted.results.find((r) => r.participantId === match.participantBId)
+        return {
+          eventType: "PLAYOFF_DUEL_DELETED",
+          entityType: "PLAYOFF_DUEL",
+          entityId: duel.id,
+          userId: session.user.id,
+          competitionId: match.competitionId,
+          details: {
+            duelId: duel.id,
+            matchId: match.id,
+            round: match.round,
+            duelNumber: deleted.duelNumber,
+            nameA: `${match.participantA.firstName} ${match.participantA.lastName}`,
+            nameB: `${match.participantB.firstName} ${match.participantB.lastName}`,
+            wasCompleted: deleted.isCompleted,
+            totalRingsA: resultA?.totalRings.toNumber() ?? null,
+            teilerA: resultA?.teiler?.toNumber() ?? null,
+            totalRingsB: resultB?.totalRings.toNumber() ?? null,
+            teilerB: resultB?.teiler?.toNumber() ?? null,
+          },
+        }
+      },
     })
   } catch (error) {
     return { error: playoffFailureMessage(error, "Duell konnte nicht gelöscht werden.") }

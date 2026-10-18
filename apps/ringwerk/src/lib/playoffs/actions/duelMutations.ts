@@ -74,7 +74,10 @@ export async function deleteNextRound(
   })
 }
 
-/** Siege aus den fertigen Duellen, gezählt mit derselben Wertung wie beim Eintragen (`storedDuelOutcome`). */
+/**
+ * Siege aus den fertigen Duellen, gezählt mit derselben Wertung wie beim Eintragen (`storedDuelOutcome`), dazu die Zahl
+ * der fertigen Duelle.
+ */
 async function countWins(tx: Tx, match: MatchScope, rules: MatchRules) {
   const duels = await tx.playoffDuel.findMany({
     where: { playoffMatchId: match.id, isCompleted: true },
@@ -101,17 +104,19 @@ async function countWins(tx: Tx, match: MatchScope, rules: MatchRules) {
     if (outcome === "A") winsA++
     else if (outcome === "B") winsB++
   }
-  return { winsA, winsB }
+  return { winsA, winsB, completed: duels.length }
 }
 
-async function addDuel(tx: Tx, matchId: string, isSuddenDeath: boolean) {
+async function addDuel(tx: Tx, matchId: string, isSuddenDeath: boolean): Promise<string> {
   const last = await tx.playoffDuel.aggregate({
     where: { playoffMatchId: matchId },
     _max: { duelNumber: true },
   })
-  await tx.playoffDuel.create({
+  const duel = await tx.playoffDuel.create({
     data: { playoffMatchId: matchId, duelNumber: (last._max.duelNumber ?? 0) + 1, isSuddenDeath },
+    select: { id: true },
   })
+  return duel.id
 }
 
 interface Settle {
@@ -121,19 +126,21 @@ interface Settle {
   mayChangeOutcome: boolean
   /** ein neu eingetragenes Unentschieden: außerhalb des Finales folgt das nächste Duell */
   newDraw: boolean
-  /** nach dem Speichern eines Duells: ein offenes Finale ohne offenes Duell bekommt die Verlängerung */
-  finalNeedsDuel: boolean
 }
 
 /**
  * Bringt ein Match nach einer Änderung an seinen Duellen in Ordnung: Siege aus den Duellen zählen, Status setzen, offene
  * Duelle eines entschiedenen Matches entfernen, das nächste Duell anlegen und bei geändertem Ausgang die Folge-Runde
  * entfernen. Läuft in der Transaktion der Änderung.
+ *
+ * Ein Finale, das nach mindestens einem fertigen Duell offen ist und kein offenes Duell hat, bekommt die Verlängerung
+ * (mit `finaleHasSuddenDeath`): In der Oberfläche lässt sich dort kein Duell anlegen. Ohne fertiges Duell legt man das
+ * erste Duell über „Duell anlegen“ an.
  */
 async function settle(tx: Tx, match: MatchScope, rules: MatchRules, opts: Settle) {
   const isFinal = match.round === "FINAL"
   const requiredWins = requiredWinsFromBestOf(rules.playoffBestOf)
-  const { winsA, winsB } = await countWins(tx, match, rules)
+  const { winsA, winsB, completed } = await countWins(tx, match, rules)
   const enough = isFinal ? 1 : requiredWins
   if (winsA >= enough && winsB >= enough) {
     throw new PlayoffActionError(
@@ -155,8 +162,7 @@ async function settle(tx: Tx, match: MatchScope, rules: MatchRules, opts: Settle
       select: { id: true },
     })
     if (open.length === 0) {
-      if (isFinal && opts.finalNeedsDuel && (rules.finaleHasSuddenDeath ?? true)) {
-        // Gleichstand im Finale: In der Oberfläche lässt sich hier kein Duell mehr anlegen, die Verlängerung folgt
+      if (isFinal && completed > 0 && (rules.finaleHasSuddenDeath ?? true)) {
         await addDuel(tx, match.id, true)
       } else if (!isFinal && opts.newDraw) {
         await addDuel(tx, match.id, false)
@@ -187,7 +193,30 @@ export interface DuelResultSide {
 /** Protokolleintrag zu einer Änderung; geschrieben in derselben Transaktion */
 type Audit = (isCorrection: boolean) => Prisma.AuditLogUncheckedCreateInput
 
-const SERIALIZABLE = { isolationLevel: "Serializable" } as const
+const ATTEMPTS = 3
+
+/** Ob Postgres die Transaktion wegen einer gleichzeitigen Änderung abgebrochen hat (Prisma `P2034`) */
+function isConflict(error: unknown): boolean {
+  const code = (error as { code?: unknown } | null)?.code
+  const text = error instanceof Error ? error.message : String(error)
+  return code === "P2034" || /could not serialize|deadlock detected/i.test(text)
+}
+
+/**
+ * Führt `fn` in einer serialisierbaren Transaktion aus und wiederholt sie bis zu dreimal, wenn Postgres sie wegen einer
+ * gleichzeitigen Änderung abbricht. Postgres bricht auch ab, wenn zwei Personen zugleich in verschiedenen Matches
+ * speichern (die Tabellen sind klein und werden ganz gelesen). Wiederholen ist sicher, weil `fn` alles, wovon es
+ * abhängt, selbst in der Transaktion liest.
+ */
+export async function serializable<T>(fn: (tx: Tx) => Promise<T>): Promise<T> {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await db.$transaction(fn, { isolationLevel: "Serializable" })
+    } catch (error) {
+      if (attempt >= ATTEMPTS || !isConflict(error)) throw error
+    }
+  }
+}
 
 /**
  * Speichert das Ergebnis eines Duells (neu oder als Korrektur) und bringt das Match in Ordnung (`settle`), alles in
@@ -207,7 +236,7 @@ export async function recordDuelResult(args: {
 }): Promise<void> {
   const { duelId, match, rules, recordedByUserId, outcome, a, b, audit } = args
   const isFinal = match.round === "FINAL"
-  await db.$transaction(async (tx) => {
+  await serializable(async (tx) => {
     const duel = await tx.playoffDuel.findUniqueOrThrow({
       where: { id: duelId },
       select: { isCompleted: true },
@@ -245,11 +274,19 @@ export async function recordDuelResult(args: {
       before,
       mayChangeOutcome: isCorrection,
       newDraw: !isCorrection && outcome === "DRAW",
-      finalNeedsDuel: true,
     })
     await tx.auditLog.create({ data: audit(isCorrection) })
-  }, SERIALIZABLE)
+  })
 }
+
+const DELETED_DUEL = {
+  duelNumber: true,
+  isCompleted: true,
+  results: { select: { participantId: true, totalRings: true, teiler: true } },
+} satisfies Prisma.PlayoffDuelSelect
+
+/** das gelöschte Duell, wie es in der Transaktion vor dem Löschen stand */
+export type DeletedDuel = Prisma.PlayoffDuelGetPayload<{ select: typeof DELETED_DUEL }>
 
 /**
  * Löscht das letzte Duell eines Matches samt Ergebnissen und bringt das Match in Ordnung (`settle`), in einer
@@ -259,13 +296,13 @@ export async function removeLastDuel(args: {
   duelId: string
   match: MatchScope
   rules: MatchRules
-  audit: Audit
+  audit: (deleted: DeletedDuel) => Prisma.AuditLogUncheckedCreateInput
 }): Promise<void> {
   const { duelId, match, rules, audit } = args
-  await db.$transaction(async (tx) => {
+  await serializable(async (tx) => {
     const duel = await tx.playoffDuel.findUniqueOrThrow({
       where: { id: duelId },
-      select: { duelNumber: true },
+      select: DELETED_DUEL,
     })
     const last = await tx.playoffDuel.aggregate({
       where: { playoffMatchId: match.id },
@@ -287,23 +324,40 @@ export async function removeLastDuel(args: {
       before,
       mayChangeOutcome: true,
       newDraw: false,
-      finalNeedsDuel: false,
     })
-    await tx.auditLog.create({ data: audit(true) })
-  }, SERIALIZABLE)
+    await tx.auditLog.create({ data: audit(duel) })
+  })
 }
 
 /**
- * Meldung für den User zu einem Fehler aus `recordDuelResult` oder `removeLastDuel`: die eigene Meldung, bei einer
- * gleichzeitigen Änderung (Prisma `P2034`, Postgres „could not serialize“) die Bitte, neu zu laden, sonst `fallback`.
+ * Legt in einem offenen Match das nächste Duell an („Duell anlegen“), in einer serialisierbaren Transaktion: Wird das
+ * Match zur selben Zeit entschieden, entsteht kein offenes Duell in einem entschiedenen Match.
+ */
+export async function addNextDuel(matchId: string): Promise<string> {
+  return serializable(async (tx) => {
+    const match = await tx.playoffMatch.findUnique({
+      where: { id: matchId },
+      select: { status: true },
+    })
+    if (!match) throw new PlayoffActionError("Playoff-Paarung nicht gefunden.")
+    if (match.status === "COMPLETED") {
+      throw new PlayoffActionError("Diese Playoff-Paarung ist bereits abgeschlossen.")
+    }
+    return addDuel(tx, matchId, false)
+  })
+}
+
+/**
+ * Meldung für den User zu einem Fehler aus den Playoff-Transaktionen: die eigene Meldung; bei einer gleichzeitigen
+ * Änderung, die auch nach dem Wiederholen bleibt (`isConflict`, oder eine schon vergebene Duell-Nummer `P2002`), die
+ * Bitte, neu zu laden; sonst `fallback`.
  */
 export function playoffFailureMessage(error: unknown, fallback: string): string {
   if (error instanceof PlayoffActionError) return error.message
   const code = (error as { code?: unknown } | null)?.code
-  const text = error instanceof Error ? error.message : String(error)
-  if (code === "P2034" || /could not serialize/i.test(text)) {
-    return "Das Match wurde gleichzeitig geändert. Bitte die Seite neu laden und noch einmal speichern."
+  if (isConflict(error) || code === "P2002") {
+    return "Die Playoffs wurden gleichzeitig geändert. Bitte die Seite neu laden und es noch einmal versuchen."
   }
-  console.error("Fehler bei einem Playoff-Duell:", text)
+  console.error("Fehler bei Playoffs:", error instanceof Error ? error.message : String(error))
   return fallback
 }

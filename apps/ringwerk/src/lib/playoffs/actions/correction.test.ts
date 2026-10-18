@@ -31,6 +31,7 @@ vi.mock("./duelOutcome", async (original) => ({
 }))
 
 import { deleteLastPlayoffDuel } from "./deleteDuel"
+import { addPlayoffDuel } from "./manualDuel"
 import { createPlayoffFake } from "./playoffFake"
 import { savePlayoffDuelResult } from "./saveDuel"
 
@@ -130,6 +131,17 @@ function bracket({ s2Duels = 0, final = false, finalDuels = [] as Outcome[] } = 
     )
   }
 }
+
+/** Finale p1 gegen p3 mit den gegebenen Duellen; `sd` markiert die Duelle ab dieser Nummer als Verlängerung */
+const final = (outcomes: ("A" | "B" | "DRAW" | "offen")[], status = "PENDING", sd = 2) => {
+  fake.current.addMatch(
+    { id: "f", round: "FINAL", participantAId: "p1", participantBId: "p3" },
+    outcomes,
+    { status }
+  )
+  for (const d of duels("f")) d.isSuddenDeath = d.duelNumber >= sd
+}
+const finalDuels = () => duels("f").map((d) => [d.duelNumber, d.isSuddenDeath, d.isCompleted])
 
 const qf1 = (outcomes: ("A" | "B" | "DRAW" | "offen")[], status = "PENDING") =>
   fake.current.addMatch(
@@ -261,6 +273,41 @@ describe("neue Eingaben", () => {
     ])
   })
 
+  it("Finale: ein Unentschieden im ersten Duell bringt die Verlängerung", async () => {
+    final(["offen"])
+    expect(await save(duelOf("f", 1), "DRAW")).toEqual({ success: true })
+    expect(stand("f")).toBe("0:0 PENDING")
+    expect(finalDuels()).toEqual([
+      [1, false, true],
+      [2, true, false],
+    ])
+  })
+
+  it("Finale: ein Unentschieden in der Verlängerung bringt die nächste", async () => {
+    final(["DRAW", "offen"])
+    expect(await save(duelOf("f", 2), "DRAW")).toEqual({ success: true })
+    expect(stand("f")).toBe("0:0 PENDING")
+    expect(finalDuels()).toEqual([
+      [1, false, true],
+      [2, true, true],
+      [3, true, false],
+    ])
+  })
+
+  it("Finale: ein Sieg entscheidet, kein weiteres Duell", async () => {
+    final(["DRAW", "offen"])
+    expect(await save(duelOf("f", 2), "B")).toEqual({ success: true })
+    expect(stand("f")).toBe("0:1 COMPLETED")
+    expect(duels("f")).toHaveLength(2)
+  })
+
+  it("Finale ohne Verlängerung im Regelwerk: ein neues Unentschieden bringt kein Duell", async () => {
+    rules.finaleHasSuddenDeath = false
+    final(["offen"])
+    expect(await save(duelOf("f", 1), "DRAW")).toEqual({ success: true })
+    expect(finalDuels()).toEqual([[1, false, true]])
+  })
+
   it("schreibt das Protokoll in der Transaktion", async () => {
     qf1(["A", "offen"])
     await save(duelOf("q1", 2), "A")
@@ -282,14 +329,44 @@ describe("gleichzeitig speichern", () => {
     expect(stand("q1")).toBe("1:2 PENDING")
   })
 
-  it("meldet eine gleichzeitige Änderung verständlich", async () => {
+  const conflict = () => Object.assign(new Error("Transaction failed"), { code: "P2034" })
+
+  it("wiederholt die Transaktion, wenn Postgres sie wegen einer gleichzeitigen Änderung abbricht", async () => {
     bracket()
-    fake.current.db.$transaction.mockRejectedValueOnce(
-      Object.assign(new Error("Transaction failed"), { code: "P2034" })
-    )
+    fake.current.db.$transaction.mockRejectedValueOnce(conflict())
+    expect(await save(duelOf("q1", 5), "B")).toEqual({ success: true })
+    expect(stand("q1")).toBe("2:3 COMPLETED")
+    expect(fake.current.db.$transaction).toHaveBeenCalledTimes(2)
+  })
+
+  it("meldet eine gleichzeitige Änderung verständlich, wenn sie nach drei Versuchen bleibt", async () => {
+    bracket()
+    fake.current.db.$transaction.mockRejectedValue(conflict())
     expect(await save(duelOf("q1", 5), "B")).toMatchObject({
       error: expect.stringContaining("gleichzeitig"),
     })
+    expect(fake.current.db.$transaction).toHaveBeenCalledTimes(3)
+  })
+
+  it("eine schon vergebene Duell-Nummer gilt als gleichzeitige Änderung", async () => {
+    qf1(["A", "B"])
+    fake.current.db.$transaction.mockRejectedValueOnce(
+      Object.assign(new Error("Unique constraint failed"), { code: "P2002" })
+    )
+    expect(await addPlayoffDuel("q1")).toMatchObject({
+      error: expect.stringContaining("gleichzeitig"),
+    })
+    expect(fake.current.db.$transaction).toHaveBeenCalledTimes(1)
+  })
+
+  it("wiederholt andere Fehler nicht", async () => {
+    bracket()
+    vi.spyOn(console, "error").mockImplementation(() => {})
+    fake.current.db.$transaction.mockRejectedValueOnce(new Error("kaputt"))
+    expect(await save(duelOf("q1", 5), "B")).toEqual({
+      error: "Ergebnis konnte nicht gespeichert werden.",
+    })
+    expect(fake.current.db.$transaction).toHaveBeenCalledTimes(1)
   })
 
   it("schreibt in einer serialisierbaren Transaktion", async () => {
@@ -330,6 +407,16 @@ describe("letztes Duell löschen", () => {
     expect(duels("f")).toHaveLength(0)
   })
 
+  it("Finale: die entscheidende Verlängerung löschen legt sie offen neu an", async () => {
+    final(["DRAW", "A"], "COMPLETED")
+    expect(await remove(duelOf("f", 2))).toEqual({ success: true })
+    expect(stand("f")).toBe("0:0 PENDING")
+    expect(finalDuels()).toEqual([
+      [1, false, true],
+      [2, true, false],
+    ])
+  })
+
   it("ist gesperrt, sobald irgendwo in der nächsten Runde ein Duell angelegt ist", async () => {
     bracket({ s2Duels: 1 })
     expect(await remove(duelOf("q1", 5))).toMatchObject({
@@ -337,5 +424,25 @@ describe("letztes Duell löschen", () => {
     })
     expect(duels("q1")).toHaveLength(5)
     expect(round("SEMI_FINAL")).toEqual(["s1", "s2"])
+  })
+})
+
+describe("Duell anlegen", () => {
+  it("legt in einem offenen Match das nächste Duell an", async () => {
+    qf1(["A", "B"])
+    expect(await addPlayoffDuel("q1")).toMatchObject({ success: true })
+    expect(duels("q1").map((d) => [d.duelNumber, d.isCompleted])).toEqual([
+      [1, true],
+      [2, true],
+      [3, false],
+    ])
+  })
+
+  it("nicht in einem entschiedenen Match", async () => {
+    qf1(["A", "A", "A"], "COMPLETED")
+    expect(await addPlayoffDuel("q1")).toMatchObject({
+      error: expect.stringContaining("abgeschlossen"),
+    })
+    expect(duels("q1")).toHaveLength(3)
   })
 })

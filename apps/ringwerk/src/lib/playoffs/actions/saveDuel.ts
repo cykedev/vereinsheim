@@ -28,23 +28,10 @@ export async function savePlayoffDuelResult(
     select: {
       id: true,
       duelNumber: true,
-      isCompleted: true,
-      playoffMatchId: true,
-      results: {
-        select: {
-          participantId: true,
-          totalRings: true,
-          teiler: true,
-          ringteiler: true,
-        },
-      },
       playoffMatch: {
         select: {
           id: true,
           round: true,
-          winsA: true,
-          winsB: true,
-          status: true,
           competitionId: true,
           participantAId: true,
           participantA: { select: { firstName: true, lastName: true } },

@@ -263,10 +263,12 @@ Paarungen ändern, nicht nur die eigene. Deshalb gilt je Runde, nicht je Teilneh
 - Den Siegstand zählt Ringwerk beim Eintragen, Korrigieren und Löschen **in der Transaktion aus den fertigen Duellen**,
   nicht aus einem vorab gelesenen Stand. Sperre, Status, offene und nächste Duelle, Entfernen der Folgerunde und
   Protokoll laufen in derselben serialisierbaren Transaktion (`recordDuelResult`, `removeLastDuel`), ebenso „… anlegen“
-  (`advanceRound`). Speichern zwei Personen zugleich, stimmt der Stand, oder eine bekommt „gleichzeitig geändert, bitte
-  neu laden“.
-- Ein Finale, das offen ist und kein offenes Duell hat (etwa nach einer Korrektur zum Unentschieden), bekommt die
-  Verlängerung, wenn das Regelwerk sie vorsieht.
+  (`advanceRound`) und „Duell anlegen“ (`addNextDuel`). Bricht Postgres eine davon wegen einer gleichzeitigen Änderung
+  ab (auch bei Speichern in verschiedenen Matches), läuft sie bis zu dreimal neu (`serializable`). Erst danach bekommt
+  die Person „gleichzeitig geändert, bitte neu laden“.
+- Ein Finale, das nach mindestens einem fertigen Duell offen ist und kein offenes Duell hat, bekommt die Verlängerung,
+  wenn das Regelwerk sie vorsieht: nach einem Unentschieden, nach einer Korrektur zum Unentschieden und nach dem
+  Löschen der entscheidenden Verlängerung. Ohne fertiges Duell legt man das erste über „Duell anlegen“ an.
 - Ein entschiedenes Match nimmt kein weiteres Duell an; wird es entschieden, fallen seine offenen Duelle weg.
 - Das alte Ergebnis eines Duells zählt Ringwerk beim Korrigieren und Löschen mit derselben Wertung zurück, mit der es
   gezählt wurde (im Finale die Kette des Finales samt Stichkriterien).

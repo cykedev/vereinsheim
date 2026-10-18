@@ -84,6 +84,10 @@ export function createPlayoffFake() {
   const tx = {
     playoffMatch: {
       findFirst: vi.fn(async ({ where }: { where: Where }) => matches(where)[0] ?? null),
+      findUnique: vi.fn(async ({ where }: { where: Where }) => {
+        const m = matches(where)[0]
+        return m ? { ...m } : null
+      }),
       findMany: vi.fn(async ({ where }: { where: Where }) => matches(where)),
       findUniqueOrThrow: vi.fn(async ({ where }: { where: Where }) => {
         const m = matches(where)[0]
