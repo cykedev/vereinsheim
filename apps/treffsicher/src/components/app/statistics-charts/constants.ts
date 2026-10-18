@@ -20,31 +20,20 @@ export const radarSeriesConfig: Record<RadarSeriesKey, { label: string; color: s
   feedback: { label: "Feedback", color: "var(--chart-2)" },
 }
 
-const shotDistributionColors: Record<string, string> = {
-  r0: "#edf1f5",
-  r1: "#dae1e8",
-  r2: "#c8d1da",
-  r3: "#b5bec8",
-  r4: "#9ca3af",
-  r5: "#8896a0",
-  r6: "#6b7280",
-  r7: "#52606d",
-  r8: "#374151",
-  r9: "#eab308",
-  r10: "#ef4444",
-}
-
+// Ringwert-Farben wie Spiegel (`--score-*`): 10 rot, 9 gold, 8 türkis, ≤ 7 violett; 0–6 als hellere Tönung von 7,
+// damit die gestapelte Fläche die Gruppen trennt
 export const shotDistributionBundledColors = {
-  r0to6: "color-mix(in srgb, #6b7280 74%, white 26%)",
-  r7: shotDistributionColors.r7,
-  r8: shotDistributionColors.r8,
-  r9: shotDistributionColors.r9,
-  r10: shotDistributionColors.r10,
+  r0to6: "color-mix(in srgb, var(--score-7) 45%, var(--card) 55%)",
+  r7: "var(--score-7)",
+  r8: "var(--score-8)",
+  r9: "var(--score-9)",
+  r10: "var(--score-10)",
 } as const
 
 export const HIT_LOCATION_CLOUD_MARGIN = { top: 12, right: 12, bottom: 12, left: 12 } as const
 export const HIT_LOCATION_CLOUD_AXIS_SIZE = 44
-export const HIT_LOCATION_CLOUD_TRAIL_STROKE = "color-mix(in srgb, var(--chart-1) 82%, white 18%)"
+export const HIT_LOCATION_CLOUD_TRAIL_STROKE =
+  "color-mix(in srgb, var(--chart-1) 82%, var(--card) 18%)"
 export const HIT_LOCATION_CLOUD_TRAIL_STROKE_WIDTH = 1.8
 export const HIT_LOCATION_CLOUD_TRAIL_STROKE_OPACITY = 0.32
 export const HIT_LOCATION_CLOUD_TRAIL_START_RADIUS = 1.8
@@ -60,7 +49,7 @@ export const CHART_POINT_STROKE_WIDTH = 1
 export const CHART_TREND_STROKE_WIDTH = 2.5
 export const CHART_TREND_STROKE_OPACITY = 0.9
 export const CHART_TREND_BAND_OPACITY = 0.3
-export const CHART_TREND_BAND_FILL = "color-mix(in srgb, var(--chart-1) 72%, white 28%)"
+export const CHART_TREND_BAND_FILL = "color-mix(in srgb, var(--chart-1) 72%, var(--card) 28%)"
 export const TREND_BAND_STD_DEV_MULTIPLIER = 2.0
 export const TREND_BAND_WINDOW_SIZE = 5
 export const TREND_BAND_LOW_QUANTILE = 0.02
@@ -71,5 +60,5 @@ export const HIT_LOCATION_TREND_BAND_OPACITY = 0.18
 export const HIT_LOCATION_ZERO_LINE_STROKE_WIDTH = 0.8
 export const HIT_LOCATION_ZERO_LINE_STROKE_OPACITY = 0.55
 export const HIT_LOCATION_ZERO_LINE_STROKE =
-  "color-mix(in oklch, var(--muted-foreground) 42%, oklch(1 0 0) 58%)"
+  "color-mix(in oklch, var(--muted-foreground) 42%, var(--card) 58%)"
 export const CHART_TIME_AXIS_MAX_TICKS = 7

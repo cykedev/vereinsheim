@@ -50,7 +50,7 @@ export function ShotDistributionTimelineCard({ model }: Props) {
               dataKey="i"
               ticks={shotDistributionTicks}
               tickFormatter={(index: number) => shotDistributionTimeline[index]?.dateLabel ?? ""}
-              tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+              tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
               axisLine={false}
               tickLine={false}
             />
@@ -62,7 +62,7 @@ export function ShotDistributionTimelineCard({ model }: Props) {
               allowDataOverflow
               ticks={[0, 25, 50, 75, 100]}
               tickFormatter={(value: number) => `${value}%`}
-              tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+              tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
               axisLine={false}
               tickLine={false}
               width={38}
@@ -109,7 +109,7 @@ export function ShotDistributionTimelineCard({ model }: Props) {
                       justifyContent: "center",
                       gap: "4px 12px",
                       paddingTop: 8,
-                      fontSize: 11,
+                      fontSize: 12,
                       color: "var(--muted-foreground)",
                     }}
                   >

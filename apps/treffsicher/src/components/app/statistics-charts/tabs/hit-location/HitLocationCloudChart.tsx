@@ -46,7 +46,7 @@ export function HitLocationCloudChart({ model }: Props) {
             domain={hitLocationCloudAxes.xDomain}
             ticks={hitLocationCloudAxes.xTicks}
             tickFormatter={(value: number) => `${value > 0 ? "+" : ""}${value.toFixed(1)}`}
-            tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+            tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
             axisLine={false}
             tickLine={false}
             height={HIT_LOCATION_CLOUD_AXIS_SIZE}
@@ -54,7 +54,7 @@ export function HitLocationCloudChart({ model }: Props) {
               value: "X (rechts + / links −) in mm",
               position: "insideBottom",
               offset: -6,
-              fontSize: 11,
+              fontSize: 12,
               fill: "var(--muted-foreground)",
             }}
           />
@@ -64,7 +64,7 @@ export function HitLocationCloudChart({ model }: Props) {
             domain={hitLocationCloudAxes.yDomain}
             ticks={hitLocationCloudAxes.yTicks}
             tickFormatter={(value: number) => `${value > 0 ? "+" : ""}${value.toFixed(1)}`}
-            tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+            tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
             axisLine={false}
             tickLine={false}
             width={HIT_LOCATION_CLOUD_AXIS_SIZE}
@@ -73,7 +73,7 @@ export function HitLocationCloudChart({ model }: Props) {
               angle: -90,
               position: "insideLeft",
               style: { textAnchor: "middle", fill: "var(--muted-foreground)" },
-              fontSize: 11,
+              fontSize: 12,
             }}
           />
           <ReferenceLine

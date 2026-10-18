@@ -1,6 +1,7 @@
 import type { SessionDetail } from "@/lib/sessions/actions"
 import { parseShotsJson } from "@/lib/sessions/shots"
 import { HitLocationVisualization } from "@/components/app/sessions/HitLocationVisualization"
+import { ShotValues } from "@/components/app/sessions/ShotValues"
 import { Card, CardContent, CardHeader, CardTitle } from "@vereinsheim/ui/card"
 
 interface Props {
@@ -119,9 +120,7 @@ export function SessionSeriesResultCard({ session, totalScore, isDecimal }: Prop
                 <div className="space-y-1">
                   <p className="text-xs text-muted-foreground">Schüsse</p>
                   {row.shotsArray.length > 0 ? (
-                    <p className="break-words font-mono text-xs text-muted-foreground">
-                      {row.shotsArray.join(" · ")}
-                    </p>
+                    <ShotValues shots={row.shotsArray} />
                   ) : (
                     <p className="text-xs text-muted-foreground">–</p>
                   )}
@@ -161,9 +160,7 @@ export function SessionSeriesResultCard({ session, totalScore, isDecimal }: Prop
                   {hasAnyShots && (
                     <td className="py-2">
                       {row.shotsArray.length > 0 ? (
-                        <span className="whitespace-nowrap font-mono text-xs text-muted-foreground">
-                          {row.shotsArray.join(" · ")}
-                        </span>
+                        <ShotValues shots={row.shotsArray} />
                       ) : (
                         <span className="text-xs text-muted-foreground">–</span>
                       )}

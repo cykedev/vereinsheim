@@ -58,10 +58,10 @@ export function WellbeingTab({ model }: Props) {
                         value: label,
                         position: "insideBottom",
                         offset: -8,
-                        fontSize: 11,
+                        fontSize: 12,
                         fill: "var(--muted-foreground)",
                       }}
-                      tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+                      tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
                       axisLine={false}
                       tickLine={false}
                     />
@@ -70,7 +70,7 @@ export function WellbeingTab({ model }: Props) {
                       type="number"
                       domain={wellbeingYAxis.domain}
                       ticks={wellbeingYAxis.ticks}
-                      tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+                      tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
                       axisLine={false}
                       tickLine={false}
                       width={34}

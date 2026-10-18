@@ -24,7 +24,7 @@ export function SeriesEditorCard({ model, actions }: Props) {
           ? {
               // Probe-Serien werden bewusst visuell anders markiert,
               // damit "zaehlt nicht" auch beim schnellen Ueberfliegen klar bleibt.
-              backgroundImage: "linear-gradient(225deg, #374151 50%, transparent 50%)",
+              backgroundImage: "linear-gradient(225deg, var(--line-strong) 50%, transparent 50%)",
               backgroundSize: "50px 50px",
               backgroundPosition: "top right",
               backgroundRepeat: "no-repeat",

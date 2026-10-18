@@ -46,7 +46,7 @@ export function HitLocationTrendChart({ model }: Props) {
           dataKey="i"
           ticks={hitLocationTrendTicks}
           tickFormatter={(i: number) => hitLocationTrendData[i]?.dateLabel ?? ""}
-          tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+          tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
           axisLine={false}
           tickLine={false}
         />
@@ -54,7 +54,7 @@ export function HitLocationTrendChart({ model }: Props) {
           domain={hitLocationTrendAxis.domain}
           ticks={hitLocationTrendAxis.ticks}
           tickFormatter={(value: number) => `${value > 0 ? "+" : ""}${value.toFixed(1)}`}
-          tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+          tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
           axisLine={false}
           tickLine={false}
           width={46}

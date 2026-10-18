@@ -57,7 +57,7 @@ export function ResultTrendCard({ model }: Props) {
               dataKey="i"
               ticks={lineChartTicks}
               tickFormatter={(index: number) => lineData[index]?.datum ?? ""}
-              tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+              tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
               axisLine={false}
               tickLine={false}
             />
@@ -73,7 +73,7 @@ export function ResultTrendCard({ model }: Props) {
                       .replace(/\.00$/, "")
                       .replace(/(\.\d)0$/, "$1")
               }
-              tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+              tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
               axisLine={false}
               tickLine={false}
               width={40}

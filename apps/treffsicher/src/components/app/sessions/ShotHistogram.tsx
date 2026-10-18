@@ -1,6 +1,7 @@
 "use client"
 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Cell } from "recharts"
+import { scoreVar } from "@/lib/scoreColors"
 import {
   ChartContainer,
   ChartTooltip,
@@ -12,23 +13,6 @@ interface ShotHistogramProps {
   shots: string[] // Schüsse aus Wertungsserien — Probeschüsse werden nicht dargestellt
   isDecimal: boolean // TENTH-Wertung: Schusswerte flooren (9.5 → Bucket „9")
 }
-
-// Farbschema analog zu Meyton-Schiessständen:
-// 10 → rot, 9 → gelb, 8–0 → Grautöne (8 dunkelst, 0 hellst)
-// Index 0 im Array entspricht Bucket 10 (links), Index 10 = Bucket 0 (rechts)
-const BUCKET_COLORS = [
-  "#ef4444", // 10 — rot
-  "#eab308", // 9 — gelb
-  "#374151", // 8 — dunkelgrau (grey-700)
-  "#52606d", // 7
-  "#6b7280", // 6 — grey-500
-  "#8896a0", // 5
-  "#9ca3af", // 4 — grey-400
-  "#b5bec8", // 3
-  "#c8d1da", // 2
-  "#dae1e8", // 1
-  "#edf1f5", // 0 — sehr hellgrau
-]
 
 interface BucketData {
   ring: number
@@ -84,13 +68,13 @@ export function ShotHistogram({ shots, isDecimal }: ShotHistogramProps) {
           <CartesianGrid stroke="var(--border)" strokeOpacity={0.4} vertical={false} />
           <XAxis
             dataKey="label"
-            tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+            tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
             axisLine={false}
             tickLine={false}
           />
           <YAxis
             allowDecimals={false}
-            tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+            tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
             axisLine={false}
             tickLine={false}
             width={28}
@@ -110,9 +94,15 @@ export function ShotHistogram({ shots, isDecimal }: ShotHistogramProps) {
               />
             }
           />
+          {/* Ringwert-Farben wie Spiegel (10 rot, 9 gold, 8 türkis, ≤ 7 violett) mit dunklem Rand */}
           <Bar dataKey="count" radius={[3, 3, 0, 0]}>
-            {data.map((entry, index) => (
-              <Cell key={`cell-${entry.ring}`} fill={BUCKET_COLORS[index]} />
+            {data.map((entry) => (
+              <Cell
+                key={`cell-${entry.ring}`}
+                fill={scoreVar(entry.ring)}
+                stroke="var(--shot-edge)"
+                strokeWidth={1}
+              />
             ))}
           </Bar>
         </BarChart>

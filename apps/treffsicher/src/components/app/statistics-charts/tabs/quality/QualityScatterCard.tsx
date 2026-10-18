@@ -46,14 +46,14 @@ export function QualityScatterCard({ model }: Props) {
               tickFormatter={(value) =>
                 ["", "Schlecht", "Mässig", "Mittel", "Gut", "Sehr gut"][value] ?? value
               }
-              tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
+              tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
               axisLine={false}
               tickLine={false}
               label={{
                 value: "Ausführung",
                 position: "insideBottom",
                 offset: -8,
-                fontSize: 11,
+                fontSize: 12,
                 fill: "var(--muted-foreground)",
               }}
             />
@@ -62,7 +62,7 @@ export function QualityScatterCard({ model }: Props) {
               type="number"
               domain={qualityYAxis.domain}
               ticks={qualityYAxis.ticks}
-              tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+              tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
               axisLine={false}
               tickLine={false}
               width={40}

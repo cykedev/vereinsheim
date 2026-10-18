@@ -37,7 +37,7 @@ export function SeriesRatingsCard({ model }: Props) {
             <CartesianGrid stroke="var(--border)" strokeOpacity={0.4} vertical={false} />
             <XAxis
               dataKey="name"
-              tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+              tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
               axisLine={false}
               tickLine={false}
             />
@@ -47,7 +47,7 @@ export function SeriesRatingsCard({ model }: Props) {
               tickFormatter={(value: number) =>
                 seriesHasDecimals ? value.toFixed(1).replace(/\.0$/, "") : String(Math.round(value))
               }
-              tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+              tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
               axisLine={false}
               tickLine={false}
               width={36}

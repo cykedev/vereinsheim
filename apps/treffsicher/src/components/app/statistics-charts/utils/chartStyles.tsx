@@ -44,5 +44,5 @@ export function renderScatterPoint(props: { cx?: number; cy?: number }, color: s
 }
 
 export function createTrendStroke(color: string): string {
-  return `color-mix(in srgb, ${color} 85%, white 15%)`
+  return `color-mix(in srgb, ${color} 85%, var(--card) 15%)`
 }
