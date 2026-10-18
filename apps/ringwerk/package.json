@@ -15,7 +15,10 @@
     "test:watch": "vitest",
     "check-types": "tsc --noEmit",
     "db:generate": "prisma generate",
-    "pruefdaten": "tsx --tsconfig tools/pruefdaten/tsconfig.json tools/pruefdaten/build.ts"
+    "pruefdaten": "tsx --tsconfig tools/pruefdaten/tsconfig.json tools/pruefdaten/build.ts",
+    "pruefen:aufnehmen": "tsx --tsconfig tools/pruefdaten/tsconfig.json tools/pruefen-ringwerk.ts --aufnehmen",
+    "pruefen:vergleichen": "tsx --tsconfig tools/pruefdaten/tsconfig.json tools/pruefen-ringwerk.ts --vergleichen",
+    "pruefen:ablaeufe": "tsx --tsconfig tools/pruefdaten/tsconfig.json tools/pruefen-ringwerk.ts --ablaeufe"
   },
   "dependencies": {
     "@prisma/adapter-pg": "catalog:",
@@ -44,6 +47,7 @@
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@vereinsheim/config": "workspace:*",
+    "@vereinsheim/pruefen": "workspace:*",
     "@vitejs/plugin-react": "catalog:",
     "dotenv": "catalog:",
     "eslint": "catalog:",
