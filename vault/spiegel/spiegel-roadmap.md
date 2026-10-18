@@ -201,7 +201,7 @@ Ziel: **Mit Opt-in erscheint die Dienstagsscheibe von selbst in Spiegel; ohne Op
 - Eine Anmeldung für alle Vereinsheim-Apps; eigene ADR. **Status:** offen.
 
 ### SP-4.3 Design 2 für alle Apps
-- Ringwerk und Treffsicher ziehen auf Design 2 um ([[adr-030]]). **Status:** offen.
+- Ringwerk und Treffsicher ziehen auf Design 2 um ([[adr-030]], [[adr-032]]). **Status:** in Arbeit, nach `plans/2026-10-16-design2-all-apps.md`: erst die gemeinsame Schicht, dann der Prüfbestand für Ringwerk, Treffsicher samt Statistik, zuletzt Ringwerk und das Gate über drei Apps.
 
 ### SP-4.4 Weitere Quellen
 - DISAG, neue Meyton-Linie ESTANX, Handeingabe als weitere Adapter ([[meyton-interfaces]]). **Status:** offen.

@@ -43,3 +43,4 @@ Kanonische Entscheidungshistorie. `supersedes`/`refines`-Kanten verbinden abgel�
 - [[adr-029]] — ADR-029 — Apache-2.0 für das ganze Monorepo, Spiegel als selbst gehostete Open-Source-Software
 - [[adr-030]] — ADR-030 — Design 2: Spiegel als Pilot einer neuen UI-Generation _(Accepted)_
 - [[adr-031]] — ADR-031 — Spiegel-Datenbank: Rohdaten als Zeilenversionen, Revisionen als Korrekturen, Projektion je Scheibe _(Accepted)_
+- [[adr-032]] — ADR-032 — Design 2 für alle Apps: Spiegel führt, Ringwerk zieht zuletzt um _(Accepted)_

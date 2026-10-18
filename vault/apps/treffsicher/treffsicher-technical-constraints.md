@@ -5,6 +5,7 @@ title: "Treffsicher — Technische Rahmenbedingungen"
 aliases: ["Technische Rahmenbedingungen — Verbindliche Regeln"]
 keywords: [treffsicher, technische, rahmenbedingungen, verbindliche, regeln, compose.yml, Dockerfile, pnpm, Migrations-Job, Upload-Volume, Dateistruktur]
 part_of: ["[[treffsicher]]"]
+governed_by: ["[[adr-032]]"]
 ---
 
 **TL;DR** Dieses Dokument definiert verbindliche technische Entscheidungen für das Projekt.
@@ -29,7 +30,7 @@ Diese Regeln dürfen nicht ohne explizite Überprüfung und Begründung geänder
 - **Authentifizierung & Sicherheit + DoS-Schutz** — NextAuth v4, bcrypt, Session-Invalidierung, Rate-Limits
 - **Linting + Dateistruktur** — ESLint v9 Flat Config, Prettier, verbindliche Verzeichnisstruktur
 - **Modularität & Wartbarkeit** — Dateigrössen-/Split-Regel, Props-Budget, Feature-Struktur, Duplikationsregel
-- **Design & UI** — Dark Mode only, 8 verbindliche UI-Konsistenzregeln
+- **Design & UI** — hell und dunkel nach [[adr-032]] (bis zum Umzug fest dunkel), 8 verbindliche UI-Konsistenzregeln
 - **Betrieb / Sprache / Versionskontrolle** — Fehlerfälle, Sprachmatrix, Git-Regeln
 
 ---
@@ -396,7 +397,7 @@ components/app/<feature>/<module>/
 
 - **Responsiv**: Mobile und Desktop gleichwertig
 - **Sprache**: Deutsch
-- **Dark Mode**: Ausschliesslich Dark Mode — kein Light Mode, kein Toggle. `class="dark"` ist fest auf `<html>` gesetzt.
+- **Darstellung**: Abgelöst durch [[adr-032]]: hell und dunkel wie Spiegel, Wahl System, Hell oder Dunkel je Gerät. Bis zum Umzug auf Design 2 ist `class="dark"` noch fest auf `<html>` gesetzt.
 - **Offline**: Kein Offline-Support (offen, [[treffsicher-backlog]] T-06)
 
 ### Verbindliche UI-Konsistenzregeln
