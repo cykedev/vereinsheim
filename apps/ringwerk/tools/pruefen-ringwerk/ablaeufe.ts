@@ -877,13 +877,17 @@ async function quarterFinalCorrection(run: Run, ui: Ui, db: Db, pass: Pass) {
         },
         orderBy: [{ createdAt: "asc" }, { id: "asc" }],
       })
-      const qf = qfs.find((m) => Math.min(m.winsA, m.winsB) === 2)!
+      const found = qfs.find((m) => Math.min(m.winsA, m.winsB) === 2)
+      expect(found !== undefined, "ein Viertelfinale mit 3:2 im Prüfbestand")
+      const qf = found!
       const aWon = qf.winsA > qf.winsB
       const winnerId = aWon ? qf.participantAId : qf.participantBId
       const loserId = aWon ? qf.participantBId : qf.participantAId
       const rt = (d: (typeof qf.duels)[number], pid: string) =>
         Number(d.results.find((r) => r.participantId === pid)?.ringteiler)
-      const index = qf.duels.findLastIndex((d) => rt(d, winnerId) < rt(d, loserId))
+      // der Stift steht an jedem fertigen Duell, in dessen Reihenfolge
+      const done = qf.duels.filter((d) => d.isCompleted && d.results.length === 2)
+      const index = done.findLastIndex((d) => rt(d, winnerId) < rt(d, loserId))
       const names = [qf.participantA, qf.participantB].map((p) => `${p.firstName} ${p.lastName}`)
       const card = `$$("main div").filter((el) => visible(el) && ${JSON.stringify(names)}.every((n) => txt(el).includes(n)) && el.querySelector("button svg.lucide-pencil")).sort((a, b) => txt(a).length - txt(b).length)[0]`
       await ui.open(`/competitions/${id}/playoffs`)
