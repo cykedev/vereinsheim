@@ -42,9 +42,11 @@ belegt das, bevor etwas nach `main` oder auf den VPS geht.
 | `… --echt` | Aufnahme und Vergleich an der Dev-Datenbank mit der Kopie der echten Daten; alles nur unter `reports/ringwerk-echt/` |
 | `pnpm --filter ringwerk pruefen:aufnehmen` | Ausgangsstand neu schreiben, nur nach Freigabe durch den User; immer vollständig (verweigert `--nur`) |
 | `… --gegenprobe` | mit `--vergleichen`: zwei Tabellenzeilen vertauschen, der Vergleich muss rot sein |
+| `… --referenz <ordner>` | Ausgangsstand in einem eigenen Ordner (Bilder darin unter `bilder/`): den alten Stand auf demselben Aufbau aufnehmen, dann den neuen dagegen vergleichen |
 | `… --nur <wort>` | nur Wettbewerbe (bzw. Abläufe), deren Schlüssel das Wort enthält |
 
-Laufzeit: Aufnahme oder Vergleich des Prüfbestands etwa 4,5 Minuten, Abläufe etwa 6 Minuten. Nicht im Gate: braucht
+Laufzeit: Aufnahme oder Vergleich des Prüfbestands knapp 2 Minuten, Abläufe gut 3 Minuten (Telefon und Desktop
+zugleich, darin 30 s Neuaufbau). Jeder Lauf nennt am Ende die Zeit je Abschnitt. Nicht im Gate: braucht
 Chrome, Poppler, den Dev-Postgres und einen Build. Der eigene Server bindet nur an `127.0.0.1`.
 
 ## Was streng ist, was ein Hinweis
@@ -78,8 +80,9 @@ Folge hängt an den IDs, und die sind in jedem Aufbau des Prüfbestands andere. 
 - Der Aufbau ist seit diesem Stand physisch reproduzierbar (eine Verbindung, `fillfactor = 50`); die Folge bei
   Gleichstand bleibt trotzdem an den IDs. Ganz eindeutig wird der Vergleich erst, wenn Ringwerk überall einen zweiten
   Sortierschlüssel hat; danach den Ausgangsstand neu aufnehmen.
-- Bis dahin für einen Ringwerk-Merge: `pruefdaten`, dann `pruefen:aufnehmen` auf dem alten Stand und
-  `pruefen:vergleichen` auf dem neuen, ohne Neuaufbau dazwischen. Der committete Ausgangsstand ist der vom User
+- Bis dahin für einen Ringwerk-Merge: `pruefdaten`, dann auf dem alten Stand
+  `pruefen:aufnehmen --referenz reports/ringwerk-alt` und auf dem neuen `pruefen:vergleichen --referenz reports/ringwerk-alt`,
+  ohne Neuaufbau dazwischen. Der committete Ausgangsstand ist der vom User
   bestätigte Stand zum Durchsehen.
 
 ## Vor jedem Merge und Release, der Ringwerk berührt

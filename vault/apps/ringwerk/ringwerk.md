@@ -99,6 +99,9 @@ MOC-Hub der Ringwerk-App (Liga & Wettkämpfe). Führt die App-Guides und die fac
   Kennung; im Bracket die Setzung), danach den Ausgangsstand neu aufnehmen.
 - **Bracket-Vorschau nur am Bildschirm:** Die Seite zeigt die Sieger einer laufenden Runde schon kursiv im nächsten
   Platz, das PDF dort „Ausstehend“.
+- **Zwei Spielpläne zugleich erzeugen bricht einen ab:** `generateCompetitionSchedule` läuft `Serializable`; erzeugen
+  zwei Sportleitungen gleichzeitig, auch in verschiedenen Wettbewerben, scheitert einer (Rollback, nichts verloren,
+  erneut klicken). Aufgefallen, als die Abläufe Telefon und Desktop zugleich bedienten.
 - **Team-Rangliste mit Dezimalpunkt:** Die Summe der Teams steht als „84.9“, die Einzelwertung als „25,3“
   (`@vereinsheim/lib/format` nutzen).
 - **Liga-PDFs runden Zehntelringe bei gemischter Disziplin:** Die PDF-Routen (Spielplan, Playoffs, öffentlich)
