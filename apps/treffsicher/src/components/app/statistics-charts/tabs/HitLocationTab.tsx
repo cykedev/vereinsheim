@@ -1,5 +1,4 @@
 import { Card, CardContent } from "@vereinsheim/ui/card"
-import { TabsContent } from "@vereinsheim/ui/tabs"
 import { HitLocationCloudCard } from "@/components/app/statistics-charts/tabs/hit-location/HitLocationCloudCard"
 import { HitLocationTrendCard } from "@/components/app/statistics-charts/tabs/hit-location/HitLocationTrendCard"
 import type { HitLocationTabModel } from "@/components/app/statistics-charts/tabs/types"
@@ -12,7 +11,7 @@ export function HitLocationTab({ model }: Props) {
   const hasHitLocationData = model.cloud.filteredHitLocations.length > 0
 
   return (
-    <TabsContent value="trefferlage" className="space-y-4">
+    <div className="space-y-4">
       {hasHitLocationData ? (
         <>
           <HitLocationCloudCard model={model.cloud} />
@@ -25,6 +24,6 @@ export function HitLocationTab({ model }: Props) {
           </CardContent>
         </Card>
       )}
-    </TabsContent>
+    </div>
   )
 }

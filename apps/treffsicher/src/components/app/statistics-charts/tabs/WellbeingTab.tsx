@@ -1,6 +1,5 @@
 import { CartesianGrid, Scatter, ScatterChart, XAxis, YAxis } from "recharts"
 import { Card, CardContent, CardHeader, CardTitle } from "@vereinsheim/ui/card"
-import { TabsContent } from "@vereinsheim/ui/tabs"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { formatDisplayScore, renderScatterPoint } from "@/components/app/statistics-charts/utils"
 import type { WellbeingTabModel } from "@/components/app/statistics-charts/tabs/types"
@@ -21,7 +20,7 @@ export function WellbeingTab({ model }: Props) {
   } = model
 
   return (
-    <TabsContent value="befinden" className="overflow-x-hidden">
+    <div className="overflow-x-hidden">
       {filteredWellbeingCount > 0 ? (
         <div className="grid min-w-0 gap-4 sm:grid-cols-2">
           {(
@@ -124,6 +123,6 @@ export function WellbeingTab({ model }: Props) {
           </CardContent>
         </Card>
       )}
-    </TabsContent>
+    </div>
   )
 }

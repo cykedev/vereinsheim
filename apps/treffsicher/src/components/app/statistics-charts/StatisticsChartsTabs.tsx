@@ -1,4 +1,7 @@
-import { Tabs, TabsList, TabsTrigger } from "@vereinsheim/ui/tabs"
+"use client"
+
+import { useState } from "react"
+import { Segmented } from "@vereinsheim/ui/design2/segmented"
 import { HitLocationTab } from "@/components/app/statistics-charts/tabs/HitLocationTab"
 import { OverviewTab } from "@/components/app/statistics-charts/tabs/OverviewTab"
 import { QualityTab } from "@/components/app/statistics-charts/tabs/QualityTab"
@@ -7,40 +10,41 @@ import { TrendTab } from "@/components/app/statistics-charts/tabs/TrendTab"
 import type { StatisticsChartsTabsProps } from "@/components/app/statistics-charts/tabs/types"
 import { WellbeingTab } from "@/components/app/statistics-charts/tabs/WellbeingTab"
 
-// Tabs bleiben horizontal scrollbar, damit alle Statistikbereiche auch mobil direkt erreichbar bleiben.
-export function StatisticsChartsTabs({ model }: StatisticsChartsTabsProps) {
-  return (
-    <Tabs defaultValue="uebersicht">
-      {/* overflow-x-auto: Tabs scrollen auf kleinen Screens statt zu brechen */}
-      <div className="no-scrollbar overflow-x-auto pb-px">
-        <TabsList className="mb-2 w-max min-w-full">
-          <TabsTrigger value="uebersicht" className="shrink-0 flex-none">
-            Übersicht
-          </TabsTrigger>
-          <TabsTrigger value="verlauf" className="shrink-0 flex-none">
-            Verlauf
-          </TabsTrigger>
-          <TabsTrigger value="trefferlage" className="shrink-0 flex-none">
-            Trefferlage
-          </TabsTrigger>
-          <TabsTrigger value="selbstbild" className="shrink-0 flex-none">
-            Selbsteinschätzung
-          </TabsTrigger>
-          <TabsTrigger value="befinden" className="shrink-0 flex-none">
-            Befinden
-          </TabsTrigger>
-          <TabsTrigger value="qualitaet" className="shrink-0 flex-none">
-            Qualität &amp; Schüsse
-          </TabsTrigger>
-        </TabsList>
-      </div>
+const TABS = [
+  { value: "uebersicht", label: "Übersicht" },
+  { value: "verlauf", label: "Verlauf" },
+  { value: "trefferlage", label: "Trefferlage" },
+  { value: "selbstbild", label: "Selbsteinschätzung" },
+  { value: "befinden", label: "Befinden" },
+  { value: "qualitaet", label: "Qualität & Schüsse" },
+] as const
 
-      <OverviewTab model={model.overview} />
-      <TrendTab model={model.trend} />
-      <HitLocationTab model={model.hitLocation} />
-      <SelfAssessmentTab model={model.selfAssessment} />
-      <WellbeingTab model={model.wellbeing} />
-      <QualityTab model={model.quality} />
-    </Tabs>
+type Tab = (typeof TABS)[number]["value"]
+
+const PANEL_ID = "statistics-tab"
+
+// Der Umschalter scrollt am Telefon in sich, damit alle Statistikbereiche direkt erreichbar bleiben.
+export function StatisticsChartsTabs({ model }: StatisticsChartsTabsProps) {
+  const [tab, setTab] = useState<Tab>("uebersicht")
+
+  return (
+    <div className="grid min-w-0 gap-4">
+      <Segmented
+        label="Bereich"
+        options={TABS}
+        value={tab}
+        onChange={setTab}
+        controls={PANEL_ID}
+        scroll
+      />
+      <div id={PANEL_ID} className="min-w-0">
+        {tab === "uebersicht" && <OverviewTab model={model.overview} />}
+        {tab === "verlauf" && <TrendTab model={model.trend} />}
+        {tab === "trefferlage" && <HitLocationTab model={model.hitLocation} />}
+        {tab === "selbstbild" && <SelfAssessmentTab model={model.selfAssessment} />}
+        {tab === "befinden" && <WellbeingTab model={model.wellbeing} />}
+        {tab === "qualitaet" && <QualityTab model={model.quality} />}
+      </div>
+    </div>
   )
 }

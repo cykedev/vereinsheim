@@ -1,5 +1,4 @@
 import { Card, CardContent } from "@vereinsheim/ui/card"
-import { TabsContent } from "@vereinsheim/ui/tabs"
 import type { OverviewTableGroup } from "@/lib/stats/overview/aggregateOverview"
 import { DisciplineOverviewTable } from "./overview"
 
@@ -14,23 +13,23 @@ export function OverviewTab({ model }: Props) {
 
   if (groups.length === 0) {
     return (
-      <TabsContent value="uebersicht" className="space-y-4">
+      <div className="space-y-4">
         <Card>
           <CardContent className="py-12 text-center text-muted-foreground">
             Keine Einheiten mit Ergebnis für den gewählten Filter.
           </CardContent>
         </Card>
-      </TabsContent>
+      </div>
     )
   }
 
   return (
-    <TabsContent value="uebersicht" className="space-y-4">
+    <div className="space-y-4">
       <div className="flex flex-col gap-4">
         {groups.map((group) => (
           <DisciplineOverviewTable key={group.disciplineId} group={group} />
         ))}
       </div>
-    </TabsContent>
+    </div>
   )
 }

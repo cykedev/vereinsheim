@@ -1,5 +1,4 @@
 import { Card, CardContent } from "@vereinsheim/ui/card"
-import { TabsContent } from "@vereinsheim/ui/tabs"
 import { QualityScatterCard } from "@/components/app/statistics-charts/tabs/quality/QualityScatterCard"
 import { ShotDistributionTimelineCard } from "@/components/app/statistics-charts/tabs/quality/ShotDistributionTimelineCard"
 import type { QualityTabModel } from "@/components/app/statistics-charts/tabs/types"
@@ -13,7 +12,7 @@ export function QualityTab({ model }: Props) {
     model.scatter.filteredQualityCount > 1 || model.distribution.shotDistributionTimeline.length > 0
 
   return (
-    <TabsContent value="qualitaet" className="space-y-4">
+    <div className="space-y-4">
       {hasAnyData ? (
         <>
           <QualityScatterCard model={model.scatter} />
@@ -26,6 +25,6 @@ export function QualityTab({ model }: Props) {
           </CardContent>
         </Card>
       )}
-    </TabsContent>
+    </div>
   )
 }

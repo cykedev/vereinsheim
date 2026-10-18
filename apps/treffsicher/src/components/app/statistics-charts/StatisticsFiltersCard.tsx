@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@vereinsheim/ui/card"
 import { Label } from "@vereinsheim/ui/label"
 import { Input } from "@vereinsheim/ui/input"
-import { Button } from "@vereinsheim/ui/button"
+import { Segmented } from "@vereinsheim/ui/design2/segmented"
 import {
   Select,
   SelectContent,
@@ -12,12 +12,36 @@ import {
 import type {
   StatisticsFiltersCardActions,
   StatisticsFiltersCardModel,
+  StatisticsFiltersPreset,
 } from "@/components/app/statistics-charts/filterTypes"
 import type { TypeFilter } from "@/components/app/statistics-charts/hooks/useStatisticsFilterState"
+import type { DisplayMode } from "@/components/app/statistics-charts/types"
 
 interface Props {
   model: StatisticsFiltersCardModel
   actions: StatisticsFiltersCardActions
+}
+
+const TYPE_OPTIONS = [
+  { value: "all", label: "Alle" },
+  { value: "TRAINING", label: "Training" },
+  { value: "WETTKAMPF", label: "Wettkampf" },
+] as const satisfies readonly { value: TypeFilter; label: string }[]
+
+const PRESET_OPTIONS = [
+  { value: "all", label: "Alle" },
+  { value: "6m", label: "6 Monate" },
+  { value: "3m", label: "3 Monate" },
+  { value: "1m", label: "1 Monat" },
+] as const satisfies readonly { value: StatisticsFiltersPreset; label: string }[]
+
+const PRESET_ACTIONS: Partial<
+  Record<StatisticsFiltersPreset, (actions: StatisticsFiltersCardActions) => void>
+> = {
+  all: (actions) => actions.selectAllTime(),
+  "6m": (actions) => actions.select6Months(),
+  "3m": (actions) => actions.select3Months(),
+  "1m": (actions) => actions.select1Month(),
 }
 
 // Filterkarte hält alle Eingriffspunkte an einer Stelle, damit URL-/State-Sync konsistent bleibt.
@@ -42,18 +66,13 @@ export function StatisticsFiltersCard({ model, actions }: Props) {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 [&>*]:min-w-0">
           <div className="space-y-2">
             <Label>Einheitentyp</Label>
-            <div className="flex gap-1">
-              {(["all", "TRAINING", "WETTKAMPF"] as TypeFilter[]).map((t) => (
-                <Button
-                  key={t}
-                  variant={typeFilter === t ? "default" : "outline"}
-                  onClick={() => actions.typeFilterChange(t)}
-                  className="h-9 flex-1 text-sm"
-                >
-                  {t === "all" ? "Alle" : t === "TRAINING" ? "Training" : "Wettkampf"}
-                </Button>
-              ))}
-            </div>
+            <Segmented<TypeFilter>
+              label="Einheitentyp"
+              options={TYPE_OPTIONS}
+              value={typeFilter}
+              onChange={actions.typeFilterChange}
+              className="w-full [&>button]:flex-1"
+            />
           </div>
 
           <div className="space-y-2">
@@ -97,58 +116,30 @@ export function StatisticsFiltersCard({ model, actions }: Props) {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label>Zeitraum</Label>
-            <div className="flex flex-wrap gap-1">
-              <Button
-                variant={activeTimePreset === "all" ? "default" : "outline"}
-                className="h-9 text-sm"
-                onClick={actions.selectAllTime}
-              >
-                Alle
-              </Button>
-              <Button
-                variant={activeTimePreset === "6m" ? "default" : "outline"}
-                className="h-9 text-sm"
-                onClick={actions.select6Months}
-              >
-                6 Monate
-              </Button>
-              <Button
-                variant={activeTimePreset === "3m" ? "default" : "outline"}
-                className="h-9 text-sm"
-                onClick={actions.select3Months}
-              >
-                3 Monate
-              </Button>
-              <Button
-                variant={activeTimePreset === "1m" ? "default" : "outline"}
-                className="h-9 text-sm"
-                onClick={actions.select1Month}
-              >
-                1 Monat
-              </Button>
-            </div>
+            {/* ein eigener Zeitraum (Von/Bis) wählt keine der Vorgaben */}
+            <Segmented<StatisticsFiltersPreset>
+              label="Zeitraum"
+              options={PRESET_OPTIONS}
+              value={activeTimePreset}
+              onChange={(preset) => PRESET_ACTIONS[preset]?.(actions)}
+              wrap
+            />
           </div>
 
           {selectedDiscipline && (
             <div className="space-y-2">
               <Label>Anzeige</Label>
-              <div className="flex flex-wrap gap-1">
-                {/* Anzeige-Modus nur mit Disziplin anbieten, weil die Hochrechnung ohne Schusszahl irreführend wäre. */}
-                <Button
-                  variant={effectiveDisplayMode === "per_shot" ? "default" : "outline"}
-                  onClick={() => actions.displayModeChange("per_shot")}
-                  className="h-9 text-sm"
-                >
-                  Ringe/Sch.
-                </Button>
-                <Button
-                  variant={effectiveDisplayMode === "projected" ? "default" : "outline"}
-                  onClick={() => actions.displayModeChange("projected")}
-                  className="h-9 text-sm"
-                >
-                  Hochrechnung ({totalDisciplineShots} Sch.)
-                </Button>
-              </div>
+              {/* Anzeige-Modus nur mit Disziplin anbieten, weil die Hochrechnung ohne Schusszahl irreführend wäre. */}
+              <Segmented<DisplayMode>
+                label="Anzeige"
+                options={[
+                  { value: "per_shot", label: "Ringe/Sch." },
+                  { value: "projected", label: `Hochrechnung (${totalDisciplineShots} Sch.)` },
+                ]}
+                value={effectiveDisplayMode}
+                onChange={actions.displayModeChange}
+                wrap
+              />
             </div>
           )}
         </div>
