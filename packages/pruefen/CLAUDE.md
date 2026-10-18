@@ -6,12 +6,12 @@ Bilder von PDFs. Nicht im Gate (braucht Chrome, einen laufenden Server und Daten
 
 ## Exporte
 
-| Export                         | Datei            | Inhalt                                                                                                                                        |
-| ------------------------------ | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@vereinsheim/pruefen/browser` | `src/browser.ts` | `Browser`, `Page` (echte Eingaben, Helfer im Fenster wie `$`, `button`, `widest`; Foto eines Elements `screenshotOf`, Cookies `cookieHeader`) |
-| `@vereinsheim/pruefen/server`  | `src/server.ts`  | `startServer({ app, port })` startet `.next` der App, `appDir(app)`                                                                           |
-| `@vereinsheim/pruefen/common`  | `src/common.ts`  | `noSideScroll`, `barDoesNotCover`, `themeNoFlash`, `dialogFocus`, `pageText`; je `Check`                                                      |
-| `@vereinsheim/pruefen/pdf`     | `src/pdf.ts`     | `pdfText` (`pdftotext -layout`), `pdfPages` (`pdftoppm -png -r 100`)                                                                          |
+| Export                         | Datei            | Inhalt                                                                                                                                                                                     |
+| ------------------------------ | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `@vereinsheim/pruefen/browser` | `src/browser.ts` | `Browser`, `Page` (echte Eingaben, Helfer im Fenster wie `$`, `button`, `widest`; Foto eines Elements `screenshotOf`, Cookies `cookieHeader`, Tippen `type`, Browser-Dialoge in `dialogs`) |
+| `@vereinsheim/pruefen/server`  | `src/server.ts`  | `startServer({ app, port, secret?, hostname? })` startet `.next` der App, `appDir(app)`                                                                                                    |
+| `@vereinsheim/pruefen/common`  | `src/common.ts`  | `noSideScroll`, `barDoesNotCover`, `themeNoFlash`, `dialogFocus`, `pageText`; je `Check`                                                                                                   |
+| `@vereinsheim/pruefen/pdf`     | `src/pdf.ts`     | `pdfText` (`pdftotext -layout`), `pdfPages` (`pdftoppm -png -r 100`)                                                                                                                       |
 
 ## Regeln
 
@@ -22,3 +22,5 @@ Bilder von PDFs. Nicht im Gate (braucht Chrome, einen laufenden Server und Daten
 - **Nur Struktur:** Die Helfer im Fenster suchen nach Daten-Attributen und ARIA, die `ui`, `shot-ui` und die Apps
   rendern (`data-app-frame`, `data-app-bar`, `data-app-content`, Rollen der Dialoge), nie nach Texten einer App.
 - Gegen einen fremden Server nur mit ausdrücklichem Schalter der App; `startServer` verweigert einen belegten Port.
+- **Browser-Dialoge** (`beforeunload`, `alert`, `confirm`) nimmt `Page` an, sonst hielte der Dialog jede Navigation an;
+  sie stehen in `page.dialogs`. Eine App-Prüfung meldet jeden, den sie nicht erwartet.

@@ -22,6 +22,7 @@ export async function startServer({
   port,
   base = `http://localhost:${port}`,
   secret = randomBytes(32).toString("hex"),
+  hostname,
   out,
 }: {
   app: string
@@ -30,6 +31,8 @@ export async function startServer({
   base?: string
   /** `NEXTAUTH_SECRET` des Servers; Vorgabe ein zufälliger. Wer ihn kennt, kann selbst Sitzungen ausstellen */
   secret?: string
+  /** Adresse, an die der Server bindet, etwa `127.0.0.1`; Vorgabe wie `next start` (alle) */
+  hostname?: string
   out: (text: string) => void
 }): Promise<ChildProcess> {
   const dir = appDir(app)
@@ -46,7 +49,7 @@ export async function startServer({
   if (taken) throw new Error(`${base} ist schon belegt; den anderen Server erst beenden`)
   const server = spawn(
     join(dir, "node_modules", ".bin", "next"),
-    ["start", "--port", String(port)],
+    ["start", "--port", String(port), ...(hostname ? ["--hostname", hostname] : [])],
     {
       cwd: dir,
       env: {

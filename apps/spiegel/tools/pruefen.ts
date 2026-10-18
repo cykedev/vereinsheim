@@ -1235,6 +1235,7 @@ async function main() {
     await section("Gemeinsame Prüfungen", () => commonChecks(page, href))
     // React meldet in der Entwicklung manches über console.error; jede Meldung zählt, damit keine untergeht
     check("Keine Skriptfehler", page.errors.length === 0, page.errors.slice(0, 5).join(" · "))
+    check("Keine Browser-Dialoge", page.dialogs.length === 0, page.dialogs.slice(0, 5).join(" · "))
   } catch (error) {
     check("Prüfung: Abbruch", false, error instanceof Error ? error.message : String(error))
   } finally {
