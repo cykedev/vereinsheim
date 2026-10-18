@@ -292,6 +292,25 @@ Datenbank nachgeprüft. Teil R ändert keine bestehende Datei in `apps/ringwerk/
   **Ränder:** leerer Wettbewerb, 16 Teilnehmer mit langen Namen, Disziplin archiviert, Wettbewerb archiviert;
   Teilnehmer-Liste mit inaktiven Teilnehmern.
 
+- **Stand R1–R3 (18. Oktober 2026, Branch `feat/design2-ringwerk-pruefbestand`):**
+  `pnpm --filter ringwerk pruefdaten` baut die Matrix in rund 30 s als 92 Wettbewerbe auf, prüft jedes erwartete
+  Merkmal an der Datenbank (`verify.ts`) und schließt mit einer Prüfsumme über alle Tabellen (`checksum.ts`, IDs durch
+  Ordnungsnummern ersetzt; `--pruefsumme` nur prüfen, `--zeilen <ordner>` kanonische Zeilen zum Vergleich zweier
+  Läufe). Abweichend vom Text oben:
+  - `build.ts` ruft **die Server-Actions selbst** auf, nicht nur die Funktionen dahinter: `tools/pruefdaten/tsconfig.json`
+    ersetzt `next-auth`, `next/cache` und `server-only` durch Stellvertreter (`stubs/`), `getAuthSession` läuft echt
+    gegen das Konto in der Datenbank. Konten: `pruef-admin|manager|user@example.test`, Passwörter in
+    `apps/ringwerk/.env` (`PRUEF_*`), dazu `PRUEF_PUBLIC_PASSWORD` für öffentliche PDFs mit Passwort.
+  - **Einzige direkte Schreibung:** der Kampflos-Sieg (`Matchup.status = WALKOVER`). Keine Action setzt ihn; Spielplan
+    und PDF zeigen ihn nur an. R5 kann diesen Weg über die Oberfläche nicht belegen, es gibt keinen.
+  - „L0 Entwurf“ ist ein aktiver Wettbewerb ohne Teilnehmer bzw. ohne Spielplan: `createCompetition` legt immer `ACTIVE`
+    an, den Status `DRAFT` erreicht keine Action.
+  - „Direktvergleich offen“ liegt in L2 (Best-of), nicht in L4: In einer fertigen Gruppenphase ist jeder direkte
+    Vergleich gespielt. L4 Best-of zeigt „ausgeglichen“ (Dreier-Kreis).
+  - **Befund für R4/R6:** `advanceRound` setzt die Finalisten in der Reihenfolge, in der `findMany` (ohne `orderBy`) die
+    Halbfinals liefert. Welche Seite A ist, hängt damit an der physischen Zeilenfolge in Postgres. Die Prüfdatenbank
+    läuft deshalb ohne Autovacuum (`db.ts`); in Produktion kann die Seite des Finales zufällig sein. Eine Änderung in
+    `src` gehört nicht in Teil R und braucht eine eigene Entscheidung.
 - **R4 Ausgangsstand aufnehmen (Haltepunkt).** `apps/ringwerk/tools/pruefen-ringwerk.ts --aufnehmen` gegen den
   gebauten Stand von `main` (vor Teil W) auf der Prüfdatenbank:
   - **Seiten:** je Wettbewerb jede erreichbare Seite (`/competitions/[id]/{schedule,standings,ranking,playoffs,
