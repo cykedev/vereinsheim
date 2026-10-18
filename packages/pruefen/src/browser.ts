@@ -159,12 +159,15 @@ const KEYS: Record<string, { code: string; keyCode: number }> = {
   Escape: { code: "Escape", keyCode: 27 },
   Enter: { code: "Enter", keyCode: 13 },
   Tab: { code: "Tab", keyCode: 9 },
+  Backspace: { code: "Backspace", keyCode: 8 },
   " ": { code: "Space", keyCode: 32 },
 }
 
 export class Page {
   /** Fehler im Fenster (unbehandelte Ausnahmen und `console.error`) über den ganzen Lauf */
   readonly errors: string[] = []
+  /** Dialoge des Browsers (`beforeunload`, `alert`, `confirm`), die die Seite geöffnet hat; jeder wird angenommen */
+  readonly dialogs: string[] = []
   private width = 1280
   private height = 900
 
@@ -189,6 +192,11 @@ export class Page {
         this.errors.push(
           `Ausnahme: ${details.exception?.description?.split("\n")[0] ?? details.text}`
         )
+      }
+      // ein offener Dialog hielte jede Navigation an; die Prüfung nimmt ihn an und schreibt ihn mit
+      if (m.method === "Page.javascriptDialogOpening") {
+        this.dialogs.push(`${String(m.params?.type)}: ${String(m.params?.message ?? "")}`)
+        void this.send("Page.handleJavaScriptDialog", { accept: true }).catch(() => {})
       }
       if (m.method === "Runtime.consoleAPICalled" && m.params?.type === "error") {
         const args = (m.params.args as { value?: unknown; description?: string }[]) ?? []
