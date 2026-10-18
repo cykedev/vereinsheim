@@ -707,6 +707,68 @@ async function leagueBestOf(run: Run, ui: Ui, db: Db, pass: Pass, base: string) 
     )
   })
 
+  await run.step("Halbfinale korrigieren: das Finale fällt weg und entsteht neu", async () => {
+    const [semi] = await db.playoffMatch.findMany({
+      where: { competitionId: id, round: "SEMI_FINAL" },
+      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+      include: { participantA: true, participantB: true },
+    })
+    const names = [semi.participantA, semi.participantB].map((p) => `${p.firstName} ${p.lastName}`)
+    // die Karte des Halbfinales: kleinster Bereich mit beiden Namen und Knöpfen zur Korrektur (Stift)
+    const card = `$$("main div").filter((el) => visible(el) && ${JSON.stringify(names)}.every((n) => txt(el).includes(n)) && el.querySelector("button svg.lucide-pencil")).sort((a, b) => txt(a).length - txt(b).length)[0]`
+    await ui.open(`/competitions/${id}/playoffs`)
+    await ui.click(
+      `[...${card}.querySelectorAll("button")].filter((b) => b.querySelector("svg.lucide-pencil")).at(-1)`,
+      "Korrektur des letzten Duells im Halbfinale"
+    )
+    // aus dem Sieg im letzten Duell wird ein Unentschieden: das Halbfinale ist wieder offen
+    await ui.fill("a-rings", DUEL.gleich.hr)
+    await ui.fill("b-rings", DUEL.gleich.ar)
+    await ui.fill("a-teiler", DUEL.gleich.ht)
+    await ui.fill("b-teiler", DUEL.gleich.at)
+    await ui.pressInDialog("Speichern")
+    await ui.dialogClosed("Dialog schließt nicht")
+    const reopened = await db.playoffMatch.findUniqueOrThrow({ where: { id: semi.id } })
+    expect(reopened.status === "PENDING", "Halbfinale wieder offen", reopened)
+    expect(
+      (await db.playoffMatch.count({ where: { competitionId: id, round: "FINAL" } })) === 0,
+      "das Finale ist weg"
+    )
+    // neu entscheiden und das Finale wieder anlegen
+    await ui.open(`/competitions/${id}/playoffs`)
+    await ui.press(/^Nächstes Duell anlegen$/)
+    await ui.until(`!!btn("Eintragen")`, "Duell wird nicht angelegt")
+    await ui.press("Eintragen")
+    await ui.fill("a-rings", DUEL.heim.hr)
+    await ui.fill("b-rings", DUEL.heim.ar)
+    await ui.fill("a-teiler", DUEL.heim.ht)
+    await ui.fill("b-teiler", DUEL.heim.at)
+    await ui.pressInDialog("Speichern")
+    await ui.dialogClosed("Dialog schließt nicht")
+    await ui.text()
+    await ui.press("Finale anlegen")
+    await ui.pressInDialog(/^Finale anlegen/)
+    await ui.dialogClosed("Dialog schließt nicht")
+    const semis = await db.playoffMatch.findMany({
+      where: { competitionId: id, round: "SEMI_FINAL" },
+    })
+    const finals = await db.playoffMatch.findMany({ where: { competitionId: id, round: "FINAL" } })
+    expect(
+      semis.every((m) => m.status === "COMPLETED"),
+      "beide Halbfinals fertig"
+    )
+    const winners = new Set(
+      semis.map((m) => (m.winsA > m.winsB ? m.participantAId : m.participantBId))
+    )
+    expect(
+      finals.length === 1 &&
+        winners.has(finals[0].participantAId) &&
+        winners.has(finals[0].participantBId),
+      "genau ein Finale mit den Siegern",
+      finals
+    )
+  })
+
   await run.step("Finale mit Verlängerung", async () => {
     await ui.open(`/competitions/${id}/playoffs`)
     await ui.press(/Schüsse anlegen$/)
