@@ -86,6 +86,12 @@ MOC-Hub der Ringwerk-App (Liga & Wettkämpfe). Führt die App-Guides und die fac
   (etwa ohne Namen), sieht danach „Gemischt (Faktor-Korrektur)“. Wer nur den Namen nachträgt, legt still einen
   gemischten Wettbewerb an. Die Radix-Auswahl mit `name` folgt dem Zurücksetzen des Formulars nach der Server Action;
   Frist und Format bleiben. Belegt von `pruefen:ablaeufe` (bekannter Befund, [[ringwerk-pruefbestand]]).
+- **Korrektur im Viertelfinale kann die Halbfinal-Runde halb löschen** (nur aus dem Code gelesen, Review vom
+  18. Oktober 2026): `cascadeDeleteEmptyNextRound` und `deleteDuel.ts` löschen nur das Folge-Match mit den korrigierten
+  Teilnehmern. Bleibt das andere Halbfinale fertig stehen, legt `advanceRound` ein Finale mit `participantBId:
+  undefined` an und wirft; die Oberfläche legt das fehlende Halbfinale nicht neu an. Mit `/debug` prüfen.
+- **Namen sortiert die Datenbank womöglich nach Bytes** (Postgres auf Alpine, musl): „Ö“ nach „Z“, anders als die
+  Sortierung in JS mit `localeCompare("de")`. Nur die Reihenfolge von Listen.
 - **Bracket-Vorschau paart benachbarte Plätze:** Die Vorschau der nächsten Runde nimmt je zwei Plätze untereinander, die
   echte Setzung macht `createNextRoundMatchups` nach Rang. Die Vorschau kann deshalb andere Gegner zeigen als die, die
   dann gesetzt werden. (Die Plätze selbst stehen seit dem 18. Oktober 2026 fest in Setzreihenfolge, siehe
