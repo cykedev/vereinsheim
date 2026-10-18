@@ -285,7 +285,8 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
 ## 10. Design 2 (nur Spiegel, ADR-030)
 
 - **Tokens aus `@vereinsheim/ui/design2.css`** statt `theme.css`: dieselben Namen, die die
-  ui-Primitives nutzen, dazu Design-2-eigene (`surface-2`, `line-strong`, `foreground-2`, `*-wash`, `gold` (ein Zeichen in Gold, goldener als das
+  ui-Primitives nutzen (auch `rank-1` … `rank-3` und `chart-1` … `chart-5`, Akzent je App über `data-app` in beiden
+  Themes), dazu Design-2-eigene (`surface-2`, `line-strong`, `foreground-2`, `*-wash`, `gold` (ein Zeichen in Gold, goldener als das
   Text-Token `warning`), `quiet` (ein leises Zeichen, 3,6 : 1 auf der Kartenfläche, nie für Text), `gold-wash` (goldene Tönung deckend auf der
   Kartenfläche), `gold-line` (Rahmen um Gold),
   `paper`, `spiegel`, `score-10` … `score-7`, `overlay`). Hell auf `:root`, dunkel unter `.dark`
@@ -295,13 +296,17 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
 - **Allgemeine Bausteine** unter `@vereinsheim/ui/design2/*` (Segment-Umschalter, mit `wrap` mehrzeilig für viele oder lange
   Möglichkeiten wie Listen und Merkmale, Schalter-Chip, weicher Kreis
   `round-toggle` für eine Einstellung neben einer großen Zahl oder in einer Filterzeile: 32 px, innen die Kartenfläche, Rahmen
-  `line-strong`, Gold nur für das Hervorgehobene); was
+  `line-strong`, Gold nur für das Hervorgehobene; dazu für jede App: Darstellung `theme` und `theme-switch` mit eigenem
+  Schlüssel je App, `toaster`, Rahmen `app-frame`, Seite `page`, `decision-dialog`, `undo`, Hilfe `help` und
+  `help-sheet`, das Maß der Leisten `bar`, Ringwert-Farben als Hex `score-colors`; Liste in `packages/ui/CLAUDE.md`).
+  Die Schreibregeln teilen alle Apps über `@vereinsheim/lib/wording` (Semikolon, drei Punkte), die Skriptprüfung über
+  `@vereinsheim/pruefen`. Was
   den Fachkern braucht (Scheibe, Serien), in `@vereinsheim/shot-ui`, mit Markup-Tests; die Bedienung im Browser prüft
   die Skriptprüfung der App (`pnpm --filter spiegel pruefen`).
 - Ringwerk und Treffsicher bleiben auf `theme.css` und ihrem Drift-Gate; Spiegel ist davon
   ausgenommen, bis beide Apps auf Design 2 umziehen.
 - **Kein Knopf ohne Folge:** Jede Aktion, die bestätigt, ablehnt, entfernt, widerruft, umstellt oder ein Konto ändert, fragt
-  über `DecisionDialog` (`apps/spiegel/src/components/shell/`) und sagt in Alltagsworten, worum es geht, was vorher zu
+  über `DecisionDialog` (`@vereinsheim/ui/design2/decision-dialog`) und sagt in Alltagsworten, worum es geht, was vorher zu
   prüfen ist, was dann passiert, was **nicht** passiert und wie es rückgängig geht. Die Texte stehen an einer Stelle
   (`apps/spiegel/src/lib/admin/consequences.ts`, Tests halten den Wortlaut), ohne Pronomen für Personen. Keine
   Fachbegriffe in der Oberfläche; als Aufgabe erscheint im Admin nur, was ein Mensch entscheiden muss, Technisches regelt

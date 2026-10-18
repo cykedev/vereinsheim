@@ -34,7 +34,8 @@ vereinsheim/                Code- + Deployment-Monorepo (pnpm + Turborepo)
 │                           Parameter) und der Auth-Kern (Validierung, Anmeldeablauf, IP aus Proxy-Headern,
 │                           Ratenbegrenzung mit Store und Admin-Auswertung) für alle drei Apps.
 ├── packages/ui/            @vereinsheim/ui — ui-Primitives, shell/, admin/ (Rate-Limit-Oberfläche), theme.css
-│                           (Ringwerk, Treffsicher) und design2.css + design2/* (Spiegel, ADR-030).
+│                           (Ringwerk, Treffsicher) und design2.css + design2/* (ADR-030, ADR-032): Tokens mit Akzent je
+│                           App, Darstellung, Rahmen, Seite, Folgen-Dialog, Rückgängig, Hilfe, Toasts, Trefferfarben.
 ├── packages/shot-core/     @vereinsheim/shot-core — Fachkern von Spiegel: Scheibenbilder, Wertung wie Meyton,
 │                           Disziplinen, Gegenprobe, Geometrie, Kennzahlen-Registry, Analyse einer Scheibe, Projektion
 │                           je Scheibe (`./projection`).
@@ -47,6 +48,8 @@ vereinsheim/                Code- + Deployment-Monorepo (pnpm + Turborepo)
 │                           JSON-Schema), Prüfsumme über RFC 8785, Testvektoren, eingefrorene Beispiele, API v1.
 ├── packages/ssmdb2-cases/  @vereinsheim/ssmdb2-cases — Sonderfall-Testdaten: echtes SSMDB2-Schema, Baukasten, der wie
 │                           Meyton schreibt, Fälle mit Snapshots v1 unter `cases/v1`; `replay` spielt sie in MariaDB ab.
+├── packages/pruefen/       @vereinsheim/pruefen — Skriptprüfung im Browser für alle Apps: Chrome über das
+│                           DevTools-Protokoll, eigener Build als Server, gemeinsame Prüfungen, PDF als Text und Bilder.
 ├── packages/meyton-pdf/    @vereinsheim/meyton-pdf — liest aus Meyton-Ausdrucken (PDF) ID im Fuß und Erstellzeit; noch
 │                           von keiner App genutzt.
 ├── tools/ssmdb2-erkunden/  Erkundung der Meyton-SSMDB2 vor Ort: Checkliste, Kopie, Schießprotokoll; nur lesend.

@@ -5,14 +5,34 @@ für alle drei Apps (ADR-015/016). Jede Komponente gibt es nur einmal — Drift 
 
 ## Was hier liegt
 
-| Export                           | Inhalt                                                                                                                                                                |
-| -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@vereinsheim/ui/<name>`         | `src/ui/<name>.tsx` — shadcn-Primitives (button, card, dialog, …)                                                                                                     |
-| `@vereinsheim/ui/shell/<name>`   | `src/shell/<name>.tsx` — ConfirmDialog, DetailActionBar, PageHeader, Providers                                                                                        |
-| `@vereinsheim/ui/admin/<name>`   | `src/admin/<name>.tsx` — `LoginRateLimitInsights`, `LoginRateLimitTable` (Admin-Ansicht der Login-Sperren)                                                            |
-| `@vereinsheim/ui/theme.css`      | `theme.css` — Tailwind-Theme-Kern (@custom-variant, @theme, :root, .dark, @layer) + `@source` aufs Paket                                                              |
-| `@vereinsheim/ui/design2.css`    | `design2.css` — Design 2 für Spiegel (ADR-030): eigene Tokens, hell auf `:root`, dunkel unter `.dark`                                                                 |
-| `@vereinsheim/ui/design2/<name>` | `src/design2/<name>.tsx` — Design-2-Bausteine: `segmented` (Segment-Umschalter, `scroll` oder `wrap`), `toggle-chip`, `sheet` (Blatt), `round-toggle` (weicher Kreis) |
+| Export                           | Inhalt                                                                                                                            |
+| -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `@vereinsheim/ui/<name>`         | `src/ui/<name>.tsx` — shadcn-Primitives (button, card, dialog, …)                                                                 |
+| `@vereinsheim/ui/shell/<name>`   | `src/shell/<name>.tsx` — ConfirmDialog, DetailActionBar, PageHeader, Providers                                                    |
+| `@vereinsheim/ui/admin/<name>`   | `src/admin/<name>.tsx` — `LoginRateLimitInsights`, `LoginRateLimitTable` (Admin-Ansicht der Login-Sperren)                        |
+| `@vereinsheim/ui/theme.css`      | `theme.css` — Tailwind-Theme-Kern (@custom-variant, @theme, :root, .dark, @layer) + `@source` aufs Paket                          |
+| `@vereinsheim/ui/design2.css`    | `design2.css` — Design 2 (ADR-030, ADR-032): eigene Tokens, hell auf `:root`, dunkel unter `.dark`, Akzent je App über `data-app` |
+| `@vereinsheim/ui/design2/<name>` | `src/design2/<name>.tsx` — Design-2-Bausteine, siehe unten                                                                        |
+
+### Bausteine von Design 2
+
+| Export                    | Inhalt                                                                                                                          |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `design2/segmented`       | Segment-Umschalter, `scroll` oder `wrap`                                                                                        |
+| `design2/toggle-chip`     | Schalter-Chip                                                                                                                   |
+| `design2/sheet`           | Blatt: am Telefon von unten, am Desktop daneben                                                                                 |
+| `design2/round-toggle`    | weicher Kreis für eine Einstellung                                                                                              |
+| `design2/theme`           | `ThemeScript storageKey` (im `<head>`), `ThemeProvider storageKey`, `useTheme` (`theme`, `resolved`, `setTheme`), `themeScript` |
+| `design2/theme-switch`    | `ThemeSwitch`: Darstellung System, Hell, Dunkel                                                                                 |
+| `design2/toaster`         | `Toaster` (sonner) in Design 2, hell oder dunkel wie `useTheme().resolved`                                                      |
+| `design2/app-frame`       | `AppFrame`: Seitenleiste ab 1024 px, untere Leiste mit Aktion in der Mitte, schmale Leiste quer; `FrameItem`, `renderLink`      |
+| `design2/page`            | `Page`: Breite, Rand und Platz über der unteren Leiste einer Seite                                                              |
+| `design2/decision-dialog` | `DecisionDialog`, `DecisionBody`, Typ `Decision`: Folgen vor dem Bestätigen                                                     |
+| `design2/undo`            | `UndoHost`, `useUndo`, `UndoBar`, Typ `UndoResult`: „Gelöscht · Rückgängig“                                                     |
+| `design2/help`            | `HelpText`, `HELP_FIELDS`, `HelpIcon`, `HelpButton`, `HelpBody` (ohne Client-Grenze)                                            |
+| `design2/help-sheet`      | `HelpSheet` (Erklärung als Blatt), `HelpProvider`, `useHelp`                                                                    |
+| `design2/bar`             | `BAR_PX`, `EDGE_PX`, `JUMP_BAR`: Klassen der 56 px hohen klebenden Leisten                                                      |
+| `design2/score-colors`    | `SCORE_HEX`, `scoreKey`: Ringwert-Farben als Hex für Orte ohne CSS-Variablen (PDF)                                              |
 
 ## Regeln
 
@@ -26,7 +46,13 @@ für alle drei Apps (ADR-015/016). Jede Komponente gibt es nur einmal — Drift 
 - **Kein `"use server"`**; **shadcn-CLI** läuft weiter im App-Kontext (`components.json` + der
   `globals.css`-Stub bleiben app-lokal).
 - Cross-Importe paket-intern **relativ** (`./button`, `../ui/alert-dialog`) — nicht über `@vereinsheim/ui`.
-- **Design 2** (`design2.css`, `src/design2/`) gilt nur für Spiegel; Ringwerk und Treffsicher importieren
-  `theme.css`. Jede Farbe, die zwischen hell und dunkel wechselt, steht in beiden Blöcken; die
-  Scheibe (Papier, Spiegel, Ringwert-Farben) ist in beiden Themes gleich (Test `tokens.test.ts`).
+- **Design 2** (`design2.css`, `src/design2/`) nutzt heute Spiegel; Ringwerk und Treffsicher importieren
+  `theme.css`, bis sie umziehen (ADR-032). Jede Farbe, die zwischen hell und dunkel wechselt, steht in beiden Blöcken;
+  die Scheibe (Papier, Spiegel, Ringwert-Farben) ist in beiden Themes gleich. Akzent, Schrift auf dem Akzent und
+  `rank-*` tragen auf der Kartenfläche mindestens 4,5 : 1, `chart-*` mindestens 3 : 1, je App und Theme (Test
+  `tokens.test.ts`).
+- **App-frei:** Bausteine aus `src/design2/` kennen keine App: Texte, Routen und Schlüssel kommen als Props
+  (`brand`, `renderLink`, `storageKey`, `Decision`). Was den Fachkern braucht, bleibt in `@vereinsheim/shot-ui`.
+- **`src/ui/*` und `src/shell/*` ändern sich erst mit Ringwerks Umzug** (ADR-032); bis dahin entstehen neue Formen
+  unter `src/design2/`.
 - Verhalten/Styles ändert man **hier**, nicht in den Apps. Nach Änderungen: `pnpm check` grün.

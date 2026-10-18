@@ -39,7 +39,8 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
   benannte Zeiträume). Die Hüllen in `src/components/*/…Screen.tsx` sind Client-Komponenten und
   bauen Routen und Rückrufe (Funktionen gehen nicht vom Server zum Client).
 - `AppShell`: `AppFrame` mit `next/link`, Bereich aus der Adresse, letzte Adresse je Bereich, Blatt der Hilfe
-  (`useHelp`). Darstellung über `ThemeProvider` (Skript vor dem Zeichnen, `localStorage`).
+  (`useHelp`). Darstellung über `ThemeProvider` aus `@vereinsheim/ui/design2/theme` (Skript vor dem Zeichnen, `localStorage` unter
+  `spiegel-theme`).
 
 ## Regeln
 
@@ -64,7 +65,7 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
   Admin-Auswertung der Sperren kommen aus `@vereinsheim/lib/auth/*`, gemeinsam mit Ringwerk und Treffsicher. Neue
   Rolle, neuer Status oder neues Passwort beenden die Sitzungen eines Kontos (das JWT trägt die Rolle).
 - **Kein Knopf ohne Folge** ([[conventions]] §10): Jede Aktion mit
-  Folgen fragt über `DecisionDialog` (`src/components/shell/`); die Texte nur aus `src/lib/admin/consequences.ts`
+  Folgen fragt über `DecisionDialog` (`@vereinsheim/ui/design2/decision-dialog`); die Texte nur aus `src/lib/admin/consequences.ts`
   (Tests halten den Wortlaut, ohne Pronomen für Personen), die Erklärungen hinter „?“ aus `src/lib/admin/help.ts`
   (`AdminHelp`). Ein Formular mit Folgen (Konto, Zeitzone) fängt `onSubmit` ab, fragt und sendet nach dem Bestätigen
   mit `requestSubmit`. Der Admin beginnt mit der Übersicht (`/admin`, `src/lib/admin/overview.ts`): Aufgaben nur für
@@ -193,7 +194,7 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
   bis 112 MiB).
 - **seed:own** nur gegen die lokale Dev-Datenbank `spiegel` (prüft die Adresse, `--force` für eine andere lokale).
 - Ausgabe in Werkzeugen über `process.stdout.write`, nicht `console.log` (Lint).
-- **Skriptprüfung der App** (`tools/pruefen.ts`, `tools/pruefen/browser.ts`): Chrome headless über das DevTools-Protokoll mit dem `WebSocket` von Node,
+- **Skriptprüfung der App** (`tools/pruefen.ts` mit `@vereinsheim/pruefen`): Chrome headless über das DevTools-Protokoll mit dem `WebSocket` von Node,
   ohne Abhängigkeit; Klicks, Ziehen und Tasten sind echte Eingaben (`Input.dispatch*`), Fokus und `next/link` verhalten
   sich wie beim Menschen. Angemeldet mit dem Demo-Konto (vorher `seed:own --demo`). Geprüft wird ohne feste Zahlen
   (echte Daten): Sprungleiste, Kleben, Rücksprung mit Pille, „Alle Beobachtungen“, Blatt der Hilfe, Lineal mit Zeiger
@@ -255,7 +256,7 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
   (`src/lib/trash-actions.ts`: `deleteCard`, `restoreCard` bis 30 Tage, `purgeCardNow`, je unter `FOR UPDATE` der Zeile);
   nach 30 Tagen löscht `purgeExpiredTrash` (`src/lib/db/trash.ts`) beim Start und stündlich endgültig, je Scheibe unter
   der Sperre ihrer Zeile neu geprüft. Der Knopf steht am Ende der Seite einer Scheibe (`DeleteCard`), danach der Rückweg
-  mit „Scheibe gelöscht · Rückgängig“ (`useUndo` aus `src/components/shell/UndoBar.tsx`, im Rahmen der App, überlebt die
+  mit „Scheibe gelöscht · Rückgängig“ (`useUndo` aus `@vereinsheim/ui/design2/undo`, im Rahmen der App, überlebt die
   Navigation der Aktion). Eine alte Adresse einer gelöschten Scheibe führt in den Papierkorb (`ownCardState`). Der
   Papierkorb zeigt auch, was nicht von selbst wiederkommt (`blockedCards`: eigene Sperren und Meldungen „nicht meine“);
   die Admin-Übersicht zählt nur die Meldungen der Anlage, ohne Namen.
