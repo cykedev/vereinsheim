@@ -249,9 +249,18 @@ App-Umfang: **nur Ergebniserfassung** (keine Zeitnahme oder Ansage-Unterstützun
 
 #### Korrekturen & Löschungen
 
-- **canCorrect-Flag:** Korrekturen erlaubt solange Folgerunde keine Duelle hat
-- Korrektur: Siegstand wird neu berechnet; leere Folge-Matches kaskadierend gelöscht
-- Löschen des letzten Duells: nur bei canCorrect
+Die nächste Runde entsteht aus **allen** Siegern einer Runde neu nach Rang; ein anderer Sieger kann jede ihrer
+Paarungen ändern, nicht nur die eigene. Deshalb gilt je Runde, nicht je Teilnehmer:
+
+- **canCorrect-Flag:** Eine Runde ist korrigierbar, solange in der **ganzen** Folgerunde kein Duell angelegt ist (das
+  Finale immer). Gilt in Oberfläche (`getPlayoffBracket`) und Actions (`hasNextRoundDuels`).
+- Korrektur: Siegstand wird neu berechnet. Ändert sich der Ausgang des Matches (anderer Sieger oder wieder offen),
+  fällt die **ganze** Folgerunde weg (`deleteNextRound`) und wird über „… anlegen“ neu gesetzt. Bleibt der Sieger,
+  bleibt die Folgerunde.
+- Löschen des letzten Duells: nur bei canCorrect; das Match ist danach offen, die ganze Folgerunde fällt weg.
+- Fehlt einer Runde eine Paarung (Bestand aus der früheren Kaskade je Teilnehmer), meldet „… anlegen“ das, statt ein
+  Finale mit einem Teilnehmer anzulegen. Belegt: `actions/correction.test.ts`, `canCorrect.test.ts`, `match.test.ts`
+  und ein Ablauf im Prüfbestand („Halbfinale korrigieren“).
 
 #### Guards
 

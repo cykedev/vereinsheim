@@ -362,7 +362,8 @@ ranking,playoffs}`, `competitions/[id]/starter-list/pdf`, `participants/pdf` und
   - Kampflos ist nicht über die Oberfläche belegbar (keine Action, keine Oberfläche); der Ablauf vermerkt das.
   - Ringwerk ordnet jede Liste bis zu einem eindeutigen Schlüssel ([[ringwerk-pruefbestand]], „Gleichstand und
     Neuaufbau“); der Ausgangsstand ist damit aufgenommen und über zwei Aufbauten ohne Fehler. Das geht als eigener
-    Ringwerk-Release vor Teil W raus.
+    Ringwerk-Release vor Teil W raus, zusammen mit der Korrektur-Regel in den Playoffs (eine Korrektur, die einen
+    Ausgang ändert, entfernt die ganze Folgerunde; [[playoffs-knockout-system]]).
   - Doku: [[ringwerk-pruefbestand]].
 
 **Prüfung Teil R:** `pnpm check`; `pruefdaten` zweimal hintereinander ergibt dieselben Daten (Prüfsumme über die
