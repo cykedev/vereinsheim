@@ -69,21 +69,17 @@ Chrome, Poppler, den Dev-Postgres und einen Build. Der eigene Server bindet nur 
 
 ## Gleichstand und Neuaufbau
 
-Ringwerk ordnet Zeilen mit gleichem Sortierschlüssel nicht eindeutig: gleiche Nachnamen in Listen, die Plätze im
-Bracket (alle Paarungen einer Runde haben dieselbe Zeit), die Seite im Finale ([[ringwerk]], offene Einzelpunkte). Die
-Folge hängt an den IDs, und die sind in jedem Aufbau des Prüfbestands andere. Deshalb:
+Der Vergleich ist über Aufbauten hinweg eindeutig: Jeder Lauf von `pruefdaten` ergibt dieselben Daten (Prüfsumme) in
+derselben physischen Folge (der Aufbau schreibt über eine Verbindung, `fillfactor = 50`), und Ringwerk ordnet jede Liste
+bis zu einem eindeutigen Schlüssel. Bei gleichem Nachnamen entscheidet der Vorname, dann die `id`; Paarungen im Bracket
+und Einschreibungen stehen nach `createdAt` und `id` in der Reihenfolge der Anlage (cuid: Zeitstempel, dann Zähler), im
+Finale ist der Sieger des oberen Halbfinales A. Tests halten das fest (`src/lib/readOrder.test.ts`,
+`src/lib/playoffs/actions/match.test.ts`). Belegt am 18. Oktober 2026: zwei Aufbauten, 0 Fehler, alle Seitenbilder
+gleich.
 
-- **Eindeutig** ist der Vergleich auf **demselben Aufbau** wie die Aufnahme: 0 Fehler, belegt am 18. Oktober 2026.
-- Nach einem Neuaufbau meldet er bei unveränderter Ringwerk-Version rund 90 bis 120 Fehler, alle Vertauschungen bei
-  Gleichstand (geprüft: gleiche Zeichen, andere Reihenfolge) und die daraus folgende Vorschau im Bracket. Der Vergleich
-  sagt das in einem Hinweis, wenn der Aufbau ein anderer ist (`build` in `_stand.json`).
-- Der Aufbau ist seit diesem Stand physisch reproduzierbar (eine Verbindung, `fillfactor = 50`); die Folge bei
-  Gleichstand bleibt trotzdem an den IDs. Ganz eindeutig wird der Vergleich erst, wenn Ringwerk überall einen zweiten
-  Sortierschlüssel hat; danach den Ausgangsstand neu aufnehmen.
-- Bis dahin für einen Ringwerk-Merge: `pruefdaten`, dann auf dem alten Stand
-  `pruefen:aufnehmen --referenz reports/ringwerk-alt` und auf dem neuen `pruefen:vergleichen --referenz reports/ringwerk-alt`,
-  ohne Neuaufbau dazwischen. Der committete Ausgangsstand ist der vom User
-  bestätigte Stand zum Durchsehen.
+Bis dahin ordnete Ringwerk Gleichstände nach der Zeilenfolge in Postgres; nach einem Neuaufbau meldete der Vergleich
+rund 150 Vertauschungen. Taucht so etwas wieder auf, nennt der Vergleich einen anderen Aufbau als bei der Aufnahme
+(`build` in `_stand.json`), und `--referenz` vergleicht alt gegen neu auf demselben Aufbau.
 
 ## Vor jedem Merge und Release, der Ringwerk berührt
 
@@ -103,8 +99,9 @@ Folge hängt an den IDs, und die sind in jedem Aufbau des Prüfbestands andere. 
 
 ## Stand 18. Oktober 2026
 
-- Ausgangsstand vom User bestätigt, aufgenommen auf `28f34bd1` (Ringwerk wie `main`). Vergleich auf demselben
-  Aufbau: 0 Fehler, 0 Hinweise. Gegenprobe rot. Nach Neuaufbau nur Vertauschungen bei Gleichstand (siehe oben).
+- Ausgangsstand vom User bestätigt, aufgenommen auf `28f34bd1` (Ringwerk wie `main`), am selben Tag mit eindeutiger
+  Reihenfolge bei Gleichstand neu aufgenommen (vom User freigegeben, alle 152 Abweichungen reine Vertauschungen).
+  Vergleich über zwei Aufbauten: 0 Fehler, 0 Hinweise. Gegenprobe rot.
 - Abläufe: alle Schritte grün bis auf einen bekannten Befund. Nach einem Feldfehler beim Anlegen springt die
   Disziplin auf „Gemischt (Faktor-Korrektur)“ zurück. Wer nur den Namen nachträgt, legt still einen gemischten
   Wettbewerb an. Die Radix-Auswahl mit `name` folgt dem Zurücksetzen des Formulars durch React. Behoben wird das außerhalb
@@ -113,8 +110,7 @@ Folge hängt an den IDs, und die sind in jedem Aufbau des Prüfbestands andere. 
   Best-of-3 in L1, L2 und L7 ohne Playoffs, Freilos, Events (Ringe, Zielwert), Saisons (Teiler/Ringe abwechselnd) und
   öffentliche PDFs mit und ohne Passwort. Keine Hin/Rück-Liga, keine Playoffs, keine Teams, kein Rückzug, kein
   Kampflos: Diese belegt nur der Prüfbestand. Kein Merkmal der echten Daten fehlt im Prüfbestand.
-- `advanceRound` liest die Halbfinals ohne `orderBy`; welche Seite im Finale A ist, hängt an der Zeilenfolge. Die
-  Prüfdatenbank läuft ohne Autovacuum, mit `fillfactor = 50`, und der Aufbau schreibt über eine Verbindung.
+- Die Prüfdatenbank läuft ohne Autovacuum, mit `fillfactor = 50`, und der Aufbau schreibt über eine Verbindung.
 
 ## Werkzeug
 

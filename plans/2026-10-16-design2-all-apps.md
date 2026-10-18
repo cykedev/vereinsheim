@@ -360,9 +360,9 @@ ranking,playoffs}`, `competitions/[id]/starter-list/pdf`, `participants/pdf` und
   - Für R7 stellt das Werkzeug die Sitzungen selbst aus (eigenes `NEXTAUTH_SECRET`, ältestes aktives Konto je Rolle,
     vom User am 18. Oktober 2026 freigegeben). Die Kopie hat kein aktives Mitgliedskonto, aufgenommen nur als Admin.
   - Kampflos ist nicht über die Oberfläche belegbar (keine Action, keine Oberfläche); der Ablauf vermerkt das.
-  - Eindeutig ist der Vergleich nur auf demselben Aufbau des Prüfbestands: Ringwerk ordnet gleiche Nachnamen, die Plätze
-    im Bracket und die Seite im Finale nicht eindeutig, nach einem Neuaufbau (andere IDs) vertauschen sie. Vorschlag an
-    den User: zweiter Sortierschlüssel in Ringwerk, eigener Schritt vor Teil W, danach Ausgangsstand neu aufnehmen.
+  - Ringwerk ordnete gleiche Nachnamen, die Plätze im Bracket und die Seite im Finale nicht eindeutig; seit dem
+    18. Oktober 2026 (Branch `feat/ringwerk-stable-order`) mit zweitem Schlüssel, der Ausgangsstand ist neu aufgenommen
+    und über zwei Aufbauten ohne Fehler. Ein eigener Ringwerk-Release (Lesereihenfolge, vor Teil W).
   - Doku: [[ringwerk-pruefbestand]].
 
 **Prüfung Teil R:** `pnpm check`; `pruefdaten` zweimal hintereinander ergibt dieselben Daten (Prüfsumme über die
