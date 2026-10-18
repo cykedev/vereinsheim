@@ -1,5 +1,7 @@
 "use client"
 
+import { useRef } from "react"
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -69,7 +71,8 @@ function Section({ title, lines, marker }: { title: string; lines: string[]; mar
 /**
  * Jede Aktion mit Folgen fragt hierüber (Regel „Kein Knopf ohne Folge“, `vault/conventions.md` §10). Die Texte kommen
  * aus den Folgen der App (`consequences.ts`). Der Fokus steht zuerst auf „Abbrechen“; der ganze Inhalt ist als Beschreibung
- * mit dem Dialog verknüpft.
+ * mit dem Dialog verknüpft. Beim Schließen kehrt der Fokus zu dem Element zurück, das ihn beim Öffnen hatte: Ohne
+ * `AlertDialogTrigger` gäbe Radix ihn an einen leeren Trigger, und er fiele auf <body>.
  */
 export function DecisionDialog({
   decision,
@@ -82,9 +85,22 @@ export function DecisionDialog({
   onOpenChange: (open: boolean) => void
   onConfirm: () => void
 }) {
+  const opener = useRef<HTMLElement | null>(null)
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="max-h-[90dvh] overflow-y-auto">
+      <AlertDialogContent
+        className="max-h-[90dvh] overflow-y-auto"
+        // beim Einhängen, bevor der Dialog den Fokus nimmt: Hier hat ihn noch der Knopf, der ihn öffnete
+        onOpenAutoFocus={() => {
+          opener.current =
+            document.activeElement instanceof HTMLElement ? document.activeElement : null
+        }}
+        onCloseAutoFocus={(event) => {
+          event.preventDefault()
+          if (opener.current?.isConnected) opener.current.focus()
+          opener.current = null
+        }}
+      >
         <AlertDialogHeader>
           <AlertDialogTitle>{decision.title}</AlertDialogTitle>
         </AlertDialogHeader>
