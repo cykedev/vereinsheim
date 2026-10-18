@@ -5,14 +5,17 @@
 // Semikolons, die Wörter des Users statt der des Codes (Sportpassnummer, zurückweisen, wieder zulassen, Spiegel holt).
 // Ein Test hält die alten Wörter fern (`consequences.test.ts`, „Schreibregeln“).
 
+import { forbiddenWords } from "@vereinsheim/lib/wording"
 import type { Decision } from "@vereinsheim/ui/design2/decision-dialog"
 
 /**
- * Was in keinem sichtbaren Text stehen darf: Semikolons und die alten Wörter des Codes, auch „Rangliste“ (in der
- * Oberfläche „Liste“). Die Tests der Dialoge, Erklärungen, Zustände und der Übersicht prüfen dagegen.
+ * Was in keinem sichtbaren Text stehen darf: die Grundregel (`@vereinsheim/lib/wording`: Semikolon, drei Punkte) und
+ * die alten Wörter des Codes, auch „Rangliste“ (in der Oberfläche „Liste“). Die Tests der Dialoge, Erklärungen,
+ * Zustände und der Übersicht prüfen dagegen.
  */
-export const OLD_WORDS =
-  /;|SportpassI[Dd]|Sportpass-ID|\bMeldung|\bAblage|[Kk]oppe?l|Rückstau|[Nn]achlad|[Nn]achgelad|Grabstein|[Ss]perre|[Rr]angliste/
+export const OLD_WORDS = forbiddenWords(
+  /SportpassI[Dd]|Sportpass-ID|\bMeldung|\bAblage|[Kk]oppe?l|Rückstau|[Nn]achlad|[Nn]achgelad|Grabstein|[Ss]perre|[Rr]angliste/
+)
 
 export type { Decision }
 

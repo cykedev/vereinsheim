@@ -9,6 +9,7 @@
     "./dateTime": "./src/dateTime.ts",
     "./format": "./src/format.ts",
     "./forms/fieldErrors": "./src/forms/fieldErrors.ts",
+    "./wording": "./src/wording.ts",
     "./hooks/useUnsavedChangesGuard": "./src/hooks/useUnsavedChangesGuard.ts",
     "./hooks/useNavigationConfirm": "./src/hooks/useNavigationConfirm.ts",
     "./auth/validation": "./src/auth/validation.ts",
