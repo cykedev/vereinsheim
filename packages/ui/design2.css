@@ -1,7 +1,7 @@
-/* Design 2 (ADR-030): Tokens für Spiegel, hell und dunkel. Eigenständig statt theme.css: Ringwerk und
-   Treffsicher bleiben auf der heutigen Schicht. Gleiche Namen wie theme.css, damit die ui-Primitives
-   passen; dazu Design-2-eigene Tokens. Werte aus dem Prototyp (Spielwiese).
-   Hell auf :root, dunkel unter .dark (Klassen-Strategie wie next-themes); keine dark:-Varianten im Code. */
+/* Design 2 (ADR-030, ADR-032): Tokens für alle Apps, hell und dunkel. Eigenständig statt theme.css. Gleiche
+   Namen wie theme.css, damit die ui-Primitives passen; dazu Design-2-eigene Tokens. Werte aus dem Prototyp
+   (Spielwiese). Hell auf :root, dunkel unter .dark (Klassen-Strategie wie next-themes); keine dark:-Varianten
+   im Code. Der Akzent je App kommt über `data-app` am <html>; ohne `data-app` gilt Spiegels Blau. */
 
 @source "./src";
 
@@ -58,6 +58,14 @@
   --color-score-9: var(--score-9);
   --color-score-8: var(--score-8);
   --color-score-7: var(--score-7);
+  --color-rank-1: var(--rank-1);
+  --color-rank-2: var(--rank-2);
+  --color-rank-3: var(--rank-3);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
   --radius-sm: calc(var(--radius) - 6px);
   --radius-md: calc(var(--radius) - 4px);
   --radius-lg: var(--radius);
@@ -137,6 +145,36 @@
   --score-9: #e9b10c;
   --score-8: #1fa3c8;
   --score-7: #7c5cd6;
+  /* Platz 1, 2, 3 (Gold, Silber, Bronze): auch als Schrift, auf der Kartenfläche ≥ 4,5 : 1 */
+  --rank-1: #8a6100;
+  --rank-2: #5f6b7a;
+  --rank-3: #a1572a;
+  /* Diagramm-Serien: chart-1 ist der Akzent, chart-2 Orange (Vergleich B), chart-3 … 5 aus der geprüften
+     Dataviz-Palette (Aqua, Violett, Magenta); auf der Kartenfläche ≥ 3 : 1, Nachbarn farbenblind unterscheidbar */
+  --chart-1: #1f5fd1;
+  --chart-2: #d95926;
+  --chart-3: #12936a;
+  --chart-4: #6250d6;
+  --chart-5: #d14d82;
+}
+
+/* Akzent je App, hell: Messing und Teal, Schrift darauf weiß */
+[data-app="ringwerk"] {
+  --ring: #8a5a00;
+  --primary: #8a5a00;
+  --primary-foreground: #ffffff;
+  --accent: rgba(138, 90, 0, 0.08);
+  --accent-wash: rgba(138, 90, 0, 0.08);
+  --chart-1: #8a5a00;
+}
+
+[data-app="treffsicher"] {
+  --ring: #0a766b;
+  --primary: #0a766b;
+  --primary-foreground: #ffffff;
+  --accent: rgba(10, 118, 107, 0.08);
+  --accent-wash: rgba(10, 118, 107, 0.08);
+  --chart-1: #0a766b;
 }
 
 .dark {
@@ -173,6 +211,33 @@
   --gold-wash: #2e2d23;
   --quiet: #66728a;
   --info: #9ccaff;
+  --rank-1: #f1c453;
+  --rank-2: #b7c1cf;
+  --rank-3: #e39a62;
+  --chart-1: #9ccaff;
+  --chart-2: #d95926;
+  --chart-3: #199e70;
+  --chart-4: #9085e9;
+  --chart-5: #d55181;
+}
+
+/* Akzent je App, dunkel: dunkle Schrift auf hellem Akzent */
+.dark[data-app="ringwerk"] {
+  --ring: #f5ae39;
+  --primary: #f5ae39;
+  --primary-foreground: #0d121a;
+  --accent: rgba(245, 174, 57, 0.11);
+  --accent-wash: rgba(245, 174, 57, 0.11);
+  --chart-1: #f5ae39;
+}
+
+.dark[data-app="treffsicher"] {
+  --ring: #4acaad;
+  --primary: #4acaad;
+  --primary-foreground: #0d121a;
+  --accent: rgba(74, 202, 173, 0.11);
+  --accent-wash: rgba(74, 202, 173, 0.11);
+  --chart-1: #4acaad;
 }
 
 @layer base {
@@ -182,4 +247,33 @@
   body {
     @apply bg-background font-sans text-foreground;
   }
+}
+
+@layer utilities {
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Native Date/Time-Controls können in manchen Browsern breiter als erwartet
+   messen. Deshalb auf die Containerbreite begrenzen. */
+input[type="date"],
+input[type="datetime-local"] {
+  max-width: 100%;
+  min-width: 0;
+}
+
+input[type="date"]::-webkit-date-and-time-value,
+input[type="datetime-local"]::-webkit-date-and-time-value {
+  text-align: left;
+}
+
+input[type="date"]::-webkit-datetime-edit,
+input[type="datetime-local"]::-webkit-datetime-edit {
+  padding: 0;
 }

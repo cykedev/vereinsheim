@@ -5,11 +5,12 @@ import { describe, expect, it } from "vitest"
 
 const css = readFileSync(fileURLToPath(new URL("../../design2.css", import.meta.url)), "utf8")
 
-/** die Custom Properties eines Blocks, der mit `selector {` beginnt */
+/** die Custom Properties eines Blocks, dessen Zeile mit `selector {` beginnt */
 function block(selector: string): Map<string, string> {
-  const start = css.indexOf(`${selector} {`)
+  const head = `\n${selector} {`
+  const start = css.indexOf(head)
   if (start < 0) throw new Error(`Block ${selector} fehlt`)
-  const body = css.slice(css.indexOf("{", start) + 1, css.indexOf("}", start))
+  const body = css.slice(start + head.length, css.indexOf("}", start))
   const props = new Map<string, string>()
   for (const match of body.matchAll(/--([\w-]+):\s*([^;]+);/g)) props.set(match[1], match[2].trim())
   return props
@@ -52,7 +53,44 @@ const THEMED = [
   "gold-wash",
   "quiet",
   "info",
+  "rank-1",
+  "rank-2",
+  "rank-3",
+  "chart-1",
+  "chart-2",
+  "chart-3",
+  "chart-4",
+  "chart-5",
 ]
+
+// was der Akzent einer App setzt, hell wie dunkel
+const ACCENT = ["ring", "primary", "primary-foreground", "accent", "accent-wash", "chart-1"]
+const APPS = ["ringwerk", "treffsicher"] as const
+
+/** relative Leuchtdichte nach WCAG 2.x aus `#rrggbb` */
+function luminance(hex: string): number {
+  const match = /^#([0-9a-f]{6})$/i.exec(hex)
+  if (!match) throw new Error(`keine Farbe als #rrggbb: ${hex}`)
+  const [r, g, b] = [0, 2, 4].map((i) => {
+    const c = parseInt(match[1].slice(i, i + 2), 16) / 255
+    return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
+  })
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b
+}
+
+/** Kontrastverhältnis nach WCAG 2.x */
+function contrast(a: string, b: string): number {
+  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x)
+  return (hi + 0.05) / (lo + 0.05)
+}
+
+/** die wirksamen Tokens einer App in einem Theme: Grundblock, dann `.dark`, dann der Akzent der App */
+function tokens(app: (typeof APPS)[number] | null, theme: "light" | "dark"): Map<string, string> {
+  const layers = [root]
+  if (theme === "dark") layers.push(dark)
+  if (app) layers.push(block(theme === "dark" ? `.dark[data-app="${app}"]` : `[data-app="${app}"]`))
+  return new Map(layers.flatMap((layer) => [...layer]))
+}
 
 describe("Design-2-Tokens", () => {
   it("jede wechselnde Farbe steht hell und dunkel", () => {
@@ -109,5 +147,42 @@ describe("Design-2-Tokens", () => {
   it("hell und dunkel setzen das Farbschema für Formulare und Bildlaufleisten", () => {
     expect(css).toMatch(/:root \{[^}]*color-scheme: light;/)
     expect(css).toMatch(/\.dark \{[^}]*color-scheme: dark;/)
+  })
+
+  it("der Akzent je App steht hell und dunkel vollständig", () => {
+    for (const app of APPS)
+      for (const selector of [`[data-app="${app}"]`, `.dark[data-app="${app}"]`]) {
+        const accent = block(selector)
+        for (const name of ACCENT) expect(accent.has(name), `${selector} --${name}`).toBe(true)
+        expect(accent.get("chart-1")).toBe(accent.get("primary"))
+      }
+  })
+
+  it("Akzent, Schrift auf dem Akzent, Plätze und Diagramm-Serien tragen auf der Kartenfläche", () => {
+    for (const app of [null, ...APPS])
+      for (const theme of ["light", "dark"] as const) {
+        const t = tokens(app, theme)
+        const at = (name: string) => t.get(name) ?? ""
+        const where = `${app ?? "spiegel"} ${theme}`
+        expect(
+          contrast(at("primary-foreground"), at("primary")),
+          `${where} Schrift auf primary`
+        ).toBeGreaterThanOrEqual(4.5)
+        expect(
+          contrast(at("primary"), at("card")),
+          `${where} primary auf card`
+        ).toBeGreaterThanOrEqual(4.5)
+        for (const rank of ["rank-1", "rank-2", "rank-3"])
+          expect(contrast(at(rank), at("card")), `${where} ${rank}`).toBeGreaterThanOrEqual(4.5)
+        for (const chart of ["chart-1", "chart-2", "chart-3", "chart-4", "chart-5"])
+          expect(contrast(at(chart), at("card")), `${where} ${chart}`).toBeGreaterThanOrEqual(3)
+      }
+  })
+
+  it("ohne data-app gilt Spiegels Blau", () => {
+    expect(root.get("primary")).toBe("#1f5fd1")
+    expect(dark.get("primary")).toBe("#9ccaff")
+    expect(root.get("chart-1")).toBe(root.get("primary"))
+    expect(dark.get("chart-1")).toBe(dark.get("primary"))
   })
 })
