@@ -6,7 +6,7 @@ import { AdminHelp } from "@/components/admin/AdminHelp"
 import { AdminTabs } from "@/components/admin/AdminTabs"
 import { DisciplineList } from "@/components/admin/DisciplineList"
 import { FamilyForms } from "@/components/admin/FamilyForms"
-import { Page } from "@/components/shell/Page"
+import { Page } from "@vereinsheim/ui/design2/page"
 import { disciplineOverview } from "@/lib/admin/disciplines"
 import { requireAdmin } from "@/lib/auth-helpers"
 

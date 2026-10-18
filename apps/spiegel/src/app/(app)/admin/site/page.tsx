@@ -5,7 +5,7 @@ import { getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
 import { AdminTabs } from "@/components/admin/AdminTabs"
 import { BridgeItem, PairBridgeForm, RankingItem, SiteForm } from "@/components/admin/SiteForms"
 import { AdminHelp } from "@/components/admin/AdminHelp"
-import { Page } from "@/components/shell/Page"
+import { Page } from "@vereinsheim/ui/design2/page"
 import { requireAdmin } from "@/lib/auth-helpers"
 import { siteOverview } from "@/lib/admin/site"
 

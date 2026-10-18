@@ -1,4 +1,4 @@
-import { Page } from "./Page"
+import { Page } from "@vereinsheim/ui/design2/page"
 
 /** ein Bereich, dessen Inhalt noch kommt: Titel und der Schritt, der ihn bringt */
 export function Placeholder({ title, sentence }: { title: string; sentence: string }) {

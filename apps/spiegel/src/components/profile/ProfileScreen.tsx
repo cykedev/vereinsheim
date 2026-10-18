@@ -8,7 +8,7 @@ import { useState } from "react"
 import { RouteLink } from "@vereinsheim/shot-ui/nav/RouteLink"
 import { Button } from "@vereinsheim/ui/button"
 
-import { Page } from "@/components/shell/Page"
+import { Page } from "@vereinsheim/ui/design2/page"
 import { ThemeSwitch } from "@vereinsheim/ui/design2/theme-switch"
 import type { ConsentRow } from "@/lib/consent/queries"
 import { CURRENT_CONSENT_VERSION } from "@/lib/consent/texts"

@@ -20,7 +20,7 @@ import {
 } from "@vereinsheim/shot-ui/nav/routes"
 
 import { NoCards } from "@/components/shell/NoCards"
-import { Page } from "@/components/shell/Page"
+import { Page } from "@vereinsheim/ui/design2/page"
 import { useSavedChoice } from "@/components/shell/useSavedChoice"
 import { marksById } from "@/lib/marks"
 import type { PageContext } from "@/lib/page-context"

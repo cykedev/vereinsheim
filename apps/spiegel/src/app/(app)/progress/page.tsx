@@ -3,7 +3,7 @@ import type { Metadata } from "next"
 import { DEFAULT_PROGRESS, routeFromUrl } from "@vereinsheim/shot-ui/nav/routes"
 
 import { NoCards } from "@/components/shell/NoCards"
-import { Page } from "@/components/shell/Page"
+import { Page } from "@vereinsheim/ui/design2/page"
 import { ProgressScreen } from "@/components/progress/ProgressScreen"
 import { requireSession } from "@/lib/auth-helpers"
 import { db } from "@/lib/db"

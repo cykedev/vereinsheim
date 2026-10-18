@@ -59,7 +59,7 @@ import {
 import { ToggleChip } from "@vereinsheim/ui/design2/toggle-chip"
 
 import { DeleteCard } from "@/components/card/DeleteCard"
-import { Page } from "@/components/shell/Page"
+import { Page } from "@vereinsheim/ui/design2/page"
 import { useSavedChoice } from "@/components/shell/useSavedChoice"
 import { useHelp } from "@/components/shell/HelpContext"
 import { addressScoring, nextCardAddress, ownHash } from "@/lib/card-address"

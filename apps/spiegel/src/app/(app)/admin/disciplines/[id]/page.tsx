@@ -5,7 +5,7 @@ import { getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
 
 import { AdminTabs } from "@/components/admin/AdminTabs"
 import { DisciplineForm } from "@/components/admin/DisciplineForm"
-import { Page } from "@/components/shell/Page"
+import { Page } from "@vereinsheim/ui/design2/page"
 import { disciplineDetail } from "@/lib/admin/disciplines"
 import { requireAdmin } from "@/lib/auth-helpers"
 

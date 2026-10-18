@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 
 import { PasswordForm } from "@/components/profile/PasswordForm"
-import { Page } from "@/components/shell/Page"
+import { Page } from "@vereinsheim/ui/design2/page"
 import { requireSession } from "@/lib/auth-helpers"
 
 export const metadata: Metadata = { title: "Passwort ändern" }

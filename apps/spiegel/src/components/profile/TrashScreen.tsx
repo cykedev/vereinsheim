@@ -6,7 +6,7 @@ import { getErrorMessage } from "@vereinsheim/lib/forms/fieldErrors"
 import { Button } from "@vereinsheim/ui/button"
 
 import { DecisionDialog } from "@/components/shell/DecisionDialog"
-import { Page } from "@/components/shell/Page"
+import { Page } from "@vereinsheim/ui/design2/page"
 import { cardPurgeNow } from "@/lib/admin/consequences"
 import { purgeCardNow, restoreCard } from "@/lib/trash-actions"
 import type { BlockedItem, TrashItem } from "@/lib/trash-view"

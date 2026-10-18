@@ -15,7 +15,7 @@ import { FormLine } from "@vereinsheim/shot-ui/start/FormLine"
 import type { StartModel } from "@vereinsheim/shot-ui/start/model"
 
 import { NoCards } from "@/components/shell/NoCards"
-import { Page } from "@/components/shell/Page"
+import { Page } from "@vereinsheim/ui/design2/page"
 import { useSavedChoice } from "@/components/shell/useSavedChoice"
 import { marksById } from "@/lib/marks"
 import type { PageContext } from "@/lib/page-context"

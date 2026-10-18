@@ -3,7 +3,7 @@ import type { Metadata } from "next"
 import { UserForm } from "@/components/admin/UserForm"
 import { requireAdmin } from "@/lib/auth-helpers"
 import { createUser } from "@/lib/users/actions"
-import { Page } from "@/components/shell/Page"
+import { Page } from "@vereinsheim/ui/design2/page"
 
 export const metadata: Metadata = { title: "Neues Konto" }
 

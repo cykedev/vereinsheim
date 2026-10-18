@@ -11,7 +11,7 @@ import { requireAdmin } from "@/lib/auth-helpers"
 import { getAdminLoginRateLimitInsights } from "@/lib/admin/actions"
 import { openConsents } from "@/lib/consent/queries"
 import { getUsers, type UserListItem } from "@/lib/users/queries"
-import { Page } from "@/components/shell/Page"
+import { Page } from "@vereinsheim/ui/design2/page"
 
 export const metadata: Metadata = { title: "Konten" }
 

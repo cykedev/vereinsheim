@@ -9,7 +9,7 @@ import { consentsOfUser } from "@/lib/consent/queries"
 import { requireAdmin } from "@/lib/auth-helpers"
 import { updateUser } from "@/lib/users/actions"
 import { getUser } from "@/lib/users/queries"
-import { Page } from "@/components/shell/Page"
+import { Page } from "@vereinsheim/ui/design2/page"
 
 export const metadata: Metadata = { title: "Konto" }
 

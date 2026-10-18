@@ -11,7 +11,7 @@ import { MiniTarget } from "@vereinsheim/shot-ui/target/MiniTarget"
 import { Button } from "@vereinsheim/ui/button"
 
 import { DecisionDialog } from "@/components/shell/DecisionDialog"
-import { Page } from "@/components/shell/Page"
+import { Page } from "@vereinsheim/ui/design2/page"
 import { notMine } from "@/lib/admin/consequences"
 import { confirmFirstCard, rejectFirstCard } from "@/lib/first-card-actions"
 import { marksById } from "@/lib/marks"
