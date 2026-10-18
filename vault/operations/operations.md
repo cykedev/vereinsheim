@@ -200,9 +200,38 @@ Ringwerk trägt den laufenden Wettkampfbetrieb und geht allein raus, nie im selb
    Fehler. Die Bilder vorher und nachher sieht der User durch.
 2. **Backup** auf dem VPS: `./scripts/vereinsheim backup`, dann `./scripts/vereinsheim restore-probe` (das Backup
    lässt sich einspielen).
-3. **Termin:** ein Tag ohne Wettkampf, den der User bestimmt.
-4. `./scripts/vereinsheim release` mit `APPS=ringwerk`, danach kurz die Seiten eines laufenden Wettbewerbs ansehen.
+3. **Brackets prüfen (nur lesend),** einmalig vor dem Release mit der Korrektur-Regel je Runde
+   ([[playoffs-knockout-system]]): Eine Korrektur konnte bis dahin eine halbe Runde hinterlassen oder einen Verlierer
+   in der nächsten Runde stehen lassen. Beide Abfragen müssen leer sein; sonst den Wettbewerb mit der Sportleitung
+   klären, bevor neu ausgeliefert wird.
+
+   ```sql
+   -- (a) Playoff-Runden mit falscher Zahl Paarungen
+   SELECT c.name, pm.round, count(*) AS paarungen
+   FROM "PlayoffMatch" pm JOIN "Competition" c ON c.id = pm."competitionId"
+   GROUP BY c.name, pm.round
+   HAVING count(*) <> CASE pm.round WHEN 'EIGHTH_FINAL' THEN 8 WHEN 'QUARTER_FINAL' THEN 4 WHEN 'SEMI_FINAL' THEN 2 ELSE 1 END;
+   -- (b) Teilnehmer der nächsten Runde, die in der Runde davor nicht gewonnen haben
+   WITH winners AS (
+     SELECT "competitionId", round, CASE WHEN "winsA" > "winsB" THEN "participantAId" ELSE "participantBId" END AS pid
+     FROM "PlayoffMatch" WHERE status = 'COMPLETED'
+   ), seats AS (
+     SELECT "competitionId", round, "participantAId" AS pid FROM "PlayoffMatch"
+     UNION ALL SELECT "competitionId", round, "participantBId" FROM "PlayoffMatch"
+   )
+   SELECT c.name, s.round
+   FROM seats s JOIN "Competition" c ON c.id = s."competitionId"
+   WHERE s.round <> (SELECT min(round) FROM "PlayoffMatch" f WHERE f."competitionId" = s."competitionId")
+     AND NOT EXISTS (
+       SELECT 1 FROM winners w WHERE w."competitionId" = s."competitionId" AND w.pid = s.pid
+         AND w.round = CASE s.round WHEN 'QUARTER_FINAL' THEN 'EIGHTH_FINAL'::"PlayoffRound"
+           WHEN 'SEMI_FINAL' THEN 'QUARTER_FINAL'::"PlayoffRound" WHEN 'FINAL' THEN 'SEMI_FINAL'::"PlayoffRound" END);
+   ```
+4. **Termin:** ein Tag ohne Wettkampf, den der User bestimmt.
+5. `./scripts/vereinsheim release` mit `APPS=ringwerk`, danach kurz die Seiten eines laufenden Wettbewerbs ansehen.
    `./scripts/vereinsheim rollback` steht bereit ([Rollback](#rollback)).
+   Mit der eindeutigen Reihenfolge ([[ringwerk-pruefbestand]], „Gleichstand und Neuaufbau“) stehen laufende Brackets
+   nach dem ersten Release einmalig in Setzreihenfolge; nur die Anzeige ändert sich. Der Sportleitung vorher sagen.
 
 ---
 

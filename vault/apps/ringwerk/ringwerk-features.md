@@ -258,9 +258,13 @@ Paarungen ändern, nicht nur die eigene. Deshalb gilt je Runde, nicht je Teilneh
   fällt die **ganze** Folgerunde weg (`deleteNextRound`) und wird über „… anlegen“ neu gesetzt. Bleibt der Sieger,
   bleibt die Folgerunde.
 - Löschen des letzten Duells: nur bei canCorrect; das Match ist danach offen, die ganze Folgerunde fällt weg.
-- Fehlt einer Runde eine Paarung (Bestand aus der früheren Kaskade je Teilnehmer), meldet „… anlegen“ das, statt ein
-  Finale mit einem Teilnehmer anzulegen. Belegt: `actions/correction.test.ts`, `canCorrect.test.ts`, `match.test.ts`
-  und ein Ablauf im Prüfbestand („Halbfinale korrigieren“).
+- Ein Duell eines entschiedenen Matches zum Unentschieden korrigiert: Es bleibt entschieden, solange die Siege reichen
+  (3:2 → 3:1). Eine Korrektur, nach der beide Seiten genug Siege hätten, lehnt Ringwerk ab.
+- Sperre, Speichern und Entfernen der Folgerunde laufen in einer serialisierbaren Transaktion.
+- Fehlt einer Runde eine Paarung, meldet „… anlegen“ das samt Weg zur Neu-Setzung, statt ein Finale mit einem
+  Teilnehmer anzulegen. Belegt: `actions/correction.test.ts`, `canCorrect.test.ts`, `match.test.ts`; über die
+  Oberfläche die Abläufe „Viertelfinale korrigieren“ (Sieger gedreht, ganzes Halbfinale neu) und „Halbfinale
+  korrigieren“ (Match wieder offen, Finale neu).
 
 #### Guards
 
