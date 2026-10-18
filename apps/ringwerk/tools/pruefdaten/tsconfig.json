@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["../../src/*"],
+      "next/cache": ["./stubs/next-cache.ts"],
+      "next-auth": ["./stubs/next-auth.ts"],
+      "server-only": ["./stubs/server-only.ts"]
+    }
+  }
+}
