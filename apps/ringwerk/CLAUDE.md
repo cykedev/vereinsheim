@@ -134,7 +134,8 @@ Ringwerk importiert (Details, Befehle und was streng ist: `vault/apps/ringwerk/r
    vorher und nachher (`reports/ringwerk-vergleich/<zeit>/vorher-nachher.html`) sieht der User durch.
 3. `pnpm --filter ringwerk pruefen:ablaeufe`: grün (bekannte Befunde stehen als BEKANNT im Bericht).
 4. An der Kopie der echten Daten: `pruefen:aufnehmen --echt` auf dem alten Stand, `pruefen:vergleichen --echt` auf dem
-   neuen. Nur lesend, Ergebnisse nur unter `reports/ringwerk-echt/`, nie committet (ADR-029).
+   neuen. Das Werkzeug liest nur (Ringwerk selbst gleicht beim Start die Standarddisziplinen ab), Ergebnisse nur unter
+   `reports/ringwerk-echt/`, nie committet (ADR-029).
 5. Den Ausgangsstand (`tools/pruefdaten/referenz/`) schreibt `pruefen:aufnehmen` nur nach Freigabe durch den User neu.
 6. Release allein, an einem Tag ohne Wettkampf, mit Backup vorher (`vault/operations/operations.md`, „Release von
    Ringwerk“).

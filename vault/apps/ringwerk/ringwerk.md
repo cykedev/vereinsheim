@@ -86,10 +86,21 @@ MOC-Hub der Ringwerk-App (Liga & Wettkämpfe). Führt die App-Guides und die fac
   (etwa ohne Namen), sieht danach „Gemischt (Faktor-Korrektur)“. Wer nur den Namen nachträgt, legt still einen
   gemischten Wettbewerb an. Die Radix-Auswahl mit `name` folgt dem Zurücksetzen des Formulars nach der Server Action;
   Frist und Format bleiben. Belegt von `pruefen:ablaeufe` (bekannter Befund, [[ringwerk-pruefbestand]]).
-- **Seite des Finales unbestimmt:** `advanceRound` liest die Halbfinals ohne `orderBy`; wer im Finale A ist, hängt an
-  der Zeilenfolge in Postgres.
+- **Reihenfolge bei Gleichstand hängt an der Zeilenfolge in Postgres** (aufgefallen am Prüfbestand: gleiche Daten,
+  andere Anzeige nach einem Neuaufbau, [[ringwerk-pruefbestand]]). Ringwerk liest dann in physischer Folge, und die
+  ändert sich, sobald eine Zeile geändert wird. Betroffen:
+  - Listen mit gleichem Nachnamen (Teilnehmer eines Wettbewerbs, Serien, Spielplan): sortiert nur nach `lastName`.
+  - Die Plätze im Bracket: `getPlayoffBracket` ordnet nach `createdAt`, alle Paarungen einer Runde entstehen in einem
+    `createMany` mit derselben Zeit. Eine Paarung kann nach einem Ergebnis den Platz wechseln (Seite und PDF).
+  - Die Vorschau der nächsten Runde paart benachbarte Plätze. Die echte Setzung macht `createNextRoundMatchups` nach
+    Rang; die Vorschau kann deshalb andere Gegner zeigen als die, die dann gesetzt werden.
+  - Die Seite im Finale: `advanceRound` liest die Halbfinals ohne `orderBy`; wer A ist, ist zufällig.
+  Die Paarungen selbst sind nicht betroffen. Vorschlag: überall ein eindeutiger zweiter Schlüssel (Vorname, dann
+  Kennung; im Bracket die Setzung), danach den Ausgangsstand neu aufnehmen.
 - **Bracket-Vorschau nur am Bildschirm:** Die Seite zeigt die Sieger einer laufenden Runde schon kursiv im nächsten
   Platz, das PDF dort „Ausstehend“.
+- **Team-Rangliste mit Dezimalpunkt:** Die Summe der Teams steht als „84.9“, die Einzelwertung als „25,3“
+  (`@vereinsheim/lib/format` nutzen).
 - **Liga-PDFs runden Zehntelringe bei gemischter Disziplin:** Die PDF-Routen (Spielplan, Playoffs, öffentlich)
   bestimmen den ScoringType einmal je Wettbewerb, bei gemischter Liga `WHOLE`; die Bildschirmansicht rechnet je
   Teilnehmer. Den ScoringType je Teilnehmer an `SchedulePdf` und `PlayoffsPdf` durchreichen (nur aus dem Code gelesen).
