@@ -71,15 +71,16 @@ Chrome, Poppler, den Dev-Postgres und einen Build. Der eigene Server bindet nur 
 
 Der Vergleich ist über Aufbauten hinweg eindeutig: Jeder Lauf von `pruefdaten` ergibt dieselben Daten (Prüfsumme) in
 derselben physischen Folge (der Aufbau schreibt über eine Verbindung, `fillfactor = 50`), und Ringwerk ordnet jede Liste
-bis zu einem eindeutigen Schlüssel. Bei gleichem Nachnamen entscheidet der Vorname, dann die `id`; Paarungen im Bracket
-und Einschreibungen stehen nach `createdAt` und `id` in der Reihenfolge der Anlage (cuid: Zeitstempel, dann Zähler), im
-Finale ist der Sieger des oberen Halbfinales A. Tests halten das fest (`src/lib/readOrder.test.ts`,
+bis zu einem eindeutigen Schlüssel. Bei gleichem Namen entscheidet der Vorname, dann die `id`; Paarungen im Bracket,
+Einschreibungen und Serien stehen nach `createdAt` und `id` in der Reihenfolge der Anlage (cuid: Zeitstempel, dann
+Zähler), Saison-Serien am selben Tag in der Reihenfolge der Erfassung, im Finale ist der Sieger des oberen Halbfinales
+A. Tests halten das fest (`src/lib/readOrder.test.ts`, `readOrderLists.test.ts`,
 `src/lib/playoffs/actions/match.test.ts`). Belegt am 18. Oktober 2026: zwei Aufbauten, 0 Fehler, alle Seitenbilder
 gleich.
 
-Bis dahin ordnete Ringwerk Gleichstände nach der Zeilenfolge in Postgres; nach einem Neuaufbau meldete der Vergleich
-rund 150 Vertauschungen. Taucht so etwas wieder auf, nennt der Vergleich einen anderen Aufbau als bei der Aufnahme
-(`build` in `_stand.json`), und `--referenz` vergleicht alt gegen neu auf demselben Aufbau.
+Ordnet eine neue Abfrage nur nach einem Schlüssel, der nicht eindeutig ist, zeigt der Vergleich nach einem Neuaufbau
+Vertauschungen. Er nennt dann einen anderen Aufbau als bei der Aufnahme (`build` in `_stand.json`); `--referenz`
+vergleicht alt gegen neu auf demselben Aufbau.
 
 ## Vor jedem Merge und Release, der Ringwerk berührt
 
