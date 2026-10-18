@@ -12,6 +12,7 @@
     "./design2/sheet": "./src/design2/sheet.tsx",
     "./design2/theme": "./src/design2/theme/index.ts",
     "./design2/theme-switch": "./src/design2/theme/ThemeSwitch.tsx",
+    "./design2/toaster": "./src/design2/toaster.tsx",
     "./design2/toggle-chip": "./src/design2/toggle-chip.tsx",
     "./admin/LoginRateLimitInsights": "./src/admin/LoginRateLimitInsights.tsx",
     "./admin/LoginRateLimitTable": "./src/admin/LoginRateLimitTable.tsx",
