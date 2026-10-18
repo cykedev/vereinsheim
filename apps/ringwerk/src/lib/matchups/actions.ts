@@ -1,7 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { db } from "@/lib/db"
+import { isConflict, serializable } from "@/lib/serializable"
 import { getAuthSession, canManage } from "@/lib/auth-helpers"
 import type { ActionResult } from "@/lib/types"
 import { generateSchedule } from "./generateSchedule"
@@ -24,102 +24,89 @@ export async function generateCompetitionSchedule(competitionId: string): Promis
   if (!session) return { error: "Nicht angemeldet." }
   if (!canManage(session.user.role)) return { error: "Keine Berechtigung." }
 
-  // Wettkampf laden und Voraussetzungen prüfen
-  const competition = await db.competition.findUnique({
-    where: { id: competitionId },
-    select: {
-      id: true,
-      status: true,
-      leagueFormat: true,
-      hinrundeDeadline: true,
-      rueckrundeDeadline: true,
-    },
-  })
-  if (!competition) return { error: "Liga nicht gefunden." }
-  if (competition.status !== "ACTIVE") {
-    return { error: "Spielplan kann nur für aktive Ligen generiert werden." }
-  }
-
-  // Aktive Teilnehmer laden
-  const enrollments = await db.competitionParticipant.findMany({
-    where: { competitionId, status: "ACTIVE" },
-    select: { participantId: true },
-    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
-  })
-
-  if (enrollments.length < 4) {
-    return {
-      error: `Mindestens 4 aktive Teilnehmer erforderlich (aktuell: ${enrollments.length}).`,
-    }
-  }
-
-  // Spielplan berechnen
-  const participantIds = enrollments.map((e) => e.participantId)
-
-  type MatchupData = {
-    competitionId: string
-    homeParticipantId: string
-    awayParticipantId: string | null
-    round: "FIRST_LEG" | "SECOND_LEG"
-    roundIndex: number
-    status: "PENDING" | "BYE"
-    dueDate: Date | null
-  }
-
-  let matchupData: MatchupData[]
-
-  if (competition.leagueFormat === "BEST_OF_SINGLE") {
-    const pairings = generateBestOfSchedule(participantIds)
-    matchupData = pairings.map((m) => ({
-      competitionId,
-      homeParticipantId: m.homeId,
-      awayParticipantId: m.awayId,
-      round: "FIRST_LEG" as const,
-      roundIndex: m.roundIndex,
-      status: m.awayId === null ? ("BYE" as const) : ("PENDING" as const),
-      dueDate: competition.hinrundeDeadline,
-    }))
-  } else {
-    // DOUBLE_ROUND_ROBIN (default)
-    const matchups = generateSchedule(participantIds)
-    matchupData = matchups.map((m) => ({
-      competitionId,
-      homeParticipantId: m.homeId,
-      awayParticipantId: m.awayId,
-      round: m.round,
-      roundIndex: m.roundIndex,
-      status: m.awayId === null ? ("BYE" as const) : ("PENDING" as const),
-      dueDate:
-        m.round === "FIRST_LEG" ? competition.hinrundeDeadline : competition.rueckrundeDeadline,
-    }))
-  }
-
-  // Sperre, Löschen und Anlegen in EINER serialisierbaren Transaktion. Neu generieren nur ohne
-  // jedes Ergebnis: eine Best-of-Paarung bleibt PENDING, bis alle Duelle entschieden sind, und
-  // Series.matchupId steht auf ON DELETE SET NULL — ein Löschen ließe erfasste Serien still
-  // verwaisen. `series: { none: {} }` sichert das zusätzlich am Löschbefehl selbst ab; ein parallel
-  // gespeichertes Ergebnis führt zum Serialisierungsfehler statt zu Datenverlust.
-  let blocker: string | null
+  // Alles, wovon der Spielplan abhängt, liest die Transaktion selbst: Bricht Postgres sie wegen einer gleichzeitigen
+  // Änderung ab (auch einer Einschreibung oder eines Spielplans in einem anderen Wettbewerb), läuft sie mit dem neuen
+  // Stand noch einmal (`serializable`).
+  //
+  // Sperre, Löschen und Anlegen in derselben Transaktion. Neu generieren nur ohne jedes Ergebnis: eine Best-of-Paarung
+  // bleibt PENDING, bis alle Duelle entschieden sind, und Series.matchupId steht auf ON DELETE SET NULL — ein Löschen
+  // ließe erfasste Serien still verwaisen. `series: { none: {} }` sichert das zusätzlich am Löschbefehl selbst ab; ein
+  // parallel gespeichertes Ergebnis führt zum Serialisierungsfehler statt zu Datenverlust.
+  let problem: string | null
   try {
-    blocker = await db.$transaction(
-      async (tx) => {
-        const reason = scheduleRegenerationBlocker(await getScheduleResultCounts(competitionId, tx))
-        if (reason) return reason
-        // Offene Paarungen und Freilose (BYE) gehören zum alten Plan — blieben Freilose stehen,
-        // hätte jeder Teilnehmer danach zwei je Runde.
-        await tx.matchup.deleteMany({
-          where: { competitionId, status: { in: ["PENDING", "BYE"] }, series: { none: {} } },
-        })
-        await tx.matchup.createMany({ data: matchupData })
-        return null
-      },
-      { isolationLevel: "Serializable" }
-    )
+    problem = await serializable(async (tx) => {
+      const competition = await tx.competition.findUnique({
+        where: { id: competitionId },
+        select: {
+          id: true,
+          status: true,
+          leagueFormat: true,
+          hinrundeDeadline: true,
+          rueckrundeDeadline: true,
+        },
+      })
+      if (!competition) return "Liga nicht gefunden."
+      if (competition.status !== "ACTIVE") {
+        return "Spielplan kann nur für aktive Ligen generiert werden."
+      }
+
+      const enrollments = await tx.competitionParticipant.findMany({
+        where: { competitionId, status: "ACTIVE" },
+        select: { participantId: true },
+        orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+      })
+      if (enrollments.length < 4) {
+        return `Mindestens 4 aktive Teilnehmer erforderlich (aktuell: ${enrollments.length}).`
+      }
+
+      const reason = scheduleRegenerationBlocker(await getScheduleResultCounts(competitionId, tx))
+      if (reason) return reason
+
+      const participantIds = enrollments.map((e) => e.participantId)
+      const matchupData =
+        competition.leagueFormat === "BEST_OF_SINGLE"
+          ? generateBestOfSchedule(participantIds).map((m) => ({
+              competitionId,
+              homeParticipantId: m.homeId,
+              awayParticipantId: m.awayId,
+              round: "FIRST_LEG" as const,
+              roundIndex: m.roundIndex,
+              status: m.awayId === null ? ("BYE" as const) : ("PENDING" as const),
+              dueDate: competition.hinrundeDeadline,
+            }))
+          : // DOUBLE_ROUND_ROBIN (default)
+            generateSchedule(participantIds).map((m) => ({
+              competitionId,
+              homeParticipantId: m.homeId,
+              awayParticipantId: m.awayId,
+              round: m.round,
+              roundIndex: m.roundIndex,
+              status: m.awayId === null ? ("BYE" as const) : ("PENDING" as const),
+              dueDate:
+                m.round === "FIRST_LEG"
+                  ? competition.hinrundeDeadline
+                  : competition.rueckrundeDeadline,
+            }))
+
+      // Offene Paarungen und Freilose (BYE) gehören zum alten Plan — blieben Freilose stehen,
+      // hätte jeder Teilnehmer danach zwei je Runde.
+      await tx.matchup.deleteMany({
+        where: { competitionId, status: { in: ["PENDING", "BYE"] }, series: { none: {} } },
+      })
+      await tx.matchup.createMany({ data: matchupData })
+      return null
+    })
   } catch (error) {
+    if (isConflict(error)) {
+      return {
+        error:
+          "Der Spielplan wurde gleichzeitig geändert. Bitte die Seite neu laden und es noch einmal versuchen.",
+      }
+    }
     console.error("Spielplan-Generierung fehlgeschlagen:", error)
     return { error: "Spielplan konnte nicht generiert werden. Bitte erneut versuchen." }
   }
-  if (blocker) return { error: blocker }
+  if (problem) return { error: problem }
 
   revalidatePath(`/competitions/${competitionId}/schedule`)
   revalidatePath(`/competitions/${competitionId}/participants`)

@@ -196,18 +196,6 @@ class Run {
   }
 }
 
-/**
- * Spielplan erzeugen nie in beiden Durchgängen zugleich: Ringwerk erzeugt ihn in einer serialisierbaren Transaktion, und
- * zwei gleichzeitige brechen sich gegenseitig ab, auch in verschiedenen Wettbewerben (nichts geht verloren, der Knopf
- * muss nur noch einmal gedrückt werden). Die Abläufe prüfen die Bedienung, nicht dieses Zusammentreffen.
- */
-let schedule: Promise<unknown> = Promise.resolve()
-function alone<T>(work: () => Promise<T>): Promise<T> {
-  const result = schedule.then(work, work)
-  schedule = result.catch(() => {})
-  return result
-}
-
 function expect(ok: boolean, what: string, detail: unknown = "") {
   if (!ok)
     throw new Error(
@@ -391,37 +379,35 @@ async function leagueClassic(run: Run, ui: Ui, db: Db, pass: Pass) {
     await enroll(ui, db, id, players)
   })
 
-  await run.step("Spielplan erzeugen und neu erzeugen", () =>
-    alone(async () => {
-      await ui.open(`/competitions/${id}/schedule`)
-      await ui.press("Spielplan generieren")
-      await ui.pressInDialog("Generieren")
-      await ui.dialogClosed("Dialog schließt nicht")
-      await ui.until(`$$("main tr").length > 10`, "kein Spielplan")
-      const first = await db.matchup.findMany({
-        where: { competitionId: id },
-        select: { id: true },
-      })
-      expect(first.length === 30, "6 Teilnehmer Hin und Rück: 30 Paarungen", first.length)
-      await ui.open(`/competitions/${id}/schedule`)
-      await ui.press("Spielplan neu generieren")
-      await ui.pressInDialog("Neu generieren")
-      await ui.dialogClosed("Dialog schließt nicht")
-      await ui.page.wait(500)
-      const second = await db.matchup.findMany({
-        where: { competitionId: id },
-        select: { id: true, homeParticipantId: true, awayParticipantId: true },
-      })
-      expect(second.length === 30, "neu erzeugt: wieder 30 Paarungen", second.length)
-      const old = new Set(first.map((m) => m.id))
-      expect(
-        second.every((m) => !old.has(m.id)),
-        "keine alte Paarung bleibt"
-      )
-      const pairs = new Set(second.map((m) => `${m.homeParticipantId}>${m.awayParticipantId}`))
-      expect(pairs.size === 30, "jede Paarung je Richtung einmal", pairs.size)
+  await run.step("Spielplan erzeugen und neu erzeugen", async () => {
+    await ui.open(`/competitions/${id}/schedule`)
+    await ui.press("Spielplan generieren")
+    await ui.pressInDialog("Generieren")
+    await ui.dialogClosed("Dialog schließt nicht")
+    await ui.until(`$$("main tr").length > 10`, "kein Spielplan")
+    const first = await db.matchup.findMany({
+      where: { competitionId: id },
+      select: { id: true },
     })
-  )
+    expect(first.length === 30, "6 Teilnehmer Hin und Rück: 30 Paarungen", first.length)
+    await ui.open(`/competitions/${id}/schedule`)
+    await ui.press("Spielplan neu generieren")
+    await ui.pressInDialog("Neu generieren")
+    await ui.dialogClosed("Dialog schließt nicht")
+    await ui.page.wait(500)
+    const second = await db.matchup.findMany({
+      where: { competitionId: id },
+      select: { id: true, homeParticipantId: true, awayParticipantId: true },
+    })
+    expect(second.length === 30, "neu erzeugt: wieder 30 Paarungen", second.length)
+    const old = new Set(first.map((m) => m.id))
+    expect(
+      second.every((m) => !old.has(m.id)),
+      "keine alte Paarung bleibt"
+    )
+    const pairs = new Set(second.map((m) => `${m.homeParticipantId}>${m.awayParticipantId}`))
+    expect(pairs.size === 30, "jede Paarung je Richtung einmal", pairs.size)
+  })
 
   await run.step("Regelwerk gesperrt, Frist änderbar", async () => {
     await ui.open(`/competitions/${id}/edit`)
@@ -575,16 +561,14 @@ async function leagueBestOf(run: Run, ui: Ui, db: Db, pass: Pass, base: string) 
 
   await run.step("einschreiben, Spielplan", async () => {
     await enroll(ui, db, id, players)
-    await alone(async () => {
-      await ui.open(`/competitions/${id}/schedule`)
-      await ui.press("Spielplan generieren")
-      await ui.pressInDialog("Generieren")
-      await ui.dialogClosed("Dialog schließt nicht")
-      expect(
-        (await db.matchup.count({ where: { competitionId: id } })) === 6,
-        "4 Teilnehmer: 6 Paarungen"
-      )
-    })
+    await ui.open(`/competitions/${id}/schedule`)
+    await ui.press("Spielplan generieren")
+    await ui.pressInDialog("Generieren")
+    await ui.dialogClosed("Dialog schließt nicht")
+    expect(
+      (await db.matchup.count({ where: { competitionId: id } })) === 6,
+      "4 Teilnehmer: 6 Paarungen"
+    )
   })
 
   await run.step("Duelle der Gruppenphase, eine Paarung mit Stechschuss", async () => {

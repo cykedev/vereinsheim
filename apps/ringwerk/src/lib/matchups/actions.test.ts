@@ -36,19 +36,9 @@ vi.mock("next/cache", () => ({
 vi.mock("@/lib/competitions/publicPdfCache", () => ({
   revalidatePublicPdf: revalidatePublicPdfMock,
 }))
+// Außerhalb der Transaktion gibt es nur `$transaction`: Was der Spielplan liest, liest er in ihr.
 vi.mock("@/lib/db", () => ({
-  db: {
-    competition: { findUnique: competitionFindUniqueMock },
-    competitionParticipant: { findMany: competitionParticipantFindManyMock },
-    matchup: {
-      count: matchupCountMock,
-      deleteMany: matchupDeleteManyMock,
-      createMany: matchupCreateManyMock,
-    },
-    series: { count: seriesCountMock },
-    playoffMatch: { count: playoffMatchCountMock },
-    $transaction: transactionMock,
-  },
+  db: { $transaction: transactionMock },
 }))
 
 import { generateCompetitionSchedule } from "./actions"
@@ -76,9 +66,10 @@ function noResults() {
   playoffMatchCountMock.mockResolvedValue(0)
 }
 
-// The action runs check + delete + create in one interactive transaction; the tx client exposes
-// the same mocked delegates as db.
+// The action reads, checks, deletes and creates in one interactive transaction.
 const txClient = {
+  competition: { findUnique: competitionFindUniqueMock },
+  competitionParticipant: { findMany: competitionParticipantFindManyMock },
   matchup: {
     count: matchupCountMock,
     deleteMany: matchupDeleteManyMock,
@@ -120,6 +111,7 @@ describe("generateCompetitionSchedule — auth guards", () => {
   it("liefert Fehler wenn Wettbewerb nicht gefunden", async () => {
     getAuthSessionMock.mockResolvedValue(adminSession)
     competitionFindUniqueMock.mockResolvedValue(null)
+    setupTransaction()
     const result = await generateCompetitionSchedule("c99")
     expect(result).toEqual({ error: "Liga nicht gefunden." })
   })
@@ -133,9 +125,10 @@ describe("generateCompetitionSchedule — auth guards", () => {
       hinrundeDeadline: null,
       rueckrundeDeadline: null,
     })
+    setupTransaction()
     const result = await generateCompetitionSchedule("c1")
     expect(result).toMatchObject({ error: expect.stringContaining("aktive") })
-    expect(transactionMock).not.toHaveBeenCalled()
+    expect(matchupCreateManyMock).not.toHaveBeenCalled()
   })
 
   it("liefert Fehler wenn weniger als 4 Teilnehmer", async () => {
@@ -153,9 +146,10 @@ describe("generateCompetitionSchedule — auth guards", () => {
       { participantId: "p3" },
     ])
     noResults()
+    setupTransaction()
     const result = await generateCompetitionSchedule("c1")
     expect(result).toMatchObject({ error: expect.stringContaining("4") })
-    expect(transactionMock).not.toHaveBeenCalled()
+    expect(matchupCreateManyMock).not.toHaveBeenCalled()
   })
 
   it("liest die Einschreibungen in der Reihenfolge der Anlage, bei gleicher Zeit nach der Kennung", async () => {
@@ -169,6 +163,7 @@ describe("generateCompetitionSchedule — auth guards", () => {
     })
     competitionParticipantFindManyMock.mockResolvedValue([])
     noResults()
+    setupTransaction()
     await generateCompetitionSchedule("c1")
     expect(competitionParticipantFindManyMock).toHaveBeenCalledWith(
       expect.objectContaining({ orderBy: [{ createdAt: "asc" }, { id: "asc" }] })
@@ -343,13 +338,51 @@ describe("generateCompetitionSchedule — BEST_OF_SINGLE", () => {
     })
   })
 
-  it("meldet einen Datenbankfehler als Fehlertext statt zu werfen", async () => {
-    // z.B. Serialisierungskonflikt, weil parallel ein Duell gespeichert wurde
+  const conflict = () => Object.assign(new Error("Transaction failed"), { code: "P2034" })
+
+  it("wiederholt die Transaktion, wenn Postgres sie wegen einer gleichzeitigen Änderung abbricht", async () => {
+    transactionMock.mockRejectedValueOnce(conflict())
+    expect(await generateCompetitionSchedule("c1")).toEqual({ success: true })
+    expect(transactionMock).toHaveBeenCalledTimes(2)
+    expect(captureCreateManyData()?.data).toHaveLength(6)
+  })
+
+  it("liest nach einem Abbruch Wettbewerb und Einschreibungen neu", async () => {
+    // im ersten Versuch vier, inzwischen ist ein fünfter eingeschrieben
+    competitionParticipantFindManyMock
+      .mockResolvedValueOnce(FOUR_PARTICIPANTS)
+      .mockResolvedValue([...FOUR_PARTICIPANTS, { participantId: "p5" }])
+    transactionMock.mockImplementationOnce(
+      async (fn: (tx: typeof txClient) => Promise<unknown>) => {
+        await fn(txClient)
+        throw conflict()
+      }
+    )
+    expect(await generateCompetitionSchedule("c1")).toEqual({ success: true })
+    expect(competitionFindUniqueMock).toHaveBeenCalledTimes(2)
+    const last = matchupCreateManyMock.mock.calls.at(-1)![0] as {
+      data: { homeParticipantId: string; awayParticipantId: string | null }[]
+    }
+    expect(
+      last.data.some((m) => m.homeParticipantId === "p5" || m.awayParticipantId === "p5")
+    ).toBe(true)
+  })
+
+  it("meldet eine gleichzeitige Änderung verständlich, wenn sie nach drei Versuchen bleibt", async () => {
     transactionMock.mockRejectedValue(new Error("could not serialize access"))
+    const result = await generateCompetitionSchedule("c1")
+    expect(result).toMatchObject({ error: expect.stringContaining("gleichzeitig") })
+    expect(transactionMock).toHaveBeenCalledTimes(3)
+  })
+
+  it("meldet einen anderen Datenbankfehler als Fehlertext, ohne ihn zu wiederholen", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {})
+    transactionMock.mockRejectedValue(new Error("kaputt"))
     const result = await generateCompetitionSchedule("c1")
     expect(result).toEqual({
       error: "Spielplan konnte nicht generiert werden. Bitte erneut versuchen.",
     })
+    expect(transactionMock).toHaveBeenCalledTimes(1)
   })
 
   it("invalidiert das öffentliche PDF", async () => {

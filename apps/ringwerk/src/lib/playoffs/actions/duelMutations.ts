@@ -1,5 +1,5 @@
 import type { Prisma, ScoringMode } from "@/generated/prisma/client"
-import { db } from "@/lib/db"
+import { isConflict, serializable } from "@/lib/serializable"
 import { getNextRound, isPlayoffMatchComplete, requiredWinsFromBestOf } from "../calculatePlayoffs"
 import type { PlayoffRound } from "../types"
 import { storedDuelOutcome } from "./duelOutcome"
@@ -192,31 +192,6 @@ export interface DuelResultSide {
 
 /** Protokolleintrag zu einer Änderung; geschrieben in derselben Transaktion */
 type Audit = (isCorrection: boolean) => Prisma.AuditLogUncheckedCreateInput
-
-const ATTEMPTS = 3
-
-/** Ob Postgres die Transaktion wegen einer gleichzeitigen Änderung abgebrochen hat (Prisma `P2034`) */
-function isConflict(error: unknown): boolean {
-  const code = (error as { code?: unknown } | null)?.code
-  const text = error instanceof Error ? error.message : String(error)
-  return code === "P2034" || /could not serialize|deadlock detected/i.test(text)
-}
-
-/**
- * Führt `fn` in einer serialisierbaren Transaktion aus und wiederholt sie bis zu dreimal, wenn Postgres sie wegen einer
- * gleichzeitigen Änderung abbricht. Postgres bricht auch ab, wenn zwei Personen zugleich in verschiedenen Matches
- * speichern (die Tabellen sind klein und werden ganz gelesen). Wiederholen ist sicher, weil `fn` alles, wovon es
- * abhängt, selbst in der Transaktion liest.
- */
-export async function serializable<T>(fn: (tx: Tx) => Promise<T>): Promise<T> {
-  for (let attempt = 1; ; attempt++) {
-    try {
-      return await db.$transaction(fn, { isolationLevel: "Serializable" })
-    } catch (error) {
-      if (attempt >= ATTEMPTS || !isConflict(error)) throw error
-    }
-  }
-}
 
 /**
  * Speichert das Ergebnis eines Duells (neu oder als Korrektur) und bringt das Match in Ordnung (`settle`), alles in

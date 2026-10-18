@@ -8,7 +8,8 @@ import { getSeedingStandings } from "@/lib/playoffs/queries"
 import { revalidatePublicPdf } from "@/lib/competitions/publicPdfCache"
 import { createNextRoundMatchups, getNextRound } from "../calculatePlayoffs"
 import type { PlayoffRound } from "../types"
-import { playoffFailureMessage, serializable } from "./duelMutations"
+import { serializable } from "@/lib/serializable"
+import { playoffFailureMessage } from "./duelMutations"
 
 const MATCHES_PER_ROUND: Record<Exclude<PlayoffRound, "FINAL">, number> = {
   EIGHTH_FINAL: 8,
