@@ -39,26 +39,26 @@ export async function noSideScroll(
 }
 
 /**
- * Am Telefon, ganz nach unten gescrollt: Das letzte Element des Inhalts endet über der unteren Leiste. Erwartet die
- * gezeigte Seite in Telefonbreite.
+ * Am Telefon, ganz nach unten gescrollt: Der Inhalt (`data-app-content` ohne seinen Platz für die Leiste) endet über der
+ * unteren Leiste. Gemessen am Rahmen, nicht am untersten Element: Elemente in Reitern, die in sich scrollen, lägen
+ * sonst scheinbar unter der Leiste. Erwartet die gezeigte Seite in Telefonbreite.
  */
 export async function barDoesNotCover(page: Page, label: string): Promise<Check> {
-  const s = await page.ev<{ bar: number; last: number; tag: string } | null>(`(async () => {
+  const s = await page.ev<{ bar: number; end: number; bottom: number } | null>(`(async () => {
     const bar = $("[data-app-bar]")
     const content = $("[data-app-content]")
     if (!visible(bar) || !content) return null
     scrollTo({ top: document.documentElement.scrollHeight, behavior: "instant" })
     await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
-    const items = $$("*", content).filter((el) => visible(el) && el.getBoundingClientRect().height > 0)
-    const last = items.sort((a, b) => b.getBoundingClientRect().bottom - a.getBoundingClientRect().bottom)[0]
-    return last ? { bar: bar.getBoundingClientRect().top, last: last.getBoundingClientRect().bottom,
-      tag: last.tagName.toLowerCase() } : null
+    const box = content.getBoundingClientRect()
+    return { bar: bar.getBoundingClientRect().top, bottom: box.bottom,
+      end: box.bottom - parseFloat(getComputedStyle(content).paddingBottom) }
   })()`)
   return {
     name: `${label}: die untere Leiste verdeckt nichts`,
-    ok: !!s && s.last <= s.bar + 0.5,
+    ok: !!s && s.end <= s.bar + 0.5 && s.bottom >= s.bar,
     detail: s
-      ? `Inhalt endet ${Math.round(s.last)} (${s.tag}), Leiste ab ${Math.round(s.bar)}`
+      ? `Inhalt endet ${Math.round(s.end)}, Rahmen ${Math.round(s.bottom)}, Leiste ab ${Math.round(s.bar)}`
       : "keine Leiste",
   }
 }

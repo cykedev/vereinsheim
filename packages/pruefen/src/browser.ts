@@ -424,12 +424,13 @@ const HELPERS = `
     .sort((a, b) => b.getBoundingClientRect().right - a.getBoundingClientRect().right).slice(0, 3)
     .map((el) => el.tagName.toLowerCase() + "." + String(el.className).split(" ").slice(0, 2).join(".") + " " + Math.round(el.getBoundingClientRect().right))
   // Darstellung, sobald <body> erscheint: Steht dort die Klasse noch nicht, blitzt die Seite im falschen Theme auf
+  // (am Dokument beobachtet: beim Einsetzen dieses Skripts gibt es <html> noch nicht)
   window.__themeAtBody = null
-  if (document.documentElement) new MutationObserver((_, observer) => {
+  new MutationObserver((_, observer) => {
     if (!document.body) return
     window.__themeAtBody = document.documentElement.classList.contains("dark") ? "dark" : "light"
     observer.disconnect()
-  }).observe(document.documentElement, { childList: true })
+  }).observe(document, { childList: true, subtree: true })
   // letzte Taste: hat die Seite sie für sich genommen? (Lauscher ganz außen, nach allen anderen)
   window.__keys = []
   addEventListener("keydown", (e) => {
