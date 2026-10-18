@@ -79,6 +79,7 @@ auch ohne das Tool zurechtkommst (z.B. wenn das CLI selbst kaputt ist).
 - [Initial-Bootstrap eines neuen VPS](#initial-bootstrap-eines-neuen-vps)
 - [Deploy](#deploy)
   - [Neue App auf einem laufenden VPS](#neue-app-auf-einem-laufenden-vps)
+  - [Release von Ringwerk](#release-von-ringwerk)
 - [Backup](#backup)
 - [Restore](#restore)
   - [Restore-Test](#restore-test-regelmäßig-empfohlen)
@@ -188,6 +189,20 @@ Für eine weitere App im Stack (eingetragen in `scripts/lib/apps.sh`, `compose.y
 3. `./scripts/vereinsheim db-ensure` — Rolle und Datenbank anlegen (`db-init` läuft nur bei einem frischen Volume).
 4. Images der App auf Docker Hub (öffentlich, [[adr-005]]), DNS-Eintrag für den Host.
 5. `./scripts/vereinsheim deploy`.
+
+### Release von Ringwerk
+
+Ringwerk trägt den laufenden Wettkampfbetrieb und geht allein raus, nie im selben Release mit Treffsicher
+([[adr-032]]). Vor dem Release:
+
+1. **Abgleich** nach [[ringwerk-pruefbestand]]: `pruefen:vergleichen` am Prüfbestand ohne Fehler,
+   `pruefen:ablaeufe` grün, `--echt` an der frischen Kopie der echten Daten (`vereinsheim dev-restore ringwerk`) ohne
+   Fehler. Die Bilder vorher und nachher sieht der User durch.
+2. **Backup** auf dem VPS: `./scripts/vereinsheim backup`, dann `./scripts/vereinsheim restore-probe` (das Backup
+   lässt sich einspielen).
+3. **Termin:** ein Tag ohne Wettkampf, den der User bestimmt.
+4. `./scripts/vereinsheim release` mit `APPS=ringwerk`, danach kurz die Seiten eines laufenden Wettbewerbs ansehen.
+   `./scripts/vereinsheim rollback` steht bereit ([Rollback](#rollback)).
 
 ---
 

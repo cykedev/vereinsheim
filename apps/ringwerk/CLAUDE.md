@@ -121,3 +121,20 @@ trivial/mechanical fixes go direct. Plans and reports live in the root `plans/` 
 | `/commit-msg`          | Generate commit message from diff       |
 | `/consolidate-lessons` | Compress lessons, promote rules to docs |
 | `/debug`               | Root-cause a bug before fixing          |
+
+---
+
+## Vor jedem Release
+
+Ringwerk trägt den laufenden Wettkampfbetrieb. Vor jedem Merge und Release, der Ringwerk oder etwas berührt, das
+Ringwerk importiert (Details, Befehle und was streng ist: `vault/apps/ringwerk/ringwerk-pruefbestand.md`):
+
+1. `pnpm check`, dann `pnpm --filter ringwerk build` (das Werkzeug startet diesen Build auf :3010).
+2. `pnpm --filter ringwerk pruefdaten`, dann `pnpm --filter ringwerk pruefen:vergleichen`: 0 Fehler. Die Bilder
+   vorher und nachher (`reports/ringwerk-vergleich/<zeit>/vorher-nachher.html`) sieht der User durch.
+3. `pnpm --filter ringwerk pruefen:ablaeufe`: grün (bekannte Befunde stehen als BEKANNT im Bericht).
+4. An der Kopie der echten Daten: `pruefen:aufnehmen --echt` auf dem alten Stand, `pruefen:vergleichen --echt` auf dem
+   neuen. Nur lesend, Ergebnisse nur unter `reports/ringwerk-echt/`, nie committet (ADR-029).
+5. Den Ausgangsstand (`tools/pruefdaten/referenz/`) schreibt `pruefen:aufnehmen` nur nach Freigabe durch den User neu.
+6. Release allein, an einem Tag ohne Wettkampf, mit Backup vorher (`vault/operations/operations.md`, „Release von
+   Ringwerk“).

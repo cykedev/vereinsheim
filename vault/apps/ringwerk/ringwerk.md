@@ -38,6 +38,7 @@ MOC-Hub der Ringwerk-App (Liga & Wettkämpfe). Führt die App-Guides und die fac
 - [[ringwerk-data-model]] — Ringwerk — Datenmodell & Glossar – Ringwerk
 - [[ringwerk-features]] — Ringwerk — Funktionale Anforderungen – Ringwerk
 - [[ringwerk-project-brief]] — Ringwerk — Project Brief: Ringwerk
+- [[ringwerk-pruefbestand]] — Prüfbestand und Abgleich vor jedem Release
 - [[ringwerk-reference-files]] — Ringwerk — Reference Files
 - [[ringwerk-technical]] — Ringwerk — Technische Anforderungen – Ringwerk
 - [[ringwerk-testing-conventions]] — ringwerk-testing-conventions
@@ -51,7 +52,7 @@ MOC-Hub der Ringwerk-App (Liga & Wettkämpfe). Führt die App-Guides und die fac
 - [[server-action-pattern]] — server-action-pattern
 - [[void-match-rendering]] — void-match-rendering
 
-## Offene Einzelpunkte (Stand 15. Oktober 2026)
+## Offene Einzelpunkte (Stand 18. Oktober 2026)
 
 - **Playoffs ohne Spielplan:** `startPlayoffs` (`src/lib/playoffs/actions/start.ts`) prüft nicht, ob ein Spielplan
   erzeugt ist. Eine Liga ohne Paarungen hat keine offenen Paarungen und könnte starten, sobald genug aktive Teilnehmer
@@ -62,6 +63,9 @@ MOC-Hub der Ringwerk-App (Liga & Wettkämpfe). Führt die App-Guides und die fac
 
 **Fachlich, mit der Sportleitung zu klären**
 
+- **Startnummern der Starterliste werden bei jedem Druck neu ausgelost** (`randomInt` in
+  `api/competitions/[id]/starter-list/pdf/route.ts`); zwei Ausdrucke desselben Events haben andere Nummern. Gewollt
+  oder einmal auslosen und speichern? Aufgefallen beim Abgleich ([[ringwerk-pruefbestand]]).
 - **Gruppenergebnisse sind nach dem Playoff-Start nur in der Oberfläche gesperrt:** `ScheduleView` blendet Erfassung und
   Korrektur aus, die Actions `saveMatchResult`, `saveBestOfDuel`, `saveStechschuss` und `deleteLatestBestOfDuel` prüfen
   den Start nicht. Ein direkter Aufruf ändert die Tabelle, und die nächste Runde wird aus ihr gesetzt. Die Sperre auch
@@ -78,6 +82,14 @@ MOC-Hub der Ringwerk-App (Liga & Wettkämpfe). Führt die App-Guides und die fac
 
 **Fehler und Lücken im Code**
 
+- **Feldfehler setzt die Disziplin zurück:** Wer beim Anlegen eine Disziplin wählt und mit einem Feldfehler speichert
+  (etwa ohne Namen), sieht danach „Gemischt (Faktor-Korrektur)“. Wer nur den Namen nachträgt, legt still einen
+  gemischten Wettbewerb an. Die Radix-Auswahl mit `name` folgt dem Zurücksetzen des Formulars nach der Server Action;
+  Frist und Format bleiben. Belegt von `pruefen:ablaeufe` (bekannter Befund, [[ringwerk-pruefbestand]]).
+- **Seite des Finales unbestimmt:** `advanceRound` liest die Halbfinals ohne `orderBy`; wer im Finale A ist, hängt an
+  der Zeilenfolge in Postgres.
+- **Bracket-Vorschau nur am Bildschirm:** Die Seite zeigt die Sieger einer laufenden Runde schon kursiv im nächsten
+  Platz, das PDF dort „Ausstehend“.
 - **Liga-PDFs runden Zehntelringe bei gemischter Disziplin:** Die PDF-Routen (Spielplan, Playoffs, öffentlich)
   bestimmen den ScoringType einmal je Wettbewerb, bei gemischter Liga `WHOLE`; die Bildschirmansicht rechnet je
   Teilnehmer. Den ScoringType je Teilnehmer an `SchedulePdf` und `PlayoffsPdf` durchreichen (nur aus dem Code gelesen).

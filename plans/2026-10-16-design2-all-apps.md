@@ -347,6 +347,21 @@ ranking,playoffs}`, `competitions/[id]/starter-list/pdf`, `participants/pdf` und
   laufen muss), `apps/ringwerk/CLAUDE.md` (Abschnitt „Vor jedem Release“), `vault/operations/operations.md` (Release
   von Ringwerk: Abgleich, Backup, Termin).
 
+- **Stand R4–R8 (18. Oktober 2026, Branch `feat/design2-ringwerk-abgleich`):** Ausgangsstand vom User bestätigt und
+  committet (`tools/pruefdaten/referenz/`, 92 Wettbewerbe und die Seiten über alle, 168 PDFs; Bilder lokal unter
+  `reports/ringwerk-referenz/`). `--vergleichen` direkt danach: 0 Fehler, 0 Hinweise; Gegenprobe rot. `--ablaeufe`
+  am Telefon (Sportleitung) und am Desktop (Admin): 58 von 60 Schritten grün, 2 mit bekanntem Befund (Disziplin springt
+  nach Feldfehler auf „Gemischt“, `KNOWN` in `ablaeufe.ts`, Behebung außerhalb von Teil R). R7: 0 Fehler an der Kopie
+  der echten Daten, Datenbank nachweislich unverändert; Phasen in `reports/ringwerk-echt/phasen.md`. Abweichend vom
+  Text oben:
+  - Streng verglichen wird die **Datenfolge** einer Seite (Zahlen und Namen in Lesereihenfolge), nicht ihr ganzer Text;
+    andere Beschriftungen bei gleichen Daten sind Hinweise. So bleibt der Vergleich mit Design 2 brauchbar.
+  - Die Startnummern der Starterliste lost Ringwerk je Abruf neu aus; sie werden herausgenommen, geprüft wird 1 bis n.
+  - Für R7 stellt das Werkzeug die Sitzungen selbst aus (eigenes `NEXTAUTH_SECRET`, ältestes aktives Konto je Rolle,
+    vom User am 18. Oktober 2026 freigegeben). Die Kopie hat kein aktives Mitgliedskonto, aufgenommen nur als Admin.
+  - Kampflos ist nicht über die Oberfläche belegbar (keine Action, keine Oberfläche); der Ablauf vermerkt das.
+  - Doku: [[ringwerk-pruefbestand]].
+
 **Prüfung Teil R:** `pnpm check`; `pruefdaten` zweimal hintereinander ergibt dieselben Daten (Prüfsumme über die
 Tabellen); `--vergleichen` direkt nach `--aufnehmen` ohne Abweichung; eine absichtlich vertauschte Zeile in einer
 Tabelle (testweise im Vergleich) wird rot gemeldet (Gegenprobe); `--ablaeufe` grün.
