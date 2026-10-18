@@ -1,27 +1,40 @@
-// Den gebauten Stand dieses Checkouts als Produktions-Server starten, für die Skriptprüfung (`pruefen --start`) und das
-// Lastskript (`ingest-load --start`): So sehen sie den eigenen Code und keinen Dev-Server eines anderen Checkouts.
+// Den gebauten Stand einer App dieses Checkouts als Produktions-Server starten, für die Skriptprüfung (`pruefen --start`)
+// und Lastskripte (`ingest-load --start`): So sehen sie den eigenen Code und keinen Dev-Server eines anderen Checkouts.
 
 import { spawn, type ChildProcess } from "node:child_process"
 import { randomBytes } from "node:crypto"
 import { existsSync, statSync } from "node:fs"
 import { join } from "node:path"
+import { fileURLToPath } from "node:url"
 
-export const APP_DIR = join(__dirname, "..", "..")
+/** Wurzel des Monorepos (dieses Paket liegt unter `packages/pruefen/src`) */
+const ROOT = fileURLToPath(new URL("../../..", import.meta.url))
+
+/** Ordner einer App, etwa `appDir("spiegel")` */
+export const appDir = (app: string) => join(ROOT, "apps", app)
 
 /**
  * Eigener Secret (Produktion verweigert den Beispielwert), die Datenbank aus `.env`. Bricht ab, wenn der Port schon
  * belegt ist oder der Server sich beendet; die letzten Zeilen seiner Fehlerausgabe stehen in der Meldung.
  */
-export async function startServer(
-  base: string,
-  port: number,
+export async function startServer({
+  app,
+  port,
+  base = `http://localhost:${port}`,
+  out,
+}: {
+  app: string
+  port: number
+  /** Adresse, unter der der Server antwortet; Vorgabe `http://localhost:<port>` */
+  base?: string
   out: (text: string) => void
-): Promise<ChildProcess> {
-  const buildId = join(APP_DIR, ".next", "BUILD_ID")
+}): Promise<ChildProcess> {
+  const dir = appDir(app)
+  const buildId = join(dir, ".next", "BUILD_ID")
   if (!existsSync(buildId))
-    throw new Error("kein Build: erst pnpm --filter spiegel build (oder pnpm check)")
+    throw new Error(`kein Build: erst pnpm --filter ${app} build (oder pnpm check)`)
   const minutes = Math.round((Date.now() - statSync(buildId).mtimeMs) / 60_000)
-  out(`Build von vor ${minutes} min (pnpm --filter spiegel build für den aktuellen Stand)`)
+  out(`Build von vor ${minutes} min (pnpm --filter ${app} build für den aktuellen Stand)`)
   // antwortet auf dem Port schon etwas, prüfte die Prüfung still einen fremden Stand
   const taken = await fetch(`${base}/login`).then(
     () => true,
@@ -29,10 +42,10 @@ export async function startServer(
   )
   if (taken) throw new Error(`${base} ist schon belegt; den anderen Server erst beenden`)
   const server = spawn(
-    join(APP_DIR, "node_modules", ".bin", "next"),
+    join(dir, "node_modules", ".bin", "next"),
     ["start", "--port", String(port)],
     {
-      cwd: APP_DIR,
+      cwd: dir,
       env: {
         ...process.env,
         NODE_ENV: "production",

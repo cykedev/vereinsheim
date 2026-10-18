@@ -12,8 +12,16 @@ import type { ChildProcess } from "node:child_process"
 
 import { HELP_TOPICS } from "@vereinsheim/shot-help/topics"
 
-import { Browser, type Page } from "./pruefen/browser"
-import { startServer } from "./pruefen/server"
+import { Browser, type Page } from "@vereinsheim/pruefen/browser"
+import {
+  barDoesNotCover,
+  type Check,
+  dialogFocus,
+  noSideScroll,
+  pageText,
+  themeNoFlash,
+} from "@vereinsheim/pruefen/common"
+import { startServer } from "@vereinsheim/pruefen/server"
 import { DEMO_EMAIL, DEMO_PASSWORD } from "./demo-account"
 
 /** mit `--start`: der eigene Produktions-Server aus `.next` dieses Checkouts (nach `build` bzw. `pnpm check`) */
@@ -593,21 +601,38 @@ async function phoneCard(page: Page, href: string) {
   )
 }
 
+const record = (checks: Check[]) => {
+  for (const c of checks) check(c.name, c.ok, c.detail)
+}
+
 async function phoneNoSideScroll(page: Page) {
-  for (const width of [390, 375]) {
-    await page.viewport(width, 844)
-    for (const path of ["/", "/cards", "/progress"]) {
-      await page.goto(`${BASE}${path}`)
-      const s = await page.ev<{ sw: number; widest: string[] }>(
-        `({ sw: document.documentElement.scrollWidth, widest: widest(${width}) })`
-      )
-      check(
-        `Telefon ${width} px: ${path} ohne seitliches Scrollen`,
-        s.sw <= width,
-        `${s.sw} ${s.widest.join(" | ")}`
-      )
-    }
+  record(
+    await noSideScroll(page, {
+      base: BASE,
+      paths: ["/", "/cards", "/progress"],
+      widths: [390, 375],
+    })
+  )
+}
+
+/**
+ * Die Prüfungen aus `@vereinsheim/pruefen/common`, die jede App mit Design 2 laufen lässt: Darstellung ohne Aufblitzen,
+ * die untere Leiste verdeckt nichts, Fokus im Dialog „Scheibe löschen“, die Liste der Scheiben als Zeilen.
+ */
+async function commonChecks(page: Page, href: string) {
+  await page.viewport(1280, 900)
+  record(await themeNoFlash(page, { url: `${BASE}/`, storageKey: "spiegel-theme" }))
+  await page.viewport(390, 844)
+  for (const path of ["/", "/cards", href]) {
+    await page.goto(`${BASE}${path}`)
+    record([await barDoesNotCover(page, `Telefon ${path}`)])
   }
+  await page.viewport(1280, 900)
+  await page.goto(`${BASE}${href}`)
+  record(await dialogFocus(page, `button("Scheibe löschen")`, "Dialog „Scheibe löschen“"))
+  await page.goto(`${BASE}/cards`)
+  const rows = await pageText(page, "main ul, main table")
+  check("Liste der Scheiben als Zeilen lesbar", rows.length >= 3, rows.slice(0, 3).join(" · "))
 }
 
 /**
@@ -1190,7 +1215,7 @@ async function main() {
     // das Demo-Konto meldet sich an; gegen einen fremden Server nur mit ausdrücklichem Schalter
     if (!ANY_HOST && !/^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/.test(BASE))
       throw new Error(`${BASE} ist kein lokaler Server; --fremder-host, wenn das gewollt ist`)
-    server = START ? await startServer(BASE, START_PORT, out) : null
+    server = START ? await startServer({ app: "spiegel", port: START_PORT, out }) : null
     browser = await Browser.launch()
     const page = await browser.newPage()
     await login(page)
@@ -1207,6 +1232,7 @@ async function main() {
     await section("Offen und Leiste", () => openAndBar(page))
     await section("Papierkorb", () => trash(page))
     await section("Admin ohne Rolle", () => adminWithoutRole(page))
+    await section("Gemeinsame Prüfungen", () => commonChecks(page, href))
     // React meldet in der Entwicklung manches über console.error; jede Meldung zählt, damit keine untergeht
     check("Keine Skriptfehler", page.errors.length === 0, page.errors.slice(0, 5).join(" · "))
   } catch (error) {

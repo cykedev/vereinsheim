@@ -26,15 +26,15 @@ import { zonedWallTimeMs } from "@vereinsheim/lib/format"
 import { createPrismaClient } from "../src/lib/db"
 import { createPairing } from "../src/lib/ingest/bridges"
 import { DEV_DATABASE_URL } from "../test/dev-database"
-import { APP_DIR, startServer } from "./pruefen/server"
+import { appDir, startServer } from "@vereinsheim/pruefen/server"
 
 const out = (text = "") => process.stdout.write(`${text}\n`)
 const PORT = 3012
 /** ein laufender Spiegel (etwa hinter Caddy im Stack); dann ohne eigenen Server */
 const EXTERNAL = process.env.BASE_URL ?? null
 const BASE = EXTERNAL ?? `http://localhost:${PORT}`
-const BRIDGE_DIR = join(APP_DIR, "..", "spiegel-bridge")
-const CASES_DIR = join(APP_DIR, "..", "..", "packages", "ssmdb2-cases", "cases", "v1")
+const BRIDGE_DIR = appDir("spiegel-bridge")
+const CASES_DIR = join(appDir("spiegel"), "..", "..", "packages", "ssmdb2-cases", "cases", "v1")
 const CONSENTED = BigInt(12345678)
 const STEP_MS = 4000
 /** Scheiben der Fälle, die ankommen dürfen bzw. nie */
@@ -146,7 +146,7 @@ async function main() {
         historyLoadedAt: HISTORY ? null : new Date(),
       },
     })
-    if (!EXTERNAL) server = await startServer(BASE, PORT, out)
+    if (!EXTERNAL) server = await startServer({ app: "spiegel", port: PORT, base: BASE, out })
     const port = startMariadb(container)
     // der ältere Abend liegt schon in der Ablage, bevor die Brücke startet
     for (const sql of steps("SF-02", OLDER_DAYS)) mariadb(container, sql)

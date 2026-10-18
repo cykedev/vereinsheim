@@ -17,7 +17,7 @@ import { LP_10M } from "@vereinsheim/shot-core/targets"
 import { createPrismaClient } from "../src/lib/db"
 import { createPairing } from "../src/lib/ingest/bridges"
 import { DEV_DATABASE_URL } from "../test/dev-database"
-import { startServer } from "./pruefen/server"
+import { startServer } from "@vereinsheim/pruefen/server"
 
 const out = (text = "") => process.stdout.write(`${text}\n`)
 const arg = (name: string, fallback: number) => {
@@ -186,7 +186,7 @@ async function main() {
         firstCardConfirmedAt: new Date(),
       })),
     })
-    if (START) server = await startServer(BASE, PORT, out)
+    if (START) server = await startServer({ app: "spiegel", port: PORT, base: BASE, out })
     const { code } = await createPairing(db, {
       siteId: site.id,
       name: `Last ${tag}`,

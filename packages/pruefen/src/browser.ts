@@ -1,6 +1,6 @@
 // Chrome headless über das DevTools-Protokoll, ohne Abhängigkeit (der `WebSocket` von Node 24). Eingaben sind echte
 // Eingaben (`Input.dispatch*`): Fokus, Standardaktionen und `next/link` verhalten sich wie bei einem Menschen. Für die
-// Skriptprüfung der App (`pruefen.ts`), nicht im Gate.
+// Skriptprüfung der Apps (`tools/pruefen.ts`), nicht im Gate.
 
 import { spawn, type ChildProcess } from "node:child_process"
 import { mkdtempSync, readFileSync, rmSync } from "node:fs"
@@ -53,7 +53,7 @@ export class Browser {
   private closed = false
 
   static async launch(): Promise<Browser> {
-    const profile = mkdtempSync(join(tmpdir(), "spiegel-pruefen-"))
+    const profile = mkdtempSync(join(tmpdir(), "vereinsheim-pruefen-"))
     // ohne Pipes: niemand liest sie, und eine volle Pipe hielte Chrome an
     const chrome = spawn(
       CHROME,
@@ -397,7 +397,7 @@ export class Page {
 }
 
 /**
- * Helfer im Fenster, vor jedem Laden eingesetzt. Nur Struktur, die `shot-ui`, `ui` und die App rendern (Daten-Attribute,
+ * Helfer im Fenster, vor jedem Laden eingesetzt. Nur Struktur, die `shot-ui`, `ui` und die Apps rendern (Daten-Attribute,
  * ARIA).
  */
 const HELPERS = `
@@ -423,6 +423,13 @@ const HELPERS = `
   const widest = (limit) => $$("body *").filter((el) => !(el instanceof SVGElement) && el.getBoundingClientRect().right > limit + 1)
     .sort((a, b) => b.getBoundingClientRect().right - a.getBoundingClientRect().right).slice(0, 3)
     .map((el) => el.tagName.toLowerCase() + "." + String(el.className).split(" ").slice(0, 2).join(".") + " " + Math.round(el.getBoundingClientRect().right))
+  // Darstellung, sobald <body> erscheint: Steht dort die Klasse noch nicht, blitzt die Seite im falschen Theme auf
+  window.__themeAtBody = null
+  if (document.documentElement) new MutationObserver((_, observer) => {
+    if (!document.body) return
+    window.__themeAtBody = document.documentElement.classList.contains("dark") ? "dark" : "light"
+    observer.disconnect()
+  }).observe(document.documentElement, { childList: true })
   // letzte Taste: hat die Seite sie für sich genommen? (Lauscher ganz außen, nach allen anderen)
   window.__keys = []
   addEventListener("keydown", (e) => {

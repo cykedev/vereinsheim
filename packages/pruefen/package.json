@@ -1,0 +1,29 @@
+{
+  "name": "@vereinsheim/pruefen",
+  "version": "0.0.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    "./browser": "./src/browser.ts",
+    "./server": "./src/server.ts",
+    "./common": "./src/common.ts",
+    "./pdf": "./src/pdf.ts"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "format:check": "prettier --check .",
+    "format": "prettier --write ."
+  },
+  "prettier": "@vereinsheim/config/prettier",
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "@vereinsheim/config": "workspace:*",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

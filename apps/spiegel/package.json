@@ -48,6 +48,7 @@
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@vereinsheim/config": "workspace:*",
+    "@vereinsheim/pruefen": "workspace:*",
     "@vereinsheim/ssmdb2-cases": "workspace:*",
     "dotenv": "catalog:",
     "eslint": "catalog:",

@@ -301,6 +301,9 @@ importers:
       '@vereinsheim/config':
         specifier: workspace:*
         version: link:../../packages/config
+      '@vereinsheim/pruefen':
+        specifier: workspace:*
+        version: link:../../packages/pruefen
       '@vereinsheim/ssmdb2-cases':
         specifier: workspace:*
         version: link:../../packages/ssmdb2-cases
@@ -534,6 +537,27 @@ importers:
         specifier: 1.8.1
         version: 1.8.1
     devDependencies:
+      '@vereinsheim/config':
+        specifier: workspace:*
+        version: link:../config
+      eslint:
+        specifier: 'catalog:'
+        version: 9.39.4(jiti@2.7.0)
+      prettier:
+        specifier: 'catalog:'
+        version: 3.8.4
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.11(@types/node@24.13.2)(vite@8.0.16(@types/node@24.13.2)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.12))
+
+  packages/pruefen:
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.13.2
       '@vereinsheim/config':
         specifier: workspace:*
         version: link:../config

@@ -1,0 +1,24 @@
+# @vereinsheim/pruefen — Claude Scope-Notiz
+
+Werkzeug für die Skriptprüfung der Apps im Browser (`pnpm --filter <app> pruefen`): Chrome headless über das
+DevTools-Protokoll, der eigene Build einer App als Server, Prüfungen, die jede App mit Design 2 braucht, und Text und
+Bilder von PDFs. Nicht im Gate (braucht Chrome, einen laufenden Server und Daten); die reinen Teile haben Tests.
+
+## Exporte
+
+| Export                         | Datei            | Inhalt                                                                                   |
+| ------------------------------ | ---------------- | ---------------------------------------------------------------------------------------- |
+| `@vereinsheim/pruefen/browser` | `src/browser.ts` | `Browser`, `Page` (echte Eingaben, Helfer im Fenster wie `$`, `button`, `widest`)        |
+| `@vereinsheim/pruefen/server`  | `src/server.ts`  | `startServer({ app, port })` startet `.next` der App, `appDir(app)`                      |
+| `@vereinsheim/pruefen/common`  | `src/common.ts`  | `noSideScroll`, `barDoesNotCover`, `themeNoFlash`, `dialogFocus`, `pageText`; je `Check` |
+| `@vereinsheim/pruefen/pdf`     | `src/pdf.ts`     | `pdfText` (`pdftotext -layout`), `pdfPages` (`pdftoppm -png -r 100`)                     |
+
+## Regeln
+
+- **Ohne Abhängigkeit:** Node 24 bringt `WebSocket` und `fetch`; Chrome kommt vom System (`CHROME_PATH`), Poppler
+  ebenso. Fehlt Poppler, sagt `pdf.ts` in einem Satz, wie es zu installieren ist.
+- **Ergebnisse statt Bericht:** Die Prüfungen liefern `Check { name, ok, detail }`; Bericht, Abschnitte und Konto
+  bleiben in der App (`tools/pruefen.ts`).
+- **Nur Struktur:** Die Helfer im Fenster suchen nach Daten-Attributen und ARIA, die `ui`, `shot-ui` und die Apps
+  rendern (`data-app-frame`, `data-app-bar`, `data-app-content`, Rollen der Dialoge), nie nach Texten einer App.
+- Gegen einen fremden Server nur mit ausdrücklichem Schalter der App; `startServer` verweigert einen belegten Port.
