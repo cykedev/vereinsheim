@@ -2,7 +2,7 @@ import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 
-import { UndoBar, type UndoView } from "./UndoBar"
+import { UndoBar, type UndoView } from "./undo"
 
 const render = (view: Partial<UndoView> = {}) =>
   renderToStaticMarkup(

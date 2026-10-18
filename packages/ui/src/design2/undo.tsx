@@ -5,14 +5,17 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 
 import { getErrorMessage } from "@vereinsheim/lib/forms/fieldErrors"
 
-import type { ActionResult } from "@/lib/types"
-
 // „Gelöscht · Rückgängig“ gleich nach einer Aktion ([[spiegel-navigation]], „Löschen und Papierkorb“). Liegt im Rahmen der
 // App, damit der Hinweis die Navigation der Aktion überlebt; wiederverwendbar für die Auswahl.
 
+/** was eine Server Action zum Rückgängigmachen liefert: die Form von `ActionResult` der Apps ([[conventions]] §6) */
+export type UndoResult =
+  | { success: true }
+  | { error: string | Record<string, string[] | undefined> }
+
 export interface UndoEntry {
   text: string
-  undo: () => Promise<ActionResult>
+  undo: () => Promise<UndoResult>
   /** die Aktion navigiert gleich danach: Diese eine Navigation schließt den Hinweis nicht */
   navigating?: boolean
 }

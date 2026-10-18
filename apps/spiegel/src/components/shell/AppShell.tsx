@@ -14,7 +14,7 @@ import { ThemeSwitch } from "@vereinsheim/ui/design2/theme-switch"
 import { isAdminPath } from "@/lib/admin-path"
 
 import { HelpContext } from "./HelpContext"
-import { UndoHost } from "./UndoBar"
+import { UndoHost } from "@vereinsheim/ui/design2/undo"
 
 /** die Adresse eines Bereichs ohne Abend und Abschnitt, als Schlüssel für das Gedächtnis */
 const memoryKey = (route: Route | null) => (route ? urlFromRoute(route) : "")

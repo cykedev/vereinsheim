@@ -17,6 +17,7 @@
     "./design2/theme-switch": "./src/design2/theme/ThemeSwitch.tsx",
     "./design2/toaster": "./src/design2/toaster.tsx",
     "./design2/toggle-chip": "./src/design2/toggle-chip.tsx",
+    "./design2/undo": "./src/design2/undo.tsx",
     "./admin/LoginRateLimitInsights": "./src/admin/LoginRateLimitInsights.tsx",
     "./admin/LoginRateLimitTable": "./src/admin/LoginRateLimitTable.tsx",
     "./alert-dialog": "./src/ui/alert-dialog.tsx",

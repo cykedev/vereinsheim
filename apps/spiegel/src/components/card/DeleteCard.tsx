@@ -7,7 +7,7 @@ import { useState, useTransition } from "react"
 import { getErrorMessage } from "@vereinsheim/lib/forms/fieldErrors"
 
 import { DecisionDialog } from "@vereinsheim/ui/design2/decision-dialog"
-import { useUndo } from "@/components/shell/UndoBar"
+import { useUndo } from "@vereinsheim/ui/design2/undo"
 import { cardDelete } from "@/lib/admin/consequences"
 import { deleteCard, restoreCard } from "@/lib/trash-actions"
 
