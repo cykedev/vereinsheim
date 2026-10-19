@@ -72,10 +72,10 @@ und über `nav/navigate`.
   unbekannte Seite ist `unknown` mit ihrem Pfad, nie ein Fehler. Belegt durch zwölf Handwerte und eine Rundreise über
   mehr als 20 000 Routen.
 - **Ids** sind erzeugte Ids aus der Datenbank, nie Namen (`isCardId`, `isNamedPeriodId`): Scheiben (`[A-Za-z0-9_-]+`,
-  etwa cuid oder UUID) und benannte Zeiträume (klein, Ziffern, Bindestriche, nicht `30d`, `90d`, `12m`, `all`,
+  etwa cuid oder UUID) und benannte Zeiträume (klein, Ziffern, Bindestriche, nicht `30d`, `90d`, `6m`, `12m`, `all`,
   `previous`). Die Familie ist die des Fachkerns (`lg-freihand`, `lg-auflage`, `lp-freihand`, `lp-auflage`).
 - **Werte:**
-  - `range`: `30d`, `90d` (Vorgabe), `12m`, `all`, `JJJJ-MM-TT..JJJJ-MM-TT` oder die Id eines benannten Zeitraums; die
+  - `range`: `30d`, `90d` (Vorgabe), `6m`, `12m`, `all`, `JJJJ-MM-TT..JJJJ-MM-TT` oder die Id eines benannten Zeitraums; die
     festen Werte gehen vor. In der Liste heißen `all` und ohne Angabe dasselbe: alle Abende.
   - `compare`: `previous` oder eine Id.
   - Filter: `family`, `kind` (`training`, `competition`), `flag`; in der Liste dazu `list` (Kennung der Liste aus

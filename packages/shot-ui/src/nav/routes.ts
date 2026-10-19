@@ -22,7 +22,7 @@ const ISO_DAY = /^(\d{4})-(\d{2})-(\d{2})$/
 const ID = /^[A-Za-z0-9_-]+$/
 
 /** feste Werte von `range` und `compare`; sie gehen einer gleichlautenden Id vor */
-const RESERVED = new Set(["30d", "90d", "12m", "all", "previous"])
+const RESERVED = new Set(["30d", "90d", "6m", "12m", "all", "previous"])
 
 /** taugt die Zeichenkette als Id einer Scheibe in der Adresse? */
 export const isCardId = (id: string) => ID.test(id)
@@ -42,13 +42,14 @@ function isDay(text: string): boolean {
   return date.getUTCFullYear() === y && date.getUTCMonth() === m - 1 && date.getUTCDate() === d
 }
 
-const ROLLING_CODES: readonly [30 | 90 | 365, string][] = [
+const ROLLING_CODES: readonly [30 | 90 | 182 | 365, string][] = [
   [30, "30d"],
   [90, "90d"],
+  [182, "6m"],
   [365, "12m"],
 ]
 
-/** ein Zeitraum als Wert von `range`: `30d`, `90d`, `12m`, `all`, `JJJJ-MM-TT..JJJJ-MM-TT` oder die Id */
+/** ein Zeitraum als Wert von `range`: `30d`, `90d`, `6m`, `12m`, `all`, `JJJJ-MM-TT..JJJJ-MM-TT` oder die Id */
 export function encodeChoice(choice: PeriodChoice): string {
   switch (choice.type) {
     case "rolling":

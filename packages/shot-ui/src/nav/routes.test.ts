@@ -34,6 +34,7 @@ describe("Zeitraum und Vergleich als Wert", () => {
     const cases: [PeriodChoice, string][] = [
       [{ type: "rolling", days: 30 }, "30d"],
       [{ type: "rolling", days: 90 }, "90d"],
+      [{ type: "rolling", days: 182 }, "6m"],
       [{ type: "rolling", days: 365 }, "12m"],
       [{ type: "all" }, "all"],
       [{ type: "free", from: "2026-05-01", to: "2026-06-30" }, "2026-05-01..2026-06-30"],
@@ -479,7 +480,7 @@ describe("Grammatik der Ids und Grenzfälle", () => {
     expect(isCardId("0b9f6c1e-5d2a-4c3b-9e8f-1a2b3c4d5e6f")).toBe(true)
     expect(isCardId("a b")).toBe(false)
     expect(isNamedPeriodId("clx8k2abc")).toBe(true)
-    for (const reserved of ["30d", "90d", "12m", "all", "previous"]) {
+    for (const reserved of ["30d", "90d", "6m", "12m", "all", "previous"]) {
       expect(isNamedPeriodId(reserved), reserved).toBe(false)
     }
     expect(isNamedPeriodId("Neue Munition")).toBe(false)

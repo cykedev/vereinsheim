@@ -88,7 +88,8 @@ Eine eigene Seite **Vergleich** gibt es nicht; der Vergleich ist eingebaut.
   („Letzte 90 Tage · Training · mit Zeitraum davor“), danach der Wechsel-Chip der Wertung der Familie
   ([[spiegel-navigation]], „Wertung je Scheibe und je Familie“).
 - **Blatt „Filter“** hinter dem Chip, auf dem Telefon von unten; die Wahl gilt mit „Übernehmen“:
-  - rollende Vorgaben: letzte 30 Tage, letzte 90 Tage, letzte 12 Monate, alles
+  - rollende Vorgaben: letzte 30 Tage, letzte 90 Tage, letzte 6 Monate (182 Tage, das Mittelmaß zwischen 90 Tagen
+    und einem Jahr), letzte 12 Monate, alles
   - die benannten Zeiträume des Schützen
   - frei von … bis
   - „Vergleichen mit“: ohne, der gleich lange Zeitraum davor, ein benannter Zeitraum (später ein Merkmal); Scheiben,

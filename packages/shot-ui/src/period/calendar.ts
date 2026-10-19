@@ -13,7 +13,7 @@ import {
 export const DAY_MS = 86_400_000
 
 export type PeriodChoice =
-  | { type: "rolling"; days: 30 | 90 | 365 }
+  | { type: "rolling"; days: 30 | 90 | 182 | 365 }
   | { type: "all" }
   | { type: "named"; id: string }
   /** ISO-Tage („2026-07-01“), beide eingeschlossen */
@@ -44,6 +44,8 @@ export const PREVIOUS_LABEL = "Zeitraum davor"
 export const ROLLING_CHOICES: readonly { choice: PeriodChoice; label: string }[] = [
   { choice: { type: "rolling", days: 30 }, label: "Letzte 30 Tage" },
   { choice: { type: "rolling", days: 90 }, label: "Letzte 90 Tage" },
+  // ein halbes Jahr zu 26 Wochen: das Mittelmaß zwischen 90 Tagen und einem Jahr
+  { choice: { type: "rolling", days: 182 }, label: "Letzte 6 Monate" },
   { choice: { type: "rolling", days: 365 }, label: "Letzte 12 Monate" },
   { choice: { type: "all" }, label: "Alles" },
 ]

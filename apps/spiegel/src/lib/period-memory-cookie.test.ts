@@ -10,6 +10,7 @@ const params = (text: string) => new URLSearchParams(text)
 describe("gemerkter Zeitraum im Fortschritt", () => {
   it("liest den Wert wie `range` in der Adresse", () => {
     expect(parseRememberedChoice("12m", NAMED)).toEqual({ type: "rolling", days: 365 })
+    expect(parseRememberedChoice("6m", NAMED)).toEqual({ type: "rolling", days: 182 })
     expect(parseRememberedChoice("all", NAMED)).toEqual({ type: "all" })
     expect(parseRememberedChoice("2026-07-01..2026-07-31", NAMED)).toEqual({
       type: "free",

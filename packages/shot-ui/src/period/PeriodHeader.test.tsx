@@ -39,6 +39,7 @@ describe("Blatt „Filter“", () => {
     for (const label of [
       "Letzte 30 Tage",
       "Letzte 90 Tage",
+      "Letzte 6 Monate",
       "Letzte 12 Monate",
       "Alles",
       "Frei",

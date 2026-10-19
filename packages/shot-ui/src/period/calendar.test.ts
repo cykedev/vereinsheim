@@ -27,6 +27,7 @@ describe("Zeiträume", () => {
     expect(ROLLING_CHOICES.map((c) => c.label)).toEqual([
       "Letzte 30 Tage",
       "Letzte 90 Tage",
+      "Letzte 6 Monate",
       "Letzte 12 Monate",
       "Alles",
     ])
@@ -35,6 +36,12 @@ describe("Zeiträume", () => {
   it("rollend: Beginn nach now − N Tage, bis now", () => {
     const range = resolveRange({ type: "rolling", days: 90 }, context)
     expect(range).toEqual({ fromMs: NOW - 90 * DAY_MS, toMs: NOW + 1, label: "Letzte 90 Tage" })
+    // sechs Monate: ein halbes Jahr zu 26 Wochen
+    expect(resolveRange({ type: "rolling", days: 182 }, context)).toEqual({
+      fromMs: NOW - 182 * DAY_MS,
+      toMs: NOW + 1,
+      label: "Letzte 6 Monate",
+    })
   })
 
   it("alles: ab der ersten Scheibe, ohne Scheiben ab jetzt", () => {
