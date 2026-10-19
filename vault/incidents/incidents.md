@@ -31,3 +31,4 @@ MOC-Hub der REMEMBER-Tier-Notes ([[adr-017]]). Normale Notes, live editiert (kei
 - [[autopilot-guard-blocks-contract-only-plans]] — Pläne nur in geschützten Pfaden laufen interaktiv, nicht autonom
 - [[ruleset-lock-granularity]] — ruleset-lock-granularity
 - [[stechschuss-modell-flip]] — stechschuss-modell-flip
+- [[loading-boundary-hidden-copy]] — mit `loading.tsx` bleibt im Hintergrund-Tab eine versteckte Kopie der Seite (doppelte Ids)

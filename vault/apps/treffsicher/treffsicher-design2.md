@@ -70,3 +70,7 @@ fehlt ein Papierkorb, eigener Plan).
 Fokus im Dialog, Admin ohne Rolle, Hilfe, „Anhang löschen“ und „Konto deaktivieren“ (Seite und Datenbank). Vor jedem
 Lauf setzt `tools/pruefen-account.ts` drei Prüfkonten in der lokalen Dev-Datenbank zurück (`pruefen@`,
 `pruefen-admin@`, `pruefen-ziel@treffsicher.test`, Zugangsdaten in `apps/treffsicher/.env`).
+
+Dazu lädt sie jede Hauptseite und eine Einheit in einem Tab im Hintergrund und meldet eine versteckte zweite Kopie des
+Inhalts (`noHiddenCopy` aus `@vereinsheim/pruefen/common`). Treffsicher hat deshalb keine `loading.tsx`, wie Spiegel
+([[loading-boundary-hidden-copy]]).
