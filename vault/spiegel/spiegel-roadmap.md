@@ -195,7 +195,10 @@ Ziel: **Mit Opt-in erscheint die Dienstagsscheibe von selbst in Spiegel; ohne Op
 ## Phase 4 · Weichen stellen
 
 ### SP-4.1 Treffsicher ablösen oder behalten
-- Entscheidung anhand echter Nutzung ([[adr-026]]). **Status:** offen.
+- Entscheidung anhand echter Nutzung ([[adr-026]]). **Status:** offen, Vorschlag liegt als Entwurf vor: [[adr-033]]
+  (Spiegel hält jede Scheibe mit Detailgrad und trägt allein die Statistik, Treffsichers Tagebuch zieht in die Einheit,
+  Treffsicher endet). Vier Stufen: vereinfachte Scheiben, Tagebuch in der Einheit, Datenübernahme mit Prüfbestand,
+  Ruhestand von Treffsicher. Frühestens nach SP-4.3.
 
 ### SP-4.2 Gemeinsame Anmeldung
 - Eine Anmeldung für alle Vereinsheim-Apps; eigene ADR. **Status:** offen.
