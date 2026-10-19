@@ -109,7 +109,7 @@ export default async function CompetitionParticipantsPage({ params }: Props) {
         {activeEntries.length === 0 ? (
           <EmptyState title="Noch keine Teilnehmer eingeschrieben" icon={Users} />
         ) : (
-          <div className="rounded-lg border bg-card">
+          <div className="rounded-2xl border bg-card">
             <div className="divide-y">
               {activeEntries.map((cp) => (
                 <div key={cp.id} className="flex items-center justify-between px-4 py-3">
@@ -159,7 +159,7 @@ export default async function CompetitionParticipantsPage({ params }: Props) {
             <UserMinus className="h-4 w-4" />
             Zurückgezogen ({withdrawnEntries.length})
           </div>
-          <div className="rounded-lg border bg-card opacity-70">
+          <div className="rounded-2xl border bg-card opacity-70">
             <div className="divide-y">
               {withdrawnEntries.map((cp) => (
                 <div key={cp.id} className="flex items-center justify-between px-4 py-3">

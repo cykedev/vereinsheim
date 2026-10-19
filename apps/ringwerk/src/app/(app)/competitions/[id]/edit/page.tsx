@@ -7,7 +7,7 @@ import { hasPlayoffsStarted } from "@/lib/playoffs/queries"
 import { updateCompetition } from "@/lib/competitions/actions"
 import { CompetitionForm } from "@/components/app/competitions/CompetitionForm"
 import { ForceDeleteCompetitionSection } from "@/components/app/competitions/ForceDeleteCompetitionSection"
-import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
+import { PageHeader } from "@vereinsheim/ui/design2/page-header"
 import type { ActionResult } from "@/lib/types"
 
 interface Props {

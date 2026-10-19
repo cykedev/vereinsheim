@@ -4,7 +4,7 @@ import { getAuthSession, canManage } from "@/lib/auth-helpers"
 import { getParticipantById } from "@/lib/participants/queries"
 import { updateParticipant } from "@/lib/participants/actions"
 import { ParticipantForm } from "@/components/app/participants/ParticipantForm"
-import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
+import { PageHeader } from "@vereinsheim/ui/design2/page-header"
 
 interface Props {
   params: Promise<{ id: string }>

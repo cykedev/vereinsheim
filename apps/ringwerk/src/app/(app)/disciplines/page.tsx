@@ -8,7 +8,7 @@ import { DisciplineActions } from "@/components/app/disciplines/DisciplineAction
 import { Button } from "@vereinsheim/ui/button"
 import { Badge } from "@vereinsheim/ui/badge"
 import { EmptyState } from "@vereinsheim/ui/empty-state"
-import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
+import { PageHeader } from "@vereinsheim/ui/design2/page-header"
 
 export const metadata: Metadata = {
   title: "Disziplinen",
@@ -48,7 +48,7 @@ export default async function DisciplinesPage() {
           actionHref="/disciplines/new"
         />
       ) : (
-        <div className="rounded-lg border bg-card">
+        <div className="rounded-2xl border bg-card">
           <div className="divide-y">
             {active.map((d) => (
               <div key={d.id} className="flex items-center justify-between px-4 py-3">
@@ -77,7 +77,7 @@ export default async function DisciplinesPage() {
             <Archive className="h-4 w-4" />
             Archiviert ({archived.length})
           </div>
-          <div className="rounded-lg border bg-card opacity-60">
+          <div className="rounded-2xl border bg-card opacity-60">
             <div className="divide-y">
               {archived.map((d) => (
                 <div key={d.id} className="flex items-center justify-between px-4 py-3">

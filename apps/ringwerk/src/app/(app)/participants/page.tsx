@@ -9,7 +9,7 @@ import { Button } from "@vereinsheim/ui/button"
 import { Badge } from "@vereinsheim/ui/badge"
 import { EmptyState } from "@vereinsheim/ui/empty-state"
 import { PdfDownloadButton } from "@/components/app/shared/PdfDownloadButton"
-import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
+import { PageHeader } from "@vereinsheim/ui/design2/page-header"
 
 export const metadata: Metadata = {
   title: "Teilnehmer",
@@ -50,7 +50,7 @@ export default async function ParticipantsPage() {
           actionHref="/participants/new"
         />
       ) : (
-        <div className="rounded-lg border bg-card">
+        <div className="rounded-2xl border bg-card">
           <div className="divide-y">
             {active.map((p) => (
               <div key={p.id} className="flex items-center justify-between px-4 py-3">
@@ -89,7 +89,7 @@ export default async function ParticipantsPage() {
       {inactive.length > 0 && (
         <div>
           <p className="mb-2 text-sm text-muted-foreground">Inaktiv ({inactive.length})</p>
-          <div className="rounded-lg border bg-card opacity-60">
+          <div className="rounded-2xl border bg-card opacity-60">
             <div className="divide-y">
               {inactive.map((p) => (
                 <div key={p.id} className="flex items-center justify-between px-4 py-3">

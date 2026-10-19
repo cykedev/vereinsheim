@@ -45,7 +45,7 @@ export function ForceDeleteCompetitionSection({ competitionId, competitionName }
   }
 
   return (
-    <div className="rounded-lg border border-destructive/50 p-4 sm:p-6">
+    <div className="rounded-2xl border border-destructive/50 bg-card p-4 sm:p-6">
       <h2 className="mb-2 text-lg font-semibold text-destructive">Gefahrenzone</h2>
       <p className="mb-4 text-sm text-muted-foreground">
         Der Wettbewerb und alle zugehörigen Daten (Teilnehmer-Einschreibungen, Spielplan,

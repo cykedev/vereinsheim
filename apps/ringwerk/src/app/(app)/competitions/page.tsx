@@ -11,7 +11,7 @@ import { CompetitionListCard } from "@/components/app/competitions/CompetitionLi
 import { CompetitionsFilters } from "@/components/app/competitions/CompetitionsFilters"
 import { Button } from "@vereinsheim/ui/button"
 import { EmptyState } from "@vereinsheim/ui/empty-state"
-import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
+import { PageHeader } from "@vereinsheim/ui/design2/page-header"
 import { getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
 import type { CompetitionListItem } from "@/lib/competitions/types"
 

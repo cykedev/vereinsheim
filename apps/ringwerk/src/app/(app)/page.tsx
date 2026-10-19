@@ -5,7 +5,7 @@ import { getAuthSession } from "@/lib/auth-helpers"
 import { getCompetitionsForManagement } from "@/lib/competitions/queries"
 import { loadCompetitionPreview } from "@/lib/competitions/preview"
 import { EmptyState } from "@vereinsheim/ui/empty-state"
-import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
+import { PageHeader } from "@vereinsheim/ui/design2/page-header"
 import { DashboardCompetitionCard } from "@/components/app/dashboard/DashboardCompetitionCard"
 
 // Reihenfolge der Karten: erst Ligen (Tabelle / Playoffs), dann Events, dann Saisons.

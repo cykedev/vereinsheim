@@ -3,7 +3,7 @@ import { redirect } from "next/navigation"
 import { getAuthSession, canManage } from "@/lib/auth-helpers"
 import { createParticipant } from "@/lib/participants/actions"
 import { ParticipantForm } from "@/components/app/participants/ParticipantForm"
-import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
+import { PageHeader } from "@vereinsheim/ui/design2/page-header"
 
 export const metadata: Metadata = {
   title: "Neuer Teilnehmer",

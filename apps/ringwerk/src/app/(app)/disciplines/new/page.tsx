@@ -3,7 +3,7 @@ import { redirect } from "next/navigation"
 import { getAuthSession, canManage } from "@/lib/auth-helpers"
 import { createDiscipline } from "@/lib/disciplines/actions"
 import { DisciplineForm } from "@/components/app/disciplines/DisciplineForm"
-import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
+import { PageHeader } from "@vereinsheim/ui/design2/page-header"
 
 export const metadata: Metadata = {
   title: "Neue Disziplin",

@@ -31,7 +31,7 @@ export function PublishSection({ form, competition }: Props) {
   } = form
 
   return (
-    <div className="space-y-4 rounded-lg border bg-card p-4">
+    <div className="space-y-4 rounded-2xl border bg-card p-4">
       <div className="flex items-start gap-3">
         <Checkbox
           id="isPublic"

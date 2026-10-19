@@ -4,7 +4,7 @@ import { getAuthSession, canManage } from "@/lib/auth-helpers"
 import { getDisciplineById } from "@/lib/disciplines/queries"
 import { updateDiscipline } from "@/lib/disciplines/actions"
 import { DisciplineForm } from "@/components/app/disciplines/DisciplineForm"
-import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
+import { PageHeader } from "@vereinsheim/ui/design2/page-header"
 import type { ActionResult } from "@/lib/types"
 
 interface Props {

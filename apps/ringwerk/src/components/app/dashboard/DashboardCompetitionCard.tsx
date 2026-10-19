@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { Badge } from "@vereinsheim/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@vereinsheim/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@vereinsheim/ui/design2/card"
 import {
   CompetitionPreviewBadges,
   CompetitionPreviewSection,

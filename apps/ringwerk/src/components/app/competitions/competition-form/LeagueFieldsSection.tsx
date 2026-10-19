@@ -57,7 +57,7 @@ export function LeagueFieldsSection({ form, competition, hasMatchups, playoffsSt
       )}
 
       {/* ── Regelset ──────────────────────────────────────────── */}
-      <div className="space-y-4 rounded-lg border bg-card p-4">
+      <div className="space-y-4 rounded-2xl border bg-card p-4">
         <p className="text-sm font-medium">Regelset</p>
         <LeagueGroupPhaseFieldset form={form} hasMatchups={hasMatchups} />
         <LeaguePlayoffsFieldset form={form} playoffsStarted={playoffsStarted} />

@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { CalendarDays, Trophy, Users, BarChart2, ListOrdered, CalendarCheck } from "lucide-react"
 import { Badge } from "@vereinsheim/ui/badge"
-import { Card, CardContent } from "@vereinsheim/ui/card"
+import { Card, CardContent } from "@vereinsheim/ui/design2/card"
 import { CompetitionActions } from "@/components/app/competitions/CompetitionActions"
 import {
   CompetitionPreviewBadges,

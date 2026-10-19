@@ -4,7 +4,7 @@ import { getAuthSession, canManage } from "@/lib/auth-helpers"
 import { getDisciplines } from "@/lib/disciplines/queries"
 import { createCompetition } from "@/lib/competitions/actions"
 import { CompetitionForm } from "@/components/app/competitions/CompetitionForm"
-import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
+import { PageHeader } from "@vereinsheim/ui/design2/page-header"
 
 export const metadata: Metadata = {
   title: "Neuer Wettbewerb",

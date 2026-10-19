@@ -48,13 +48,14 @@ für alle drei Apps (ADR-015/016). Jede Komponente gibt es nur einmal — Drift 
 - **Kein `"use server"`**; **shadcn-CLI** läuft weiter im App-Kontext (`components.json` + der
   `globals.css`-Stub bleiben app-lokal).
 - Cross-Importe paket-intern **relativ** (`./button`, `../ui/alert-dialog`) — nicht über `@vereinsheim/ui`.
-- **Design 2** (`design2.css`, `src/design2/`) nutzen Spiegel und Treffsicher; Ringwerk importiert `theme.css`, bis es
-  umzieht (ADR-032, Teil W). Jede Farbe, die zwischen hell und dunkel wechselt, steht in beiden Blöcken;
+- **Design 2** (`design2.css`, `src/design2/`) nutzen alle drei Apps (Ringwerk seit Teil W von ADR-032); `theme.css`
+  importiert keine App mehr und entfällt in Teil E. Jede Farbe, die zwischen hell und dunkel wechselt, steht in beiden Blöcken;
   die Scheibe (Papier, Spiegel, Ringwert-Farben) ist in beiden Themes gleich. Akzent, Schrift auf dem Akzent und
   `rank-*` tragen auf der Kartenfläche mindestens 4,5 : 1, `chart-*` mindestens 3 : 1, je App und Theme (Test
   `tokens.test.ts`).
 - **App-frei:** Bausteine aus `src/design2/` kennen keine App: Texte, Routen und Schlüssel kommen als Props
   (`brand`, `renderLink`, `storageKey`, `Decision`). Was den Fachkern braucht, bleibt in `@vereinsheim/shot-ui`.
-- **`src/ui/*` und `src/shell/*` ändern sich erst mit Ringwerks Umzug** (ADR-032); bis dahin entstehen neue Formen
-  unter `src/design2/`.
+- **`src/ui/*` steht in Design 2:** Dialoge auf der Kartenfläche mit `rounded-2xl` über `scrim`, Titel in
+  `font-display`, Leerzustand in `design2/card` (Test `src/ui/dialogs.test.tsx`). Neue Formen entstehen weiter unter
+  `src/design2/`.
 - Verhalten/Styles ändert man **hier**, nicht in den Apps. Nach Änderungen: `pnpm check` grün.

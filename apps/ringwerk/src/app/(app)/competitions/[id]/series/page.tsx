@@ -82,7 +82,7 @@ export default async function SeriesPage({ params }: Props) {
           actionHref={`/competitions/${id}/participants`}
         />
       ) : (
-        <div className="rounded-lg border bg-card">
+        <div className="rounded-2xl border bg-card">
           <div className="divide-y">
             {activeParticipants.map((cp) => {
               const series = seriesMap.get(cp.id) ?? seriesMap.get(cp.participant.id)
@@ -199,7 +199,7 @@ async function SeasonSeriesPageContent({ id }: { id: string }) {
           actionHref={`/competitions/${id}/participants`}
         />
       ) : (
-        <div className="rounded-lg border bg-card">
+        <div className="rounded-2xl border bg-card">
           <div className="divide-y">
             {activeParticipants.map((cp) => (
               <SeasonParticipantItem

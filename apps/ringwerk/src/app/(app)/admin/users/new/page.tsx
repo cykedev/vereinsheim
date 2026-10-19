@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import { UserCreateForm } from "@/components/app/users/UserCreateForm"
-import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
+import { PageHeader } from "@vereinsheim/ui/design2/page-header"
 
 export const metadata: Metadata = {
   title: "Neuer Nutzer",

@@ -37,7 +37,7 @@ export function AuditLogList({ entries, displayTimeZone, showLeagueName = false 
   }
 
   return (
-    <div className="rounded-lg border bg-card">
+    <div className="rounded-2xl border bg-card">
       <div className="divide-y">
         {entries.map((entry) => {
           const label = AUDIT_EVENT_LABELS[entry.eventType] ?? entry.eventType

@@ -1,7 +1,7 @@
 import Link from "next/link"
 import type { LucideIcon } from "lucide-react"
 import { Button } from "./button"
-import { Card, CardContent } from "./card"
+import { Card, CardContent } from "../design2/card"
 
 interface Props {
   // Überschrift/Hauptaussage (deutsch).

@@ -5,12 +5,12 @@ import { getUsers } from "@/lib/users/queries"
 import { getAdminLoginRateLimitInsights } from "@/lib/admin/actions"
 import { Button } from "@vereinsheim/ui/button"
 import { Badge } from "@vereinsheim/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@vereinsheim/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@vereinsheim/ui/design2/card"
 import { UserRowActions } from "@/components/app/users/UserRowActions"
 import { AdminLoginRateLimitTable } from "@/components/app/admin/AdminLoginRateLimitTable"
 import { LoginRateLimitInsights } from "@vereinsheim/ui/admin/LoginRateLimitInsights"
 import { EmptyState } from "@vereinsheim/ui/empty-state"
-import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
+import { PageHeader } from "@vereinsheim/ui/design2/page-header"
 import { getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
 
 export const metadata: Metadata = {
@@ -60,7 +60,7 @@ export default async function AdminUsersPage() {
           actionHref="/admin/users/new"
         />
       ) : (
-        <div className="rounded-lg border bg-card">
+        <div className="rounded-2xl border bg-card">
           <div className="divide-y">
             {active.map((user) => (
               <div key={user.id} className="flex items-center justify-between px-4 py-3">
@@ -92,7 +92,7 @@ export default async function AdminUsersPage() {
       {inactive.length > 0 && (
         <div>
           <p className="mb-2 text-sm text-muted-foreground">Inaktiv ({inactive.length})</p>
-          <div className="rounded-lg border bg-card opacity-60">
+          <div className="rounded-2xl border bg-card opacity-60">
             <div className="divide-y">
               {inactive.map((user) => (
                 <div key={user.id} className="flex items-center justify-between px-4 py-3">

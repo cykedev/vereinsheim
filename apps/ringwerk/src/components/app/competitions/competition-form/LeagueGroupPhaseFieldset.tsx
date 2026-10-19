@@ -62,7 +62,7 @@ export function LeagueGroupPhaseFieldset({ form, hasMatchups }: Props) {
 
       {/* BEST_OF_SINGLE group-phase fields */}
       {isBestOfSingle && (
-        <div className="space-y-4 rounded-lg border bg-card p-4">
+        <div className="space-y-4 rounded-2xl border bg-card p-4">
           <p className="text-sm font-medium">Gruppenphase (Best-of)</p>
 
           <div className="grid grid-cols-2 gap-4">
