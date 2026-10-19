@@ -32,6 +32,25 @@ describe("Zahlen über den Zeitraum", () => {
     expect(html).not.toMatch(/title="|R50|σ/)
   })
 
+  it("eine ungerade letzte Kachel füllt im Raster aus zwei Spalten die Zeile, ab drei Spalten nicht", () => {
+    const tiles = periodModel({
+      items: now.map(item),
+      state: initialPeriodState({ family: "lg-10m" }),
+      nowMs: NOW,
+      timeZone: TZ,
+      named: [],
+      tileKeys: ["result.decimalMean", "result.tensRate", "group.sigma"],
+    }).tiles
+    const html = renderToStaticMarkup(h(PeriodTiles, { tiles, compareLabel: null }))
+    expect([...html.matchAll(/data-period-tile="/g)]).toHaveLength(3)
+    for (const cls of [...html.matchAll(/data-period-tile="[^"]*" class="([^"]*)"/g)].map(
+      (m) => m[1]
+    )) {
+      expect(cls).toContain("last:odd:col-span-2")
+      expect(cls).toContain("@min-[27rem]:last:odd:col-span-1")
+    }
+  })
+
   it("mit Vergleich: Wert dort, Δ und Urteil; ohne Wert ein Strich mit Grund", () => {
     const m = model([...now, ...before], { compare: { type: "previous" } })
     const html = renderToStaticMarkup(
