@@ -2,7 +2,6 @@
 // mehreren Fensterbreiten, Darstellung ohne Aufblitzen, Fokus im Dialog), gegen die laufende App mit dem Prüfkonto.
 // Nicht im Gate: braucht Chrome, einen laufenden Server und Daten.
 //
-//   pnpm --filter treffsicher pruefen:konto     einmal: das Prüfkonto mit erfundenen Einheiten
 //   pnpm --filter treffsicher pruefen           gegen http://localhost:3001 (BASE_URL), `--alle` zeigt jede Prüfung
 //   pnpm --filter treffsicher pruefen --start   startet den gebauten Stand dieses Checkouts auf :3011 und prüft ihn
 //   … --nur <abschnitt>                         nur Abschnitte, deren Name das Wort enthält
@@ -21,6 +20,17 @@ import {
   themeNoFlash,
 } from "@vereinsheim/pruefen/common"
 import { startServer } from "@vereinsheim/pruefen/server"
+
+import {
+  activeByEmail,
+  attachmentNames,
+  closeTestDb,
+  prepareTestAccounts,
+  PRUEFEN_ADMIN_EMAIL,
+  PRUEFEN_ATTACHMENTS,
+  PRUEFEN_EMAIL,
+  PRUEFEN_TARGET_EMAIL,
+} from "./pruefen-account"
 
 config({ path: join(import.meta.dirname, "..", ".env"), quiet: true })
 
@@ -66,13 +76,13 @@ async function section(name: string, run: () => Promise<void>) {
   }
 }
 
-async function login(page: Page) {
-  const email = process.env.PRUEFEN_EMAIL
-  const password = process.env.PRUEFEN_PASSWORD
-  if (!email || !password)
-    throw new Error(
-      "PRUEFEN_EMAIL/PRUEFEN_PASSWORD fehlen; erst pnpm --filter treffsicher pruefen:konto"
-    )
+/** meldet ein Prüfkonto an (Mitglied oder Admin); die Zugangsdaten legt `prepareTestAccounts` an */
+async function login(page: Page, role: "member" | "admin" = "member") {
+  const prefix = role === "admin" ? "PRUEFEN_ADMIN" : "PRUEFEN"
+  const email =
+    process.env[`${prefix}_EMAIL`] ?? (role === "admin" ? PRUEFEN_ADMIN_EMAIL : PRUEFEN_EMAIL)
+  const password = process.env[`${prefix}_PASSWORD`]
+  if (!password) throw new Error(`${prefix}_PASSWORD fehlt in apps/treffsicher/.env`)
   await page.viewport(1280, 900)
   await page.goto(`${BASE}/login`, '$("form")')
   const status = await page.ev<number>(`(async () => {
@@ -85,21 +95,75 @@ async function login(page: Page) {
   })()`)
   await page.goto(`${BASE}/dashboard`)
   const signedIn = await page.ev<boolean>(`location.pathname === "/dashboard"`)
-  if (status !== 200 || !signedIn)
-    throw new Error(
-      `Anmeldung mit dem Prüfkonto gescheitert (${status}); vorher pnpm --filter treffsicher pruefen:konto`
-    )
+  if (status !== 200 || !signedIn) throw new Error(`Anmeldung mit ${email} gescheitert (${status})`)
 }
 
-/** die Adresse der neuesten Einheit im Tagebuch */
-async function pickSession(page: Page): Promise<string> {
-  await page.goto(`${BASE}/sessions`)
-  const href = await page.ev<string | null>(
-    `$$('a[href^="/sessions/"]').map((a) => a.getAttribute("href"))
-      .find((h) => /^\\/sessions\\/(?!new)[^/]+$/.test(h)) ?? null`
+/** der Bestätigen-Knopf des offenen Dialogs: der letzte sichtbare Knopf darin (neben „Abbrechen“) */
+const CONFIRM = `$$('[role="alertdialog"] button').filter(visible).at(-1)`
+
+/**
+ * Anhang löschen: Der zweite von zwei Anhängen wird gewählt und bestätigt. Danach fehlt genau er, in der Einheit und in
+ * der Datenbank; der erste bleibt.
+ */
+async function attachmentFlow(page: Page, sessionId: string) {
+  await page.viewport(1280, 900)
+  await page.goto(`${BASE}/sessions/${sessionId}`)
+  const [first, second] = PRUEFEN_ATTACHMENTS
+  const opener = `$$("button").filter(visible).find((b) => b.closest("[data-slot=card]")?.textContent.includes(${JSON.stringify(second)}) && /Löschen/.test(txt(b) + (b.getAttribute("aria-label") ?? "")))`
+  check(
+    "Anhang löschen: beide Anhänge stehen vorher in der Einheit",
+    await page.ev<boolean>(
+      `${JSON.stringify([...PRUEFEN_ATTACHMENTS])}.every((n) => document.body.textContent.includes(n)) && !!(${opener})`
+    )
   )
-  if (!href) throw new Error("keine Einheit im Tagebuch des Prüfkontos")
-  return href
+  await page.click(opener, { settle: 400 })
+  await page.click(CONFIRM, { settle: 800 })
+  await page.waitFor(`!document.body.textContent.includes(${JSON.stringify(second)})`, 10_000)
+  await page.goto(`${BASE}/sessions/${sessionId}`)
+  const shown = await page.ev<{ first: boolean; second: boolean }>(`({
+    first: document.body.textContent.includes(${JSON.stringify(first)}),
+    second: document.body.textContent.includes(${JSON.stringify(second)}) })`)
+  const stored = await attachmentNames(sessionId)
+  check(
+    "Anhang löschen: genau der gewählte Anhang ist weg, der andere bleibt (Seite und Datenbank)",
+    shown.first && !shown.second && stored.join() === first,
+    { shown, stored }
+  )
+}
+
+/**
+ * Konto deaktivieren: Das Zielkonto wird unter Admin deaktiviert (mit Dialog) und wieder aktiviert (ohne Dialog). Nur
+ * dieses Konto ändert sich.
+ */
+async function accountFlow(page: Page) {
+  await login(page, "admin")
+  await page.goto(`${BASE}/admin`)
+  const emails = [PRUEFEN_TARGET_EMAIL, PRUEFEN_ADMIN_EMAIL, PRUEFEN_EMAIL]
+  const row = `$$("tr").filter(visible).find((tr) => tr.textContent.includes(${JSON.stringify(PRUEFEN_TARGET_EMAIL)}))`
+  const button = (label: string) =>
+    `$$("button", ${row}).find((b) => txt(b) === ${JSON.stringify(label)})`
+  await page.click(button("Deaktivieren"), { settle: 400 })
+  const asked = await page.ev<boolean>(`!!$$('[role="alertdialog"]').find(visible)`)
+  await page.click(CONFIRM, { settle: 800 })
+  await page.waitFor(`!!(${button("Aktivieren")})`, 10_000)
+  const off = await activeByEmail(emails)
+  check(
+    "Konto deaktivieren: fragt nach, danach ist genau das Zielkonto inaktiv",
+    asked &&
+      off[PRUEFEN_TARGET_EMAIL] === false &&
+      off[PRUEFEN_ADMIN_EMAIL] === true &&
+      off[PRUEFEN_EMAIL] === true,
+    { asked, off }
+  )
+  await page.click(button("Aktivieren"), { settle: 800 })
+  const askedAgain = await page.ev<boolean>(`!!$$('[role="alertdialog"]').find(visible)`)
+  await page.waitFor(`!!(${button("Deaktivieren")})`, 10_000)
+  const on = await activeByEmail(emails)
+  check(
+    "Konto aktivieren: ohne Nachfrage, das Zielkonto ist wieder aktiv",
+    !askedAgain && Object.values(on).every(Boolean),
+    { askedAgain, on }
+  )
 }
 
 /** Rahmen: Seitenleiste ab 1024 px, untere Leiste darunter, aktiver Eintrag, Neue Einheit in der Mitte */
@@ -213,14 +277,19 @@ async function main() {
     if (!ANY_HOST && !/^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/.test(BASE))
       throw new Error(`${BASE} ist kein lokaler Server; --fremder-host, wenn das gewollt ist`)
     server = START ? await startServer({ app: "treffsicher", port: START_PORT, out }) : null
+    // jeder Lauf beginnt mit denselben Daten: die Abläufe löschen und deaktivieren wirklich
+    const { newestSessionId } = await prepareTestAccounts()
+    const session = `/sessions/${newestSessionId}`
     browser = await Browser.launch()
     const page = await browser.newPage()
     await login(page)
-    const session = await pickSession(page)
     await section("Rahmen", () => frame(page))
     await section("Breiten und Leiste", () => layout(page, session))
     await section("Darstellung und Dialog", () => themeAndDialog(page, session))
     await section("Admin ohne Rolle", () => adminWithoutRole(page))
+    await section("Anhang löschen", () => attachmentFlow(page, newestSessionId))
+    // als Letztes: meldet den Admin an
+    await section("Konto deaktivieren", () => accountFlow(page))
     // React meldet in der Entwicklung manches über console.error; jede Meldung zählt, damit keine untergeht
     check("Keine Skriptfehler", page.errors.length === 0, page.errors.slice(0, 5).join(" · "))
     check("Keine Browser-Dialoge", page.dialogs.length === 0, page.dialogs.slice(0, 5).join(" · "))
@@ -229,6 +298,7 @@ async function main() {
   } finally {
     await browser?.close()
     server?.kill()
+    await closeTestDb()
   }
   clearTimeout(guard)
   process.exit(report() ? 1 : 0)
