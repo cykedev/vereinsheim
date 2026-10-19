@@ -7,7 +7,6 @@ import { BookOpen } from "lucide-react"
 import { SESSION_TYPE_LABELS } from "@/lib/sessions/presentation"
 import { EmptyState } from "@vereinsheim/ui/empty-state"
 import { SessionsFilters } from "@/components/app/sessions/SessionsFilters"
-import { CreateItemLinkButton } from "@/components/app/sessions/CreateItemLinkButton"
 import { SessionsList } from "@/components/app/sessions/list/SessionsList"
 import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
 
@@ -82,7 +81,6 @@ export default async function SessionsPage({
               ? `${formatSessionCount(filteredSessions.length)} von ${formatSessionCount(sessions.length)}`
               : formatSessionCount(sessions.length)
         }
-        action={<CreateItemLinkButton href="/sessions/new" label="Neue Einheit" />}
       />
 
       {sessions.length > 0 && (

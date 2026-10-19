@@ -13,11 +13,10 @@ import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
 import { getAuthSession } from "@/lib/auth-helpers"
 import { getDashboardData } from "@/lib/dashboard/queries"
 import { GOAL_TYPE_LABELS } from "@/components/app/goals/goal-card-section/format"
-import { CreateItemLinkButton } from "@/components/app/sessions/CreateItemLinkButton"
 import { SessionsList } from "@/components/app/sessions/list/SessionsList"
 
 export const metadata: Metadata = {
-  title: "Dashboard",
+  title: "Start",
 }
 
 function StatCard({ label, value }: { label: string; value: number }) {
@@ -48,11 +47,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-8">
-      <PageHeader
-        title="Dashboard"
-        description={`Willkommen, ${displayName}`}
-        action={<CreateItemLinkButton href="/sessions/new" label="Neue Einheit" />}
-      />
+      <PageHeader title="Start" description={`Willkommen, ${displayName}`} />
 
       <div className="grid gap-4 sm:grid-cols-2">
         <StatCard label="Einheiten in den letzten 30 Tagen" value={sessionsLast30Days} />
