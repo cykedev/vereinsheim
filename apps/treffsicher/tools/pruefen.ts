@@ -101,6 +101,35 @@ async function login(page: Page, role: "member" | "admin" = "member") {
 /** der Bestätigen-Knopf des offenen Dialogs: der letzte sichtbare Knopf darin (neben „Abbrechen“) */
 const CONFIRM = `$$('[role="alertdialog"] button').filter(visible).at(-1)`
 
+/** „?“ öffnet die Erklärung als Blatt, „Erklärungen“ zeigt die Kurzsätze unter den Titeln */
+async function helpFlow(page: Page, session: string) {
+  for (const [width, height] of [
+    [390, 844],
+    [1280, 900],
+  ] as const) {
+    await page.viewport(width, height)
+    await page.goto(`${BASE}${session}`)
+    await page.click(`$('[data-help="wellbeing"]')`, { settle: 400 })
+    const sheet = await page.ev<string>(
+      `txt($$("dialog").find((d) => d.open)?.querySelector("h2") ?? null)`
+    )
+    check(`${width} px: „?“ an Befinden öffnet die Erklärung`, sheet === "Befinden", sheet)
+    await page.key("Escape")
+    await page.wait(300)
+    await page.click(`$$("button").filter(visible).find((b) => txt(b) === "Erklärungen")`, {
+      settle: 300,
+    })
+    const shorts = await page.ev<string[]>(
+      `$$("[data-help-short]").filter(visible).map((p) => p.dataset.helpShort)`
+    )
+    check(
+      `${width} px: „Erklärungen“ zeigt die Kurzsätze an Befinden und Prognose und Feedback`,
+      shorts.includes("wellbeing") && shorts.includes("prognosis-feedback"),
+      shorts
+    )
+  }
+}
+
 /**
  * Anhang löschen: Der zweite von zwei Anhängen wird gewählt und bestätigt. Danach fehlt genau er, in der Einheit und in
  * der Datenbank; der erste bleibt.
@@ -314,6 +343,7 @@ async function main() {
     await section("Breiten und Leiste", () => layout(page, session))
     await section("Darstellung und Dialog", () => themeAndDialog(page, session))
     await section("Admin ohne Rolle", () => adminWithoutRole(page))
+    await section("Hilfe", () => helpFlow(page, session))
     await section("Anhang löschen", () => attachmentFlow(page, newestSessionId))
     // als Letztes: meldet den Admin an
     await section("Konto deaktivieren", () => accountFlow(page))

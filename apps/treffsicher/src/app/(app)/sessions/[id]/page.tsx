@@ -13,6 +13,7 @@ import { SessionPrognosisFeedbackComparisonCard } from "@/components/app/session
 import { SessionSeriesResultCard } from "@/components/app/sessions/SessionSeriesResultCard"
 import { ShotHistogram } from "@/components/app/sessions/ShotHistogram"
 import { WellbeingSection } from "@/components/app/sessions/WellbeingSection"
+import { ExplainProvider, ExplainSwitch } from "@/components/app/help/Explain"
 import { SessionDetailHeader, SessionDetailSectionCard } from "@/components/app/sessions/detail"
 import { Card, CardContent, CardHeader, CardTitle } from "@vereinsheim/ui/design2/card"
 import { Separator } from "@vereinsheim/ui/separator"
@@ -33,81 +34,87 @@ export default async function SessionDetailPage({ params }: { params: Promise<{ 
   const viewModel = buildSessionDetailViewModel(sessionRecord)
 
   return (
-    <div className="space-y-6">
-      <SessionDetailHeader session={sessionRecord} displayTimeZone={displayTimeZone} />
+    <ExplainProvider>
+      <div className="space-y-6">
+        <SessionDetailHeader session={sessionRecord} displayTimeZone={displayTimeZone} />
 
-      <Separator />
+        <Separator />
 
-      {viewModel.hasSeriesResults && (
-        <SessionSeriesResultCard
-          session={sessionRecord}
-          totalScore={viewModel.totalScore}
-          isDecimal={viewModel.isDecimal}
-        />
-      )}
+        <div className="flex justify-end">
+          <ExplainSwitch />
+        </div>
 
-      {viewModel.showShotDistribution && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Schussverteilung</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ShotHistogram shots={viewModel.scoringShots} isDecimal={viewModel.isDecimal} />
-          </CardContent>
-        </Card>
-      )}
-
-      {viewModel.hasAttachmentSection && (
-        <SessionDetailSectionCard
-          title="Anhänge"
-          icon={Paperclip}
-          headerSuffix={
-            sessionRecord.attachments.length > 0 ? (
-              <span className="text-base font-normal text-muted-foreground">
-                ({sessionRecord.attachments.length})
-              </span>
-            ) : undefined
-          }
-        >
-          <AttachmentSection
-            sessionId={sessionRecord.id}
-            attachments={sessionRecord.attachments.map((attachment) => ({
-              id: attachment.id,
-              filePath: attachment.filePath,
-              fileType: attachment.fileType,
-              originalName: attachment.originalName,
-              label: attachment.label,
-            }))}
+        {viewModel.hasSeriesResults && (
+          <SessionSeriesResultCard
+            session={sessionRecord}
+            totalScore={viewModel.totalScore}
+            isDecimal={viewModel.isDecimal}
           />
+        )}
+
+        {viewModel.showShotDistribution && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Schussverteilung</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ShotHistogram shots={viewModel.scoringShots} isDecimal={viewModel.isDecimal} />
+            </CardContent>
+          </Card>
+        )}
+
+        {viewModel.hasAttachmentSection && (
+          <SessionDetailSectionCard
+            title="Anhänge"
+            icon={Paperclip}
+            headerSuffix={
+              sessionRecord.attachments.length > 0 ? (
+                <span className="text-base font-normal text-muted-foreground">
+                  ({sessionRecord.attachments.length})
+                </span>
+              ) : undefined
+            }
+          >
+            <AttachmentSection
+              sessionId={sessionRecord.id}
+              attachments={sessionRecord.attachments.map((attachment) => ({
+                id: attachment.id,
+                filePath: attachment.filePath,
+                fileType: attachment.fileType,
+                originalName: attachment.originalName,
+                label: attachment.label,
+              }))}
+            />
+          </SessionDetailSectionCard>
+        )}
+
+        <SessionDetailSectionCard title="Befinden" icon={Heart} help="wellbeing">
+          <WellbeingSection sessionId={sessionRecord.id} initialData={sessionRecord.wellbeing} />
         </SessionDetailSectionCard>
-      )}
 
-      <SessionDetailSectionCard title="Befinden" icon={Heart}>
-        <WellbeingSection sessionId={sessionRecord.id} initialData={sessionRecord.wellbeing} />
-      </SessionDetailSectionCard>
+        {viewModel.hasPrognosisFeedback && (
+          <SessionDetailSectionCard title="Prognose" icon={Gauge}>
+            <PrognosisSection sessionId={sessionRecord.id} initialData={sessionRecord.prognosis} />
+          </SessionDetailSectionCard>
+        )}
 
-      {viewModel.hasPrognosisFeedback && (
-        <SessionDetailSectionCard title="Prognose" icon={Gauge}>
-          <PrognosisSection sessionId={sessionRecord.id} initialData={sessionRecord.prognosis} />
+        {viewModel.hasPrognosisFeedback && (
+          <SessionDetailSectionCard title="Feedback" icon={CheckCircle2}>
+            <FeedbackSection sessionId={sessionRecord.id} initialData={sessionRecord.feedback} />
+          </SessionDetailSectionCard>
+        )}
+
+        {viewModel.hasPrognosisFeedback && sessionRecord.prognosis && sessionRecord.feedback && (
+          <SessionPrognosisFeedbackComparisonCard
+            prognosis={sessionRecord.prognosis}
+            feedback={sessionRecord.feedback}
+          />
+        )}
+
+        <SessionDetailSectionCard title="Reflexion" icon={MessageSquare}>
+          <ReflectionSection sessionId={sessionRecord.id} initialData={sessionRecord.reflection} />
         </SessionDetailSectionCard>
-      )}
-
-      {viewModel.hasPrognosisFeedback && (
-        <SessionDetailSectionCard title="Feedback" icon={CheckCircle2}>
-          <FeedbackSection sessionId={sessionRecord.id} initialData={sessionRecord.feedback} />
-        </SessionDetailSectionCard>
-      )}
-
-      {viewModel.hasPrognosisFeedback && sessionRecord.prognosis && sessionRecord.feedback && (
-        <SessionPrognosisFeedbackComparisonCard
-          prognosis={sessionRecord.prognosis}
-          feedback={sessionRecord.feedback}
-        />
-      )}
-
-      <SessionDetailSectionCard title="Reflexion" icon={MessageSquare}>
-        <ReflectionSection sessionId={sessionRecord.id} initialData={sessionRecord.reflection} />
-      </SessionDetailSectionCard>
-    </div>
+      </div>
+    </ExplainProvider>
   )
 }

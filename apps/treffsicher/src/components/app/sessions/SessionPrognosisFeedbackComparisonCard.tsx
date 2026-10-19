@@ -1,5 +1,6 @@
 import type { SessionDetail } from "@/lib/sessions/actions"
 import { Card, CardContent, CardHeader, CardTitle } from "@vereinsheim/ui/design2/card"
+import { HelpMark, HelpShort } from "@/components/app/help/Explain"
 
 type ComparisonDimensionKey =
   | "fitness"
@@ -36,7 +37,11 @@ export function SessionPrognosisFeedbackComparisonCard({ prognosis, feedback }: 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Vergleich Prognose vs. Feedback</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          Prognose und Feedback
+          <HelpMark id="prognosis-feedback" />
+        </CardTitle>
+        <HelpShort id="prognosis-feedback" />
       </CardHeader>
       <CardContent>
         <div className="space-y-2 md:hidden">
