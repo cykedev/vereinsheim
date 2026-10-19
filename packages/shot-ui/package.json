@@ -64,6 +64,7 @@
     "./period/model": "./src/period/model.ts",
     "./period/item": "./src/period/item.ts",
     "./period/fromProjection": "./src/period/fromProjection.ts",
+    "./period/links": "./src/period/links.ts",
     "./period/sentence": "./src/period/sentence.ts",
     "./period/PeriodChart": "./src/period/PeriodChart.tsx",
     "./period/PeriodChartBar": "./src/period/PeriodChartBar.tsx",

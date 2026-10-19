@@ -4,7 +4,9 @@ import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 
+import { RouteLink } from "../nav/RouteLink"
 import { CardLine, CardReadout, cardKindText, deltaText } from "./CardReadout"
+import type { PeriodLinkProps } from "./links"
 import { item, marksOf, periodCard, TZ } from "./testSeason"
 
 const metric = metricByKey("result.decimalMean")!
@@ -25,15 +27,19 @@ const render = (props: Partial<Parameters<typeof CardReadout>[0]> = {}) =>
       metric,
       timeZone: TZ,
       chosen: true,
-      cardRoute: (id: string) => ({
-        page: "card" as const,
-        id,
-        origin: null,
-        selection: null,
-        shot: null,
-        scoring: "decimal" as const,
-        anchor: null,
-      }),
+      renderLink: (id: string, props: PeriodLinkProps) =>
+        createElement(RouteLink, {
+          route: {
+            page: "card" as const,
+            id,
+            origin: null,
+            selection: null,
+            shot: null,
+            scoring: "decimal" as const,
+            anchor: null,
+          },
+          ...props,
+        }),
       ...props,
     })
   )
@@ -110,15 +116,19 @@ describe("Ablesezeile auf dem Telefon", () => {
         delta: { delta: 0.03, n: 5 },
         metric,
         timeZone: TZ,
-        cardRoute: (id: string) => ({
-          page: "card" as const,
-          id,
-          origin: null,
-          selection: null,
-          shot: null,
-          scoring: "decimal" as const,
-          anchor: null,
-        }),
+        renderLink: (id: string, props: PeriodLinkProps) =>
+          createElement(RouteLink, {
+            route: {
+              page: "card" as const,
+              id,
+              origin: null,
+              selection: null,
+              shot: null,
+              scoring: "decimal" as const,
+              anchor: null,
+            },
+            ...props,
+          }),
       })
     )
     expect(html).toContain("28.09. · 10,00 · +0,03 zum Schnitt davor")
@@ -134,15 +144,19 @@ describe("Ablesezeile auf dem Telefon", () => {
           delta: { delta: 0.03, n: 5 },
           metric,
           timeZone: TZ,
-          cardRoute: (id: string) => ({
-            page: "card" as const,
-            id,
-            origin: null,
-            selection: null,
-            shot: null,
-            scoring: "decimal" as const,
-            anchor: null,
-          }),
+          renderLink: (id: string, props: PeriodLinkProps) =>
+            createElement(RouteLink, {
+              route: {
+                page: "card" as const,
+                id,
+                origin: null,
+                selection: null,
+                shot: null,
+                scoring: "decimal" as const,
+                anchor: null,
+              },
+              ...props,
+            }),
           ...extra,
         })
       )

@@ -6,9 +6,8 @@ import { cn } from "@vereinsheim/lib/utils"
 import { useId, useMemo, useState } from "react"
 
 import { formatSigned, formatValue } from "../format"
-import { RouteLink } from "../nav/RouteLink"
-import type { ListRoute } from "../nav/routes"
 import { KindMark } from "../list/KindMark"
+import type { RenderLink } from "./links"
 import { itemKind, type PeriodItem, type PeriodMetric } from "./model"
 
 export interface CardListProps {
@@ -24,8 +23,11 @@ export interface CardListProps {
   onChoose?: (id: string) => void
   /** auf dem Telefon so viele Zeilen, bis „Alle zeigen“ */
   collapseAfter?: number
-  /** „Alle in Scheiben zeigen“: die Scheiben-Liste mit Familie, Art und Zeitraum (`listFromProgress`) */
-  showAll?: ListRoute
+  /**
+   * „Alle in Scheiben zeigen“ als Link der App (in Spiegel ein `RouteLink` auf die Scheiben-Liste mit Familie, Art und
+   * Zeitraum, `listFromProgress`); ohne keinen
+   */
+  showAll?: RenderLink
   className?: string
 }
 
@@ -156,15 +158,12 @@ export function CardList({
           {expanded ? "Weniger zeigen" : `Alle ${rows.length} zeigen`}
         </button>
       )}
-      {showAll && (
-        <RouteLink
-          route={showAll}
-          data-show-all
-          className="mt-1 block w-full cursor-pointer rounded-lg px-2 py-2 text-center text-[13px] font-semibold text-primary hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-ring"
-        >
-          Alle in Scheiben zeigen
-        </RouteLink>
-      )}
+      {showAll?.({
+        "data-show-all": true,
+        className:
+          "mt-1 block w-full cursor-pointer rounded-lg px-2 py-2 text-center text-[13px] font-semibold text-primary hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-ring",
+        children: "Alle in Scheiben zeigen",
+      })}
     </div>
   )
 }

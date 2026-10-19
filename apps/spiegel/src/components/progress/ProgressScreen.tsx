@@ -16,10 +16,12 @@ import { PERIOD_SECTIONS, type PeriodSection } from "@vereinsheim/shot-ui/layout
 import { useActiveSection } from "@vereinsheim/shot-ui/layout/useActiveSection"
 import { useReturnJump } from "@vereinsheim/shot-ui/layout/useReturnJump"
 import { listFromProgress, openCard, progressRoute } from "@vereinsheim/shot-ui/nav/navigate"
+import { RouteLink } from "@vereinsheim/shot-ui/nav/RouteLink"
 import { isCardId, urlFromRoute } from "@vereinsheim/shot-ui/nav/routes"
 import { rangeDays } from "@vereinsheim/shot-ui/period/calendar"
 import { CardList } from "@vereinsheim/shot-ui/period/CardList"
 import { CardLine, CardReadout } from "@vereinsheim/shot-ui/period/CardReadout"
+import type { RenderItemLink } from "@vereinsheim/shot-ui/period/links"
 import { periodReading, type PeriodModel } from "@vereinsheim/shot-ui/period/model"
 import { PeriodChart } from "@vereinsheim/shot-ui/period/PeriodChart"
 import { PeriodChartBar } from "@vereinsheim/shot-ui/period/PeriodChartBar"
@@ -175,7 +177,9 @@ export function ProgressScreen({
   const readingValue = reading ? (model.values.find((v) => v.id === reading.card.id) ?? null) : null
   // die Wege als Adressen: eine Scheibe mit diesem Fortschritt als Herkunft, in ihrer Wertung; „Alle in Scheiben zeigen“
   // ohne Wertung
-  const cardRoute = (id: string) => openCard(progressRoute(current, null), id)
+  const cardLink: RenderItemLink = (id, props) => (
+    <RouteLink route={openCard(progressRoute(current, null), id)} {...props} />
+  )
   const here = progressRoute({ ...current, scoring: "decimal" }, null)
   const chooseFromList = useCallback(
     (id: string) => {
@@ -283,7 +287,7 @@ export function ProgressScreen({
                 delta={model.deltas.get(reading.card.id)}
                 metric={model.metric}
                 timeZone={timeZone}
-                cardRoute={cardRoute}
+                renderLink={cardLink}
                 onHelp={onHelp}
               />
             )}
@@ -359,7 +363,7 @@ export function ProgressScreen({
                 metric={model.metric}
                 timeZone={timeZone}
                 chosen={reading.chosen}
-                cardRoute={cardRoute}
+                renderLink={cardLink}
                 onHelp={onHelp}
               />
             </div>
@@ -382,7 +386,7 @@ export function ProgressScreen({
                   timeZone={timeZone}
                   chosen={chosen}
                   onChoose={chooseFromList}
-                  showAll={listFromProgress(here)}
+                  showAll={(props) => <RouteLink route={listFromProgress(here)} {...props} />}
                 />
               </div>
             ),

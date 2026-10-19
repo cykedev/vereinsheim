@@ -8,11 +8,10 @@ import { cn } from "@vereinsheim/lib/utils"
 
 import { formatSigned, formatValue, unitText } from "../format"
 import { groupView } from "../geometry"
-import { RouteLink } from "../nav/RouteLink"
-import type { CardRoute } from "../nav/routes"
 import { HelpButton } from "../help/HelpButton"
 import { MiniTarget } from "../target/MiniTarget"
 import { KIND_TEXT } from "../list/KindMark"
+import type { RenderItemLink } from "./links"
 import { itemKind, type PeriodItem, type PeriodMetric } from "./model"
 
 export interface CardReadoutProps {
@@ -33,8 +32,8 @@ export interface CardReadoutProps {
   timeZone: string
   /** gewählt oder, ohne Wahl, die neueste */
   chosen: boolean
-  /** die Adresse einer Scheibe aus diesem Fortschritt (`openCard` mit ihm als Herkunft) */
-  cardRoute: (id: string) => CardRoute
+  /** der Link „Scheibe öffnen“ (in Spiegel ein `RouteLink` mit `openCard` aus diesem Fortschritt) */
+  renderLink: RenderItemLink
   /** „?“ am Abstand zum Schnitt davor; ohne kein „?“ */
   onHelp?: (id: string) => void
   className?: string
@@ -71,7 +70,7 @@ export function CardReadout({
   metric,
   timeZone,
   chosen,
-  cardRoute,
+  renderLink,
   onHelp,
   className,
 }: CardReadoutProps) {
@@ -134,12 +133,11 @@ export function CardReadout({
           <p className="text-[13px] text-muted-foreground">ohne Lage</p>
         )}
       </div>
-      <RouteLink
-        route={cardRoute(card.id)}
-        className="justify-self-start cursor-pointer rounded-full border border-line-strong px-3.5 py-1.5 text-[13px] font-semibold text-primary hover:bg-accent-wash focus-visible:outline-2 focus-visible:outline-ring"
-      >
-        Scheibe öffnen
-      </RouteLink>
+      {renderLink(card.id, {
+        className:
+          "justify-self-start cursor-pointer rounded-full border border-line-strong px-3.5 py-1.5 text-[13px] font-semibold text-primary hover:bg-accent-wash focus-visible:outline-2 focus-visible:outline-ring",
+        children: "Scheibe öffnen",
+      })}
     </div>
   )
 }
@@ -154,12 +152,12 @@ export function CardLine({
   delta,
   metric,
   timeZone,
-  cardRoute,
+  renderLink,
   onHelp,
   className,
 }: Pick<
   CardReadoutProps,
-  "card" | "value" | "delta" | "metric" | "timeZone" | "cardRoute" | "onHelp"
+  "card" | "value" | "delta" | "metric" | "timeZone" | "renderLink" | "onHelp"
 > & {
   className?: string
 }) {
@@ -184,12 +182,11 @@ export function CardLine({
           />
         )}
       </span>
-      <RouteLink
-        route={cardRoute(card.id)}
-        className="shrink-0 cursor-pointer rounded font-semibold whitespace-nowrap text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring"
-      >
-        Scheibe öffnen
-      </RouteLink>
+      {renderLink(card.id, {
+        className:
+          "shrink-0 cursor-pointer rounded font-semibold whitespace-nowrap text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring",
+        children: "Scheibe öffnen",
+      })}
     </div>
   )
 }

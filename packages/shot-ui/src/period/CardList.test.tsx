@@ -3,8 +3,10 @@ import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 
+import { RouteLink } from "../nav/RouteLink"
 import { DEFAULT_LIST, type ListRoute } from "../nav/routes"
 import { CardList } from "./CardList"
+import type { PeriodLinkProps } from "./links"
 import { periodModel } from "./model"
 import { initialPeriodState } from "./state"
 import { item, NOW, periodCard, TZ } from "./testSeason"
@@ -30,7 +32,9 @@ const render = (count: number, chosen: string | null = null, showAll?: ListRoute
       timeZone: TZ,
       chosen,
       onChoose: () => {},
-      showAll,
+      showAll:
+        showAll &&
+        ((props: PeriodLinkProps) => createElement(RouteLink, { route: showAll, ...props })),
     })
   )
 }

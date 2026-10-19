@@ -3,8 +3,10 @@ import { createElement as h } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 
+import { RouteLink } from "../nav/RouteLink"
 import { CardList } from "./CardList"
 import { CardLine, CardReadout } from "./CardReadout"
+import type { PeriodLinkProps } from "./links"
 import { lightPeriodModel, periodModel, periodReading, type PeriodModel } from "./model"
 import { PeriodChart } from "./PeriodChart"
 import { PeriodInsights } from "./PeriodInsights"
@@ -73,7 +75,8 @@ function page(model: PeriodModel, chosen: string | null) {
         metric: model.metric,
         timeZone: TZ,
         chosen: reading.chosen,
-        cardRoute: route,
+        renderLink: (id: string, props: PeriodLinkProps) =>
+          h(RouteLink, { route: route(id), ...props }),
       })
     ),
     renderToStaticMarkup(
@@ -83,7 +86,8 @@ function page(model: PeriodModel, chosen: string | null) {
         delta,
         metric: model.metric,
         timeZone: TZ,
-        cardRoute: route,
+        renderLink: (id: string, props: PeriodLinkProps) =>
+          h(RouteLink, { route: route(id), ...props }),
       })
     ),
   ]
