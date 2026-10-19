@@ -148,7 +148,7 @@ describe("progressPageData", () => {
     expect(Object.keys(progress!.marks)).toEqual([progress!.model.reading!.card.id])
     // leicht: ohne Werte, Rekorde und Felder der App
     for (const card of progress!.model.cards) {
-      expect(card.projection.values).toEqual({})
+      expect(card.metrics).toEqual({})
       expect(card).not.toHaveProperty("family")
     }
   })

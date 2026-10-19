@@ -6,11 +6,11 @@ import { periodModel } from "./model"
 import { PeriodInsights, recordRows } from "./PeriodInsights"
 import { PeriodTiles } from "./PeriodTiles"
 import { initialPeriodState, type PeriodState } from "./state"
-import { NOW, periodCard, projected, TZ } from "./testSeason"
+import { item, NOW, periodCard, TZ } from "./testSeason"
 
 const model = (cards: ReturnType<typeof periodCard>[], partial: Partial<PeriodState> = {}) =>
   periodModel({
-    cards: cards.map(projected),
+    items: cards.map(item),
     state: { ...initialPeriodState({ family: "lg-10m" }), ...partial },
     nowMs: NOW,
     timeZone: TZ,

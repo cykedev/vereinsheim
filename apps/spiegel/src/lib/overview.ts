@@ -2,6 +2,7 @@ import type { CardMark } from "@vereinsheim/shot-core/projection"
 import { cardListModel, type CardListModel } from "@vereinsheim/shot-ui/list/evenings"
 import { periodStateFromRoute } from "@vereinsheim/shot-ui/nav/navigate"
 import type { ListQuery, ProgressQuery } from "@vereinsheim/shot-ui/nav/routes"
+import { fromProjection } from "@vereinsheim/shot-ui/period/fromProjection"
 import { lightPeriodModel, periodModel, type PeriodModel } from "@vereinsheim/shot-ui/period/model"
 import type { PeriodState } from "@vereinsheim/shot-ui/period/state"
 import { startModel, type StartModel } from "@vereinsheim/shot-ui/start/model"
@@ -117,7 +118,7 @@ export async function progressPageData(
   }
   const model = lightPeriodModel(
     periodModel({
-      cards: shown.filter((card) => card.family?.slug === option.value),
+      items: shown.filter((card) => card.family?.slug === option.value).map(fromProjection),
       state,
       nowMs: context.nowMs,
       timeZone: context.timeZone,

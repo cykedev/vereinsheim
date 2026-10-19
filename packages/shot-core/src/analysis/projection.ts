@@ -226,13 +226,26 @@ export function projectedValues(
 }
 
 /** zählt die Scheibe für Rekorde (wie `recordEligible`)? */
-function projectedEligible(card: ProjectedCard): boolean {
+export function projectedEligible(card: ProjectedCard): boolean {
   const excluding: readonly string[] = RECORD_EXCLUDING_FLAGS
   return (
     card.complete &&
     !card.flags.some((flag) => excluding.includes(flag)) &&
     !card.projection.suspicious
   )
+}
+
+/**
+ * zählt eine Scheibe, die für Rekorde zählt, unter den Filtern der Seite (Art, nur Probe, als Wertung gezählte Probe)?
+ * Eine Regel für `projectedRecords` und jede andere Eingabe aus gespeicherten Kandidaten
+ */
+export function recordsInView(
+  card: { kind: PeriodCard["kind"]; flags: readonly string[]; probeOnly: boolean },
+  options: { kind?: PeriodCard["kind"]; includeProbeOnly?: boolean }
+): boolean {
+  if (options.kind !== undefined && card.kind !== options.kind) return false
+  if (!options.includeProbeOnly && card.flags.includes(FLAG_COUNTED_AS_MATCH)) return false
+  return !card.probeOnly || Boolean(options.includeProbeOnly)
 }
 
 /** wie `periodRecords`, aus den Projektionen */
@@ -244,9 +257,8 @@ export function projectedRecords(
   return combineRecords(
     byStart(cards).flatMap((card) => {
       if (!projectedEligible(card)) return []
-      if (options.kind !== undefined && card.kind !== options.kind) return []
-      if (!options.includeProbeOnly && card.flags.includes(FLAG_COUNTED_AS_MATCH)) return []
-      if (card.projection.probeOnly && !options.includeProbeOnly) return []
+      const { kind, flags } = card
+      if (!recordsInView({ kind, flags, probeOnly: card.projection.probeOnly }, options)) return []
       const candidates = card.projection.records[scoring]
       return candidates ? [{ id: card.id, atMs: card.startedAtMs, candidates }] : []
     })

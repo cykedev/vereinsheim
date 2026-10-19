@@ -4,6 +4,7 @@
 
 import { cardListModel, lastEvening, type ListInputCard } from "../list/evenings"
 import type { NamedPeriod } from "../period/calendar"
+import { fromProjection } from "../period/fromProjection"
 import { byStart, periodModel } from "../period/model"
 import { backRoute, periodStateFromRoute } from "./navigate"
 import type { CardRoute } from "./routes"
@@ -63,7 +64,9 @@ export function contextCardIds(card: CardRoute, input: ContextInput): string[] |
     const fromRoute = periodStateFromRoute(back, own ?? "")
     const state = { ...fromRoute, family: familyOf(fromRoute.family) ?? fromRoute.family }
     const model = periodModel({
-      cards: input.cards.filter((c) => c.family === state.family).map((c) => c.card),
+      items: input.cards
+        .filter((c) => c.family === state.family)
+        .map((c) => fromProjection(c.card)),
       state: { ...state, chosen: null },
       nowMs: input.nowMs,
       timeZone: input.timeZone,

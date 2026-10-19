@@ -4,7 +4,7 @@ import type { NamedPeriod } from "./calendar"
 import { deltasBefore, isProbeOnly, periodModel, periodReading, PERIOD_TILE_KEYS } from "./model"
 import { periodSentence, verdictText } from "./sentence"
 import { initialPeriodState, type PeriodState } from "./state"
-import { NOW, periodCard, projected, TZ } from "./testSeason"
+import { item, NOW, periodCard, projected, TZ } from "./testSeason"
 
 const NAMED: NamedPeriod[] = [
   { id: "lm", name: "Vorbereitung", from: "2026-05-01", to: "2026-06-30" },
@@ -14,7 +14,7 @@ const model = (
   state: Partial<PeriodState> = {}
 ) =>
   periodModel({
-    cards: (cards as ReturnType<typeof periodCard>[]).map(projected),
+    items: (cards as ReturnType<typeof periodCard>[]).map(item),
     state: { ...initialPeriodState({ family: "lg-10m" }), ...state },
     nowMs: NOW,
     timeZone: TZ,
@@ -437,6 +437,10 @@ describe("Grenzfälle des Modells", () => {
     expect(isProbeOnly(projected(probe))).toBe(true)
     expect(isProbeOnly(projected(THREE[0]))).toBe(false)
     expect(isProbeOnly(projected(periodCard("leer", 1, [])))).toBe(false)
+    // derselbe Wert im Eintrag der Seite (`fromProjection`)
+    expect(item(probe).probeOnly).toBe(true)
+    expect(item(THREE[0]).probeOnly).toBe(false)
+    expect(item(periodCard("leer", 1, [])).probeOnly).toBe(false)
     expect(model([...THREE, probe], { includeProbeOnly: false }).excludedProbeOnly).toBe(1)
     expect(model([...THREE, probe]).excludedProbeOnly).toBe(0)
   })

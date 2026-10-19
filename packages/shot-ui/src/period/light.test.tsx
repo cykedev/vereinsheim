@@ -11,7 +11,7 @@ import { PeriodInsights } from "./PeriodInsights"
 import { PeriodResult } from "./PeriodResult"
 import { PeriodTiles } from "./PeriodTiles"
 import { initialPeriodState } from "./state"
-import { marksOf, NOW, periodCard, projected, TZ } from "./testSeason"
+import { item, marksOf, NOW, periodCard, TZ } from "./testSeason"
 
 // zwölf Scheiben: Training, ein Wettkampf, eine nur Probe; dazu eine ältere als Vergleich
 const RAW = [9, 10, 8, 10, 9, 11, 9, 10, 8, 10, 9, 10].map((v, i) =>
@@ -21,7 +21,7 @@ const RAW = [9, 10, 8, 10, 9, 11, 9, 10, 8, 10, 9, 10].map((v, i) =>
   })
 )
 const full = periodModel({
-  cards: RAW.map(projected),
+  items: RAW.map(item),
   state: { ...initialPeriodState({ family: "lg-10m" }), compare: { type: "previous" } },
   nowMs: NOW,
   timeZone: TZ,
@@ -90,18 +90,17 @@ function page(model: PeriodModel, chosen: string | null) {
 }
 
 describe("lightPeriodModel: das Modell für den Browser", () => {
-  it("die Scheiben ohne Werte und Rekorde ihrer Projektion, alles andere bleibt", () => {
+  it("die Scheiben ohne Werte und Rekorde, alles andere bleibt", () => {
     expect(light.cards.map((c) => c.id)).toEqual(full.cards.map((c) => c.id))
     for (const card of light.cards) {
-      expect(card.projection.values).toEqual({})
-      expect(card.projection.records).toEqual({ decimal: null, rings: null })
+      expect(card.metrics).toEqual({})
+      expect(card.records).toEqual({ decimal: null, rings: null })
     }
     const original = full.cards.find((c) => c.id === "k5")!
-    expect(light.cards.find((c) => c.id === "k5")!.projection).toMatchObject({
+    expect(light.cards.find((c) => c.id === "k5")).toMatchObject({
       probeOnly: true,
-      printedShots: original.projection.printedShots,
-      suspicious: original.projection.suspicious,
-      version: original.projection.version,
+      shots: original.shots,
+      flags: original.flags,
     })
     expect(light.reading?.card).toBe(light.cards.find((c) => c.id === full.reading?.card.id))
     const { cards: _a, reading: _b, ...rest } = light
@@ -117,7 +116,7 @@ describe("lightPeriodModel: das Modell für den Browser", () => {
   it("auch ohne Vergleich, je Scheibe und je Monat", () => {
     for (const view of ["cards", "months"] as const) {
       const plain = periodModel({
-        cards: RAW.map(projected),
+        items: RAW.map(item),
         state: { ...initialPeriodState({ family: "lg-10m" }), view },
         nowMs: NOW,
         timeZone: TZ,
@@ -141,10 +140,10 @@ describe("lightPeriodModel: das Modell für den Browser", () => {
     expect(light.metric).toMatchObject({ key: "result.decimalMean", label: "Ø je Schuss" })
   })
 
-  it("nur die Felder einer projizierten Scheibe, auch wenn die App mehr hereinreicht", () => {
+  it("nur die Felder eines Eintrags, auch wenn die App mehr hereinreicht", () => {
     const withExtras = periodModel({
-      cards: RAW.map((card) => ({
-        ...projected(card),
+      items: RAW.map((card) => ({
+        ...item(card),
         stand: "3",
         family: { slug: "lg", name: "LG" },
       })),
@@ -155,20 +154,8 @@ describe("lightPeriodModel: das Modell für den Browser", () => {
     })
     const card = lightPeriodModel(withExtras).cards[0]
     expect(Object.keys(card).sort()).toEqual(
-      ["complete", "flags", "id", "kind", "projection", "startedAtMs"].sort()
+      ["flags", "id", "kind", "metrics", "probeOnly", "records", "shots", "startedAtMs"].sort()
     )
-    // amtliche Wertung und die der Scheibe gehören zur projizierten Scheibe und bleiben
-    const scored = periodModel({
-      cards: RAW.map((card) => ({ ...projected(card), official: "rings", scoring: "decimal" })),
-      state: initialPeriodState({ family: "lg-10m" }),
-      nowMs: NOW,
-      timeZone: TZ,
-      named: [],
-    })
-    expect(lightPeriodModel(scored).cards[0]).toMatchObject({
-      official: "rings",
-      scoring: "decimal",
-    })
   })
 
   it("das leichte Modell ist kleiner", () => {

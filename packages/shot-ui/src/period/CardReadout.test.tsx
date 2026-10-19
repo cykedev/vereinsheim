@@ -5,11 +5,11 @@ import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 
 import { CardLine, CardReadout, cardKindText, deltaText } from "./CardReadout"
-import { marksOf, periodCard, projected, TZ } from "./testSeason"
+import { item, marksOf, periodCard, TZ } from "./testSeason"
 
 const metric = metricByKey("result.decimalMean")!
 const raw = periodCard("k1", 2, [100, 102, 98], { kind: "competition" })
-const card = projected(raw)
+const card = item(raw)
 const marks = marksOf([raw]).get("k1")!
 const value = { id: "k1", atMs: card.startedAtMs, value: 10, n: 3 }
 const point = { ...value, mean: 9.9, partial: false, band: { low: 9.6, high: 10.2 } }
@@ -93,8 +93,8 @@ describe("Ablesung einer Scheibe", () => {
   })
 
   it("Art und Abstand in Worten", () => {
-    expect(cardKindText(projected(periodCard("t", 1, [100])))).toBe("Training")
-    expect(cardKindText(projected(periodCard("p", 1, [100], { probe: true })))).toBe(
+    expect(cardKindText(item(periodCard("t", 1, [100])))).toBe("Training")
+    expect(cardKindText(item(periodCard("p", 1, [100], { probe: true })))).toBe(
       "Training nur Probe"
     )
     expect(deltaText({ delta: -0.05, n: 1 }, 2)).toBe("−0,05 zum Schnitt der Scheibe davor")

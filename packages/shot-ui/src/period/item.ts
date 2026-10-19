@@ -1,0 +1,94 @@
+// Eingabe der Seite eines Zeitraums: ein schlanker Eintrag je Scheibe oder Einheit, ohne Schüsse. Spiegel bildet ihn
+// aus der Projektion (`fromProjection`), Treffsicher aus einer Einheit. Hier wird nur ausgewählt und gezählt; die Werte
+// und die Bausteine der Rekorde rechnet der Fachkern (`@vereinsheim/shot-core`).
+
+import {
+  combineRecords,
+  type CardValue,
+  type PeriodCard,
+  type PeriodRecords,
+  type RecordCandidates,
+  type VolumeBucket,
+} from "@vereinsheim/shot-core/analysis"
+import { inScoring, type MetricDefinition, type Scoring } from "@vereinsheim/shot-core/metrics"
+import { recordsInView } from "@vereinsheim/shot-core/projection"
+
+export interface PeriodItem {
+  id: string
+  startedAtMs: number
+  kind: PeriodCard["kind"]
+  /** nur Probe mit mindestens einem Schuss: zählt nur mit `includeProbeOnly` */
+  probeOnly: boolean
+  /** Schüsse wie am Ausdruck (Umfang, Ablesung) */
+  shots: number
+  /**
+   * Werte der Kennzahlen der Ebene Scheibe nach Schlüssel in der Wertung (`inScoring(…).key`), mit n; ohne Wert fehlt
+   * der Schlüssel oder steht null
+   */
+  metrics: Readonly<Record<string, { value: number; n: number } | null>>
+  /** Bausteine der Rekorde je Wertung (`cardRecordCandidates`); null, wenn der Eintrag für Rekorde nicht zählt */
+  records: Readonly<Record<Scoring, RecordCandidates | null>>
+  /** Merkmale; für Rekorde zählt `FLAG_COUNTED_AS_MATCH` */
+  flags: readonly string[]
+}
+
+/** Einträge in ihrer Folge: nach Beginn, bei Gleichstand nach Kennung (wie im Fachkern) */
+const byStart = (items: readonly PeriodItem[]) =>
+  [...items].sort(
+    (a, b) => a.startedAtMs - b.startedAtMs || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
+  )
+
+/** wie `cardValues`, aus den Einträgen: ohne Wert kein Punkt, nur Probe nur mit dem Schalter */
+export function itemValues(
+  items: readonly PeriodItem[],
+  metric: Readonly<MetricDefinition>,
+  scoring: Scoring,
+  options: { includeProbeOnly?: boolean } = {}
+): CardValue[] {
+  if (!metric.scopes.includes("card"))
+    throw new RangeError(`${metric.key}: keine Kennzahl der Ebene Scheibe`)
+  const key = inScoring(metric, scoring).key
+  return byStart(items).flatMap((item) => {
+    if (item.probeOnly && !options.includeProbeOnly) return []
+    const entry = item.metrics[key]
+    return entry ? [{ id: item.id, atMs: item.startedAtMs, value: entry.value, n: entry.n }] : []
+  })
+}
+
+/** wie `periodRecords`, aus den Bausteinen der Einträge (`combineRecords`) */
+export function itemRecords(
+  items: readonly PeriodItem[],
+  scoring: Scoring,
+  options: { kind?: PeriodCard["kind"]; includeProbeOnly?: boolean } = {}
+): PeriodRecords {
+  return combineRecords(
+    byStart(items).flatMap((item) => {
+      if (!recordsInView(item, options)) return []
+      const candidates = item.records[scoring]
+      return candidates ? [{ id: item.id, atMs: item.startedAtMs, candidates }] : []
+    })
+  )
+}
+
+/** wie `trainingVolume`, aus den Einträgen: Schüsse wie am Ausdruck, Einträge und Tage je Abschnitt */
+export function itemVolume(
+  items: readonly PeriodItem[],
+  bucketOf: (atMs: number) => string,
+  dayOf: (atMs: number) => string
+): VolumeBucket[] {
+  const buckets = new Map<string, { shots: number; cards: number; days: Set<string> }>()
+  for (const item of byStart(items)) {
+    const key = bucketOf(item.startedAtMs)
+    const bucket = buckets.get(key) ?? { shots: 0, cards: 0, days: new Set<string>() }
+    bucket.shots += item.shots
+    bucket.cards += 1
+    bucket.days.add(dayOf(item.startedAtMs))
+    buckets.set(key, bucket)
+  }
+  return [...buckets].map(([key, b]) => ({
+    key,
+    shots: b.shots,
+    cards: b.cards,
+    days: b.days.size,
+  }))
+}

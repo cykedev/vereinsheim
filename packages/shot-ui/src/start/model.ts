@@ -12,6 +12,7 @@ import { cardListModel, lastEvening, type ListInputCard, type ListRow } from "..
 import { progressRoute } from "../nav/navigate"
 import { DEFAULT_LIST, type ProgressRoute } from "../nav/routes"
 import type { NamedPeriod } from "../period/calendar"
+import { fromProjection } from "../period/fromProjection"
 import { byStart, periodModel } from "../period/model"
 import { NEW_RECORDS, recordRows, type RecordRow } from "../period/records"
 import { initialPeriodState } from "../period/state"
@@ -192,7 +193,7 @@ function formOf(all: readonly ListInputCard[], family: string, input: StartInput
     compare: { type: "previous" as const },
   }
   const model = periodModel({
-    cards: all.filter((c) => c.family === family).map((c) => c.card),
+    items: all.filter((c) => c.family === family).map((c) => fromProjection(c.card)),
     state,
     nowMs: input.nowMs,
     timeZone: input.timeZone,

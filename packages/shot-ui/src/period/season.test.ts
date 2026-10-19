@@ -5,10 +5,10 @@
 import { describe, expect, it } from "vitest"
 
 import type { NamedPeriod } from "./calendar"
-import { isProbeOnly, lightPeriodModel, periodModel, type PeriodModel } from "./model"
+import { lightPeriodModel, periodModel, type PeriodModel } from "./model"
 import { NEW_RECORDS, recordRows } from "./records"
 import { initialPeriodState, type PeriodState } from "./state"
-import { NOW, projected, seasonCards, TZ } from "./testSeason"
+import { item, NOW, seasonCards, TZ } from "./testSeason"
 
 const NAMED: NamedPeriod[] = [
   { id: "vorbereitung", name: "Vorbereitung", from: "2026-05-01", to: "2026-06-30" },
@@ -47,8 +47,8 @@ const plain = (model: PeriodModel) => {
     id: c.id,
     startedAtMs: c.startedAtMs,
     kind: c.kind,
-    probeOnly: isProbeOnly(c),
-    shots: c.projection.printedShots,
+    probeOnly: c.probeOnly,
+    shots: c.shots,
   })
   const shown = {
     ...model,
@@ -67,7 +67,7 @@ const plain = (model: PeriodModel) => {
 
 const modelFor = (state: Partial<PeriodState>) =>
   periodModel({
-    cards: seasonCards().map(projected),
+    items: seasonCards().map(item),
     state: { ...initialPeriodState({ family: "lg-10m" }), ...state },
     nowMs: NOW,
     timeZone: TZ,

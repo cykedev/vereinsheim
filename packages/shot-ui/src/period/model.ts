@@ -1,6 +1,7 @@
 // Modell der Seite eines Zeitraums: alles, was die Seite zeigt, aus dem Fachkern. Die Bausteine zeichnen nur, was hier
-// steht; Datum und Zeitzone über `@vereinsheim/lib/format`. Es rechnet aus den Projektionen der Scheiben, nie aus
-// Schüssen (ADR-031): `projectedValues`, `projectedRecords`, `projectedVolume`.
+// steht; Datum und Zeitzone über `@vereinsheim/lib/format`. Es rechnet aus einem schlanken Eintrag je Scheibe oder
+// Einheit (`PeriodItem`), nie aus Schüssen: Spiegel bildet ihn aus der Projektion (`fromProjection`, ADR-031),
+// Treffsicher aus einer Einheit.
 
 import {
   comparePeriods,
@@ -13,12 +14,7 @@ import {
   type TrendPoint,
   type VolumeBucket,
 } from "@vereinsheim/shot-core/analysis"
-import {
-  projectedRecords,
-  projectedValues,
-  projectedVolume,
-  type ProjectedCard,
-} from "@vereinsheim/shot-core/projection"
+import type { ProjectedCard } from "@vereinsheim/shot-core/projection"
 import {
   inScoring,
   metricByKey,
@@ -41,7 +37,10 @@ import {
   type DateRange,
   type NamedPeriod,
 } from "./calendar"
+import { itemRecords, itemValues, itemVolume, type PeriodItem } from "./item"
 import type { PeriodMetricKey, PeriodState } from "./state"
+
+export type { PeriodItem } from "./item"
 
 /** Kennzahlen des Verlaufs mit kurzem Namen für den Umschalter */
 export const PERIOD_CHART_METRICS: readonly { key: PeriodMetricKey; label: string }[] = [
@@ -95,7 +94,7 @@ export interface PeriodModel {
   range: DateRange
   compareRange: DateRange | null
   /** Scheiben im Zeitraum nach Art, in ihrer Folge (Beginn, Id) */
-  cards: ProjectedCard[]
+  cards: PeriodItem[]
   /** die Kennzahl des Verlaufs in der Wertung der Seite, ohne ihre Rechnung (das Modell geht vom Server zum Browser) */
   metric: PeriodMetric
   values: CardValue[]
@@ -164,7 +163,7 @@ export interface PeriodModel {
 }
 
 export interface PeriodReading {
-  card: ProjectedCard
+  card: PeriodItem
   point: TrendPoint | null
   chosen: boolean
 }
@@ -181,8 +180,11 @@ export type CardKind = "training" | "competition" | "probe"
 
 export const cardKind = (card: ProjectedCard): CardKind => kindOf(card.kind, isProbeOnly(card))
 
+/** Art eines Eintrags der Seite eines Zeitraums, wie `cardKind` */
+export const itemKind = (item: PeriodItem): CardKind => kindOf(item.kind, item.probeOnly)
+
 /** die Art aus Wettkampf oder Training und „nur Probe“: eine Regel für die Übersichten und die Seite einer Scheibe */
-export const kindOf = (kind: ProjectedCard["kind"], probeOnly: boolean): CardKind =>
+export const kindOf = (kind: PeriodItem["kind"], probeOnly: boolean): CardKind =>
   kind === "competition" ? "competition" : probeOnly ? "probe" : "training"
 
 /** „nur Probe“ aus den Schüssen, für die Seite einer Scheibe (sie hat Schüsse statt Projektion); wie `isProbeOnly` */
@@ -248,10 +250,10 @@ export interface CalendarDay {
 }
 
 /**
- * die Tage des Kalenders aus den Scheiben des Zeitraums: der Umfang des Fachkerns (`projectedVolume`, T6/T7) je Abend wie
- * die Liste (`eveningDay`), dazu die Zahl der Wettkämpfe
+ * die Tage des Kalenders aus den Scheiben des Zeitraums: der Umfang (`itemVolume`, T6/T7) je Abend wie die Liste
+ * (`eveningDay`), dazu die Zahl der Wettkämpfe
  */
-function calendarDays(cards: readonly ProjectedCard[], timeZone: string): CalendarDay[] {
+function calendarDays(cards: readonly PeriodItem[], timeZone: string): CalendarDay[] {
   const evening = (ms: number) => eveningDay(ms, timeZone)
   const competition = new Map<string, number>()
   for (const card of cards)
@@ -259,7 +261,7 @@ function calendarDays(cards: readonly ProjectedCard[], timeZone: string): Calend
       const key = evening(card.startedAtMs)
       competition.set(key, (competition.get(key) ?? 0) + 1)
     }
-  return projectedVolume(cards, evening, evening)
+  return itemVolume(cards, evening, evening)
     .map(({ key, shots, cards }) => ({ key, shots, cards, competition: competition.get(key) ?? 0 }))
     .sort((a, b) => (a.key < b.key ? -1 : 1))
 }
@@ -271,8 +273,8 @@ function calendarDays(cards: readonly ProjectedCard[], timeZone: string): Calend
 function calendarOf(
   range: DateRange,
   nowMs: number,
-  cards: readonly ProjectedCard[],
-  family: readonly ProjectedCard[],
+  cards: readonly PeriodItem[],
+  family: readonly PeriodItem[],
   timeZone: string
 ): PeriodModel["calendar"] {
   const days = calendarDays(cards, timeZone)
@@ -287,8 +289,8 @@ function calendarOf(
 }
 
 export function periodModel(input: {
-  /** alle Scheiben einer Familie, mit Projektion */
-  cards: readonly ProjectedCard[]
+  /** alle Scheiben einer Familie (in Spiegel `fromProjection`) */
+  items: readonly PeriodItem[]
   state: PeriodState
   nowMs: number
   timeZone: string
@@ -297,23 +299,21 @@ export function periodModel(input: {
   const { state, nowMs, timeZone, named } = input
   const options = { includeProbeOnly: state.includeProbeOnly }
   const scoring: Scoring = state.scoring
-  const ofKind = (card: ProjectedCard) => state.kind === "all" || card.kind === state.kind
-  const firstMs = input.cards.length ? Math.min(...input.cards.map((c) => c.startedAtMs)) : null
+  const ofKind = (card: PeriodItem) => state.kind === "all" || card.kind === state.kind
+  const firstMs = input.items.length ? Math.min(...input.items.map((c) => c.startedAtMs)) : null
   const range = resolveRange(state.choice, { nowMs, timeZone, named, firstMs })
   const other = compareRange(state.compare, range, { nowMs, timeZone, named })
   const within = (r: DateRange) =>
-    input.cards.filter((c) => inRange(c.startedAtMs, r) && ofKind(c)).sort(byStart)
+    input.items.filter((c) => inRange(c.startedAtMs, r) && ofKind(c)).sort(byStart)
   const cards = within(range)
   const inPeriod = new Set(cards.map((c) => c.id))
   const otherAll = other ? within(other) : null
   const otherCards = otherAll ? otherAll.filter((c) => !inPeriod.has(c.id)) : null
 
   const chartMetric = metricByKey(state.metric) as Readonly<MetricDefinition>
-  const values = projectedValues(cards, chartMetric, scoring, options)
+  const values = itemValues(cards, chartMetric, scoring, options)
   const trend = periodTrend(values)
-  const compareValues = otherCards
-    ? projectedValues(otherCards, chartMetric, scoring, options)
-    : null
+  const compareValues = otherCards ? itemValues(otherCards, chartMetric, scoring, options) : null
 
   const day = (ms: number) => formatIsoDate(new Date(ms), timeZone)
   const better = chartMetric.better
@@ -329,13 +329,13 @@ export function periodModel(input: {
   })
 
   // Scheiben der Familie in der Art der Seite, auch vor dem Zeitraum: für den Abstand zum Schnitt davor
-  const family = input.cards.filter(ofKind).sort(byStart)
-  const familyValues = projectedValues(family, chartMetric, scoring, options)
+  const family = input.items.filter(ofKind).sort(byStart)
+  const familyValues = itemValues(family, chartMetric, scoring, options)
   const deltas = deltasBefore(familyValues, inPeriod)
   // je Abend wie die Liste (vor 4 Uhr der Vortag), für Wochen und Kalender gleich
   const evening = (ms: number) => eveningDay(ms, timeZone)
   const volume = new Map(
-    projectedVolume(cards, (ms) => isoWeekKey(evening(ms)), evening).map((w) => [w.key, w])
+    itemVolume(cards, (ms) => isoWeekKey(evening(ms)), evening).map((w) => [w.key, w])
   )
   const calendar = calendarOf(range, nowMs, cards, family, timeZone)
   const weeks = weeksBetween(calendar.from, calendar.to).map(({ key }) => ({
@@ -346,8 +346,8 @@ export function periodModel(input: {
   const tiles: PeriodTile[] = PERIOD_TILE_KEYS.map((key) => {
     const base = metricByKey(key) as Readonly<MetricDefinition>
     const metric = inScoring(base, scoring)
-    const own = projectedValues(cards, base, scoring, options)
-    const theirs = otherCards ? projectedValues(otherCards, base, scoring, options) : null
+    const own = itemValues(cards, base, scoring, options)
+    const theirs = otherCards ? itemValues(otherCards, base, scoring, options) : null
     return {
       key,
       label: metricLabel(metric),
@@ -363,7 +363,7 @@ export function periodModel(input: {
   })
 
   const summaryMetric = metricByKey(SUMMARY_KEY) as MetricDefinition
-  const perShot = projectedValues(cards, summaryMetric, scoring, options)
+  const perShot = itemValues(cards, summaryMetric, scoring, options)
   // beste Scheibe nur unter gleicher Schusszahl: eine kurze Scheibe hat leichter einen hohen Ø (wie R1)
   const counts = new Map<number, number>()
   for (const value of perShot) counts.set(value.n, (counts.get(value.n) ?? 0) + 1)
@@ -395,8 +395,8 @@ export function periodModel(input: {
     const previousCards = within(previous).filter((c) => !ownIds.has(c.id))
     return {
       comparison: comparePeriods(
-        projectedValues(previousCards, summaryMetric, scoring, options),
-        projectedValues(ownCards, summaryMetric, scoring, options)
+        itemValues(previousCards, summaryMetric, scoring, options),
+        itemValues(ownCards, summaryMetric, scoring, options)
       ),
       label: previous.label,
       lastDays: all ? FORM_DAYS : null,
@@ -416,7 +416,7 @@ export function periodModel(input: {
     trend,
     compareValues,
     compareShared: otherAll ? otherAll.length - (otherCards?.length ?? 0) : 0,
-    excludedProbeOnly: state.includeProbeOnly ? 0 : cards.filter(isProbeOnly).length,
+    excludedProbeOnly: state.includeProbeOnly ? 0 : cards.filter((c) => c.probeOnly).length,
     comparison: tiles[0].compare?.comparison ?? null,
     form,
     view: other ? "cards" : (state.view ?? (values.length >= MONTH_VIEW_FROM ? "months" : "cards")),
@@ -425,7 +425,7 @@ export function periodModel(input: {
     weeks,
     calendar,
     newest: perShot.at(-1)?.id ?? null,
-    records: projectedRecords(input.cards, scoring, {
+    records: itemRecords(input.items, scoring, {
       kind: state.kind === "all" ? undefined : state.kind,
       includeProbeOnly: state.includeProbeOnly,
     }),
@@ -441,30 +441,23 @@ export function periodModel(input: {
 }
 
 /**
- * eine Scheibe für den Browser: nur die Felder von `ProjectedCard` (eine App reicht mehr herein, etwa Familie und Stand),
- * die Projektion ohne Werte und Rekorde (die Bausteine lesen Art und Schusszahl)
+ * ein Eintrag für den Browser: nur die Felder von `PeriodItem` (eine App reicht mehr herein), ohne Werte und Rekorde
+ * (die Bausteine lesen Art, „nur Probe“ und Schusszahl)
  */
-const lightCard = (card: ProjectedCard): ProjectedCard => ({
+const lightCard = (card: PeriodItem): PeriodItem => ({
   id: card.id,
   startedAtMs: card.startedAtMs,
   kind: card.kind,
-  complete: card.complete,
+  probeOnly: card.probeOnly,
+  shots: card.shots,
+  metrics: {},
+  records: { decimal: null, rings: null },
   flags: card.flags,
-  ...(card.official ? { official: card.official } : {}),
-  ...(card.scoring ? { scoring: card.scoring } : {}),
-  projection: {
-    version: card.projection.version,
-    probeOnly: card.projection.probeOnly,
-    suspicious: card.projection.suspicious,
-    printedShots: card.projection.printedShots,
-    values: {},
-    records: { decimal: null, rings: null },
-  },
 })
 
 /**
  * Das Modell für den Browser (Fortschritt in der App): Rechnet der Server `periodModel`, gehen die Scheiben ohne
- * die Werte und Rekorde ihrer Projektion mit. Die Bausteine (`PeriodChart`, `CardList`, `CardReadout`, `PeriodResult`,
+ * ihre Werte und Rekorde mit. Die Bausteine (`PeriodChart`, `CardList`, `CardReadout`, `PeriodResult`,
  * `PeriodInsights`) lesen von einer Scheibe nur Id, Beginn, Art, „nur Probe“ und Schusszahl; die Werte der Kennzahl
  * stehen in `values`. Ein Test hält fest, dass sie damit dasselbe zeichnen. Auf dem leichten Modell nicht neu rechnen.
  */

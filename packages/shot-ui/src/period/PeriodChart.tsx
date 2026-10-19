@@ -18,7 +18,7 @@ import {
 } from "../analysis/charts/ChartRuler"
 import { ChartSvg, crisp, niceStep } from "../analysis/charts/frame"
 import { formatSigned, formatValue, unitText } from "../format"
-import { isProbeOnly, type PeriodModel } from "./model"
+import type { PeriodModel } from "./model"
 
 const HEIGHT = 240
 const PAD = { left: 44, right: 14, top: 14, bottom: 26 }
@@ -334,7 +334,7 @@ export function PeriodChart({ width, model, timeZone, chosen, onChoose }: Period
             )}
             {pointsOf(values, atValue).map(([cx, cy], i) => {
               const card = kinds.get(values[i].id)
-              const probeOnly = card ? isProbeOnly(card) : false
+              const probeOnly = card?.probeOnly ?? false
               const competition = card?.kind === "competition"
               const picked = i === index
               return (

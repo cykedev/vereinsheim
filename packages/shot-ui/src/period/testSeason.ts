@@ -11,6 +11,8 @@ import {
 } from "@vereinsheim/shot-core/projection"
 
 import { DAY_MS } from "./calendar"
+import { fromProjection } from "./fromProjection"
+import type { PeriodItem } from "./item"
 
 /** „jetzt“ der Tests: 30. September 2026, 12:00 Uhr MESZ */
 export const NOW = Date.UTC(2026, 8, 30, 10)
@@ -41,6 +43,9 @@ export function periodCard(
 
 /** die Scheibe als Eingabe der Übersichten: Merkmale und Projektion (wie die App sie aus der Datenbank liest) */
 export const projected = (card: PeriodCard): ProjectedCard => projectCard(card)
+
+/** die Scheibe als Eingabe der Seite eines Zeitraums, wie Spiegel sie bildet (`fromProjection`) */
+export const item = (card: PeriodCard): PeriodItem => fromProjection(projectCard(card))
 
 /** die Lagen der kleinen Scheiben nach Id, wie die App sie zu den gezeigten Scheiben liest */
 export const marksOf = (cards: readonly PeriodCard[]): Map<string, MarkShot[]> =>

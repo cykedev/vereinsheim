@@ -1,7 +1,7 @@
 "use client"
 
 import type { CardValue, TrendPoint } from "@vereinsheim/shot-core/analysis"
-import type { MarkShot, ProjectedCard } from "@vereinsheim/shot-core/projection"
+import type { MarkShot } from "@vereinsheim/shot-core/projection"
 import type { TargetImage } from "@vereinsheim/shot-core/targets"
 import { formatDateOnly, formatShortDay } from "@vereinsheim/lib/format"
 import { cn } from "@vereinsheim/lib/utils"
@@ -13,10 +13,10 @@ import type { CardRoute } from "../nav/routes"
 import { HelpButton } from "../help/HelpButton"
 import { MiniTarget } from "../target/MiniTarget"
 import { KIND_TEXT } from "../list/KindMark"
-import { cardKind, isProbeOnly, type PeriodMetric } from "./model"
+import { itemKind, type PeriodItem, type PeriodMetric } from "./model"
 
 export interface CardReadoutProps {
-  card: ProjectedCard
+  card: PeriodItem
   /**
    * die Lagen der Scheibe für die kleine Scheibe (`markShots(cardMarks(…))`); leer: „ohne Lage“; null: sie laden noch
    * (die App holt sie zu einer neuen Wahl nach), ein leerer Platz gleicher Größe
@@ -48,7 +48,7 @@ const explainsDelta = (metric: PeriodMetric) =>
   metric.key === "result.decimalMean" || metric.key === "result.ringsMean"
 
 /** „Training“, „Wettkampf“, „Training nur Probe“ */
-export const cardKindText = (card: ProjectedCard) => KIND_TEXT[cardKind(card)]
+export const cardKindText = (card: PeriodItem) => KIND_TEXT[itemKind(card)]
 
 /** „+0,03 zum Schnitt der 5 Scheiben davor“, „… der Scheibe davor“ */
 export function deltaText(delta: { delta: number; n: number }, decimals: number): string {
@@ -101,7 +101,7 @@ export function CardReadout({
           <p className="text-muted-foreground">
             {value ? metric.label : `${metric.label}: ohne Wert`}
           </p>
-          <p>{`${card.projection.printedShots} Schuss${isProbeOnly(card) ? " (Probe als Training)" : ""}`}</p>
+          <p>{`${card.shots} Schuss${card.probeOnly ? " (Probe als Training)" : ""}`}</p>
           {value && (
             <div className="flex items-start justify-between gap-2">
               <p data-delta className="tabular-nums">

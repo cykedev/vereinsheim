@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest"
 import { periodModel } from "./model"
 import { PeriodChart } from "./PeriodChart"
 import { initialPeriodState, type PeriodState } from "./state"
-import { NOW, periodCard, projected, TZ } from "./testSeason"
+import { item, NOW, periodCard, TZ } from "./testSeason"
 
 const render = (
   cards: ReturnType<typeof periodCard>[],
@@ -16,7 +16,7 @@ const render = (
     createElement(PeriodChart, {
       width: 600,
       model: periodModel({
-        cards: cards.map(projected),
+        items: cards.map(item),
         state: { ...initialPeriodState({ family: "lg-10m" }), ...state },
         nowMs: NOW,
         timeZone: TZ,

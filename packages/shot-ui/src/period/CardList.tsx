@@ -1,7 +1,6 @@
 "use client"
 
 import type { CardValue } from "@vereinsheim/shot-core/analysis"
-import type { ProjectedCard } from "@vereinsheim/shot-core/projection"
 import { formatShortDate } from "@vereinsheim/lib/format"
 import { cn } from "@vereinsheim/lib/utils"
 import { useId, useMemo, useState } from "react"
@@ -10,11 +9,11 @@ import { formatSigned, formatValue } from "../format"
 import { RouteLink } from "../nav/RouteLink"
 import type { ListRoute } from "../nav/routes"
 import { KindMark } from "../list/KindMark"
-import { cardKind, type PeriodMetric } from "./model"
+import { itemKind, type PeriodItem, type PeriodMetric } from "./model"
 
 export interface CardListProps {
   /** Scheiben des Zeitraums in ihrer Folge (älteste zuerst) */
-  cards: readonly ProjectedCard[]
+  cards: readonly PeriodItem[]
   /** Werte der Kennzahl des Verlaufs */
   values: readonly CardValue[]
   /** Abstand zum Schnitt der Scheiben davor (`PeriodModel.deltas`) */
@@ -97,7 +96,7 @@ export function CardList({
             const date = formatShortDate(new Date(card.startedAtMs), timeZone)
             const choose = onChoose ? () => onChoose(card.id) : undefined
             // wie am Ausdruck: die Wertung, bei nur Probe die Probe
-            const count = card.projection.printedShots
+            const count = card.shots
             return (
               <tr
                 key={card.id}
@@ -127,7 +126,7 @@ export function CardList({
                   </button>
                 </td>
                 <td className="px-1 py-1.5 text-center text-muted-foreground">
-                  <KindMark kind={cardKind(card)} />
+                  <KindMark kind={itemKind(card)} />
                 </td>
                 <td className="px-2 py-1.5 text-right">
                   {value ? formatValue(value.value, metric.decimals) : "–"}

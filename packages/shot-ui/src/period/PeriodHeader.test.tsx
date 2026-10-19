@@ -8,7 +8,7 @@ import { PeriodControls, PeriodHeader } from "./PeriodHeader"
 import { choiceValid, filterSummary, namedSpan, PeriodPicker } from "./PeriodPicker"
 import { PeriodResult } from "./PeriodResult"
 import { initialPeriodState, type PeriodState } from "./state"
-import { NOW, periodCard, projected, TZ } from "./testSeason"
+import { item, NOW, periodCard, TZ } from "./testSeason"
 
 const NAMED: NamedPeriod[] = [
   { id: "lm", name: "Vorbereitung Landesmeisterschaft", from: "2026-05-01", to: "2026-06-30" },
@@ -191,7 +191,7 @@ describe("Filter und Kopf", () => {
 describe("Ergebnis-Box", () => {
   const model = (cards: ReturnType<typeof periodCard>[], partial: Partial<PeriodState> = {}) =>
     periodModel({
-      cards: cards.map(projected),
+      items: cards.map(item),
       state: state(partial),
       nowMs: NOW,
       timeZone: TZ,
