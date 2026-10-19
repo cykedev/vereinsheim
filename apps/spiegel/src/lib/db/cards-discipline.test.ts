@@ -272,5 +272,7 @@ describe("Nachrechnen gleich dem Adapter (alle eingefrorenen Fälle)", () => {
         if (adapted.has(shot.key))
           expect(shot.flags, `${card.scheibenId} ${shot.key}`).toEqual(adapted.get(shot.key))
     }
-  })
+    // spielt alle Fälle Lesung für Lesung ein (gut 50 Stapel mit Transaktion): allein etwa 1,5 s, im Gate neben den
+    // Builds aller Apps mehr als das Zeitlimit von 5 s
+  }, 20_000)
 })

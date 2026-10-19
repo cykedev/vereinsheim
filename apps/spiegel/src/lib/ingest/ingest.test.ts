@@ -604,7 +604,9 @@ describe("ingestBatch: jeder Block eine Scheibe (SF-03, SF-72)", () => {
         ).toEqual(expected.blocks ?? [expected.counted])
       }
     }
-  })
+    // jede der gut 50 Lesungen aller Fälle ist ein eigener Stapel mit Transaktion: allein etwa 1,5 s, im Gate neben den
+    // Builds aller Apps mehr als das Zeitlimit von 5 s
+  }, 20_000)
 
   it("SF-72: der alte Block geht nicht verloren, wenn sein letzter Stand und der erste neue im selben Stapel kommen", async () => {
     const expected = frozenExpected("SF-72").cards[0]
