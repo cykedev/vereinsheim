@@ -52,9 +52,12 @@ export const scoringOf = (scoringType: string): Scoring =>
 const keyIn = (key: string, scoring: Scoring) =>
   inScoring(metricByKey(key) as MetricDefinition, scoring).key
 
-/** ein Wert auf das Raster der Wertung (Zehntel oder ganze Ringe), damit Summen aus Gleitkommazahlen exakt bleiben */
-const onGrid = (value: number, scoring: Scoring) =>
-  scoring === "decimal" ? Math.round(value * 10) / 10 : Math.round(value)
+/**
+ * eine Summe auf Zehntel, das Raster der gespeicherten Ergebnisse, damit Summen aus Gleitkommazahlen exakt bleiben. Auch
+ * in ganzen Ringen nicht auf ganze: Ohne Einzelschüsse gilt das eingetragene Ergebnis, und einzelne Serien solcher
+ * Disziplinen tragen ein Zehntel
+ */
+const onTenths = (value: number) => Math.round(value * 10) / 10
 
 /** die Lage als Kennzahl: der Schwerpunkt-Abstand (L2) aus dem Ausdruck, für Kachel und Verlauf „Lage“ */
 const LOCATION_KEY = "group.mpiDistance"
@@ -153,10 +156,7 @@ export function periodItem(session: SessionForPeriod): SessionItem | null {
     0
   )
   const location = locationMetric(base.location, n)
-  const total = onGrid(
-    series.reduce((sum, s) => sum + (s.scoreTotal as number), 0),
-    scoring
-  )
+  const total = onTenths(series.reduce((sum, s) => sum + (s.scoreTotal as number), 0))
   return {
     ...base,
     shots: n,

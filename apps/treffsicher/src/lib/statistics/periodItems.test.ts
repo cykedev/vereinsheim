@@ -102,6 +102,17 @@ describe("eine Einheit als Eintrag der Seite eines Zeitraums", () => {
     expect(item.shots).toBe(20)
   })
 
+  it("ganze Ringe ohne Einzelschüsse: das eingetragene Ergebnis gilt, auch mit Zehntel", () => {
+    const item = periodItem(
+      session("zehntel", 2, [{ total: 94.5 }, { total: 95.6 }, { total: 96 }], {
+        discipline: WHOLE,
+      })
+    )!
+    expect(item.scoring).toBe("rings")
+    expect(item.metrics["result.rings"]).toEqual({ value: 286.1, n: 30 })
+    expect(item.metrics["result.ringsMean"]?.value).toBeCloseTo(286.1 / 30, 10)
+  })
+
   it("leere Serien zählen nicht", () => {
     const empty = {
       ...MIXED,
