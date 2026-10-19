@@ -258,3 +258,191 @@ und für Screenreader) der Grund.
 | Admin, „Letzte Session-Änderung“ ohne Datum  | „—“                       | „–“ noch keine Einheit        |
 
 Dazu heißt „Letzte Session-Änderung“ in der Liste der Konten neu **„Letzte Änderung an einer Einheit“**.
+
+---
+
+## Treffsicher: Statistik als Seite eines Zeitraums (G4–G8)
+
+**Status: Entwurf, wartet auf Freigabe**
+
+Die Statistik wird die Seite eines Zeitraums aus Spiegel (Fortschritt). Die Bausteine kommen aus `shot-ui`. Neu sind
+nur die Wörter für Treffsicher, die beiden Reiter „Einflüsse“ und „Selbstbild“ und die Erklärungen hinter dem „?“.
+
+### Wörter auf der Seite
+
+Spiegel sagt „Scheibe“, Treffsicher sagt **„Einheit“**. Beide Wörter sind weiblich, die Sätze bleiben sonst gleich.
+
+| Ort                          | Spiegel                                                   | Treffsicher                                                              |
+| ---------------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------ |
+| Titel der Seite (Navigation) | Fortschritt                                               | Statistik                                                                |
+| Kopfzeile                    | {LG 40} · {12} Scheiben · {Tage}                          | {Luftgewehr} · {12} Einheiten · {Tage}                                   |
+| Ablesung                     | Neueste Scheibe · Gewählte Scheibe · Scheibe öffnen       | Neueste Einheit · Gewählte Einheit · Einheit öffnen                      |
+| Ablesung, erste              | erste Scheibe, kein Schnitt davor                         | erste Einheit, kein Schnitt davor                                        |
+| Abstand                      | +0,03 zum Schnitt der 5 Scheiben davor                    | +0,03 zum Schnitt der 5 Einheiten davor                                  |
+| Abschnitt                    | Scheiben                                                  | Einheiten                                                                |
+| Liste                        | Keine Scheibe im Zeitraum. · Scheibe vom {Datum} wählen   | Keine Einheit im Zeitraum. · Einheit vom {Datum} wählen                  |
+| Liste, Ende                  | Alle in Scheiben zeigen                                   | entfällt (das Tagebuch filtert nicht nach Zeitraum)                      |
+| Kacheln                      | Mittel je Scheibe · keine Scheibe mit Wert                | Mittel je Einheit · keine Einheit mit Wert                               |
+| Ergebnis-Box                 | {12} Scheiben · {480} Wertungsschüsse · beste Scheibe zu 40 Schuss | {12} Einheiten · {480} Wertungsschüsse · beste Einheit zu 40 Schuss |
+| Vergleich                    | zu wenige Scheiben                                        | zu wenige Einheiten                                                      |
+| Verlauf                      | je Scheibe · Für einen Verlauf braucht es zwei Scheiben mit Wert. | je Einheit · Für einen Verlauf braucht es zwei Einheiten mit Wert. |
+| Umfang                       | {140} Schuss, {3} Scheiben, {2} Tage                      | {140} Schuss, {3} Einheiten, {2} Tage                                    |
+| Rekorde                      | Scheibe zu 40 Schuss · Beste Form (Ø über 5 Scheiben)     | Einheit zu 40 Schuss · Beste Form (Ø über 5 Einheiten)                   |
+| Analyse                      | Analyse über die Scheiben                                 | Analyse über die Einheiten                                               |
+| Leerer Zeitraum              | Keine Scheibe in diesem Zeitraum. Wähle oben einen längeren Zeitraum oder eine andere Art. | Keine Einheit in diesem Zeitraum. Wähle oben einen längeren Zeitraum oder eine andere Art. |
+
+Abweichend von Spiegel:
+
+- **Kein Rekord:** „Noch kein Rekord: Es zählen nur abgeschlossene, vollständige Scheiben.“ → „Noch kein Rekord. Es
+  zählen nur Einheiten mit Einzelschüssen in jeder Serie.“
+- **Noch nichts da** (keine Einheit mit Disziplin und Ergebnis): „Noch keine Einheit mit Ergebnis. Trag eine Einheit
+  mit Disziplin und Serien ein. Dann steht hier dein Verlauf.“
+- **Kennzahlen im Verlauf:** Ø je Schuss · Zehner · Lage. Streuung und Tempo gibt es nicht, denn Treffsicher kennt
+  weder die Lage jedes Schusses noch die Zeit.
+- **Kacheln:** Ø je Schuss · Zehnerquote · Schwerpunkt-Abstand (aus der Trefferlage des Ausdrucks, in mm).
+- **Wertung:** Nur bei Disziplinen in Zehnteln steht der Umschalter „In Zehnteln“ / „In ganzen Ringen“.
+- **Blatt „Filter“:** ohne „Trainings nur aus Probe mitzählen“. In Treffsicher zählt Probe nie.
+- **Umfang:** nur „Umfang je Woche“, ohne Kalender. Im Kalender führt in Spiegel jeder Tag zur Liste an diesem Abend.
+  Das Tagebuch kennt diesen Filter nicht.
+
+### Reiter der Analyse
+
+Unter „Was der Zeitraum zeigt“ stehen drei Reiter: **Rekorde · Einflüsse · Selbstbild**.
+
+### Einflüsse (neu)
+
+Ort: Statistik, Reiter „Einflüsse“. Eine Karte je Merkmal, in dieser Reihenfolge: Schlaf, Energie, Stress, Motivation,
+Ausführung.
+
+- **Unterzeile:** Ø je Schuss an Tagen mit hohem gegen niedrigen Wert, im gewählten Zeitraum.
+- **Zwei Zeilen je Karte**, je mit Ø je Schuss und Zahl der Einheiten:
+
+  | Merkmal    | hoch               | niedrig              |
+  | ---------- | ------------------ | -------------------- |
+  | Schlaf     | Guter Schlaf       | Schlechter Schlaf    |
+  | Energie    | Viel Energie       | Wenig Energie        |
+  | Stress     | Viel Stress        | Wenig Stress         |
+  | Motivation | Hohe Motivation    | Niedrige Motivation  |
+  | Ausführung | Gute Ausführung    | Schwache Ausführung  |
+
+  Beispiel: „Guter Schlaf · 9,21 · 8 Einheiten“ und „Schlechter Schlaf · 9,05 · 7 Einheiten“.
+- **Urteil darunter**, in denselben Worten wie der Vergleich zweier Zeiträume, immer vom hohen Wert aus gesehen:
+  - „Guter Schlaf: deutlich besser“ · „Viel Stress: schwächer“
+  - „Kein klarer Unterschied“
+  - „Zu wenige Einheiten. Für ein Urteil braucht es auf jeder Seite 5. Wähle oben einen längeren Zeitraum.“
+- **Ohne Werte:** „Im Zeitraum hast du kein Befinden eingetragen.“ · „Im Zeitraum hast du keine Serie bewertet.“
+
+### Selbstbild (neu)
+
+Ort: Statistik, Reiter „Selbstbild“. Eine Zeile je Bereich: Kondition, Ernährung, Technik, Taktik, Mentale Stärke,
+Umfeld, Material.
+
+- **Unterzeile:** Prognose vor und Feedback nach der Einheit, im Mittel über {4} Einheiten.
+- **Je Zeile:** der Bereich, zwei Balken von 0 bis 100 (Prognose leise, Feedback in der Farbe der App), dazu die Zahlen
+  „Prognose {62} · Feedback {70} · Abstand +8“.
+- **Kein Urteil.** Dafür sind es zu wenige Einheiten.
+- **Ohne Werte:** „Im Zeitraum gibt es keine Einheit mit Prognose und Feedback.“
+
+### Erklärungen hinter dem „?“
+
+**Frage an dich:** Der Plan sagt „gleiche Texte wie Spiegel“. Spiegels Texte sprechen aber von Scheiben, vom Kalender,
+von „Trainings nur aus Probe“, von Streuung und Ellipse. Das stimmt in Treffsicher nicht. Vorschlag: eigene Fassungen
+für Treffsicher, aus Spiegels Wortlaut gekürzt. Spiegel bleibt unverändert.
+
+#### Ø je Schuss (Kachel, Verlauf)
+
+- **Kurz:** Der Durchschnitt deiner Wertungsschüsse je Schuss.
+- **Was es ist:** Die Summe deiner Wertungsserien geteilt durch die Zahl der Wertungsschüsse. Probe zählt nicht mit.
+  Hast du keine Einzelschüsse eingetragen, zählt je Serie die Schusszahl der Disziplin.
+- **So liest du es:** Der Ø je Schuss vergleicht Einheiten mit verschiedener Schusszahl fair. In Disziplinen mit
+  Zehnteln schaltest du oben zwischen Zehnteln und ganzen Ringen um.
+- **Vorsicht:** In ganzen Ringen zählen nur Einheiten mit Einzelschüssen. Aus einer Serie in Zehnteln lassen sich die
+  ganzen Ringe nicht ablesen.
+
+#### Zehnerquote (Kachel, Verlauf)
+
+- **Kurz:** Wie viele deiner Wertungsschüsse eine Zehn sind.
+- **Was es ist:** Der Anteil der Zehner an deinen Wertungsschüssen. Es zählen nur Einheiten mit Einzelschüssen.
+- **So liest du es:** 25 % heißt: jeder vierte Schuss eine Zehn.
+- **Vorsicht:** Bei wenigen Schüssen schwankt die Quote stark. Ein Abend mit 20 Schuss sagt wenig.
+
+#### Schwerpunkt-Abstand (Kachel, Verlauf „Lage“)
+
+- **Kurz:** Wie weit die Mitte deiner Treffer von der Mitte der Scheibe liegt.
+- **Was es ist:** Die Trefferlage vom Ausdruck, waagrecht und senkrecht in mm, als ein Abstand zur Mitte.
+- **So liest du es:** 0,5 mm heißt: Deine Treffer liegen im Mittel einen halben Millimeter neben der Mitte. Kleiner ist
+  besser.
+- **Was du tun kannst:** Bleibt der Abstand über mehrere Einheiten groß und in derselben Richtung, lohnt ein Blick auf
+  die Visierung.
+- **Vorsicht:** Es zählen nur Einheiten, bei denen du die Trefferlage eingetragen hast.
+
+#### Verlauf und Form
+
+- **Kurz:** Wie sich eine Zahl von Einheit zu Einheit entwickelt, mit deiner typischen Schwankung.
+- **Was es ist:** Jeder Punkt ist eine Einheit. Die Linie ist der Schnitt der letzten fünf Einheiten. Sie ist
+  gestrichelt, solange es noch keine fünf sind. Das Formband um die Linie zeigt, wie weit deine Einheiten üblicherweise
+  um diesen Schnitt schwanken. Je Monat zeigt die Statistik dazu Boden und Decke: den Wert an einem schwachen Tag, den
+  mittleren und den an einem guten Tag.
+- **So liest du es:** Liegt eine Einheit im Band, war sie für deine Form normal. Etwa zwei von drei Einheiten liegen
+  darin. Wird dein Boden über die Monate besser, werden deine schwachen Tage besser.
+- **Vorsicht:** Eine einzelne Einheit außerhalb des Bands ist noch kein Formknick.
+- **Mindestzahl:** Ab 1 Einheit. Das Formband ab 10 Einheiten, Boden und Decke ab 5 Einheiten im Monat.
+
+#### Trainingsumfang
+
+- **Kurz:** Wie viel du trainierst: Schüsse, Einheiten und Tage je Woche.
+- **Was es ist:** Je Woche die Zahl deiner Wertungsschüsse, deiner Einheiten und der Tage mit Training. Auch Wochen ohne
+  Training stehen da.
+- **So liest du es:** Der Umfang sagt nichts über die Güte. Leg ihn neben den Verlauf. Liegen deine Einheiten in Wochen
+  mit sehr vielen Schüssen öfter unter dem Formband, kann das Ermüdung sein.
+
+#### Zwei Zeiträume im Vergleich
+
+- **Kurz:** Ob sich eine Zahl zwischen zwei Zeiträumen wirklich verändert hat.
+- **Was es ist:** Die Statistik vergleicht die Werte deiner Einheiten aus zwei Zeiträumen. Jede Einheit zählt einmal,
+  egal wie viele Schüsse sie hat.
+- **So liest du es:** Steht „besser“ oder „schwächer“, entstünde so ein Unterschied durch Zufall allein in höchstens 5
+  von 100 Vergleichen. Steht „kein klarer Unterschied“, heißt das nicht „gleich geblieben“. Die Einheiten reichen nur
+  nicht, es zu zeigen. „Deutlich“ heißt: Der Unterschied ist groß genug, um im Training etwas auszumachen.
+- **Vorsicht:** Unter 5 Einheiten je Seite gibt es kein Urteil.
+
+#### Abstand zum Schnitt davor
+
+- **Kurz:** Wie deine Einheit zum Schnitt deiner fünf Einheiten davor passt.
+- **Was es ist:** Der Unterschied zwischen dem Ø je Schuss einer Einheit und dem Schnitt deiner bis zu fünf Einheiten
+  davor in derselben Disziplin. Die Einheit selbst zählt nicht mit.
+- **So liest du es:** +0,12 heißt: 0,12 Ringe je Schuss über dem Schnitt der Einheiten davor.
+- **Vorsicht:** Ein Abstand, der in deinem Formband bleibt, ist normal.
+
+#### Rekorde
+
+- **Kurz:** Deine Bestwerte über alle Einheiten, die zählen.
+- **Was es ist:** Bestes Ergebnis, beste Serie, meiste Zehner auf einer Einheit und in einer Serie, längste Folge von
+  Zehnern, längste Folge ohne Schuss unter 9, dein bester schwächster Schuss, die kleinste Spanne zwischen bester und
+  schwächster Serie und deine beste Form über fünf Einheiten in Folge. In Zehnteln dazu die meisten 10,9. Ergebnisse
+  gelten je Schusszahl der Einheit, Serien je Serienlänge.
+- **So liest du es:** Bei Gleichstand bleibt der frühere Rekord. Rekorde gelten über alle deine Einheiten der
+  Disziplin, nicht nur über den Zeitraum.
+- **Vorsicht:** Es zählen nur Einheiten mit Einzelschüssen in jeder Wertungsserie.
+
+#### Einflüsse (neu)
+
+- **Kurz:** Ob du an Tagen mit gutem Befinden oder guter Ausführung anders schießt.
+- **Was es ist:** Für jedes Merkmal teilt die Statistik deine Einheiten im Zeitraum in zwei Gruppen: über deinem
+  mittleren Wert und darunter. Einheiten genau auf dem mittleren Wert zählen nicht mit. Dann vergleicht sie den Ø je
+  Schuss der beiden Gruppen, so wie zwei Zeiträume. Bei der Ausführung zählt das Mittel deiner bewerteten
+  Wertungsserien.
+- **So liest du es:** „Guter Schlaf: deutlich besser“ heißt: Nach gutem Schlaf liegt dein Ø je Schuss klar höher.
+  „Kein klarer Unterschied“ heißt nicht, dass es keinen gibt. Die Einheiten reichen nur nicht, es zu zeigen.
+- **Was du tun kannst:** Trag das Befinden vor jeder Einheit ein. Erst mit vielen Einheiten zeigt sich ein Muster.
+- **Vorsicht:** Ein Zusammenhang ist noch kein Grund. Wer müde ist, trainiert vielleicht auch anders.
+- **Mindestzahl:** Ein Urteil ab 5 Einheiten je Gruppe.
+
+#### Selbstbild (neu)
+
+- **Kurz:** Wie du dich vor der Einheit einschätzt und wie es danach war, im Mittel über den Zeitraum.
+- **Was es ist:** Je Bereich das Mittel deiner Prognose vor der Einheit und deines Feedbacks danach. Der Abstand ist
+  Feedback minus Prognose.
+- **So liest du es:** Plus heißt: besser als gedacht. Minus heißt: schlechter als gedacht. Ist ein Bereich oft im
+  Minus, schätzt du ihn vorher zu gut ein.
+- **Vorsicht:** Beide Werte sind deine eigene Einschätzung. Ein Urteil gibt es nicht, dafür sind es zu wenige Einheiten.
