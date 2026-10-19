@@ -193,6 +193,60 @@ export async function statisticsFlow(
     self.rows === 7 ? self.text.includes("Abstand") : self.text.includes("keine Einheit"),
     self
   )
+
+  await rememberFlow(page, base, check)
+}
+
+/**
+ * Gemerkt wie in Spiegel: Der im Blatt „Filter“ übernommene Zeitraum gilt beim nächsten Öffnen ohne Abfrage, ein Link
+ * mit Zeitraum wie verlangt; die Wertung gilt je Disziplin; „Statistik“ in der Navigation führt zur letzten Adresse.
+ * Am Ende vergessen, damit die übrigen Prüfungen die Vorgaben sehen.
+ */
+async function rememberFlow(page: Page, base: string, check: CheckFn) {
+  await page.viewport(1280, 900)
+  await page.goto(`${base}/statistics`, '$("[data-period-header]")')
+  const picker = `$("[data-period-picker]").closest("dialog")`
+  await page.click(`$("[data-period-chip]")`, { settle: 300 })
+  await page.click(`$$("[data-period-picker] label").find((l) => txt(l).startsWith("Letzte 6"))`)
+  await page.click(`button("Übernehmen", ${picker})`, { settle: 300 })
+  await page.waitFor(`location.search.includes("range=6m")`, 10_000)
+  const chip = `txt($$("[data-period-chip]").filter(visible)[0])`
+  await page.goto(`${base}/statistics`, '$("[data-period-header]")')
+  const remembered = await page.ev<string>(chip)
+  await page.goto(`${base}/statistics?range=all`, '$("[data-period-header]")')
+  const explicit = await page.ev<string>(chip)
+  check(
+    "Gemerkt: der übernommene Zeitraum gilt beim nächsten Öffnen, ein Link mit Zeitraum wie verlangt",
+    remembered.startsWith("Letzte 6 Monate") && explicit.startsWith("Alles"),
+    { remembered, explicit }
+  )
+
+  const scoring = `$$("[data-scoring-chip]").filter(visible)[0]?.dataset.scoring ?? ""`
+  const before = await page.ev<string>(scoring)
+  await page.click(`$$("[data-scoring-chip]").filter(visible)[0]`, { settle: 300 })
+  await page.waitFor(`(${scoring}) !== ${JSON.stringify(before)}`, 10_000)
+  await page.wait(800)
+  await page.goto(`${base}/statistics`, '$("[data-period-header]")')
+  const after = await page.ev<string>(scoring)
+  check(
+    "Gemerkt: die Wertung der Disziplin gilt beim nächsten Öffnen",
+    before === "decimal" && after === "rings",
+    { before, after }
+  )
+
+  await page.goto(`${base}/statistics?range=30d`, '$("[data-period-header]")')
+  await page.click(`$('[data-app-sidebar] [data-area="sessions"]')`, { settle: 300 })
+  await page.waitFor(`location.pathname === "/sessions"`, 10_000)
+  await page.click(`$('[data-app-sidebar] [data-area="statistics"]')`, { settle: 300 })
+  await page.waitFor(`location.pathname === "/statistics"`, 10_000)
+  const back = await page.ev<string>(`location.search`)
+  check(
+    "Navigation: „Statistik“ führt zur zuletzt gesehenen Adresse zurück",
+    back.includes("range=30d"),
+    back
+  )
+  await page.ev(`document.cookie = "treffsicher-period=; path=/; max-age=0"`)
+  await page.ev(`document.cookie = "treffsicher-scoring=; path=/; max-age=0"`)
 }
 
 /** Bildschirmfotos der Statistik bei 390 und 1280 px in Hell und Dunkel, als PNG in `dir` */

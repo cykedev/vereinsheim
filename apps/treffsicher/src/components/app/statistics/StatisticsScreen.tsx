@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useCallback, useEffect, useMemo, useState, useTransition } from "react"
 
+import type { Scoring } from "@vereinsheim/shot-core/metrics"
 import { ScoringChip } from "@vereinsheim/shot-ui/controls/ScoringChip"
 import { HelpTextsProvider } from "@vereinsheim/shot-ui/help/HelpTexts"
 import { PeriodPage } from "@vereinsheim/shot-ui/layout/PeriodPage"
@@ -28,7 +29,8 @@ import { countOf } from "@vereinsheim/shot-ui/period/words"
 import { useHelp } from "@vereinsheim/ui/design2/help-sheet"
 
 import { helpHeading } from "@/lib/help/topics"
-import { statisticsUrl, statisticsUrlAfter, type DisciplineOption } from "@/lib/statistics/page"
+import { rememberPeriod, rememberScoring } from "@/lib/statistics/memory-client"
+import { statisticsUrl, type DisciplineOption } from "@/lib/statistics/page"
 import { SESSION_WORDS, STATISTICS_SECTIONS } from "@/lib/statistics/words"
 
 import type { StatisticsAnalysisData } from "./StatisticsAnalysis"
@@ -79,10 +81,13 @@ export function StatisticsScreen({
   })
   const [seen, setSeen] = useState(state)
   const [dirty, setDirty] = useState(false)
+  // die eben umgestellte Wertung, bis der Server neu gerechnet hat
+  const [shownScoring, setShownScoring] = useState<Scoring | null>(null)
   if (seen !== state) {
     setSeen(state)
     setChosen(state.chosen)
     setDirty(false)
+    setShownScoring(null)
   }
   const current: PeriodState = useMemo(() => ({ ...state, chosen }), [state, chosen])
   const model = useMemo(() => ({ ...base, reading: periodReading(base, chosen) }), [base, chosen])
@@ -95,15 +100,22 @@ export function StatisticsScreen({
         setDirty(true)
         return
       }
-      startTransition(() =>
-        router.push(statisticsUrlAfter(next, action, options), { scroll: false })
-      )
+      if (action.type === "setScoring") {
+        // die Wertung gehört zur Disziplin: auf dem Gerät gemerkt, der Server rechnet neu (ohne zu scrollen)
+        rememberScoring(current.family, action.scoring)
+        setShownScoring(action.scoring)
+        startTransition(() => router.refresh())
+        return
+      }
+      // ein übernommener Zeitraum gilt auch beim nächsten Öffnen, nie das bloße Öffnen
+      if (action.type === "setFilters" || action.type === "setChoice") rememberPeriod(next.choice)
+      startTransition(() => router.push(statisticsUrl(next), { scroll: false }))
     },
-    [current, options, router]
+    [current, router]
   )
 
   // die Wahl in die Adresse, erst wenn sie ruht und keine Navigation läuft
-  const address = useMemo(() => statisticsUrl(current, switchable), [current, switchable])
+  const address = useMemo(() => statisticsUrl(current), [current])
   useEffect(() => {
     if (!dirty || pending) return
     const timer = setTimeout(() => {
@@ -147,7 +159,7 @@ export function StatisticsScreen({
                   actions={
                     switchable && (
                       <ScoringChip
-                        scoring={state.scoring}
+                        scoring={shownScoring ?? state.scoring}
                         texts={{ rings: "In ganzen Ringen", decimal: "In Zehnteln" }}
                         label="Wertung"
                         onChange={(scoring) => dispatch({ type: "setScoring", scoring })}

@@ -2,17 +2,21 @@ import { createElement as h } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it, vi } from "vitest"
 
-const nav = vi.hoisted(() => ({ pathname: "/sessions" }))
-vi.mock("next/navigation", () => ({ usePathname: () => nav.pathname }))
+const nav = vi.hoisted(() => ({ pathname: "/sessions", search: "" }))
+vi.mock("next/navigation", () => ({
+  usePathname: () => nav.pathname,
+  useSearchParams: () => new URLSearchParams(nav.search),
+}))
 vi.mock("next/link", () => ({
   default: ({ href, ...props }: { href: string } & Record<string, unknown>) =>
     h("a", { href, ...props }),
 }))
 
-const { AppShell } = await import("./AppShell")
+const { AppShell, statisticsMemory } = await import("./AppShell")
 
-const render = (isAdmin: boolean, pathname = "/sessions") => {
+const render = (isAdmin: boolean, pathname = "/sessions", search = "") => {
   nav.pathname = pathname
+  nav.search = search
   return renderToStaticMarkup(h(AppShell, { isAdmin, children: h("p", null, "Inhalt") }))
 }
 
@@ -62,5 +66,12 @@ describe("AppShell", () => {
     expect(html).toMatch(/data-area="goals" aria-current="page"/)
     const bar = html.slice(html.indexOf("data-app-bar"))
     expect(bar).toMatch(/data-area="profile" aria-current="page"/)
+  })
+
+  it("„Statistik“ führt zur zuletzt gesehenen Adresse der Statistik, ohne die gewählte Einheit", () => {
+    expect(render(false)).toMatch(/<a href="\/statistics" data-area="statistics"/)
+    const html = render(false, "/statistics", "range=6m&family=lg&pick=abc")
+    expect(html).toMatch(/<a href="\/statistics\?range=6m&amp;family=lg" data-area="statistics"/)
+    expect(statisticsMemory(new URLSearchParams("pick=abc"))).toBe("/statistics")
   })
 })

@@ -274,7 +274,9 @@ Die Statistik ist die Seite eines Zeitraums aus Spiegel ([[spiegel-langzeit]], [
   Vergleich mit dem Zeitraum davor; Art Training, Wettkampf oder beides.
 - **Disziplin Pflicht:** Die Seite zeigt immer genau eine Disziplin, nie gemischte. Ohne Wahl die zuletzt geschossene,
   ausgeblendete Disziplinen nur, wenn es keine andere gibt.
-- Der Zustand steht in der Adresse (`/statistics?range=6m&family=<Disziplin>&…`, Schlüssel wie in Spiegel).
+- Der Zustand steht in der Adresse (`/statistics?range=6m&family=<Disziplin>&…`, Schlüssel wie in Spiegel). Wie in
+  Spiegel gemerkt: der übernommene Zeitraum (gilt beim nächsten Öffnen ohne eigene Abfrage), die Wertung je Disziplin
+  und die letzte Adresse der Statistik für die Navigation.
 
 ### Ø je Schuss
 

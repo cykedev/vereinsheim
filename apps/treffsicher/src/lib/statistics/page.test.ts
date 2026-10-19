@@ -5,7 +5,6 @@ import {
   statisticsPage,
   statisticsState,
   statisticsUrl,
-  statisticsUrlAfter,
   STATISTICS_TILES,
 } from "@/lib/statistics/page"
 import type { StatisticsSession } from "@/lib/statistics/sessions"
@@ -96,11 +95,15 @@ describe("Zustand der Statistik aus der Adresse", () => {
     expect(state.includeProbeOnly).toBe(true)
   })
 
-  it("ganze Ringe nur in Zehntel-Disziplinen wählbar, sonst immer", () => {
-    const tenth = (q: string) => statisticsState(new URLSearchParams(q), options)!.state.scoring
-    expect(tenth("family=lg")).toBe("decimal")
-    expect(tenth("family=lg&scoring=rings")).toBe("rings")
-    expect(tenth("family=kk")).toBe("rings")
+  it("ganze Ringe nur in Zehntel-Disziplinen wählbar, gemerkt je Disziplin, sonst immer", () => {
+    const scoring = (q: string, scorings: Record<string, "rings" | "decimal"> = {}) =>
+      statisticsState(new URLSearchParams(q), options, { choice: null, scorings })!.state.scoring
+    expect(scoring("family=lg")).toBe("decimal")
+    // die gemerkte Wertung der Disziplin gilt, eine Wertung in der Adresse nicht (wie in Spiegel)
+    expect(scoring("family=lg", { lg: "rings" })).toBe("rings")
+    expect(scoring("family=lg&scoring=rings")).toBe("decimal")
+    // je Disziplin: die gemerkte von Luftgewehr gilt nicht für eine andere
+    expect(scoring("family=kk", { lg: "decimal" })).toBe("rings")
   })
 
   it("Kennzahlen ohne Wert in Treffsicher (Streuung, Tempo) fallen auf den Ø je Schuss zurück", () => {
@@ -111,42 +114,29 @@ describe("Zustand der Statistik aus der Adresse", () => {
     expect(metric("metric=tens")).toBe("result.tensRate")
   })
 
-  it("die Adresse hin und zurück; die Wertung nur, wo sie wählbar ist", () => {
+  it("die Adresse hin und zurück, ohne Wertung", () => {
+    const memory = { choice: null, scorings: { lg: "rings" as const } }
     const { state } = statisticsState(
-      new URLSearchParams("family=lg&scoring=rings&range=6m&metric=location"),
-      options
+      new URLSearchParams("family=lg&range=6m&metric=location"),
+      options,
+      memory
     )!
-    const url = statisticsUrl(state, true)
-    expect(url).toBe("/statistics?range=6m&family=lg&scoring=rings&metric=location")
-    const back = statisticsState(new URLSearchParams(url.split("?")[1]), options)!.state
+    const url = statisticsUrl(state)
+    expect(url).toBe("/statistics?range=6m&family=lg&metric=location")
+    const back = statisticsState(new URLSearchParams(url.split("?")[1]), options, memory)!.state
     expect(back).toEqual(state)
-    const kk = statisticsState(new URLSearchParams("family=kk"), options)!.state
-    expect(statisticsUrl(kk, false)).toBe("/statistics?family=kk")
-  })
-})
-
-describe("Adresse nach einer Aktion", () => {
-  const options = disciplineOptions(SESSIONS, [])
-
-  it("eine andere Disziplin öffnet in ihrer Vorgabe, nicht in den ganzen Ringen der vorigen", () => {
-    const { state } = statisticsState(new URLSearchParams("family=kk&range=6m"), options)!
-    expect(state.scoring).toBe("rings")
-    const next = { ...state, family: "lg" }
-    const url = statisticsUrlAfter(next, { type: "setFamily", family: "lg" }, options)
-    expect(url).toBe("/statistics?range=6m&family=lg")
-    expect(statisticsState(new URLSearchParams(url.split("?")[1]), options)!.state.scoring).toBe(
-      "decimal"
-    )
   })
 
-  it("andere Aktionen behalten die gewählte Wertung", () => {
-    const { state } = statisticsState(new URLSearchParams("family=lg&scoring=rings"), options)!
-    const url = statisticsUrlAfter(
-      { ...state, metric: "result.tensRate" },
-      { type: "setMetric", metric: "result.tensRate" },
-      options
-    )
-    expect(url).toBe("/statistics?family=lg&scoring=rings&metric=tens")
+  it("ohne eigene Abfrage gilt der gemerkte Zeitraum, mit eigener die Adresse", () => {
+    const memory = { choice: { type: "rolling" as const, days: 182 as const }, scorings: {} }
+    const choice = (q: string) =>
+      statisticsState(new URLSearchParams(q), options, memory)!.state.choice
+    expect(choice("")).toEqual({ type: "rolling", days: 182 })
+    // die Disziplin zählt nicht als eigene Abfrage
+    expect(choice("family=lg")).toEqual({ type: "rolling", days: 182 })
+    expect(choice("range=all")).toEqual({ type: "all" })
+    expect(choice("family=lg&kind=training").type).toBe("rolling")
+    expect(choice("family=lg&kind=training")).toEqual({ type: "rolling", days: 90 })
   })
 })
 

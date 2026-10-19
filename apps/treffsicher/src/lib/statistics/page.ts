@@ -10,13 +10,15 @@ import {
 } from "@vereinsheim/shot-ui/nav/routes"
 import { itemValues } from "@vereinsheim/shot-ui/period/item"
 import { lightPeriodModel, periodModel, type PeriodModel } from "@vereinsheim/shot-ui/period/model"
-import type { PeriodAction, PeriodMetricKey, PeriodState } from "@vereinsheim/shot-ui/period/state"
+import type { PeriodChoice } from "@vereinsheim/shot-ui/period/calendar"
+import type { PeriodMetricKey, PeriodState } from "@vereinsheim/shot-ui/period/state"
 
 import type { RingDistribution } from "@vereinsheim/shot-core/analysis"
 
 import { periodRingDistribution } from "@/lib/sessions/ringDistribution"
 import { influences, sessionQuality, type Influence } from "@/lib/statistics/influences"
 import { locationSummary, type LocationSummary } from "@/lib/statistics/location"
+import { withRememberedChoice } from "@/lib/statistics/memory"
 import { aggregateOverview, type OverviewTableGroup } from "@/lib/statistics/overview"
 import { periodItems, scoringOf } from "@/lib/statistics/periodItems"
 import { selfImage, type SelfImage } from "@/lib/statistics/selfImage"
@@ -67,40 +69,48 @@ export function disciplineOptions(
   return shown.length ? shown : all
 }
 
-/** die Adresse der Statistik zu einem Zustand: Vorgaben fallen weg, ganze Ringe nur, wo man sie wählt */
-export function statisticsUrl(state: PeriodState, switchable: boolean): string {
-  const query: ProgressQuery = { ...state, scoring: switchable ? state.scoring : "decimal" }
+/**
+ * die Adresse der Statistik zu einem Zustand: Vorgaben fallen weg. Die Wertung gehört nicht hinein, sie ist die der
+ * Disziplin (gemerkt auf dem Gerät), wie in Spiegels Fortschritt
+ */
+export function statisticsUrl(state: PeriodState): string {
+  const query: ProgressQuery = { ...state, scoring: "decimal" }
   const params = new URLSearchParams(progressQueryToParams(query).map(([k, v]) => [k, v]))
   const search = params.toString()
   return search ? `/statistics?${search}` : "/statistics"
 }
 
-/**
- * die Adresse nach einer Aktion der Seite: Eine andere Disziplin öffnet in ihrer Vorgabe (Zehntel, wo umschaltbar),
- * nicht in der Wertung der vorigen
- */
-export function statisticsUrlAfter(
-  next: PeriodState,
-  action: PeriodAction,
-  options: readonly DisciplineOption[]
-): string {
-  const switchable = options.find((o) => o.value === next.family)?.switchable ?? false
-  const state: PeriodState = action.type === "setFamily" ? { ...next, scoring: "decimal" } : next
-  return statisticsUrl(state, switchable)
+/** was das Gerät gemerkt hat: den übernommenen Zeitraum und die Wertung je Disziplin (`memory.ts`) */
+export interface StatisticsMemory {
+  choice: PeriodChoice | null
+  scorings: Readonly<Record<string, Scoring>>
 }
 
-/** der Zustand aus der Adresse: unbekannte Disziplin wie keine (die mit der neuesten Einheit) */
+const NOTHING_REMEMBERED: StatisticsMemory = { choice: null, scorings: {} }
+
+/**
+ * der Zustand aus der Adresse und dem Gemerkten: unbekannte Disziplin wie keine (die mit der neuesten Einheit). Ohne
+ * eigene Abfrage gilt der gemerkte Zeitraum; die Wertung ist die gemerkte der Disziplin, sonst Zehntel, in
+ * Ganzring-Disziplinen immer ganze Ringe. Eine Wertung in der Adresse gilt nicht
+ */
 export function statisticsState(
   search: URLSearchParams,
-  options: readonly DisciplineOption[]
+  options: readonly DisciplineOption[],
+  memory: StatisticsMemory = NOTHING_REMEMBERED
 ): { state: PeriodState; option: DisciplineOption } | null {
-  const query = progressQueryFromParams(
+  const query = withRememberedChoice(
+    progressQueryFromParams(
+      search,
+      STATISTICS_METRICS.map((m) => m.key)
+    ),
     search,
-    STATISTICS_METRICS.map((m) => m.key)
+    memory.choice
   )
   const option = options.find((o) => o.value === query.family) ?? options[0]
   if (!option) return null
-  const scoring: Scoring = option.switchable ? query.scoring : "rings"
+  const scoring: Scoring = option.switchable
+    ? (memory.scorings[option.value] ?? "decimal")
+    : "rings"
   return {
     state: { ...query, family: option.value, scoring, includeProbeOnly: true },
     option,
@@ -128,11 +138,13 @@ export function statisticsPage(input: {
   sessions: readonly StatisticsSession[]
   search: URLSearchParams
   hidden: readonly string[]
+  /** was das Gerät gemerkt hat; ohne nichts */
+  memory?: StatisticsMemory
   nowMs: number
   timeZone: string
 }): StatisticsPage | null {
   const options = disciplineOptions(input.sessions, input.hidden)
-  const chosen = statisticsState(input.search, options)
+  const chosen = statisticsState(input.search, options, input.memory)
   if (!chosen) return null
   const { state, option } = chosen
   const items = periodItems(input.sessions.filter((s) => s.discipline?.id === option.value))

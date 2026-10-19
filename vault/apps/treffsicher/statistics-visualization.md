@@ -25,6 +25,11 @@ Einheit und die Trefferlage. Neu: Einflüsse, Selbstbild als Zeilen, Rekorde. Ho
   Der Browser bekommt das leichte Modell (`lightPeriodModel`).
 - **Browser** (`src/components/app/statistics/`): `StatisticsScreen` wie Spiegels `ProgressScreen`. Filter schreiben die
   Adresse und rechnen auf dem Server neu, die Wahl einer Einheit bleibt im Browser (`pick` per `replaceState`).
+- **Gemerkt wie in Spiegel** (`src/lib/statistics/memory.ts`): der im Blatt „Filter“ übernommene Zeitraum im Cookie
+  `treffsicher-period` (gilt, wenn die Adresse außer der Disziplin keine Abfrage hat) und je Disziplin die Wertung im
+  Cookie `treffsicher-scoring` (die Wertung steht nicht in der Adresse; Spiegel speichert sie je Familie in der
+  Datenbank, Treffsicher auf dem Gerät, ohne Migration). Der Rahmen merkt sich die letzte Adresse der Statistik
+  (ohne `pick`), „Statistik“ in der Navigation führt dorthin zurück.
 - **Bausteine aus `shot-ui`** mit Treffsichers Wörtern: `PeriodWordsProvider` mit „Einheit“ statt „Scheibe“,
   `HelpTextsProvider` für Titel und Kurzsätze der Hilfe, eigene Kacheln (`tileKeys`) und Kennzahlen des Verlaufs
   (`metrics`), kein Schalter „Trainings nur aus Probe“, Ablesung ohne kleine Scheibe (`target: null`), kein Kalender.
