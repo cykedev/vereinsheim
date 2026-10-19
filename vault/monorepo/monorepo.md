@@ -63,7 +63,7 @@ vereinsheim/
 ```
 
 **App-lokal bleibt** (nie geteilt): Prisma-Schema/Migrations/`src/generated/prisma`, `db.ts`, `auth.ts`,
-`src/types/next-auth.d.ts`, fachliche Komponenten, app-spezifische Deps (`recharts`/`react-hook-form`
+`src/types/next-auth.d.ts`, fachliche Komponenten, app-spezifische Deps (`react-hook-form`
 bei Treffsicher, `@react-pdf/renderer` bei Ringwerk).
 
 ## 4. Der schnelle Build

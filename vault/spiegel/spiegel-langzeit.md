@@ -6,7 +6,7 @@ aliases: [spiegel-zeitraum, langzeit-konzept, fortschritt-konzept]
 keywords: [langzeit, zeitraum, saison, fortschritt, verlauf, formband, gleitender schnitt, rekorde, kalender, vergleich, zeitraum gegen zeitraum, besser werden, form, langzeit-trefferbild, dichte, filter, disziplin-familie, training, wettkampf, benannter zeitraum, auswahl, navigation, drill-down, ablesung, scheiben-liste, erkenntnisse, mindestzahl, nicht nachweisbar]
 part_of: ["[[spiegel]]"]
 governed_by: ["[[adr-030]]"]
-relates_to: ["[[spiegel-ui-design]]", "[[spiegel-roadmap]]", "[[spiegel-statistics]]", "[[spiegel-metrics]]", "[[spiegel-mobile]]", "[[spiegel-data-model]]"]
+relates_to: ["[[spiegel-ui-design]]", "[[spiegel-roadmap]]", "[[spiegel-statistics]]", "[[spiegel-metrics]]", "[[spiegel-mobile]]", "[[spiegel-data-model]]", "[[statistics-visualization]]"]
 ---
 
 **TL;DR** Die Seite eines Zeitraums (Bereich Fortschritt) ist für den Schützen selbst gebaut wie die Seite einer
@@ -15,7 +15,8 @@ abgelesen, statt der Schusstabelle gibt es die Liste der Scheiben, darunter Zahl
 sich aus Zeitraum und Filter; Zeiträume sind rollend, frei oder vom Schützen benannt. Der Vergleich mit einem zweiten
 Zeitraum ist eingebaut und urteilt nur mit Test. Gebaut sind Fachkern (`shot-core/analysis/period.ts`, `records.ts`)
 und Seite (`shot-ui/period/*`, `PeriodPage`, in der App `/progress`); offen sind Langzeit-Trefferbild, Erkenntnisse
-je Reiter und das Anlegen benannter Zeiträume.
+je Reiter und das Anlegen benannter Zeiträume. Treffsicher zeigt seine Statistik mit denselben Bausteinen
+([[statistics-visualization]]).
 
 ## Grundentscheidungen
 
@@ -203,6 +204,23 @@ Wie auf der Scheibe:
   Dichteraster liefern.
 - **Ausreißer:** Der schrittweise Test braucht O(n³/10) und ist nur je Scheibe gedacht. Über Zeiträume zählen
   die Ausreißer je Scheibe.
+
+### Auch in Treffsicher
+
+Treffsichers Statistik ist dieselbe Seite über Einheiten statt Scheiben ([[statistics-visualization]], [[adr-032]]).
+Eingabe ist `PeriodItem`; was Spiegel anders braucht als Treffsicher, sind Parameter mit Spiegels Vorgabe, Spiegel
+ändert sich dadurch nicht:
+
+- **Wörter:** `PeriodWordsProvider` (`period/PeriodWords`) mit `PeriodWords` (`period/words`: Einzahl, Mehrzahl, Satz
+  ohne Rekord); die reinen Texte (`verdictText`, `periodSentence`, `recordRows`, `weekText`, `deltaText`) nehmen sie als
+  letzten Parameter. Vorgabe `CARD_WORDS` („Scheibe“). „Einheit“ ist wie „Scheibe“ weiblich, die Sätze bleiben gleich.
+- **Hilfe:** `HelpTextsProvider` (`help/HelpTexts`) gibt Titel und Kurzsatz einer Erklärung; `AnalysisCard` nimmt
+  sie als `texts`. Vorgabe `shot-help`.
+- **Kennzahlen:** `periodModel({ tileKeys })` für die Kacheln (die erste trägt den Vergleich), `PeriodChartBar.metrics`
+  für den Verlauf. Treffsicher: Ø je Schuss, Zehner, Lage (`group.mpiDistance` aus der Trefferlage des Ausdrucks,
+  in der Adresse `metric=location`).
+- **Blatt „Filter“:** `probeOnlySwitch={false}` blendet „Trainings nur aus Probe mitzählen“ aus.
+- **Ablesung:** `CardReadout` mit `target: null` zeichnet keine kleine Scheibe.
 
 ## Vorgaben
 

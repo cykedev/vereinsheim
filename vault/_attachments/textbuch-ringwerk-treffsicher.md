@@ -307,7 +307,30 @@ Abweichend von Spiegel:
 
 ### Reiter der Analyse
 
-Unter „Was der Zeitraum zeigt“ stehen drei Reiter: **Rekorde · Einflüsse · Selbstbild**.
+Unter „Was der Zeitraum zeigt“ stehen vier Reiter: **Rekorde · Trefferlage · Einflüsse · Selbstbild**.
+
+### Unter „Zahlen“: Ringverteilung und Tabelle (erhalten aus der alten Statistik)
+
+Wunsch des Users (19. Oktober 2026): Die Tabelle und die Trefferlage der alten Statistik bleiben erhalten, in der Art
+von Spiegel.
+
+- **Ringverteilung:** Titel „Ringverteilung“, daneben „{320} Wertungsschüsse aus {8} Einheiten“, darunter je Ring
+  Anzahl und Anteil.
+- **Tabelle:** Titel „Serien je Einheit“ (alt: der Name der Disziplin), daneben „{8} Einheiten“. Spalten, Gruppen und
+  Ø-Zeilen wie bisher („Serie 1“ … „Gesamt“, „Σ alle“, „{3}er Serien“, „Ø aller Serien“). Jedes Datum führt zur
+  Einheit. Zahlen mit Komma statt Punkt.
+
+### Trefferlage (erhalten, neu gezeichnet)
+
+Ort: Statistik, Reiter „Trefferlage“.
+
+- **Unterzeile:** „Lage vom Ausdruck, im Mittel über {7} Einheiten: {0,20 mm rechts} und {0,10 mm hoch}.“ Auf null
+  „waagrecht mittig“ bzw. „senkrecht mittig“.
+- **Karte „Lage je Einheit“:** je Einheit ein Punkt, rechts und hoch positiv, das Mittel als Schwerpunkt-Zeichen.
+- **Karte „Lage im Verlauf“:** Legende „waagrecht (rechts +)“ · „senkrecht (hoch +)“. Das Lineal nennt „{12.10.2026} ·
+  {0,40 mm rechts} und {0,20 mm hoch}“. „Werte als Tabelle“ mit den Spalten „Datum“, „waagrecht (rechts +)“,
+  „senkrecht (hoch +)“.
+- **Ohne Werte:** „Im Zeitraum hast du keine Trefferlage eingetragen.“
 
 ### Einflüsse (neu)
 

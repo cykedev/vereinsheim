@@ -28,7 +28,7 @@ Verbindliche Referenzdokumente: [[treffsicher-requirements]] · [[treffsicher-te
 | 3.12  | Import-Sicherheits-Härtung (SSRF, PDF-Plausibilität)                                      | ✅     |
 | 3.13  | DoS-Härtung: Streaming-Import, FormData-Limits, Statistik-Caps, Login-Rate-Limit          | ✅     |
 | 4.1   | Saisonziele (CRUD + Einheits-Verknüpfung)                                                 | ✅     |
-| 4.2   | Radarchart (7 Dimensionen Prognose vs. Feedback)                                          | ✅     |
+| 4.2   | Radarchart (7 Dimensionen Prognose vs. Feedback); abgelöst durch „Selbstbild“ (ADR-032)    | ✅     |
 | 4.3   | PDF-Export einzelner Einheit                                                              | ✅     |
 | 5.1   | Admin-Bereich: Nutzerverwaltung, System-Disziplinen, Passwortwechsel                      | ✅     |
 | 5.2   | PWA / Offline-Unterstützung                                                               | ⏳     |

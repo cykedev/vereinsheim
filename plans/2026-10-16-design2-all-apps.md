@@ -552,6 +552,18 @@ arbeiten bereits auf einem schlichten Wert je Scheibe (`CardValue { id, atMs, va
   Meyton-Farben gestrichen), `wellbeing-tracking.md`, `spiegel-langzeit.md` (Bausteine auch in Treffsicher),
   `packages/shot-ui/CLAUDE.md`.
 
+- **Stand Teil G (19. Oktober 2026, Branch `feat/design2-statistik-seite`):** G4–G7, G9 und G10 umgesetzt; G8 wartet
+  auf die Freigabe des Textbuchs (bis dahin Spiegels Erklärungen als Rückfall). Abweichend vom Text oben:
+  - **Wunsch des Users:** Die alten Auswertungen gehen nicht verloren. Die Tabelle je Disziplin bleibt („Serien je
+    Einheit“ unter „Zahlen“, dieselbe Rechnung), die Trefferlage bleibt (Reiter „Trefferlage“: Wolke mit Mittel,
+    Verlauf je Achse). Die Schussverteilung im Zeitverlauf wird die Ringverteilung des Zeitraums.
+  - `shot-ui` nimmt Wörter, Hilfe-Köpfe, Kacheln, Kennzahlen des Verlaufs, den Schalter für Probe und die kleine
+    Scheibe der Ablesung als Parameter; Spiegel bleibt bei seinen Vorgaben (Tests unverändert grün).
+  - Lage als Kennzahl: `group.mpiDistance` aus der Trefferlage des Ausdrucks. Kein Kalender (das Tagebuch filtert
+    nicht nach Tag).
+  - Zahlenabgleich: 47 von 47 Gruppen gleich, nachdem die Rundung auf ganze Ringe entfiel (drei Serien mit Zehntel in
+    Ganzring-Disziplinen).
+
 **Prüfung Teil G:** `pnpm check`; Spiegel `pruefen` grün (die Verallgemeinerung ändert dort nichts); Treffsicher
 `pruefen` mit Abschnitt „Statistik“: kein seitliches Scrollen, Lineal und „Werte als Tabelle“, Vergleich, Blatt
 „Filter“. Abgleich der Zahlen: Ø je Schuss je Disziplin und Zeitraum auf der neuen Seite gleich der heutigen

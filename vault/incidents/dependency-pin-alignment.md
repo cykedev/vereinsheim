@@ -22,8 +22,9 @@ Nicht angefasst, jedes mit eigenem Grund:
 - **typescript 6.0.3 → 7.0.2** — Major; braucht eigenen Durchlauf über beide Apps + `packages/*`.
 - **eslint 9.39.4 → 10.9.0** — Major; hängt an `eslint-config-next`-Kompatibilität und der geteilten
   Flat-Config in `packages/config`.
-- **recharts 2.15.4 → 3.10.1** — Major mit API-Brüchen; wird in ~10 Treffsicher-Chart-Komponenten
-  plus dem shadcn-`chart.tsx`-Wrapper benutzt. Eigenes Vorhaben mit visueller Abnahme.
+- **recharts 2.15.4 → 3.10.1** — Major mit API-Brüchen; wurde in ~10 Treffsicher-Chart-Komponenten
+  plus dem shadcn-`chart.tsx`-Wrapper benutzt. Erledigt: Treffsicher zeichnet seit Teil G von [[adr-032]]
+  mit `shot-ui`, `recharts` ist entfernt (Oktober 2026).
 - **@types/node 24.13.2 → 26.2.0** — **darf nicht** hoch: die Runtime ist `node:24-alpine`
   (Dockerfile) und `engines.node: >=24`. Die Typen müssen der Runtime folgen, nicht umgekehrt.
 - **prettier 3.8.4 → 3.9.6** — kein Major, aber 3.9 formatiert kurze Union-Typen einzeilig statt

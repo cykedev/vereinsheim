@@ -3,7 +3,7 @@ id: treffsicher-requirements
 type: guide
 title: "Treffsicher — Fachliche Anforderungen"
 aliases: ["Fachliche Anforderungen — Schiesstraining App"]
-keywords: [treffsicher, fachliche, anforderungen, schiesstraining, Schussverteilung, Zeitverlauf je Einheit]
+keywords: [treffsicher, fachliche, anforderungen, schiesstraining, Ringverteilung, Seite eines Zeitraums, Statistik]
 part_of: ["[[treffsicher]]"]
 ---
 
@@ -24,7 +24,7 @@ part_of: ["[[treffsicher]]"]
 - **Schuss-Ablauf** — Editierbares Schritte-Dokument, disziplinabhängig, Einheits-Verknüpfung
 - **Saisonziele** — Ergebnis- und Prozessziele mit Zeitraum und Einheits-Verknüpfung
 - **Dateien & Bilder** — Anhänge nur bei TRAINING/WETTKAMPF (JPEG/PNG/WebP/PDF)
-- **Statistiken & Auswertung** — Verlauf, Serien, Befinden-Korrelation, 7-Dim-Radar, Schussverteilung
+- **Statistiken & Auswertung** — Seite eines Zeitraums wie Spiegel: Verlauf, Tabelle der Serien, Trefferlage, Einflüsse, Selbstbild
 - **Nutzerverwaltung & Sicherheit** — Admin-Only-Erstellung, Datenisolation, Lastschutz-Grenzen
 - **Export / Design-Entscheidungen** — PDF-Export je Einheit; Darstellung hell und dunkel, Sprache, UI-Muster
 
@@ -264,41 +264,47 @@ Anhänge sind ausschliesslich bei Einheiten des Typs **Training** und **Wettkamp
 
 ## Statistiken & Auswertung
 
-### Zeiträume
+Die Statistik ist die Seite eines Zeitraums aus Spiegel ([[spiegel-langzeit]], [[adr-032]]): dieselben Bausteine
+(`shot-ui`), dieselben Rechnungen (`shot-core`) und dieselben Regeln. Aufbau, Zuordnung und Abgleich:
+[[statistics-visualization]].
 
-- Frei konfigurierbar (von–bis Datumswahl)
-- Voreinstellungen: letzter Monat, letzte 3 Monate, letzte 6 Monate, gesamte Zeit
+### Zeiträume und Filter
 
-### Filter
+- Zeitraum im Blatt „Filter“: letzte 30 Tage, 90 Tage (Vorgabe), 6 Monate, 12 Monate, Alles, frei (von–bis);
+  Vergleich mit dem Zeitraum davor; Art Training, Wettkampf oder beides.
+- **Disziplin Pflicht:** Die Seite zeigt immer genau eine Disziplin, nie gemischte. Ohne Wahl die zuletzt geschossene,
+  ausgeblendete Disziplinen nur, wenn es keine andere gibt.
+- Der Zustand steht in der Adresse (`/statistics?range=6m&family=<Disziplin>&…`, Schlüssel wie in Spiegel).
 
-- Training, Wettkampf oder beides kombiniert
-- **Disziplin-Filter**: Statistiken vermischen nie unterschiedliche Disziplinen — bei gesetztem Disziplin-Filter werden ausschliesslich Einheiten dieser Disziplin ausgewertet
+### Ø je Schuss
 
-### Normalisierung
+- **Ø je Schuss** über die Wertungsserien (Probe zählt nie). Mit Einzelschüssen in jeder Wertungsserie aus den
+  Schüssen, sonst aus den eingetragenen Serienergebnissen; je Serie zählen ihre Einzelschüsse, ohne sie die Schusszahl
+  je Serie der Disziplin.
+- **Wertung aus der Disziplin:** In Zehntel-Disziplinen ist auf ganze Ringe umschaltbar (dann zählen nur Einheiten mit
+  Einzelschüssen), in Ganzring-Disziplinen gilt das eingetragene Ergebnis.
+- Die **Hochrechnung entfällt**; das Ergebnis wie am Ausdruck steht auf der Einheit.
 
-Da Einheiten mit unterschiedlicher Schussanzahl (z.B. 2 statt 4 Serien) vorkommen können, werden Statistiken **normalisiert** dargestellt:
+### Was die Seite zeigt
 
-- **Ringe/Schuss** (Standardmodus): Durchschnitt pro Schuss über alle Wertungsserien (ohne Probeschüsse), auf 2 Nachkommastellen gerundet — direkt vergleichbar auch bei abweichender Serienzahl
-- **Hochrechnung** (optionaler Modus, nur bei gewählter Disziplin): Projektion auf die volle Schusszahl der gewählten Disziplin. Beispiel: 8.75 Ringe/Schuss × 40 Schuss = 350 Ringe. Zehntelwertung wird korrekt berücksichtigt.
+- **Kopf:** Zeitraum, Disziplin, Zahl der Einheiten, ein Satz „Werde ich besser?“ (Vergleich mit dem Zeitraum davor,
+  Urteil nur mit Test).
+- **Verlauf:** Ø je Schuss, Zehnerquote oder Lage (Schwerpunkt-Abstand aus der Trefferlage), je Einheit mit Schnitt der
+  letzten fünf und Formband, ab 60 Einheiten je Monat mit Boden und Decke; Lineal und „Werte als Tabelle“.
+- **Umfang je Woche**, **Ergebnis-Box**, **Ablesung** der gewählten oder neuesten Einheit, **Liste** der Einheiten.
+- **Zahlen:** Kacheln Ø je Schuss, Zehnerquote, Schwerpunkt-Abstand (mit Vergleich), die **Ringverteilung** aller
+  Wertungsschüsse des Zeitraums und die **Tabelle „Serien je Einheit“** (Spalten je Serienposition, Gesamt über die
+  übliche Serienzahl, „Σ alle“ bei Extra-Serien, Gruppen nach Serienzahl mit Ø-Zeile, Ø aller Serien).
+- **Analyse in vier Reitern:** Rekorde (R1, R2, R5 nur in Zehnteln, R6, R7, R8, R10, R11; nur Einheiten mit
+  Einzelschüssen in jeder Serie), **Trefferlage** (Lage je Einheit als Wolke mit Mittel, Verlauf waagrecht und
+  senkrecht), **Einflüsse** (je Befinden-Wert und Ausführung hohe gegen niedrige Gruppe, Urteil ab 5 Einheiten je
+  Seite) und **Selbstbild** (je Bereich Ø Prognose, Ø Feedback, Abstand; kein Urteil, kein Radar).
 
-### Auswertungsansichten
+### Einheits-Detailansicht — Ringverteilung
 
-- **Ergebnisverlauf**: Ringe/Schuss (oder Hochrechnung) über Zeit mit gleitendem Trend
-- **Serienwertungen**: Minimum, Maximum, Durchschnitt je Serienposition
-- **Befinden-Korrelation**: Schlaf / Energie / Stress / Motivation vs. normalisiertem Ergebnis (Ringe/Schuss)
-- **Selbsteinschätzung (7 Dimensionen)**: Radarchart über Zeit (Prognose vs. Feedback)
-- **Schussqualität vs. Ringe**: Ausführungsqualität (1–5) vs. normalisiertem Serienergebnis (Ringe/Schuss)
-- **Schussverteilung im Zeitverlauf**: Anteil der Treffer je Ringwert (0–10) als gestapeltes Flächendiagramm, normalisiert auf Prozent — vergleichbar über Einheiten mit unterschiedlicher Schussanzahl. Nur sichtbar wenn Einzelschüsse erfasst wurden. 10er oben im Stack, 0er unten. Legende und Tooltip absteigend (10 → 0). **Ein Punkt je Einheit, keine zeitliche Bündelung** (eine Mittelung über Tage/Wochen/Monate würde Veränderungen glätten); gebündelt wird nur der Ringbereich 0–6 zu einem Band. Achse `08.09.26`, Tooltip mit Datum, Uhrzeit und Schusszahl, damit zwei Einheiten am selben Tag unterscheidbar sind (`buildShotDistributionTimeline`).
-
-### Einheits-Detailansicht — Schuss-Histogramm
-
-Wenn Einzelschüsse für eine Einheit erfasst wurden, wird ein Histogramm der Trefferwertungen angezeigt:
-
-- Darstellung als Balkendiagramm (Anzahl Treffer je Ringwert 0–10)
-- Ringwert 10 links, 0 rechts (beste Werte links)
-- Alle 11 Ringwerte immer vollständig dargestellt (stabile Achse), auch bei Anzahl 0
-- Bei Zehntelwertung: Schusswerte werden auf den nächsttieferen ganzen Ring gefloort (9.5 und 9.1 → Bucket 9)
-- Nur Wertungsschüsse werden dargestellt — Probeschüsse sind nicht Teil der Auswertung
+Wenn Einzelschüsse erfasst wurden, zeigt die Einheit die Ringverteilung wie Spiegel (`RingBars`): je Ring von 10
+abwärts ein Balken in der Trefferfarbe mit Anzahl und Anteil, mindestens bis Ring 8. Bei Zehnteln zählt der ganze
+Ring (9,9 ist eine 9). Nur Wertungsschüsse.
 
 ### Einheiten-Übersicht (Tagebuch) — Schussanzahl
 
@@ -308,12 +314,12 @@ In der Einheitenliste wird bei Einheiten mit erfasstem Ergebnis neben der Ringza
 - Berechnung: je Wertungsserie die Zahl der erfassten Einzelschüsse, sonst Schuss pro Serie gemäss Disziplin; Probeschüsse werden separat ausgewiesen ("+ 10 Probe")
 - Nur sichtbar wenn ein Ergebnis vorhanden und die Schussanzahl grösser als 0 ist
 
-### Farbschema Schussverteilung (Histogramm und Zeitverlauf)
+### Trefferfarben
 
-Analog zu Meyton-Schiessständen — einheitlich in Detailansicht und Statistik:
+Wie Spiegel ([[adr-032]]), überall gleich (Statistik, Einheit, Schusswerte, PDF der Einheit): 10 rot, 9 gold, 8
+türkis, ≤ 7 violett (`score-*`, im PDF `SCORE_HEX`). Die Meyton-Skala (Rot, Gelb, Graustufen) entfällt.
 
-| Ringwert | Farbe                                |
-| -------- | ------------------------------------ |
+-------- | ------------------------------------ |
 | 10       | Rot                                  |
 | 9        | Gelb                                 |
 | 8        | Dunkelgrau (dunkelst der Graureihe)  |

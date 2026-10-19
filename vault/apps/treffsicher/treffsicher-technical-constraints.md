@@ -102,7 +102,7 @@ Diese Regeln dürfen nicht ohne explizite Überprüfung und Begründung geänder
 | Auth            | NextAuth.js             | 4.x (stabil) |
 | UI-Komponenten  | shadcn/ui               | aktuell      |
 | Styling         | Tailwind CSS            | 4.x          |
-| Charts          | Recharts                | 2.x          |
+| Charts          | SVG aus `@vereinsheim/shot-ui` (wie Spiegel) | -            |
 | Package Manager | pnpm (Workspace)        | 10.x         |
 | Container       | Docker + Docker Compose | -            |
 

@@ -66,16 +66,16 @@ Bedienung und Recovery: Root-`README.md` und `vault/operations/operations.md`.
 
 ## Tech Stack
 
-| Bereich   | Technologie                |
-| --------- | -------------------------- |
-| Framework | Next.js 16 App Router      |
-| Sprache   | TypeScript 6 strict        |
-| Datenbank | PostgreSQL 15 + Prisma 7   |
-| Auth      | NextAuth.js v4             |
-| UI        | shadcn/ui + Tailwind CSS 4 |
-| Charts    | Recharts 2                 |
-| Tests     | Vitest                     |
-| Container | Docker + Docker Compose    |
+| Bereich   | Technologie                    |
+| --------- | ------------------------------ |
+| Framework | Next.js 16 App Router          |
+| Sprache   | TypeScript 6 strict            |
+| Datenbank | PostgreSQL 15 + Prisma 7       |
+| Auth      | NextAuth.js v4                 |
+| UI        | shadcn/ui + Tailwind CSS 4     |
+| Charts    | SVG aus `@vereinsheim/shot-ui` |
+| Tests     | Vitest                         |
+| Container | Docker + Docker Compose        |
 
 ---
 

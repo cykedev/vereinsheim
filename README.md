@@ -113,7 +113,7 @@ Installing the bridge at the range: [apps/spiegel-bridge/README.md](apps/spiegel
 | Language  | TypeScript (strict); Go for the bridge                |
 | Database  | PostgreSQL 15 + Prisma 7                              |
 | Auth      | NextAuth.js v4                                        |
-| UI        | shadcn/ui + Tailwind CSS 4 · Recharts                 |
+| UI        | shadcn/ui + Tailwind CSS 4 · SVG charts (shot-ui)     |
 | Tooling   | pnpm + Turborepo · Vitest                             |
 | Deploy    | Docker · Caddy · single VPS · ops CLI `vereinsheim`   |
 
