@@ -488,6 +488,28 @@ arbeiten bereits auf einem schlichten Wert je Scheibe (`CardValue { id, atMs, va
 - **G0 Abgleich (Haltepunkt).** Die Tabelle mit echten Zahlen aus der Dev-DB belegen (wie viele Einheiten mit
   Einzelschüssen, mit Trefferlage, mit Befinden, mit Qualität; nur Zählungen, keine Namen). **HALT:** Der User gibt die
   Zuordnung frei oder ändert sie.
+
+  **Ergebnis G0 (19. Oktober 2026, vom User freigegeben):** 262 Einheiten von 6 Konten, alle Training oder Wettkampf
+  mit Disziplin; 250 mit Ergebnis, 204 mit Einzelschüssen, 202 mit Trefferlage, 39 mit Befinden, 48 mit Qualität, 10
+  mit Prognose und Feedback; 15 unvollständig, 39 mit mehr Serien als die Disziplin vorgibt. Daraus gilt:
+
+  1. **Wertung fest aus der Disziplin.** In Disziplinen mit ganzen Ringen hat keiner der 6.862 Schüsse ein Zehntel; dort
+     nur ganze Ringe. Der Umschalter der Wertung erscheint nur bei Zehntel-Disziplinen.
+  2. **Ohne Einzelschüsse zählt die Einheit im Ø je Schuss** aus den Serienergebnissen, mit n = Serien × Schuss je Serie
+     der Disziplin (die echte Zahl ist nicht gespeichert). Alles andere „–“ mit Grund.
+  3. **Kacheln:** Treffsicher hat weder Lage je Schuss noch Zeit; Streuung (σ, waagrecht, senkrecht) und Tempo
+     entfallen. Kacheln: Ø je Schuss, Zehner, Lage aus dem Ausdruck (mm).
+  4. **Rekorde:** ohne Lage je Schuss kein bester Teiler (R3), keine engste Gruppe (R4), keine Innenzehner; R5 nur in
+     Zehnteln. Es bleiben R1, R2, R5, R6 (Zehner), R7, R8, R10, R11.
+  5. **Einflüsse** über den gewählten Zeitraum wie alles andere; reicht es nicht, „zu wenige Einheiten“ mit dem
+     Hinweis, einen längeren Zeitraum zu wählen.
+  6. **Selbstbild** nur als Zeilen mit Werten, ohne Urteil (höchstens 4 Einheiten je Konto und Disziplin). Probeserien
+     zählen in Treffsicher nie; den Schalter „Trainings nur aus Probe mitzählen“ gibt es dort nicht.
+
+  **Ergänzung des Users:** Spiegel und Treffsicher bekommen die Vorgabe **„Letzte 6 Monate“** (182 Tage, Adresse `6m`)
+  zwischen 90 Tagen und 12 Monaten, als Mittelmaß. Die Vorgabe beim Öffnen bleibt 90 Tage. Umgesetzt in `shot-ui`
+  (`ROLLING_CHOICES`, `ROLLING_CODES`, `RESERVED`), damit gilt es für beide Apps; Doku in `spiegel-langzeit.md` und
+  `spiegel-navigation.md`.
 - **G1 Eingabe verallgemeinern.** `packages/shot-ui/src/period/model.ts`: `periodModel` nimmt statt
   `ProjectedCard[]` eine schlanke Eingabe
   `PeriodItem { id: string; startedAtMs: number; kind: "training" | "match"; probeOnly: boolean; metrics: Record<string, { value: number; n: number } | null>; records: { decimal: RecordCandidates | null; rings: RecordCandidates | null }; flags: readonly string[] }`.
