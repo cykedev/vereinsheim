@@ -6,12 +6,13 @@ keywords: [Ringwerk-App, Ligaverwaltung, Wettkampfverwaltung, Vereinsliga, Schie
 part_of: ["[[overview]]"]
 ---
 
-**TL;DR** Liga- & Wettkampf-Verwaltung. apps/ringwerk, Dev-Port 3000.
+**TL;DR** Liga- & Wettkampf-Verwaltung. apps/ringwerk, Dev-Port 3000, Design 2 hell und dunkel ([[ringwerk-design2]]).
 
 MOC-Hub der Ringwerk-App (Liga & Wettkämpfe). Führt die App-Guides und die fachlichen Notes zusammen.
 
 ## Guides & Notes
 
+- [[ringwerk-design2]] — Ringwerk in Design 2 (Rahmen, Darstellung, Reiter, Tabellen, Skriptprüfung)
 - [[audit-logging]] — audit-logging
 - [[best-of-single]] — best-of-single
 - [[club-wide-data-rule]] — club-wide-data-rule
