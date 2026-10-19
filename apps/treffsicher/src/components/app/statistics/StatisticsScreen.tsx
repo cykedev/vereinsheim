@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
-import { useCallback, useEffect, useMemo, useState, useTransition, type ReactNode } from "react"
+import { useCallback, useEffect, useMemo, useState, useTransition } from "react"
 
 import { ScoringChip } from "@vereinsheim/shot-ui/controls/ScoringChip"
 import { HelpTextsProvider } from "@vereinsheim/shot-ui/help/HelpTexts"
@@ -33,6 +33,7 @@ import { SESSION_WORDS, STATISTICS_SECTIONS } from "@/lib/statistics/words"
 
 import {
   statisticsBelow,
+  type StatisticsAnalysisData,
   StatisticsChart,
   StatisticsList,
   StatisticsReadout,
@@ -59,8 +60,7 @@ export function StatisticsScreen({
   state: PeriodState
   options: DisciplineOption[]
   timeZone: string
-  /** Einflüsse und Selbstbild über die Einheiten des Zeitraums, vom Server gerechnet */
-  analysis?: { influences: ReactNode; selfImage: ReactNode }
+  analysis: StatisticsAnalysisData
 }) {
   const router = useRouter()
   const help = useHelp()

@@ -124,6 +124,36 @@ describe("Seite der Statistik", () => {
     expect(result.model.cards[0].metrics).toEqual({})
   })
 
+  it("Einflüsse und Selbstbild nur über die Einheiten der Seite", () => {
+    const wellbeing = { sleep: 70, energy: 60, stress: 20, motivation: 80 }
+    const self = {
+      fitness: 50,
+      nutrition: 50,
+      technique: 50,
+      tactics: 50,
+      mentalStrength: 50,
+      environment: 50,
+      equipment: 50,
+    }
+    const sessions = [
+      // vor dem Zeitraum der letzten 30 Tage: zählt nicht
+      { ...session("alt", 60, LG, [95]), wellbeing, prognosis: self, feedback: self },
+      { ...session("neu", 5, LG, [96]), wellbeing, prognosis: self, feedback: self },
+      { ...session("wk", 4, LG, [97]), type: "WETTKAMPF", wellbeing },
+    ]
+    const result = statisticsPage({
+      sessions,
+      search: new URLSearchParams("family=lg&range=30d&kind=training"),
+      hidden: [],
+      nowMs: NOW,
+      timeZone: "Europe/Berlin",
+    })!
+    expect(result.model.cards.map((c) => c.id)).toEqual(["neu"])
+    expect(result.influences.find((i) => i.key === "sleep")?.entered).toBe(1)
+    expect(result.influences.find((i) => i.key === "quality")?.entered).toBe(0)
+    expect(result.selfImage.n).toBe(1)
+  })
+
   it("ohne Einheit mit Ergebnis keine Seite", () => {
     expect(
       statisticsPage({

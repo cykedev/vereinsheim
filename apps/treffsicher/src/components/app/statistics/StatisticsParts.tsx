@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useState, type ReactNode } from "react"
+import { useCallback, useState } from "react"
 
 import { ChartSlot } from "@vereinsheim/shot-ui/analysis/charts/frame"
 import { HelpButton, HelpIcon } from "@vereinsheim/shot-ui/help/HelpButton"
@@ -18,7 +18,12 @@ import { Segmented } from "@vereinsheim/ui/design2/segmented"
 import { ToggleChip } from "@vereinsheim/ui/design2/toggle-chip"
 
 import { metricHelpId } from "@/lib/help/topics"
+import type { Influence } from "@/lib/statistics/influences"
 import { STATISTICS_METRICS } from "@/lib/statistics/page"
+import type { SelfImage } from "@/lib/statistics/selfImage"
+
+import { StatisticsInfluences } from "./StatisticsInfluences"
+import { StatisticsSelfImage } from "./StatisticsSelfImage"
 
 export interface StatisticsPartProps {
   model: PeriodModel
@@ -161,6 +166,12 @@ export function StatisticsList({ model, state, timeZone, dispatch, jumpTo }: Sta
 
 type AnalysisTab = "records" | "influences" | "selfImage"
 
+/** Einflüsse und Selbstbild über die Einheiten des Zeitraums, vom Server gerechnet */
+export interface StatisticsAnalysisData {
+  influences: Influence[]
+  selfImage: SelfImage
+}
+
 /** Analyse: Rekorde, dazu Einflüsse und Selbstbild, wenn der Server sie mitgibt */
 function StatisticsAnalysis({
   model,
@@ -170,7 +181,7 @@ function StatisticsAnalysis({
   dispatch,
   jumpTo,
   analysis,
-}: StatisticsPartProps & { analysis?: { influences: ReactNode; selfImage: ReactNode } }) {
+}: StatisticsPartProps & { analysis: StatisticsAnalysisData }) {
   const [explain, setExplain] = useState(false)
   const [tab, setTab] = useState<AnalysisTab>("records")
   const chooseFromRecord = (id: string) => {
@@ -183,25 +194,21 @@ function StatisticsAnalysis({
   return (
     <div className="grid gap-2">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        {analysis ? (
-          <Segmented
-            label="Reiter der Analyse"
-            value={tab}
-            options={[
-              { value: "records", label: "Rekorde" },
-              { value: "influences", label: "Einflüsse" },
-              { value: "selfImage", label: "Selbstbild" },
-            ]}
-            onChange={setTab}
-          />
-        ) : (
-          <span />
-        )}
+        <Segmented
+          label="Reiter der Analyse"
+          value={tab}
+          options={[
+            { value: "records", label: "Rekorde" },
+            { value: "influences", label: "Einflüsse" },
+            { value: "selfImage", label: "Selbstbild" },
+          ]}
+          onChange={setTab}
+        />
         <ToggleChip pressed={explain} icon={<HelpIcon />} onPressedChange={setExplain}>
           Erklärungen
         </ToggleChip>
       </div>
-      {tab === "records" || !analysis ? (
+      {tab === "records" ? (
         <PeriodInsights
           model={model}
           scoring={state.scoring}
@@ -212,18 +219,16 @@ function StatisticsAnalysis({
           chosen={state.chosen}
         />
       ) : tab === "influences" ? (
-        analysis.influences
+        <StatisticsInfluences rows={analysis.influences} />
       ) : (
-        analysis.selfImage
+        <StatisticsSelfImage image={analysis.selfImage} />
       )}
     </div>
   )
 }
 
 /** Zahlen und Analyse unter Verlauf und Liste */
-export function statisticsBelow(
-  props: StatisticsPartProps & { analysis?: { influences: ReactNode; selfImage: ReactNode } }
-) {
+export function statisticsBelow(props: StatisticsPartProps & { analysis: StatisticsAnalysisData }) {
   return [
     {
       id: "numbers" as const,

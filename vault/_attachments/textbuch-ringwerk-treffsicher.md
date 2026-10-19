@@ -331,6 +331,9 @@ Ausführung.
   - „Kein klarer Unterschied“
   - „Zu wenige Einheiten. Für ein Urteil braucht es auf jeder Seite 5. Wähle oben einen längeren Zeitraum.“
 - **Ohne Werte:** „Im Zeitraum hast du kein Befinden eingetragen.“ · „Im Zeitraum hast du keine Serie bewertet.“
+- **Alle Werte gleich** (keine Einheit über oder unter der Mitte): „Deine Werte sind im Zeitraum alle gleich. So gibt es
+  nichts zu vergleichen.“
+- Mit Urteil oder „Kein klarer Unterschied“ steht der Unterschied dahinter: „· Δ +0,16“.
 
 ### Selbstbild (neu)
 
@@ -341,6 +344,8 @@ Umfeld, Material.
 - **Je Zeile:** der Bereich, zwei Balken von 0 bis 100 (Prognose leise, Feedback in der Farbe der App), dazu die Zahlen
   „Prognose {62} · Feedback {70} · Abstand +8“.
 - **Kein Urteil.** Dafür sind es zu wenige Einheiten.
+- **Unter den Zeilen:** „Oben die Prognose, unten das Feedback. Abstand ist Feedback minus Prognose. Plus heißt: besser
+  als gedacht.“
 - **Ohne Werte:** „Im Zeitraum gibt es keine Einheit mit Prognose und Feedback.“
 
 ### Erklärungen hinter dem „?“

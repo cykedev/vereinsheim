@@ -116,6 +116,29 @@ export async function statisticsFlow(
     tabs.join() === "Rekorde,Einflüsse,Selbstbild",
     tabs
   )
+  const tab = (label: string) =>
+    page.click(
+      `$$('[role="radiogroup"][aria-label="Reiter der Analyse"] button').find((b) => txt(b) === ${JSON.stringify(label)})`,
+      { settle: 300 }
+    )
+  await tab("Einflüsse")
+  const influence = await page.ev<string[]>(
+    `$$("[data-influence-verdict]").filter(visible).map((p) => txt(p))`
+  )
+  check(
+    "Einflüsse: je Merkmal eine Karte mit Urteil (Schlaf, Energie, Stress, Motivation, Ausführung)",
+    influence.length === 5 && influence.every((t) => t.length > 0),
+    influence
+  )
+  await tab("Selbstbild")
+  const self = await page.ev<{ rows: number; text: string }>(`({
+    rows: $$("[data-self-image]").filter(visible).length,
+    text: txt($('section[aria-label="Selbstbild"]')) })`)
+  check(
+    "Selbstbild: sieben Zeilen mit Prognose, Feedback und Abstand, oder der Hinweis ohne Einheit",
+    self.rows === 7 ? self.text.includes("Abstand") : self.text.includes("keine Einheit"),
+    self
+  )
 }
 
 /** Bildschirmfotos der Statistik bei 390 und 1280 px in Hell und Dunkel, als PNG in `dir` */
@@ -136,6 +159,18 @@ export async function statisticsPictures(page: Page, base: string, dir: string) 
       await page.viewport(width, full)
       await page.wait(400)
       writeFileSync(join(dir, `statistik-${width}-${theme}.png`), await page.screenshot())
+      // die Reiter Einflüsse und Selbstbild je für sich
+      for (const [label, name] of [
+        ["Einflüsse", "einfluesse"],
+        ["Selbstbild", "selbstbild"],
+      ] as const) {
+        await page.click(
+          `$$('[role="radiogroup"][aria-label="Reiter der Analyse"] button').find((b) => txt(b) === ${JSON.stringify(label)})`,
+          { settle: 300 }
+        )
+        const shot = await page.screenshotOf(`$('section[aria-label=${JSON.stringify(label)}]')`)
+        if (shot) writeFileSync(join(dir, `statistik-${name}-${width}-${theme}.png`), shot)
+      }
     }
   }
   await page.ev(`localStorage.removeItem("treffsicher-theme")`)

@@ -2,16 +2,19 @@
 // `shot-ui/nav/routes`), gerechnet auf dem Server mit `periodModel` aus den Einheiten einer Disziplin. Die Wertung folgt
 // der Disziplin; nur Disziplinen in Zehnteln lassen ganze Ringe zu. Probe zählt in Treffsicher nie.
 
-import type { Scoring } from "@vereinsheim/shot-core/metrics"
+import { metricByKey, type MetricDefinition, type Scoring } from "@vereinsheim/shot-core/metrics"
 import {
   progressQueryFromParams,
   progressQueryToParams,
   type ProgressQuery,
 } from "@vereinsheim/shot-ui/nav/routes"
+import { itemValues } from "@vereinsheim/shot-ui/period/item"
 import { lightPeriodModel, periodModel, type PeriodModel } from "@vereinsheim/shot-ui/period/model"
 import type { PeriodMetricKey, PeriodState } from "@vereinsheim/shot-ui/period/state"
 
+import { influences, sessionQuality, type Influence } from "@/lib/statistics/influences"
 import { periodItems, scoringOf } from "@/lib/statistics/periodItems"
+import { selfImage, type SelfImage } from "@/lib/statistics/selfImage"
 import type { StatisticsSession } from "@/lib/statistics/sessions"
 
 /** Kacheln: Ø je Schuss (trägt den Vergleich), Zehnerquote, Lage aus dem Ausdruck */
@@ -90,6 +93,9 @@ export interface StatisticsPage {
   state: PeriodState
   options: DisciplineOption[]
   option: DisciplineOption
+  /** Einflüsse über die Einheiten des Zeitraums (Art wie die Seite) */
+  influences: Influence[]
+  selfImage: SelfImage
 }
 
 /** die Seite für den Browser: das leichte Modell der gewählten Disziplin; ohne Einheit mit Ergebnis null */
@@ -113,5 +119,28 @@ export function statisticsPage(input: {
     timeZone: input.timeZone,
     named: [],
   })
-  return { model: lightPeriodModel(model), state, options, option }
+  // Einflüsse und Selbstbild über die Einheiten der Seite (Zeitraum und Art), im Ø je Schuss ihrer Wertung
+  const perShot = itemValues(
+    model.cards,
+    metricByKey("result.decimalMean") as MetricDefinition,
+    state.scoring
+  )
+  const byId = new Map(input.sessions.map((s) => [s.id, s]))
+  const entries = perShot.map((value) => {
+    const session = byId.get(value.id) as StatisticsSession
+    const quality = sessionQuality(session.series)
+    return {
+      value,
+      factors: { ...session.wellbeing, ...(quality === null ? {} : { quality }) },
+    }
+  })
+  const inPeriod = model.cards.map((card) => byId.get(card.id) as StatisticsSession)
+  return {
+    model: lightPeriodModel(model),
+    state,
+    options,
+    option,
+    influences: influences(entries),
+    selfImage: selfImage(inPeriod),
+  }
 }
