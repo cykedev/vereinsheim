@@ -5,7 +5,7 @@ import type { ReactNode } from "react"
 
 import { formatValue } from "../format"
 import { HelpButton, HelpIcon } from "../help/HelpButton"
-import { shotHelp, type HelpLookup } from "../help/HelpTexts"
+import { shotHelp, type HelpLookup } from "../help/headings"
 
 // Gemeinsame Teile der Analyse-Karten.
 

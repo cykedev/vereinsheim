@@ -217,8 +217,21 @@ export function progressQueryToParams(query: ProgressQuery): Param[] {
   return present(progressPairs(query))
 }
 
-export function progressQueryFromParams(params: URLSearchParams): ProgressQuery {
+/** Kennzahlen des Verlaufs, die Spiegels Fortschritt anbietet; andere aus der Adresse gelten als Vorgabe */
+export const PROGRESS_METRICS: readonly PeriodMetricKey[] = [
+  "result.decimalMean",
+  "group.sigma",
+  "result.tensRate",
+  "time.intervalMedian",
+]
+
+/** `metrics`: die Kennzahlen, die die Seite anbietet (Treffsicher: Ø je Schuss, Zehner, Lage) */
+export function progressQueryFromParams(
+  params: URLSearchParams,
+  metrics: readonly PeriodMetricKey[] = PROGRESS_METRICS
+): ProgressQuery {
   const view = params.get("view")
+  const metric = METRIC_CODES.find(([, code]) => code === params.get("metric"))?.[0]
   return {
     choice: decodeChoice(params.get("range"), DEFAULT_CHOICE),
     compare: decodeCompare(params.get("compare")),
@@ -226,9 +239,7 @@ export function progressQueryFromParams(params: URLSearchParams): ProgressQuery 
     kind: kindOf(params.get("kind")),
     includeProbeOnly: params.get("sighters") !== "0",
     scoring: scoringOf(params.get("scoring")),
-    metric:
-      METRIC_CODES.find(([, code]) => code === params.get("metric"))?.[0] ??
-      DEFAULT_PROGRESS.metric,
+    metric: metric && metrics.includes(metric) ? metric : DEFAULT_PROGRESS.metric,
     view: view === "cards" || view === "months" ? view : null,
     chosen: idOrNull(params.get("pick")),
   }

@@ -3,7 +3,12 @@ import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 
 import { HelpTextsProvider } from "../help/HelpTexts"
-import { routeFromUrl, urlFromRoute } from "../nav/routes"
+import {
+  progressQueryFromParams,
+  PROGRESS_METRICS,
+  routeFromUrl,
+  urlFromRoute,
+} from "../nav/routes"
 import { CardList } from "./CardList"
 import { CardLine, CardReadout } from "./CardReadout"
 import { PERIOD_TILE_KEYS, periodModel, periodReading } from "./model"
@@ -113,7 +118,7 @@ describe("Wörter der Seite eines Zeitraums", () => {
     expect(html).toContain("Neueste Scheibe")
     expect(html).toContain("Scheibe öffnen")
     expect(html).toContain("Mittel je Scheibe")
-    expect(html).toContain("je Scheibe")
+    expect(html).toMatch(/>je Scheibe</)
     expect(html).not.toContain("Einheit")
   })
 
@@ -208,18 +213,23 @@ describe("Kennzahlen als Parameter", () => {
         ],
       })
     )
-    expect(html).toContain("Lage")
-    expect(html).not.toContain("Streuung")
+    expect(html).toMatch(/>Lage</)
+    expect(html).not.toMatch(/>Streuung</)
   })
 
-  it("der Schwerpunkt-Abstand geht durch die Adresse", () => {
+  it("der Schwerpunkt-Abstand geht nur durch die Adresse einer Seite, die ihn anbietet", () => {
     const state = {
       ...initialPeriodState({ family: "lg-10m" }),
       metric: "group.mpiDistance" as const,
     }
     const url = urlFromRoute({ page: "progress", query: state, section: null })
     expect(url).toContain("metric=location")
+    // Spiegel bietet ihn nicht an: die Vorgabe
     const back = routeFromUrl("/progress", url.split("?")[1] ?? "", "")
-    expect(back.page === "progress" && back.query.metric).toBe("group.mpiDistance")
+    expect(back.page === "progress" && back.query.metric).toBe("result.decimalMean")
+    const params = new URLSearchParams(url.split("?")[1])
+    expect(progressQueryFromParams(params, [...PROGRESS_METRICS, "group.mpiDistance"]).metric).toBe(
+      "group.mpiDistance"
+    )
   })
 })
