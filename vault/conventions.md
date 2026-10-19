@@ -171,14 +171,14 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
 - **Umgesetzt (Tier 1):** die Shared-Schicht liegt in gemeinsamen Paketen (`@vereinsheim/ui`,
   `@vereinsheim/lib`, `@vereinsheim/config`) — Drift ist dort strukturell unmöglich (siehe §1).
 - **Offene Angleichungen:** Dependency-Pins (inkl. TypeScript-Major).
-- **Erzwungen** (`consistency-check.sh`, Abschnitt „Konventionen (fatal)"):
-  Palette-Klassen und `dark:`-Varianten (§4), Opazitäts-Modifier und Schriftgrößen unter `text-xs`
-  (§3), Seiten-eigene `px-/py-`-Container (§3), inline `new Intl.*` und `toLocale*String()` (§6),
-  ASCII-Ellipsen und `text-2xl font-bold` (§3), Icon-Buttons unter `h-10 w-10`, „… →"-Buttons (§7)
-  und inline-Leerzustände (§2).
-  Die Muster sind bewusst eng: das `EmptyState`-Icon **darf** `h-8 w-8` sein, ein „→" **darf** als
-  Inhalt in Protokolltexten stehen, die Hex-Skala der Trefferlage-Charts **darf** bleiben, und ein
-  `PageHeader`-Untertitel „Noch keine …" ist kein Leerzustand. Wer eine Regel ergänzt, prüft sie
+- **Erzwungen** (`consistency-check.sh`, Abschnitt „Konventionen (fatal)"), für Ringwerk und Treffsicher:
+  Palette-Klassen und `dark:`-Varianten (§4), Opazitäts-Modifier auf `text-muted-foreground` (§3), inline
+  `new Intl.*` und `toLocale*String()` (§6), ASCII-Ellipsen (§3) und „… →"-Buttons (§7). Die Regeln, die nur zu
+  `theme.css` gehörten (Schrift unter `text-xs`, Seiten-Container, `text-2xl font-bold`, Icon-Buttons unter
+  `h-10 w-10`, inline-Leerzustand), prüft das Gate seit dem Umzug beider Apps auf Design 2 nicht mehr; Regeln für
+  Design 2 über drei Apps folgen in Teil E.
+  Die Muster sind bewusst eng: ein „→" **darf** als Inhalt in Protokolltexten stehen, die Hex-Skala der
+  Trefferlage-Charts **darf** bleiben. Wer eine Regel ergänzt, prüft sie
   gegen eine Probe-Datei mit absichtlichen Verstößen **und** gegen den grünen Ist-Zustand.
 
 ## 9. Aus Lernlog übernommen
@@ -301,11 +301,9 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
   den Fachkern braucht (Scheibe, Serien), in `@vereinsheim/shot-ui`, mit Markup-Tests; die Bedienung im Browser prüft
   die Skriptprüfung der App (`pnpm --filter spiegel pruefen`).
 - Treffsicher läuft seit Teil T von SP-4.3 auf Design 2 ([[treffsicher-design2]]), Ringwerk seit Teil W
-  ([[ringwerk-design2]]); `theme.css` nutzt keine App mehr. Bis das Drift-Gate in Teil E auf drei Apps umgestellt ist, prüft es Treffsicher nur mit den Regeln, die
-  auch in Design 2 gelten (Palette, `dark:`, Opazität auf `text-muted-foreground`, inline `Intl`/`toLocale*`,
-  ASCII-Ellipse, „… →“-Button). `src/app/globals.css` vergleicht es nicht, die Regeln von `theme.css` (Schrift unter
-  `text-xs`, Seiten-Container, `text-2xl font-bold`, Icon-Button unter `h-10 w-10`, inline-Leerzustand) gelten nur
-  für Ringwerk.
+  ([[ringwerk-design2]]); `theme.css` nutzt keine App mehr. Bis das Drift-Gate in Teil E auf drei Apps umgestellt ist,
+  prüft es Ringwerk und Treffsicher mit den Regeln, die auch in Design 2 gelten (§8), und vergleicht ihre
+  `src/app/globals.css` wieder byte-genau.
 - **Kein Knopf ohne Folge:** Jede Aktion, die bestätigt, ablehnt, entfernt, widerruft, umstellt oder ein Konto ändert, fragt
   über `DecisionDialog` (`@vereinsheim/ui/design2/decision-dialog`) und sagt in Alltagsworten, worum es geht, was vorher zu
   prüfen ist, was dann passiert, was **nicht** passiert und wie es rückgängig geht. Die Texte stehen an einer Stelle

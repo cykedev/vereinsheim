@@ -658,6 +658,11 @@ Treffsicher bleiben Palette, `dark:`, Opazität auf `text-muted-foreground`, inl
 und „… →“-Button; Ringwerk prüft das Gate unverändert vollständig. E1–E3 lösen diesen Übergang ab
 (`theme_rules`/`DESIGN2_SKIP_MATCH` wieder entfernen).
 
+**Mit Teil W „Basis“ (19. Oktober 2026, mit OK des Users):** Ringwerk ist auf Design 2. Das Gate prüft beide Apps mit
+denselben Regeln, die theme.css-Regeln samt `theme_rules` und `DESIGN2_SKIP_MATCH` sind entfernt, `globals.css` wird
+wieder verglichen (byte-gleich). Gegenprobe an einer Kopie von Ringwerk: jede verbleibende Regel und eine geänderte
+`globals.css` rot. Für E1–E3 bleiben Spiegel im Gate und die neuen Regeln von Design 2 (E2).
+
 **Prüfung Teil E:** `./scripts/consistency-check.sh` grün; mit Probedatei rot; `pnpm check`; alle drei `pruefen`;
 Ringwerk `pruefen:vergleichen` ohne Abweichung.
 

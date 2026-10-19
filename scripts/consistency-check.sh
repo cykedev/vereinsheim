@@ -10,11 +10,10 @@
 #   - bekannte Anti-Pattern (native Dialoge, MoreHorizontal in Aktionen,
 #     font-bold-h1, ASCII-Ellipsis, inline Intl-Datum)
 #
-# Treffsicher läuft auf Design 2 (ADR-030/032): Für Treffsicher entfallen der Vergleich von
-# globals.css und die Regeln, die nur zu theme.css gehören (Schrift unter text-xs, eigener
-# Seiten-Container, text-2xl font-bold, Icon-Buttons unter h-10 w-10, inline-Leerzustand).
-# Ringwerk prüft das Gate weiter vollständig. Spiegel prüft es nicht. Ein Gate über alle drei
-# Apps auf Design 2 folgt mit dem Umzug von Ringwerk.
+# Ringwerk und Treffsicher laufen auf Design 2 (ADR-030/032). Die Regeln, die nur zu theme.css
+# gehörten (Schrift unter text-xs, eigener Seiten-Container, text-2xl font-bold, Icon-Buttons
+# unter h-10 w-10, inline-Leerzustand), prüft das Gate nicht mehr. Spiegel prüft es nicht; ein
+# Gate über alle drei Apps mit den Regeln von Design 2 folgt in Teil E.
 #
 # Aufruf: ./scripts/consistency-check.sh   (vor jedem Release via build-and-push.sh)
 set -euo pipefail
@@ -31,7 +30,7 @@ warn=0
 # Fast die gesamte geteilte Schicht liegt in packages/*: tsconfig/eslint/
 # prettier/postcss/next.config/vitest in @vereinsheim/config; cn/forms/fieldErrors +
 # Form-Hooks in @vereinsheim/lib; die ui/-Primitives, shell/-Komponenten und
-# der globals.css-Theme-Kern (@vereinsheim/ui/theme.css) in @vereinsheim/ui —
+# der Kern von globals.css (@vereinsheim/ui/design2.css) in @vereinsheim/ui —
 # Drift dort strukturell unmöglich. Hier bleibt nur, was Next/shadcn als app-lokale Dateien
 # erzwingen (alle trivial + byte-identisch): components.json, der dünne globals.css-Stub,
 # die Error-Boundaries + not-found. Dazu der Wrapper um die geteilte
@@ -47,16 +46,8 @@ MUST_MATCH=(
 )
 # Hinweis: vault/conventions.md ist EINE Quelle am Root, nicht pro App.
 
-# Treffsicher bindet design2.css ein, Ringwerk theme.css: globals.css gleicht erst wieder,
-# wenn Ringwerk auf Design 2 umzieht.
-DESIGN2_SKIP_MATCH=(src/app/globals.css)
-
 echo "== Byte-identische Shared-Dateien & Configs =="
 for f in "${MUST_MATCH[@]}"; do
-  if [[ " ${DESIGN2_SKIP_MATCH[*]} " == *" $f "* ]]; then
-    echo "  skip $f (Treffsicher auf Design 2)"
-    continue
-  fi
   if [[ ! -f "$TS/$f" || ! -f "$RW/$f" ]]; then
     echo "  FATAL fehlt in einem Repo: $f"
     fail=1
@@ -101,18 +92,14 @@ echo "== Konventionen (fatal) =="
 # eingehalten. Ohne Gate driften sie zurueck — deshalb fatal.
 #
 # Wichtig bei den Mustern: eng genug halten, damit legitime Faelle nicht
-# anschlagen. Genau drei Fehlalarme sind zu vermeiden (jeweils real im
-# Code): das EmptyState-Icon ist `h-8 w-8` und kein
-# Button; ein "→" steht auch als Inhalt in Protokolltexten ("alt → neu"); und
+# anschlagen. Genau zwei Fehlalarme sind zu vermeiden (jeweils real im
+# Code): ein "→" steht auch als Inhalt in Protokolltexten ("alt → neu"); und
 # die Hex-Skala der Trefferlage-Charts ist eine Datenskala, keine UI-Semantik.
 conv_fail=0
 report() { echo "  FATAL $1: $2"; conv_fail=1; fail=1; }
 
 for repo in "$TS" "$RW"; do
   name=$(basename "$repo")
-  # Regeln, die nur zu theme.css gehören, gelten nicht für Treffsicher (Design 2).
-  theme_rules=1
-  [[ "$repo" == "$TS" ]] && theme_rules=0
 
   # §4: Farbe traegt Bedeutung ueber Tokens, nicht ueber die Tailwind-Palette.
   # Ausgenommen: PDF-Renderer (eigene Hex-Styles), die Trefferlage-Datenskala
@@ -122,22 +109,15 @@ for repo in "$TS" "$RW"; do
     | grep -vE '/pdf/|statistics-charts/constants\.ts|components/ui/chart\.tsx' | wc -l | tr -d ' ') || true
   [[ "$hits" != "0" ]] && report "$name" "$hits Palette-Klasse(n) statt semantischem Token (§4)"
 
-  # §4: dark:-Varianten sind toter Code (beide Apps laufen fest im Dark Mode).
+  # §4: Farbe kommt aus den Tokens, die hell und dunkel je ihren Wert haben; dark:-Varianten
+  # umgehen sie.
   hits=$(grep -rn 'dark:' "$repo/src" --include='*.tsx' 2>/dev/null \
     | grep -vE 'components/ui/(chart|checkbox|form|table)\.tsx' | wc -l | tr -d ' ') || true
-  [[ "$hits" != "0" ]] && report "$name" "$hits dark:-Variante(n) — die Apps sind dark-only (§4)"
+  [[ "$hits" != "0" ]] && report "$name" "$hits dark:-Variante(n) — Farbe aus den Tokens (§4)"
 
   # §3: Kontrast-Untergrenze.
   hits=$(grep -rnE 'text-muted-foreground/[0-9]+' "$repo/src" 2>/dev/null | wc -l | tr -d ' ') || true
   [[ "$hits" != "0" ]] && report "$name" "$hits Opazitaets-Modifier auf text-muted-foreground (§3)"
-  if [[ "$theme_rules" == "1" ]]; then
-    hits=$(grep -rnE 'text-\[[0-9]{1,2}px\]' "$repo/src" 2>/dev/null | wc -l | tr -d ' ') || true
-    [[ "$hits" != "0" ]] && report "$name" "$hits Schriftgroesse unter text-xs (§3)"
-
-    # §3: Das Layout liefert den Container; eine Seite setzt keinen eigenen.
-    hits=$(grep -rlE 'px-4 py-8' "$repo/src/app" --include='page.tsx' 2>/dev/null | wc -l | tr -d ' ') || true
-    [[ "$hits" != "0" ]] && report "$name" "$hits Seite(n) mit eigenem px-/py-Container (§3)"
-  fi
 
   # §6: Formatierung nur ueber @vereinsheim/lib/format.
   hits=$(grep -rn 'new Intl\.' "$repo/src" --include='*.ts' --include='*.tsx' 2>/dev/null | wc -l | tr -d ' ') || true
@@ -149,36 +129,13 @@ for repo in "$TS" "$RW"; do
   hits=$(grep -rnE '(Speichern|Löschen|Laden|Lädt|Wird|Anmelden|Generiere|Erstelle)\.\.\.' "$repo/src" 2>/dev/null | wc -l | tr -d ' ') || true
   [[ "$hits" != "0" ]] && report "$name" "$hits ASCII-'...' statt '…' (§3)"
 
-  if [[ "$theme_rules" == "1" ]]; then
-    # §3: Seitentitel sind font-semibold, nicht bold.
-    hits=$(grep -rn 'text-2xl font-bold' "$repo/src" 2>/dev/null | wc -l | tr -d ' ') || true
-    [[ "$hits" != "0" ]] && report "$name" "$hits 'text-2xl font-bold' — Kanon ist font-semibold (§3)"
-
-    # Compliance-Regel der App: Icon-Buttons mind. h-10 w-10. Nur Buttons pruefen —
-    # `h-8 w-8` an einem Icon (z.B. im EmptyState) ist legitim.
-    hits=$(grep -rn 'h-8 w-8' "$repo/src" --include='*.tsx' 2>/dev/null | grep -iE '<Button|button' | wc -l | tr -d ' ') || true
-    [[ "$hits" != "0" ]] && report "$name" "$hits Icon-Button unter h-10 w-10"
-  fi
-
   # §7: Die Karte bzw. ihr Titel ist der Link — kein zusaetzlicher "Details →".
   hits=$(grep -rnE '>[^<]*(Details|Rangliste|Mehr)\s*→' "$repo/src" --include='*.tsx' 2>/dev/null | wc -l | tr -d ' ') || true
   [[ "$hits" != "0" ]] && report "$name" "$hits '… →'-Button statt klickbarer Karte (§7)"
-
-  # §2: Leerzustaende ueber die gemeinsame Komponente. Ausgenommen sind
-  # (a) EmptyState selbst und seine Props, (b) Dialoge/Formulare/Editoren — dort
-  # ist eine Zeile richtig — und (c) Strings in Anfuehrungszeichen, weil das
-  # PageHeader-Untertitel sind ("Noch keine Einheiten erfasst.") und kein
-  # Leerzustand. Gesucht wird also blanker JSX-Text.
-  if [[ "$theme_rules" == "1" ]]; then
-    hits=$(grep -rnE 'Keine .{0,40}(vorhanden|gefunden|erfasst)|Noch keine ' "$repo/src" --include='*.tsx' 2>/dev/null \
-      | grep -vE 'EmptyState|title=|description=|emptyText|/pdf/|Dialog|Editor|-form/|Form\.tsx' \
-      | grep -vE '"[^"]*(Keine |Noch keine )' | wc -l | tr -d ' ') || true
-    [[ "$hits" != "0" ]] && report "$name" "$hits inline-Leerzustand statt <EmptyState> (§2)"
-  fi
 done
 
 if [[ "$conv_fail" == "0" ]]; then
-  echo "  ok   alle Konventions-Checks (§2/§3/§4/§6/§7)"
+  echo "  ok   alle Konventions-Checks (§3/§4/§6/§7)"
 fi
 
 echo "== Anti-Pattern (Warnungen) =="

@@ -66,3 +66,9 @@ und prüft als Admin, Sportleitung und Mitglied: Rahmen und Leisten je Rolle, Pr
 seitliches Scrollen, die untere Leiste, die Reiter, das Bracket, keine versteckte Kopie im Hintergrund, Darstellung
 ohne Aufblitzen und den Fokus im Dialog „Spielplan neu generieren“ (nur geöffnet und mit Escape geschlossen). Es
 schreibt nichts. Dazu vor jedem Merge und Release der Abgleich aus [[ringwerk-pruefbestand]].
+
+## Drift-Gate
+
+`scripts/consistency-check.sh` prüft Ringwerk seit diesem Umzug wie Treffsicher: ohne die Regeln, die nur zu
+`theme.css` gehörten (Schrift `text-[13px]` und `text-[15px]` sind Maße von Design 2), mit byte-gleicher
+`globals.css` ([[conventions]] §8).
