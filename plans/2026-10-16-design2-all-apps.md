@@ -651,6 +651,13 @@ vorher/nachher nebeneinander); `tools/stack-e2e/run.sh`; danach Release nach „
   „Design 2 (alle Apps)“ und rückt nach vorn; `drift-protection`, `vault/architecture/architecture.md`
   (Cross-App-Konsistenz), SP-4.3 **Status:** umgesetzt; `/sync-graph`.
 
+**Vorgezogen für den Release von Treffsicher (19. Oktober 2026, mit OK des Users):** `scripts/consistency-check.sh`
+nimmt Treffsicher vom Vergleich von `globals.css` und von den Regeln aus, die nur zu `theme.css` gehören (Schrift
+unter `text-xs`, Seiten-Container, `text-2xl font-bold`, Icon-Button unter `h-10 w-10`, inline-Leerzustand). Für
+Treffsicher bleiben Palette, `dark:`, Opazität auf `text-muted-foreground`, inline `Intl`/`toLocale*`, ASCII-Ellipse
+und „… →“-Button; Ringwerk prüft das Gate unverändert vollständig. E1–E3 lösen diesen Übergang ab
+(`theme_rules`/`DESIGN2_SKIP_MATCH` wieder entfernen).
+
 **Prüfung Teil E:** `./scripts/consistency-check.sh` grün; mit Probedatei rot; `pnpm check`; alle drei `pruefen`;
 Ringwerk `pruefen:vergleichen` ohne Abweichung.
 

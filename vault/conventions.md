@@ -317,8 +317,11 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
   den Fachkern braucht (Scheibe, Serien), in `@vereinsheim/shot-ui`, mit Markup-Tests; die Bedienung im Browser prüft
   die Skriptprüfung der App (`pnpm --filter spiegel pruefen`).
 - Treffsicher läuft seit Teil T von SP-4.3 auf Design 2 ([[treffsicher-design2]]), Ringwerk bleibt bis Teil W auf
-  `theme.css`. Bis das Drift-Gate in Teil E auf drei Apps umgestellt ist, weicht `src/app/globals.css` von Treffsicher
-  damit von Ringwerk ab (`MUST_MATCH` meldet das).
+  `theme.css`. Bis das Drift-Gate in Teil E auf drei Apps umgestellt ist, prüft es Treffsicher nur mit den Regeln, die
+  auch in Design 2 gelten (Palette, `dark:`, Opazität auf `text-muted-foreground`, inline `Intl`/`toLocale*`,
+  ASCII-Ellipse, „… →“-Button). `src/app/globals.css` vergleicht es nicht, die Regeln von `theme.css` (Schrift unter
+  `text-xs`, Seiten-Container, `text-2xl font-bold`, Icon-Button unter `h-10 w-10`, inline-Leerzustand) gelten nur
+  für Ringwerk.
 - **Kein Knopf ohne Folge:** Jede Aktion, die bestätigt, ablehnt, entfernt, widerruft, umstellt oder ein Konto ändert, fragt
   über `DecisionDialog` (`@vereinsheim/ui/design2/decision-dialog`) und sagt in Alltagsworten, worum es geht, was vorher zu
   prüfen ist, was dann passiert, was **nicht** passiert und wie es rückgängig geht. Die Texte stehen an einer Stelle
