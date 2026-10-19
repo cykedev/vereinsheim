@@ -34,7 +34,7 @@ function QualityDots({ quality }: { quality: number | null }) {
         <span
           key={i}
           className={`inline-block h-2 w-2 rounded-full transition-colors ${
-            i < q ? "bg-primary" : "bg-muted/40"
+            i < q ? "bg-primary" : "bg-line-strong"
           }`}
         />
       ))}
