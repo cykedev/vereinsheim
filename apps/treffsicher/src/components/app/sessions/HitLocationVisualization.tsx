@@ -1,3 +1,4 @@
+import { formatValue } from "@vereinsheim/shot-ui/format"
 import type {
   HitLocationHorizontalDirection,
   HitLocationVerticalDirection,
@@ -45,10 +46,10 @@ export function HitLocationVisualization({
         <span>{directionLabel}</span>
       </span>
       <span className="rounded-md border border-border/50 px-2 py-1 tabular-nums text-muted-foreground">
-        {horizontalArrow} {horizontalMm.toFixed(2)} mm
+        {horizontalArrow} {formatValue(horizontalMm, 2)} mm
       </span>
       <span className="rounded-md border border-border/50 px-2 py-1 tabular-nums text-muted-foreground">
-        {verticalArrow} {verticalMm.toFixed(2)} mm
+        {verticalArrow} {formatValue(verticalMm, 2)} mm
       </span>
     </div>
   )
