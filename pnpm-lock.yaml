@@ -355,6 +355,12 @@ importers:
       '@vereinsheim/lib':
         specifier: workspace:*
         version: link:../../packages/lib
+      '@vereinsheim/shot-core':
+        specifier: workspace:*
+        version: link:../../packages/shot-core
+      '@vereinsheim/shot-ui':
+        specifier: workspace:*
+        version: link:../../packages/shot-ui
       '@vereinsheim/ui':
         specifier: workspace:*
         version: link:../../packages/ui

@@ -24,6 +24,8 @@
     "@prisma/adapter-pg": "catalog:",
     "@prisma/client": "catalog:",
     "@vereinsheim/lib": "workspace:*",
+    "@vereinsheim/shot-core": "workspace:*",
+    "@vereinsheim/shot-ui": "workspace:*",
     "@vereinsheim/ui": "workspace:*",
     "bcryptjs": "catalog:",
     "lucide-react": "catalog:",
