@@ -6,7 +6,7 @@ interface Props {
 
 export function RankBadge({ rank, podium = true }: Props) {
   const base =
-    "inline-flex w-[1.25rem] items-center justify-center rounded px-1 py-0.5 text-xs tabular-nums shrink-0"
+    "inline-flex w-[1.25rem] shrink-0 items-center justify-center rounded-md px-1 py-0.5 font-display text-xs font-bold tabular-nums"
 
   if (podium && rank === 1)
     return <span className={`${base} bg-rank-1/20 text-rank-1`}>{rank}</span>

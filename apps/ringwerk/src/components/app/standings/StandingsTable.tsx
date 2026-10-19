@@ -28,7 +28,7 @@ export function StandingsTable({ rows }: Props) {
   }
 
   return (
-    <div className="overflow-hidden rounded-lg border bg-card">
+    <div className="overflow-hidden rounded-2xl border bg-card">
       <Table>
         <TableHeader>
           <TableRow className="border-b bg-muted/40">
@@ -88,32 +88,32 @@ export function StandingsTable({ rows }: Props) {
                     </>
                   )}
                 </TableCell>
-                <TableCell className="px-2 py-3 text-center text-muted-foreground sm:px-4">
+                <TableCell className="px-2 py-3 text-center font-mono text-muted-foreground tabular-nums sm:px-4">
                   {row.played}
                 </TableCell>
-                <TableCell className="px-2 py-3 text-center sm:px-4">
+                <TableCell className="px-2 py-3 text-center font-mono tabular-nums sm:px-4">
                   {row.wins > 0 ? (
                     <span className="font-medium text-success">{row.wins}</span>
                   ) : (
                     <span className="text-muted-foreground">{row.wins}</span>
                   )}
                 </TableCell>
-                <TableCell className="hidden px-4 py-3 text-center sm:table-cell">
+                <TableCell className="hidden px-4 py-3 text-center font-mono tabular-nums sm:table-cell">
                   {row.draws > 0 ? (
                     <span className="font-medium text-warning">{row.draws}</span>
                   ) : (
                     <span className="text-muted-foreground">{row.draws}</span>
                   )}
                 </TableCell>
-                <TableCell className="hidden px-4 py-3 text-center sm:table-cell">
+                <TableCell className="hidden px-4 py-3 text-center font-mono tabular-nums sm:table-cell">
                   <span className="text-muted-foreground">{row.losses}</span>
                 </TableCell>
                 <TableCell className="px-2 py-3 text-center sm:px-4">
-                  <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
+                  <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 font-mono text-sm font-bold text-primary tabular-nums">
                     {row.points}
                   </span>
                 </TableCell>
-                <TableCell className="hidden px-4 py-3 text-right text-muted-foreground sm:table-cell">
+                <TableCell className="hidden px-4 py-3 text-right font-mono text-muted-foreground tabular-nums sm:table-cell">
                   {formatDecimal1(row.bestRingteiler)}
                 </TableCell>
               </TableRow>

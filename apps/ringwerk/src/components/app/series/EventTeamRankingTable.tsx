@@ -27,7 +27,7 @@ export function EventTeamRankingTable({ entries, scoringMode, teamScoring }: Pro
   const teamScoringLabel = teamScoring === "SUM" ? "Summe" : "Bestes"
 
   return (
-    <div className="overflow-hidden rounded-lg border bg-card">
+    <div className="overflow-hidden rounded-2xl border bg-card">
       <div className="px-4 py-2 border-b bg-muted/30 flex items-center justify-between">
         <span className="text-sm font-medium">Team-Rangliste</span>
         <span className="text-xs text-muted-foreground">{teamScoringLabel}</span>
@@ -59,7 +59,7 @@ export function EventTeamRankingTable({ entries, scoringMode, teamScoring }: Pro
               <TableCell className="px-3 py-2 text-muted-foreground hidden whitespace-normal sm:table-cell text-xs">
                 {entry.members.map((m) => m.participantName).join(", ")}
               </TableCell>
-              <TableCell className="px-3 py-2 text-right tabular-nums font-medium">
+              <TableCell className="px-3 py-2 text-right font-mono tabular-nums font-medium">
                 {formatTeamScore(entry.teamScore, scoringMode)}
               </TableCell>
             </TableRow>

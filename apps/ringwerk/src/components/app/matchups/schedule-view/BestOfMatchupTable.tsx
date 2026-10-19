@@ -30,7 +30,7 @@ export function BestOfMatchupTable({
   bestOfConfig,
 }: Props) {
   return (
-    <div className="overflow-hidden rounded-lg border bg-card">
+    <div className="overflow-hidden rounded-2xl border bg-card">
       <Table>
         <TableHeader>
           <TableRow className="border-b bg-muted/40">

@@ -9,7 +9,7 @@ export function Connector({ height, pairs }: { height: number; pairs: ConnectorP
       width={CONN_W}
       height={height}
       style={{ display: "block", flexShrink: 0 }}
-      className="text-border"
+      className="text-line-strong"
     >
       {pairs.map(({ in1, in2, out }, i) => (
         <g key={i} stroke="currentColor" strokeWidth={1} fill="none">

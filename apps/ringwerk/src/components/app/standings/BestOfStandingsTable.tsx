@@ -39,7 +39,7 @@ export function BestOfStandingsTable({ rows }: Props) {
   }
 
   return (
-    <div className="overflow-hidden rounded-lg border bg-card">
+    <div className="overflow-hidden rounded-2xl border bg-card">
       <Table>
         <TableHeader>
           <TableRow className="border-b bg-muted/40">
@@ -98,13 +98,13 @@ export function BestOfStandingsTable({ rows }: Props) {
                     </>
                   )}
                 </TableCell>
-                <TableCell className="hidden px-4 py-3 text-center text-muted-foreground sm:table-cell">
+                <TableCell className="hidden px-4 py-3 text-center font-mono text-muted-foreground tabular-nums sm:table-cell">
                   {row.played}
                 </TableCell>
-                <TableCell className="px-2 py-3 text-center font-medium sm:px-4">
+                <TableCell className="px-2 py-3 text-center font-mono font-medium tabular-nums sm:px-4">
                   {row.wins}
                 </TableCell>
-                <TableCell className="hidden px-4 py-3 text-center sm:table-cell">
+                <TableCell className="hidden px-4 py-3 text-center font-mono tabular-nums sm:table-cell">
                   <span
                     className={
                       row.duelDiff > 0
@@ -117,7 +117,7 @@ export function BestOfStandingsTable({ rows }: Props) {
                     {row.duelDiff > 0 ? `+${row.duelDiff}` : row.duelDiff}
                   </span>
                 </TableCell>
-                <TableCell className="hidden px-4 py-3 text-center text-muted-foreground sm:table-cell">
+                <TableCell className="hidden px-4 py-3 text-center font-mono text-muted-foreground tabular-nums sm:table-cell">
                   {row.duelsWon}:{row.duelsLost}
                 </TableCell>
                 <TableCell className="hidden px-4 py-3 text-right sm:table-cell">

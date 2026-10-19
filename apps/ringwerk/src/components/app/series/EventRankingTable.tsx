@@ -36,7 +36,7 @@ export function EventRankingTable({
   const scoreLabel = SCORING_MODE_COLUMN_LABELS[scoringMode] ?? "Score"
 
   return (
-    <div className="overflow-hidden rounded-lg border bg-card">
+    <div className="overflow-hidden rounded-2xl border bg-card">
       <Table>
         <TableHeader>
           <TableRow className="border-b bg-muted/50">
@@ -84,7 +84,7 @@ export function EventRankingTable({
               <TableCell className="px-3 py-2 text-muted-foreground hidden whitespace-normal sm:table-cell">
                 {entry.disciplineName}
               </TableCell>
-              <TableCell className="px-3 py-2 text-right tabular-nums">
+              <TableCell className="px-3 py-2 text-right font-mono tabular-nums">
                 {formatRings(
                   entry.rings,
                   getEffectiveScoringType(
@@ -94,10 +94,10 @@ export function EventRankingTable({
                   )
                 )}
               </TableCell>
-              <TableCell className="px-3 py-2 text-right tabular-nums text-muted-foreground hidden sm:table-cell">
+              <TableCell className="px-3 py-2 text-right font-mono tabular-nums text-muted-foreground hidden sm:table-cell">
                 {formatDecimal1(isMixed ? entry.correctedTeiler : entry.teiler)}
               </TableCell>
-              <TableCell className="px-3 py-2 text-right tabular-nums font-medium">
+              <TableCell className="px-3 py-2 text-right font-mono tabular-nums font-medium">
                 {formatScore(entry.score, scoringMode)}
               </TableCell>
             </TableRow>

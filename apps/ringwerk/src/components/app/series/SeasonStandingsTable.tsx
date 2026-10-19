@@ -123,7 +123,7 @@ export function SeasonStandingsTable({ entries, minSeries, sort, isMixed = false
           hat.
         </p>
       )}
-      <div className="overflow-hidden rounded-lg border bg-card">
+      <div className="overflow-hidden rounded-2xl border bg-card">
         <Table>
           <TableHeader>
             <TableRow className="border-b bg-muted/50">
@@ -186,13 +186,13 @@ export function SeasonStandingsTable({ entries, minSeries, sort, isMixed = false
                     </span>
                   </TableCell>
                   {minSeries !== null && (
-                    <TableCell className="px-3 py-2 text-right tabular-nums hidden sm:table-cell">
+                    <TableCell className="px-3 py-2 text-right font-mono tabular-nums hidden sm:table-cell">
                       <span className={qualified ? "text-success" : "text-destructive"}>
                         {entry.seriesCount}/{minSeries}
                       </span>
                     </TableCell>
                   )}
-                  <TableCell className="px-3 py-2 tabular-nums">
+                  <TableCell className="px-3 py-2 font-mono tabular-nums">
                     <div className="flex items-center justify-end gap-1.5">
                       {entry.bestRings !== null ? (
                         <>
@@ -206,7 +206,7 @@ export function SeasonStandingsTable({ entries, minSeries, sort, isMixed = false
                       )}
                     </div>
                   </TableCell>
-                  <TableCell className={cn("px-3 py-2 tabular-nums", teilerHidden)}>
+                  <TableCell className={cn("px-3 py-2 font-mono tabular-nums", teilerHidden)}>
                     <div className="flex items-center justify-end gap-1.5">
                       {entry.bestCorrectedTeiler !== null ? (
                         <>
@@ -222,7 +222,7 @@ export function SeasonStandingsTable({ entries, minSeries, sort, isMixed = false
                   </TableCell>
                   <TableCell
                     className={cn(
-                      "px-3 py-2 tabular-nums",
+                      "px-3 py-2 font-mono tabular-nums",
                       !alternating && "font-medium",
                       ringteilerHidden
                     )}

@@ -14,7 +14,10 @@ export function BracketSlot({
     return (
       <div
         style={{ height: SLOT_H, width: SLOT_W }}
-        className={cn("rounded-lg border border-dashed", hasPreview && "bg-card/50")}
+        className={cn(
+          "rounded-xl border border-dashed border-line-strong",
+          hasPreview && "bg-card/50"
+        )}
       >
         {hasPreview ? (
           <div className="flex h-full flex-col divide-y divide-border/50">
@@ -48,8 +51,8 @@ export function BracketSlot({
     <div
       style={{ height: SLOT_H, width: SLOT_W }}
       className={cn(
-        "overflow-hidden rounded-lg border bg-card shadow-sm",
-        match.status === "COMPLETED" && "border-muted"
+        "overflow-hidden rounded-xl border border-line-strong bg-card shadow-sm",
+        match.status === "COMPLETED" && "border-border"
       )}
     >
       <div className="flex h-full flex-col divide-y divide-border">
@@ -79,7 +82,7 @@ export function BracketSlot({
               </span>
               <span
                 className={cn(
-                  "inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold tabular-nums",
+                  "inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full font-mono text-xs font-bold tabular-nums",
                   isWinner ? style?.badge : "text-muted-foreground"
                 )}
               >
