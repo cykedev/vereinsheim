@@ -1,6 +1,7 @@
 "use client"
 
-import { ConfirmDialog } from "@vereinsheim/ui/shell/ConfirmDialog"
+import { DecisionDialog } from "@vereinsheim/ui/design2/decision-dialog"
+import { leaveUnsaved } from "@/lib/consequences"
 
 interface Props {
   open: boolean
@@ -8,17 +9,14 @@ interface Props {
   onConfirm: () => void
 }
 
-// Einheitlicher Verwerfen-Dialog für den Dirty-Guard von Langformularen.
-// Bündelt die festen deutschen Texte, damit jedes Formular denselben Wortlaut nutzt.
+// Verwerfen-Dialog für den Schutz vor ungespeicherten Änderungen in Langformularen; der Wortlaut steht in
+// `leaveUnsaved`.
 export function DiscardChangesDialog({ open, onCancel, onConfirm }: Props) {
   return (
-    <ConfirmDialog
+    <DecisionDialog
+      decision={leaveUnsaved()}
       open={open}
-      onOpenChange={(o) => !o && onCancel()}
-      title="Ungespeicherte Änderungen verwerfen?"
-      description="Es gibt nicht gespeicherte Änderungen. Beim Verlassen gehen sie verloren."
-      confirmLabel="Verwerfen"
-      destructive
+      onOpenChange={(next) => !next && onCancel()}
       onConfirm={onConfirm}
     />
   )

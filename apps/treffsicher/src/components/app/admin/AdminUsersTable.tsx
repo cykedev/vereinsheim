@@ -3,18 +3,10 @@
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { setUserActive, type AdminUserListItem } from "@/lib/admin/actions"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@vereinsheim/ui/alert-dialog"
+import { DecisionDialog } from "@vereinsheim/ui/design2/decision-dialog"
 import { AdminUsersTableDesktop, AdminUsersTableMobile } from "@/components/app/admin/users-table"
 import { getErrorMessage } from "@vereinsheim/lib/forms/fieldErrors"
+import { accountDeactivate } from "@/lib/consequences"
 import {
   confirmedDeactivation,
   requestActiveChange,
@@ -76,36 +68,20 @@ export function AdminUsersTable({ users, currentAdminId, displayTimeZone }: Prop
         Der eigene aktive Admin-Account kann nicht deaktiviert werden.
       </p>
 
-      <AlertDialog
+      <DecisionDialog
+        decision={accountDeactivate({
+          name: deactivationCandidate?.name ?? null,
+          email: deactivationCandidate?.email ?? "",
+        })}
         open={deactivationCandidate !== null}
         onOpenChange={(open) => !open && setDeactivationCandidate(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Nutzer deaktivieren?</AlertDialogTitle>
-            <AlertDialogDescription>
-              {deactivationCandidate
-                ? `Der Account "${deactivationCandidate.name ? `${deactivationCandidate.name} <${deactivationCandidate.email}>` : deactivationCandidate.email}" kann sich danach nicht mehr anmelden.`
-                : "Der Account kann sich danach nicht mehr anmelden."}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={pending}>Abbrechen</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-white hover:bg-destructive/90"
-              disabled={pending}
-              onClick={() => {
-                const change = confirmedDeactivation(deactivationCandidate)
-                if (!change) return
-                setDeactivationCandidate(null)
-                performSetActive(change.userId, change.isActive)
-              }}
-            >
-              Deaktivieren
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        onConfirm={() => {
+          const change = confirmedDeactivation(deactivationCandidate)
+          if (!change) return
+          setDeactivationCandidate(null)
+          performSetActive(change.userId, change.isActive)
+        }}
+      />
     </div>
   )
 }

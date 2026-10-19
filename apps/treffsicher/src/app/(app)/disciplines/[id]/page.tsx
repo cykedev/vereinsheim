@@ -11,6 +11,7 @@ import {
 } from "@/lib/disciplines/actions"
 import { DetailActionBar } from "@vereinsheim/ui/shell/DetailActionBar"
 import { ArchiveDisciplineButton } from "@/components/app/disciplines/ArchiveDisciplineButton"
+import { disciplineActivate, disciplineArchive, disciplineDelete } from "@/lib/consequences"
 import { DeleteDisciplineButton } from "@/components/app/disciplines/DeleteDisciplineButton"
 import { FavouriteDisciplineButton } from "@/components/app/disciplines/FavouriteDisciplineButton"
 import { HideDisciplineButton } from "@/components/app/disciplines/HideDisciplineButton"
@@ -75,11 +76,22 @@ export default async function DisciplineDetailPage({
               <ArchiveDisciplineButton
                 disciplineId={discipline.id}
                 isArchived={discipline.isArchived}
-                compact
+                decision={
+                  discipline.isArchived
+                    ? disciplineActivate({ name: discipline.name, system: discipline.isSystem })
+                    : disciplineArchive({
+                        name: discipline.name,
+                        system: discipline.isSystem,
+                        favourite: favouriteDisciplineId === discipline.id,
+                      })
+                }
               />
             )}
             {canManage && canDelete && (
-              <DeleteDisciplineButton disciplineId={discipline.id} compact />
+              <DeleteDisciplineButton
+                disciplineId={discipline.id}
+                decision={disciplineDelete({ name: discipline.name, system: discipline.isSystem })}
+              />
             )}
             <Button variant="ghost" size="sm" className="px-2 sm:px-3" asChild>
               <Link href="/disciplines" aria-label="Zurück zu Disziplinen">

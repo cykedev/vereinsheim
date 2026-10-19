@@ -2,22 +2,14 @@
 
 import { useTransition, useRef, useState } from "react"
 import { uploadAttachment, deleteAttachment } from "@/lib/sessions/actions"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@vereinsheim/ui/alert-dialog"
+import { DecisionDialog } from "@vereinsheim/ui/design2/decision-dialog"
 import { Button } from "@vereinsheim/ui/button"
 import { Input } from "@vereinsheim/ui/input"
 import { Label } from "@vereinsheim/ui/label"
 import { Card, CardContent } from "@vereinsheim/ui/design2/card"
 import { getErrorMessage } from "@vereinsheim/lib/forms/fieldErrors"
 import { attachmentToDelete } from "@/components/app/sessions/attachmentDeletion"
+import { attachmentDelete } from "@/lib/consequences"
 
 interface AttachmentData {
   id: string
@@ -117,10 +109,11 @@ export function AttachmentSection({ sessionId, attachments }: Props) {
                     {attachment.label ?? attachment.originalName}
                   </span>
                   <Button
-                    variant="destructive"
+                    variant="ghost"
                     size="xs"
-                    className="h-7 shrink-0"
+                    className="h-7 shrink-0 text-destructive hover:text-destructive"
                     disabled={isPending}
+                    aria-label={`Anhang ${attachment.originalName} löschen`}
                     onClick={() => setDeleteCandidate(attachment)}
                   >
                     Löschen
@@ -160,31 +153,13 @@ export function AttachmentSection({ sessionId, attachments }: Props) {
         <p className="text-xs text-muted-foreground">JPEG, PNG, WebP oder PDF — max. 10 MB</p>
       </form>
 
-      <AlertDialog
+      {/* bleibt eingehängt, damit der Fokus beim Schließen zum Knopf zurückkehrt */}
+      <DecisionDialog
+        decision={attachmentDelete({ name: deleteCandidate?.originalName ?? "" })}
         open={deleteCandidate !== null}
         onOpenChange={(open) => !open && setDeleteCandidate(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Anhang löschen?</AlertDialogTitle>
-            <AlertDialogDescription>
-              {deleteCandidate
-                ? `"${deleteCandidate.originalName}" wird dauerhaft entfernt.`
-                : "Der Anhang wird dauerhaft entfernt."}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isPending}>Abbrechen</AlertDialogCancel>
-            <AlertDialogAction
-              disabled={isPending}
-              className="bg-destructive text-white hover:bg-destructive/90"
-              onClick={handleDeleteConfirmed}
-            >
-              Löschen
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        onConfirm={handleDeleteConfirmed}
+      />
     </div>
   )
 }

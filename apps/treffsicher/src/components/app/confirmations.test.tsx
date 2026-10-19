@@ -2,8 +2,10 @@ import { createElement as h, type ComponentType } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
+import { leaveUnsaved } from "@/lib/consequences"
 import { confirms, reset, settle } from "@/test/confirm-capture"
 
+// Der Wortlaut der Dialoge ist hier gleichgültig (eigener Test in `lib/consequences.test.ts`).
 // Welche Action läuft nach dem Bestätigen, mit welchen Werten, genau einmal, und wohin geht es danach. Die Tests
 // gelten vor und nach dem Umbau auf `DecisionDialog` (Stellvertreter in `@/test/confirm-capture`).
 
@@ -83,7 +85,7 @@ beforeEach(() => {
 
 describe("Bestätigen löst genau eine Action aus", () => {
   it("Einheit löschen: deleteSession mit der Id, danach ins Tagebuch", async () => {
-    await confirm(DeleteSessionButton, { sessionId: "s1" })
+    await confirm(DeleteSessionButton, { sessionId: "s1", decision: leaveUnsaved() })
     expect(mocks.deleteSession).toHaveBeenCalledTimes(1)
     expect(mocks.deleteSession).toHaveBeenCalledWith("s1")
     expect(mocks.push).toHaveBeenCalledWith("/sessions")
@@ -91,19 +93,19 @@ describe("Bestätigen löst genau eine Action aus", () => {
 
   it("Einheit löschen mit Fehler: bleibt auf der Seite", async () => {
     mocks.deleteSession.mockResolvedValue({ error: "Einheit nicht gefunden" })
-    await confirm(DeleteSessionButton, { sessionId: "s1" })
+    await confirm(DeleteSessionButton, { sessionId: "s1", decision: leaveUnsaved() })
     expect(mocks.push).not.toHaveBeenCalled()
   })
 
   it("Ablauf löschen: deleteShotRoutine mit der Id, danach zu den Abläufen", async () => {
-    await confirm(DeleteShotRoutineButton, { routineId: "r1" })
+    await confirm(DeleteShotRoutineButton, { routineId: "r1", decision: leaveUnsaved() })
     expect(mocks.deleteShotRoutine).toHaveBeenCalledTimes(1)
     expect(mocks.deleteShotRoutine).toHaveBeenCalledWith("r1")
     expect(mocks.push).toHaveBeenCalledWith("/shot-routines")
   })
 
   it("Disziplin löschen: deleteDiscipline mit der Id, danach zu den Disziplinen", async () => {
-    await confirm(DeleteDisciplineButton, { disciplineId: "d1" })
+    await confirm(DeleteDisciplineButton, { disciplineId: "d1", decision: leaveUnsaved() })
     expect(mocks.deleteDiscipline).toHaveBeenCalledTimes(1)
     expect(mocks.deleteDiscipline).toHaveBeenCalledWith("d1")
     expect(mocks.push).toHaveBeenCalledWith("/disciplines")
@@ -111,19 +113,27 @@ describe("Bestätigen löst genau eine Action aus", () => {
 
   it("Disziplin löschen mit Fehler: bleibt auf der Seite", async () => {
     mocks.deleteDiscipline.mockResolvedValue({ error: "wird verwendet" })
-    await confirm(DeleteDisciplineButton, { disciplineId: "d1" })
+    await confirm(DeleteDisciplineButton, { disciplineId: "d1", decision: leaveUnsaved() })
     expect(mocks.push).not.toHaveBeenCalled()
   })
 
   it("Disziplin archivieren: setDisciplineArchived(id, true), danach neu laden", async () => {
-    await confirm(ArchiveDisciplineButton, { disciplineId: "d1", isArchived: false })
+    await confirm(ArchiveDisciplineButton, {
+      disciplineId: "d1",
+      isArchived: false,
+      decision: leaveUnsaved(),
+    })
     expect(mocks.setDisciplineArchived).toHaveBeenCalledTimes(1)
     expect(mocks.setDisciplineArchived).toHaveBeenCalledWith("d1", true)
     expect(mocks.refresh).toHaveBeenCalledTimes(1)
   })
 
   it("Disziplin aktivieren: setDisciplineArchived(id, false)", async () => {
-    await confirm(ArchiveDisciplineButton, { disciplineId: "d1", isArchived: true })
+    await confirm(ArchiveDisciplineButton, {
+      disciplineId: "d1",
+      isArchived: true,
+      decision: leaveUnsaved(),
+    })
     expect(mocks.setDisciplineArchived).toHaveBeenCalledTimes(1)
     expect(mocks.setDisciplineArchived).toHaveBeenCalledWith("d1", false)
   })

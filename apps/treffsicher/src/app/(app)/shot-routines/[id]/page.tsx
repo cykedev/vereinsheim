@@ -7,6 +7,7 @@ import { getAuthSession } from "@/lib/auth-helpers"
 import { getShotRoutineById } from "@/lib/shot-routines/actions"
 import { DetailActionBar } from "@vereinsheim/ui/shell/DetailActionBar"
 import { ShotRoutineView } from "@/components/app/shot-routines/ShotRoutineView"
+import { routineDelete } from "@/lib/consequences"
 import { DeleteShotRoutineButton } from "@/components/app/shot-routines/DeleteShotRoutineButton"
 import type { RoutineStep } from "@/lib/shot-routines/actions"
 import { Button } from "@vereinsheim/ui/button"
@@ -43,7 +44,10 @@ export default async function ShotRoutineDetailPage({
                 <Pencil className="h-4 w-4" />
               </Link>
             </Button>
-            <DeleteShotRoutineButton routineId={id} />
+            <DeleteShotRoutineButton
+              routineId={id}
+              decision={routineDelete({ name: routine.name, steps: steps.length })}
+            />
             <Button variant="ghost" size="sm" className="px-2 sm:px-3" asChild>
               <Link href="/shot-routines" aria-label="Zurück zu Abläufen">
                 <ArrowLeft className="h-4 w-4 sm:mr-1.5" />

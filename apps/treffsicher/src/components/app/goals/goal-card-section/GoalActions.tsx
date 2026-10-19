@@ -1,20 +1,11 @@
 "use client"
 
+import { useState } from "react"
 import Link from "next/link"
 import { ArrowLeft, Pencil, Target, Trash2 } from "lucide-react"
 import { Button } from "@vereinsheim/ui/button"
 import { DetailActionBar } from "@vereinsheim/ui/shell/DetailActionBar"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@vereinsheim/ui/alert-dialog"
+import { DecisionDialog, type Decision } from "@vereinsheim/ui/design2/decision-dialog"
 
 interface Props {
   pending: boolean
@@ -22,10 +13,20 @@ interface Props {
   onEditGoal: () => void
   onEditAssignments: () => void
   onDelete: () => void
+  /** die Folgen in Worten (`goalDelete`) */
+  deleteDecision: Decision
 }
 
 // Aktionsleiste bündelt Bearbeiten/Zuweisen/Löschen, damit Card-Header aufgeräumt bleibt.
-export function GoalActions({ pending, backHref, onEditGoal, onEditAssignments, onDelete }: Props) {
+export function GoalActions({
+  pending,
+  backHref,
+  onEditGoal,
+  onEditAssignments,
+  onDelete,
+  deleteDecision,
+}: Props) {
+  const [open, setOpen] = useState(false)
   return (
     <div className="flex items-start justify-end">
       {/* Mobile bekommt dieselben Aktionen als Icon/kurze Labels, damit nichts aus dem Header herausbricht. */}
@@ -51,37 +52,23 @@ export function GoalActions({ pending, backHref, onEditGoal, onEditAssignments, 
           <Target className="h-4 w-4 sm:mr-1.5" />
           <span className="hidden sm:inline">Zuweisen</span>
         </Button>
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button
-              size="icon"
-              variant="destructive"
-              className="size-9 sm:h-8 sm:w-auto sm:px-3"
-              disabled={pending}
-              aria-label="Ziel löschen"
-            >
-              <Trash2 className="h-4 w-4 sm:mr-1.5" />
-              <span className="hidden sm:inline">Löschen</span>
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Ziel löschen?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Das Ziel und alle Verknüpfungen zu Einheiten werden entfernt.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-              <AlertDialogAction
-                className="bg-destructive text-white hover:bg-destructive/90"
-                onClick={onDelete}
-              >
-                Löschen
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="px-2 text-destructive hover:text-destructive sm:px-3"
+          disabled={pending}
+          aria-label="Ziel löschen"
+          onClick={() => setOpen(true)}
+        >
+          <Trash2 className="h-4 w-4 sm:mr-1.5" />
+          <span className="hidden sm:inline">Löschen</span>
+        </Button>
+        <DecisionDialog
+          decision={deleteDecision}
+          open={open}
+          onOpenChange={setOpen}
+          onConfirm={onDelete}
+        />
         {backHref && (
           <Button variant="ghost" size="sm" className="px-2 sm:px-3" asChild>
             <Link href={backHref} aria-label="Zurück zu Zielen">

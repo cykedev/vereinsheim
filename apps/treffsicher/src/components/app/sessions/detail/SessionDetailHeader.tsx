@@ -1,7 +1,8 @@
 import { Goal, Target } from "lucide-react"
 import { SESSION_TYPE_BADGE_CLASS, SESSION_TYPE_LABELS } from "@/lib/sessions/presentation"
 import type { SessionDetail } from "@/lib/sessions/actions"
-import { formatLongDateTime } from "@vereinsheim/lib/format"
+import { formatLongDateTime, formatTimeOfDay, formatWeekdayDate } from "@vereinsheim/lib/format"
+import { sessionDelete } from "@/lib/consequences"
 import { Badge } from "@vereinsheim/ui/badge"
 import { SessionDetailHeaderActions } from "@/components/app/sessions/detail/SessionDetailHeaderActions"
 
@@ -18,7 +19,17 @@ export function SessionDetailHeader({ session, displayTimeZone }: Props) {
         <Badge variant="outline" className={SESSION_TYPE_BADGE_CLASS[session.type] ?? ""}>
           {SESSION_TYPE_LABELS[session.type] ?? session.type}
         </Badge>
-        <SessionDetailHeaderActions sessionId={session.id} isFavourite={session.isFavourite} />
+        <SessionDetailHeaderActions
+          sessionId={session.id}
+          isFavourite={session.isFavourite}
+          deleteDecision={sessionDelete({
+            when: `${formatWeekdayDate(session.date, displayTimeZone)} um ${formatTimeOfDay(session.date, displayTimeZone)}`,
+            discipline: session.discipline?.name ?? null,
+            type: SESSION_TYPE_LABELS[session.type] ?? session.type,
+            attachments: session.attachments.length,
+            goals: session.goals.length,
+          })}
+        />
       </div>
 
       <div className="min-w-0 space-y-1.5">

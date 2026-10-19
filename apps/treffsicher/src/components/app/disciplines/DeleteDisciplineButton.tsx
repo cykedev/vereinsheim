@@ -3,31 +3,21 @@
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { Trash2 } from "lucide-react"
-import { deleteDiscipline } from "@/lib/disciplines/actions"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@vereinsheim/ui/alert-dialog"
 import { Button } from "@vereinsheim/ui/button"
+import { DecisionDialog, type Decision } from "@vereinsheim/ui/design2/decision-dialog"
+import { deleteDiscipline } from "@/lib/disciplines/actions"
 
 type Props = {
   disciplineId: string
-  compact?: boolean
+  /** die Folgen in Worten (`disciplineDelete`), von der Seite berechnet */
+  decision: Decision
 }
 
-// Endgültiges Löschen wird separat vom Archivieren angeboten.
-// Der Server blockiert den Vorgang, sobald die Disziplin noch verwendet wird.
-export function DeleteDisciplineButton({ disciplineId, compact = false }: Props) {
+// Löschen gibt es nur für eine Disziplin ohne Einheiten und Abläufe; der Server prüft das noch einmal.
+export function DeleteDisciplineButton({ disciplineId, decision }: Props) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
-  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [open, setOpen] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
 
   function handleDelete(): void {
@@ -36,7 +26,6 @@ export function DeleteDisciplineButton({ disciplineId, compact = false }: Props)
       const result = await deleteDiscipline(disciplineId)
       if ("error" in result) {
         setMessage(typeof result.error === "string" ? result.error : "Löschen fehlgeschlagen.")
-        setConfirmOpen(false)
         return
       }
       router.push("/disciplines")
@@ -46,42 +35,23 @@ export function DeleteDisciplineButton({ disciplineId, compact = false }: Props)
   return (
     <div className="space-y-2">
       {message && <p className="text-sm text-destructive">{message}</p>}
-      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <AlertDialogTrigger asChild>
-          <Button
-            variant="destructive"
-            size={compact ? "icon" : "sm"}
-            className={compact ? "size-9 sm:h-8 sm:w-auto sm:px-3" : undefined}
-            disabled={isPending}
-            aria-label={isPending ? "Löschen…" : "Disziplin löschen"}
-          >
-            <Trash2 className={compact ? "h-4 w-4 sm:mr-1.5" : "mr-1.5 h-3.5 w-3.5"} />
-            {compact ? (
-              <span className="hidden sm:inline">{isPending ? "Löschen…" : "Löschen"}</span>
-            ) : (
-              <span>{isPending ? "Löschen…" : "Löschen"}</span>
-            )}
-          </Button>
-        </AlertDialogTrigger>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Disziplin endgültig löschen?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Diese Aktion kann nicht rückgängig gemacht werden.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isPending}>Abbrechen</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-white hover:bg-destructive/90"
-              disabled={isPending}
-              onClick={handleDelete}
-            >
-              Löschen
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="px-2 text-destructive hover:text-destructive sm:px-3"
+        disabled={isPending}
+        aria-label={isPending ? "Löschen…" : "Disziplin löschen"}
+        onClick={() => setOpen(true)}
+      >
+        <Trash2 className="h-4 w-4 sm:mr-1.5" />
+        <span className="hidden sm:inline">{isPending ? "Löschen…" : "Löschen"}</span>
+      </Button>
+      <DecisionDialog
+        decision={decision}
+        open={open}
+        onOpenChange={setOpen}
+        onConfirm={handleDelete}
+      />
     </div>
   )
 }

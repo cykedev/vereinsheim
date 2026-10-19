@@ -15,6 +15,8 @@ import { GoalAssignmentsForm } from "@/components/app/goals/goal-card-section/Go
 import { GoalEditForm } from "@/components/app/goals/goal-card-section/GoalEditForm"
 import { GoalSummary } from "@/components/app/goals/goal-card-section/GoalSummary"
 import { getErrorMessage } from "@vereinsheim/lib/forms/fieldErrors"
+import { formatDateOnly } from "@vereinsheim/lib/format"
+import { goalDelete } from "@/lib/consequences"
 
 interface Props {
   goal: GoalWithAssignments
@@ -131,6 +133,12 @@ export function GoalCardSection({ goal, sessions, backHref, displayTimeZone }: P
           onEditGoal={() => setEditingGoal(true)}
           onEditAssignments={openAssignmentsEditor}
           onDelete={handleDelete}
+          deleteDecision={goalDelete({
+            title: goal.title,
+            from: formatDateOnly(goal.dateFrom, displayTimeZone),
+            to: formatDateOnly(goal.dateTo, displayTimeZone),
+            sessions: goal.sessionCount,
+          })}
         />
         <GoalSummary goal={goal} displayTimeZone={displayTimeZone} />
       </div>
