@@ -36,8 +36,10 @@ export function ParticipantResult({
     <div className="space-y-0.5">
       <div className="font-medium">{name}</div>
       <div className="font-mono text-xs text-muted-foreground tabular-nums">
-        {formatRings(result.rings, scoringType)} R · {formatDecimal1(result.teiler)} T · RT{" "}
-        {formatDecimal1(result.ringteiler)}
+        {/* umbrechen nur zwischen den Werten, nie zwischen Zahl und Kürzel */}
+        <span className="whitespace-nowrap">{formatRings(result.rings, scoringType)} R</span> ·{" "}
+        <span className="whitespace-nowrap">{formatDecimal1(result.teiler)} T</span> ·{" "}
+        <span className="whitespace-nowrap">RT {formatDecimal1(result.ringteiler)}</span>
       </div>
     </div>
   )
