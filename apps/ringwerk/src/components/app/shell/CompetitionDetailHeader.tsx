@@ -75,10 +75,13 @@ export function CompetitionDetailHeader({
         {meta}
       </div>
 
-      <CompetitionTabs
-        tabs={competitionTabs(id, current, links)}
-        current={competitionPageHref(id, current)}
-      />
+      {/* Reiter erst ab zwei Seiten: eine allein führt nirgendwohin */}
+      {links.some((page) => page !== current) && (
+        <CompetitionTabs
+          tabs={competitionTabs(id, current, links)}
+          current={competitionPageHref(id, current)}
+        />
+      )}
     </div>
   )
 }

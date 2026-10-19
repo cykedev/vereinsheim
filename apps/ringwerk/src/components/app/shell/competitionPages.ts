@@ -18,7 +18,7 @@ const LABEL: Readonly<Record<CompetitionPage, string>> = {
   "audit-log": "Protokoll",
 }
 
-/** Reihenfolge der Reiter: Ergebnis zuerst, dann Erfassen, Teilnehmer und Protokoll */
+/** Reihenfolge der Reiter: Ergebnis zuerst, dann Playoffs, Erfassen, Teilnehmer und Protokoll */
 const ORDER: readonly CompetitionPage[] = [
   "schedule",
   "ranking",
