@@ -348,6 +348,14 @@ Umfeld, Material.
   als gedacht.“
 - **Ohne Werte:** „Im Zeitraum gibt es keine Einheit mit Prognose und Feedback.“
 
+### Ringverteilung der Einheit (G7)
+
+Ort: Seite einer Einheit, Karte „Schussverteilung“ (Säulen). Neu wie Spiegel: Balken je Ring in den Trefferfarben.
+
+- **Titel:** „Schussverteilung“ → **„Ringverteilung“**
+- **Je Ring:** die Anzahl und der Anteil, etwa „12 · 30 %“.
+- **Darunter:** „{40} Wertungsschüsse, Probe zählt nicht“
+
 ### Erklärungen hinter dem „?“
 
 **Frage an dich:** Der Plan sagt „gleiche Texte wie Spiegel“. Spiegels Texte sprechen aber von Scheiben, vom Kalender,

@@ -4,14 +4,15 @@ import { CheckCircle2, Gauge, Heart, MessageSquare, Paperclip } from "lucide-rea
 import { getAuthSession } from "@/lib/auth-helpers"
 import { getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
 import { getSessionById } from "@/lib/sessions/actions"
+import { sessionRingDistribution } from "@/lib/sessions/ringDistribution"
 import { buildSessionDetailViewModel } from "@/lib/sessions/sessionDetailViewModel"
+import { RingBars } from "@vereinsheim/shot-ui/analysis/charts/RingBars"
 import { AttachmentSection } from "@/components/app/sessions/AttachmentSection"
 import { FeedbackSection } from "@/components/app/sessions/FeedbackSection"
 import { PrognosisSection } from "@/components/app/sessions/PrognosisSection"
 import { ReflectionSection } from "@/components/app/sessions/ReflectionSection"
 import { SessionPrognosisFeedbackComparisonCard } from "@/components/app/sessions/SessionPrognosisFeedbackComparisonCard"
 import { SessionSeriesResultCard } from "@/components/app/sessions/SessionSeriesResultCard"
-import { ShotHistogram } from "@/components/app/sessions/ShotHistogram"
 import { WellbeingSection } from "@/components/app/sessions/WellbeingSection"
 import { ExplainProvider, ExplainSwitch } from "@/components/app/help/Explain"
 import { SessionDetailHeader, SessionDetailSectionCard } from "@/components/app/sessions/detail"
@@ -32,6 +33,7 @@ export default async function SessionDetailPage({ params }: { params: Promise<{ 
   if (!sessionRecord) notFound()
 
   const viewModel = buildSessionDetailViewModel(sessionRecord)
+  const rings = sessionRingDistribution(viewModel.scoringShots)
 
   return (
     <ExplainProvider>
@@ -55,10 +57,14 @@ export default async function SessionDetailPage({ params }: { params: Promise<{ 
         {viewModel.showShotDistribution && (
           <Card>
             <CardHeader>
-              <CardTitle>Schussverteilung</CardTitle>
+              <CardTitle>Ringverteilung</CardTitle>
             </CardHeader>
-            <CardContent>
-              <ShotHistogram shots={viewModel.scoringShots} isDecimal={viewModel.isDecimal} />
+            <CardContent className="grid gap-2">
+              {/* Ringwert-Farben wie Spiegel, je Ring Anzahl und Anteil als Zahl */}
+              <RingBars dist={rings} />
+              <p className="text-[13px] text-muted-foreground">
+                {`${rings.n} Wertungsschüsse, Probe zählt nicht`}
+              </p>
             </CardContent>
           </Card>
         )}
