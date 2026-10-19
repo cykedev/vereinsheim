@@ -15,6 +15,10 @@ import {
 } from "@vereinsheim/ui/alert-dialog"
 import { AdminUsersTableDesktop, AdminUsersTableMobile } from "@/components/app/admin/users-table"
 import { getErrorMessage } from "@vereinsheim/lib/forms/fieldErrors"
+import {
+  confirmedDeactivation,
+  requestActiveChange,
+} from "@/components/app/admin/users-table/activeChange"
 
 interface Props {
   users: AdminUserListItem[]
@@ -43,12 +47,9 @@ export function AdminUsersTable({ users, currentAdminId, displayTimeZone }: Prop
   }
 
   function handleSetActive(user: AdminUserListItem, nextIsActive: boolean) {
-    // Deaktivierung immer bestätigen lassen; Aktivierung darf direkt erfolgen.
-    if (!nextIsActive) {
-      setDeactivationCandidate(user)
-      return
-    }
-    performSetActive(user.id, nextIsActive)
+    const change = requestActiveChange(user, nextIsActive)
+    if (change.kind === "confirm") setDeactivationCandidate(change.user)
+    else performSetActive(change.userId, change.isActive)
   }
 
   return (
@@ -94,10 +95,10 @@ export function AdminUsersTable({ users, currentAdminId, displayTimeZone }: Prop
               className="bg-destructive text-white hover:bg-destructive/90"
               disabled={pending}
               onClick={() => {
-                if (!deactivationCandidate) return
-                const candidateId = deactivationCandidate.id
+                const change = confirmedDeactivation(deactivationCandidate)
+                if (!change) return
                 setDeactivationCandidate(null)
-                performSetActive(candidateId, false)
+                performSetActive(change.userId, change.isActive)
               }}
             >
               Deaktivieren

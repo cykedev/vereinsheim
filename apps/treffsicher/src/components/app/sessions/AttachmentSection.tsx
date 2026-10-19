@@ -17,6 +17,7 @@ import { Input } from "@vereinsheim/ui/input"
 import { Label } from "@vereinsheim/ui/label"
 import { Card, CardContent } from "@vereinsheim/ui/card"
 import { getErrorMessage } from "@vereinsheim/lib/forms/fieldErrors"
+import { attachmentToDelete } from "@/components/app/sessions/attachmentDeletion"
 
 interface AttachmentData {
   id: string
@@ -59,10 +60,11 @@ export function AttachmentSection({ sessionId, attachments }: Props) {
   }
 
   function handleDeleteConfirmed(): void {
-    if (!deleteCandidate) return
+    const attachmentId = attachmentToDelete(deleteCandidate, attachments)
+    if (!attachmentId) return
     setMessage(null)
     startTransition(async () => {
-      const result = await deleteAttachment(deleteCandidate.id)
+      const result = await deleteAttachment(attachmentId)
       const error = getErrorMessage(result)
       if (error) {
         setMessage(error)
