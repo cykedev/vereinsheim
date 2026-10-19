@@ -81,7 +81,7 @@ export function UnenrollAction({ fullName, isPending, onConfirm }: UnenrollProps
           <AlertDialogCancel>Abbrechen</AlertDialogCancel>
           <AlertDialogAction
             onClick={onConfirm}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            className="bg-destructive text-primary-foreground hover:bg-destructive/90"
           >
             Entfernen
           </AlertDialogAction>

@@ -114,7 +114,7 @@ export function CompetitionActions({ competition, backHref }: Props) {
             <AlertDialogCancel>Abbrechen</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="bg-destructive text-primary-foreground hover:bg-destructive/90"
             >
               Löschen
             </AlertDialogAction>

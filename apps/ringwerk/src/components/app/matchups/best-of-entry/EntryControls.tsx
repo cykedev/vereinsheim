@@ -33,7 +33,7 @@ export function DeleteDuelConfirm({ open, onOpenChange, onConfirm }: DeleteConfi
           <AlertDialogCancel>Abbrechen</AlertDialogCancel>
           <AlertDialogAction
             onClick={onConfirm}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            className="bg-destructive text-primary-foreground hover:bg-destructive/90"
           >
             Zurücknehmen
           </AlertDialogAction>
