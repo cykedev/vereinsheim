@@ -51,10 +51,12 @@ Art und Darstellung an; die Tabelle und die Trefferlage bleiben.
 ## Einflüsse
 
 `influences` (`src/lib/statistics/influences.ts`): je Merkmal (Schlaf, Energie, Stress, Motivation, Ausführung als
-Mittel der bewerteten Wertungsserien) die Einheiten über und unter dem Median; Einheiten auf dem Median zählen nicht.
+Mittel der bewerteten Wertungsserien) die Einheiten über und unter dem Median; Einheiten auf dem Median zählen zur
+kleineren Gruppe (Werte bleiben oft auf einer Stufe stehen), bei gleich großen Gruppen zu keiner.
 `comparePeriods` mit der niedrigen Gruppe als a und der hohen als b, Urteil vom hohen Wert aus („Guter Schlaf: deutlich
 besser“), ab fünf Einheiten je Seite. Sind alle Werte gleich, sagt die Karte das. Die Tests prüfen die Regeln per
-Mutationsprobe (Median mitzählen, Gruppen tauschen, Probe mitzählen, Mitte nach Reihenfolge).
+Mutationsprobe (Gruppen tauschen, Probe mitzählen, Mitte nach Reihenfolge, gleiche Werte immer oben, nie unten oder
+bei Gleichstand unten).
 
 ## Zahlenabgleich (19. Oktober 2026)
 

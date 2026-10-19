@@ -465,7 +465,7 @@ für Treffsicher, aus Spiegels Wortlaut gekürzt. Spiegel bleibt unverändert.
 
 - **Kurz:** Ob du an Tagen mit gutem Befinden oder guter Ausführung anders schießt.
 - **Was es ist:** Für jedes Merkmal teilt die Statistik deine Einheiten im Zeitraum in zwei Gruppen: über deinem
-  mittleren Wert und darunter. Einheiten genau auf dem mittleren Wert zählen nicht mit. Dann vergleicht sie den Ø je
+  mittleren Wert und darunter. Einheiten genau auf dem mittleren Wert zählen zur kleineren Gruppe. Dann vergleicht sie den Ø je
   Schuss der beiden Gruppen, so wie zwei Zeiträume. Bei der Ausführung zählt das Mittel deiner bewerteten
   Wertungsserien.
 - **So liest du es:** „Guter Schlaf: deutlich besser“ heißt: Nach gutem Schlaf liegt dein Ø je Schuss klar höher.
