@@ -17,6 +17,7 @@ const { Dialog, DialogContent, DialogTitle } = await import("./dialog")
 const { AlertDialog, AlertDialogContent, AlertDialogTitle, AlertDialogDescription } =
   await import("./alert-dialog")
 const { EmptyState } = await import("./empty-state")
+const { ConfirmDialog } = await import("../shell/ConfirmDialog")
 
 describe("Dialoge in Design 2", () => {
   it("Dialog: Kartenfläche mit großem Radius über abgedunkeltem Hintergrund, Titel in der Schrift der Marke", () => {
@@ -46,6 +47,24 @@ describe("Dialoge in Design 2", () => {
       /data-slot="alert-dialog-content" [^>]*class="[^"]*bg-card[^"]*rounded-2xl/
     )
     expect(html).toMatch(/data-slot="alert-dialog-title" [^>]*class="[^"]*font-display/)
+  })
+})
+
+describe("Bestätigung mit Folge", () => {
+  it("Knopf einer zerstörenden Aktion: Schrift auf dem Rot aus einem Token, das es gibt", () => {
+    const html = renderToStaticMarkup(
+      h(ConfirmDialog, {
+        open: true,
+        onOpenChange: () => {},
+        title: "Löschen?",
+        description: "Satz",
+        confirmLabel: "Löschen",
+        destructive: true,
+        onConfirm: () => {},
+      })
+    )
+    expect(html).toMatch(/class="[^"]*bg-destructive text-primary-foreground[^"]*"[^>]*>Löschen</)
+    expect(html).not.toContain("destructive-foreground")
   })
 })
 

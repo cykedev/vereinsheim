@@ -1,5 +1,7 @@
 "use client"
 
+import { useRef } from "react"
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,9 +33,22 @@ export function ConfirmDialog({
   onConfirm,
   destructive = false,
 }: Props) {
+  const opener = useRef<HTMLElement | null>(null)
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
+      <AlertDialogContent
+        // ohne Auslöser von Radix: Den Knopf, der den Dialog öffnete, merkt sich der Dialog selbst und gibt ihm den
+        // Fokus beim Schließen zurück (wie `DecisionDialog`)
+        onOpenAutoFocus={() => {
+          opener.current =
+            document.activeElement instanceof HTMLElement ? document.activeElement : null
+        }}
+        onCloseAutoFocus={(event) => {
+          event.preventDefault()
+          if (opener.current?.isConnected) opener.current.focus()
+          opener.current = null
+        }}
+      >
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
           <AlertDialogDescription>{description}</AlertDialogDescription>
@@ -44,7 +59,9 @@ export function ConfirmDialog({
             onClick={onConfirm}
             className={
               destructive
-                ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                ? // Design 2 kennt kein `destructive-foreground`; `primary-foreground` ist auf `destructive` in
+                  // beiden Themes lesbar
+                  "bg-destructive text-primary-foreground hover:bg-destructive/90"
                 : undefined
             }
           >

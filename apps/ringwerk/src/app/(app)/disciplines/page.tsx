@@ -52,7 +52,7 @@ export default async function DisciplinesPage() {
           <div className="divide-y">
             {active.map((d) => (
               <div key={d.id} className="flex items-center justify-between px-4 py-3">
-                <div className="flex items-center gap-3">
+                <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
                   <div>
                     <span className="text-sm font-medium">{d.name}</span>
                     {d.isSystem && (
@@ -81,7 +81,7 @@ export default async function DisciplinesPage() {
             <div className="divide-y">
               {archived.map((d) => (
                 <div key={d.id} className="flex items-center justify-between px-4 py-3">
-                  <div className="flex items-center gap-3">
+                  <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
                     <span className="text-sm line-through">{d.name}</span>
                     <Badge variant="outline" className="text-xs">
                       {d.scoringType === "WHOLE" ? "Ganzringe" : "Zehntelringe"}
