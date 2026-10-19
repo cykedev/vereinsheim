@@ -168,7 +168,9 @@ export async function prepareTestAccounts(): Promise<{ newestSessionId: string }
               position: i + 1,
               shots,
               scoreTotal: total.toFixed(1),
-              executionQuality: 1 + ((s + i) % 5),
+              // die letzte Serie der neuesten Einheit ohne Bewertung: zeigt „–“ mit Grund
+              executionQuality:
+                s === 7 && i === discipline.seriesCount - 1 ? null : 1 + ((s + i) % 5),
             }
           }),
         },

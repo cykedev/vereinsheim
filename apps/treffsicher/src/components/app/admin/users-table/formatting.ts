@@ -20,11 +20,6 @@ export function formatDate(date: Date, displayTimeZone: string): string {
   return formatDateTime(new Date(date), displayTimeZone)
 }
 
-export function formatOptionalDate(date: Date | null, displayTimeZone: string): string {
-  if (!date) return "—"
-  return formatDate(date, displayTimeZone)
-}
-
 export function formatCount(value: number): string {
   return formatInteger(value)
 }

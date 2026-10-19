@@ -1,10 +1,10 @@
 import type { AdminUserListItem } from "@/lib/admin/actions"
+import { Missing } from "@/components/app/shell/Missing"
 import { Badge } from "@vereinsheim/ui/badge"
 import { AdminUserActionButtons } from "@/components/app/admin/users-table/AdminUserActionButtons"
 import {
   formatCount,
   formatDate,
-  formatOptionalDate,
   getRoleBadgeClass,
   getStatusBadgeClass,
 } from "@/components/app/admin/users-table/formatting"
@@ -34,7 +34,7 @@ export function AdminUsersTableDesktop({
             <th className="pb-2 pr-4 font-medium">Rolle</th>
             <th className="pb-2 pr-4 font-medium">Status</th>
             <th className="pb-2 pr-4 font-medium">Aktivität</th>
-            <th className="pb-2 pr-4 font-medium">Letzte Session-Änderung</th>
+            <th className="pb-2 pr-4 font-medium">Letzte Änderung an einer Einheit</th>
             <th className="pb-2 font-medium">Aktion</th>
           </tr>
         </thead>
@@ -47,7 +47,9 @@ export function AdminUsersTableDesktop({
                 <td className="py-3 pr-4">
                   <div className="max-w-[280px] space-y-1">
                     {/* Name/Email/Created gruppieren, damit Aktionsspalte visuell ruhig bleibt. */}
-                    <p className="break-words font-medium leading-tight">{user.name ?? "—"}</p>
+                    <p className="break-words font-medium leading-tight">
+                      {user.name ?? <Missing kind="name" />}
+                    </p>
                     <p className="break-all text-xs text-muted-foreground">{user.email}</p>
                     <p className="text-xs text-muted-foreground">
                       Angelegt: {formatDate(user.createdAt, displayTimeZone)}
@@ -87,7 +89,11 @@ export function AdminUsersTableDesktop({
                   </div>
                 </td>
                 <td className="py-2 pr-4 text-muted-foreground">
-                  {formatOptionalDate(user.lastSessionEditAt, displayTimeZone)}
+                  {user.lastSessionEditAt ? (
+                    formatDate(user.lastSessionEditAt, displayTimeZone)
+                  ) : (
+                    <Missing kind="lastSessionEdit" />
+                  )}
                 </td>
                 <td className="py-2">
                   <AdminUserActionButtons

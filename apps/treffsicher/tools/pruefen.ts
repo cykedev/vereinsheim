@@ -109,6 +109,14 @@ async function helpFlow(page: Page, session: string) {
   ] as const) {
     await page.viewport(width, height)
     await page.goto(`${BASE}${session}`)
+    const missing = await page.ev<string[]>(
+      `$$('[data-missing="quality"]').filter(visible).map((el) => txt(el))`
+    )
+    check(
+      `${width} px: eine Serie ohne Bewertung zeigt „–“ mit Grund statt leerer Punkte`,
+      missing.length === 1 && missing[0].includes("nicht bewertet"),
+      missing
+    )
     await page.click(`$('[data-help="wellbeing"]')`, { settle: 400 })
     const sheet = await page.ev<string>(
       `txt($$("dialog").find((d) => d.open)?.querySelector("h2") ?? null)`

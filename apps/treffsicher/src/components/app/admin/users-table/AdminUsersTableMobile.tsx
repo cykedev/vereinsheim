@@ -1,11 +1,11 @@
 import type { AdminUserListItem } from "@/lib/admin/actions"
+import { Missing } from "@/components/app/shell/Missing"
 import { Badge } from "@vereinsheim/ui/badge"
 import { Card, CardContent } from "@vereinsheim/ui/design2/card"
 import { AdminUserActionButtons } from "@/components/app/admin/users-table/AdminUserActionButtons"
 import {
   formatCount,
   formatDate,
-  formatOptionalDate,
   getRoleBadgeClass,
   getStatusBadgeClass,
 } from "@/components/app/admin/users-table/formatting"
@@ -35,7 +35,7 @@ export function AdminUsersTableMobile({
           <Card key={user.id}>
             <CardContent className="space-y-3">
               <div className="space-y-1">
-                <p className="break-words font-medium">{user.name ?? "—"}</p>
+                <p className="break-words font-medium">{user.name ?? <Missing kind="name" />}</p>
                 <p className="break-all text-sm text-muted-foreground">{user.email}</p>
               </div>
 
@@ -56,8 +56,12 @@ export function AdminUsersTableMobile({
                 {formatCount(user.goalsCount)} Ziele, {formatCount(user.shotRoutinesCount)} Abläufe
               </p>
               <p className="text-xs text-muted-foreground">
-                Letzte Session-Änderung:{" "}
-                {formatOptionalDate(user.lastSessionEditAt, displayTimeZone)}
+                Letzte Änderung an einer Einheit:{" "}
+                {user.lastSessionEditAt ? (
+                  formatDate(user.lastSessionEditAt, displayTimeZone)
+                ) : (
+                  <Missing kind="lastSessionEdit" />
+                )}
               </p>
 
               <AdminUserActionButtons

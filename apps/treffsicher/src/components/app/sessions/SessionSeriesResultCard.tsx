@@ -2,6 +2,7 @@ import type { SessionDetail } from "@/lib/sessions/actions"
 import { parseShotsJson } from "@/lib/sessions/shots"
 import { HitLocationVisualization } from "@/components/app/sessions/HitLocationVisualization"
 import { ShotValues } from "@/components/app/sessions/ShotValues"
+import { Missing } from "@/components/app/shell/Missing"
 import { Card, CardContent, CardHeader, CardTitle } from "@vereinsheim/ui/design2/card"
 
 interface Props {
@@ -20,7 +21,9 @@ interface SeriesRow {
 }
 
 function QualityDots({ quality }: { quality: number | null }) {
-  const q = quality ?? 0
+  // ohne Bewertung keine fünf leeren Punkte: die sähen aus wie die schlechteste Bewertung
+  if (quality === null) return <Missing kind="quality" />
+  const q = quality
   const labels = ["", "Schlecht", "Mässig", "Mittel", "Gut", "Sehr gut"]
   return (
     <span
@@ -85,7 +88,15 @@ export function SessionSeriesResultCard({ session, totalScore, isDecimal }: Prop
         <CardTitle className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
           <span>Ergebnis</span>
           <span className="font-display text-3xl font-bold tabular-nums">
-            {totalScore !== null ? (isDecimal ? totalScore.toFixed(1) : totalScore) : "–"}
+            {totalScore !== null ? (
+              isDecimal ? (
+                totalScore.toFixed(1)
+              ) : (
+                totalScore
+              )
+            ) : (
+              <Missing kind="sessionResult" />
+            )}
             <span className="ml-1 text-base font-normal text-muted-foreground">Ringe</span>
           </span>
         </CardTitle>
@@ -105,11 +116,15 @@ export function SessionSeriesResultCard({ session, totalScore, isDecimal }: Prop
                   {row.isPractice && <span className="ml-1 text-xs">(P)</span>}
                 </p>
                 <p className="font-mono text-sm font-semibold tabular-nums">
-                  {row.scoreValue !== null
-                    ? isDecimal
-                      ? row.scoreValue.toFixed(1)
-                      : row.scoreValue
-                    : "–"}
+                  {row.scoreValue !== null ? (
+                    isDecimal ? (
+                      row.scoreValue.toFixed(1)
+                    ) : (
+                      row.scoreValue
+                    )
+                  ) : (
+                    <Missing kind="seriesResult" />
+                  )}
                 </p>
               </div>
               <div className="flex items-center justify-between gap-3">
@@ -122,7 +137,7 @@ export function SessionSeriesResultCard({ session, totalScore, isDecimal }: Prop
                   {row.shotsArray.length > 0 ? (
                     <ShotValues shots={row.shotsArray} />
                   ) : (
-                    <p className="text-xs text-muted-foreground">–</p>
+                    <Missing kind="shots" />
                   )}
                 </div>
               )}
@@ -148,11 +163,15 @@ export function SessionSeriesResultCard({ session, totalScore, isDecimal }: Prop
                     {row.isPractice && <span className="ml-1 text-xs">(P)</span>}
                   </td>
                   <td className="py-2 pr-4 font-mono font-medium tabular-nums">
-                    {row.scoreValue !== null
-                      ? isDecimal
-                        ? row.scoreValue.toFixed(1)
-                        : row.scoreValue
-                      : "–"}
+                    {row.scoreValue !== null ? (
+                      isDecimal ? (
+                        row.scoreValue.toFixed(1)
+                      ) : (
+                        row.scoreValue
+                      )
+                    ) : (
+                      <Missing kind="seriesResult" />
+                    )}
                   </td>
                   <td className="py-2 pr-4">
                     <QualityDots quality={row.executionQuality} />
@@ -162,7 +181,7 @@ export function SessionSeriesResultCard({ session, totalScore, isDecimal }: Prop
                       {row.shotsArray.length > 0 ? (
                         <ShotValues shots={row.shotsArray} />
                       ) : (
-                        <span className="text-xs text-muted-foreground">–</span>
+                        <Missing kind="shots" />
                       )}
                     </td>
                   )}
