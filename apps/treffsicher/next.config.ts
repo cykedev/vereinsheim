@@ -7,7 +7,12 @@ import { createNextConfig } from "@vereinsheim/config/next"
 const base = createNextConfig(__dirname)
 const nextConfig: NextConfig = {
   ...base,
-  transpilePackages: [...base.transpilePackages, "@vereinsheim/shot-core", "@vereinsheim/shot-ui"],
+  transpilePackages: [
+    ...base.transpilePackages,
+    "@vereinsheim/shot-core",
+    "@vereinsheim/shot-help",
+    "@vereinsheim/shot-ui",
+  ],
 }
 
 export default nextConfig

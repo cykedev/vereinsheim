@@ -25,6 +25,7 @@
     "@prisma/client": "catalog:",
     "@vereinsheim/lib": "workspace:*",
     "@vereinsheim/shot-core": "workspace:*",
+    "@vereinsheim/shot-help": "workspace:*",
     "@vereinsheim/shot-ui": "workspace:*",
     "@vereinsheim/ui": "workspace:*",
     "bcryptjs": "catalog:",

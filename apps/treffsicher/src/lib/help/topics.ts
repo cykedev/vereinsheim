@@ -1,3 +1,5 @@
+import { helpForMetric, helpTopic as shotHelpTopic } from "@vereinsheim/shot-help/lookup"
+import { shotHelp } from "@vereinsheim/shot-ui/help/HelpTexts"
 import type { HelpText } from "@vereinsheim/ui/design2/help"
 
 // Erklärungen der App, je Thema ein Schlüssel; das Blatt der Hilfe im Rahmen zeigt sie. Der Wortlaut ist im Textbuch
@@ -26,6 +28,21 @@ export const HELP_TOPICS = {
 
 export type HelpTopicId = keyof typeof HELP_TOPICS
 
-/** die Erklärung zu einem Thema; null: unbekannt */
-export const helpTopic = (id: string | null): HelpText | null =>
-  id !== null && id in HELP_TOPICS ? HELP_TOPICS[id as HelpTopicId] : null
+/**
+ * die Erklärung zu einem Thema; null: unbekannt. Eigene Themen gehen vor, sonst die von Spiegel (`shot-help`) mit
+ * derselben Id: So öffnet jedes „?“ der Bausteine aus `shot-ui` ein Blatt.
+ */
+export const helpTopic = (id: string | null): HelpText | null => {
+  if (id === null) return null
+  if (id in HELP_TOPICS) return HELP_TOPICS[id as HelpTopicId]
+  return shotHelpTopic(id) ?? null
+}
+
+/** Titel und Kurzsatz für die Karten der Bausteine (`HelpTextsProvider`), aus derselben Quelle wie das Blatt */
+export const helpHeading = (id: string): { title: string; short?: string } => {
+  const topic = helpTopic(id)
+  return topic ? { title: topic.title, short: topic.short } : shotHelp(id)
+}
+
+/** das Thema einer Kennzahl (Kachel, Verlauf), wie in Spiegel */
+export const metricHelpId = (key: string): string | null => helpForMetric(key)?.id ?? null

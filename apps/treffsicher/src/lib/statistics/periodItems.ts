@@ -56,6 +56,18 @@ const keyIn = (key: string, scoring: Scoring) =>
 const onGrid = (value: number, scoring: Scoring) =>
   scoring === "decimal" ? Math.round(value * 10) / 10 : Math.round(value)
 
+/** die Lage als Kennzahl: der Schwerpunkt-Abstand (L2) aus dem Ausdruck, für Kachel und Verlauf „Lage“ */
+const LOCATION_KEY = "group.mpiDistance"
+
+/**
+ * Abstand der Trefferlage zur Mitte in mm, auf Hundertstel wie die Kennzahl; n sind die Wertungsschüsse, über die der
+ * Ausdruck die Lage gemittelt hat
+ */
+function locationMetric(location: SessionItem["location"], n: number) {
+  if (!location) return null
+  return { value: Math.round(Math.hypot(location.xMm, location.yMm) * 100) / 100, n }
+}
+
 function locationOf(session: SessionForPeriod): SessionItem["location"] {
   const { hitLocationHorizontalMm: x, hitLocationVerticalMm: y } = session
   if (x === null || y === null) return null
@@ -122,6 +134,8 @@ export function periodItem(session: SessionForPeriod): SessionItem | null {
       ...projection.values,
     }
     for (const key of WITHOUT_POSITION) delete metrics[key]
+    const location = locationMetric(base.location, projection.printedShots)
+    if (location) metrics[LOCATION_KEY] = location
     return {
       ...base,
       shots: projection.printedShots,
@@ -138,6 +152,7 @@ export function periodItem(session: SessionForPeriod): SessionItem | null {
     (sum, s) => sum + (parseShotsJson(s.shots).length || discipline.shotsPerSeries),
     0
   )
+  const location = locationMetric(base.location, n)
   const total = onGrid(
     series.reduce((sum, s) => sum + (s.scoreTotal as number), 0),
     scoring
@@ -148,6 +163,7 @@ export function periodItem(session: SessionForPeriod): SessionItem | null {
     metrics: {
       [keyIn("result.decimal", scoring)]: { value: total, n },
       [keyIn("result.decimalMean", scoring)]: { value: total / n, n },
+      ...(location ? { [LOCATION_KEY]: location } : {}),
     },
     records: { decimal: null, rings: null },
     withShots: false,

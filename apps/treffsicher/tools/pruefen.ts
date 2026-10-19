@@ -5,6 +5,7 @@
 //   pnpm --filter treffsicher pruefen           gegen http://localhost:3001 (BASE_URL), `--alle` zeigt jede Prüfung
 //   pnpm --filter treffsicher pruefen --start   startet den gebauten Stand dieses Checkouts auf :3011 und prüft ihn
 //   … --nur <abschnitt>                         nur Abschnitte, deren Name das Wort enthält
+//   … --bilder <ordner>                         dazu Bildschirmfotos der Statistik (390 und 1280 px, hell und dunkel)
 
 import type { ChildProcess } from "node:child_process"
 import { join } from "node:path"
@@ -31,6 +32,7 @@ import {
   PRUEFEN_EMAIL,
   PRUEFEN_TARGET_EMAIL,
 } from "./pruefen-account"
+import { statisticsFlow, statisticsPictures } from "./pruefen-statistik"
 
 config({ path: join(import.meta.dirname, "..", ".env"), quiet: true })
 
@@ -352,6 +354,12 @@ async function main() {
     await section("Darstellung und Dialog", () => themeAndDialog(page, session))
     await section("Admin ohne Rolle", () => adminWithoutRole(page))
     await section("Hilfe", () => helpFlow(page, session))
+    await section("Statistik", () => statisticsFlow(page, BASE, check, record))
+    const pictures = process.argv.indexOf("--bilder")
+    if (pictures >= 0)
+      await section("Statistik Bilder", () =>
+        statisticsPictures(page, BASE, process.argv[pictures + 1] ?? "bilder")
+      )
     await section("Anhang löschen", () => attachmentFlow(page, newestSessionId))
     // als Letztes: meldet den Admin an
     await section("Konto deaktivieren", () => accountFlow(page))

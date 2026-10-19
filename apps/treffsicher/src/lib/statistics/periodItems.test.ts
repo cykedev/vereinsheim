@@ -134,7 +134,10 @@ describe("eine Einheit als Eintrag der Seite eines Zeitraums", () => {
     )!
     expect(match.kind).toBe("competition")
     expect(match.location).toEqual({ xMm: -1.5, yMm: 0.8 })
+    // die Lage als Schwerpunkt-Abstand (L2), der Kennzahl von Kachel und Verlauf: √(1,5² + 0,8²) = 1,7
+    expect(match.metrics["group.mpiDistance"]).toEqual({ value: 1.7, n: 10 })
     expect(periodItem(MIXED)!.location).toBeNull()
+    expect(periodItem(MIXED)!.metrics["group.mpiDistance"]).toBeUndefined()
     expect(periodItem({ ...MIXED, discipline: null })).toBeNull()
     expect(periodItem(session("leer", 1, [{ total: null }]))).toBeNull()
   })

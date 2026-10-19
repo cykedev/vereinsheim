@@ -1,7 +1,6 @@
 import { Skeleton } from "@vereinsheim/ui/skeleton"
 
-// Die Statistik-Seite lädt fünf Abfragen parallel — ohne Platzhalter bliebe
-// die Seite bis dahin leer.
+// Die Statistik liest die Einheiten und rechnet auf dem Server; ohne Platzhalter bliebe die Seite bis dahin leer.
 export default function Loading() {
   return (
     <div className="space-y-6">
