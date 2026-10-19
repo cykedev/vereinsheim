@@ -1,5 +1,5 @@
 // Selbstbild: je Bereich das Mittel der Prognose vor und des Feedbacks nach der Einheit über die Einheiten des
-// Zeitraums mit beidem. Nur Zahlen, kein Urteil: Dafür sind es zu wenige Einheiten (G0).
+// Zeitraums mit beidem. Nur Zahlen, kein Urteil: Dafür sind es zu wenige Einheiten.
 
 import type { SelfImageKey, SelfImageValues } from "@/lib/statistics/sessions"
 

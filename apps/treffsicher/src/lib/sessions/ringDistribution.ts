@@ -29,13 +29,18 @@ export function sessionRingDistribution(shots: readonly string[]): RingDistribut
   return ringDistribution(metricShots)
 }
 
-/** Ringverteilung über mehrere Einheiten: alle Wertungsschüsse zusammen (Serien ohne Probe) */
+/**
+ * Ringverteilung über mehrere Einheiten: alle Wertungsschüsse zusammen (Serien ohne Probe), dazu wie viele Einheiten
+ * Einzelschüsse beitragen
+ */
 export function periodRingDistribution(
   sessions: readonly { series: readonly { isPractice: boolean; shots: unknown }[] }[]
-): RingDistribution {
-  return sessionRingDistribution(
-    sessions.flatMap((session) =>
-      session.series.filter((s) => !s.isPractice).flatMap((s) => parseShotsJson(s.shots))
-    )
+): { dist: RingDistribution; sessions: number } {
+  const shots = sessions.map((session) =>
+    session.series.filter((s) => !s.isPractice).flatMap((s) => parseShotsJson(s.shots))
   )
+  return {
+    dist: sessionRingDistribution(shots.flat()),
+    sessions: shots.filter((list) => sessionRingDistribution(list).n > 0).length,
+  }
 }

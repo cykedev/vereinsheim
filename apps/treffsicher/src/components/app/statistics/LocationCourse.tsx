@@ -12,7 +12,7 @@ import { formatSigned, formatValue } from "@vereinsheim/shot-ui/format"
 import { formatDateOnly, formatShortDay } from "@vereinsheim/lib/format"
 
 import type { LocationSummary } from "@/lib/statistics/location"
-import { locationText } from "@/lib/statistics/locationText"
+import { locationText, tickDecimals } from "@/lib/statistics/locationText"
 
 const HEIGHT = 200
 const PAD = { left: 40, right: 12, top: 10, bottom: 22 }
@@ -123,7 +123,7 @@ export function LocationCourse({
               stroke={t === 0 ? "var(--line-strong)" : "var(--border)"}
             />
             <text x={PAD.left - 6} y={y(t) + 4} textAnchor="end">
-              {formatValue(t, step < 1 ? 1 : 0)}
+              {formatValue(t, tickDecimals(step))}
             </text>
           </g>
         ))}

@@ -21,7 +21,7 @@ describe("Ringverteilung einer Einheit", () => {
 
 describe("Ringverteilung über mehrere Einheiten", () => {
   it("alle Wertungsschüsse zusammen, ohne Probe", () => {
-    const dist = periodRingDistribution([
+    const { dist, sessions } = periodRingDistribution([
       {
         series: [
           { isPractice: true, shots: ["10.9", "10.9"] },
@@ -37,5 +37,13 @@ describe("Ringverteilung über mehrere Einheiten", () => {
     ])
     expect(dist.n).toBe(3)
     expect([dist.counts[10], dist.counts[9], dist.counts[8]]).toEqual([1, 1, 1])
+    expect(sessions).toBe(2)
+    // eine Einheit ohne Einzelschüsse trägt nichts bei und zählt nicht
+    expect(
+      periodRingDistribution([
+        { series: [{ isPractice: false, shots: ["9.5"] }] },
+        { series: [{ isPractice: false, shots: null }] },
+      ]).sessions
+    ).toBe(1)
   })
 })

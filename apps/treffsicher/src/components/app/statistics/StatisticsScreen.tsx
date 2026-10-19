@@ -28,12 +28,12 @@ import { countOf } from "@vereinsheim/shot-ui/period/words"
 import { useHelp } from "@vereinsheim/ui/design2/help-sheet"
 
 import { helpHeading } from "@/lib/help/topics"
-import { statisticsUrl, type DisciplineOption } from "@/lib/statistics/page"
+import { statisticsUrl, statisticsUrlAfter, type DisciplineOption } from "@/lib/statistics/page"
 import { SESSION_WORDS, STATISTICS_SECTIONS } from "@/lib/statistics/words"
 
+import type { StatisticsAnalysisData } from "./StatisticsAnalysis"
+import { statisticsBelow } from "./StatisticsNumbers"
 import {
-  statisticsBelow,
-  type StatisticsAnalysisData,
   StatisticsChart,
   StatisticsList,
   StatisticsReadout,
@@ -95,8 +95,9 @@ export function StatisticsScreen({
         setDirty(true)
         return
       }
-      const nextSwitchable = options.find((o) => o.value === next.family)?.switchable ?? false
-      startTransition(() => router.push(statisticsUrl(next, nextSwitchable), { scroll: false }))
+      startTransition(() =>
+        router.push(statisticsUrlAfter(next, action, options), { scroll: false })
+      )
     },
     [current, options, router]
   )
@@ -114,7 +115,12 @@ export function StatisticsScreen({
   const sessionLink: RenderItemLink = (id, props) => <Link href={`/sessions/${id}`} {...props} />
   const result = <PeriodResult model={model} timeZone={timeZone} onHelp={onHelp} />
   const empty = model.cards.length === 0
-  const parts = { model, state: current, timeZone, onHelp, sessionLink, dispatch, jumpTo }
+  const parts = {
+    model,
+    state: current,
+    timeZone,
+    actions: { onHelp, sessionLink, dispatch, jumpTo },
+  }
 
   return (
     <HelpTextsProvider lookup={helpHeading}>

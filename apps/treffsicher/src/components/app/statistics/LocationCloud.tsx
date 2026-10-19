@@ -4,7 +4,11 @@ import { ChartSlot, ChartSvg, crisp, niceStep } from "@vereinsheim/shot-ui/analy
 import { formatValue } from "@vereinsheim/shot-ui/format"
 import { MpiMark } from "@vereinsheim/shot-ui/target/MpiMark"
 
+import { countOf } from "@vereinsheim/shot-ui/period/words"
+
 import type { LocationSummary } from "@/lib/statistics/location"
+import { tickDecimals } from "@/lib/statistics/locationText"
+import { SESSION_WORDS } from "@/lib/statistics/words"
 
 const PAD = 28
 const MAX_SIDE = 340
@@ -46,7 +50,7 @@ export function LocationCloud({
               <ChartSvg
                 width={side}
                 height={side}
-                label={`Trefferlage von ${summary.points.length} Einheiten, rechts und hoch positiv`}
+                label={`Trefferlage von ${countOf(summary.points.length, SESSION_WORDS)}, rechts und hoch positiv`}
               >
                 {ticks.map((t) => (
                   <g key={t}>
@@ -65,10 +69,10 @@ export function LocationCloud({
                       stroke={t === 0 ? "var(--line-strong)" : "var(--border)"}
                     />
                     <text x={at(t)} y={side - 8} textAnchor="middle">
-                      {formatValue(t, step < 1 ? 1 : 0)}
+                      {formatValue(t, tickDecimals(step))}
                     </text>
                     <text x={PAD - 6} y={atY(t) + 4} textAnchor="end">
-                      {formatValue(t, step < 1 ? 1 : 0)}
+                      {formatValue(t, tickDecimals(step))}
                     </text>
                   </g>
                 ))}

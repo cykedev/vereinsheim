@@ -10,7 +10,7 @@ import {
 } from "@vereinsheim/shot-ui/nav/routes"
 import { itemValues } from "@vereinsheim/shot-ui/period/item"
 import { lightPeriodModel, periodModel, type PeriodModel } from "@vereinsheim/shot-ui/period/model"
-import type { PeriodMetricKey, PeriodState } from "@vereinsheim/shot-ui/period/state"
+import type { PeriodAction, PeriodMetricKey, PeriodState } from "@vereinsheim/shot-ui/period/state"
 
 import type { RingDistribution } from "@vereinsheim/shot-core/analysis"
 
@@ -75,20 +75,34 @@ export function statisticsUrl(state: PeriodState, switchable: boolean): string {
   return search ? `/statistics?${search}` : "/statistics"
 }
 
+/**
+ * die Adresse nach einer Aktion der Seite: Eine andere Disziplin öffnet in ihrer Vorgabe (Zehntel, wo umschaltbar),
+ * nicht in der Wertung der vorigen
+ */
+export function statisticsUrlAfter(
+  next: PeriodState,
+  action: PeriodAction,
+  options: readonly DisciplineOption[]
+): string {
+  const switchable = options.find((o) => o.value === next.family)?.switchable ?? false
+  const state: PeriodState = action.type === "setFamily" ? { ...next, scoring: "decimal" } : next
+  return statisticsUrl(state, switchable)
+}
+
 /** der Zustand aus der Adresse: unbekannte Disziplin wie keine (die mit der neuesten Einheit) */
 export function statisticsState(
   search: URLSearchParams,
   options: readonly DisciplineOption[]
 ): { state: PeriodState; option: DisciplineOption } | null {
-  const query = progressQueryFromParams(search)
+  const query = progressQueryFromParams(
+    search,
+    STATISTICS_METRICS.map((m) => m.key)
+  )
   const option = options.find((o) => o.value === query.family) ?? options[0]
   if (!option) return null
   const scoring: Scoring = option.switchable ? query.scoring : "rings"
-  const metric = STATISTICS_METRICS.some((m) => m.key === query.metric)
-    ? query.metric
-    : "result.decimalMean"
   return {
-    state: { ...query, family: option.value, scoring, metric, includeProbeOnly: true },
+    state: { ...query, family: option.value, scoring, includeProbeOnly: true },
     option,
   }
 }
@@ -105,8 +119,8 @@ export interface StatisticsPage {
   overview: OverviewTableGroup | null
   /** Trefferlage vom Ausdruck im Zeitraum */
   location: LocationSummary
-  /** Ringverteilung aller Wertungsschüsse im Zeitraum */
-  rings: RingDistribution
+  /** Ringverteilung aller Wertungsschüsse im Zeitraum und wie viele Einheiten beitragen */
+  rings: { dist: RingDistribution; sessions: number }
 }
 
 /** die Seite für den Browser: das leichte Modell der gewählten Disziplin; ohne Einheit mit Ergebnis null */

@@ -120,7 +120,7 @@ export async function statisticsFlow(
   // Reiter der Analyse
   await page.goto(`${base}/statistics?range=all`)
   const tabs = await page.ev<string[]>(
-    `$$('[role="radiogroup"][aria-label="Reiter der Analyse"] button').map((b) => txt(b))`
+    `$$('[role="radiogroup"][aria-label="Reiter der Analyse"] button').filter(visible).map((b) => txt(b))`
   )
   check(
     "Analyse: Reiter Rekorde, Trefferlage, Einflüsse, Selbstbild",
@@ -129,7 +129,7 @@ export async function statisticsFlow(
   )
   const tab = (label: string) =>
     page.click(
-      `$$('[role="radiogroup"][aria-label="Reiter der Analyse"] button').find((b) => txt(b) === ${JSON.stringify(label)})`,
+      `$$('[role="radiogroup"][aria-label="Reiter der Analyse"] button').filter(visible).find((b) => txt(b) === ${JSON.stringify(label)})`,
       { settle: 300 }
     )
   await tab("Trefferlage")
@@ -203,7 +203,7 @@ export async function statisticsPictures(page: Page, base: string, dir: string) 
         ["Selbstbild", "selbstbild"],
       ] as const) {
         await page.click(
-          `$$('[role="radiogroup"][aria-label="Reiter der Analyse"] button').find((b) => txt(b) === ${JSON.stringify(label)})`,
+          `$$('[role="radiogroup"][aria-label="Reiter der Analyse"] button').filter(visible).find((b) => txt(b) === ${JSON.stringify(label)})`,
           { settle: 300 }
         )
         const shot = await page.screenshotOf(`$('section[aria-label=${JSON.stringify(label)}]')`)

@@ -5,6 +5,7 @@ import {
   statisticsPage,
   statisticsState,
   statisticsUrl,
+  statisticsUrlAfter,
   STATISTICS_TILES,
 } from "@/lib/statistics/page"
 import type { StatisticsSession } from "@/lib/statistics/sessions"
@@ -124,6 +125,31 @@ describe("Zustand der Statistik aus der Adresse", () => {
   })
 })
 
+describe("Adresse nach einer Aktion", () => {
+  const options = disciplineOptions(SESSIONS, [])
+
+  it("eine andere Disziplin öffnet in ihrer Vorgabe, nicht in den ganzen Ringen der vorigen", () => {
+    const { state } = statisticsState(new URLSearchParams("family=kk&range=6m"), options)!
+    expect(state.scoring).toBe("rings")
+    const next = { ...state, family: "lg" }
+    const url = statisticsUrlAfter(next, { type: "setFamily", family: "lg" }, options)
+    expect(url).toBe("/statistics?range=6m&family=lg")
+    expect(statisticsState(new URLSearchParams(url.split("?")[1]), options)!.state.scoring).toBe(
+      "decimal"
+    )
+  })
+
+  it("andere Aktionen behalten die gewählte Wertung", () => {
+    const { state } = statisticsState(new URLSearchParams("family=lg&scoring=rings"), options)!
+    const url = statisticsUrlAfter(
+      { ...state, metric: "result.tensRate" },
+      { type: "setMetric", metric: "result.tensRate" },
+      options
+    )
+    expect(url).toBe("/statistics?family=lg&scoring=rings&metric=tens")
+  })
+})
+
 describe("Seite der Statistik", () => {
   it("rechnet die gewählte Disziplin mit den Kacheln von Treffsicher", () => {
     const result = page("family=lg&range=all")!
@@ -149,7 +175,16 @@ describe("Seite der Statistik", () => {
     }
     const sessions = [
       // vor dem Zeitraum der letzten 30 Tage: zählt nicht
-      { ...session("alt", 60, LG, [95]), wellbeing, prognosis: self, feedback: self },
+      {
+        ...session("alt", 60, LG, [95]),
+        wellbeing,
+        prognosis: self,
+        feedback: self,
+        hitLocationHorizontalMm: 1,
+        hitLocationHorizontalDirection: "LEFT" as const,
+        hitLocationVerticalMm: 1,
+        hitLocationVerticalDirection: "LOW" as const,
+      },
       { ...session("neu", 5, LG, [96]), wellbeing, prognosis: self, feedback: self },
       { ...session("wk", 4, LG, [97]), type: "WETTKAMPF", wellbeing },
     ]
@@ -164,6 +199,10 @@ describe("Seite der Statistik", () => {
     expect(result.influences.find((i) => i.key === "sleep")?.entered).toBe(1)
     expect(result.influences.find((i) => i.key === "quality")?.entered).toBe(0)
     expect(result.selfImage.n).toBe(1)
+    // Tabelle, Trefferlage und Ringverteilung ebenso nur über die Einheit der Seite
+    expect(result.overview?.sessionCount).toBe(1)
+    expect(result.location.points).toEqual([])
+    expect(result.rings.sessions).toBe(0)
   })
 
   it("ohne Einheit mit Ergebnis keine Seite", () => {

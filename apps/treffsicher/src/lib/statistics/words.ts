@@ -1,7 +1,7 @@
 import type { PeriodSection } from "@vereinsheim/shot-ui/layout/sections"
 import type { PeriodWords } from "@vereinsheim/shot-ui/period/words"
 
-// Wörter der Statistik: Die Bausteine aus Spiegel sagen „Scheibe“, Treffsicher sagt „Einheit“ (Textbuch, G4–G8).
+// Wörter der Statistik: Die Bausteine aus Spiegel sagen „Scheibe“, Treffsicher sagt „Einheit“ (Textbuch).
 
 export const SESSION_WORDS: PeriodWords = {
   one: "Einheit",

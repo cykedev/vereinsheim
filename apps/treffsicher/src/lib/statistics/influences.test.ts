@@ -60,7 +60,19 @@ describe("Einflüsse", () => {
     expect(stress.comparison?.verdict).toBe("lower")
   })
 
-  it("Einheiten genau auf dem mittleren Wert zählen in keiner Gruppe", () => {
+  it("eine Mehrheit auf dem mittleren Wert zählt zur kleineren Gruppe", () => {
+    // 15 Einheiten bei 70, 5 bei 80: Median 70. Ohne diese Regel bliebe unten niemand, ein längerer Zeitraum hülfe nie
+    const rows = [
+      ...Array.from({ length: 15 }, (_, i) => entry(9 + i / 100, { sleep: 70 })),
+      ...Array.from({ length: 5 }, (_, i) => entry(9.6 + i / 100, { sleep: 80 })),
+    ]
+    const split = splitAtMedian(rows, "sleep")
+    expect(split.high).toHaveLength(5)
+    expect(split.low).toHaveLength(15)
+    expect(of("sleep", rows).comparison?.test).not.toBeNull()
+  })
+
+  it("auf dem mittleren Wert bei gleich großen Gruppen in keiner", () => {
     // vier auf dem Median 50 mit auffällig hohem Ø: zählten sie oben mit, stiege das Mittel der hohen Gruppe
     const rows = [
       ...[1, 2, 3, 4].map(() => entry(10.5, { energy: 50 })),

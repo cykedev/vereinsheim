@@ -1,5 +1,5 @@
 import { helpForMetric, helpTopic as shotHelpTopic } from "@vereinsheim/shot-help/lookup"
-import { shotHelp } from "@vereinsheim/shot-ui/help/HelpTexts"
+import { shotHelp } from "@vereinsheim/shot-ui/help/headings"
 import type { HelpText } from "@vereinsheim/ui/design2/help"
 
 // Erklärungen der App, je Thema ein Schlüssel; das Blatt der Hilfe im Rahmen zeigt sie. Der Wortlaut ist im Textbuch

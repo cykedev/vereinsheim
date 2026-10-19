@@ -1,6 +1,7 @@
 // Einflüsse: Liegt der Ø je Schuss an Tagen mit hohem Befinden oder guter Ausführung anders? Je Merkmal zwei Gruppen
 // der Einheiten im Zeitraum, über und unter dem mittleren Wert (Median) des Merkmals; Einheiten genau auf ihm zählen
-// nicht. Verglichen wird wie zwei Zeiträume (`comparePeriods`, Urteil ab fünf Einheiten je Seite).
+// zur kleineren Gruppe, bei gleich großen zu keiner. Verglichen wird wie zwei Zeiträume (`comparePeriods`, Urteil ab
+// fünf Einheiten je Seite).
 
 import {
   comparePeriods,
@@ -12,7 +13,7 @@ import { median } from "@vereinsheim/shot-core/stats"
 export const INFLUENCE_KEYS = ["sleep", "energy", "stress", "motivation", "quality"] as const
 export type InfluenceKey = (typeof INFLUENCE_KEYS)[number]
 
-/** Name des Merkmals und seiner beiden Gruppen (Textbuch, G4–G8) */
+/** Name des Merkmals und seiner beiden Gruppen (Textbuch) */
 export const INFLUENCE_LABELS: Record<InfluenceKey, { name: string; high: string; low: string }> = {
   sleep: { name: "Schlaf", high: "Guter Schlaf", low: "Schlechter Schlaf" },
   energy: { name: "Energie", high: "Viel Energie", low: "Wenig Energie" },
@@ -48,7 +49,11 @@ const group = (values: readonly CardValue[]): InfluenceGroup => ({
   mean: values.length ? values.reduce((sum, v) => sum + v.value, 0) / values.length : null,
 })
 
-/** die Einheiten über und unter dem Median des Merkmals; auf dem Median keine */
+/**
+ * die Einheiten über und unter dem Median des Merkmals. Die auf dem Median kommen zur kleineren Gruppe: Werte bleiben
+ * oft auf einer Stufe stehen (Regler, Ausführung 1 bis 5), sonst fiele die Mehrheit weg. Sind beide Gruppen gleich
+ * groß, zählen sie nicht, damit keine Seite bevorzugt ist
+ */
 export function splitAtMedian(
   entries: readonly InfluenceEntry[],
   key: InfluenceKey
@@ -57,9 +62,15 @@ export function splitAtMedian(
   if (!withFactor.length) return { high: [], low: [], entered: 0 }
   // nie null: es gibt mindestens einen Wert
   const middle = median(withFactor.map((e) => e.factors[key] as number)) as number
+  const value = (e: InfluenceEntry) => e.factors[key] as number
+  const above = withFactor.filter((e) => value(e) > middle)
+  const below = withFactor.filter((e) => value(e) < middle)
+  const on = withFactor.filter((e) => value(e) === middle)
+  const high = above.length < below.length ? [...above, ...on] : above
+  const low = below.length < above.length ? [...on, ...below] : below
   return {
-    high: withFactor.filter((e) => (e.factors[key] as number) > middle).map((e) => e.value),
-    low: withFactor.filter((e) => (e.factors[key] as number) < middle).map((e) => e.value),
+    high: high.map((e) => e.value),
+    low: low.map((e) => e.value),
     entered: withFactor.length,
   }
 }

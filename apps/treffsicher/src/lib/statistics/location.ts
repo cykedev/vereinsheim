@@ -1,6 +1,6 @@
 // Trefferlage über den Zeitraum: die Lage vom Ausdruck je Einheit (mm, rechts und hoch positiv), ihr Mittel und je
 // Achse der Verlauf mit dem Schnitt der letzten fünf und dem Formband aus dem Fachkern (`periodTrend`), wie der Verlauf
-// der Seite. Ersetzt Wolke und Trend der alten Statistik.
+// der Seite.
 
 import { periodTrend, type TrendPoint } from "@vereinsheim/shot-core/analysis"
 

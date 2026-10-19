@@ -54,7 +54,7 @@ export default async function SessionDetailPage({ params }: { params: Promise<{ 
           />
         )}
 
-        {viewModel.showShotDistribution && (
+        {viewModel.showShotDistribution && rings.n > 0 && (
           <Card>
             <CardHeader>
               <CardTitle>Ringverteilung</CardTitle>
