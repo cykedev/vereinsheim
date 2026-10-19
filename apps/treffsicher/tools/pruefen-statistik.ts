@@ -165,6 +165,25 @@ export async function statisticsFlow(
     influence.length === 5 && influence.every((t) => t.length > 0),
     influence
   )
+  // „?“ öffnet Treffsichers eigene Erklärung, nicht die von Spiegel
+  const sheetTitle = async (locator: string) => {
+    await page.click(locator, { settle: 400 })
+    const title = await page.ev<string>(
+      `txt($$("dialog").find((d) => d.open)?.querySelector("h2") ?? null)`
+    )
+    await page.key("Escape")
+    await page.wait(300)
+    return title
+  }
+  const influenceHelp = await sheetTitle(`$$('[data-help="einfluesse"]').filter(visible)[0]`)
+  const tileHelp = await sheetTitle(
+    `$$('[data-period-tile="group.mpiDistance"] [data-help]').filter(visible)[0]`
+  )
+  check(
+    "Hilfe: „?“ an Einflüssen und an der Kachel Lage öffnen Treffsichers Erklärungen",
+    influenceHelp === "Einflüsse" && tileHelp === "Schwerpunkt-Abstand",
+    { influenceHelp, tileHelp }
+  )
   await tab("Selbstbild")
   const self = await page.ev<{ rows: number; text: string }>(`({
     rows: $$("[data-self-image]").filter(visible).length,

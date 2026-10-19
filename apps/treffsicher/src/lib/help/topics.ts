@@ -1,11 +1,12 @@
-import { helpForMetric, helpTopic as shotHelpTopic } from "@vereinsheim/shot-help/lookup"
-import { shotHelp } from "@vereinsheim/shot-ui/help/headings"
+import { helpForMetric } from "@vereinsheim/shot-help/lookup"
 import type { HelpText } from "@vereinsheim/ui/design2/help"
+
+import { STATISTICS_TOPICS } from "./statisticsTopics"
 
 // Erklärungen der App, je Thema ein Schlüssel; das Blatt der Hilfe im Rahmen zeigt sie. Der Wortlaut ist im Textbuch
 // freigegeben (vault/_attachments/textbuch-ringwerk-treffsicher.md) und folgt den Schreibregeln ([[conventions]] §10).
 
-export const HELP_TOPICS = {
+const SESSION_TOPICS = {
   "prognosis-feedback": {
     title: "Prognose und Feedback",
     short: "Wie du dich vor der Einheit eingeschätzt hast und wie es danach war.",
@@ -26,23 +27,24 @@ export const HELP_TOPICS = {
   },
 } as const satisfies Record<string, HelpText>
 
+/** alle Themen: die der Einheit und die der Statistik */
+export const HELP_TOPICS = { ...SESSION_TOPICS, ...STATISTICS_TOPICS }
+
 export type HelpTopicId = keyof typeof HELP_TOPICS
 
-/**
- * die Erklärung zu einem Thema; null: unbekannt. Eigene Themen gehen vor, sonst die von Spiegel (`shot-help`) mit
- * derselben Id: So öffnet jedes „?“ der Bausteine aus `shot-ui` ein Blatt.
- */
-export const helpTopic = (id: string | null): HelpText | null => {
-  if (id === null) return null
-  if (id in HELP_TOPICS) return HELP_TOPICS[id as HelpTopicId]
-  return shotHelpTopic(id) ?? null
-}
+/** die Erklärung zu einem Thema; null: unbekannt */
+export const helpTopic = (id: string | null): HelpText | null =>
+  id !== null && id in HELP_TOPICS ? HELP_TOPICS[id as HelpTopicId] : null
 
-/** Titel und Kurzsatz für die Karten der Bausteine (`HelpTextsProvider`), aus derselben Quelle wie das Blatt */
+/**
+ * Titel und Kurzsatz für die Karten der Bausteine (`HelpTextsProvider`), aus derselben Quelle wie das Blatt. Ein
+ * unbekanntes Thema ist ein Fehler: Jedes „?“ der Statistik hat ein Thema in Treffsicher (Test)
+ */
 export const helpHeading = (id: string): { title: string; short?: string } => {
   const topic = helpTopic(id)
-  return topic ? { title: topic.title, short: topic.short } : shotHelp(id)
+  if (!topic) throw new Error(`Keine Erklärung zu ${id}`)
+  return { title: topic.title, short: topic.short }
 }
 
-/** das Thema einer Kennzahl (Kachel, Verlauf), wie in Spiegel */
+/** das Thema einer Kennzahl (Kachel, Verlauf): dieselbe Id wie in Spiegel, in Treffsicher mit eigenem Text */
 export const metricHelpId = (key: string): string | null => helpForMetric(key)?.id ?? null

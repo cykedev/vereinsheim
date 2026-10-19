@@ -48,6 +48,13 @@ Einheit und die Trefferlage. Neu: Einflüsse, Selbstbild als Zeilen, Rekorde. Ho
 Der User hat am 19. Oktober 2026 festgelegt: Die alten Auswertungen gehen nicht verloren, sie nähern sich Spiegel in
 Art und Darstellung an; die Tabelle und die Trefferlage bleiben.
 
+## Hilfe
+
+Jedes „?“ der Statistik öffnet eine Erklärung von Treffsicher (`src/lib/help/statisticsTopics.ts`, freigegeben im
+Textbuch): unter denselben Ids wie in Spiegel, damit die Bausteine aus `shot-ui` sie finden (`HelpTextsProvider` für
+Titel und Kurzsatz, das Blatt aus `helpTopic`). Ein Test hält fest, dass jede Id der Seite ein eigenes Thema hat und
+keins von Spiegel kommt.
+
 ## Einflüsse
 
 `influences` (`src/lib/statistics/influences.ts`): je Merkmal (Schlaf, Energie, Stress, Motivation, Ausführung als

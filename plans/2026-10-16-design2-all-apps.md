@@ -552,8 +552,8 @@ arbeiten bereits auf einem schlichten Wert je Scheibe (`CardValue { id, atMs, va
   Meyton-Farben gestrichen), `wellbeing-tracking.md`, `spiegel-langzeit.md` (Bausteine auch in Treffsicher),
   `packages/shot-ui/CLAUDE.md`.
 
-- **Stand Teil G (19. Oktober 2026, Branch `feat/design2-statistik-seite`):** G4–G7, G9 und G10 umgesetzt; G8 wartet
-  auf die Freigabe des Textbuchs (bis dahin Spiegels Erklärungen als Rückfall). Abweichend vom Text oben:
+- **Stand Teil G (19. Oktober 2026, Branch `feat/design2-statistik-seite`):** G4–G10 umgesetzt, Textbuch am 19. Oktober
+  freigegeben. Abweichend vom Text oben:
   - **Wunsch des Users:** Die alten Auswertungen gehen nicht verloren. Die Tabelle je Disziplin bleibt („Serien je
     Einheit“ unter „Zahlen“, dieselbe Rechnung), die Trefferlage bleibt (Reiter „Trefferlage“: Wolke mit Mittel,
     Verlauf je Achse). Die Schussverteilung im Zeitverlauf wird die Ringverteilung des Zeitraums.
@@ -563,6 +563,9 @@ arbeiten bereits auf einem schlichten Wert je Scheibe (`CardValue { id, atMs, va
     nicht nach Tag).
   - Zahlenabgleich: 47 von 47 Gruppen gleich, nachdem die Rundung auf ganze Ringe entfiel (drei Serien mit Zehntel in
     Ganzring-Disziplinen).
+  - G8: eigene Erklärungen für Treffsicher unter Spiegels Ids statt Spiegels Texte (Entscheid des Users).
+  - Die Statistik hat keine `loading.tsx` mehr: Mit ihr blieb im Build manchmal eine versteckte zweite Kopie der Seite
+    im DOM.
 
 **Prüfung Teil G:** `pnpm check`; Spiegel `pruefen` grün (die Verallgemeinerung ändert dort nichts); Treffsicher
 `pruefen` mit Abschnitt „Statistik“: kein seitliches Scrollen, Lineal und „Werte als Tabelle“, Vergleich, Blatt

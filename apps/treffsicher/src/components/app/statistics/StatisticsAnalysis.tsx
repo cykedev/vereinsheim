@@ -40,6 +40,7 @@ export function StatisticsAnalysis({
 }: StatisticsPartProps & { analysis: StatisticsAnalysisData }) {
   const [explain, setExplain] = useState(false)
   const [tab, setTab] = useState<AnalysisTab>("records")
+  const help = { explain, onHelp: (id: string) => onHelp(id) }
   const chooseFromRecord = (id: string) => {
     if (state.chosen !== id) dispatch({ type: "choose", id })
     const shown = [...document.querySelectorAll("[data-card-readout], [data-card-line]")].find(
@@ -78,11 +79,11 @@ export function StatisticsAnalysis({
           chosen={state.chosen}
         />
       ) : tab === "location" ? (
-        <StatisticsLocation summary={analysis.location} timeZone={timeZone} />
+        <StatisticsLocation summary={analysis.location} timeZone={timeZone} help={help} />
       ) : tab === "influences" ? (
-        <StatisticsInfluences rows={analysis.influences} />
+        <StatisticsInfluences rows={analysis.influences} help={help} />
       ) : (
-        <StatisticsSelfImage image={analysis.selfImage} />
+        <StatisticsSelfImage image={analysis.selfImage} help={help} />
       )}
     </div>
   )

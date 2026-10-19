@@ -10,6 +10,7 @@ import { locationText } from "@/lib/statistics/locationText"
 import { SESSION_WORDS } from "@/lib/statistics/words"
 
 import { LocationCloud } from "./LocationCloud"
+import { SectionHead } from "./SectionHead"
 import { LocationCourse } from "./LocationCourse"
 
 const box = "grid min-w-0 content-start gap-3 rounded-2xl border border-border bg-card p-4"
@@ -21,21 +22,25 @@ const box = "grid min-w-0 content-start gap-3 rounded-2xl border border-border b
 export function StatisticsLocation({
   summary,
   timeZone,
+  help,
 }: {
   summary: LocationSummary
   timeZone: string
+  help: { explain: boolean; onHelp: (id: string) => void }
 }) {
   const [chosen, setChosen] = useState<string | null>(null)
   return (
     <section aria-label="Trefferlage" className="@container grid gap-4">
-      <div className="grid min-w-0 gap-1">
-        <h2 className="font-display text-xl font-bold tracking-tight">Trefferlage</h2>
-        <p className="text-[13px] text-muted-foreground">
-          {summary.mean
+      <SectionHead
+        title="Trefferlage"
+        sub={
+          summary.mean
             ? `Lage vom Ausdruck, im Mittel über ${countOf(summary.points.length, SESSION_WORDS)}: ${locationText(summary.mean)}.`
-            : "Im Zeitraum hast du keine Trefferlage eingetragen."}
-        </p>
-      </div>
+            : "Im Zeitraum hast du keine Trefferlage eingetragen."
+        }
+        helpId="lage-echt"
+        {...help}
+      />
       {summary.mean && (
         <div className="grid gap-4 @min-[48rem]:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
           <article className={box}>

@@ -4,7 +4,9 @@ import { describe, expect, it } from "vitest"
 
 import { TREFFSICHER_OLD_WORDS } from "@/lib/consequences"
 
-import { HELP_TOPICS, helpTopic } from "./topics"
+import { STATISTICS_TILES } from "@/lib/statistics/page"
+
+import { HELP_TOPICS, helpHeading, helpTopic, metricHelpId } from "./topics"
 
 const topics = Object.values(HELP_TOPICS)
 
@@ -27,6 +29,29 @@ describe("Hilfe-Themen", () => {
     )
     expect(texts.length).toBeGreaterThan(8)
     expect(forbiddenIn(texts, TREFFSICHER_OLD_WORDS)).toEqual([])
+  })
+
+  it("jedes „?“ der Statistik hat ein eigenes Thema, keins aus Spiegel", () => {
+    // die Ids, nach denen die Bausteine der Seite eines Zeitraums fragen, und die Kennzahlen der Kacheln
+    const ids = [
+      "verlauf-und-form",
+      "trainingsumfang",
+      "zeitraum-vergleich",
+      "gegen-den-schnitt",
+      "rekorde",
+      "einfluesse",
+      "selbstbild",
+      ...STATISTICS_TILES.map((key) => metricHelpId(key)),
+    ]
+    for (const id of ids) {
+      expect(id).not.toBeNull()
+      expect(helpTopic(id)?.title).toBeTruthy()
+      expect(JSON.stringify(helpTopic(id))).not.toMatch(
+        /Scheiben\b|Spiegel|Ellipse|Kalender|Probe mitz/
+      )
+    }
+    expect(helpHeading("lage-echt").title).toBe("Schwerpunkt-Abstand")
+    expect(() => helpHeading("ringverteilung")).toThrow()
   })
 
   it("findet ein Thema, unbekannt und ohne Schlüssel nichts", () => {

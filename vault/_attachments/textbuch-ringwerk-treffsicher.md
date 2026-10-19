@@ -263,7 +263,7 @@ Dazu heißt „Letzte Session-Änderung“ in der Liste der Konten neu **„Letz
 
 ## Treffsicher: Statistik als Seite eines Zeitraums (G4–G8)
 
-**Status: Entwurf, wartet auf Freigabe**
+**Status: freigegeben am 19. Oktober 2026** (eigene Erklärungen für Treffsicher statt der von Spiegel)
 
 Die Statistik wird die Seite eines Zeitraums aus Spiegel (Fortschritt). Die Bausteine kommen aus `shot-ui`. Neu sind
 nur die Wörter für Treffsicher, die beiden Reiter „Einflüsse“ und „Selbstbild“ und die Erklärungen hinter dem „?“.
@@ -381,9 +381,9 @@ Ort: Seite einer Einheit, Karte „Schussverteilung“ (Säulen). Neu wie Spiege
 
 ### Erklärungen hinter dem „?“
 
-**Frage an dich:** Der Plan sagt „gleiche Texte wie Spiegel“. Spiegels Texte sprechen aber von Scheiben, vom Kalender,
-von „Trainings nur aus Probe“, von Streuung und Ellipse. Das stimmt in Treffsicher nicht. Vorschlag: eigene Fassungen
-für Treffsicher, aus Spiegels Wortlaut gekürzt. Spiegel bleibt unverändert.
+Entschieden vom User: eigene Fassungen für Treffsicher, aus Spiegels Wortlaut gekürzt (Spiegels Texte sprechen von
+Scheiben, Kalender, „Trainings nur aus Probe“, Streuung und Ellipse). Spiegel bleibt unverändert. Im Code unter
+Spiegels Ids in `apps/treffsicher/src/lib/help/statisticsTopics.ts`.
 
 #### Ø je Schuss (Kachel, Verlauf)
 

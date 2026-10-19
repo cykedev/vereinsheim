@@ -12,6 +12,8 @@ import {
 } from "@/lib/statistics/influences"
 import { SESSION_WORDS } from "@/lib/statistics/words"
 
+import { SectionHead } from "./SectionHead"
+
 function GroupLine({ label, group }: { label: string; group: InfluenceGroup }) {
   return (
     <p className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-3 text-[13px]">
@@ -30,15 +32,21 @@ function GroupLine({ label, group }: { label: string; group: InfluenceGroup }) {
  * Reiter „Einflüsse“: je Merkmal eine Karte mit dem Ø je Schuss der hohen und der niedrigen Gruppe und dem Urteil,
  * gerechnet auf dem Server (`influences`).
  */
-export function StatisticsInfluences({ rows }: { rows: readonly Influence[] }) {
+export function StatisticsInfluences({
+  rows,
+  help,
+}: {
+  rows: readonly Influence[]
+  help: { explain: boolean; onHelp: (id: string) => void }
+}) {
   return (
     <section aria-label="Einflüsse" className="@container grid gap-4">
-      <div className="grid min-w-0 gap-1">
-        <h2 className="font-display text-xl font-bold tracking-tight">Einflüsse</h2>
-        <p className="text-[13px] text-muted-foreground">
-          Ø je Schuss an Tagen mit hohem gegen niedrigen Wert, im gewählten Zeitraum.
-        </p>
-      </div>
+      <SectionHead
+        title="Einflüsse"
+        sub="Ø je Schuss an Tagen mit hohem gegen niedrigen Wert, im gewählten Zeitraum."
+        helpId="einfluesse"
+        {...help}
+      />
       <div className="grid gap-3 @min-[40rem]:grid-cols-2">
         {rows.map((row) => {
           const labels = INFLUENCE_LABELS[row.key]
