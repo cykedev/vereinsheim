@@ -4,7 +4,7 @@
 // Nicht im Gate: braucht Chrome, den Dev-Postgres mit der Prüfdatenbank und einen Build.
 //
 //   pnpm --filter ringwerk pruefdaten        Prüfdatenbank (einmal vorher)
-//   pnpm --filter ringwerk pruefen           startet den gebauten Stand dieses Checkouts auf :3012 und prüft ihn
+//   pnpm --filter ringwerk pruefen           startet den gebauten Stand dieses Checkouts auf :3013 und prüft ihn
 //   … --alle                                 zeigt jede Prüfung, nicht nur FAIL
 //   … --nur <abschnitt>                      nur Abschnitte, deren Name das Wort enthält
 
@@ -30,7 +30,7 @@ import { pruefDatabaseUrl } from "./pruefdaten/db"
 import { login } from "./pruefen-ringwerk/capture"
 
 const APP_DIR = path.resolve(__dirname, "..")
-const PORT = 3012
+const PORT = 3013
 const BASE = `http://localhost:${PORT}`
 
 /** die Seiten über alle Wettbewerbe; Admin dazu, Teilnehmer und Disziplinen nur für die Sportleitung */

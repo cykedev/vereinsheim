@@ -61,7 +61,7 @@ Dialoge (`ui/dialog`, `ui/alert-dialog`) stehen auf der Kartenfläche mit `round
 
 ## Skriptprüfung
 
-`pnpm --filter ringwerk pruefen` startet den gebauten Stand auf :3012 gegen die Prüfdatenbank (vorher `pruefdaten`)
+`pnpm --filter ringwerk pruefen` startet den gebauten Stand auf :3013 gegen die Prüfdatenbank (vorher `pruefdaten`)
 und prüft als Admin, Sportleitung und Mitglied: Rahmen und Leisten je Rolle, Profil, Breiten 375 bis 1280 px ohne
 seitliches Scrollen, die untere Leiste, die Reiter, das Bracket, keine versteckte Kopie im Hintergrund, Darstellung
 ohne Aufblitzen und den Fokus im Dialog „Spielplan neu generieren“ (nur geöffnet und mit Escape geschlossen). Es

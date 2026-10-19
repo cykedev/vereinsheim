@@ -309,13 +309,16 @@ export class Page {
     await wait(ms)
   }
 
-  /** Mitte eines Elements im Fenster; ist es nicht im Bild, vorher dorthin scrollen (ohne Gleiten) */
+  /** Mitte eines Elements im Fenster; ist es nicht im Bild oder verdeckt, vorher dorthin scrollen (ohne Gleiten) */
   private async centerOf(locator: Locator, scroll: boolean): Promise<{ x: number; y: number }> {
     const point = await this.ev<{ x: number; y: number } | null>(`(() => {
       const el = ${locator}
       if (!el) return null
       const inView = (r) => r.top >= 0 && r.bottom <= innerHeight && r.left >= 0 && r.right <= innerWidth
-      if (${scroll} && !inView(el.getBoundingClientRect())) el.scrollIntoView({ block: "center", behavior: "instant" })
+      // im Fenster, aber verdeckt (etwa von der festen unteren Leiste): Ein Mensch scrollte, der Klick träfe sonst die Leiste
+      const free = (r) => { const top = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2); return !!top && (top === el || el.contains(top)) }
+      const box = el.getBoundingClientRect()
+      if (${scroll} && (!inView(box) || !free(box))) el.scrollIntoView({ block: "center", behavior: "instant" })
       const r = el.getBoundingClientRect()
       return { x: r.left + r.width / 2, y: r.top + r.height / 2 }
     })()`)
