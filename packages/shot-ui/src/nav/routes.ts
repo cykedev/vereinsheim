@@ -145,6 +145,7 @@ const METRIC_CODES: readonly [PeriodMetricKey, string][] = [
   ["group.sigma", "sigma"],
   ["result.tensRate", "tens"],
   ["time.intervalMedian", "tempo"],
+  ["group.mpiDistance", "location"],
 ]
 
 const slugOrNull = (value: string | null) => (value && SLUG.test(value) ? value : null)

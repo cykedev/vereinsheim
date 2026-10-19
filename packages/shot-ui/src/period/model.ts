@@ -287,6 +287,8 @@ function calendarOf(
 export function periodModel(input: {
   /** alle Scheiben einer Familie (in Spiegel `fromProjection`) */
   items: readonly PeriodItem[]
+  /** Kennzahlen der Kacheln (Vorgabe `PERIOD_TILE_KEYS`); die erste ist der Ø je Schuss, er trägt den Vergleich */
+  tileKeys?: readonly string[]
   state: PeriodState
   nowMs: number
   timeZone: string
@@ -339,7 +341,7 @@ export function periodModel(input: {
     label: weekLabel(key),
   }))
 
-  const tiles: PeriodTile[] = PERIOD_TILE_KEYS.map((key) => {
+  const tiles: PeriodTile[] = (input.tileKeys ?? PERIOD_TILE_KEYS).map((key) => {
     const base = metricByKey(key) as Readonly<MetricDefinition>
     const metric = inScoring(base, scoring)
     const own = itemValues(cards, base, scoring, options)

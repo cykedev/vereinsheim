@@ -1,9 +1,13 @@
+"use client"
+
 import type { Scoring } from "@vereinsheim/shot-core/metrics"
 import { formatDateOnly } from "@vereinsheim/lib/format"
 import { cn } from "@vereinsheim/lib/utils"
 
 import { AnalysisCard, Note } from "../analysis/parts"
 import type { PeriodModel } from "./model"
+import { useHelpTexts } from "../help/HelpTexts"
+import { usePeriodWords } from "./PeriodWords"
 import { NEW_RECORDS, recordRows, type RecordRow } from "./records"
 
 /** die Zeilen der Rekorde; liegen in `./records` (rein, ohne React), hier weiter für bestehende Aufrufer */
@@ -44,7 +48,9 @@ export function PeriodInsights({
 }: PeriodInsightsProps) {
   const inPeriod = new Set(model.cards.map((c) => c.id))
   const date = (ms: number) => formatDateOnly(new Date(ms), timeZone)
-  const rows = recordRows(model.records, scoring)
+  const words = usePeriodWords()
+  const texts = useHelpTexts()
+  const rows = recordRows(model.records, scoring, words)
   const inRange = rows.filter((row) => inPeriod.has(row.record.cardId))
   const recent = inRange.slice(0, NEW_RECORDS)
   const row = (r: RecordRow) => {
@@ -105,9 +111,9 @@ export function PeriodInsights({
     <section aria-label="Analyse" className={cn("@container grid gap-4", className)}>
       <div className="grid min-w-0 gap-1">
         <h2 className="font-display text-xl font-bold tracking-tight">Was der Zeitraum zeigt</h2>
-        <p className="text-[13px] text-muted-foreground">Analyse über die Scheiben</p>
+        <p className="text-[13px] text-muted-foreground">{`Analyse über die ${words.many}`}</p>
       </div>
-      <AnalysisCard help="rekorde" explain={explain} onHelp={onHelp}>
+      <AnalysisCard help="rekorde" texts={texts} explain={explain} onHelp={onHelp}>
         {rows.length ? (
           <>
             {recent.length ? (
@@ -128,7 +134,7 @@ export function PeriodInsights({
             </details>
           </>
         ) : (
-          <Note>Noch kein Rekord: Es zählen nur abgeschlossene, vollständige Scheiben.</Note>
+          <Note>{words.noRecords}</Note>
         )}
       </AnalysisCard>
     </section>

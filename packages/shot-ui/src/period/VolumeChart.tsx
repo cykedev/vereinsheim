@@ -11,6 +11,8 @@ import {
 } from "../analysis/charts/ChartRuler"
 import { ChartSvg, crisp, niceStep } from "../analysis/charts/frame"
 import { weekDate } from "./calendar"
+import { usePeriodWords } from "./PeriodWords"
+import { CARD_WORDS, countOf, type PeriodWords } from "./words"
 
 const HEIGHT = 120
 const PAD = { left: 36, right: 12, top: 10, bottom: 22 }
@@ -20,9 +22,9 @@ export type VolumeWeek = VolumeBucket & { label: string }
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
 
 /** „Woche ab 06.07.2026: 140 Schuss, 3 Scheiben, 2 Tage“ (die Woche als Datum ihres Montags) */
-export const weekText = (w: VolumeWeek) =>
+export const weekText = (w: VolumeWeek, words: PeriodWords = CARD_WORDS) =>
   w.cards
-    ? `Woche ab ${weekDate(w.key)}: ${w.shots} Schuss, ${plural(w.cards, "Scheibe", "Scheiben")}, ${plural(w.days, "Tag", "Tage")}`
+    ? `Woche ab ${weekDate(w.key)}: ${w.shots} Schuss, ${countOf(w.cards, words)}, ${plural(w.days, "Tag", "Tage")}`
     : `Woche ab ${weekDate(w.key)}: kein Training`
 
 /**
@@ -31,6 +33,7 @@ export const weekText = (w: VolumeWeek) =>
  * Ausdruck, Trainings nur aus Probe mit ihrer Probe; die Ergebnis-Box zählt nur Wertungsschüsse.
  */
 export function VolumeChart({ width, weeks }: { width: number; weeks: readonly VolumeWeek[] }) {
+  const words = usePeriodWords()
   const plotW = Math.max(1, width - PAD.left - PAD.right)
   const slot = plotW / Math.max(1, weeks.length)
   const x = (i: number) => PAD.left + (i + 0.5) * slot
@@ -48,7 +51,7 @@ export function VolumeChart({ width, weeks }: { width: number; weeks: readonly V
   // ein Datum wie „06.07.“ braucht rund 40 px, dazu Luft bis zum nächsten
   const every = Math.max(1, Math.ceil(52 / slot))
   const chosen = ruler.index === null ? null : weeks[ruler.index]
-  const text = chosen ? weekText(chosen) : null
+  const text = chosen ? weekText(chosen, words) : null
   const grid: number[] = []
   for (let v = 0; v <= top + step / 2; v += step) grid.push(v)
 
@@ -103,7 +106,7 @@ export function VolumeChart({ width, weeks }: { width: number; weeks: readonly V
       </ChartSvg>
       <ValuesTable
         caption="Schüsse je Woche"
-        columns={["Woche ab", "Schuss", "Scheiben", "Tage"]}
+        columns={["Woche ab", "Schuss", words.many, "Tage"]}
         rows={weeks.map((w) => [weekDate(w.key), String(w.shots), String(w.cards), String(w.days)])}
       />
     </div>

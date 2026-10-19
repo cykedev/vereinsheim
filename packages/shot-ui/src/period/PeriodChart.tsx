@@ -19,6 +19,8 @@ import {
 import { ChartSvg, crisp, niceStep } from "../analysis/charts/frame"
 import { formatSigned, formatValue, unitText } from "../format"
 import type { PeriodModel } from "./model"
+import { usePeriodWords } from "./PeriodWords"
+import { countOf } from "./words"
 
 const HEIGHT = 240
 const PAD = { left: 44, right: 14, top: 14, bottom: 26 }
@@ -74,6 +76,7 @@ function monthStarts(fromMs: number, toMs: number, timeZone: string): number[] {
  * nur ab; darunter „Werte als Tabelle“. Ohne zwei Werte ein Satz statt des Diagramms.
  */
 export function PeriodChart({ width, model, timeZone, chosen, onChoose }: PeriodChartProps) {
+  const words = usePeriodWords()
   const { values, trend, months, metric, range, compareRange } = model
   const compare = model.compareValues
   const mode: "cards" | "months" | "compare" = compare ? "compare" : model.view
@@ -107,7 +110,7 @@ export function PeriodChart({ width, model, timeZone, chosen, onChoose }: Period
   if (!enough) {
     return (
       <p data-chart-empty className="text-[13px] text-muted-foreground">
-        Für einen Verlauf braucht es zwei Scheiben mit Wert.
+        {`Für einen Verlauf braucht es zwei ${words.many} mit Wert.`}
       </p>
     )
   }
@@ -164,14 +167,14 @@ export function PeriodChart({ width, model, timeZone, chosen, onChoose }: Period
     const v = values[i]
     const card = kinds.get(v.id)
     const kind = card?.kind === "competition" ? "Wettkampf · " : ""
-    const lead = mode === "compare" ? `Scheibe ${i + 1} · ` : ""
+    const lead = mode === "compare" ? `${words.one} ${i + 1} · ` : ""
     const other =
       mode === "compare" && compare?.[i] ? ` · im Vergleich ${show(compare[i].value)}` : ""
     // derselbe Abstand wie in Liste und Ablesung: zu den Scheiben davor, ohne sie selbst
     const delta = model.deltas.get(v.id)
     const before = delta
-      ? `${formatSigned(delta.delta, digits)} zum Schnitt ${delta.n === 1 ? "der Scheibe" : `der ${delta.n} Scheiben`} davor`
-      : "erste Scheibe"
+      ? `${formatSigned(delta.delta, digits)} zum Schnitt ${delta.n === 1 ? `der ${words.one}` : `der ${delta.n} ${words.many}`} davor`
+      : `erste ${words.one}`
     return `${lead}${date(v.atMs)} · ${kind}${show(v.value)} · ${before}${other}`
   }
   const monthText = (i: number) => {
@@ -179,13 +182,13 @@ export function PeriodChart({ width, model, timeZone, chosen, onChoose }: Period
     const spread =
       m.p10 === null
         ? m.floor === null && m.ceiling === null && metric.better === "none"
-          ? "Spanne ab 5 Scheiben"
-          : "Boden und Decke ab 5 Scheiben"
+          ? `Spanne ab 5 ${words.many}`
+          : `Boden und Decke ab 5 ${words.many}`
         : m.floor !== null && m.ceiling !== null
           ? `Boden ${formatValue(m.floor, digits)} · Decke ${formatValue(m.ceiling, digits)}`
           : `Spanne ${formatValue(m.p10, digits)} – ${formatValue(m.p90 as number, digits)}`
     // Alltagsworte wie auf der ersten Ebene: „Mitte“ ist der Median, das Blatt „?“ nennt ihn so
-    return `${m.label} · ${m.n} ${m.n === 1 ? "Scheibe" : "Scheiben"} · Mitte ${formatValue(m.median, digits)} · ${spread}`
+    return `${m.label} · ${countOf(m.n, words)} · Mitte ${formatValue(m.median, digits)} · ${spread}`
   }
   const index = ruler.index
   const text = index === null ? null : mode === "months" ? monthText(index) : cardText(index)
@@ -193,8 +196,8 @@ export function PeriodChart({ width, model, timeZone, chosen, onChoose }: Period
     mode === "months"
       ? `${metric.label} je Monat`
       : mode === "compare"
-        ? `${metric.label} je Scheibe, ${range.label} gegen ${compareRange?.label ?? ""}`
-        : `${metric.label} je Scheibe mit Schnitt der letzten fünf`
+        ? `${metric.label} je ${words.one}, ${range.label} gegen ${compareRange?.label ?? ""}`
+        : `${metric.label} je ${words.one} mit Schnitt der letzten fünf`
 
   const monthTicks = mode === "cards" ? monthStarts(range.fromMs, range.toMs, timeZone) : []
   const tickEvery = Math.max(1, Math.ceil((monthTicks.length * 34) / plotW))
@@ -403,9 +406,9 @@ export function PeriodChart({ width, model, timeZone, chosen, onChoose }: Period
         caption={label}
         columns={
           mode === "months"
-            ? ["Monat", "Scheiben", "Mitte", "Spanne von", "bis"]
+            ? ["Monat", words.many, "Mitte", "Spanne von", "bis"]
             : mode === "compare"
-              ? ["Scheibe", range.label, compareRange?.label ?? ""]
+              ? [words.one, range.label, compareRange?.label ?? ""]
               : ["Datum", metric.label, "Linie: Schnitt der letzten fünf mit ihr"]
         }
         rows={

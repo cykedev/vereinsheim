@@ -9,6 +9,7 @@ import { formatSigned, formatValue } from "../format"
 import { KindMark } from "../list/KindMark"
 import type { RenderLink } from "./links"
 import { itemKind, type PeriodItem, type PeriodMetric } from "./model"
+import { usePeriodWords } from "./PeriodWords"
 
 export interface CardListProps {
   /** Scheiben des Zeitraums in ihrer Folge (älteste zuerst) */
@@ -48,6 +49,7 @@ export function CardList({
   showAll,
   className,
 }: CardListProps) {
+  const words = usePeriodWords()
   const [expanded, setExpanded] = useState(false)
   const tableId = useId()
   const byId = useMemo(() => new Map(values.map((v) => [v.id, v])), [values])
@@ -58,7 +60,7 @@ export function CardList({
   if (!rows.length) {
     return (
       <p className={cn("text-[13px] text-muted-foreground", className)}>
-        Keine Scheibe im Zeitraum.
+        {`Keine ${words.one} im Zeitraum.`}
       </p>
     )
   }
@@ -66,7 +68,7 @@ export function CardList({
   return (
     <div className={cn("overflow-auto", className)}>
       <table id={tableId} className="w-full border-collapse text-[13px] tabular-nums">
-        <caption className="sr-only">{`Scheiben, neueste zuerst, mit ${metric.label}`}</caption>
+        <caption className="sr-only">{`${words.many}, neueste zuerst, mit ${metric.label}`}</caption>
         <thead className="sticky top-0 bg-card text-xs text-muted-foreground">
           <tr>
             <th scope="col" className="px-2 py-1.5 text-left font-medium">
@@ -80,7 +82,7 @@ export function CardList({
             </th>
             <th
               scope="col"
-              title="Abstand zum Schnitt der bis zu fünf Scheiben davor"
+              title={`Abstand zum Schnitt der bis zu fünf ${words.many} davor`}
               className="px-2 py-1.5 text-right font-medium"
             >
               zum Schnitt
@@ -116,7 +118,7 @@ export function CardList({
                   <button
                     type="button"
                     aria-pressed={picked}
-                    aria-label={`Scheibe vom ${date} wählen`}
+                    aria-label={`${words.one} vom ${date} wählen`}
                     onClick={(event) => {
                       // die Zeile wählt sonst ein zweites Mal
                       event.stopPropagation()
@@ -162,7 +164,7 @@ export function CardList({
         "data-show-all": true,
         className:
           "mt-1 block w-full cursor-pointer rounded-lg px-2 py-2 text-center text-[13px] font-semibold text-primary hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-ring",
-        children: "Alle in Scheiben zeigen",
+        children: `Alle in ${words.many} zeigen`,
       })}
     </div>
   )

@@ -8,6 +8,7 @@ import type { Scoring } from "@vereinsheim/shot-core/metrics"
 
 import { formatValue, ringsText } from "../format"
 import type { PeriodModel } from "./model"
+import { CARD_WORDS, type PeriodWords } from "./words"
 
 /** so viele neue Rekorde stehen oben im Fortschritt und je Abend auf Start */
 export const NEW_RECORDS = 5
@@ -20,7 +21,11 @@ export interface RecordRow {
 }
 
 /** die Zeilen der Rekorde R1–R8, R10, R11 in der Reihenfolge des Katalogs */
-export function recordRows(records: PeriodModel["records"], scoring: Scoring): RecordRow[] {
+export function recordRows(
+  records: PeriodModel["records"],
+  scoring: Scoring,
+  words: PeriodWords = CARD_WORDS
+): RecordRow[] {
   const ringDigits = scoring === "rings" ? 0 : 1
   const perKey = (
     table: Readonly<Record<number, RecordRef>>,
@@ -46,7 +51,7 @@ export function recordRows(records: PeriodModel["records"], scoring: Scoring): R
   const rings = (r: RecordRef) => ringsText(r.value, ringDigits)
   const count = (r: RecordRef) => String(r.value)
   const shots = (r: RecordRef) => `${r.value} Schuss`
-  const card = (k: number) => `Scheibe zu ${k} Schuss`
+  const card = (k: number) => `${words.one} zu ${k} Schuss`
   const series = (k: number) => `Serie zu ${k} Schuss`
   return [
     ...perKey(records.bestCard, (k) => `Bestes Ergebnis, ${card(k)}`, rings, "R1"),
@@ -81,7 +86,7 @@ export function recordRows(records: PeriodModel["records"], scoring: Scoring): R
     ),
     ...one(records.longestTenRun, "R7", "Längste Zehnerfolge", shots),
     ...one(records.longestNineRun, "R7n", "Längste Folge ohne Schuss unter 9", shots),
-    ...one(records.bestForm, "R8", "Beste Form (Ø über 5 Scheiben)", (r) =>
+    ...one(records.bestForm, "R8", `Beste Form (Ø über 5 ${words.many})`, (r) =>
       formatValue(r.value, 2)
     ),
     ...perKey(

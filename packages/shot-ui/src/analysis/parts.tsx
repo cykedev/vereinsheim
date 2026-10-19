@@ -1,18 +1,21 @@
 "use client"
 
-import { helpTopic } from "@vereinsheim/shot-help/lookup"
 import { cn } from "@vereinsheim/lib/utils"
 import type { ReactNode } from "react"
 
 import { formatValue } from "../format"
 import { HelpButton, HelpIcon } from "../help/HelpButton"
-import { helpEntry } from "../help/HelpDetails"
+import { shotHelp, type HelpLookup } from "../help/HelpTexts"
 
 // Gemeinsame Teile der Analyse-Karten.
 
 export interface AnalysisCardProps {
-  /** Erklärung aus `shot-help`: Thema (`helpTopic`) oder Oberfläche (`VIEW_HELP`); ohne keine Hilfe */
+  /**
+   * Id der Erklärung: Titel und Kurzsatz aus `shot-help` (Thema oder Oberfläche) oder aus `texts`; ohne keine Hilfe
+   */
   help?: string
+  /** woher Titel und Kurzsatz kommen (Vorgabe `shot-help`; eine Seite reicht `useHelpTexts()` durch) */
+  texts?: HelpLookup
   /** Titel, wenn er nicht aus der Erklärung kommt */
   title?: string
   /** kleiner Zusatz im Kopf, etwa „aus den Zahlen“; keine Katalog-IDs, die interessieren nicht */
@@ -31,6 +34,7 @@ export interface AnalysisCardProps {
 /** Eine Karte der Analyse: Kopf mit Titel, Zusatz und „?“, mit „Erklärungen“ der Kurzsatz, dann Inhalt */
 export function AnalysisCard({
   help,
+  texts = shotHelp,
   title,
   tag,
   wide,
@@ -39,8 +43,8 @@ export function AnalysisCard({
   className,
   children,
 }: AnalysisCardProps) {
-  const topic = help ? helpTopic(help) : undefined
-  const heading = title ?? (help ? helpEntry(help).title : "")
+  const topic = help ? texts(help) : undefined
+  const heading = title ?? topic?.title ?? ""
   return (
     <article
       data-card={help}
@@ -62,7 +66,7 @@ export function AnalysisCard({
           <HelpButton label={heading} helpId={help} onClick={() => onHelp(help)} />
         )}
       </div>
-      {explain && topic && (
+      {explain && topic?.short && (
         <p data-short="true" className="text-[12.5px] leading-snug text-foreground-2">
           {topic.short}
         </p>

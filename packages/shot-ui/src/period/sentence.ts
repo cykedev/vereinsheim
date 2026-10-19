@@ -6,6 +6,7 @@ import type { PeriodComparison } from "@vereinsheim/shot-core/analysis"
 import { formatValue } from "../format"
 import { PREVIOUS_LABEL } from "./calendar"
 import type { PeriodModel } from "./model"
+import { CARD_WORDS, type PeriodWords } from "./words"
 
 /**
  * Urteil in Alltagsworten: „deutlich besser“, „schwächer“, „kein klarer Unterschied“, „zu wenige Scheiben“;
@@ -13,9 +14,10 @@ import type { PeriodModel } from "./model"
  */
 export function verdictText(
   comparison: PeriodComparison,
-  better: "higher" | "lower" | "none"
+  better: "higher" | "lower" | "none",
+  words: PeriodWords = CARD_WORDS
 ): string {
-  if (comparison.test === null) return "zu wenige Scheiben"
+  if (comparison.test === null) return `zu wenige ${words.many}`
   if (comparison.verdict === "unclear") return "kein klarer Unterschied"
   const up = comparison.verdict === "higher"
   const word =
@@ -38,7 +40,10 @@ const LEVEL = 0.005
  * 90 davor (`PeriodModel.form`); „ein klarer Unterschied“ nur bei einem Urteil, in denselben Worten wie `verdictText`.
  * Ohne Scheiben keiner.
  */
-export function periodSentence(model: Pick<PeriodModel, "form">): string | null {
+export function periodSentence(
+  model: Pick<PeriodModel, "form">,
+  words: PeriodWords = CARD_WORDS
+): string | null {
   const form = model.form
   if (!form) return null
   const days = form.lastDays
@@ -53,8 +58,8 @@ export function periodSentence(model: Pick<PeriodModel, "form">): string | null 
   const c = form.comparison
   if (!c || c.test === null) {
     return days
-      ? `Für einen Vergleich der letzten ${days} Tage mit den ${days} Tagen davor sind es zu wenige Scheiben.`
-      : `Für einen Vergleich mit ${other.dative} sind es zu wenige Scheiben.`
+      ? `Für einen Vergleich der letzten ${days} Tage mit den ${days} Tagen davor sind es zu wenige ${words.many}.`
+      : `Für einen Vergleich mit ${other.dative} sind es zu wenige ${words.many}.`
   }
   if (Math.abs(c.delta) < LEVEL) return `${subject} gleichauf mit ${other.dative}.`
   // „…, nicht nachweisbar“ klingt wie ein Widerspruch zur Zahl davor

@@ -1,10 +1,14 @@
+"use client"
+
 import { formatDateOnly, formatInteger } from "@vereinsheim/lib/format"
 import { cn } from "@vereinsheim/lib/utils"
 
 import { formatSigned, formatValue } from "../format"
 import { HelpButton } from "../help/HelpButton"
 import type { PeriodModel } from "./model"
+import { usePeriodWords } from "./PeriodWords"
 import { verdictText } from "./sentence"
+import { countOf } from "./words"
 
 export interface PeriodResultProps {
   model: Pick<PeriodModel, "summary" | "comparison" | "compareRange" | "compareShared">
@@ -21,6 +25,7 @@ export interface PeriodResultProps {
 export function PeriodResult({ model, timeZone, onHelp, className }: PeriodResultProps) {
   const { summary, comparison, compareRange, compareShared } = model
   const best = summary.best
+  const words = usePeriodWords()
   return (
     <div className={cn("grid content-start gap-3", className)}>
       <div className="grid gap-1">
@@ -37,12 +42,12 @@ export function PeriodResult({ model, timeZone, onHelp, className }: PeriodResul
         </p>
         <p className="text-[13px] text-muted-foreground">
           {summary.cards
-            ? `${summary.cards} ${summary.cards === 1 ? "Scheibe" : "Scheiben"} · ${formatInteger(summary.shots)} Wertungsschüsse`
-            : "keine Scheibe mit Wert"}
+            ? `${countOf(summary.cards, words)} · ${formatInteger(summary.shots)} Wertungsschüsse`
+            : `keine ${words.one} mit Wert`}
         </p>
         {best && (
           <p data-best className="text-[13px]">
-            <span className="text-muted-foreground">{`beste Scheibe zu ${best.shots} Schuss `}</span>
+            <span className="text-muted-foreground">{`beste ${words.one} zu ${best.shots} Schuss `}</span>
             <span className="font-semibold tabular-nums">{formatValue(best.value, 2)}</span>
             <span className="text-muted-foreground">{` am ${formatDateOnly(new Date(best.atMs), timeZone)}`}</span>
           </p>
@@ -56,10 +61,10 @@ export function PeriodResult({ model, timeZone, onHelp, className }: PeriodResul
                     {formatSigned(comparison.delta, 2)}
                   </span>
                   {` gegen ${compareRange.label} · `}
-                  <span className="font-semibold">{verdictText(comparison, "higher")}</span>
+                  <span className="font-semibold">{verdictText(comparison, "higher", words)}</span>
                 </>
               ) : (
-                `gegen ${compareRange.label}: zu wenige Scheiben`
+                `gegen ${compareRange.label}: zu wenige ${words.many}`
               )}
             </p>
             {onHelp && (
@@ -73,7 +78,7 @@ export function PeriodResult({ model, timeZone, onHelp, className }: PeriodResul
         )}
         {compareRange && compareShared > 0 && (
           <p data-compare-shared className="text-[12.5px] text-muted-foreground">
-            {`${compareShared} ${compareShared === 1 ? "Scheibe liegt" : "Scheiben liegen"} in beiden Zeiträumen und ${compareShared === 1 ? "zählt" : "zählen"} nur hier.`}
+            {`${countOf(compareShared, words)} ${compareShared === 1 ? "liegt" : "liegen"} in beiden Zeiträumen und ${compareShared === 1 ? "zählt" : "zählen"} nur hier.`}
           </p>
         )}
       </div>

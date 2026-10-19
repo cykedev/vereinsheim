@@ -6,6 +6,7 @@ import { Sheet } from "@vereinsheim/ui/design2/sheet"
 import { useState } from "react"
 
 import { KIND_OPTIONS } from "../controls/CardFilters"
+import { usePeriodWords } from "./PeriodWords"
 import type { CardKind } from "./state"
 import {
   PREVIOUS_LABEL,
@@ -38,6 +39,8 @@ export interface PeriodPickerProps {
   named: readonly NamedPeriod[]
   timeZone: string
   onApply: (filters: PeriodFilters) => void
+  /** der Schalter „Trainings nur aus Probe mitzählen“ (Vorgabe ja); ohne bleibt `includeProbeOnly` wie gegeben */
+  probeOnlySwitch?: boolean
   className?: string
 }
 
@@ -97,8 +100,10 @@ export function PeriodPicker({
   named,
   timeZone,
   onApply,
+  probeOnlySwitch = true,
   className,
 }: PeriodPickerProps) {
+  const words = usePeriodWords()
   const [open, setOpen] = useState(false)
   const [draft, setDraft] = useState(choice)
   const [draftCompare, setDraftCompare] = useState(compare)
@@ -252,7 +257,7 @@ export function PeriodPicker({
               )
             })}
             <p className="pl-2 text-[12.5px] text-muted-foreground">
-              Scheiben, die in beiden Zeiträumen liegen, zählen nur im gewählten.
+              {`${words.many}, die in beiden Zeiträumen liegen, zählen nur im gewählten.`}
             </p>
           </fieldset>
           <fieldset className="grid gap-1">
@@ -266,15 +271,17 @@ export function PeriodPicker({
               )
             )}
           </fieldset>
-          <label className={optionClass}>
-            <input
-              type="checkbox"
-              checked={draftProbe}
-              onChange={(event) => setDraftProbe(event.target.checked)}
-              className="size-4 accent-[var(--primary)]"
-            />
-            <span>Trainings nur aus Probe mitzählen</span>
-          </label>
+          {probeOnlySwitch && (
+            <label className={optionClass}>
+              <input
+                type="checkbox"
+                checked={draftProbe}
+                onChange={(event) => setDraftProbe(event.target.checked)}
+                className="size-4 accent-[var(--primary)]"
+              />
+              <span>Trainings nur aus Probe mitzählen</span>
+            </label>
+          )}
           <button
             type="button"
             disabled={!valid}

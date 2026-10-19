@@ -13,6 +13,8 @@ import { MiniTarget } from "../target/MiniTarget"
 import { KIND_TEXT } from "../list/KindMark"
 import type { RenderItemLink } from "./links"
 import { itemKind, type PeriodItem, type PeriodMetric } from "./model"
+import { usePeriodWords } from "./PeriodWords"
+import { CARD_WORDS, type PeriodWords } from "./words"
 
 export interface CardReadoutProps {
   card: PeriodItem
@@ -21,7 +23,8 @@ export interface CardReadoutProps {
    * (die App holt sie zu einer neuen Wahl nach), ein leerer Platz gleicher Größe
    */
   marks: readonly MarkShot[] | null
-  target: TargetImage
+  /** das Scheibenbild der kleinen Scheibe; null: keine kleine Scheibe (Treffsicher kennt keine Lage je Schuss) */
+  target: TargetImage | null
   /** Wert der Kennzahl des Verlaufs; null: die Scheibe hat keinen */
   value: CardValue | null
   /** ihr Punkt im Verlauf (Formband) */
@@ -50,8 +53,12 @@ const explainsDelta = (metric: PeriodMetric) =>
 export const cardKindText = (card: PeriodItem) => KIND_TEXT[itemKind(card)]
 
 /** „+0,03 zum Schnitt der 5 Scheiben davor“, „… der Scheibe davor“ */
-export function deltaText(delta: { delta: number; n: number }, decimals: number): string {
-  const before = delta.n === 1 ? "der Scheibe davor" : `der ${delta.n} Scheiben davor`
+export function deltaText(
+  delta: { delta: number; n: number },
+  decimals: number,
+  words: PeriodWords = CARD_WORDS
+): string {
+  const before = delta.n === 1 ? `der ${words.one} davor` : `der ${delta.n} ${words.many} davor`
   return `${formatSigned(delta.delta, decimals)} zum Schnitt ${before}`
 }
 
@@ -74,6 +81,7 @@ export function CardReadout({
   onHelp,
   className,
 }: CardReadoutProps) {
+  const words = usePeriodWords()
   const unit = unitText(metric.unit)
   const band = point?.band ?? null
   const inBand = band && value ? value.value >= band.low && value.value <= band.high : null
@@ -81,13 +89,13 @@ export function CardReadout({
     <div data-card-readout={card.id} className={cn("grid gap-3", className)}>
       <div className="flex items-baseline justify-between gap-3">
         <h3 className="font-display text-base font-bold">
-          {chosen ? "Gewählte Scheibe" : "Neueste Scheibe"}
+          {chosen ? `Gewählte ${words.one}` : `Neueste ${words.one}`}
         </h3>
         <span className="text-[13px] text-muted-foreground">
           {`${formatDateOnly(new Date(card.startedAtMs), timeZone)} · ${cardKindText(card)}`}
         </span>
       </div>
-      <div className="grid grid-cols-[minmax(0,1fr)_96px] items-start gap-4">
+      <div className={cn("grid items-start gap-4", target && "grid-cols-[minmax(0,1fr)_96px]")}>
         <div className="grid min-w-0 content-start gap-1 text-[13px]">
           <p className="font-display text-[1.6rem] leading-none font-bold tabular-nums">
             {value ? formatValue(value.value, metric.decimals) : "–"}
@@ -104,7 +112,9 @@ export function CardReadout({
           {value && (
             <div className="flex items-start justify-between gap-2">
               <p data-delta className="tabular-nums">
-                {delta ? deltaText(delta, metric.decimals) : "erste Scheibe, kein Schnitt davor"}
+                {delta
+                  ? deltaText(delta, metric.decimals, words)
+                  : `erste ${words.one}, kein Schnitt davor`}
               </p>
               {onHelp && explainsDelta(metric) && (
                 <HelpButton
@@ -121,7 +131,7 @@ export function CardReadout({
             </p>
           )}
         </div>
-        {marks === null ? (
+        {!target ? null : marks === null ? (
           <span
             aria-hidden="true"
             data-marks-loading="true"
@@ -136,7 +146,7 @@ export function CardReadout({
       {renderLink(card.id, {
         className:
           "justify-self-start cursor-pointer rounded-full border border-line-strong px-3.5 py-1.5 text-[13px] font-semibold text-primary hover:bg-accent-wash focus-visible:outline-2 focus-visible:outline-ring",
-        children: "Scheibe öffnen",
+        children: `${words.one} öffnen`,
       })}
     </div>
   )
@@ -161,6 +171,7 @@ export function CardLine({
 > & {
   className?: string
 }) {
+  const words = usePeriodWords()
   const parts = [
     formatShortDay(new Date(card.startedAtMs), timeZone),
     value ? formatValue(value.value, metric.decimals) : "ohne Wert",
@@ -185,7 +196,7 @@ export function CardLine({
       {renderLink(card.id, {
         className:
           "shrink-0 cursor-pointer rounded font-semibold whitespace-nowrap text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring",
-        children: "Scheibe öffnen",
+        children: `${words.one} öffnen`,
       })}
     </div>
   )

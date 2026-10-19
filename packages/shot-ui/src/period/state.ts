@@ -5,12 +5,16 @@ import type { Scoring } from "@vereinsheim/shot-core/metrics"
 
 import { DEFAULT_CHOICE, type CompareChoice, type PeriodChoice } from "./calendar"
 
-/** Kennzahlen des Verlaufs: nur solche, die nicht an der Schusszahl hängen */
+/**
+ * Kennzahlen des Verlaufs: nur solche, die nicht an der Schusszahl hängen; der Schwerpunkt-Abstand für Einträge, deren
+ * Lage nur als Ganzes bekannt ist (Treffsicher: Trefferlage vom Ausdruck)
+ */
 export type PeriodMetricKey =
   | "result.decimalMean"
   | "group.sigma"
   | "result.tensRate"
   | "time.intervalMedian"
+  | "group.mpiDistance"
 
 export type CardKind = "all" | "training" | "competition"
 

@@ -1,10 +1,14 @@
+"use client"
+
 import { helpForMetric } from "@vereinsheim/shot-help/lookup"
 import { cn } from "@vereinsheim/lib/utils"
 
 import { formatSigned, formatValue, unitText } from "../format"
 import { HelpButton } from "../help/HelpButton"
 import type { PeriodTile } from "./model"
+import { usePeriodWords } from "./PeriodWords"
 import { verdictText } from "./sentence"
+import { countOf } from "./words"
 
 export interface PeriodTilesProps {
   tiles: readonly PeriodTile[]
@@ -14,14 +18,13 @@ export interface PeriodTilesProps {
   className?: string
 }
 
-const cards = (n: number) => `${n} ${n === 1 ? "Scheibe" : "Scheiben"}`
-
 /**
  * Zahlen über den Zeitraum: je Kennzahl das Mittel der Werte je Scheibe (Einheit Scheibe) und die
  * Zahl der Scheiben; mit Vergleich der Wert im Vergleichszeitraum, der Unterschied und das Urteil („deutlich“ nur
  * neben einem Urteil). Kacheln mit Wert, Einheit und kurzer Angabe, drei Spalten ab 27rem Breite.
  */
 export function PeriodTiles({ tiles, compareLabel, onHelp, className }: PeriodTilesProps) {
+  const words = usePeriodWords()
   return (
     <section
       className={cn("@container grid gap-3", className)}
@@ -30,7 +33,9 @@ export function PeriodTiles({ tiles, compareLabel, onHelp, className }: PeriodTi
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="font-display text-xl font-bold tracking-tight">Zahlen über den Zeitraum</h2>
         <span className="text-[13px] text-muted-foreground">
-          {compareLabel ? `Mittel je Scheibe, gegen ${compareLabel}` : "Mittel je Scheibe"}
+          {compareLabel
+            ? `Mittel je ${words.one}, gegen ${compareLabel}`
+            : `Mittel je ${words.one}`}
         </span>
       </div>
       <div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-border bg-border @min-[27rem]:grid-cols-3">
@@ -69,19 +74,19 @@ export function PeriodTiles({ tiles, compareLabel, onHelp, className }: PeriodTi
                 )}
               </span>
               <span className="text-[12.5px] leading-snug text-muted-foreground">
-                {tile.value === null ? "keine Scheibe mit Wert" : cards(tile.n)}
+                {tile.value === null ? `keine ${words.one} mit Wert` : countOf(tile.n, words)}
               </span>
               {other && compareLabel && (
                 <span data-tile-compare className="text-[12.5px] leading-snug text-foreground-2">
                   {other.value === null
-                    ? `${compareLabel}: keine Scheibe mit Wert`
+                    ? `${compareLabel}: keine ${words.one} mit Wert`
                     : `${compareLabel}: ${formatValue(other.value, tile.decimals)}`}
                   {other.comparison && (
                     <>
                       <br />
                       <span className="tabular-nums">{`Δ ${formatSigned(other.comparison.delta, tile.decimals)} · `}</span>
                       <span className="font-semibold">
-                        {verdictText(other.comparison, tile.better)}
+                        {verdictText(other.comparison, tile.better, words)}
                       </span>
                     </>
                   )}

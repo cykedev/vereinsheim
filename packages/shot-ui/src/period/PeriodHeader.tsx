@@ -23,6 +23,8 @@ export interface PeriodControlsProps {
    * als Wechsel-Chip)
    */
   actions?: ReactNode
+  /** der Schalter „Trainings nur aus Probe mitzählen“ im Blatt „Filter“ (Vorgabe ja) */
+  probeOnlySwitch?: boolean
 }
 
 /**
@@ -38,6 +40,7 @@ export function PeriodControls({
   timeZone,
   families,
   actions,
+  probeOnlySwitch,
 }: PeriodControlsProps) {
   return (
     <div data-period-controls className="flex flex-wrap items-center gap-2">
@@ -57,6 +60,7 @@ export function PeriodControls({
         timeZone={timeZone}
         // eine Aktion für das ganze Blatt
         onApply={(filters) => dispatch({ type: "setFilters", filters })}
+        probeOnlySwitch={probeOnlySwitch}
       />
       {actions && (
         <div data-period-actions className="flex items-center gap-1.5">
