@@ -63,7 +63,7 @@ export function StatisticsFiltersCard({ model, actions }: Props) {
   return (
     <Card>
       <CardContent className="space-y-4">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 [&>*]:min-w-0">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-[auto_repeat(3,minmax(0,1fr))] [&>*]:min-w-0">
           <div className="space-y-2">
             <Label>Einheitentyp</Label>
             <Segmented<TypeFilter>
@@ -71,6 +71,7 @@ export function StatisticsFiltersCard({ model, actions }: Props) {
               options={TYPE_OPTIONS}
               value={typeFilter}
               onChange={actions.typeFilterChange}
+              scroll
               className="w-full [&>button]:flex-1"
             />
           </div>

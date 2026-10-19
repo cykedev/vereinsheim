@@ -220,6 +220,33 @@ async function layout(page: Page, session: string) {
     await page.goto(`${BASE}${path}`)
     record([await barCheck(page, `Telefon ${path}`)])
   }
+  for (const width of [390, 768, 1024, 1280]) {
+    await page.viewport(width, 900)
+    for (const path of MAIN) {
+      await page.goto(`${BASE}${path}`)
+      record([await segmentsInside(page, `${width} px: ${path}`)])
+    }
+  }
+}
+
+/**
+ * Kein Umschalter ragt über sein Feld hinaus (sonst liegen Knöpfe über dem Nachbarfeld): Jeder Knopf endet im
+ * Umschalter, außer der Umschalter scrollt in sich.
+ */
+async function segmentsInside(page: Page, label: string): Promise<Check> {
+  const out = await page.ev<
+    string[]
+  >(`$$('[role="radiogroup"]').filter(visible).flatMap((group) => {
+    if (["auto", "scroll"].includes(getComputedStyle(group).overflowX)) return []
+    const box = group.getBoundingClientRect()
+    return $$("button", group).filter((b) => b.getBoundingClientRect().right > box.right + 1)
+      .map((b) => (group.getAttribute("aria-label") ?? "") + " " + txt(b))
+  })`)
+  return {
+    name: `${label}: Umschalter bleiben in ihrem Feld`,
+    ok: out.length === 0,
+    detail: out.join(", "),
+  }
 }
 
 /**
