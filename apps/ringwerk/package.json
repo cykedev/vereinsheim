@@ -15,6 +15,7 @@
     "test:watch": "vitest",
     "check-types": "tsc --noEmit",
     "db:generate": "prisma generate",
+    "pruefen": "tsx --tsconfig tools/pruefdaten/tsconfig.json tools/pruefen.ts",
     "pruefdaten": "tsx --tsconfig tools/pruefdaten/tsconfig.json tools/pruefdaten/build.ts",
     "pruefen:aufnehmen": "tsx --tsconfig tools/pruefdaten/tsconfig.json tools/pruefen-ringwerk.ts --aufnehmen",
     "pruefen:vergleichen": "tsx --tsconfig tools/pruefdaten/tsconfig.json tools/pruefen-ringwerk.ts --vergleichen",
