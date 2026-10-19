@@ -1,6 +1,6 @@
-// Eingabe der Seite eines Zeitraums: ein schlanker Eintrag je Scheibe oder Einheit, ohne Schüsse. Spiegel bildet ihn
-// aus der Projektion (`fromProjection`), Treffsicher aus einer Einheit. Hier wird nur ausgewählt und gezählt; die Werte
-// und die Bausteine der Rekorde rechnet der Fachkern (`@vereinsheim/shot-core`).
+// Eingabe der Seite eines Zeitraums: ein schlanker Eintrag je Scheibe oder Einheit, ohne Schüsse. Spiegel bildet
+// ihn aus der Projektion (`fromProjection`), Treffsicher aus einer Einheit. Hier wird nur ausgewählt und gezählt;
+// die Werte und die Bausteine der Rekorde rechnet der Fachkern (`@vereinsheim/shot-core`).
 
 import {
   combineRecords,
@@ -32,11 +32,13 @@ export interface PeriodItem {
   flags: readonly string[]
 }
 
-/** Einträge in ihrer Folge: nach Beginn, bei Gleichstand nach Kennung (wie im Fachkern) */
-const byStart = (items: readonly PeriodItem[]) =>
-  [...items].sort(
-    (a, b) => a.startedAtMs - b.startedAtMs || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
-  )
+/** zeitliche Folge, bei gleichem Beginn nach Id (wie im Fachkern); eine Regel für Zeitraum und Liste */
+export const byStart = (
+  a: { id: string; startedAtMs: number },
+  b: { id: string; startedAtMs: number }
+) => a.startedAtMs - b.startedAtMs || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
+
+const inOrder = (items: readonly PeriodItem[]) => [...items].sort(byStart)
 
 /** wie `cardValues`, aus den Einträgen: ohne Wert kein Punkt, nur Probe nur mit dem Schalter */
 export function itemValues(
@@ -48,7 +50,7 @@ export function itemValues(
   if (!metric.scopes.includes("card"))
     throw new RangeError(`${metric.key}: keine Kennzahl der Ebene Scheibe`)
   const key = inScoring(metric, scoring).key
-  return byStart(items).flatMap((item) => {
+  return inOrder(items).flatMap((item) => {
     if (item.probeOnly && !options.includeProbeOnly) return []
     const entry = item.metrics[key]
     return entry ? [{ id: item.id, atMs: item.startedAtMs, value: entry.value, n: entry.n }] : []
@@ -62,7 +64,7 @@ export function itemRecords(
   options: { kind?: PeriodCard["kind"]; includeProbeOnly?: boolean } = {}
 ): PeriodRecords {
   return combineRecords(
-    byStart(items).flatMap((item) => {
+    inOrder(items).flatMap((item) => {
       if (!recordsInView(item, options)) return []
       const candidates = item.records[scoring]
       return candidates ? [{ id: item.id, atMs: item.startedAtMs, candidates }] : []
@@ -77,7 +79,7 @@ export function itemVolume(
   dayOf: (atMs: number) => string
 ): VolumeBucket[] {
   const buckets = new Map<string, { shots: number; cards: number; days: Set<string> }>()
-  for (const item of byStart(items)) {
+  for (const item of inOrder(items)) {
     const key = bucketOf(item.startedAtMs)
     const bucket = buckets.get(key) ?? { shots: 0, cards: 0, days: new Set<string>() }
     bucket.shots += item.shots

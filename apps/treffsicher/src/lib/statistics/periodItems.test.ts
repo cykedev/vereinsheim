@@ -116,6 +116,10 @@ describe("eine Einheit als Eintrag der Seite eines Zeitraums", () => {
     )!
     expect(item.withShots).toBe(false)
     expect(item.metrics["result.decimalMean"]?.value).toBeCloseTo(9.5, 10)
+    // je Serie ihre Einzelschüsse, sonst der Schuss je Serie der Disziplin: 5 + 10
+    const short = periodItem(session("kurz", 2, [{ shots: shots(9, 9, 9, 9, 9) }, { total: 100 }]))!
+    expect(short.metrics["result.decimalMean"]).toEqual({ value: 145 / 15, n: 15 })
+    expect(short.shots).toBe(15)
   })
 
   it("Art, Lage aus dem Ausdruck und Einheiten ohne Disziplin oder Ergebnis", () => {

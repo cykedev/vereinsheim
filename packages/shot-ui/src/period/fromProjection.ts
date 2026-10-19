@@ -6,8 +6,8 @@ import type { PeriodItem } from "./item"
 
 /**
  * Eine Scheibe mit Projektion als Eintrag: Werte und Rekord-Kandidaten aus der Projektion, „nur Probe“ wie
- * `isProbeOnly` (mit mindestens einem Schuss), die Schüsse wie am Ausdruck. Eine Scheibe, die für Rekorde nicht zählt
- * (`projectedEligible`), trägt keine Kandidaten.
+ * `isProbeOnly` (mit mindestens einem Schuss), die Schüsse wie am Ausdruck. Eine Scheibe, die für Rekorde nicht
+ * zählt (`projectedEligible`), trägt keine Kandidaten.
  */
 export function fromProjection(card: ProjectedCard): PeriodItem {
   const { projection } = card

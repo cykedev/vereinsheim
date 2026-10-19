@@ -153,9 +153,11 @@ Bedienung prüft `pnpm --filter spiegel pruefen`.
   `cardListModel`, `startModel`, `contextCardIds` und `lastEvening` nehmen `ProjectedCard` aus
   `shot-core/projection`, nie Schüsse. `periodModel` nimmt `PeriodItem` (`period/item`), damit auch Treffsicher seine
   Einheiten zeigen kann; Spiegel bildet ihn über `fromProjection`, die Filter der Rekorde teilt `recordsInView` aus dem
-  Fachkern. Eine Charakterisierung über eine Saison (`period/season.test.ts`, `seasonCards`) hält das ganze Modell fest. Werte kommen aus der Projektion (`projectedValues`, `projectedRecords`,
-  `projectedVolume`), die Schusszahl aus `printedShots`, der Ø eines Abends aus `pooledMean`; „nur Probe“ ist
-  `isProbeOnly` (Projektion), auf der Seite einer Scheibe `probeOnlyShots` (Schüsse), die Art beider `kindOf`. Die
+  Fachkern. Eine Charakterisierung über eine Saison (`period/season.test.ts`, `seasonCards`) hält das ganze Modell fest.
+  Werte kommen aus der Projektion (`projectedValues`, `projectedRecords`, `projectedVolume`; im Zeitraum `itemValues`,
+  `itemRecords`, `itemVolume`), die Schusszahl aus `printedShots` (im Zeitraum `PeriodItem.shots`), der Ø eines Abends
+  aus `pooledMean`; „nur Probe“ ist `isProbeOnly` (Projektion, im Zeitraum `PeriodItem.probeOnly`), auf der Seite einer
+  Scheibe `probeOnlyShots` (Schüsse), die Art aller `kindOf`. Die
   kleinen Scheiben (`EveningList`, `EveningBlock`, `CardReadout`) bekommen ihre Lagen als `marks` (Id → `MarkShot[]`,
   `markShots(cardMarks(…))`); `MiniTarget` braucht nur Lage und Ring. Die Tests projizieren ihre Scheiben (`projected`,
   `marksOf` in `period/testSeason.ts`) und behalten ihre Erwartungen: Was grün bleibt, rechnet wie aus den Schüssen.
@@ -196,7 +198,7 @@ Bedienung prüft `pnpm --filter spiegel pruefen`.
   Wahl, Serie, Schuss als Nummer wie `shotLabels`, Wertung, Abschnitt), nicht _wie_ es gezeichnet ist (Ebenen,
   Ausschnitt, Thema, Erklärungen). Vorgaben fallen weg, Schlüssel stehen in fester Reihenfolge, Ungültiges gilt als
   Vorgabe, nie ein Fehler. Seiten bauen Adressen und Wege nur über `nav/routes` und `nav/navigate`. Ids sind erzeugte Ids, nie
-  Namen (`isCardId`, `isNamedPeriodId`; benannte Zeiträume nicht `30d`, `90d`, `12m`, `all`, `previous`), die Familie
+  Namen (`isCardId`, `isNamedPeriodId`; benannte Zeiträume nicht `30d`, `90d`, `6m`, `12m`, `all`, `previous`), die Familie
   die des Fachkerns (`lg-freihand` …). Die Wertung einer Scheibe (`CardRoute.scoring`) hat keine Vorgabe: ohne Angabe
   null, die Scheibe öffnet in ihrer; `scoring=decimal` steht ausdrücklich da. `openCard` gibt ohne Rekord null,
   `siblingRoute` setzt null, `backRoute` führt ohne Wertung in den Fortschritt.
@@ -265,7 +267,7 @@ Bedienung prüft `pnpm --filter spiegel pruefen`.
   zeigt Säulen je Woche (`VolumeChart`) oder den Kalender (`CalendarChart`, T7), umgeschaltet in der App
   („Wochen | Kalender“, wie gezeichnet, nicht in der Adresse; geblättert wird im Baustein, `CalendarBrowser`); die Tage
   rechnet `periodModel.calendar` (dazu `all`: alle Trainingstage der Familie in der Art, und `today`) über
-  `projectedVolume` je Abend (`eveningDay` aus `period/calendar`, auch über `list/evenings` exportiert). Ein
+  `itemVolume` je Abend (`eveningDay` aus `period/calendar`, auch über `list/evenings` exportiert). Ein
   Vergleich urteilt nur mit Test, „deutlich“ steht nur neben einem Urteil (`verdictText`). Der Abstand zum
   Schnitt ist der zu den bis zu fünf Scheiben davor, ohne die Scheibe selbst; Boden und Decke folgen der
   Richtung der Kennzahl.

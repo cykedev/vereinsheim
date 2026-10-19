@@ -37,7 +37,7 @@ import {
   type DateRange,
   type NamedPeriod,
 } from "./calendar"
-import { itemRecords, itemValues, itemVolume, type PeriodItem } from "./item"
+import { byStart, itemRecords, itemValues, itemVolume, type PeriodItem } from "./item"
 import type { PeriodMetricKey, PeriodState } from "./state"
 
 export type { PeriodItem } from "./item"
@@ -213,11 +213,7 @@ export function periodReading(
 const mean = (values: readonly CardValue[]) =>
   values.length ? values.reduce((sum, v) => sum + v.value, 0) / values.length : null
 
-/** zeitliche Folge, bei gleichem Beginn nach Id (wie im Fachkern); eine Regel für Zeitraum und Liste */
-export const byStart = (
-  a: Pick<ProjectedCard, "id" | "startedAtMs">,
-  b: Pick<ProjectedCard, "id" | "startedAtMs">
-) => a.startedAtMs - b.startedAtMs || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
+export { byStart } from "./item"
 
 /** die bis zu fünf Scheiben davor, wie der gleitende Schnitt */
 const DELTA_WINDOW = 5

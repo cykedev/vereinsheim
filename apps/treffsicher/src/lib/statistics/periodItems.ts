@@ -65,7 +65,9 @@ function locationOf(session: SessionForPeriod): SessionItem["location"] {
   }
 }
 
-/** die Einzelschüsse der Wertung als Schüsse des Fachkerns, ohne Lage und Zeit; null, wenn einer Serie welche fehlen */
+/**
+ * die Einzelschüsse der Wertung als Schüsse des Fachkerns, ohne Lage und Zeit; null, wenn einer Serie welche fehlen
+ */
 function matchShots(series: SessionForPeriod["series"], scoring: Scoring): MetricShot[] | null {
   const shots: MetricShot[] = []
   for (const [index, serie] of series.entries()) {
@@ -89,9 +91,10 @@ function matchShots(series: SessionForPeriod["series"], scoring: Scoring): Metri
 
 /**
  * Eine Einheit als Eintrag: Training oder Wettkampf mit Disziplin und Ergebnis, sonst null. Wertungsserien sind die
- * ohne Probe mit Ergebnis (wie die Übersicht der Statistik). Mit Einzelschüssen in jeder Wertungsserie Werte und Rekord-Kandidaten aus `cardProjection` (in Zehntel-Disziplinen beide Wertungen, sonst nur
- * ganze Ringe), ohne Innenzehner. Ohne sie Ergebnis und Ø je Schuss in der Wertung der Disziplin aus den
- * Serienergebnissen, mit n = Serien × Schuss je Serie der Disziplin (die echte Zahl ist nicht gespeichert).
+ * ohne Probe mit Ergebnis (wie die Übersicht der Statistik). Mit Einzelschüssen in jeder Wertungsserie kommen Werte
+ * und Rekord-Kandidaten aus `cardProjection` (in Zehntel-Disziplinen beide Wertungen, sonst nur ganze Ringe), ohne
+ * Innenzehner. Sonst Ergebnis und Ø je Schuss in der Wertung der Disziplin aus den Serienergebnissen; je Serie zählen
+ * ihre Einzelschüsse, ohne sie der Schuss je Serie der Disziplin (die echte Zahl ist nicht gespeichert).
  */
 export function periodItem(session: SessionForPeriod): SessionItem | null {
   const { discipline } = session
@@ -131,7 +134,10 @@ export function periodItem(session: SessionForPeriod): SessionItem | null {
     }
   }
 
-  const n = series.length * discipline.shotsPerSeries
+  const n = series.reduce(
+    (sum, s) => sum + (parseShotsJson(s.shots).length || discipline.shotsPerSeries),
+    0
+  )
   const total = onGrid(
     series.reduce((sum, s) => sum + (s.scoreTotal as number), 0),
     scoring
