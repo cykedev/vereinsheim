@@ -1,19 +1,20 @@
-import type { Metadata } from "next"
-import { Geist, Geist_Mono } from "next/font/google"
+import type { Metadata, Viewport } from "next"
+import { Archivo, Geist, Geist_Mono } from "next/font/google"
 import "./globals.css"
+import { ThemeProvider, ThemeScript } from "@vereinsheim/ui/design2/theme"
+import { Toaster } from "@vereinsheim/ui/design2/toaster"
 import { Providers } from "@vereinsheim/ui/shell/Providers"
-import { Toaster } from "@vereinsheim/ui/sonner"
 import { runStartup } from "@/lib/startup"
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-})
+// Schriften von Design 2, beim Build geladen und selbst ausgeliefert (keine Anfrage an Google beim Aufruf)
+const archivo = Archivo({ subsets: ["latin"], axes: ["wdth"], variable: "--font-archivo" })
+const geist = Geist({ subsets: ["latin"], variable: "--font-geist" })
+const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono" })
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-})
+/** Schlüssel der Darstellung in `localStorage` */
+const THEME_KEY = "ringwerk-theme"
+
+export const viewport: Viewport = { viewportFit: "cover" }
 
 export const metadata: Metadata = {
   // Seiten setzen nur ihren eigenen Titel; das Template hängt den App-Namen an.
@@ -36,10 +37,20 @@ export default async function RootLayout({
   await runStartup()
 
   return (
-    <html lang="de" className="dark" data-app="ringwerk" suppressHydrationWarning>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <Providers>{children}</Providers>
-        <Toaster />
+    <html
+      lang="de"
+      data-app="ringwerk"
+      suppressHydrationWarning
+      className={`${archivo.variable} ${geist.variable} ${geistMono.variable}`}
+    >
+      <head>
+        <ThemeScript storageKey={THEME_KEY} />
+      </head>
+      <body className="bg-background font-sans text-foreground antialiased">
+        <ThemeProvider storageKey={THEME_KEY}>
+          <Providers>{children}</Providers>
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   )
