@@ -92,7 +92,7 @@ Schützenhaus: Meyton-Server (SSMDB2) ←nur lesend── Brücke ──HTTPS, n
 - **ringwerk:** `/` · `/competitions/[id]{/schedule,/standings,/ranking,/playoffs}` · `/participants` ·
   `/disciplines` · `/admin` · `/account` · `/api/public/c/[slug]/pdf` (öffentlich).
 - **treffsicher:** `/` → `/dashboard` · `/sessions{/[id]{/edit,/export/pdf},/new}` · `/shot-routines` · `/statistics` · `/goals` ·
-  `/disciplines` · `/admin` · `/account` (alles auth-gated, Dark-Mode-only).
+  `/disciplines` · `/admin` · `/profile` (`/account` leitet weiter; alles auth-gated, Design 2 hell und dunkel).
 - **spiegel:** `/` (Start) · `/cards{/[id]}` · `/progress` · `/open` · `/profile{/trash}` · `/admin{/users,/disciplines,/site}` ·
   `/api/ingest/v1/{pair,state,snapshots,heartbeat}` (Brücke, Geräte-Token).
 
@@ -103,7 +103,8 @@ Detail (Komponenten, lib-Module, Datenfluss): die App-Notes im Vault und die `CL
 Ringwerk und Treffsicher teilen eine UI-/Pattern-Schicht über `@vereinsheim/ui`, `@vereinsheim/lib` und
 `@vereinsheim/config`. **Single Source der Konventionen:** [[conventions]]. Den Rest (`components.json`,
 `globals.css`-Stub, Error-Boundaries, einige Wrapper) und die Konventionen erzwingt `scripts/consistency-check.sh` als
-Release-Gate ([[drift-protection]]). Spiegel nutzt Design 2 (ADR-030) und ist vom Drift-Gate ausgenommen.
+Release-Gate ([[drift-protection]]). Spiegel und Treffsicher nutzen Design 2 (ADR-030, ADR-032); bis Teil E von SP-4.3
+weicht Treffsichers `globals.css` deshalb von Ringwerk ab.
 
 ## Knowledge & Harness (ADR-016/017/018/023/024/025)
 

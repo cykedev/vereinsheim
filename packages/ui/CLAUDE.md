@@ -48,8 +48,8 @@ für alle drei Apps (ADR-015/016). Jede Komponente gibt es nur einmal — Drift 
 - **Kein `"use server"`**; **shadcn-CLI** läuft weiter im App-Kontext (`components.json` + der
   `globals.css`-Stub bleiben app-lokal).
 - Cross-Importe paket-intern **relativ** (`./button`, `../ui/alert-dialog`) — nicht über `@vereinsheim/ui`.
-- **Design 2** (`design2.css`, `src/design2/`) nutzt heute Spiegel; Ringwerk und Treffsicher importieren
-  `theme.css`, bis sie umziehen (ADR-032). Jede Farbe, die zwischen hell und dunkel wechselt, steht in beiden Blöcken;
+- **Design 2** (`design2.css`, `src/design2/`) nutzen Spiegel und Treffsicher; Ringwerk importiert `theme.css`, bis es
+  umzieht (ADR-032, Teil W). Jede Farbe, die zwischen hell und dunkel wechselt, steht in beiden Blöcken;
   die Scheibe (Papier, Spiegel, Ringwert-Farben) ist in beiden Themes gleich. Akzent, Schrift auf dem Akzent und
   `rank-*` tragen auf der Kartenfläche mindestens 4,5 : 1, `chart-*` mindestens 3 : 1, je App und Theme (Test
   `tokens.test.ts`).

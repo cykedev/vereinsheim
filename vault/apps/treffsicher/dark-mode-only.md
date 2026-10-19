@@ -10,4 +10,4 @@ part_of: ["[[treffsicher]]"]
 documented_in: ["[[treffsicher-technical-constraints#Design & UI]]"]
 ---
 
-**TL;DR** Abgelöst durch [[adr-032]]: hell und dunkel wie Spiegel, die Wahl System, Hell oder Dunkel gilt je Gerät. Bis zum Umzug auf Design 2 läuft Treffsicher noch fest dunkel mit `class="dark"` auf `<html>`.
+**TL;DR** Abgelöst durch [[adr-032]]: hell und dunkel wie Spiegel, die Wahl System, Hell oder Dunkel gilt je Gerät. Umgesetzt in [[treffsicher-design2]].

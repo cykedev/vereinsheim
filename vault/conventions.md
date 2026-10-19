@@ -56,25 +56,30 @@ app-übergreifende Komponenten gehören in diese Liste (in `MUST_MATCH` des Gate
 
 ## 2. Komponenten-Kanon
 
-- **Seitenkopf:** `<PageHeader title description action />` (`shell/PageHeader.tsx`). Kein inline-h1.
+- **Seitenkopf:** `<PageHeader title description action />` (Ringwerk `shell/PageHeader.tsx`, Treffsicher
+  `design2/page-header`). Kein inline-h1.
   Detailseiten mit oberer Aktionsleiste nutzen stattdessen `DetailActionBar` (siehe unten) + rohes
   `h1` im selben Stil.
 - **Detail-Aktionen:** `<DetailActionBar>` — Inline-`ghost`-Buttons oben rechts, Reihenfolge
   **fachlich → destruktiv → Zurück**. **Kein** `DropdownMenu`/`MoreHorizontal` für Objekt-Aktionen.
 - **Leerzustände:** `<EmptyState title description icon actionLabel actionHref />`. Kein inline
   `Keine … vorhanden`.
-- **Bestätigungen:** `<ConfirmDialog>` (destruktiv: `destructive`-Prop). Nie native `confirm()`.
+- **Bestätigungen:** `<DecisionDialog>` mit den Folgen aus `lib/consequences.ts` der App (§10 „Kein Knopf ohne
+  Folge“); Ringwerk nutzt bis zu seinem Umzug (Teil W von SP-4.3) noch `<ConfirmDialog>`. Nie native `confirm()`.
 - **Feldfehler:** `getFieldError`/`getGeneralError` (`lib/forms/fieldErrors.ts`) + `<FieldError>` mit
   `aria-invalid`/`aria-describedby`.
 - **Toasts:** nach jeder mutierenden Server-Action `toast.success(...)` bzw. `toast.error(...)` (sonner).
-- **Datenverlust:** Langformulare nutzen `useUnsavedChangesGuard` + `useNavigationConfirm` + `ConfirmDialog`.
+- **Datenverlust:** Langformulare nutzen `useUnsavedChangesGuard` + `useNavigationConfirm` + den Verwerfen-Dialog
+  der App (Treffsicher `DiscardChangesDialog` mit `DecisionDialog`, Ringwerk noch `ConfirmDialog`).
 
 ## 3. Typografie & Layout
 
-- Seitentitel: `text-2xl font-semibold tracking-tight` (**nicht** `font-bold`).
+- Seitentitel: in Ringwerk `text-2xl font-semibold tracking-tight` (**nicht** `font-bold`); in Design 2 (Spiegel,
+  Treffsicher) `font-display text-[1.7rem] leading-tight font-bold` über `design2/page-header`.
 - Untertitel: `text-sm text-muted-foreground`.
 - Pending-/Lade-Texte: Unicode-Ellipsis `…` (U+2026), nie ASCII `...`.
-- App-Shell: `mx-auto max-w-6xl px-4 py-8` — **im Layout, nicht in der Seite**. Eine Seite setzt
+- App-Shell: Ringwerk `mx-auto max-w-6xl px-4 py-8`, Treffsicher `Page` aus `design2/page` mit einer Spalte
+  (`grid-cols-1`) — **im Layout, nicht in der Seite**. Eine Seite setzt
   **keinen** eigenen `px-`/`py-`-Container (sonst doppeltes Padding); ein eigenes `max-w` für
   Formularseiten (`mx-auto max-w-lg space-y-6`) ist erlaubt und bewusst zu setzen.
 - **Kontrast-Untergrenze:** kein Opazitäts-Modifier auf `text-muted-foreground` (kein `/60`, `/70`,
@@ -97,7 +102,9 @@ Admin ist `Shield` (letzter Haupt-Nav-Eintrag), PDF/Download ist `Download`.
 
 ### Farben: semantische Tokens statt Palette
 
-Farbe trägt Bedeutung und wird über die Tokens aus `@vereinsheim/ui/theme.css` ausgedrückt:
+Farbe trägt Bedeutung und wird über Tokens ausgedrückt: in Ringwerk aus `@vereinsheim/ui/theme.css`, in Spiegel und
+Treffsicher aus `@vereinsheim/ui/design2.css` (dieselben Namen, hell und dunkel, dazu `score-10` … `score-7` für
+Ringwerte, §10):
 
 | Token                  | Bedeutung                                     |
 | ---------------------- | --------------------------------------------- |
@@ -109,16 +116,22 @@ Farbe trägt Bedeutung und wird über die Tokens aus `@vereinsheim/ui/theme.css`
 | `chart-1` … `chart-5`  | Diagramm-Serien (`chart-1` = App-Akzent)      |
 
 **Keine Tailwind-Palette-Klassen** (`text-emerald-600`, `bg-amber-950`, …) und **keine
-`dark:`-Varianten** — beide Apps laufen fest im Dark Mode, eine `dark:`-Variante ist toter Code.
-Ausnahme: die Hex-Skala der Trefferlage-Charts (`statistics-charts/constants.ts`) — Datenskala,
-keine UI-Semantik.
+`dark:`-Varianten** — Farbe kommt aus den Tokens, die in hell und dunkel je ihren Wert haben (Ringwerk läuft bis
+Teil W fest dunkel). Treffer und Ringwerte zeigen alle Apps in den Farben von Spiegel (`score-*`, im PDF `SCORE_HEX`);
+die Meyton-Skala von Treffsicher ist entfallen.
 
 Die **Akzentfarbe** je App kommt über `data-app` am `<html>`-Element (Ringwerk = Messing,
-Treffsicher = Teal) und überschreibt nur `--primary`, `--primary-foreground`, `--ring`, `--chart-1`.
+Treffsicher = Teal, Spiegel ohne `data-app` = Blau), in Design 2 für hell und dunkel getrennt.
 
 ## 5. Navigation
 
-Ein Schema in beiden Apps:
+**Design 2 (Spiegel, Treffsicher): `AppFrame`** aus `@vereinsheim/ui/design2/app-frame`. Am Telefon eine untere Leiste
+mit höchstens fünf Einträgen und der Aktion der App in der Mitte (Treffsicher „Neue Einheit“), im Querformat eine
+schmale Leiste, ab 1024 px eine Seitenleiste mit Trenner vor Profil und Admin. Was nicht in die Leiste passt, steht am
+Telefon in Profil. Die Darstellung steht unten in der Seitenleiste und in Profil. Aktiv-Erkennung über eine reine
+Funktion der App (Treffsicher `areaOf`, Start exakt). Eine Seite wiederholt die Aktion des Rahmens nicht.
+
+**Ringwerk bis Teil W** — das Kopfzeilen-Schema:
 
 - Kopfzeile `border-b border-border bg-card`.
 - Links das **Logo als Link** auf die Startseite: Marken-Icon `h-5 w-5 text-primary` +
@@ -282,7 +295,7 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
   Ein `pnpm install --frozen-lockfile` verlinkt neu. Den Lockfile-Diff auf Änderungen in fremden
   Importern prüfen: Sie invalidieren deren Image-Build-Cache.
 
-## 10. Design 2 (nur Spiegel, ADR-030)
+## 10. Design 2 (Spiegel und Treffsicher, ADR-030, ADR-032)
 
 - **Tokens aus `@vereinsheim/ui/design2.css`** statt `theme.css`: dieselben Namen, die die
   ui-Primitives nutzen (auch `rank-1` … `rank-3` und `chart-1` … `chart-5`, Akzent je App über `data-app` in beiden
@@ -303,12 +316,14 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
   `@vereinsheim/pruefen`. Was
   den Fachkern braucht (Scheibe, Serien), in `@vereinsheim/shot-ui`, mit Markup-Tests; die Bedienung im Browser prüft
   die Skriptprüfung der App (`pnpm --filter spiegel pruefen`).
-- Ringwerk und Treffsicher bleiben auf `theme.css` und ihrem Drift-Gate; Spiegel ist davon
-  ausgenommen, bis beide Apps auf Design 2 umziehen.
+- Treffsicher läuft seit Teil T von SP-4.3 auf Design 2 ([[treffsicher-design2]]), Ringwerk bleibt bis Teil W auf
+  `theme.css`. Bis das Drift-Gate in Teil E auf drei Apps umgestellt ist, weicht `src/app/globals.css` von Treffsicher
+  damit von Ringwerk ab (`MUST_MATCH` meldet das).
 - **Kein Knopf ohne Folge:** Jede Aktion, die bestätigt, ablehnt, entfernt, widerruft, umstellt oder ein Konto ändert, fragt
   über `DecisionDialog` (`@vereinsheim/ui/design2/decision-dialog`) und sagt in Alltagsworten, worum es geht, was vorher zu
   prüfen ist, was dann passiert, was **nicht** passiert und wie es rückgängig geht. Die Texte stehen an einer Stelle
-  (`apps/spiegel/src/lib/admin/consequences.ts`, Tests halten den Wortlaut), ohne Pronomen für Personen. Keine
+  (`apps/spiegel/src/lib/admin/consequences.ts`, `apps/treffsicher/src/lib/consequences.ts`; Tests halten den
+  Wortlaut), ohne Pronomen für Personen. Keine
   Fachbegriffe in der Oberfläche; als Aufgabe erscheint im Admin nur, was ein Mensch entscheiden muss, Technisches regelt
   Spiegel selbst und zeigt es höchstens als Zustand.
 - **So schreiben wir** ([[spiegel-dialog-texts-not-understood]]):

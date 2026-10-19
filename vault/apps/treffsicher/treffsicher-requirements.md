@@ -26,7 +26,7 @@ part_of: ["[[treffsicher]]"]
 - **Dateien & Bilder** — Anhänge nur bei TRAINING/WETTKAMPF (JPEG/PNG/WebP/PDF)
 - **Statistiken & Auswertung** — Verlauf, Serien, Befinden-Korrelation, 7-Dim-Radar, Schussverteilung
 - **Nutzerverwaltung & Sicherheit** — Admin-Only-Erstellung, Datenisolation, Lastschutz-Grenzen
-- **Export / Design-Entscheidungen** — PDF-Export je Einheit; Dark Mode only, Sprache, UI-Muster
+- **Export / Design-Entscheidungen** — PDF-Export je Einheit; Darstellung hell und dunkel, Sprache, UI-Muster
 
 ---
 
@@ -326,7 +326,7 @@ Analog zu Meyton-Schiessständen — einheitlich in Detailansicht und Statistik:
 
 - Jeder Nutzer hat einen eigenen Account mit Login und Passwort
 - Konten werden ausschliesslich durch Administratoren erstellt — keine Selbstregistrierung
-- Eingeloggte Nutzer können ihr eigenes Passwort im Konto-Bereich selbst ändern (mit aktuellem Passwort)
+- Eingeloggte Nutzer können ihr eigenes Passwort im Profil selbst ändern (mit aktuellem Passwort)
 - Jeder Nutzer sieht ausschliesslich seine eigenen Daten
 - Die Anwendung ist über das Internet zugänglich (Web-App)
 - Datenschutz: Keine Daten sind ohne Login einsehbar
@@ -353,7 +353,7 @@ Analog zu Meyton-Schiessständen — einheitlich in Detailansicht und Statistik:
 
 ## Design-Entscheidungen
 
-- **Dark Mode**: Die App verwendet ausschliesslich Dark Mode — kein Light Mode, kein Toggle.
+- **Darstellung**: hell und dunkel, Wahl System, Hell oder Dunkel je Gerät (ADR-032, [[treffsicher-design2]]).
 - **Prognose und Feedback**: Nur bei Training und Wettkampf verfügbar (nicht bei Trockentraining und Mentaltraining).
 - **Sprache und interne Benennung**:
   - Die Anwendung ist für Nutzer ausschliesslich auf Deutsch.

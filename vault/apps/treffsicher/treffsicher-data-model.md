@@ -143,7 +143,7 @@ PRISMA_AUTO_RESOLVE_UNKNOWN_FAILED_MIGRATIONS= # false (sicherer Default): unbek
 - **Rollen**: `ADMIN` und `USER`
 - **Erster Admin**: Wird automatisch beim ersten App-Start angelegt, wenn noch kein Admin existiert (aus `ADMIN_EMAIL` + `ADMIN_PASSWORD`)
 - **Admin-Funktionen**: Nutzer anlegen, bearbeiten (Name, E-Mail, Rolle, Status), deaktivieren, Passwort zurücksetzen
-- **Nutzer-Funktion**: Eigenes Passwort ändern unter `/account` (aktuelles Passwort erforderlich)
+- **Nutzer-Funktion**: Eigenes Passwort ändern unter `/profile` (aktuelles Passwort erforderlich)
 - **Session-Invalidierung**: Passwortwechsel/-Reset erhöht `sessionVersion` — alte JWTs werden ungültig
 
 ---

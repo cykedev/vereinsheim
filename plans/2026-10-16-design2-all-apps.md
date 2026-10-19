@@ -439,6 +439,20 @@ apps/treffsicher/src/components`) zeigen „–“ mit Grund aus einer reinen Fu
   Ringwert-Skala), §5 neu („Navigation: `AppFrame`“), §2 („Bestätigungen: `DecisionDialog`“) mit dem Hinweis, dass
   Ringwerk bis Teil W noch das alte Schema hat; `vault/apps/treffsicher/*` mit Navigation, Theme, Dialogen.
 
+- **Stand Teil T (19. Oktober 2026, Branch `feat/design2-treffsicher`):** T1–T9, TC0–TC2 und TD0–TD4 umgesetzt, Textbuch
+  vom User am 19. Oktober freigegeben. Abweichend vom Text oben:
+  - Auf Wunsch des Users zierlicher wie Spiegel: neue Bausteine `design2/card` (16 px Rand, 12 px Abstand) und
+    `design2/page-header` (Titel in Archivo); `ui/card` und `shell/PageHeader` bleiben für Ringwerk unverändert.
+  - Kein eigener Knopf „Neue Einheit“ mehr auf Start und Tagebuch (die Aktion steht im Rahmen); „Dashboard“ heißt
+    „Start“. Das Layout setzt `Page` mit einer Spalte, sonst verbreiterten Tabellen mit Mindestbreite die Seite.
+  - Charakterisierung der Dialoge ohne jsdom (User-Entscheid, kein neues Paket): Stellvertreter der Dialoge
+    (`src/test/confirm-capture.ts`) und für Anhang und Konto reine Funktionen; beide Abläufe zusätzlich im Browser.
+  - `pruefen` setzt vor jedem Lauf drei Prüfkonten zurück (Mitglied, Admin, Zielkonto; `tools/pruefen-account.ts`),
+    weil die Abläufe wirklich löschen und deaktivieren; die Zugangsdaten stehen in `apps/treffsicher/.env`.
+  - Release-Gate: `scripts/consistency-check.sh` meldet `globals.css` als abweichend zu Ringwerk, bis Teil E das Gate
+    auf drei Apps umstellt. Ein Release von Ringwerk oder Treffsicher aus diesem Stand braucht vorher Teil E (oder
+    eine Ausnahme im Gate).
+
 **Prüfung Teil T:** `pnpm check`; `pnpm --filter treffsicher pruefen --start` und `pnpm --filter spiegel pruefen
 --start` grün; Sichtprüfung im Browser bei 390 und 1280 px, hell und dunkel, jede Hauptseite, jeder Dialog,
 Bildschirmfotos für den User; `pnpm --filter ringwerk pruefen:vergleichen` ohne Abweichung (Ringwerk unberührt).

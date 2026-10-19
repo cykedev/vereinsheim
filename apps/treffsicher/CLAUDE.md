@@ -1,7 +1,8 @@
 # Treffsicher
 
 Trainings-App für Schiesssportler (Tagebuch, Ergebniserfassung, Mentaltraining, Statistiken).
-Self-hosted, Einzelnutzer bis Vereinsbetrieb, ausschliesslich Dark Mode, ausschliesslich Deutsch in der UI.
+Self-hosted, Einzelnutzer bis Vereinsbetrieb, Design 2 hell und dunkel (ADR-032), ausschliesslich Deutsch in der UI.
+Rahmen, Dialoge, Hilfe und Skriptprüfung: `vault/apps/treffsicher/treffsicher-design2.md`.
 
 **Verbindliche Referenzdokumente** (bei Widersprüchen: Docs gewinnen):
 
@@ -124,7 +125,10 @@ Keine neuen deutschen Benennungen für interne Bezeichner oder URL-Segmente.
 
 Details: vault/apps/treffsicher/treffsicher-technical-constraints.md#design--ui
 
-- Nur **shadcn/ui** — kein `alert()`/`confirm()`; Icon-Buttons: `ghost`; destruktive Aktionen: Bestätigungsdialog
+- **Design 2**: Karten und Seitenkopf aus `@vereinsheim/ui/design2/card` und `design2/page-header`, Rahmen
+  `AppShell` (`components/app/shell/`), Farben nur aus Tokens; kein `alert()`/`confirm()`; Icon-Buttons: `ghost`
+- Bestätigungen über `DecisionDialog`, Wortlaut nur in `src/lib/consequences.ts` (erst ins Textbuch, dann in den Code)
+- Prüfung im Browser: `pnpm --filter treffsicher pruefen --start` (Prüfkonten setzt das Skript selbst zurück)
 - Listen: ganze Karte klickbar → Detail; Terminologie: **"Probe"** (nicht "Probeschuss")
 - Detailseiten: Action-Leiste oben rechts, fachliche → destruktive Aktion → Zurück
 

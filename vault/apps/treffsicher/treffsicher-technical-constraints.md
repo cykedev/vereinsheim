@@ -170,7 +170,7 @@ if (process.env.NODE_ENV !== "production") {
 - **Sessions**: Server-seitig via NextAuth.js Session-Tokens
 - **Datenisolation**: Jeder Datenbankzugriff filtert zwingend nach `userId` — kein Nutzer sieht fremde Daten
 - **Kein E-Mail-Versand** im ersten Schritt — kein Mail-Reset-Flow
-- **Passwortwechsel (Self-Service)**: Nur im eingeloggten Zustand mit aktuellem Passwort (`/account`)
+- **Passwortwechsel (Self-Service)**: Nur im eingeloggten Zustand mit aktuellem Passwort (`/profile`)
 - **Passwort vergessen**: Reset weiterhin nur durch Admin
 - **Session-Invalidierung bei Passwortwechsel**: Passwortwechsel/-Reset erhöht `sessionVersion`; alte JWT-Sessions werden dadurch serverseitig ungültig
 - **HTTPS**: In Produktion zwingend (via Reverse Proxy — Caddy auf dem VPS)
@@ -397,7 +397,7 @@ components/app/<feature>/<module>/
 
 - **Responsiv**: Mobile und Desktop gleichwertig
 - **Sprache**: Deutsch
-- **Darstellung**: Abgelöst durch [[adr-032]]: hell und dunkel wie Spiegel, Wahl System, Hell oder Dunkel je Gerät. Bis zum Umzug auf Design 2 ist `class="dark"` noch fest auf `<html>` gesetzt.
+- **Darstellung**: Abgelöst durch [[adr-032]]: hell und dunkel wie Spiegel, Wahl System, Hell oder Dunkel je Gerät. Umgesetzt, siehe [[treffsicher-design2]].
 - **Offline**: Kein Offline-Support (offen, [[treffsicher-backlog]] T-06)
 
 ### Verbindliche UI-Konsistenzregeln
@@ -410,7 +410,7 @@ components/app/<feature>/<module>/
    - Das gilt auch für "Leistungsziel erreicht", "Probe/Wertung" und analoge Umschalter.
 3. **Konsistente Flows für Anlegen und Löschen/Archivieren**:
    - "Neu anlegen"-Aktionen folgen durchgängig demselben Muster (Bezeichnung, Platzierung, Route `/.../new`).
-   - Destruktive Aktionen verwenden immer denselben Bestätigungsdialog-Stil inkl. klarer Folgenbeschreibung.
+   - Destruktive Aktionen fragen über `DecisionDialog` und nennen ihre Folgen in Alltagsworten (Wortlaut in `src/lib/consequences.ts`, [[treffsicher-design2]]).
 4. **Mobil ist gleichwertig, nicht reduziert**:
    - Navigation und zentrale Aktionen bleiben auf Mobilgeräten textlich verständlich.
    - Das Interaktionsverhalten ist auf Desktop und Mobil konsistent.
