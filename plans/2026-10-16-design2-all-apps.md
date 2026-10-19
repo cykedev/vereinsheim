@@ -496,7 +496,8 @@ arbeiten bereits auf einem schlichten Wert je Scheibe (`CardValue { id, atMs, va
   1. **Wertung fest aus der Disziplin.** In Disziplinen mit ganzen Ringen hat keiner der 6.862 Schüsse ein Zehntel; dort
      nur ganze Ringe. Der Umschalter der Wertung erscheint nur bei Zehntel-Disziplinen.
   2. **Ohne Einzelschüsse zählt die Einheit im Ø je Schuss** aus den Serienergebnissen, mit n = Serien × Schuss je Serie
-     der Disziplin (die echte Zahl ist nicht gespeichert). Alles andere „–“ mit Grund.
+     der Disziplin (die echte Zahl ist nicht gespeichert); hat nur ein Teil der Serien Einzelschüsse, zählen dort die
+     Schüsse (wie die heutige Übersicht). Alles andere „–“ mit Grund.
   3. **Kacheln:** Treffsicher hat weder Lage je Schuss noch Zeit; Streuung (σ, waagrecht, senkrecht) und Tempo
      entfallen. Kacheln: Ø je Schuss, Zehner, Lage aus dem Ausdruck (mm).
   4. **Rekorde:** ohne Lage je Schuss kein bester Teiler (R3), keine engste Gruppe (R4), keine Innenzehner; R5 nur in
