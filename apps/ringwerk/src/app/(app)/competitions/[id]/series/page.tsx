@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import { notFound, redirect } from "next/navigation"
-import { BarChart2, Users } from "lucide-react"
+import { Users } from "lucide-react"
 import { getAuthSession, canManage } from "@/lib/auth-helpers"
 import { getCompetitionById, getSeasonWithSeries } from "@/lib/competitions/queries"
 import { getCompetitionParticipants } from "@/lib/competitionParticipants/queries"
@@ -11,10 +11,7 @@ import { effectiveTeilerFaktor } from "@/lib/scoring/calculateScore"
 import { EventSeriesDialog } from "@/components/app/series/EventSeriesDialog"
 import { DeleteEventSeriesButton } from "@/components/app/series/DeleteEventSeriesButton"
 import { SeasonParticipantItem } from "@/components/app/series/SeasonParticipantItem"
-import {
-  CompetitionDetailHeader,
-  DetailNavButton,
-} from "@/components/app/shell/CompetitionDetailHeader"
+import { CompetitionDetailHeader } from "@/components/app/shell/CompetitionDetailHeader"
 import { Badge } from "@vereinsheim/ui/badge"
 import { EmptyState } from "@vereinsheim/ui/empty-state"
 import { formatDateOnly, getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
@@ -71,20 +68,9 @@ export default async function SeriesPage({ params }: Props) {
       <CompetitionDetailHeader
         title={competition.name}
         subtitle={`${competition.discipline?.name ?? "Gemischt"} · Serien erfassen`}
-        actions={
-          <>
-            <DetailNavButton
-              href={`/competitions/${id}/participants`}
-              label="Teilnehmer"
-              icon={Users}
-            />
-            <DetailNavButton
-              href={`/competitions/${id}/ranking`}
-              label="Rangliste"
-              icon={BarChart2}
-            />
-          </>
-        }
+        id={id}
+        current="series"
+        links={["participants", "ranking"]}
       />
 
       {activeParticipants.length === 0 ? (
@@ -199,20 +185,9 @@ async function SeasonSeriesPageContent({ id }: { id: string }) {
       <CompetitionDetailHeader
         title={competition.name}
         subtitle={`${competition.discipline?.name ?? "Gemischt"} · Serien erfassen`}
-        actions={
-          <>
-            <DetailNavButton
-              href={`/competitions/${id}/participants`}
-              label="Teilnehmer"
-              icon={Users}
-            />
-            <DetailNavButton
-              href={`/competitions/${id}/standings`}
-              label="Rangliste"
-              icon={BarChart2}
-            />
-          </>
-        }
+        id={id}
+        current="series"
+        links={["participants", "standings"]}
       />
 
       {activeParticipants.length === 0 ? (

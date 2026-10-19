@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import { notFound, redirect } from "next/navigation"
-import { ListOrdered, Pencil, Users } from "lucide-react"
+import { Pencil } from "lucide-react"
 import { getAuthSession } from "@/lib/auth-helpers"
 import { getSeasonWithSeries } from "@/lib/competitions/queries"
 import { calculateSeasonStandings } from "@/lib/scoring/calculateSeasonStandings"
@@ -67,20 +67,13 @@ export default async function SeasonStandingsPage({ params }: Props) {
             </p>
           ) : undefined
         }
+        id={id}
+        current="standings"
+        links={canManage ? ["participants", "series"] : []}
         actions={
           <>
             {canManage && (
               <>
-                <DetailNavButton
-                  href={`/competitions/${id}/participants`}
-                  label="Teilnehmer"
-                  icon={Users}
-                />
-                <DetailNavButton
-                  href={`/competitions/${id}/series`}
-                  label="Serien erfassen"
-                  icon={ListOrdered}
-                />
                 <DetailNavButton
                   href={`/competitions/${id}/edit`}
                   label="Bearbeiten"

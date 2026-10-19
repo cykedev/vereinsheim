@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import { notFound, redirect } from "next/navigation"
-import { CalendarDays, Trophy, Users } from "lucide-react"
+import { Trophy } from "lucide-react"
 import { getAuthSession } from "@/lib/auth-helpers"
 import { getCompetitionById } from "@/lib/competitions/queries"
 import { getEffectiveScoringType } from "@/lib/series/scoring-format"
@@ -13,10 +13,7 @@ import { PlayoffBracket } from "@/components/app/playoffs/PlayoffBracket"
 import { StartPlayoffsButton } from "@/components/app/playoffs/StartPlayoffsButton"
 import { AdvanceRoundButton } from "@/components/app/playoffs/AdvanceRoundButton"
 import { PdfDownloadButton } from "@/components/app/shared/PdfDownloadButton"
-import {
-  CompetitionDetailHeader,
-  DetailNavButton,
-} from "@/components/app/shell/CompetitionDetailHeader"
+import { CompetitionDetailHeader } from "@/components/app/shell/CompetitionDetailHeader"
 
 interface Props {
   params: Promise<{ id: string }>
@@ -82,22 +79,11 @@ export default async function CompetitionPlayoffsPage({ params }: Props) {
       <CompetitionDetailHeader
         title={competition.name}
         subtitle={`${competition.discipline?.name ?? "Gemischt"} · Playoffs`}
+        id={id}
+        current="playoffs"
+        links={canManage ? ["participants", "schedule"] : ["schedule"]}
         actions={
-          <>
-            {canManage && (
-              <DetailNavButton
-                href={`/competitions/${id}/participants`}
-                label="Teilnehmer"
-                icon={Users}
-              />
-            )}
-            <DetailNavButton
-              href={`/competitions/${id}/schedule`}
-              label="Spielplan & Tabelle"
-              icon={CalendarDays}
-            />
-            {playoffsStarted && <PdfDownloadButton href={`/api/competitions/${id}/pdf/playoffs`} />}
-          </>
+          playoffsStarted && <PdfDownloadButton href={`/api/competitions/${id}/pdf/playoffs`} />
         }
       />
 

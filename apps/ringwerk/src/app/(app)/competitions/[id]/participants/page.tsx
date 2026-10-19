@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import { notFound, redirect } from "next/navigation"
-import { BarChart2, CalendarDays, ListOrdered, Trophy, UserMinus, Users } from "lucide-react"
+import { UserMinus, Users } from "lucide-react"
 import { getAuthSession, canManage } from "@/lib/auth-helpers"
 import { getCompetitionById } from "@/lib/competitions/queries"
 import { getCompetitionParticipants } from "@/lib/competitionParticipants/queries"
@@ -15,10 +15,7 @@ import { hasPlayoffsStarted } from "@/lib/playoffs/queries"
 import { EnrollParticipantForm } from "@/components/app/competitionParticipants/EnrollParticipantForm"
 import { CompetitionParticipantActions } from "@/components/app/competitionParticipants/CompetitionParticipantActions"
 import { Badge } from "@vereinsheim/ui/badge"
-import {
-  CompetitionDetailHeader,
-  DetailNavButton,
-} from "@/components/app/shell/CompetitionDetailHeader"
+import { CompetitionDetailHeader } from "@/components/app/shell/CompetitionDetailHeader"
 import { EmptyState } from "@vereinsheim/ui/empty-state"
 import { PdfDownloadButton } from "@/components/app/shared/PdfDownloadButton"
 import type { ActionResult } from "@/lib/types"
@@ -74,50 +71,21 @@ export default async function CompetitionParticipantsPage({ params }: Props) {
       <CompetitionDetailHeader
         title={competition.name}
         subtitle={`${competition.discipline?.name ?? "Gemischt"} · Teilnehmerverwaltung`}
+        id={id}
+        current="participants"
+        links={
+          isEvent
+            ? ["series", "ranking"]
+            : isSeason
+              ? ["series", "standings"]
+              : ["schedule", "playoffs"]
+        }
         actions={
-          isEvent ? (
-            <>
-              <PdfDownloadButton
-                href={`/api/competitions/${id}/starter-list/pdf`}
-                label="Starterliste drucken"
-              />
-              <DetailNavButton
-                href={`/competitions/${id}/series`}
-                label="Serien erfassen"
-                icon={ListOrdered}
-              />
-              <DetailNavButton
-                href={`/competitions/${id}/ranking`}
-                label="Rangliste"
-                icon={BarChart2}
-              />
-            </>
-          ) : isSeason ? (
-            <>
-              <DetailNavButton
-                href={`/competitions/${id}/series`}
-                label="Serien erfassen"
-                icon={ListOrdered}
-              />
-              <DetailNavButton
-                href={`/competitions/${id}/standings`}
-                label="Rangliste"
-                icon={BarChart2}
-              />
-            </>
-          ) : (
-            <>
-              <DetailNavButton
-                href={`/competitions/${id}/schedule`}
-                label="Spielplan & Tabelle"
-                icon={CalendarDays}
-              />
-              <DetailNavButton
-                href={`/competitions/${id}/playoffs`}
-                label="Playoffs"
-                icon={Trophy}
-              />
-            </>
+          isEvent && (
+            <PdfDownloadButton
+              href={`/api/competitions/${id}/starter-list/pdf`}
+              label="Starterliste drucken"
+            />
           )
         }
       />

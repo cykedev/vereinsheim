@@ -1,14 +1,10 @@
 import type { Metadata } from "next"
 import { notFound, redirect } from "next/navigation"
-import { CalendarDays, Trophy, Users } from "lucide-react"
 import { getAuthSession } from "@/lib/auth-helpers"
 import { getCompetitionById } from "@/lib/competitions/queries"
 import { getAuditLogsByCompetition } from "@/lib/auditLog/queries"
 import { AuditLogList } from "@/components/app/auditLog/AuditLogList"
-import {
-  CompetitionDetailHeader,
-  DetailNavButton,
-} from "@/components/app/shell/CompetitionDetailHeader"
+import { CompetitionDetailHeader } from "@/components/app/shell/CompetitionDetailHeader"
 import { getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
 
 interface Props {
@@ -40,21 +36,9 @@ export default async function CompetitionAuditLogPage({ params }: Props) {
       <CompetitionDetailHeader
         title={competition.name}
         subtitle={`${competition.discipline?.name ?? "Gemischt"} · Protokoll`}
-        actions={
-          <>
-            <DetailNavButton
-              href={`/competitions/${id}/participants`}
-              label="Teilnehmer"
-              icon={Users}
-            />
-            <DetailNavButton
-              href={`/competitions/${id}/schedule`}
-              label="Spielplan & Tabelle"
-              icon={CalendarDays}
-            />
-            <DetailNavButton href={`/competitions/${id}/playoffs`} label="Playoffs" icon={Trophy} />
-          </>
-        }
+        id={id}
+        current="audit-log"
+        links={["participants", "schedule", "playoffs"]}
       />
 
       <AuditLogList entries={entries} displayTimeZone={tz} />
