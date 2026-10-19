@@ -31,6 +31,7 @@
     "./target/display": "./src/target/display.ts",
     "./analysis/parts": "./src/analysis/parts.tsx",
     "./analysis/charts/frame": "./src/analysis/charts/frame.tsx",
+    "./analysis/charts/ChartRuler": "./src/analysis/charts/ChartRuler.tsx",
     "./analysis/charts/RingBars": "./src/analysis/charts/RingBars.tsx",
     "./analysis/AnalysisPanel": "./src/analysis/AnalysisPanel.tsx",
     "./analysis/input": "./src/analysis/input.ts",

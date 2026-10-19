@@ -19,7 +19,13 @@ export type SelfImageValues = Record<SelfImageKey, number>
 
 /** eine Einheit, wie die Statistik sie liest: Eintrag der Seite, dazu Befinden, Ausführung, Prognose und Feedback */
 export interface StatisticsSession extends SessionForPeriod {
-  discipline: (NonNullable<SessionForPeriod["discipline"]> & { id: string; name: string }) | null
+  discipline:
+    | (NonNullable<SessionForPeriod["discipline"]> & {
+        id: string
+        name: string
+        seriesCount: number
+      })
+    | null
   series: (SessionForPeriod["series"][number] & { executionQuality: number | null })[]
   wellbeing: { sleep: number; energy: number; stress: number; motivation: number } | null
   prognosis: SelfImageValues | null
@@ -45,7 +51,13 @@ export async function statisticsSessions(
       hitLocationVerticalMm: true,
       hitLocationVerticalDirection: true,
       discipline: {
-        select: { id: true, name: true, shotsPerSeries: true, scoringType: true },
+        select: {
+          id: true,
+          name: true,
+          seriesCount: true,
+          shotsPerSeries: true,
+          scoringType: true,
+        },
       },
       series: {
         select: {

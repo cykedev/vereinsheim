@@ -18,11 +18,20 @@ import { Segmented } from "@vereinsheim/ui/design2/segmented"
 import { ToggleChip } from "@vereinsheim/ui/design2/toggle-chip"
 
 import { metricHelpId } from "@/lib/help/topics"
+import type { RingDistribution } from "@vereinsheim/shot-core/analysis"
+import { RingBars } from "@vereinsheim/shot-ui/analysis/charts/RingBars"
+import { countOf } from "@vereinsheim/shot-ui/period/words"
+
 import type { Influence } from "@/lib/statistics/influences"
+import type { LocationSummary } from "@/lib/statistics/location"
+import type { OverviewTableGroup } from "@/lib/statistics/overview"
+import { SESSION_WORDS } from "@/lib/statistics/words"
 import { STATISTICS_METRICS } from "@/lib/statistics/page"
 import type { SelfImage } from "@/lib/statistics/selfImage"
 
+import { DisciplineOverviewTable } from "./overview"
 import { StatisticsInfluences } from "./StatisticsInfluences"
+import { StatisticsLocation } from "./StatisticsLocation"
 import { StatisticsSelfImage } from "./StatisticsSelfImage"
 
 export interface StatisticsPartProps {
@@ -164,12 +173,16 @@ export function StatisticsList({ model, state, timeZone, dispatch, jumpTo }: Sta
   )
 }
 
-type AnalysisTab = "records" | "influences" | "selfImage"
+type AnalysisTab = "records" | "location" | "influences" | "selfImage"
 
 /** Einflüsse und Selbstbild über die Einheiten des Zeitraums, vom Server gerechnet */
 export interface StatisticsAnalysisData {
   influences: Influence[]
   selfImage: SelfImage
+  /** Tabelle der Serien je Einheit; null ohne Einheit */
+  overview: OverviewTableGroup | null
+  location: LocationSummary
+  rings: RingDistribution
 }
 
 /** Analyse: Rekorde, dazu Einflüsse und Selbstbild, wenn der Server sie mitgibt */
@@ -193,16 +206,19 @@ function StatisticsAnalysis({
   }
   return (
     <div className="grid gap-2">
-      <div className="flex flex-wrap items-center justify-between gap-2">
+      <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
         <Segmented
           label="Reiter der Analyse"
           value={tab}
           options={[
             { value: "records", label: "Rekorde" },
+            { value: "location", label: "Trefferlage" },
             { value: "influences", label: "Einflüsse" },
             { value: "selfImage", label: "Selbstbild" },
           ]}
           onChange={setTab}
+          // vier Reiter sind am schmalen Telefon breiter als die Seite: dort scrollen sie in sich
+          scroll
         />
         <ToggleChip pressed={explain} icon={<HelpIcon />} onPressedChange={setExplain}>
           Erklärungen
@@ -218,6 +234,8 @@ function StatisticsAnalysis({
           onChoose={chooseFromRecord}
           chosen={state.chosen}
         />
+      ) : tab === "location" ? (
+        <StatisticsLocation summary={analysis.location} timeZone={timeZone} />
       ) : tab === "influences" ? (
         <StatisticsInfluences rows={analysis.influences} />
       ) : (
@@ -233,11 +251,30 @@ export function statisticsBelow(props: StatisticsPartProps & { analysis: Statist
     {
       id: "numbers" as const,
       node: (
-        <PeriodTiles
-          tiles={props.model.tiles}
-          compareLabel={props.model.compareRange?.label ?? null}
-          onHelp={(key) => props.onHelp(metricHelpId(key))}
-        />
+        <div className="grid min-w-0 gap-4">
+          <PeriodTiles
+            tiles={props.model.tiles}
+            compareLabel={props.model.compareRange?.label ?? null}
+            onHelp={(key) => props.onHelp(metricHelpId(key))}
+          />
+          {props.analysis.rings.n > 0 && (
+            <article data-period-rings className={`grid gap-3 p-4 ${box}`}>
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <h3 className="font-display text-base font-bold">Ringverteilung</h3>
+                <span className="text-[13px] text-muted-foreground">
+                  {`${props.analysis.rings.n} Wertungsschüsse aus ${countOf(
+                    props.model.cards.length,
+                    SESSION_WORDS
+                  )}`}
+                </span>
+              </div>
+              <RingBars dist={props.analysis.rings} />
+            </article>
+          )}
+          {props.analysis.overview && (
+            <DisciplineOverviewTable group={props.analysis.overview} timeZone={props.timeZone} />
+          )}
+        </div>
       ),
     },
     { id: "analysis" as const, node: <StatisticsAnalysis {...props} /> },

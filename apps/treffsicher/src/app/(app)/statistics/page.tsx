@@ -48,7 +48,13 @@ export default async function StatisticsPage({
       state={page.state}
       options={page.options}
       timeZone={timeZone}
-      analysis={{ influences: page.influences, selfImage: page.selfImage }}
+      analysis={{
+        influences: page.influences,
+        selfImage: page.selfImage,
+        overview: page.overview,
+        location: page.location,
+        rings: page.rings,
+      }}
     />
   )
 }

@@ -1,6 +1,6 @@
 // Die Konten der Skriptprüfung (`pruefen`) in der Dev-Datenbank, jedes Mal im selben Zustand:
 // - `pruefen@treffsicher.test` (Mitglied) mit einem festen Satz erfundener Einheiten (Serien mit Einzelschüssen,
-//   Befinden, Prognose und Feedback); die neueste Einheit hat zwei Anhänge (kleine Bilder im Upload-Verzeichnis),
+//   Befinden, Prognose und Feedback, Trefferlage); die neueste Einheit hat zwei Anhänge (kleine Bilder im Upload-Verzeichnis),
 // - `pruefen-admin@treffsicher.test` (Admin) für die Abläufe unter Admin,
 // - `pruefen-ziel@treffsicher.test` (Mitglied, aktiv), das die Prüfung deaktiviert und wieder aktiviert.
 // Nur gegen eine Datenbank auf diesem Rechner. Die Zugangsdaten stehen als PRUEFEN_EMAIL/PRUEFEN_PASSWORD und
@@ -160,6 +160,13 @@ export async function prepareTestAccounts(): Promise<{ newestSessionId: string }
         location: "Schießstand",
         disciplineId: discipline.id,
         trainingGoal: s === 5 ? null : "Ruhiger Abzug",
+        // Trefferlage vom Ausdruck, bis auf die erste Einheit: wandert von links tief nach rechts hoch
+        ...(s > 0 && {
+          hitLocationHorizontalMm: Math.abs(s - 4) * 0.3,
+          hitLocationHorizontalDirection: s < 4 ? "LEFT" : "RIGHT",
+          hitLocationVerticalMm: Math.abs(s - 3) * 0.2,
+          hitLocationVerticalDirection: s < 3 ? "LOW" : "HIGH",
+        }),
         series: {
           create: Array.from({ length: discipline.seriesCount }, (_, i) => {
             const shots = Array.from({ length: discipline.shotsPerSeries }, (_, k) => shot(s, i, k))

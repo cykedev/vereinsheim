@@ -1,7 +1,7 @@
 import { ringDistribution, type RingDistribution } from "@vereinsheim/shot-core/analysis"
 import type { MetricShot } from "@vereinsheim/shot-core/metrics"
 
-import { parseShotValue } from "@/lib/sessions/shots"
+import { parseShotsJson, parseShotValue } from "@/lib/sessions/shots"
 
 /**
  * Ringverteilung der Wertungsschüsse einer Einheit wie in Spiegel (`ringDistribution` aus dem Fachkern): je Schuss
@@ -27,4 +27,15 @@ export function sessionRingDistribution(shots: readonly string[]): RingDistribut
     ]
   })
   return ringDistribution(metricShots)
+}
+
+/** Ringverteilung über mehrere Einheiten: alle Wertungsschüsse zusammen (Serien ohne Probe) */
+export function periodRingDistribution(
+  sessions: readonly { series: readonly { isPractice: boolean; shots: unknown }[] }[]
+): RingDistribution {
+  return sessionRingDistribution(
+    sessions.flatMap((session) =>
+      session.series.filter((s) => !s.isPractice).flatMap((s) => parseShotsJson(s.shots))
+    )
+  )
 }

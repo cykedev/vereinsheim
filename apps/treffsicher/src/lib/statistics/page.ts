@@ -12,7 +12,12 @@ import { itemValues } from "@vereinsheim/shot-ui/period/item"
 import { lightPeriodModel, periodModel, type PeriodModel } from "@vereinsheim/shot-ui/period/model"
 import type { PeriodMetricKey, PeriodState } from "@vereinsheim/shot-ui/period/state"
 
+import type { RingDistribution } from "@vereinsheim/shot-core/analysis"
+
+import { periodRingDistribution } from "@/lib/sessions/ringDistribution"
 import { influences, sessionQuality, type Influence } from "@/lib/statistics/influences"
+import { locationSummary, type LocationSummary } from "@/lib/statistics/location"
+import { aggregateOverview, type OverviewTableGroup } from "@/lib/statistics/overview"
 import { periodItems, scoringOf } from "@/lib/statistics/periodItems"
 import { selfImage, type SelfImage } from "@/lib/statistics/selfImage"
 import type { StatisticsSession } from "@/lib/statistics/sessions"
@@ -96,6 +101,12 @@ export interface StatisticsPage {
   /** Einflüsse über die Einheiten des Zeitraums (Art wie die Seite) */
   influences: Influence[]
   selfImage: SelfImage
+  /** Tabelle der Serien je Einheit im Zeitraum; null ohne Einheit */
+  overview: OverviewTableGroup | null
+  /** Trefferlage vom Ausdruck im Zeitraum */
+  location: LocationSummary
+  /** Ringverteilung aller Wertungsschüsse im Zeitraum */
+  rings: RingDistribution
 }
 
 /** die Seite für den Browser: das leichte Modell der gewählten Disziplin; ohne Einheit mit Ergebnis null */
@@ -111,6 +122,7 @@ export function statisticsPage(input: {
   if (!chosen) return null
   const { state, option } = chosen
   const items = periodItems(input.sessions.filter((s) => s.discipline?.id === option.value))
+  const itemsById = new Map(items.map((item) => [item.id, item]))
   const model = periodModel({
     items,
     tileKeys: STATISTICS_TILES,
@@ -142,5 +154,13 @@ export function statisticsPage(input: {
     option,
     influences: influences(entries),
     selfImage: selfImage(inPeriod),
+    overview:
+      aggregateOverview({
+        sessions: inPeriod,
+        hiddenDisciplineIds: [],
+        disciplineFilter: option.value,
+      })[0] ?? null,
+    location: locationSummary(model.cards.flatMap((card) => itemsById.get(card.id) ?? [])),
+    rings: periodRingDistribution(inPeriod),
   }
 }

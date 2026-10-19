@@ -37,6 +37,17 @@ export async function statisticsFlow(
     shown.text.match(SPIEGEL_WORDS)?.[0] ?? ""
   )
 
+  // die Tabelle der Serien und die Ringverteilung stehen unter „Zahlen“
+  const numbers = await page.ev<{ table: boolean; rows: number; rings: number }>(`(() => {
+    const section = $('[data-section="numbers"]')
+    return { table: txt(section).includes("Serien je Einheit"), rows: $$("table tbody tr", section).length,
+      rings: $$("[data-period-rings] [data-ring-row]").length } })()`)
+  check(
+    "Zahlen: Tabelle der Serien je Einheit mit Ø-Zeile und Ringverteilung des Zeitraums",
+    numbers.table && numbers.rows >= 1 && numbers.rings >= 3,
+    numbers
+  )
+
   // Lineal: ein Tipp auf einen Punkt wählt die Einheit für Ablesung und Liste
   const point = await page.ev<{ id: string; x: number; y: number } | null>(`(() => {
     const g = $$("[data-card-point]").at(-2)
@@ -112,8 +123,8 @@ export async function statisticsFlow(
     `$$('[role="radiogroup"][aria-label="Reiter der Analyse"] button').map((b) => txt(b))`
   )
   check(
-    "Analyse: Reiter Rekorde, Einflüsse, Selbstbild",
-    tabs.join() === "Rekorde,Einflüsse,Selbstbild",
+    "Analyse: Reiter Rekorde, Trefferlage, Einflüsse, Selbstbild",
+    tabs.join() === "Rekorde,Trefferlage,Einflüsse,Selbstbild",
     tabs
   )
   const tab = (label: string) =>
@@ -121,6 +132,30 @@ export async function statisticsFlow(
       `$$('[role="radiogroup"][aria-label="Reiter der Analyse"] button').find((b) => txt(b) === ${JSON.stringify(label)})`,
       { settle: 300 }
     )
+  await tab("Trefferlage")
+  const cloud = await page.ev<number>(`$$("[data-location-point]").length`)
+  const course = `$('section[aria-label="Trefferlage"] svg[role="slider"]')`
+  await page.ev(`${course}.scrollIntoView({ block: "center", behavior: "instant" })`)
+  await page.wait(200)
+  const box = await page.ev<{ x: number; y: number; w: number }>(`(() => {
+    const r = ${course}.getBoundingClientRect(); return { x: r.left, y: r.top + r.height / 2, w: r.width } })()`)
+  await page.clickAt(box.x + box.w - 20, box.y)
+  await page.wait(300)
+  const picked = await page.ev<{ chosen: number; line: string }>(`({
+    chosen: $$("[data-location-point][data-chosen]").length,
+    line: txt($('section[aria-label="Trefferlage"] [data-readout]')) })`)
+  check(
+    "Trefferlage: Wolke mit einem Punkt je Einheit, das Lineal im Verlauf wählt die Einheit in der Wolke",
+    cloud === 7 && picked.chosen === 1 && /mm (rechts|links)/.test(picked.line),
+    { cloud, ...picked }
+  )
+  await page.click(`$('section[aria-label="Trefferlage"] [data-values] summary')`, { settle: 200 })
+  check(
+    "Trefferlage: „Werte als Tabelle“ mit einer Zeile je Einheit",
+    (await page.ev<number>(
+      `$$('section[aria-label="Trefferlage"] [data-values][open] tbody tr').length`
+    )) === 7
+  )
   await tab("Einflüsse")
   const influence = await page.ev<string[]>(
     `$$("[data-influence-verdict]").filter(visible).map((p) => txt(p))`
@@ -160,7 +195,10 @@ export async function statisticsPictures(page: Page, base: string, dir: string) 
       await page.wait(400)
       writeFileSync(join(dir, `statistik-${width}-${theme}.png`), await page.screenshot())
       // die Reiter Einflüsse und Selbstbild je für sich
+      const numbers = await page.screenshotOf(`$('[data-section="numbers"]')`)
+      if (numbers) writeFileSync(join(dir, `statistik-zahlen-${width}-${theme}.png`), numbers)
       for (const [label, name] of [
+        ["Trefferlage", "trefferlage"],
         ["Einflüsse", "einfluesse"],
         ["Selbstbild", "selbstbild"],
       ] as const) {

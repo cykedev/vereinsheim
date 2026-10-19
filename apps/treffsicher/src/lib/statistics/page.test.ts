@@ -11,8 +11,20 @@ import type { StatisticsSession } from "@/lib/statistics/sessions"
 
 const NOW = Date.UTC(2026, 9, 1, 10)
 const DAY = 86_400_000
-const LG = { id: "lg", name: "Luftgewehr", shotsPerSeries: 10, scoringType: "TENTH" }
-const KK = { id: "kk", name: "Kleinkaliber", shotsPerSeries: 10, scoringType: "WHOLE" }
+const LG = {
+  id: "lg",
+  name: "Luftgewehr",
+  seriesCount: 4,
+  shotsPerSeries: 10,
+  scoringType: "TENTH",
+}
+const KK = {
+  id: "kk",
+  name: "Kleinkaliber",
+  seriesCount: 4,
+  shotsPerSeries: 10,
+  scoringType: "WHOLE",
+}
 
 function session(
   id: string,

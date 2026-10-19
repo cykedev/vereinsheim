@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { sessionRingDistribution } from "@/lib/sessions/ringDistribution"
+import { periodRingDistribution, sessionRingDistribution } from "@/lib/sessions/ringDistribution"
 
 describe("Ringverteilung einer Einheit", () => {
   it("je Schuss der ganze Ring, Zehntel abgerundet, Unlesbares zählt nicht", () => {
@@ -16,5 +16,26 @@ describe("Ringverteilung einer Einheit", () => {
 
   it("ohne Schüsse leer", () => {
     expect(sessionRingDistribution([]).n).toBe(0)
+  })
+})
+
+describe("Ringverteilung über mehrere Einheiten", () => {
+  it("alle Wertungsschüsse zusammen, ohne Probe", () => {
+    const dist = periodRingDistribution([
+      {
+        series: [
+          { isPractice: true, shots: ["10.9", "10.9"] },
+          { isPractice: false, shots: ["9.5", "10.1"] },
+        ],
+      },
+      {
+        series: [
+          { isPractice: false, shots: ["8.0"] },
+          { isPractice: false, shots: null },
+        ],
+      },
+    ])
+    expect(dist.n).toBe(3)
+    expect([dist.counts[10], dist.counts[9], dist.counts[8]]).toEqual([1, 1, 1])
   })
 })
