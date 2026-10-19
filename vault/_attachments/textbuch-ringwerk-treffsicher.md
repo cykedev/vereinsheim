@@ -12,7 +12,7 @@ passiert, Was nicht passiert, Rückgängig, Knopf. Daneben steht immer „Abbrec
 
 ## Treffsicher: Folgen vor dem Bestätigen (TC0)
 
-**Status: Entwurf, wartet auf Freigabe**
+**Status: freigegeben am 19. Oktober 2026**
 
 ### 1. Einheit löschen
 
@@ -205,7 +205,7 @@ die Grundregel: kein Semikolon, keine drei Punkte.
 
 ## Treffsicher: Hilfe (TD0)
 
-**Status: Entwurf, wartet auf Freigabe**
+**Status: freigegeben am 19. Oktober 2026**
 
 Die Erklärung öffnet sich über „?“ als Blatt. Der Schalter „Erklärungen“ auf der Seite einer Einheit zeigt den Kurzsatz
 unter dem Titel der Karte, wie in Spiegel. Felder: Kurz, Was es ist, So liest du es, Was du tun kannst, Vorsicht.
@@ -243,7 +243,7 @@ Ort: Seite einer Einheit, Karte „Befinden“.
 
 ## Treffsicher: „–“ mit Grund (TD3)
 
-**Status: Entwurf, wartet auf Freigabe**
+**Status: freigegeben am 19. Oktober 2026**
 
 Wo heute eine 0, ein leeres Feld oder ein Strich ohne Erklärung steht, steht künftig „–“ und daneben (oder als Tooltip
 und für Screenreader) der Grund.
