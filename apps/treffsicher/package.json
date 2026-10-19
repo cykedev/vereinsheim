@@ -38,7 +38,6 @@
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-hook-form": "^7.85.0",
-    "recharts": "^2.15.4",
     "sonner": "catalog:",
     "unpdf": "1.8.1",
     "zod": "catalog:"
