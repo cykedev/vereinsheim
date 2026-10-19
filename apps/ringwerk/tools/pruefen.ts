@@ -7,6 +7,8 @@
 //   pnpm --filter ringwerk pruefen           startet den gebauten Stand dieses Checkouts auf :3013 und prüft ihn
 //   … --alle                                 zeigt jede Prüfung, nicht nur FAIL
 //   … --nur <abschnitt>                      nur Abschnitte, deren Name das Wort enthält
+//   … --bilder <ordner>                      dazu Bilder je Phase für die Sichtprüfung (390 und 1280 px, hell und
+//                                            dunkel) mit einer Übersicht index.html
 
 import type { ChildProcess } from "node:child_process"
 import path from "node:path"
@@ -27,6 +29,7 @@ import { startServer } from "@vereinsheim/pruefen/server"
 
 import { PRUEF_ACCOUNTS } from "./pruefdaten/accounts"
 import { pruefDatabaseUrl } from "./pruefdaten/db"
+import { pictures } from "./pruefen-bilder"
 import { login } from "./pruefen-ringwerk/capture"
 
 const APP_DIR = path.resolve(__dirname, "..")
@@ -56,6 +59,47 @@ const SAMPLES = [
 ] as const
 /** ein Spielplan ohne Ergebnis: „Spielplan neu generieren“ öffnet einen Dialog */
 const REGENERATE = "L-DRR-6 · L1 Spielplan, kein Ergebnis (Hin/Rück)"
+
+/** mit `--bilder`: je Phase eine Seite eines Wettbewerbs (Name im Prüfbestand, Seite) */
+const PHASES: readonly (readonly [string, string, string])[] = [
+  ["L1 Spielplan, kein Ergebnis", REGENERATE, "schedule"],
+  ["L2 Hinrunde läuft (Best-of-3)", "L-BO3-7 · L2 Hinrunde läuft (Best-of-3)", "schedule"],
+  ["L3 Rückrunde läuft", "L-DRR-6 · L3 Rückrunde läuft (Hin/Rück)", "schedule"],
+  [
+    "L4 Gruppenphase fertig (Best-of-5)",
+    "L-BO5-4 · L4 Gruppenphase fertig (Best-of-5)",
+    "schedule",
+  ],
+  ["L4 Playoffs noch nicht gestartet", "L-BO5-4 · L4 Gruppenphase fertig (Best-of-5)", "playoffs"],
+  [
+    "L5 Achtelfinale mitten in der Runde",
+    "L-DRR-16 · L5 Achtelfinale mitten in der Runde (Hin/Rück)",
+    "playoffs",
+  ],
+  [
+    "L5 Viertelfinale fertig",
+    "L-BO3-8 · L5 Viertelfinale fertig, nicht weitergeschaltet (Best-of-3)",
+    "playoffs",
+  ],
+  ["L5 nur Halbfinale", "L-DRR-4 · L5 nur Halbfinale mitten in der Runde (Hin/Rück)", "playoffs"],
+  [
+    "L6 Finale in der Verlängerung",
+    "L-BO5-4 · L6 Finale in der Verlängerung (Best-of-5)",
+    "playoffs",
+  ],
+  [
+    "L7 abgeschlossen mit Playoffs",
+    "L-DRR-4 · L7 abgeschlossen mit Playoffs (Hin/Rück)",
+    "playoffs",
+  ],
+  ["Gleichstand auf Platz 1 und 3", "R · Gleichstand auf Platz 1 und 3 (Hin/Rück)", "schedule"],
+  ["16 Teilnehmer mit langen Namen", "R · 16 Teilnehmer mit langen Namen", "participants"],
+  ["Event teilweise gewertet", "E · teilweise gewertet (Ringteiler)", "ranking"],
+  ["Event Teams", "E · Teams Summe, Teamgröße 3, fertig", "ranking"],
+  ["Event Serien erfassen", "E · teilweise gewertet (Ringteiler)", "series"],
+  ["Saison klassisch nach Ringteiler", "S · klassisch nach Ringteiler, gemischt", "standings"],
+  ["Saison wenige Serien", "S · wenige Serien", "standings"],
+]
 
 const out = (text = "") => process.stdout.write(`${text}\n`)
 
@@ -257,7 +301,9 @@ async function main() {
       quiet: true,
     })
     const url = pruefDatabaseUrl(env)
-    const ids = await competitionIds(url, [...SAMPLES.map((s) => s.name), REGENERATE])
+    const ids = await competitionIds(url, [
+      ...new Set([...SAMPLES.map((s) => s.name), REGENERATE, ...PHASES.map(([, name]) => name)]),
+    ])
     const competitionPaths = SAMPLES.flatMap((s) =>
       s.pages.map((p) => `/competitions/${ids.get(s.name)}/${p}`)
     )
@@ -303,6 +349,23 @@ async function main() {
         )
       )
     })
+
+    const pictureDir = process.argv.indexOf("--bilder")
+    if (pictureDir >= 0)
+      await section("Bilder", () =>
+        pictures(page, BASE, path.resolve(process.argv[pictureDir + 1] ?? "bilder"), [
+          { title: "Start", path: "/" },
+          { title: "Wettbewerbe", path: "/competitions" },
+          { title: "Teilnehmer", path: "/participants" },
+          { title: "Disziplinen", path: "/disciplines" },
+          { title: "Profil", path: "/profile" },
+          { title: "Admin", path: "/admin/users" },
+          ...PHASES.map(([title, name, page]) => ({
+            title,
+            path: `/competitions/${ids.get(name)}/${page}`,
+          })),
+        ])
+      )
 
     await signIn(page, env, "MANAGER")
     await section("Rahmen Sportleitung", () =>
