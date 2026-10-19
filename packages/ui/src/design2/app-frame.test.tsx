@@ -77,6 +77,12 @@ describe("AppFrame", () => {
     expect(four).not.toContain('data-area="new"')
   })
 
+  it("mit drei Feldern drei Spalten, ohne leere vierte", () => {
+    const three = render({ action: undefined, bar: ["start", "diary", "profile"] })
+    expect(three).toContain("grid-cols-3")
+    expect(three).not.toContain("grid-cols-4")
+  })
+
   it("aria-current am Eintrag der Seite; die Leisten folgen barCurrent", () => {
     expect(html.match(/aria-current="page"/g)).toHaveLength(3)
     const moved = render({ current: "admin", barCurrent: "profile" })

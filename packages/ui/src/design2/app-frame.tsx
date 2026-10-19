@@ -208,7 +208,11 @@ export function AppFrame({
         <div
           className={cn(
             "mx-auto grid h-14 max-w-lg",
-            barItems.length >= 5 ? "grid-cols-5" : "grid-cols-4"
+            barItems.length >= 5
+              ? "grid-cols-5"
+              : barItems.length === 4
+                ? "grid-cols-4"
+                : "grid-cols-3"
           )}
         >
           {barItems.map((item) => {

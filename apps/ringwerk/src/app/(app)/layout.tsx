@@ -1,5 +1,6 @@
-import { Navigation } from "@/components/app/shell/Navigation"
 import { redirect } from "next/navigation"
+import { Page } from "@vereinsheim/ui/design2/page"
+import { AppShell } from "@/components/app/shell/AppShell"
 import { getAuthSession } from "@/lib/auth-helpers"
 
 // Layout für alle geschützten Seiten.
@@ -10,9 +11,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   if (!session) redirect("/login")
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation role={session.user.role} />
-      <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
-    </div>
+    <AppShell role={session.user.role}>
+      {/* eine Spalte, die nie breiter als die Seite wird: breite Tabellen scrollen in sich, nicht die Seite */}
+      <Page className="grid-cols-1">{children}</Page>
+    </AppShell>
   )
 }
