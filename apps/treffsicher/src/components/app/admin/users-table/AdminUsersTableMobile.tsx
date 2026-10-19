@@ -1,6 +1,6 @@
 import type { AdminUserListItem } from "@/lib/admin/actions"
 import { Badge } from "@vereinsheim/ui/badge"
-import { Card, CardContent } from "@vereinsheim/ui/card"
+import { Card, CardContent } from "@vereinsheim/ui/design2/card"
 import { AdminUserActionButtons } from "@/components/app/admin/users-table/AdminUserActionButtons"
 import {
   formatCount,
@@ -33,7 +33,7 @@ export function AdminUsersTableMobile({
 
         return (
           <Card key={user.id}>
-            <CardContent className="space-y-3 py-4">
+            <CardContent className="space-y-3">
               <div className="space-y-1">
                 <p className="break-words font-medium">{user.name ?? "—"}</p>
                 <p className="break-all text-sm text-muted-foreground">{user.email}</p>

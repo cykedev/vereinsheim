@@ -1,4 +1,4 @@
-import { Card, CardContent } from "@vereinsheim/ui/card"
+import { Card, CardContent } from "@vereinsheim/ui/design2/card"
 import { ResultTrendCard } from "@/components/app/statistics-charts/tabs/trend/ResultTrendCard"
 import { SeriesRatingsCard } from "@/components/app/statistics-charts/tabs/trend/SeriesRatingsCard"
 import type { TrendTabModel } from "@/components/app/statistics-charts/tabs/types"

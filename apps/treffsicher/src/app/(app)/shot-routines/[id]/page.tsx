@@ -53,7 +53,9 @@ export default async function ShotRoutineDetailPage({
           </DetailActionBar>
         </div>
         <div className="space-y-1">
-          <h1 className="break-words text-2xl font-semibold tracking-tight">{routine.name}</h1>
+          <h1 className="break-words font-display text-[1.7rem] leading-tight font-bold tracking-tight">
+            {routine.name}
+          </h1>
         </div>
       </div>
 

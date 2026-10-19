@@ -6,9 +6,9 @@ import { BookOpen, Goal } from "lucide-react"
 import { formatDateOnly, getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
 import { Badge } from "@vereinsheim/ui/badge"
 import { Button } from "@vereinsheim/ui/button"
-import { Card, CardContent } from "@vereinsheim/ui/card"
+import { Card, CardContent } from "@vereinsheim/ui/design2/card"
 import { EmptyState } from "@vereinsheim/ui/empty-state"
-import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
+import { PageHeader } from "@vereinsheim/ui/design2/page-header"
 
 import { getAuthSession } from "@/lib/auth-helpers"
 import { getDashboardData } from "@/lib/dashboard/queries"
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
 function StatCard({ label, value }: { label: string; value: number }) {
   return (
     <Card>
-      <CardContent className="space-y-1 py-4">
+      <CardContent className="space-y-1">
         <p className="text-sm text-muted-foreground">{label}</p>
         <p className="font-display text-2xl font-bold tabular-nums">{value}</p>
       </CardContent>
@@ -49,7 +49,7 @@ export default async function DashboardPage() {
     <div className="space-y-8">
       <PageHeader title="Start" description={`Willkommen, ${displayName}`} />
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-2 gap-3">
         <StatCard label="Einheiten in den letzten 30 Tagen" value={sessionsLast30Days} />
         <StatCard label="Einheiten gesamt" value={sessionsTotal} />
       </div>
@@ -84,7 +84,7 @@ export default async function DashboardPage() {
               // Ganze Karte klickbar wie in den Übersichtslisten.
               <Link key={goal.id} href={`/goals/${goal.id}`} className="block">
                 <Card className="transition-colors hover:bg-muted/30">
-                  <CardContent className="space-y-2 py-4">
+                  <CardContent className="space-y-2">
                     <div className="flex flex-wrap items-center gap-2">
                       <Goal className="h-4 w-4 shrink-0 text-muted-foreground" />
                       <p className="break-words font-medium">{goal.title}</p>

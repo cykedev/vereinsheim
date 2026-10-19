@@ -1,6 +1,6 @@
 import type { RoutineStep } from "@/lib/shot-routines/actions"
 import { Badge } from "@vereinsheim/ui/badge"
-import { Card, CardContent } from "@vereinsheim/ui/card"
+import { Card, CardContent } from "@vereinsheim/ui/design2/card"
 import { formatDateTime } from "@vereinsheim/lib/format"
 
 interface Props {
@@ -33,7 +33,7 @@ export function ShotRoutineView({ steps, createdAt, updatedAt, displayTimeZone }
         <div className="space-y-2">
           {sortedSteps.map((step, index) => (
             <Card key={`${step.order}-${index}`}>
-              <CardContent className="py-4">
+              <CardContent>
                 <div className="flex items-start gap-3">
                   <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-semibold text-secondary-foreground">
                     {index + 1}

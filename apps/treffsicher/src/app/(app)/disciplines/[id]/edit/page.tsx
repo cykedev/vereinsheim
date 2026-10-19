@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation"
 import { getAuthSession } from "@/lib/auth-helpers"
 import { getDisciplineById } from "@/lib/disciplines/actions"
 import { DisciplineForm } from "@/components/app/disciplines/DisciplineForm"
-import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
+import { PageHeader } from "@vereinsheim/ui/design2/page-header"
 
 export const metadata: Metadata = {
   title: "Disziplin bearbeiten",

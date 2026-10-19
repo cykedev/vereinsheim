@@ -9,10 +9,10 @@ import {
   getHiddenDisciplineIds,
 } from "@/lib/disciplines/actions"
 import { Badge } from "@vereinsheim/ui/badge"
-import { Card, CardContent } from "@vereinsheim/ui/card"
+import { Card, CardContent } from "@vereinsheim/ui/design2/card"
 import { EmptyState } from "@vereinsheim/ui/empty-state"
 import { CreateItemLinkButton } from "@/components/app/sessions/CreateItemLinkButton"
-import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
+import { PageHeader } from "@vereinsheim/ui/design2/page-header"
 
 const scoringTypeLabel: Record<string, string> = {
   WHOLE: "Ganzringe",
@@ -67,7 +67,7 @@ export default async function DisciplinesPage() {
             // komplette Karte öffnet die Detailansicht mit allen Aktionen.
             <Link key={d.id} href={`/disciplines/${d.id}`} className="block">
               <Card className="transition-colors hover:bg-muted/30">
-                <CardContent className="py-4">
+                <CardContent>
                   <div className="min-w-0 space-y-0.5">
                     <div className="flex items-center gap-2">
                       {/* Favorit in der Übersicht direkt sichtbar halten —

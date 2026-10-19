@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { Heart, Target } from "lucide-react"
 import { Badge } from "@vereinsheim/ui/badge"
-import { Card, CardContent } from "@vereinsheim/ui/card"
+import { Card, CardContent } from "@vereinsheim/ui/design2/card"
 import type { SessionWithDiscipline } from "@/lib/sessions/actions"
 import { buildSessionListItemModel } from "@/components/app/sessions/list/sessionListItemModel"
 
@@ -44,7 +44,7 @@ export function SessionListItemCard({ session, displayTimeZone }: Props) {
   return (
     <Link href={`/sessions/${model.id}`} className="block">
       <Card className="transition-colors hover:bg-muted/30">
-        <CardContent className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0 flex-1 space-y-2">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">

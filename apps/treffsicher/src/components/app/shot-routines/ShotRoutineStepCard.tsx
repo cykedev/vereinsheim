@@ -5,7 +5,7 @@ import type { RoutineStep } from "@/lib/shot-routines/actions"
 import { Button } from "@vereinsheim/ui/button"
 import { Input } from "@vereinsheim/ui/input"
 import { Textarea } from "@vereinsheim/ui/textarea"
-import { Card, CardContent } from "@vereinsheim/ui/card"
+import { Card, CardContent } from "@vereinsheim/ui/design2/card"
 
 interface Props {
   step: RoutineStep
@@ -29,7 +29,7 @@ export function ShotRoutineStepCard({
 }: Props) {
   return (
     <Card>
-      <CardContent className="space-y-3 pt-4">
+      <CardContent className="space-y-3">
         <div className="flex items-center justify-between gap-2">
           <span className="text-sm font-medium text-muted-foreground">Schritt {step.order}</span>
           <div className="flex items-center gap-1">

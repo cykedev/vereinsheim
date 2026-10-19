@@ -4,7 +4,7 @@ import { getAuthSession } from "@/lib/auth-helpers"
 import { getShotRoutineById } from "@/lib/shot-routines/actions"
 import { ShotRoutineEditor } from "@/components/app/shot-routines/ShotRoutineEditor"
 import type { RoutineStep } from "@/lib/shot-routines/actions"
-import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
+import { PageHeader } from "@vereinsheim/ui/design2/page-header"
 
 export const metadata: Metadata = {
   title: "Ablauf bearbeiten",

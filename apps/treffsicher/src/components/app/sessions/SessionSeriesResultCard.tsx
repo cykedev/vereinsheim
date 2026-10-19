@@ -2,7 +2,7 @@ import type { SessionDetail } from "@/lib/sessions/actions"
 import { parseShotsJson } from "@/lib/sessions/shots"
 import { HitLocationVisualization } from "@/components/app/sessions/HitLocationVisualization"
 import { ShotValues } from "@/components/app/sessions/ShotValues"
-import { Card, CardContent, CardHeader, CardTitle } from "@vereinsheim/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@vereinsheim/ui/design2/card"
 
 interface Props {
   session: SessionDetail

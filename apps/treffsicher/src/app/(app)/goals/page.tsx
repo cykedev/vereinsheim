@@ -6,9 +6,9 @@ import { getAuthSession } from "@/lib/auth-helpers"
 import { formatDateOnly, getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
 import { getGoalsWithAssignments } from "@/lib/goals/actions"
 import { CreateItemLinkButton } from "@/components/app/sessions/CreateItemLinkButton"
-import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
+import { PageHeader } from "@vereinsheim/ui/design2/page-header"
 import { Badge } from "@vereinsheim/ui/badge"
-import { Card, CardContent } from "@vereinsheim/ui/card"
+import { Card, CardContent } from "@vereinsheim/ui/design2/card"
 import { EmptyState } from "@vereinsheim/ui/empty-state"
 
 const goalTypeLabels: Record<string, string> = {
@@ -50,7 +50,7 @@ export default async function GoalsPage() {
             // So bleibt der Flow konsistent: Liste -> Detail -> Aktionen.
             <Link key={goal.id} href={`/goals/${goal.id}`} className="block">
               <Card className="transition-colors hover:bg-muted/30">
-                <CardContent className="space-y-2 py-4">
+                <CardContent className="space-y-2">
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="break-words font-medium">{goal.title}</p>
                     <Badge variant="outline">{goalTypeLabels[goal.type] ?? goal.type}</Badge>

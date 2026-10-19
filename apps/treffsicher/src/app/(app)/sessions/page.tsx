@@ -8,7 +8,7 @@ import { SESSION_TYPE_LABELS } from "@/lib/sessions/presentation"
 import { EmptyState } from "@vereinsheim/ui/empty-state"
 import { SessionsFilters } from "@/components/app/sessions/SessionsFilters"
 import { SessionsList } from "@/components/app/sessions/list/SessionsList"
-import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
+import { PageHeader } from "@vereinsheim/ui/design2/page-header"
 
 type SessionsSearchParams = Promise<{
   type?: string | string[]

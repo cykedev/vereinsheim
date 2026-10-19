@@ -1,5 +1,5 @@
 import type { FormEventHandler } from "react"
-import { Card, CardContent } from "@vereinsheim/ui/card"
+import { Card, CardContent } from "@vereinsheim/ui/design2/card"
 import { DiscardChangesDialog } from "@/components/app/shell/DiscardChangesDialog"
 import { MeytonImportDialog } from "@/components/app/session-form/MeytonImportDialog"
 import { SessionFormFooter } from "@/components/app/session-form/SessionFormFooter"
@@ -63,7 +63,7 @@ export function SessionFormBody({
       className="space-y-6"
     >
       <Card>
-        <CardContent className="space-y-4 pt-6">
+        <CardContent className="space-y-4">
           <SessionMainFields model={main.model} actions={main.actions} />
           <SessionGoalsSection model={goals.model} actions={goals.actions} />
         </CardContent>

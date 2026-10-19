@@ -1,4 +1,4 @@
-import { Card, CardContent } from "@vereinsheim/ui/card"
+import { Card, CardContent } from "@vereinsheim/ui/design2/card"
 import { SeriesEditorHeader } from "@/components/app/session-form/series-editor/SeriesEditorHeader"
 import { SeriesShotsGrid } from "@/components/app/session-form/series-editor/SeriesShotsGrid"
 import { SeriesTotalInput } from "@/components/app/session-form/series-editor/SeriesTotalInput"
@@ -42,7 +42,7 @@ export function SeriesEditorCard({ model, actions }: Props) {
             : undefined
         }
       >
-        <CardContent className="space-y-3 pt-4">
+        <CardContent className="space-y-3">
           <input
             type="hidden"
             name={`series[${seriesIndex}][isPractice]`}

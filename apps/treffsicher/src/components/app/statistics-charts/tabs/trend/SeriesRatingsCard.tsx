@@ -1,5 +1,5 @@
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"
-import { Card, CardContent, CardHeader, CardTitle } from "@vereinsheim/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@vereinsheim/ui/design2/card"
 import {
   ChartContainer,
   ChartLegend,

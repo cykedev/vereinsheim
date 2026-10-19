@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import { getAuthSession } from "@/lib/auth-helpers"
 import { redirect } from "next/navigation"
 import { DisciplineForm } from "@/components/app/disciplines/DisciplineForm"
-import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
+import { PageHeader } from "@vereinsheim/ui/design2/page-header"
 
 export const metadata: Metadata = {
   title: "Neue Disziplin",

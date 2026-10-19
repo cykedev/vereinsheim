@@ -3,7 +3,7 @@ import { redirect } from "next/navigation"
 import Link from "next/link"
 import { getAuthSession } from "@/lib/auth-helpers"
 import { createGoalAndRedirect } from "@/lib/goals/actions"
-import { Card, CardContent, CardHeader, CardTitle } from "@vereinsheim/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@vereinsheim/ui/design2/card"
 import { Button } from "@vereinsheim/ui/button"
 import { Input } from "@vereinsheim/ui/input"
 import { Label } from "@vereinsheim/ui/label"
@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@vereinsheim/ui/select"
-import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
+import { PageHeader } from "@vereinsheim/ui/design2/page-header"
 
 export const metadata: Metadata = {
   title: "Neues Ziel",

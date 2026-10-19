@@ -7,8 +7,8 @@ import { LoginRateLimitInsights } from "@vereinsheim/ui/admin/LoginRateLimitInsi
 import { AdminLoginRateLimitTable } from "@/components/app/admin/AdminLoginRateLimitTable"
 import { AdminUsersTable } from "@/components/app/admin/AdminUsersTable"
 import { CreateItemLinkButton } from "@/components/app/sessions/CreateItemLinkButton"
-import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
-import { Card, CardContent, CardHeader, CardTitle } from "@vereinsheim/ui/card"
+import { PageHeader } from "@vereinsheim/ui/design2/page-header"
+import { Card, CardContent, CardHeader, CardTitle } from "@vereinsheim/ui/design2/card"
 
 export const metadata: Metadata = {
   title: "Nutzerverwaltung",

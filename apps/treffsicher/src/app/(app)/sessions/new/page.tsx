@@ -4,7 +4,7 @@ import { redirect } from "next/navigation"
 import { getDisciplines, getFavouriteDisciplineId } from "@/lib/disciplines/actions"
 import { getGoalsForSelection } from "@/lib/goals/actions"
 import { SessionForm } from "@/components/app/session-form/SessionForm"
-import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
+import { PageHeader } from "@vereinsheim/ui/design2/page-header"
 
 export const metadata: Metadata = {
   title: "Neue Einheit",

@@ -7,8 +7,8 @@ import { formatDateOnly, getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
 import { getShotRoutines } from "@/lib/shot-routines/actions"
 import type { RoutineStep } from "@/lib/shot-routines/actions"
 import { CreateItemLinkButton } from "@/components/app/sessions/CreateItemLinkButton"
-import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
-import { Card, CardContent } from "@vereinsheim/ui/card"
+import { PageHeader } from "@vereinsheim/ui/design2/page-header"
+import { Card, CardContent } from "@vereinsheim/ui/design2/card"
 import { EmptyState } from "@vereinsheim/ui/empty-state"
 
 export const metadata: Metadata = {
@@ -48,7 +48,7 @@ export default async function ShotRoutinesPage() {
               // das entspricht dem Tagebuch-Flow und reduziert einen unnötigen Extra-Schritt.
               <Link key={r.id} href={`/shot-routines/${r.id}`} className="block">
                 <Card className="transition-colors hover:bg-muted/30">
-                  <CardContent className="py-4">
+                  <CardContent>
                     <div className="min-w-0 space-y-0.5">
                       <p className="break-words font-medium">{r.name}</p>
                       <p className="break-words text-sm text-muted-foreground">

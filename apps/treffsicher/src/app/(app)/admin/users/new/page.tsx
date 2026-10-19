@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import { redirect } from "next/navigation"
 import { getAuthSession } from "@/lib/auth-helpers"
 import { AdminCreateUserForm } from "@/components/app/admin/AdminCreateUserForm"
-import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
+import { PageHeader } from "@vereinsheim/ui/design2/page-header"
 
 export const metadata: Metadata = {
   title: "Neuer Nutzer",

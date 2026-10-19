@@ -11,7 +11,7 @@ import {
 } from "@/lib/stats/actions"
 import { getHiddenDisciplineIds } from "@/lib/disciplines/actions"
 import { StatisticsChartsWrapper } from "@/components/app/statistics-charts/StatisticsChartsWrapper"
-import { PageHeader } from "@vereinsheim/ui/shell/PageHeader"
+import { PageHeader } from "@vereinsheim/ui/design2/page-header"
 
 export const metadata: Metadata = {
   title: "Statistiken",

@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@vereinsheim/ui/select"
-import { Card, CardContent } from "@vereinsheim/ui/card"
+import { Card, CardContent } from "@vereinsheim/ui/design2/card"
 import type { Discipline } from "@/generated/prisma/client"
 
 interface Props {
@@ -55,7 +55,7 @@ export function DisciplineForm({ initialData, disciplineId, canCreateSystem = fa
 
   return (
     <Card className="max-w-lg">
-      <CardContent className="pt-6">
+      <CardContent>
         <form action={formAction} className="space-y-4">
           {/* Globaler Fehler */}
           {generalError && <p className="text-sm text-destructive">{generalError}</p>}

@@ -1,4 +1,4 @@
-import { Card, CardContent } from "@vereinsheim/ui/card"
+import { Card, CardContent } from "@vereinsheim/ui/design2/card"
 import { Label } from "@vereinsheim/ui/label"
 import { Input } from "@vereinsheim/ui/input"
 import { Segmented } from "@vereinsheim/ui/design2/segmented"
@@ -62,7 +62,7 @@ export function StatisticsFiltersCard({ model, actions }: Props) {
 
   return (
     <Card>
-      <CardContent className="space-y-4 pt-6">
+      <CardContent className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 [&>*]:min-w-0">
           <div className="space-y-2">
             <Label>Einheitentyp</Label>

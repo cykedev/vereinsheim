@@ -16,7 +16,7 @@ import { FavouriteDisciplineButton } from "@/components/app/disciplines/Favourit
 import { HideDisciplineButton } from "@/components/app/disciplines/HideDisciplineButton"
 import { Badge } from "@vereinsheim/ui/badge"
 import { Button } from "@vereinsheim/ui/button"
-import { Card, CardContent } from "@vereinsheim/ui/card"
+import { Card, CardContent } from "@vereinsheim/ui/design2/card"
 import { Separator } from "@vereinsheim/ui/separator"
 
 const scoringTypeLabel: Record<string, string> = {
@@ -92,7 +92,9 @@ export default async function DisciplineDetailPage({
 
         <div className="space-y-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="break-words text-2xl font-semibold tracking-tight">{discipline.name}</h1>
+            <h1 className="break-words font-display text-[1.7rem] leading-tight font-bold tracking-tight">
+              {discipline.name}
+            </h1>
             {discipline.isSystem && <Badge variant="secondary">Standard</Badge>}
             {discipline.isArchived && <Badge variant="outline">Archiviert</Badge>}
             {isHidden && <Badge variant="outline">Ausgeblendet</Badge>}

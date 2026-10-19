@@ -15,7 +15,7 @@ import {
 import { Button } from "@vereinsheim/ui/button"
 import { Input } from "@vereinsheim/ui/input"
 import { Label } from "@vereinsheim/ui/label"
-import { Card, CardContent } from "@vereinsheim/ui/card"
+import { Card, CardContent } from "@vereinsheim/ui/design2/card"
 import { getErrorMessage } from "@vereinsheim/lib/forms/fieldErrors"
 import { attachmentToDelete } from "@/components/app/sessions/attachmentDeletion"
 

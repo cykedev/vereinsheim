@@ -14,7 +14,7 @@ import { SessionSeriesResultCard } from "@/components/app/sessions/SessionSeries
 import { ShotHistogram } from "@/components/app/sessions/ShotHistogram"
 import { WellbeingSection } from "@/components/app/sessions/WellbeingSection"
 import { SessionDetailHeader, SessionDetailSectionCard } from "@/components/app/sessions/detail"
-import { Card, CardContent, CardHeader, CardTitle } from "@vereinsheim/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@vereinsheim/ui/design2/card"
 import { Separator } from "@vereinsheim/ui/separator"
 
 export const metadata: Metadata = {

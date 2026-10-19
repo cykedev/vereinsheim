@@ -22,7 +22,7 @@ export function SessionDetailHeader({ session, displayTimeZone }: Props) {
       </div>
 
       <div className="min-w-0 space-y-1.5">
-        <h1 className="break-words text-2xl font-semibold tracking-tight">
+        <h1 className="break-words font-display text-[1.7rem] leading-tight font-bold tracking-tight">
           {formatLongDateTime(session.date, displayTimeZone)}
         </h1>
 

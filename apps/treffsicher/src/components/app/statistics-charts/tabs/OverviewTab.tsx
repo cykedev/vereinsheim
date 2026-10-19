@@ -1,4 +1,4 @@
-import { Card, CardContent } from "@vereinsheim/ui/card"
+import { Card, CardContent } from "@vereinsheim/ui/design2/card"
 import type { OverviewTableGroup } from "@/lib/stats/overview/aggregateOverview"
 import { DisciplineOverviewTable } from "./overview"
 
