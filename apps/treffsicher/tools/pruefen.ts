@@ -1,5 +1,6 @@
 // Skriptprüfung der App: Bedienung, die kein Test im Node sieht (Rahmen und Leisten, kein seitliches Scrollen bei
-// mehreren Fensterbreiten, Darstellung ohne Aufblitzen, Fokus im Dialog), gegen die laufende App mit dem Prüfkonto.
+// mehreren Fensterbreiten, Darstellung ohne Aufblitzen, Fokus im Dialog, keine versteckte Kopie im Hintergrund), gegen
+// die laufende App mit dem Prüfkonto.
 // Nicht im Gate: braucht Chrome, einen laufenden Server und Daten.
 //
 //   pnpm --filter treffsicher pruefen           gegen http://localhost:3001 (BASE_URL), `--alle` zeigt jede Prüfung
@@ -17,6 +18,7 @@ import {
   barDoesNotCover,
   type Check,
   dialogFocus,
+  noHiddenCopy,
   noSideScroll,
   themeNoFlash,
 } from "@vereinsheim/pruefen/common"
@@ -346,11 +348,15 @@ async function main() {
     // jeder Lauf beginnt mit denselben Daten: die Abläufe löschen und deaktivieren wirklich
     const { newestSessionId } = await prepareTestAccounts()
     const session = `/sessions/${newestSessionId}`
-    browser = await Browser.launch()
-    const page = await browser.newPage()
+    const chrome = await Browser.launch()
+    browser = chrome
+    const page = await chrome.newPage()
     await login(page)
     await section("Rahmen", () => frame(page))
     await section("Breiten und Leiste", () => layout(page, session))
+    await section("Versteckte Kopie", async () => {
+      record(await noHiddenCopy(chrome, page, { base: BASE, paths: [...MAIN, session] }))
+    })
     await section("Darstellung und Dialog", () => themeAndDialog(page, session))
     await section("Admin ohne Rolle", () => adminWithoutRole(page))
     await section("Hilfe", () => helpFlow(page, session))

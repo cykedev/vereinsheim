@@ -1,8 +1,8 @@
 // Prüfungen, die jede App mit Design 2 braucht: kein seitliches Scrollen, die untere Leiste verdeckt nichts, die
-// Darstellung blitzt nicht auf, der Fokus in Dialogen, der Text einer Tabelle oder Liste als Zeilen. Jede Prüfung
-// liefert Ergebnisse; die App schreibt sie in ihren Bericht.
+// Darstellung blitzt nicht auf, der Fokus in Dialogen, keine versteckte Kopie des Inhalts, der Text einer Tabelle oder
+// Liste als Zeilen. Jede Prüfung liefert Ergebnisse; die App schreibt sie in ihren Bericht.
 
-import type { Locator, Page } from "./browser"
+import type { Browser, Locator, Page } from "./browser"
 
 export interface Check {
   name: string
@@ -130,6 +130,47 @@ export async function dialogFocus(page: Page, opener: Locator, label: string): P
       detail: JSON.stringify(after),
     },
   ]
+}
+
+/**
+ * Keine versteckte zweite Kopie des Seiteninhalts. Streamt eine Seite in eine Suspense-Grenze (etwa aus `loading.tsx`),
+ * schickt React den Inhalt erst in einem `<div hidden>` am Ende von `body` und verschiebt ihn im nächsten
+ * Animationsframe an seinen Platz. In einem Tab im Hintergrund kommt dieser Frame nicht: Der Client rendert die Seite
+ * trotzdem, und die Kopie bleibt mit doppelten Ids liegen, bis der Tab sichtbar wird. Geprüft wird deshalb mit der Seite
+ * im Hintergrund: kein `h1` unter einem `[hidden]`-Vorfahren und keine Id doppelt. Danach steht die Seite wieder vorn.
+ */
+export async function noHiddenCopy(
+  browser: Browser,
+  page: Page,
+  { base, paths }: { base: string; paths: string[] }
+): Promise<Check[]> {
+  const front = await browser.newPage()
+  await browser.send("Target.activateTarget", { targetId: front.targetId })
+  const checks: Check[] = []
+  try {
+    for (const path of paths) {
+      await page.goto(`${base}${path}`)
+      await page.wait(1_000)
+      const s = await page.ev<{ background: boolean; hidden: string[]; twice: string[] }>(`(() => {
+        const ids = new Map()
+        for (const el of $$("[id]")) ids.set(el.id, (ids.get(el.id) ?? 0) + 1)
+        return { background: document.visibilityState === "hidden",
+          hidden: $$("h1").filter((h) => h.closest("[hidden]")).map((h) => txt(h)),
+          twice: [...ids].filter(([, n]) => n > 1).map(([id]) => id) }
+      })()`)
+      checks.push({
+        name: `Im Hintergrund: ${path} ohne versteckte Kopie des Inhalts`,
+        ok: s.background && s.hidden.length === 0 && s.twice.length === 0,
+        detail: s.background
+          ? `${s.hidden.length ? `versteckt: ${s.hidden.join(", ")} ` : ""}${s.twice.length ? `doppelt: #${s.twice.slice(0, 5).join(", #")}` : ""}`
+          : "die Seite steht nicht im Hintergrund",
+      })
+    }
+  } finally {
+    await browser.send("Target.activateTarget", { targetId: page.targetId })
+    await front.close()
+  }
+  return checks
 }
 
 /**
