@@ -6,7 +6,15 @@ import type { ActionResult } from "@/lib/types"
 import type { AuditEventType } from "@/lib/auditLog/types"
 import { revalidateParticipantPaths } from "./_shared"
 
-export async function deleteParticipant(id: string, force: boolean): Promise<ActionResult> {
+/**
+ * Löscht einen inaktiven Teilnehmer. Mit `force` (nur Admin) samt allen Daten, auch den Serien der Gegner; dafür muss
+ * `confirmationLastName` der Nachname sein, wie beim Löschen eines Wettbewerbs mit allen Daten.
+ */
+export async function deleteParticipant(
+  id: string,
+  force: boolean,
+  confirmationLastName?: string
+): Promise<ActionResult> {
   const session = await getAuthSession()
   if (!session) return { error: "Nicht angemeldet" }
   if (!canManage(session.user.role)) return { error: "Keine Berechtigung" }
@@ -42,6 +50,10 @@ export async function deleteParticipant(id: string, force: boolean): Promise<Act
     })
     revalidateParticipantPaths()
     return { success: true }
+  }
+
+  if ((confirmationLastName ?? "").trim() !== participant.lastName) {
+    return { error: "Der eingegebene Nachname stimmt nicht mit dem Teilnehmer überein." }
   }
 
   // Force delete — cascade in transaction

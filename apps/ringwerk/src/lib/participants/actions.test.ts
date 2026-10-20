@@ -187,9 +187,27 @@ describe("deleteParticipant (force=true)", () => {
     expect(transactionMock).not.toHaveBeenCalled()
   })
 
-  it("executes transaction and deletes participant", async () => {
+  it("lehnt einen falschen Nachnamen ab, ohne zu löschen", async () => {
+    getAuthSessionMock.mockResolvedValue(adminSession)
+    const result = await deleteParticipant("p1", true, "Birk")
+    expect(result).toEqual({
+      error: "Der eingegebene Nachname stimmt nicht mit dem Teilnehmer überein.",
+    })
+    expect(transactionMock).not.toHaveBeenCalled()
+  })
+
+  it("lehnt ohne Nachnamen ab, ohne zu löschen", async () => {
     getAuthSessionMock.mockResolvedValue(adminSession)
     const result = await deleteParticipant("p1", true)
+    expect(result).toEqual({
+      error: "Der eingegebene Nachname stimmt nicht mit dem Teilnehmer überein.",
+    })
+    expect(transactionMock).not.toHaveBeenCalled()
+  })
+
+  it("executes transaction and deletes participant", async () => {
+    getAuthSessionMock.mockResolvedValue(adminSession)
+    const result = await deleteParticipant("p1", true, ` ${inactiveParticipant.lastName} `)
     expect(result).toEqual({ success: true })
     expect(transactionMock).toHaveBeenCalledOnce()
     expect(txMock.participant.delete).toHaveBeenCalledWith({ where: { id: "p1" } })
@@ -204,7 +222,7 @@ describe("deleteParticipant (force=true)", () => {
   it("returns error when transaction throws", async () => {
     getAuthSessionMock.mockResolvedValue(adminSession)
     transactionMock.mockRejectedValue(new Error("DB error"))
-    const result = await deleteParticipant("p1", true)
+    const result = await deleteParticipant("p1", true, inactiveParticipant.lastName)
     expect(result).toEqual({ error: "Teilnehmer konnte nicht gelöscht werden." })
   })
 })

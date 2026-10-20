@@ -24,8 +24,10 @@ export function DeleteEventSeriesButton({ seriesId, competitionId, name, teams }
   function handleDelete() {
     startTransition(async () => {
       const result = await deleteEventSeries(seriesId, competitionId)
-      if ("error" in result && typeof result.error === "string") {
-        toast.error(result.error)
+      if ("error" in result) {
+        toast.error(typeof result.error === "string" ? result.error : "Fehler beim Löschen.")
+      } else {
+        toast.success("Ergebnis gelöscht.")
       }
     })
   }

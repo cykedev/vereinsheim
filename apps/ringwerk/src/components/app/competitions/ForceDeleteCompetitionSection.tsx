@@ -37,6 +37,7 @@ export function ForceDeleteCompetitionSection({ competitionId, competitionName, 
       if ("error" in result) {
         toast.error(typeof result.error === "string" ? result.error : "Fehler beim Löschen.")
       } else {
+        toast.success("Wettbewerb gelöscht.")
         router.push("/competitions")
       }
     })

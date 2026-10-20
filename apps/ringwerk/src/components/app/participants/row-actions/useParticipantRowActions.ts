@@ -19,7 +19,9 @@ export function useParticipantRowActions(participantId: string, isActive: boolea
 
   function handleDelete(force: boolean) {
     startTransition(async () => {
-      const result = await deleteParticipant(participantId, force)
+      const result = force
+        ? await deleteParticipant(participantId, true, confirmName)
+        : await deleteParticipant(participantId, false)
       if ("error" in result) {
         toast.error(typeof result.error === "string" ? result.error : "Fehler beim Löschen.")
       } else {

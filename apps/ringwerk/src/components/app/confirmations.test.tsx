@@ -228,6 +228,7 @@ describe("Ergebnisse", () => {
     await confirmAt(0)
     expect(mocks.deleteEventSeries).toHaveBeenCalledTimes(1)
     expect(mocks.deleteEventSeries).toHaveBeenCalledWith("s1", "c1")
+    expect(mocks.toastSuccess).toHaveBeenCalledWith("Ergebnis gelöscht.")
     onlyCalled(mocks.deleteEventSeries)
   })
 
@@ -243,6 +244,7 @@ describe("Ergebnisse", () => {
     await confirmAt(0)
     expect(mocks.deleteSeasonSeries).toHaveBeenCalledTimes(1)
     expect(mocks.deleteSeasonSeries).toHaveBeenCalledWith("s2", "c1")
+    expect(mocks.toastSuccess).toHaveBeenCalledWith("Serie gelöscht.")
     onlyCalled(mocks.deleteSeasonSeries)
   })
 })
@@ -301,7 +303,8 @@ describe("Teilnehmer (Liste aller Teilnehmer)", () => {
     show(ParticipantRowActions, { ...row, isActive: false, isAdmin: true, competitionsCount: 3 })
     await confirmAt(1)
     expect(mocks.deleteParticipant).toHaveBeenCalledTimes(1)
-    expect(mocks.deleteParticipant).toHaveBeenCalledWith("p1", true)
+    // der getippte Nachname geht mit, die Action prüft ihn selbst
+    expect(mocks.deleteParticipant).toHaveBeenCalledWith("p1", true, " Birke ")
     onlyCalled(mocks.deleteParticipant)
   })
 })
@@ -446,6 +449,7 @@ describe("Wettbewerbe", () => {
     await confirmAt(0)
     expect(mocks.forceDeleteCompetition).toHaveBeenCalledTimes(1)
     expect(mocks.forceDeleteCompetition).toHaveBeenCalledWith("c1", "Rundenwettkampf 2026")
+    expect(mocks.toastSuccess).toHaveBeenCalledWith("Wettbewerb gelöscht.")
     expect(mocks.push).toHaveBeenCalledWith("/competitions")
     onlyCalled(mocks.forceDeleteCompetition)
   })
