@@ -91,16 +91,18 @@ Tooltip), „Best. RT“ ohne Duell, Platz eines Zurückgezogenen (Tooltip), Dir
 Freilos, Paarung mit Zurückgezogenem nicht gewertet, Uhr einer offenen Paarung (Tooltip), Liga ohne Stichtag
 (Tooltip). Der Strich in den leeren Feldern der Bracket-Vorschau bleibt und nennt den Grund nur als Tooltip. Gründe
 ohne Zahl und ohne Wort aus `DATA_WORDS`, damit der Abgleich die Datenfolge jeder Seite gleich liest. Die PDFs
-bleiben, wie sie sind.
+bleiben, wie sie sind. Zurückgezogene zeigen beim Ringteiler und beim Direktvergleich den Strich wie im PDF. Die
+Vorschauen auf Start und in der Liste der Wettbewerbe (`CompetitionPreview`, `help={false}`) zeigen kein „?“ und
+klassisch keine Zeile „Sortierung“.
 
 ## Skriptprüfung
 
 `pnpm --filter ringwerk pruefen` startet den gebauten Stand auf :3013 gegen die Prüfdatenbank (vorher `pruefdaten`)
 und prüft als Admin, Sportleitung und Mitglied: Rahmen und Leisten je Rolle, Profil, Breiten 375 bis 1280 px ohne
 seitliches Scrollen, die untere Leiste, die Reiter, das Bracket, keine versteckte Kopie im Hintergrund, Darstellung
-ohne Aufblitzen, den Fokus in acht Dialogen mit Folgen (nur geöffnet und mit Escape geschlossen) und die Hilfe: jedes
-sichtbare „?“ öffnet sein Thema, am Telefon und am Desktop, ohne die Tabelle umzuordnen, jedes Thema hat ein „?“,
-jedes „–“ nennt seinen Grund. Mit `--bilder` dazu die Blätter der Hilfe. Es schreibt nichts. Dazu vor jedem Merge und Release der Abgleich aus [[ringwerk-pruefbestand]].
+ohne Aufblitzen, den Fokus in acht Dialogen mit Folgen (nur geöffnet und mit Escape geschlossen) und die Hilfe:
+Jedes sichtbare „?“ öffnet sein Thema, am Telefon und am Desktop, ohne die Tabelle umzuordnen. Jedes Thema hat ein
+„?“, jedes „–“ nennt seinen Grund. Mit `--bilder` dazu die Blätter der Hilfe. Es schreibt nichts. Dazu vor jedem Merge und Release der Abgleich aus [[ringwerk-pruefbestand]].
 
 ## Drift-Gate
 

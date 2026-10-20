@@ -101,6 +101,9 @@ MOC-Hub der Ringwerk-App (Liga & Wettkämpfe). Führt die App-Guides und die fac
 - **Höchste Ringzahl in Duellen fest 100 oder 109** (`MAX_RINGS`), in Saison und Event 10 oder 10,9 je Schuss. Gleich
   bei zehn Schuss, bei anderer Schusszahl verschiebt es den Ringteiler zwischen ganzen Ringen und Zehnteln in einem
   gemischten Wettbewerb.
+- **Faktor einer Standarddisziplin hält nur bis zum nächsten Start:** `ensureSystemDisciplines`
+  (`lib/disciplines/systemDisciplines.ts`) setzt bei jedem Start den Faktor der vier Standarddisziplinen per Upsert
+  zurück. Eine Änderung unter „Disziplinen“ gilt so bis zum nächsten Deploy. Gefunden im Review der Hilfe (WD0).
 - **Faktor nachträglich geändert:** Gespeicherte Ringteiler behalten den alten Faktor, der korrigierte Teiler der
   Saison rechnet live mit dem neuen. Den Faktor sperren, sobald die Disziplin Ergebnisse hat, oder neu rechnen.
 - **„Best. RT“ bei Wertung nach Ringen:** Die Tabelle der Liga zeigt immer den besten Ringteiler, den Gleichstand

@@ -1404,3 +1404,5 @@ rechnet, und meiden die Fälle, in denen es anders zeigt als rechnet.
   immer in den Stechschuss, ein Wiederholungsduell gibt es nicht.
 - **„Best. RT“ bei Wertung nach Ringen.** Die Tabelle der Liga zeigt immer den besten Ringteiler. Bei Wertung nach
   Ringen entscheiden aber die meisten Ringe den Gleichstand, und die zeigt sie nicht.
+- **Faktor der Standarddisziplinen.** Ringwerk setzt den Faktor der vier Standarddisziplinen bei jedem Start zurück
+  (`ensureSystemDisciplines`). Eine Änderung in der App hält nur bis zum nächsten Deploy.
