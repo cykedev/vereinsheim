@@ -51,10 +51,10 @@ export async function deleteCard(cardId: string): Promise<ActionResult> {
     const card = await ownCard(tx, cardId, ownerId)
     if (!card) return MISSING
     if (card.deletedAt) return "Diese Scheibe ist schon gelöscht."
-    // die Bedingung auch im Befehl selbst (§9)
+    // die Bedingung auch im Befehl selbst (§9); Löschen beendet das Teilen, Wiederherstellen bringt den Link nicht zurück
     const { count } = await tx.card.updateMany({
       where: { id: cardId, ownerId, ownerPending: false, deletedAt: null },
-      data: { deletedAt: new Date() },
+      data: { deletedAt: new Date(), shareId: null, sharedAt: null },
     })
     return count === 1 ? null : MISSING
   })

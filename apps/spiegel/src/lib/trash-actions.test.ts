@@ -65,6 +65,26 @@ describe("deleteCard", () => {
     expect(await deleteCard(id)).toEqual({ error: "Diese Scheibe ist schon gelöscht." })
   })
 
+  it("beendet das Teilen; nach dem Wiederherstellen bleibt der Link aus", async () => {
+    asOwner()
+    const id = await card()
+    await db.card.update({
+      where: { id },
+      data: { shareId: randomUUID(), sharedAt: new Date() },
+    })
+    expect(await deleteCard(id)).toEqual({ success: true })
+    const share = { shareId: true, sharedAt: true } as const
+    expect(await db.card.findUnique({ where: { id }, select: share })).toEqual({
+      shareId: null,
+      sharedAt: null,
+    })
+    expect(await restoreCard(id)).toEqual({ success: true })
+    expect(await db.card.findUnique({ where: { id }, select: share })).toEqual({
+      shareId: null,
+      sharedAt: null,
+    })
+  })
+
   it("fremde, wartende und unbekannte Scheiben nicht; ohne Sitzung nichts", async () => {
     asOwner()
     const foreign = await card({ ownerId: otherId })
