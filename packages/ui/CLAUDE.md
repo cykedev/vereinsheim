@@ -29,7 +29,7 @@ für alle drei Apps (ADR-015/016). Jede Komponente gibt es nur einmal — Drift 
 | `design2/page`            | `Page`: Breite, Rand und Platz über der unteren Leiste einer Seite                                                              |
 | `design2/page-header`     | `PageHeader`: Seitenkopf mit Titel in der Schrift der Marke, Satz und Aktion                                                    |
 | `design2/card`            | `Card` und ihre Teile wie `ui/card`, in den Maßen von Spiegel (16 px Rand, 12 px Abstand, große Radien)                         |
-| `design2/decision-dialog` | `DecisionDialog`, `DecisionBody`, Typ `Decision`: Folgen vor dem Bestätigen                                                     |
+| `design2/decision-dialog` | `DecisionDialog` (mit `children`, `confirmDisabled`), `DecisionBody`, `NoticeDialog`, Typ `Decision`: Folgen vor dem Bestätigen |
 | `design2/undo`            | `UndoHost`, `useUndo`, `UndoBar`, Typ `UndoResult`: „Gelöscht · Rückgängig“                                                     |
 | `design2/help`            | `HelpText`, `HELP_FIELDS`, `HelpIcon`, `HelpButton`, `HelpBody` (ohne Client-Grenze)                                            |
 | `design2/help-sheet`      | `HelpSheet` (Erklärung als Blatt), `HelpProvider`, `useHelp`                                                                    |

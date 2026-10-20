@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef } from "react"
+import { useRef, type ReactNode } from "react"
 
 import {
   AlertDialog,
@@ -73,17 +73,24 @@ function Section({ title, lines, marker }: { title: string; lines: string[]; mar
  * aus den Folgen der App (`consequences.ts`). Der Fokus steht zuerst auf „Abbrechen“; der ganze Inhalt ist als Beschreibung
  * mit dem Dialog verknüpft. Beim Schließen kehrt der Fokus zu dem Element zurück, das ihn beim Öffnen hatte: Ohne
  * `AlertDialogTrigger` gäbe Radix ihn an einen leeren Trigger, und er fiele auf <body>.
+ *
+ * `children` steht unter den Folgen, etwa ein Feld, in das zur Bestätigung ein Name getippt wird; `confirmDisabled`
+ * sperrt den Knopf, bis es stimmt.
  */
 export function DecisionDialog({
   decision,
   open,
   onOpenChange,
   onConfirm,
+  confirmDisabled = false,
+  children,
 }: {
   decision: Decision
   open: boolean
   onOpenChange: (open: boolean) => void
   onConfirm: () => void
+  confirmDisabled?: boolean
+  children?: ReactNode
 }) {
   const opener = useRef<HTMLElement | null>(null)
   return (
@@ -112,10 +119,12 @@ export function DecisionDialog({
             <DecisionBody decision={decision} />
           </div>
         </AlertDialogDescription>
+        {children}
         <AlertDialogFooter>
           <AlertDialogCancel>Abbrechen</AlertDialogCancel>
           <AlertDialogAction
             onClick={onConfirm}
+            disabled={confirmDisabled}
             className={
               decision.destructive
                 ? // Design 2 kennt kein `destructive-foreground`; `primary-foreground` ist auf `destructive` in
@@ -126,6 +135,49 @@ export function DecisionDialog({
           >
             {decision.confirmLabel}
           </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  )
+}
+
+/**
+ * Ein Hinweis statt einer Entscheidung: Die Aktion geht hier nicht, und der Text sagt, warum und was stattdessen geht.
+ * Nur ein Knopf „Schließen“. Fokus wie bei `DecisionDialog`.
+ */
+export function NoticeDialog({
+  title,
+  text,
+  open,
+  onOpenChange,
+}: {
+  title: string
+  text: string
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}) {
+  const opener = useRef<HTMLElement | null>(null)
+  return (
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      <AlertDialogContent
+        onOpenAutoFocus={() => {
+          opener.current =
+            document.activeElement instanceof HTMLElement ? document.activeElement : null
+        }}
+        onCloseAutoFocus={(event) => {
+          event.preventDefault()
+          if (opener.current?.isConnected) opener.current.focus()
+          opener.current = null
+        }}
+      >
+        <AlertDialogHeader>
+          <AlertDialogTitle>{title}</AlertDialogTitle>
+          <AlertDialogDescription className="text-sm text-foreground-2">
+            {text}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Schließen</AlertDialogCancel>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
