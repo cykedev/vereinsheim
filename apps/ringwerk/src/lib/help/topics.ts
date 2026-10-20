@@ -31,7 +31,7 @@ export const HELP_TOPICS = {
     what: "In einem gemischten Wettbewerb schießen die Teilnehmer verschiedene Disziplinen. Ihre Teiler sind nicht direkt vergleichbar. Ringwerk nimmt deshalb jeden Teiler mal den Faktor seiner Disziplin. Luftgewehr hat den Faktor 1,0. Luftpistole hat als Standard 0,333. Ein Teiler von 90 mit der Luftpistole zählt dann wie 30,0.",
     read: "Kleiner ist besser, wie beim Teiler. Die Spalte zeigt den Teiler nach der Korrektur. Der Ringteiler rechnet mit demselben Wert.",
     caution:
-      "Die Korrektur gilt nur in gemischten Wettbewerben. Hat ein Wettbewerb eine feste Disziplin, zählt der Teiler vom Ausdruck. Den Faktor jeder Disziplin legt die Sportleitung in der App unter „Disziplinen“ fest.",
+      "Die Korrektur gilt nur in gemischten Wettbewerben. Hat ein Wettbewerb eine feste Disziplin, zählt der Teiler vom Ausdruck. Die Faktoren stehen in der App unter „Disziplinen“.",
     formula: "korrigierter Teiler = Teiler × Faktor der Disziplin.",
   },
   "season-order": {
@@ -54,7 +54,7 @@ export const HELP_TOPICS = {
     short:
       "Siege zählen zuerst. Bei Gleichstand entscheiden die Sätze, dann der direkte Vergleich.",
     what: "Jede Begegnung besteht aus mehreren Duellen, den Sätzen. Einen Satz gewinnt, wer in der Wertung des Wettbewerbs besser ist, zum Beispiel mit dem kleineren Ringteiler. Ist ein Satz auch nach den Stichkriterien gleich, zählt er für keinen. Wer mehr Sätze gewinnt, gewinnt die Begegnung. Steht es nach allen Sätzen gleich, entscheidet ein Stechschuss: ein Schuss in Zehnteln, der höhere Wert gewinnt. Die gleichen Sätze zählen dann für den Sieger.",
-    read: "Die Tabelle ordnet nach Siegen, dann nach der Satzdifferenz, dann nach den gewonnenen Sätzen. Stehen danach zwei oder mehr gleich, entscheidet der direkte Vergleich: ihre Begegnungen untereinander. Die letzte Spalte zeigt ihn. Bei zweien steht dort das Ergebnis ihrer Begegnung und der Gegner. Bei dreien oder mehr steht ihre Bilanz untereinander. „offen“ heißt: Eine Begegnung untereinander fehlt noch. „ausgeglichen“ heißt: Alle haben untereinander dieselbe Bilanz, etwa weil jeder einmal gewonnen hat. In beiden Fällen ordnet der Name. Wer nur noch am Namen hängt, teilt sich den Platz.",
+    read: "Die Tabelle ordnet nach Siegen, dann nach der Satzdifferenz, dann nach den gewonnenen Sätzen. Stehen danach zwei oder mehr gleich, entscheidet der direkte Vergleich: ihre Begegnungen untereinander. Die Spalte „Direktvergleich“ zeigt ihn. Am Telefon steht sie nicht da, im PDF schon. Bei zweien steht dort das Ergebnis ihrer Begegnung und der Gegner. Bei dreien oder mehr steht ihre Bilanz untereinander. „offen“ heißt: Eine Begegnung untereinander fehlt noch. „ausgeglichen“ heißt: Alle haben untereinander dieselbe Bilanz, etwa weil jeder einmal gewonnen hat. Bei „offen“ zählt bis dahin die Bilanz der gespielten Begegnungen. Wo die Bilanz gleich ist, ordnet der Name. Wer nur noch am Namen hängt, teilt sich den Platz.",
     caution:
       "Begegnungen mit einem zurückgezogenen Teilnehmer zählen für niemanden. Zurückgezogene stehen durchgestrichen am Ende.",
   },
@@ -62,7 +62,7 @@ export const HELP_TOPICS = {
     title: "Tabelle der Liga",
     short:
       "Punkte zählen zuerst. Bei Gleichstand entscheiden der direkte Vergleich und dann der beste Ringteiler.",
-    what: "Jede Paarung ist ein Duell über eine Serie. Ein Sieg bringt 2 Punkte, ein Unentschieden 1 Punkt, eine Niederlage keinen. Ein Freilos zählt wie ein Sieg. Wer das Duell gewinnt, hängt von der Wertung ab. Beim Ringteiler gewinnt der kleinere, bei Gleichstand gewinnen mehr Ringe, dann der kleinere Teiler. Bei Ringen gewinnen mehr Ringe, dann der kleinere Teiler. Beim Teiler gewinnt der kleinere Teiler, dann mehr Ringe.",
+    what: "Jede Paarung ist ein Duell über eine Serie. Ein Sieg bringt 2 Punkte, ein Unentschieden 1 Punkt, eine Niederlage keinen. Ein Freilos bringt 2 Punkte. In „Sp.“ und „S“ zählt es nicht mit. Wer das Duell gewinnt, hängt von der Wertung ab. Beim Ringteiler gewinnt der kleinere, bei Gleichstand gewinnen mehr Ringe, dann der kleinere Teiler. Bei Ringen gewinnen mehr Ringe, dann der kleinere Teiler. Beim Teiler gewinnt der kleinere Teiler, dann mehr Ringe.",
     read: "„Sp.“ sind gespielte Duelle. „S“, „U“ und „N“ sind Siege, Unentschieden und Niederlagen. Bei gleichen Punkten zählen zuerst die Punkte aus den Duellen dieser Teilnehmer untereinander. Dann zählt der beste Ringteiler aus allen Duellen, bei Wertung nach Ringen die meisten Ringe. Ist auch das gleich, teilen sich beide den Platz.",
     caution:
       "Paarungen mit einem zurückgezogenen Teilnehmer zählen nicht. Zurückgezogene stehen durchgestrichen am Ende.",
@@ -71,7 +71,7 @@ export const HELP_TOPICS = {
     title: "Playoffs",
     short:
       "Die Besten der Gruppenphase spielen gegeneinander. Wer ein Match verliert, scheidet aus.",
-    what: "Die Playoffs beginnen, wenn alle Paarungen der Gruppenphase gespielt sind. Je nach Wettbewerb kommen die besten 16 ins Achtelfinale, die besten 8 ins Viertelfinale oder die besten 4 ins Halbfinale. Zurückgezogene zählen nicht mit. Gesetzt wird nach der Tabelle der Gruppenphase. Der Erste trifft auf den Letzten der Qualifizierten, der Zweite auf den Vorletzten, und so weiter. Teilen sich zwei einen Platz, zählt die Reihenfolge, in der die Tabelle sie zeigt.",
+    what: "Die Sportleitung startet die Playoffs, wenn alle Paarungen der Gruppenphase gespielt sind. Je nach Wettbewerb kommen die besten 16 ins Achtelfinale, die besten 8 ins Viertelfinale oder die besten 4 ins Halbfinale. Zurückgezogene zählen nicht mit. Gesetzt wird nach der Tabelle der Gruppenphase. Der Erste trifft auf den Letzten der Qualifizierten, der Zweite auf den Vorletzten, und so weiter. Teilen sich zwei einen Platz, zählt die Reihenfolge, in der die Tabelle sie zeigt.",
     read: "Ein Match gewinnt, wer zuerst genug Duelle gewinnt. Bei Best-of-5 sind das 3. Die Zahlen auf der Karte sind die gewonnenen Duelle. Ein Duell gewinnt der kleinere Ringteiler. Bei Gleichstand gewinnen mehr Ringe, dann der kleinere Teiler. Ist auch das gleich, zählt das Duell für keinen, und ein weiteres folgt. Für jede neue Runde setzt Ringwerk neu: Der Beste der Verbliebenen nach der Tabelle der Gruppenphase trifft auf den Schwächsten.",
     caution:
       "Die Paarungen einer Runde stehen erst fest, wenn die Runde davor fertig ist. Die Namen, die der Turnierbaum vorher in den leeren Feldern zeigt, sind nur eine Vorschau. Die neue Setzung kann anders ausfallen.",
