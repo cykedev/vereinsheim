@@ -187,8 +187,8 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
   Apps und in den geteilten Paketen `packages/ui/src`, `packages/shot-ui/src`, `packages/shot-help/src` (ohne Tests):
   Palette-Klassen und `dark:`-Varianten (§4, Farbe aus den Tokens), Opazitäts-Modifier auf `text-muted-foreground`
   (§3), inline `new Intl.*` und `toLocale*String()` (§6), ASCII-Ellipsen (§3), „… →"-Buttons (§7) und Symbolknöpfe
-  (`size="icon…"`) mit einer Klasse `size-`, `h-` oder `w-` von 1 bis 5, also unter 24 px (§10; der kleinste ist
-  `icon-xs`). Ausgenommen von `dark:` sind nur die shadcn-Primitives in `packages/ui/src/ui` und Ringwerks
+  (`<Button size="icon…">`, auch über mehrere Zeilen) mit einer Klasse `size-`, `h-` oder `w-` unter 6, auch halbe
+  Stufen, `px` und `[Npx]` unter 24 px (§10; der kleinste ist `icon-xs`). Rohe `<button>` sieht diese Regel nicht. Ausgenommen von `dark:` sind nur die shadcn-Primitives in `packages/ui/src/ui` und Ringwerks
   `components/ui/checkbox.tsx`, die ihre Varianten aus dem Generator mitbringen.
   Die Muster sind bewusst eng: ein „→" **darf** als Inhalt in Protokolltexten stehen. Wer eine Regel ergänzt, prüft sie
   gegen eine Probe-Datei mit absichtlichen Verstößen **und** gegen den grünen Ist-Zustand.
@@ -315,7 +315,7 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
 - Alle drei Apps laufen auf Design 2: Spiegel als Vorbild, Treffsicher ([[treffsicher-design2]]) und Ringwerk
   ([[ringwerk-design2]]) seit Oktober 2026. Das Drift-Gate prüft sie mit denselben Regeln (§8).
 - **Symbolknöpfe** sind mindestens 24 px groß (`size="icon-xs"`), sonst `icon-sm` (32 px), `icon` (36 px) oder
-  `icon-lg` (40 px); eine Klasse, die sie kleiner macht, ist verboten (Gate).
+  `icon-lg` (40 px); eine Klasse, die sie kleiner macht, ist verboten (Gate für `<Button size="icon…">`, §8).
 - **Kein Knopf ohne Folge:** Jede Aktion, die bestätigt, ablehnt, entfernt, widerruft, umstellt oder ein Konto ändert, fragt
   über `DecisionDialog` (`@vereinsheim/ui/design2/decision-dialog`) und sagt in Alltagsworten, worum es geht, was vorher zu
   prüfen ist, was dann passiert, was **nicht** passiert und wie es rückgängig geht. Die Texte stehen an einer Stelle

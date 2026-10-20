@@ -3,7 +3,7 @@
 #
 # FATAL (Exit 1):
 #   - die app-lokalen Shared-Dateien weichen zwischen den Apps ab
-#   - Verstöße gegen die Regeln von Design 2 (ADR-030/032, vault/conventions.md §3/§4/§6/§7) in den Apps
+#   - Verstöße gegen die Regeln von Design 2 (ADR-030/032, vault/conventions.md §3/§4/§6/§7/§10) in den Apps
 #     und in den geteilten UI-Paketen
 # WARN (nicht blockierend):
 #   - gemeinsame Dependencies haben unterschiedliche Versionen
@@ -111,7 +111,7 @@ targets=()
 for app in "${APPS[@]}"; do targets+=("apps/$app/src"); done
 targets+=(packages/ui/src packages/shot-ui/src packages/shot-help/src)
 
-# hits <dir> <grep-Argumente…>: Treffer ohne Tests
+# hits <dir> <grep-Optionen…> <muster>: Treffer ohne Tests (Optionen vor dem Muster, auch unter POSIXLY_CORRECT)
 hits() {
   local dir="$1"
   shift
@@ -122,12 +122,12 @@ for dir in "${targets[@]}"; do
   name="${dir%/src}"
 
   # §4: Farbe traegt Bedeutung ueber Tokens, nicht ueber die Tailwind-Palette.
-  n=$(hits "$dir" -E '\b(text|bg|border|ring|fill|stroke)-(emerald|amber|yellow|orange|sky|blue|green|red|rose|slate|zinc|gray|purple)-[0-9]' --include='*.tsx' --include='*.ts')
+  n=$(hits "$dir" --include='*.tsx' --include='*.ts' -E '\b(text|bg|border|ring|fill|stroke)-(emerald|amber|yellow|orange|sky|blue|green|red|rose|slate|zinc|gray|purple)-[0-9]')
   [[ "$n" != "0" ]] && report "$name" "$n Palette-Klasse(n) statt semantischem Token (§4)"
 
   # §4: Farbe kommt aus den Tokens, die hell und dunkel je ihren Wert haben; dark:-Varianten
   # umgehen sie.
-  n=$({ grep -rn 'dark:' "$dir" --include='*.tsx' 2>/dev/null || true; } \
+  n=$({ grep -rn --include='*.tsx' 'dark:' "$dir" 2>/dev/null || true; } \
     | { grep -vE '\.test\.tsx:|packages/ui/src/ui/|apps/ringwerk/src/components/ui/checkbox\.tsx' || true; } | wc -l | tr -d ' ')
   [[ "$n" != "0" ]] && report "$name" "$n dark:-Variante(n) — Farbe aus den Tokens (§4)"
 
@@ -136,7 +136,7 @@ for dir in "${targets[@]}"; do
   [[ "$n" != "0" ]] && report "$name" "$n Opazitaets-Modifier auf text-muted-foreground (§3)"
 
   # §6: Formatierung nur ueber @vereinsheim/lib/format.
-  n=$(hits "$dir" 'new Intl\.' --include='*.ts' --include='*.tsx')
+  n=$(hits "$dir" --include='*.ts' --include='*.tsx' 'new Intl\.')
   [[ "$n" != "0" ]] && report "$name" "$n inline new Intl.* — @vereinsheim/lib/format nutzen (§6)"
   n=$(hits "$dir" -E '\.toLocale(Date|Time)?String\(')
   [[ "$n" != "0" ]] && report "$name" "$n toLocale*String() — formatiert in der Locale des Browsers (§6)"
@@ -146,16 +146,18 @@ for dir in "${targets[@]}"; do
   [[ "$n" != "0" ]] && report "$name" "$n ASCII-'...' statt '…' (§3)"
 
   # §7: Die Karte bzw. ihr Titel ist der Link — kein zusaetzlicher "Details →".
-  n=$(hits "$dir" -E '>[^<]*(Details|Rangliste|Mehr)\s*→' --include='*.tsx')
+  n=$(hits "$dir" --include='*.tsx' -E '>[^<]*(Details|Rangliste|Mehr)\s*→')
   [[ "$n" != "0" ]] && report "$name" "$n '… →'-Button statt klickbarer Karte (§7)"
 
   # §10: Symbolknoepfe sind mindestens 24 px gross (size="icon-xs"). Gesucht wird im ganzen
-  # oeffnenden <Button …>-Tag, auch ueber mehrere Zeilen, nach einer Klasse size-/h-/w- von 1 bis 5.
+  # oeffnenden <Button …>-Tag, auch ueber mehrere Zeilen und ueber {…}-Ausdruecke mit ">" hinweg, nach
+  # einer Klasse size-/h-/w- unter 6 (auch halbe Stufen, px und [Npx] unter 24 px). Rohe <button>
+  # sieht die Regel nicht.
   n=$(find "$dir" -name '*.tsx' ! -name '*.test.tsx' -print0 2>/dev/null | xargs -0 perl -0777 -ne '
-    while (/<Button\b((?:=>|[^>])*?)>/gs) {
+    while (/<Button\b((?:\{(?:[^{}]|\{[^{}]*\})*\}|"[^"]*"|[^>{"])*)>/gs) {
       my $tag = $1;
-      next unless $tag =~ /\bsize="icon/;
-      $n++ if $tag =~ /(?:^|[\s"'\''`{])(?:size|h|w)-[1-5](?=[\s"'\''`}]|$)/;
+      next unless $tag =~ /\bsize=(?:\{\s*)?["'\''`]icon/;
+      $n++ if $tag =~ /(?:^|[\s"'\''`{])(?:size|h|w)-(?:[0-5](?:\.5)?|px|\[(?:1?\d|2[0-3])px\])(?=[\s"'\''`}]|$)/;
     }
     END { print $n // 0 }' 2>/dev/null | awk '{s+=$1} END {print s+0}')
   [[ "$n" != "0" ]] && report "$name" "$n Symbolknopf/-knoepfe unter 24 px (§10)"

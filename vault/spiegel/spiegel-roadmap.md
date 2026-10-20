@@ -232,7 +232,6 @@ Was zwischen den Features offen ist und keinen eigenen Abschnitt hat.
   übernimmt.
 - **PDFs in Design 2:** Die PDFs von Ringwerk und Treffsicher zeigen Ringwerte schon in den Farben von Spiegel
   (`SCORE_HEX`), Aufbau und Schrift sind noch die alten.
-
 - **Liste als Filter im Fortschritt** und auf der Seite einer Scheibe eine Verknüpfung „alle Scheiben dieser Liste“.
 - **Start des Laufs nach falscher Uhr** (SF-79): Startet die Brücke mit falscher Uhr, trägt `runStartedAt` den ganzen
   Lauf die falsche Zeit. Die Regel „ein neuer Lauf macht alles davor endgültig“ greift dann nicht, Scheiben von vor dem

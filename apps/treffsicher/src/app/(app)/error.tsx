@@ -3,7 +3,8 @@
 import { useEffect } from "react"
 import { Button } from "@vereinsheim/ui/button"
 
-// Fehler beim Rendern (etwa die Datenbank nicht erreichbar); „Nochmal“ rendert die Seite neu
+// Fehler beim Rendern im Rahmen der App (etwa die Datenbank nicht erreichbar); „Nochmal“ rendert die Seite neu. Ein
+// <div>, kein <main>: das <main> stellt der Rahmen (`AppFrame`).
 export default function ErrorPage({
   error,
   reset,
@@ -16,7 +17,7 @@ export default function ErrorPage({
   }, [error])
 
   return (
-    <main className="mx-auto grid max-w-2xl gap-3 px-4 py-12">
+    <div className="mx-auto grid max-w-2xl gap-3 px-4 py-12">
       <h1 className="font-display text-[1.7rem] leading-tight font-bold tracking-tight">
         Etwas ist schiefgegangen
       </h1>
@@ -26,6 +27,6 @@ export default function ErrorPage({
       <Button className="h-10 justify-self-start" onClick={reset}>
         Nochmal
       </Button>
-    </main>
+    </div>
   )
 }
