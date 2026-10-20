@@ -272,7 +272,7 @@ export async function sharedCard(db: Db, shareId: string): Promise<PageCard | nu
 }
 
 /** der Link einer eigenen Scheibe; null, wenn sie nicht geteilt ist */
-export async function cardShare(
+export async function ownCardShare(
   db: Db,
   query: { cardId: string; ownerId: string }
 ): Promise<{ shareId: string; sharedAtMs: number } | null> {

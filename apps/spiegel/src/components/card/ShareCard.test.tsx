@@ -1,8 +1,10 @@
 import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 
-import { ShareCard } from "./ShareCard"
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: () => {} }) }))
+
+const { ShareCard } = await import("./ShareCard")
 
 const ID = "3f2b8c1e-9a4d-4e7b-8c2a-1d5e6f7a8b9c"
 const render = (share: { shareId: string; sharedAtMs: number } | null) =>

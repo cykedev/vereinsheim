@@ -5,7 +5,7 @@ import { generateSeason } from "../../../test/generate"
 import { createTestSite, type TestSite } from "../../../test/fixtures"
 
 import { writeRevision } from "./cards"
-import { cardShare, cardWithShots, sharedCard } from "./reads"
+import { cardWithShots, ownCardShare, sharedCard } from "./reads"
 
 const db = createPrismaClient()
 let site: TestSite
@@ -98,13 +98,13 @@ describe("sharedCard", () => {
   })
 })
 
-describe("cardShare", () => {
+describe("ownCardShare", () => {
   it("der Link einer eigenen Scheibe mit Tag des Teilens; nichts für ungeteilte und fremde", async () => {
-    expect(await cardShare(db, { cardId: ids.shared, ownerId: site.ownerId })).toEqual({
+    expect(await ownCardShare(db, { cardId: ids.shared, ownerId: site.ownerId })).toEqual({
       shareId: links.shared,
       sharedAtMs: Date.UTC(2026, 9, 20, 12),
     })
-    expect(await cardShare(db, { cardId: ids.unshared, ownerId: site.ownerId })).toBeNull()
-    expect(await cardShare(db, { cardId: ids.foreign, ownerId: site.ownerId })).toBeNull()
+    expect(await ownCardShare(db, { cardId: ids.unshared, ownerId: site.ownerId })).toBeNull()
+    expect(await ownCardShare(db, { cardId: ids.foreign, ownerId: site.ownerId })).toBeNull()
   })
 })

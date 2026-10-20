@@ -9,8 +9,9 @@ import { VISIBLE_CARD } from "@/lib/db/visible"
 import type { ActionResult } from "@/lib/types"
 
 // Teilen einer eigenen Scheibe per Link: Prüfung und Änderung in einer Transaktion unter der Sperre der Zeile (§9).
-// Kein `revalidatePath`: Danach scrollte Next zum Anker der Adresse; der Abschnitt „Teilen“ hält den Zustand aus dem
-// Ergebnis.
+// Kein `revalidatePath`: Danach scrollt Next zum Anker der Adresse. Der Abschnitt „Teilen“ zeigt das Ergebnis sofort und
+// rechnet die Seite über `router.refresh()` neu. Sitzung und Kennung prüfen die Actions im `try`: Sie geben immer ein
+// `ActionResult` zurück, auch wenn die Datenbank nicht antwortet.
 
 const MISSING = "Diese Scheibe gibt es nicht mehr."
 const RETRY = "Das geht gerade nicht. Lade die Seite neu."
@@ -23,10 +24,10 @@ export interface Share {
 
 /** teilt die eigene sichtbare Scheibe; ist sie schon geteilt, bleibt ihr Link */
 export async function shareCard(cardId: string): Promise<ActionResult<Share>> {
-  const ownerId = await shooterId()
-  if (!ownerId) return { error: RETRY }
-  if (!isCardIdInput(cardId)) return { error: MISSING }
   try {
+    const ownerId = await shooterId()
+    if (!ownerId) return { error: RETRY }
+    if (!isCardIdInput(cardId)) return { error: MISSING }
     const share = await db.$transaction(async (tx): Promise<Share | null> => {
       if (!(await lockCard(tx, cardId))) return null
       const card = await tx.card.findFirst({
@@ -52,10 +53,10 @@ export async function shareCard(cardId: string): Promise<ActionResult<Share>> {
 
 /** beendet das Teilen der eigenen Scheibe; der Link geht danach nicht mehr, neu teilen gibt einen neuen */
 export async function stopSharingCard(cardId: string): Promise<ActionResult> {
-  const ownerId = await shooterId()
-  if (!ownerId) return { error: RETRY }
-  if (!isCardIdInput(cardId)) return { error: MISSING }
   try {
+    const ownerId = await shooterId()
+    if (!ownerId) return { error: RETRY }
+    if (!isCardIdInput(cardId)) return { error: MISSING }
     const { count } = await db.card.updateMany({
       where: { id: cardId, ownerId },
       data: { shareId: null, sharedAt: null },

@@ -1,6 +1,7 @@
 "use client"
 
 import { Copy, Send, Share2, Unlink } from "lucide-react"
+import { useRouter } from "next/navigation"
 import { useEffect, useState, useSyncExternalStore, useTransition } from "react"
 
 import { getErrorMessage } from "@vereinsheim/lib/forms/fieldErrors"
@@ -32,8 +33,8 @@ const BUTTON =
 
 /**
  * Teilen am Ende der Seite einer Scheibe, über dem Löschen: erstellt nach der Rückfrage einen Link, zeigt ihn mit
- * Kopieren und Senden und beendet das Teilen wieder. Den Stand hält die Seite (`onChange`, aus dem Ergebnis der Actions,
- * ohne Neuladen), damit auch das Löschen ihn kennt.
+ * Kopieren und Senden und beendet das Teilen wieder. Den Stand hält die Seite (`onChange`, sofort aus dem Ergebnis der
+ * Actions), damit auch das Löschen ihn kennt; danach rechnet sie über `router.refresh()` neu.
  */
 export function ShareCard({
   cardId,
@@ -60,6 +61,7 @@ export function ShareCard({
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const [pending, startTransition] = useTransition()
+  const router = useRouter()
   const origin = useOrigin()
   const canSend = useCanSend()
   const link = share ? `${origin}${sharePath(share.shareId)}` : null
@@ -161,15 +163,21 @@ export function ShareCard({
             setError(null)
             if (stopping) {
               const result = await stopSharingCard(cardId)
-              if ("error" in result)
+              if ("error" in result) {
                 setError(getErrorMessage(result) ?? "Das Teilen ließ sich nicht beenden.")
-              else onChange(null)
-              return
+                return
+              }
+              onChange(null)
+            } else {
+              const result = await shareCard(cardId)
+              if ("error" in result || !result.data) {
+                setError(getErrorMessage(result) ?? "Der Link ließ sich nicht erstellen.")
+                return
+              }
+              onChange(result.data)
             }
-            const result = await shareCard(cardId)
-            if ("error" in result || !result.data)
-              setError(getErrorMessage(result) ?? "Der Link ließ sich nicht erstellen.")
-            else onChange(result.data)
+            // die Seite neu vom Server, damit Zurück und Vor den neuen Stand zeigen (der Cache von Next hielte den alten)
+            router.refresh()
           })
         }}
       />

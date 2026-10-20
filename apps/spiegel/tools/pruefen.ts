@@ -829,6 +829,17 @@ async function sharing(browser: Browser, page: Page, href: string) {
     link
   )
 
+  // Zurück bringt die Seite aus dem Cache von Next: Sie muss den Link zeigen, nicht den Stand des ersten Besuchs
+  await page.goto(`${BASE}/cards`)
+  await page.ev(`history.back()`)
+  check(
+    "Teilen: nach Weg und Zurück steht der Link weiter da",
+    await page.waitFor(
+      `location.pathname === ${JSON.stringify(href.split("?")[0])} && txt($("[data-share-link]")) === ${JSON.stringify(link)}`
+    ),
+    await page.ev<string>(`location.pathname + " " + txt($("[data-share-card]"))`)
+  )
+
   const guest = await browser.newPage({ isolated: true })
   try {
     await guest.viewport(1280, 900)

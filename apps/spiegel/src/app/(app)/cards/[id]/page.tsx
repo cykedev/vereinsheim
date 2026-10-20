@@ -7,7 +7,7 @@ import { routeFromUrl } from "@vereinsheim/shot-ui/nav/routes"
 import { CardScreen } from "@/components/card/CardScreen"
 import { requireSession } from "@/lib/auth-helpers"
 import { db } from "@/lib/db"
-import { cardShare, cardWithShots, ownCardState, ownerCards } from "@/lib/db/reads"
+import { cardWithShots, ownCardShare, ownCardState, ownerCards } from "@/lib/db/reads"
 import { pageContext } from "@/lib/page-context"
 import { listable, withFamily } from "@/lib/pages"
 import { searchOf } from "@/lib/search"
@@ -55,7 +55,7 @@ export default async function CardRoutePage({
       own={{
         near: ids ? neighbours(ids, id) : null,
         paging: ids !== null,
-        share: await cardShare(db, { cardId: id, ownerId }),
+        share: await ownCardShare(db, { cardId: id, ownerId }),
       }}
       path={`/cards/${encodeURIComponent(id)}`}
       context={context}

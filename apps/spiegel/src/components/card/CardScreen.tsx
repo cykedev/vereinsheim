@@ -186,8 +186,15 @@ export function CardScreen({
   }
   const [explain, setExplain] = useState(false)
   const owner = own !== null
-  // der Link zum Teilen: Teilen und Löschen sehen denselben Stand, ohne die Seite neu zu laden
-  const [share, setShare] = useState(own?.share ?? null)
+  // der Link zum Teilen: Teilen und Löschen sehen denselben Stand, sofort aus dem Ergebnis der Action. Kommt vom Server
+  // ein anderer (nach `router.refresh()`, nach Zurück aus dem Cache von Next mit dem Stand des ersten Besuchs), gilt er
+  const serverShare = own?.share ?? null
+  const [share, setShare] = useState(serverShare)
+  const [seenShare, setSeenShare] = useState(serverShare)
+  if (serverShare?.shareId !== seenShare?.shareId) {
+    setSeenShare(serverShare)
+    setShare(serverShare)
+  }
   const hash = useHash(ownPath)
   // der Reiter: gewählt, sonst aus dem Anker beim Laden, sonst der erste (eine Scheibe beginnt mit ihm)
   const [chosenTab, setChosenTab] = useState<AnalysisTab | null>(null)

@@ -75,7 +75,7 @@ describe("shareCard", () => {
     })
     expect((await sharedCard(db, first.data.shareId))?.id).toBe(id)
     expect(await shareCard(id)).toEqual(first)
-    // kein `revalidatePath`: Danach scrollte Next zum Anker der Adresse
+    // kein `revalidatePath`: Danach scrollt Next zum Anker der Adresse
     expect(mocks.revalidated).toBe(before)
   })
 
