@@ -382,7 +382,7 @@ async function leagueClassic(run: Run, ui: Ui, db: Db, pass: Pass) {
   await run.step("Spielplan erzeugen und neu erzeugen", async () => {
     await ui.open(`/competitions/${id}/schedule`)
     await ui.press("Spielplan generieren")
-    await ui.pressInDialog("Generieren")
+    await ui.pressInDialog("Spielplan generieren")
     await ui.dialogClosed("Dialog schließt nicht")
     await ui.until(`$$("main tr").length > 10`, "kein Spielplan")
     const first = await db.matchup.findMany({
@@ -392,7 +392,7 @@ async function leagueClassic(run: Run, ui: Ui, db: Db, pass: Pass) {
     expect(first.length === 30, "6 Teilnehmer Hin und Rück: 30 Paarungen", first.length)
     await ui.open(`/competitions/${id}/schedule`)
     await ui.press("Spielplan neu generieren")
-    await ui.pressInDialog("Neu generieren")
+    await ui.pressInDialog("Spielplan neu generieren")
     await ui.dialogClosed("Dialog schließt nicht")
     await ui.page.wait(500)
     const second = await db.matchup.findMany({
@@ -495,9 +495,9 @@ async function leagueClassic(run: Run, ui: Ui, db: Db, pass: Pass) {
     pass.role === "ADMIN" ? "erzwungen löschen" : "erzwungen löschen verweigert (Sportleitung)",
     async () => {
       await ui.open(`/competitions/${id}/edit`)
-      await ui.press("Wettbewerb endgültig löschen")
+      await ui.press("Wettbewerb mit allen Daten löschen")
       await ui.fill("confirm-competition-name", name)
-      await ui.pressInDialog("Endgültig löschen")
+      await ui.pressInDialog("Mit allen Daten löschen")
       if (pass.role === "ADMIN") {
         await ui.waitPath(/^\/competitions$/, "keine Rückkehr zur Liste")
         expect((await db.competition.count({ where: { name } })) === 0, "Wettbewerb weg")
@@ -512,11 +512,12 @@ async function leagueClassic(run: Run, ui: Ui, db: Db, pass: Pass) {
           left
         )
       } else {
+        // der Dialog schließt beim Bestätigen; die Ablehnung kommt als Meldung
         await ui.until(
-          `txt(dlg()).includes("Keine Berechtigung")`,
-          "keine Meldung „Keine Berechtigung“ im Dialog"
+          `toasts().some((t) => t.includes("Keine Berechtigung"))`,
+          "keine Meldung „Keine Berechtigung“"
         )
-        await ui.pressInDialog("Abbrechen")
+        await ui.dialogClosed("Dialog schließt nicht")
         expect((await db.competition.count({ where: { name } })) === 1, "Wettbewerb bleibt")
         expect((await db.series.count({ where: { matchupId } })) === 2, "Serien bleiben")
       }
@@ -563,7 +564,7 @@ async function leagueBestOf(run: Run, ui: Ui, db: Db, pass: Pass, base: string) 
     await enroll(ui, db, id, players)
     await ui.open(`/competitions/${id}/schedule`)
     await ui.press("Spielplan generieren")
-    await ui.pressInDialog("Generieren")
+    await ui.pressInDialog("Spielplan generieren")
     await ui.dialogClosed("Dialog schließt nicht")
     expect(
       (await db.matchup.count({ where: { competitionId: id } })) === 6,
@@ -797,11 +798,11 @@ async function leagueBestOf(run: Run, ui: Ui, db: Db, pass: Pass, base: string) 
 
   await run.step("abschließen und archivieren", async () => {
     await pressOnCard(ui, name, "Als abgeschlossen markieren")
-    await ui.pressInDialog("Bestätigen")
+    await ui.pressInDialog("Abschließen")
     await ui.dialogClosed("Dialog schließt nicht")
     expect((await competitionNamed(db, name)).status === "COMPLETED", "abgeschlossen")
     await pressOnCard(ui, name, "Archivieren")
-    await ui.pressInDialog("Bestätigen")
+    await ui.pressInDialog("Archivieren")
     await ui.dialogClosed("Dialog schließt nicht")
     expect((await competitionNamed(db, name)).status === "ARCHIVED", "archiviert")
   })
@@ -968,7 +969,7 @@ async function eventFlow(run: Run, ui: Ui, db: Db, pass: Pass, base: string) {
     }
     await ui.open(`/competitions/${id}/series`)
     await ui.pressIn([labelOf(enrolled[0])], "Ergebnis löschen")
-    await ui.pressInDialog("Löschen")
+    await ui.pressInDialog("Ergebnis löschen")
     await ui.dialogClosed("Dialog schließt nicht")
     expect(
       (await db.series.count({ where: { competitionId: id } })) === enrolled.length - 1,
@@ -1117,7 +1118,7 @@ async function deleteFlow(run: Run, ui: Ui, db: Db, pass: Pass) {
     await ui.waitPath(/^\/competitions\/[^/]+\/participants$/, "keine Weiterleitung")
     await competitionNamed(db, name)
     await pressOnCard(ui, name, "Löschen")
-    await ui.pressInDialog("Löschen")
+    await ui.pressInDialog("Wettbewerb löschen")
     await ui.dialogClosed("Dialog schließt nicht")
     expect((await db.competition.count({ where: { name } })) === 0, "gelöscht")
   })

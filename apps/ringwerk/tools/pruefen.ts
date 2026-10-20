@@ -59,6 +59,8 @@ const SAMPLES = [
 ] as const
 /** ein Spielplan ohne Ergebnis: „Spielplan neu generieren“ öffnet einen Dialog */
 const REGENERATE = "L-DRR-6 · L1 Spielplan, kein Ergebnis (Hin/Rück)"
+/** eine fertige Gruppenphase: „Playoffs starten“ öffnet einen Dialog */
+const START = "L-BO5-4 · L4 Gruppenphase fertig (Best-of-5)"
 
 /** mit `--bilder`: je Phase eine Seite eines Wettbewerbs (Name im Prüfbestand, Seite) */
 const PHASES: readonly (readonly [string, string, string])[] = [
@@ -302,7 +304,12 @@ async function main() {
     })
     const url = pruefDatabaseUrl(env)
     const ids = await competitionIds(url, [
-      ...new Set([...SAMPLES.map((s) => s.name), REGENERATE, ...PHASES.map(([, name]) => name)]),
+      ...new Set([
+        ...SAMPLES.map((s) => s.name),
+        REGENERATE,
+        START,
+        ...PHASES.map(([, name]) => name),
+      ]),
     ])
     const competitionPaths = SAMPLES.flatMap((s) =>
       s.pages.map((p) => `/competitions/${ids.get(s.name)}/${p}`)
@@ -339,15 +346,20 @@ async function main() {
       record(
         await themeNoFlash(page, { url: `${BASE}/competitions`, storageKey: "ringwerk-theme" })
       )
-      // nur öffnen und mit Escape schließen: der Prüfbestand bleibt unverändert
-      await page.goto(`${BASE}/competitions/${ids.get(REGENERATE)}/schedule`)
-      record(
-        await dialogFocus(
-          page,
-          `button("Spielplan neu generieren")`,
-          "Dialog „Spielplan neu generieren“"
-        )
-      )
+      // die Dialoge mit Folgen nur öffnen und mit Escape schließen: der Prüfbestand bleibt unverändert
+      const dialogs: readonly (readonly [string, string])[] = [
+        [`/competitions/${ids.get(REGENERATE)}/schedule`, "Spielplan neu generieren"],
+        [`/competitions/${ids.get(START)}/playoffs`, "Playoffs starten"],
+        [`/competitions/${ids.get(REGENERATE)}/edit`, "Wettbewerb mit allen Daten löschen"],
+        ["/competitions", "Als abgeschlossen markieren"],
+        ["/competitions", "Löschen"],
+        ["/participants", "Deaktivieren"],
+        ["/disciplines", "Löschen"],
+      ]
+      for (const [where, opener] of dialogs) {
+        await page.goto(`${BASE}${where}`)
+        record(await dialogFocus(page, `button(${JSON.stringify(opener)})`, `Dialog „${opener}“`))
+      }
     })
 
     const pictureDir = process.argv.indexOf("--bilder")
