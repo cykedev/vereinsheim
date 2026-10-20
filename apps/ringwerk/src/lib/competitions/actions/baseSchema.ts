@@ -139,11 +139,6 @@ export const BaseSchema = z
       (v) => (v === "none" || v === "" || !v ? null : v),
       z.enum(PLAYOFF_SCORING_MODES).nullable()
     ),
-    finaleHasSuddenDeath: z
-      .string()
-      .nullable()
-      .optional()
-      .transform((v) => v === "true" || v === "on"),
     // Liga – BEST_OF_SINGLE group-phase config
     leagueFormat: z.preprocess(
       (v) => (!v || v === "" ? "DOUBLE_ROUND_ROBIN" : v),

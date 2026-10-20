@@ -68,7 +68,6 @@ export type CompetitionDetail = {
   finalePrimary: ScoringMode
   finaleTiebreaker1: ScoringMode | null
   finaleTiebreaker2: ScoringMode | null
-  finaleHasSuddenDeath: boolean | null
   // Liga – BEST_OF_SINGLE group-phase config
   leagueFormat: LeagueFormat
   groupBestOf: number | null

@@ -238,11 +238,14 @@ describe("Halbfinale und Finale", () => {
     ])
   })
 
-  it("Finale ohne Verlängerung im Regelwerk: kein weiteres Duell", async () => {
+  it("Finale mit abgeschalteter Verlängerung in der alten Spalte: die Verlängerung kommt trotzdem", async () => {
     rules.finaleHasSuddenDeath = false
     bracket({ final: true, finalDuels: ["A"] })
     expect(await save(duelOf("f", 1), "DRAW")).toEqual({ success: true })
-    expect(duels("f")).toHaveLength(1)
+    expect(duels("f").map((d) => [d.duelNumber, d.isSuddenDeath, d.isCompleted])).toEqual([
+      [1, false, true],
+      [2, true, false],
+    ])
   })
 })
 
@@ -302,11 +305,14 @@ describe("neue Eingaben", () => {
     expect(duels("f")).toHaveLength(2)
   })
 
-  it("Finale ohne Verlängerung im Regelwerk: ein neues Unentschieden bringt kein Duell", async () => {
+  it("Finale mit abgeschalteter Verlängerung in der alten Spalte: ein Unentschieden bringt die Verlängerung", async () => {
     rules.finaleHasSuddenDeath = false
     final(["offen"])
     expect(await save(duelOf("f", 1), "DRAW")).toEqual({ success: true })
-    expect(finalDuels()).toEqual([[1, false, true]])
+    expect(finalDuels()).toEqual([
+      [1, false, true],
+      [2, true, false],
+    ])
   })
 
   it("schreibt das Protokoll in der Transaktion", async () => {

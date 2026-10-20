@@ -1242,7 +1242,7 @@ Ort: Spaltenkopf „Best. Teiler korr.“ (Saison) und „Teiler korr.“ (Event
   nicht direkt vergleichbar. Ringwerk nimmt deshalb jeden Teiler mal den Faktor seiner Disziplin. Luftgewehr hat den
   Faktor 1,0. Luftpistole hat als Standard 0,333. Ein Teiler von 90 mit der Luftpistole zählt dann wie 30,0.
 - **So liest du es:** Kleiner ist besser, wie beim Teiler. Die Spalte zeigt den Teiler nach der Korrektur. Der
-  Ringteiler rechnet mit demselben Wert.
+  Ringteiler rechnet mit demselben Wert. Auch ein Duell vergleicht den korrigierten Teiler.
 - **Vorsicht:** Die Korrektur gilt nur in gemischten Wettbewerben. Hat ein Wettbewerb eine feste Disziplin, zählt der
   Teiler vom Ausdruck. Die Faktoren stehen in der App unter „Disziplinen“.
 - **Formel für Profis:** korrigierter Teiler = Teiler × Faktor der Disziplin.
@@ -1342,7 +1342,7 @@ Ort: Überschrift „Finale“ unter dem Turnierbaum, „?“ rechts.
   Karte des Finales nennt sie: „Primär“ ist das Hauptkriterium, „TB“ ein Stichkriterium.
 - **So liest du es:** Steht es nach allen Kriterien gleich, folgt die Verlängerung: ein weiteres Duell nach denselben
   Regeln. Das geht so weiter, bis ein Duell entscheidet. Wer es gewinnt, hat das Finale gewonnen.
-- **Vorsicht:** Die Verlängerung gibt es, wenn der Wettbewerb sie vorsieht. Das ist der Standard.
+- **Vorsicht:** Die Verlängerung hat keine Grenze. Es folgen so viele Duelle, bis eines entscheidet.
 
 ---
 

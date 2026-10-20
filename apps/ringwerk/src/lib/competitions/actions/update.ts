@@ -74,7 +74,6 @@ export async function updateCompetition(
     finalePrimary: formData.get("finalePrimary"),
     finaleTiebreaker1: formData.get("finaleTiebreaker1"),
     finaleTiebreaker2: formData.get("finaleTiebreaker2"),
-    finaleHasSuddenDeath: formData.get("finaleHasSuddenDeath"),
     leagueFormat: formData.get("leagueFormat"),
     groupBestOf: formData.get("groupBestOf"),
     groupPlayAllDuels: formData.get("groupPlayAllDuels"),
@@ -157,8 +156,6 @@ export async function updateCompetition(
         type === "LEAGUE" && !playoffsStarted ? (parsed.data.finaleTiebreaker1 ?? null) : undefined,
       finaleTiebreaker2:
         type === "LEAGUE" && !playoffsStarted ? (parsed.data.finaleTiebreaker2 ?? null) : undefined,
-      finaleHasSuddenDeath:
-        type === "LEAGUE" && !playoffsStarted ? parsed.data.finaleHasSuddenDeath : undefined,
       // BEST_OF_SINGLE group-phase config — locked once a schedule exists
       // groupPlayAllDuels DB default is false; explicitly persist the form value
       leagueFormat: type === "LEAGUE" && !rulesetLocked ? parsed.data.leagueFormat : undefined,

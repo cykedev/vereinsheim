@@ -23,7 +23,6 @@ export interface MatchRules {
   finalePrimary: ScoringMode
   finaleTiebreaker1: ScoringMode | null
   finaleTiebreaker2: ScoringMode | null
-  finaleHasSuddenDeath: boolean | null
 }
 
 /** Eine Meldung für den User; die Transaktion wird zurückgerollt, nichts ist gespeichert. */
@@ -136,8 +135,8 @@ interface Settle {
  * Duelle eines entschiedenen Matches entfernen, das nächste Duell anlegen und bei geändertem Ausgang die Folge-Runde
  * entfernen. Läuft in der Transaktion der Änderung.
  *
- * Ein Finale, das nach mindestens einem fertigen Duell offen ist und kein offenes Duell hat, bekommt die Verlängerung
- * (mit `finaleHasSuddenDeath`): In der Oberfläche lässt sich dort kein Duell anlegen. Ohne fertiges Duell legt man das
+ * Ein Finale, das nach mindestens einem fertigen Duell offen ist und kein offenes Duell hat, bekommt immer die
+ * Verlängerung: In der Oberfläche lässt sich dort kein Duell anlegen. Ohne fertiges Duell legt man das
  * erste Duell über „Duell anlegen“ an.
  */
 async function settle(tx: Tx, match: MatchScope, rules: MatchRules, opts: Settle) {
@@ -165,7 +164,7 @@ async function settle(tx: Tx, match: MatchScope, rules: MatchRules, opts: Settle
       select: { id: true },
     })
     if (open.length === 0) {
-      if (isFinal && completed > 0 && (rules.finaleHasSuddenDeath ?? true)) {
+      if (isFinal && completed > 0) {
         await addDuel(tx, match.id, true)
       } else if (!isFinal && opts.newDraw) {
         await addDuel(tx, match.id, false)

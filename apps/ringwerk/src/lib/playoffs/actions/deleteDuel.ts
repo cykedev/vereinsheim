@@ -33,7 +33,6 @@ export async function deleteLastPlayoffDuel(duelId: string): Promise<ActionResul
               finalePrimary: true,
               finaleTiebreaker1: true,
               finaleTiebreaker2: true,
-              finaleHasSuddenDeath: true,
             },
           },
           participantAId: true,
@@ -59,7 +58,6 @@ export async function deleteLastPlayoffDuel(duelId: string): Promise<ActionResul
         finalePrimary: match.competition.finalePrimary,
         finaleTiebreaker1: match.competition.finaleTiebreaker1 ?? null,
         finaleTiebreaker2: match.competition.finaleTiebreaker2 ?? null,
-        finaleHasSuddenDeath: match.competition.finaleHasSuddenDeath,
       },
       audit: (deleted) => {
         const resultA = deleted.results.find((r) => r.participantId === match.participantAId)

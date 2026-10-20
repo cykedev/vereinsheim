@@ -47,7 +47,6 @@ export async function createCompetition(
     finalePrimary: formData.get("finalePrimary"),
     finaleTiebreaker1: formData.get("finaleTiebreaker1"),
     finaleTiebreaker2: formData.get("finaleTiebreaker2"),
-    finaleHasSuddenDeath: formData.get("finaleHasSuddenDeath"),
     leagueFormat: formData.get("leagueFormat"),
     groupBestOf: formData.get("groupBestOf"),
     groupPlayAllDuels: formData.get("groupPlayAllDuels"),
@@ -115,7 +114,6 @@ export async function createCompetition(
       finalePrimary: type === "LEAGUE" ? parsed.data.finalePrimary : undefined,
       finaleTiebreaker1: type === "LEAGUE" ? (parsed.data.finaleTiebreaker1 ?? null) : null,
       finaleTiebreaker2: type === "LEAGUE" ? (parsed.data.finaleTiebreaker2 ?? null) : null,
-      finaleHasSuddenDeath: type === "LEAGUE" ? parsed.data.finaleHasSuddenDeath : null,
       // BEST_OF_SINGLE group-phase config — only meaningful for LEAGUE
       // groupPlayAllDuels DB default is false; explicitly set true for BEST_OF_SINGLE
       leagueFormat: type === "LEAGUE" ? parsed.data.leagueFormat : undefined,

@@ -81,7 +81,6 @@ export async function buildLeague(ctx: Context, s: LeagueScenario, start: Date):
         finaleTiebreaker1:
           s.finale?.tiebreaker1 ?? (s.phase === "L6-stichkriterium" ? "TEILER" : "none"),
         finaleTiebreaker2: "none",
-        finaleHasSuddenDeath: true,
         isPublic: s.public !== undefined,
         publicSlug: slug,
         publicPassword: s.public?.startsWith("passwort") ? ctx.publicPassword : undefined,

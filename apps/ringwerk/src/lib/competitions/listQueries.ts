@@ -50,7 +50,6 @@ export async function getCompetitionById(id: string): Promise<CompetitionDetail 
       finalePrimary: true,
       finaleTiebreaker1: true,
       finaleTiebreaker2: true,
-      finaleHasSuddenDeath: true,
       leagueFormat: true,
       groupBestOf: true,
       groupPlayAllDuels: true,

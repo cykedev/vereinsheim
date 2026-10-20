@@ -13,7 +13,7 @@ import { playoffFailureMessage, recordDuelResult } from "./duelMutations"
  * Speichert das Ergebnis eines Playoff-Einzel-Duells (neu oder als Korrektur).
  * Siegstand und Status zählt `recordDuelResult` in der Transaktion aus den Duellen. Ändert eine Korrektur den Ausgang,
  * entfällt die ganze nächste Runde (sie wird über `advanceRound` neu gesetzt).
- * Finale offen ohne offenes Duell: Sudden-Death-Duell (mit `finaleHasSuddenDeath`).
+ * Finale offen ohne offenes Duell: Duell der Verlängerung.
  * Bei VF/HF-Unentschieden: legt automatisch das nächste Duell an.
  */
 export async function savePlayoffDuelResult(
@@ -46,7 +46,6 @@ export async function savePlayoffDuelResult(
               finalePrimary: true,
               finaleTiebreaker1: true,
               finaleTiebreaker2: true,
-              finaleHasSuddenDeath: true,
             },
           },
         },
@@ -63,7 +62,6 @@ export async function savePlayoffDuelResult(
     finalePrimary: match.competition.finalePrimary,
     finaleTiebreaker1: match.competition.finaleTiebreaker1 ?? null,
     finaleTiebreaker2: match.competition.finaleTiebreaker2 ?? null,
-    finaleHasSuddenDeath: match.competition.finaleHasSuddenDeath,
   }
   const finaleTeilerNeeded =
     isFinal &&

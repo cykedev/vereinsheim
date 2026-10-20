@@ -1102,6 +1102,18 @@ describe("createCompetition — BEST_OF_SINGLE", () => {
     )
   })
 
+  it("schreibt die Verlängerung im Finale nicht: es gibt sie immer, die Spalte bleibt, wie sie ist", async () => {
+    const fd = makeFormData({
+      name: "Liga",
+      type: "LEAGUE",
+      scoringMode: "RINGTEILER",
+      disciplineId: "d1",
+      finaleHasSuddenDeath: "false",
+    })
+    expect(await createCompetition(null, fd)).toMatchObject({ success: true })
+    expect(competitionCreateMock.mock.calls[0][0].data).not.toHaveProperty("finaleHasSuddenDeath")
+  })
+
   it("lehnt geraden groupBestOf-Wert ab", async () => {
     const fd = makeFormData({
       name: "Fehlerhaft",
@@ -1208,6 +1220,16 @@ describe("updateCompetition — BEST_OF_SINGLE", () => {
         }),
       })
     )
+  })
+
+  it("lässt die Spalte der Verlängerung im Finale unverändert, auch wenn das Feld fehlt oder mitkommt", async () => {
+    const variants: Record<string, string>[] = [{}, { finaleHasSuddenDeath: "false" }]
+    for (const extra of variants) {
+      competitionUpdateMock.mockClear()
+      const fd = makeFormData({ name: "Liga", scoringMode: "RINGTEILER", ...extra })
+      expect(await updateCompetition("c1", null, fd)).toMatchObject({ success: true })
+      expect(competitionUpdateMock.mock.calls[0][0].data).not.toHaveProperty("finaleHasSuddenDeath")
+    }
   })
 
   it("sperrt leagueFormat-Änderung sobald ein Spielplan existiert", async () => {

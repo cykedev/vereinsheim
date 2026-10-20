@@ -10,9 +10,6 @@ export function useRulesetState(competition?: CompetitionDetail) {
   const [finaleTiebreaker2, setFinaleTiebreaker2] = useState<string>(
     competition?.finaleTiebreaker2 ?? "none"
   )
-  const [finaleHasSuddenDeath, setFinaleHasSuddenDeath] = useState<boolean>(
-    competition?.finaleHasSuddenDeath ?? true
-  )
 
   const [leagueFormat, setLeagueFormat] = useState<string>(
     competition?.leagueFormat ?? "DOUBLE_ROUND_ROBIN"
@@ -50,8 +47,6 @@ export function useRulesetState(competition?: CompetitionDetail) {
     setFinaleTiebreaker1,
     finaleTiebreaker2,
     setFinaleTiebreaker2,
-    finaleHasSuddenDeath,
-    setFinaleHasSuddenDeath,
     leagueFormat,
     setLeagueFormat,
     groupBestOf,

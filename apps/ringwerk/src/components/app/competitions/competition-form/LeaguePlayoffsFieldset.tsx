@@ -1,6 +1,5 @@
 import { Lock } from "lucide-react"
 import { Label } from "@vereinsheim/ui/label"
-import { Checkbox } from "@/components/ui/checkbox"
 import {
   Select,
   SelectContent,
@@ -32,8 +31,6 @@ export function LeaguePlayoffsFieldset({ form, playoffsStarted }: Props) {
     setFinaleTiebreaker1,
     finaleTiebreaker2,
     setFinaleTiebreaker2,
-    finaleHasSuddenDeath,
-    setFinaleHasSuddenDeath,
   } = form
 
   return (
@@ -149,24 +146,6 @@ export function LeaguePlayoffsFieldset({ form, playoffsStarted }: Props) {
           Bei Gleichstand nach Tiebreaker 1 (nur wenn TB1 gesetzt).
         </p>
       </div>
-      <div className="flex items-center gap-2">
-        <Checkbox
-          id="finaleHasSuddenDeath"
-          name="finaleHasSuddenDeath"
-          checked={finaleHasSuddenDeath}
-          onCheckedChange={(checked: boolean | "indeterminate") =>
-            setFinaleHasSuddenDeath(checked === true)
-          }
-        />
-        <Label htmlFor="finaleHasSuddenDeath" className="cursor-pointer">
-          Finale: Gleichstand per Stechschuss
-        </Label>
-      </div>
-      <input
-        type="hidden"
-        name="finaleHasSuddenDeath"
-        value={finaleHasSuddenDeath ? "true" : "false"}
-      />
     </fieldset>
   )
 }

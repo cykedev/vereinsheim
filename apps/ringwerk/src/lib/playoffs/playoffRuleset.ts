@@ -16,8 +16,6 @@ export type PlayoffRuleset = {
   finaleTiebreaker1: ScoringMode | null
   /** Optionaler Tiebreaker 2. null = kein TB. Setzt TB1 voraus. */
   finaleTiebreaker2: ScoringMode | null
-  /** Ob Sudden-Death nach Gleichstand im Finale gespielt wird. Default: true */
-  finaleHasSuddenDeath: boolean | null
 }
 
 /**

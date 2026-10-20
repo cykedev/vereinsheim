@@ -29,7 +29,7 @@ export const HELP_TOPICS = {
     short:
       "Der Teiler mal dem Faktor der Disziplin. So lassen sich verschiedene Disziplinen vergleichen.",
     what: "In einem gemischten Wettbewerb schießen die Teilnehmer verschiedene Disziplinen. Ihre Teiler sind nicht direkt vergleichbar. Ringwerk nimmt deshalb jeden Teiler mal den Faktor seiner Disziplin. Luftgewehr hat den Faktor 1,0. Luftpistole hat als Standard 0,333. Ein Teiler von 90 mit der Luftpistole zählt dann wie 30,0.",
-    read: "Kleiner ist besser, wie beim Teiler. Die Spalte zeigt den Teiler nach der Korrektur. Der Ringteiler rechnet mit demselben Wert.",
+    read: "Kleiner ist besser, wie beim Teiler. Die Spalte zeigt den Teiler nach der Korrektur. Der Ringteiler rechnet mit demselben Wert. Auch ein Duell vergleicht den korrigierten Teiler.",
     caution:
       "Die Korrektur gilt nur in gemischten Wettbewerben. Hat ein Wettbewerb eine feste Disziplin, zählt der Teiler vom Ausdruck. Die Faktoren stehen in der App unter „Disziplinen“.",
     formula: "korrigierter Teiler = Teiler × Faktor der Disziplin.",
@@ -82,7 +82,7 @@ export const HELP_TOPICS = {
       "Ein Duell entscheidet. Bei Gleichstand zählen die Stichkriterien, dann folgt die Verlängerung.",
     what: "Im Finale schießen beide eine Serie. Es zählt zuerst das Hauptkriterium des Wettbewerbs, als Standard die Ringe. Ist es gleich, entscheidet das erste Stichkriterium, dann das zweite. Beides legt der Wettbewerb fest. Die Karte des Finales nennt sie: „Primär“ ist das Hauptkriterium, „TB“ ein Stichkriterium.",
     read: "Steht es nach allen Kriterien gleich, folgt die Verlängerung: ein weiteres Duell nach denselben Regeln. Das geht so weiter, bis ein Duell entscheidet. Wer es gewinnt, hat das Finale gewonnen.",
-    caution: "Die Verlängerung gibt es, wenn der Wettbewerb sie vorsieht. Das ist der Standard.",
+    caution: "Die Verlängerung hat keine Grenze. Es folgen so viele Duelle, bis eines entscheidet.",
   },
 } as const satisfies Record<string, HelpText>
 
