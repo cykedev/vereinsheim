@@ -4,7 +4,7 @@ import {
   resolveBestOf,
   stechschussOutcome,
 } from "@/lib/scoring/bestOf"
-import { effectiveTeilerFaktor } from "@/lib/scoring/calculateScore"
+import { bestOfDuelSide } from "@/lib/matchups/outcome"
 import type { DuelSeries, BestOfStatus } from "@/lib/scoring/bestOf"
 import type { MatchResultSummary } from "@/lib/matchups/types"
 import type { ScoringMode } from "@/generated/prisma/client"
@@ -14,7 +14,6 @@ export function deriveMatchStatus(
   homeId: string,
   awayId: string,
   series: MatchResultSummary[],
-  disciplineId: string | null,
   scoringMode: ScoringMode,
   tiebreaker1: ScoringMode | null,
   tiebreaker2: ScoringMode | null,
@@ -34,14 +33,7 @@ export function deriveMatchStatus(
         tiebreakByDuel.set(s.duelNumber, { ...existing, awayRings: s.rings })
       }
     } else {
-      // Factor of 1 used here: both sides share the same factor, so outcomes
-      // are comparable even without the per-discipline factor for display.
-      const factor = effectiveTeilerFaktor(disciplineId, 1)
-      const entry: DuelSeries = {
-        rings: s.rings,
-        correctedTeiler: s.teiler * factor,
-        ringteiler: s.ringteiler,
-      }
+      const entry = bestOfDuelSide(s)
       const existing = regularByDuel.get(s.duelNumber) ?? {}
       if (s.participantId === homeId) {
         regularByDuel.set(s.duelNumber, { ...existing, home: entry })
@@ -68,7 +60,6 @@ export function countDuelWins(
   homeId: string,
   awayId: string,
   series: MatchResultSummary[],
-  disciplineId: string | null,
   scoringMode: ScoringMode,
   tiebreaker1: ScoringMode | null,
   tiebreaker2: ScoringMode | null,
@@ -77,12 +68,7 @@ export function countDuelWins(
   const byDuel = new Map<number, { home?: DuelSeries; away?: DuelSeries }>()
   for (const s of series) {
     if (s.duelNumber === null || s.isTiebreak) continue
-    const factor = effectiveTeilerFaktor(disciplineId, 1)
-    const entry: DuelSeries = {
-      rings: s.rings,
-      correctedTeiler: s.teiler * factor,
-      ringteiler: s.ringteiler,
-    }
+    const entry = bestOfDuelSide(s)
     const existing = byDuel.get(s.duelNumber) ?? {}
     if (s.participantId === homeId) {
       byDuel.set(s.duelNumber, { ...existing, home: entry })

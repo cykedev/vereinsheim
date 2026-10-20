@@ -101,7 +101,6 @@ export function BestOfMatchupTable({
               m.homeParticipant.id,
               m.awayParticipant!.id,
               m.results,
-              bestOfConfig.disciplineId,
               scoringMode,
               bestOfConfig.groupTiebreaker1,
               bestOfConfig.groupTiebreaker2,

@@ -4,7 +4,7 @@ import {
   resolveBestOf,
   stechschussOutcome,
 } from "@/lib/scoring/bestOf"
-import { effectiveTeilerFaktor } from "@/lib/scoring/calculateScore"
+import { bestOfDuelSide } from "@/lib/matchups/outcome"
 import type { DuelSeries } from "@/lib/scoring/bestOf"
 import type { ScoringMode } from "@/generated/prisma/client"
 import type { MatchResultSummary } from "@/lib/matchups/types"
@@ -22,7 +22,6 @@ export function deriveBestOfLabel(
   homeId: string,
   awayId: string,
   series: MatchResultSummary[],
-  disciplineId: string | null,
   scoringMode: ScoringMode,
   tiebreaker1: ScoringMode | null,
   tiebreaker2: ScoringMode | null,
@@ -42,12 +41,7 @@ export function deriveBestOfLabel(
         tiebreakByDuel.set(s.duelNumber, { ...existing, awayRings: s.rings })
       }
     } else {
-      const factor = effectiveTeilerFaktor(disciplineId, 1)
-      const entry: DuelSeries = {
-        rings: s.rings,
-        correctedTeiler: s.teiler * factor,
-        ringteiler: s.ringteiler,
-      }
+      const entry = bestOfDuelSide(s)
       const existing = regularByDuel.get(s.duelNumber) ?? {}
       if (s.participantId === homeId) {
         regularByDuel.set(s.duelNumber, { ...existing, home: entry })

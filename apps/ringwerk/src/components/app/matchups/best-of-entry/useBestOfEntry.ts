@@ -15,7 +15,6 @@ interface Args {
   awayParticipant: MatchupParticipant
   series: MatchResultSummary[]
   scoringMode: ScoringMode
-  disciplineId: string | null
   groupBestOf: number
   groupPlayAllDuels: boolean
   groupTiebreaker1: ScoringMode | null
@@ -28,7 +27,6 @@ export function useBestOfEntry({
   awayParticipant,
   series,
   scoringMode,
-  disciplineId,
   groupBestOf,
   groupPlayAllDuels,
   groupTiebreaker1,
@@ -46,7 +44,6 @@ export function useBestOfEntry({
     homeId,
     awayId,
     series,
-    disciplineId,
     scoringMode,
     groupTiebreaker1,
     groupTiebreaker2,
@@ -58,7 +55,6 @@ export function useBestOfEntry({
     homeId,
     awayId,
     series,
-    disciplineId,
     scoringMode,
     groupTiebreaker1,
     groupTiebreaker2,

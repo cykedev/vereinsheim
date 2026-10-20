@@ -1,5 +1,5 @@
 import { duelOutcome, stechschussOutcome } from "@/lib/scoring/bestOf"
-import { effectiveTeilerFaktor } from "@/lib/scoring/calculateScore"
+import { bestOfDuelSide } from "@/lib/matchups/outcome"
 import { formatRings, formatDecimal1 } from "@/lib/series/scoring-format"
 import type { MatchResultSummary } from "@/lib/matchups/types"
 import type { ScoringMode, ScoringType } from "@/generated/prisma/client"
@@ -10,7 +10,6 @@ interface Props {
   series: MatchResultSummary[]
   duelNumbers: number[]
   stechschussNumbers: number[]
-  disciplineId: string | null
   scoringMode: ScoringMode
   scoringType: ScoringType
   groupTiebreaker1: ScoringMode | null
@@ -24,7 +23,6 @@ export function RecordedDuelsList({
   series,
   duelNumbers,
   stechschussNumbers,
-  disciplineId,
   scoringMode,
   scoringType,
   groupTiebreaker1,
@@ -44,16 +42,8 @@ export function RecordedDuelsList({
         const outcome =
           homeS && awayS
             ? duelOutcome(
-                {
-                  rings: homeS.rings,
-                  correctedTeiler: homeS.teiler * effectiveTeilerFaktor(disciplineId, 1),
-                  ringteiler: homeS.ringteiler,
-                },
-                {
-                  rings: awayS.rings,
-                  correctedTeiler: awayS.teiler * effectiveTeilerFaktor(disciplineId, 1),
-                  ringteiler: awayS.ringteiler,
-                },
+                bestOfDuelSide(homeS),
+                bestOfDuelSide(awayS),
                 scoringMode,
                 groupTiebreaker1,
                 groupTiebreaker2

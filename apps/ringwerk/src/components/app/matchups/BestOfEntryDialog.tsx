@@ -64,7 +64,6 @@ export function BestOfEntryDialog({
     awayParticipant,
     series,
     scoringMode,
-    disciplineId,
     groupBestOf,
     groupPlayAllDuels,
     groupTiebreaker1,
@@ -142,7 +141,6 @@ export function BestOfEntryDialog({
               series={series}
               duelNumbers={duelNumbers}
               stechschussNumbers={stechschussNumbers}
-              disciplineId={disciplineId}
               scoringMode={scoringMode}
               scoringType={scoringType}
               groupTiebreaker1={groupTiebreaker1}

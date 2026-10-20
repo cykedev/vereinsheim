@@ -1,6 +1,7 @@
 import { Document, Page, View, Text } from "@react-pdf/renderer"
 import type { ReactElement } from "react"
 import type { ScoringMode } from "@/generated/prisma/client"
+import { bestOfDuelSide } from "@/lib/matchups/outcome"
 import type { MatchupListItem } from "@/lib/matchups/types"
 import type { BestOfStandingRow } from "@/lib/standings/queries"
 import {
@@ -88,14 +89,7 @@ function deriveSatzResult(
         tiebreakByDuel.set(s.duelNumber, { ...existing, awayRings: s.rings })
       }
     } else {
-      // For mixed competitions, teilerFaktor is stored in ringteiler already;
-      // correctedTeiler = teiler × 1 is sufficient for outcome comparison since
-      // both sides use the same factor — outcome only depends on relative values.
-      const entry: DuelSeries = {
-        rings: s.rings,
-        correctedTeiler: s.teiler,
-        ringteiler: s.ringteiler,
-      }
+      const entry = bestOfDuelSide(s)
       const existing = regularByDuel.get(s.duelNumber) ?? {}
       if (s.participantId === homeId) {
         regularByDuel.set(s.duelNumber, { ...existing, home: entry })
