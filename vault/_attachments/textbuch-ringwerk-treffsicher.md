@@ -1413,6 +1413,9 @@ Zurückgezogene zeigen beim Ringteiler und beim Direktvergleich den Strich wie i
 
 ## Ringwerk: Befunde beim Ablesen für WD0 (nicht Teil dieses Abschnitts)
 
+**Erledigt am 20. Oktober 2026** mit „Ringwerk: Wertung richtig anzeigen (B1–B7)“ unten, dazu der Sieger einer Paarung
+im PDF des Spielplans (B8).
+
 Beim Prüfen am Code aufgefallen. Keiner davon ändert sich mit der Hilfe. Die Texte oben beschreiben, was Ringwerk heute
 rechnet, und meiden die Fälle, in denen es anders zeigt als rechnet.
 

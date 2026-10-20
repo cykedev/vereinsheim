@@ -126,7 +126,6 @@ Konfigurierbare Regelsets pro Liga:
 | finalePrimary           | RINGS      | Hauptkriterium Finale (Pflicht)                                     |
 | finaleTiebreaker1       | —          | Erstes Tiebreaker-Kriterium bei Gleichstand (optional)              |
 | finaleTiebreaker2       | —          | Zweites Tiebreaker-Kriterium bei weiterem Gleichstand (optional)    |
-| finaleHasSuddenDeath    | true       | Sudden Death bei verbleibendem Gleichstand nach allen Kriterien     |
 
 Das Regelset wird **phasenweise gesperrt**: Gruppenphase/Format (Format, Wertungsmodus, Best-of, Schuss/Serie) sind **nach Spielplan-Generierung gesperrt**; die **Playoff-/Finale-Einstellungen** (Best-of, Viertel-/Achtelfinale, Finale-Kriterien) bleiben editierbar, **bis die Playoffs gestartet sind** (`playoffMatch.count > 0`). So lässt sich z. B. eine falsch gewählte Bracket-Größe noch korrigieren, bevor die K.-o.-Phase läuft.
 
@@ -243,7 +242,7 @@ beide Formate in `lib/playoffs/actions/seeding.test.ts`.
 | Regel            | Beschreibung                                                                                             |
 | ---------------- | -------------------------------------------------------------------------------------------------------- |
 | Wertung          | Kette: `finalePrimary` → `finaleTiebreaker1` → `finaleTiebreaker2` (default: nur Ringe, höchste gewinnt) |
-| Gleichstand      | Wenn nach allen Kriterien noch Gleichstand und `finaleHasSuddenDeath`: weiteres Duell bis Entscheid      |
+| Gleichstand      | Wenn nach allen Kriterien noch Gleichstand: weiteres Duell (Verlängerung) bis Entscheid, immer           |
 | Einrichtungszeit | 3 Minuten                                                                                                |
 | Probeschuss      | Keiner                                                                                                   |
 | Ansage           | Jeder Schuss einzeln                                                                                     |
@@ -314,7 +313,6 @@ BEST_OF_SINGLE ist ein alternatives Gruppenphase-Format für LEAGUE-Wettbewerbe.
 | groupPlayAllDuels   | true           | Alle N Duelle werden immer gespielt (im Formular/Standard auf true gesetzt; DB-Default false) |
 | groupTiebreaker1    | null           | Optionaler Override: Sekundärkriterium bei Duel-Wert-Gleichstand (sonst Stechschuss)          |
 | groupTiebreaker2    | null           | Optionaler Override: Tertiärkriterium                                                         |
-| groupHasSuddenDeath | true           | Stechschuss bei Paarungs-Gleichstand (Standard); false = Wiederholungsduell (wird gespeichert, aber noch nicht ausgewertet)                   |
 
 ### Spielplan
 

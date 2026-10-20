@@ -56,13 +56,13 @@ part_of: ["[[ringwerk]]"]
 | finalePrimary           | ScoringMode  | RINGS              | Hauptkriterium Finale (Pflicht); Default: nur Ringe, höchste gewinnt                                                |
 | finaleTiebreaker1       | ScoringMode? | null               | Tiebreaker-Kriterium 1 bei Gleichstand (optional)                                                                   |
 | finaleTiebreaker2       | ScoringMode? | null               | Tiebreaker-Kriterium 2 bei weiterem Gleichstand (optional)                                                          |
-| finaleHasSuddenDeath    | Boolean?     | true               | Sudden Death nach allen Kriterien noch Gleichstand                                                                  |
+| finaleHasSuddenDeath    | Boolean?     | true               | ungenutzt (E1, 20.10.2026): Ringwerk liest und schreibt die Spalte nicht mehr, die Verlängerung im Finale gibt es immer |
 | leagueFormat            | LeagueFormat | DOUBLE_ROUND_ROBIN | Spielplan-Format (Doppelrunde oder Einfachrunde Best-of-N)                                                          |
 | groupBestOf             | Int?         | 3                  | N in Best-of-N (muss ungerade sein); benötigte Siege = ceil(N/2)                                                    |
 | groupPlayAllDuels       | Boolean      | false (DB)         | Alle N Duelle immer austragen, kein vorzeitiger Abbruch; im Formular/Standard für BEST_OF_SINGLE auf true vorbelegt |
 | groupTiebreaker1        | ScoringMode? | null               | Optionaler Override: sekundäres Kriterium bei Duel-Wert-Gleichstand statt Stechschuss                               |
 | groupTiebreaker2        | ScoringMode? | null               | Optionaler Override: tertiäres Kriterium bei weiterem Gleichstand                                                   |
-| groupHasSuddenDeath     | Boolean      | true               | true = Stechschuss bei Paarungs-Gleichstand (Standard); false = Wiederholungsduell (wird gespeichert, aber noch nicht ausgewertet)                                  |
+| groupHasSuddenDeath     | Boolean      | true               | ungenutzt (E4, 20.10.2026): Ringwerk liest und schreibt die Spalte nicht mehr, ein Gleichstand geht immer in den Stechschuss |
 
 #### Event-spezifisch (EVENT)
 

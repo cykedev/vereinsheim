@@ -76,8 +76,6 @@ MOC-Hub der Ringwerk-App (Liga & Wettkämpfe). Führt die App-Guides und die fac
   Vorschlag: beim Start warnen, wenn der letzte und der erste nicht qualifizierte Platz gleich sind.
 - **Event im Wertungsmodus RINGS:** Gleiche Ringe teilen den Platz unabhängig vom Teiler. Ob ein Teiler-Tiebreak
   gewünscht ist, ist offen.
-- **„Wiederholungsduell“ (`groupHasSuddenDeath = false`) hat keine Wirkung:** Formular, Schema und Actions speichern
-  den Schalter, ausgewertet wird er nirgends; entschieden wird immer per Stechschuss. Umsetzen oder die Option entfernen.
 - **Ausschreibungs-Vorlage für den Best-of-Modus** gibt es nur noch in der Git-History, mit Platzhaltern und veraltet
   (Stechschuss als 1:1 statt 2:1, alte Reihenfolge der Tabelle). Aktualisiert zu [[best-of-single]] legen oder verwerfen.
 
@@ -87,27 +85,6 @@ MOC-Hub der Ringwerk-App (Liga & Wettkämpfe). Führt die App-Guides und die fac
   (etwa ohne Namen), sieht danach „Gemischt (Faktor-Korrektur)“. Wer nur den Namen nachträgt, legt still einen
   gemischten Wettbewerb an. Die Radix-Auswahl mit `name` folgt dem Zurücksetzen des Formulars nach der Server Action;
   Frist und Format bleiben. Belegt von `pruefen:ablaeufe` (bekannter Befund, [[ringwerk-pruefbestand]]).
-- **Finale ohne Verlängerung im Regelwerk:** Endet ein Duell im Finale unentschieden und ist `finaleHasSuddenDeath`
-  aus, gibt es kein weiteres Duell und keinen Weg in der Oberfläche. Mit der Sportleitung klären, was dann gilt. Die
-  Karte des Finales sagt trotzdem immer „bei Gleichstand Verlängerung“.
-- **Finale: angezeigter Sieger eines Duells nur nach Ringen** (`mapDuelItem` in `lib/playoffs/queries.ts` ruft
-  `determineFinaleRoundWinner` ohne Hauptkriterium und Stichkriterien). Gewertet wird mit beiden. Entscheidet ein
-  Stichkriterium bei gleichen Ringen oder ist das Hauptkriterium nicht „Ringe“, zeigt die Zeile „Unentschieden“ oder
-  den falschen Sieger, das Match zählt richtig. Aufgefallen beim Textbuch der Hilfe (WD0, 20. Oktober 2026).
-- **Teiler vom Ausdruck statt korrigiert in gemischten Ligen und Playoffs:** `determineOutcome` (Liga mit Hin- und
-  Rückrunde), `determinePlayoffDuelWinner` und das Kriterium „Teiler“ im Finale vergleichen den gespeicherten Teiler
-  ohne Faktor. Best-of und Saison rechnen mit dem korrigierten. Betrifft gemischte Wettbewerbe mit Wertung nach Teiler
-  oder dem Teiler als Stichkriterium.
-- **Höchste Ringzahl in Duellen fest 100 oder 109** (`MAX_RINGS`), in Saison und Event 10 oder 10,9 je Schuss. Gleich
-  bei zehn Schuss, bei anderer Schusszahl verschiebt es den Ringteiler zwischen ganzen Ringen und Zehnteln in einem
-  gemischten Wettbewerb.
-- **Faktor einer Standarddisziplin hält nur bis zum nächsten Start:** `ensureSystemDisciplines`
-  (`lib/disciplines/systemDisciplines.ts`) setzt bei jedem Start den Faktor der vier Standarddisziplinen per Upsert
-  zurück. Eine Änderung unter „Disziplinen“ gilt so bis zum nächsten Deploy. Gefunden im Review der Hilfe (WD0).
-- **Faktor nachträglich geändert:** Gespeicherte Ringteiler behalten den alten Faktor, der korrigierte Teiler der
-  Saison rechnet live mit dem neuen. Den Faktor sperren, sobald die Disziplin Ergebnisse hat, oder neu rechnen.
-- **„Best. RT“ bei Wertung nach Ringen:** Die Tabelle der Liga zeigt immer den besten Ringteiler, den Gleichstand
-  entscheiden bei Wertung nach Ringen aber die meisten Ringe.
 - **Namen sortiert die Datenbank womöglich nach Bytes** (Postgres auf Alpine, musl): „Ö“ nach „Z“, anders als die
   Sortierung in JS mit `localeCompare("de")`. Nur die Reihenfolge von Listen.
 - **Bracket-Vorschau paart benachbarte Plätze:** Die Vorschau der nächsten Runde nimmt je zwei Plätze untereinander, die
