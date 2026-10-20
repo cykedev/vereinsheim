@@ -4,7 +4,13 @@
 import { describe, expect, it, vi } from "vitest"
 
 const { findMany } = vi.hoisted(() => ({ findMany: vi.fn() }))
-vi.mock("@/lib/db", () => ({ db: { playoffMatch: { findMany } } }))
+vi.mock("@/lib/db", () => ({
+  db: {
+    playoffMatch: { findMany },
+    competition: { findUnique: async () => ({ finalePrimary: "RINGS", disciplineId: "lg" }) },
+    competitionParticipant: { findMany: async () => [] },
+  },
+}))
 
 import { getPlayoffBracket } from "./queries"
 
