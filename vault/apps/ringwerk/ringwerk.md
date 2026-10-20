@@ -81,6 +81,10 @@ MOC-Hub der Ringwerk-App (Liga & Wettkämpfe). Führt die App-Guides und die fac
 
 **Fehler und Lücken im Code**
 
+- **Sperre der Wertungsart zählt nur Wettbewerbe:** `updateDiscipline` sperrt einen Wechsel der Wertungsart, sobald ein
+  Wettbewerb die Disziplin hat, nicht bei Einschreibungen oder Serien in gemischten Wettbewerben. Die Wertungsart geht
+  über `getMaxRings` in gespeicherte Ringteiler ein. Wie die Sperre des Faktors zählen (Review der Befunde B1–B8).
+
 - **Feldfehler setzt die Disziplin zurück:** Wer beim Anlegen eine Disziplin wählt und mit einem Feldfehler speichert
   (etwa ohne Namen), sieht danach „Gemischt (Faktor-Korrektur)“. Wer nur den Namen nachträgt, legt still einen
   gemischten Wettbewerb an. Die Radix-Auswahl mit `name` folgt dem Zurücksetzen des Formulars nach der Server Action;

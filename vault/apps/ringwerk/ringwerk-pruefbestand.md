@@ -100,6 +100,20 @@ vergleicht alt gegen neu auf demselben Aufbau.
 
 ## Stand 20. Oktober 2026
 
+- Wertung richtig anzeigen (B1–B8, Plan „Ringwerk — Befunde aus dem Ablesen für die Hilfe“): drei neue Szenarien mit
+  gesetzten Ergebnissen, nicht zufällig. `L-FIN-TB` (Finale bei gleichen Ringen über den Ringteiler), `L-MIX-T`
+  (gemischt nach Teiler, Teiler vom Ausdruck und korrigierter entscheiden anders), `L-RINGE` (Punktgleiche, die meisten
+  Ringe und der beste Ringteiler trennen verschieden); 95 Wettbewerbe. Zweimal mit Freigabe aufgenommen: auf dem alten
+  Code (`ff8dfd37`, nahm auch die Beschriftungen aus WD0/WD3 auf) und nach den Korrekturen (`20b1c899`).
+- Weil Ringwerk `finaleHasSuddenDeath` nicht mehr schreibt (E1), hat der neue Aufbau eine andere Prüfsumme (63 Ligen
+  `null` statt `true`, `pruefdaten --zeilen` alt gegen neu: sonst nichts). Verglichen wurde deshalb alter gegen neuen
+  Code auf demselben neuen Aufbau (`--referenz`, alter Stand in einem eigenen Worktree): 28 Fehler und 8 Hinweise, alle
+  aus B1 (L6c in drei Formaten, `L-FIN-TB`), B3 (`L-MIX-T`, auch die Vorschau auf Start und Liste) und B6 (`L-RINGE`).
+  Danach Vergleich 0 Fehler, 0 Hinweise; Abläufe grün bis auf die zwei bekannten Befunde; `pruefen` 0 FAIL von 279.
+- Lücke im Bestand: Er hat keine gemischte Liga im Best-of-Format und keine Disziplin mit festem Faktor ≠ 1 in einer Liga.
+  Beides decken Tests ab (`bestOfStatus.test.ts`, `standings/queries.test.ts`, `matchups/queries.test.ts`), nicht der
+  Abgleich.
+
 - Ausgangsstand neu aufgenommen auf `6b8a4ca0` (Design 2 mit den Dialogen, vom User freigegeben). Grund: Spielplan und
   nächste Runde schreiben jetzt einen Protokolleintrag, `pruefdaten` erzeugt also 72 Protokollzeilen mehr
   (54 „Spielplan generiert“, 18 „Playoff-Runde angelegt“). Belegt über `pruefdaten --zeilen` auf altem und neuem Stand:

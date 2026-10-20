@@ -18,7 +18,7 @@ documented_in: ["[[ringwerk-features#Gemeinsame Konfiguration]]"]
 - **Was sie ändert:** den Ringteiler (gespeichert, `höchste Ringzahl − Ringe + Teiler × Faktor`) und jeden Vergleich
   nach Teiler: Liga mit Hin- und Rückrunde (Duell, direkter Vergleich, Spielplan, PDF), Best-of, Playoff-Duelle, das
   Kriterium „Teiler“ im Finale, Saison und Event. Eine Stelle je Weg: `duelSide` (Tabelle), `pairingOutcome`
-  (Spielplan, PDF), `storedDuelOutcome` mit `duelFactors` (Playoffs), `evaluateMatchState` (Best-of). Der korrigierte
+  (Spielplan, PDF), `storedDuelOutcome` mit `duelFactors` (Playoffs), `evaluateMatchState` (Best-of, Wertung) und `bestOfDuelSide` (Best-of, Anzeige: Spielplan, Eingabedialog, PDF). Den korrigierten Teiler einer Serie liefern die Abfragen (`correctedTeiler` in Tabelle und Spielplan). Der korrigierte
   Teiler ist ungerundet; Luftpistole 90 ergibt 29,999997 und schlägt Luftgewehr 30,0, auch wo beide als „30,0“ stehen.
 - **Angezeigt** wird der Teiler vom Ausdruck („T“), die Spalten „Teiler korr.“ in Saison und Event zeigen den
   korrigierten.
