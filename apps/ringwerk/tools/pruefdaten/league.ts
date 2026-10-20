@@ -68,7 +68,6 @@ export async function buildLeague(ctx: Context, s: LeagueScenario, start: Date):
         leagueFormat: isBestOf ? "BEST_OF_SINGLE" : "DOUBLE_ROUND_ROBIN",
         groupBestOf: isBestOf ? (s.format === "BO3" ? 3 : 5) : undefined,
         groupPlayAllDuels: isBestOf,
-        groupHasSuddenDeath: isBestOf,
         groupTiebreaker1: isBestOf ? "none" : undefined,
         groupTiebreaker2: isBestOf ? "none" : undefined,
         // Die Stichtage blendet das Formular im Best-of-Format aus.

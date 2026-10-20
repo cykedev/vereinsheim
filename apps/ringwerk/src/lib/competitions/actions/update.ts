@@ -79,7 +79,6 @@ export async function updateCompetition(
     groupPlayAllDuels: formData.get("groupPlayAllDuels"),
     groupTiebreaker1: formData.get("groupTiebreaker1"),
     groupTiebreaker2: formData.get("groupTiebreaker2"),
-    groupHasSuddenDeath: formData.get("groupHasSuddenDeath"),
   })
   if (!parsed.success) return { error: parsed.error.flatten().fieldErrors }
 
@@ -174,10 +173,6 @@ export async function updateCompetition(
       groupTiebreaker2:
         type === "LEAGUE" && !rulesetLocked && parsed.data.leagueFormat === "BEST_OF_SINGLE"
           ? (parsed.data.groupTiebreaker2 ?? null)
-          : undefined,
-      groupHasSuddenDeath:
-        type === "LEAGUE" && !rulesetLocked && parsed.data.leagueFormat === "BEST_OF_SINGLE"
-          ? parsed.data.groupHasSuddenDeath
           : undefined,
     },
   })

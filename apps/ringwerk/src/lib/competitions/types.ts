@@ -74,7 +74,6 @@ export type CompetitionDetail = {
   groupPlayAllDuels: boolean
   groupTiebreaker1: ScoringMode | null
   groupTiebreaker2: ScoringMode | null
-  groupHasSuddenDeath: boolean
   // Liga – Deadlines
   hinrundeDeadline: Date | null
   rueckrundeDeadline: Date | null

@@ -1094,12 +1094,13 @@ describe("createCompetition — BEST_OF_SINGLE", () => {
           leagueFormat: "BEST_OF_SINGLE",
           groupBestOf: 3,
           groupPlayAllDuels: true,
-          groupHasSuddenDeath: true,
           groupTiebreaker1: null,
           groupTiebreaker2: null,
         }),
       })
     )
+    // Gleichstand im Best-of geht immer in den Stechschuss; die Spalte schreibt Ringwerk nicht
+    expect(competitionCreateMock.mock.calls[0][0].data).not.toHaveProperty("groupHasSuddenDeath")
   })
 
   it("schreibt die Verlängerung im Finale nicht: es gibt sie immer, die Spalte bleibt, wie sie ist", async () => {
@@ -1220,6 +1221,7 @@ describe("updateCompetition — BEST_OF_SINGLE", () => {
         }),
       })
     )
+    expect(competitionUpdateMock.mock.calls[0][0].data).not.toHaveProperty("groupHasSuddenDeath")
   })
 
   it("lässt die Spalte der Verlängerung im Finale unverändert, auch wenn das Feld fehlt oder mitkommt", async () => {

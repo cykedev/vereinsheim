@@ -24,9 +24,6 @@ export function useRulesetState(competition?: CompetitionDetail) {
   const [groupTiebreaker2, setGroupTiebreaker2] = useState<string>(
     competition?.groupTiebreaker2 ?? "none"
   )
-  const [groupHasSuddenDeath, setGroupHasSuddenDeath] = useState<boolean>(
-    competition?.groupHasSuddenDeath ?? true
-  )
 
   const [playoffBestOf, setPlayoffBestOf] = useState<string>(
     String(competition?.playoffBestOf ?? 5)
@@ -57,8 +54,6 @@ export function useRulesetState(competition?: CompetitionDetail) {
     setGroupTiebreaker1,
     groupTiebreaker2,
     setGroupTiebreaker2,
-    groupHasSuddenDeath,
-    setGroupHasSuddenDeath,
     playoffBestOf,
     setPlayoffBestOf,
     playoffHasViertelfinale,

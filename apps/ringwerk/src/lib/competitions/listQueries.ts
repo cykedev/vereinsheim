@@ -55,7 +55,6 @@ export async function getCompetitionById(id: string): Promise<CompetitionDetail 
       groupPlayAllDuels: true,
       groupTiebreaker1: true,
       groupTiebreaker2: true,
-      groupHasSuddenDeath: true,
       hinrundeDeadline: true,
       rueckrundeDeadline: true,
       eventDate: true,

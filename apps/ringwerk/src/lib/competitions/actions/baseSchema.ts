@@ -162,11 +162,6 @@ export const BaseSchema = z
       (v) => (v === "none" || v === "" || !v ? null : v),
       z.enum(BEST_OF_SINGLE_SCORING_MODES).nullable()
     ),
-    groupHasSuddenDeath: z
-      .string()
-      .nullable()
-      .optional()
-      .transform((v) => v === "true" || v === "on"),
   })
   .superRefine((data, ctx) => {
     if (data.finaleTiebreaker2 && !data.finaleTiebreaker1) {

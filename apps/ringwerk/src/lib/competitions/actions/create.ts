@@ -52,7 +52,6 @@ export async function createCompetition(
     groupPlayAllDuels: formData.get("groupPlayAllDuels"),
     groupTiebreaker1: formData.get("groupTiebreaker1"),
     groupTiebreaker2: formData.get("groupTiebreaker2"),
-    groupHasSuddenDeath: formData.get("groupHasSuddenDeath"),
     isPublic: formData.get("isPublic"),
     publicSlug: formData.get("publicSlug"),
     publicPassword: formData.get("publicPassword"),
@@ -132,10 +131,6 @@ export async function createCompetition(
       groupTiebreaker2:
         type === "LEAGUE" && parsed.data.leagueFormat === "BEST_OF_SINGLE"
           ? (parsed.data.groupTiebreaker2 ?? null)
-          : undefined,
-      groupHasSuddenDeath:
-        type === "LEAGUE" && parsed.data.leagueFormat === "BEST_OF_SINGLE"
-          ? parsed.data.groupHasSuddenDeath
           : undefined,
       isPublic: parsed.data.isPublic ?? false,
       publicSlug: parsed.data.publicSlug,

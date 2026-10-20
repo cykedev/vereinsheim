@@ -32,8 +32,6 @@ export function LeagueGroupPhaseFieldset({ form, hasMatchups }: Props) {
     setGroupTiebreaker1,
     groupTiebreaker2,
     setGroupTiebreaker2,
-    groupHasSuddenDeath,
-    setGroupHasSuddenDeath,
     shotsPerSeries,
     setShotsPerSeries,
   } = form
@@ -158,24 +156,6 @@ export function LeagueGroupPhaseFieldset({ form, hasMatchups }: Props) {
                   Bei Gleichstand nach Tiebreaker 1 (nur wenn TB1 gesetzt).
                 </p>
               </div>
-
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="groupHasSuddenDeath"
-                  checked={groupHasSuddenDeath}
-                  onCheckedChange={(checked: boolean | "indeterminate") =>
-                    setGroupHasSuddenDeath(checked === true)
-                  }
-                />
-                <Label htmlFor="groupHasSuddenDeath" className="cursor-pointer">
-                  Gleichstand per Stechschuss
-                </Label>
-              </div>
-              <input
-                type="hidden"
-                name="groupHasSuddenDeath"
-                value={groupHasSuddenDeath ? "true" : "false"}
-              />
             </div>
           </details>
         </div>
