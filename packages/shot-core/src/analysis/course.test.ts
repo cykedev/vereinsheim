@@ -142,6 +142,16 @@ describe("Ermüdung und Trend (I2, I3)", () => {
     expect(tired).toMatchObject({ clear: false, direction: null })
   })
 
+  it("gleiche Mittel: Unterschied genau 0 und kein Urteil, auch wenn die Ränge steigen", () => {
+    // Summe beider Hälften 100,0 Ringe; in Gleitkomma läge der Unterschied der Mittel bei 1,8e-15
+    const tired = fatigue(
+      valued([...ten(100), ...Array.from({ length: 9 }, () => 102), 82]),
+      "decimal"
+    )
+    expect(tired?.deltaRings).toBe(0)
+    expect(tired).toMatchObject({ clear: false, direction: null })
+  })
+
   it("kein Urteil, wenn Test und Mittel in verschiedene Richtungen zeigen", () => {
     // neun der letzten zehn über allen ersten, einer weit darunter: Ränge steigen, das Mittel fällt
     const tired = fatigue(

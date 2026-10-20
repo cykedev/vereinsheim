@@ -77,17 +77,20 @@ export function fatigue(
   /** Richtung des Werts am Ende, nur wenn klar */
   direction: "up" | "down" | null
 } | null {
-  const values = valued(shots, scoring).map((shot) => valueRings(shot, scoring))
+  // in Zehnteln summiert: gleiche Mittel ergeben genau 0, nicht ±1e-15, und das Vorzeichen bleibt ehrlich
+  const values = valued(shots, scoring).map((shot) => valueTenths(shot, scoring))
   if (values.length < 20) return null
   const first = values.slice(0, 10)
   const last = values.slice(-10)
-  const firstMeanRings = meanOf(first)
-  const lastMeanRings = meanOf(last)
-  const deltaRings = lastMeanRings - firstMeanRings
+  const sumOf = (list: readonly number[]) => list.reduce((s, v) => s + v, 0)
+  const deltaTenths = sumOf(last) - sumOf(first)
+  const firstMeanRings = sumOf(first) / 100
+  const lastMeanRings = sumOf(last) / 100
+  const deltaRings = deltaTenths / 100
   const test = mannWhitney(last, first)
   // wie beim Trend: ein Urteil nur, wenn Test und Mittel in dieselbe Richtung zeigen
   const side = test ? Math.sign(test.u - (last.length * first.length) / 2) : 0
-  const clear = test !== null && test.p < 0.05 && side !== 0 && side === Math.sign(deltaRings)
+  const clear = test !== null && test.p < 0.05 && side !== 0 && side === Math.sign(deltaTenths)
   const positioned = selectShots(inShotOrder(shots), {
     kinds: MATCH,
     need: "position",
