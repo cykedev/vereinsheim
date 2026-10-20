@@ -311,6 +311,24 @@ async function main() {
         ...PHASES.map(([, name]) => name),
       ]),
     ])
+    /** Dialoge mit Folgen: Seite, Knopf, der den Dialog öffnet, und was er fragt */
+    const dialogs: readonly (readonly [string, string, string])[] = [
+      [
+        `/competitions/${ids.get(REGENERATE)}/schedule`,
+        "Spielplan neu generieren",
+        "Spielplan neu",
+      ],
+      [`/competitions/${ids.get(START)}/playoffs`, "Playoffs starten", "Playoffs starten"],
+      [
+        `/competitions/${ids.get(REGENERATE)}/edit`,
+        "Wettbewerb mit allen Daten löschen",
+        "Wettbewerb mit allen Daten löschen",
+      ],
+      ["/competitions", "Als abgeschlossen markieren", "Wettbewerb abschließen"],
+      ["/competitions", "Löschen", "Wettbewerb mit Teilnehmern löschen (Hinweis)"],
+      ["/participants", "Deaktivieren", "Teilnehmer deaktivieren"],
+      ["/disciplines", "Löschen", "Disziplin löschen"],
+    ]
     const competitionPaths = SAMPLES.flatMap((s) =>
       s.pages.map((p) => `/competitions/${ids.get(s.name)}/${p}`)
     )
@@ -347,15 +365,6 @@ async function main() {
         await themeNoFlash(page, { url: `${BASE}/competitions`, storageKey: "ringwerk-theme" })
       )
       // die Dialoge mit Folgen nur öffnen und mit Escape schließen: der Prüfbestand bleibt unverändert
-      const dialogs: readonly (readonly [string, string])[] = [
-        [`/competitions/${ids.get(REGENERATE)}/schedule`, "Spielplan neu generieren"],
-        [`/competitions/${ids.get(START)}/playoffs`, "Playoffs starten"],
-        [`/competitions/${ids.get(REGENERATE)}/edit`, "Wettbewerb mit allen Daten löschen"],
-        ["/competitions", "Als abgeschlossen markieren"],
-        ["/competitions", "Löschen"],
-        ["/participants", "Deaktivieren"],
-        ["/disciplines", "Löschen"],
-      ]
       for (const [where, opener] of dialogs) {
         await page.goto(`${BASE}${where}`)
         record(await dialogFocus(page, `button(${JSON.stringify(opener)})`, `Dialog „${opener}“`))
@@ -375,6 +384,11 @@ async function main() {
           ...PHASES.map(([title, name, page]) => ({
             title,
             path: `/competitions/${ids.get(name)}/${page}`,
+          })),
+          ...dialogs.map(([where, opener, title]) => ({
+            title: `Dialog: ${title}`,
+            path: where,
+            opener,
           })),
         ])
       )

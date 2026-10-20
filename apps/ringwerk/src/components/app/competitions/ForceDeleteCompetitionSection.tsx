@@ -63,7 +63,7 @@ export function ForceDeleteCompetitionSection({ competitionId, competitionName, 
         confirmDisabled={!nameMatches || isPending}
       >
         <div className="space-y-2">
-          <Label htmlFor="confirm-competition-name">
+          <Label htmlFor="confirm-competition-name" className="block leading-normal">
             {CONFIRM_COMPETITION_NAME} <span className="font-semibold">{competitionName}</span>
           </Label>
           <Input

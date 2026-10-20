@@ -80,7 +80,7 @@ export function ParticipantDeleteDialog({
           confirmDisabled={!nameMatches || isPending}
         >
           <div className="space-y-2">
-            <Label htmlFor="confirm-participant-name">
+            <Label htmlFor="confirm-participant-name" className="block leading-normal">
               {CONFIRM_LAST_NAME} <span className="font-semibold">{lastName}</span>
             </Label>
             <Input

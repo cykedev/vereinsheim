@@ -1,6 +1,7 @@
 // Bilder für die Sichtprüfung durch den User: je Phase eine Seite eines Wettbewerbs, dazu die Seiten über alle
-// Wettbewerbe, hell und dunkel, am Telefon und am Desktop. Der erste Bildschirm der Seite, dazu das Bracket und die
-// erste Tabelle für sich. Eine Übersicht `index.html` stellt alles nebeneinander. Liest nur.
+// Wettbewerbe und die Dialoge mit Folgen, hell und dunkel, am Telefon und am Desktop. Der erste Bildschirm der Seite,
+// dazu das Bracket und die erste Tabelle für sich, beim Dialog der Dialog für sich. Eine Übersicht `index.html` stellt
+// alles nebeneinander. Liest nur: Ein Dialog wird nur geöffnet und mit Escape geschlossen.
 
 import { mkdirSync, writeFileSync } from "node:fs"
 import path from "node:path"
@@ -11,6 +12,8 @@ import type { Page } from "@vereinsheim/pruefen/browser"
 export interface Picture {
   title: string
   path: string
+  /** Beschriftung des Knopfs, der einen Dialog öffnet; dann zeigt das Bild den offenen Dialog */
+  opener?: string
 }
 
 const THEMES = ["light", "dark"] as const
@@ -42,22 +45,31 @@ export async function pictures(page: Page, base: string, dir: string, list: Pict
         await page.ev(`localStorage.setItem("ringwerk-theme", ${JSON.stringify(theme)})`)
         await page.goto(`${base}${picture.path}`)
         await page.wait(400)
+        if (picture.opener)
+          await page.click(`button(${JSON.stringify(picture.opener)})`, { settle: 500 })
         const files: string[] = []
         const file = `${name}-${width}-${theme}.png`
         writeFileSync(path.join(dir, file), await page.screenshot())
         files.push(file)
-        for (const [part, locator] of [
-          [
-            "bracket",
-            `$$("main div").find((el) => getComputedStyle(el).overflowX === "auto" && /Halbfinale/.test(el.textContent))`,
-          ],
-          ["tabelle", `$("main table")`],
-        ] as const) {
+        const parts = picture.opener
+          ? ([["dialog", `$('[role="alertdialog"]')`]] as const)
+          : ([
+              [
+                "bracket",
+                `$$("main div").find((el) => getComputedStyle(el).overflowX === "auto" && /Halbfinale/.test(el.textContent))`,
+              ],
+              ["tabelle", `$("main table")`],
+            ] as const)
+        for (const [part, locator] of parts) {
           const shot = await page.screenshotOf(locator)
           if (!shot) continue
           const partFile = `${name}-${part}-${width}-${theme}.png`
           writeFileSync(path.join(dir, partFile), shot)
           files.push(partFile)
+        }
+        if (picture.opener) {
+          await page.key("Escape")
+          await page.wait(300)
         }
         cells.push(
           `<figure><figcaption>${width} px · ${theme === "light" ? "hell" : "dunkel"}</figcaption>${files
