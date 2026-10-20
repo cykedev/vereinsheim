@@ -1,17 +1,14 @@
 import { Trash2 } from "lucide-react"
 import { Button } from "@vereinsheim/ui/button"
-import {
-  AlertDialog,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@vereinsheim/ui/alert-dialog"
+import { DecisionDialog, NoticeDialog } from "@vereinsheim/ui/design2/decision-dialog"
 import { Input } from "@vereinsheim/ui/input"
 import { Label } from "@vereinsheim/ui/label"
+import {
+  CONFIRM_LAST_NAME,
+  participantDelete,
+  participantDeleteBlocked,
+  participantForceDelete,
+} from "@/lib/consequences"
 import type { ParticipantRowActionsState } from "./useParticipantRowActions"
 
 interface Props {
@@ -22,6 +19,8 @@ interface Props {
   competitionsCount: number
 }
 
+// Löschen eines inaktiven Teilnehmers: ohne Wettbewerb einfach, mit Wettbewerben nur ein Admin und nur mit dem
+// Nachnamen als Bestätigung (die Action löscht dann alle Daten, auch die Serien der Gegner).
 export function ParticipantDeleteDialog({
   actions,
   firstName,
@@ -33,79 +32,56 @@ export function ParticipantDeleteDialog({
     actions
   const hasData = competitionsCount > 0
   const nameMatches = confirmName.trim() === lastName
+  const name = `${firstName} ${lastName}`
+
+  function onOpenChange(open: boolean) {
+    setDeleteOpen(open)
+    if (!open) setConfirmName("")
+  }
 
   return (
-    <AlertDialog
-      open={deleteOpen}
-      onOpenChange={(open) => {
-        setDeleteOpen(open)
-        if (!open) setConfirmName("")
-      }}
-    >
-      <AlertDialogTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-10 w-10"
-          title="Löschen"
-          disabled={isPending}
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      </AlertDialogTrigger>
+    <>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-10 w-10"
+        title="Löschen"
+        aria-label="Löschen"
+        disabled={isPending}
+        onClick={() => setDeleteOpen(true)}
+      >
+        <Trash2 className="h-4 w-4" />
+      </Button>
 
-      {/* Variante 1: Keine Wettbewerbsdaten — einfache Bestätigung */}
       {!hasData && (
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Teilnehmer löschen?</AlertDialogTitle>
-            <AlertDialogDescription>
-              {lastName}, {firstName} wird endgültig gelöscht. Diese Aktion kann nicht rückgängig
-              gemacht werden.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isPending}>Abbrechen</AlertDialogCancel>
-            <Button variant="destructive" onClick={() => handleDelete(false)} disabled={isPending}>
-              {isPending ? "Löschen…" : "Löschen"}
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
+        <DecisionDialog
+          decision={participantDelete({ name })}
+          open={deleteOpen}
+          onOpenChange={onOpenChange}
+          onConfirm={() => handleDelete(false)}
+          confirmDisabled={isPending}
+        />
       )}
 
-      {/* Variante 2: Wettbewerbsdaten vorhanden, kein Admin */}
       {hasData && !isAdmin && (
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Löschen nicht möglich</AlertDialogTitle>
-            <AlertDialogDescription>
-              Dieser Teilnehmer hat {competitionsCount}{" "}
-              {competitionsCount === 1 ? "Wettbewerb" : "Wettbewerbe"} und kann daher nicht gelöscht
-              werden. Force-Delete ist nur für Admins möglich.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Schließen</AlertDialogCancel>
-          </AlertDialogFooter>
-        </AlertDialogContent>
+        <NoticeDialog
+          {...participantDeleteBlocked({ name, competitions: competitionsCount })}
+          open={deleteOpen}
+          onOpenChange={onOpenChange}
+        />
       )}
 
-      {/* Variante 3: Wettbewerbsdaten vorhanden, Admin — Force-Delete */}
       {hasData && isAdmin && (
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Teilnehmer endgültig löschen?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Diese Aktion kann nicht rückgängig gemacht werden. Alle Daten dieses Teilnehmers
-              werden dauerhaft gelöscht — inklusive {competitionsCount}{" "}
-              {competitionsCount === 1 ? "Wettbewerb" : "Wettbewerbe"}, alle Serien und
-              Liga-Paarungen (inkl. der Serien des jeweiligen Gegners).
-            </AlertDialogDescription>
-          </AlertDialogHeader>
+        <DecisionDialog
+          decision={participantForceDelete({ name, competitions: competitionsCount })}
+          open={deleteOpen}
+          onOpenChange={onOpenChange}
+          onConfirm={() => handleDelete(true)}
+          confirmDisabled={!nameMatches || isPending}
+        >
           <div className="space-y-2">
             <Label htmlFor="confirm-participant-name">
-              Zur Bestätigung den Nachnamen eingeben:{" "}
-              <span className="font-semibold">{lastName}</span>
+              {CONFIRM_LAST_NAME} <span className="font-semibold">{lastName}</span>
             </Label>
             <Input
               id="confirm-participant-name"
@@ -116,18 +92,8 @@ export function ParticipantDeleteDialog({
               autoComplete="off"
             />
           </div>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isPending}>Abbrechen</AlertDialogCancel>
-            <Button
-              variant="destructive"
-              onClick={() => handleDelete(true)}
-              disabled={!nameMatches || isPending}
-            >
-              {isPending ? "Löschen…" : "Endgültig löschen"}
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
+        </DecisionDialog>
       )}
-    </AlertDialog>
+    </>
   )
 }
