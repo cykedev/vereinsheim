@@ -86,19 +86,7 @@ export async function advanceRound(competitionId: string): Promise<ActionResult>
         return "Noch nicht alle Matches der aktuellen Runde abgeschlossen."
       }
 
-      const incomplete = await handleMatchCompletion(tx, competitionId, roundToAdvance)
-      if (incomplete) return incomplete
-      await tx.auditLog.create({
-        data: {
-          eventType: "PLAYOFF_ROUND_CREATED" satisfies AuditEventType,
-          entityType: "COMPETITION",
-          entityId: competitionId,
-          userId: session.user.id,
-          competitionId,
-          details: { round: getNextRound(roundToAdvance) },
-        },
-      })
-      return null
+      return handleMatchCompletion(tx, competitionId, roundToAdvance, session.user.id)
     })
   } catch (error) {
     return {
@@ -113,14 +101,15 @@ export async function advanceRound(competitionId: string): Promise<ActionResult>
 }
 
 /**
- * Legt die nächste Runde an, wenn alle Matches der Runde abgeschlossen sind (aus `advanceRound`).
- * Bei FINAL → keine weitere Runde.
+ * Legt die nächste Runde an, wenn alle Matches der Runde abgeschlossen sind (aus `advanceRound`), und protokolliert sie
+ * direkt nach dem Anlegen. Bei FINAL → keine weitere Runde.
  * Liefert eine Meldung für den User, wenn der Runde eine Paarung fehlt, sonst null.
  */
 async function handleMatchCompletion(
   tx: Prisma.TransactionClient,
   competitionId: string,
-  round: PlayoffRound
+  round: PlayoffRound,
+  userId: string
 ): Promise<string | null> {
   if (round === "FINAL") return null
 
@@ -170,6 +159,16 @@ async function handleMatchCompletion(
         participantBId: winners[1],
       },
     })
+    await tx.auditLog.create({
+      data: {
+        eventType: "PLAYOFF_ROUND_CREATED" satisfies AuditEventType,
+        entityType: "COMPETITION",
+        entityId: competitionId,
+        userId,
+        competitionId,
+        details: { round: nextRound },
+      },
+    })
     return null
   }
 
@@ -187,6 +186,16 @@ async function handleMatchCompletion(
       participantAId: m.participantAId,
       participantBId: m.participantBId,
     })),
+  })
+  await tx.auditLog.create({
+    data: {
+      eventType: "PLAYOFF_ROUND_CREATED" satisfies AuditEventType,
+      entityType: "COMPETITION",
+      entityId: competitionId,
+      userId,
+      competitionId,
+      details: { round: nextRound },
+    },
   })
   return null
 }

@@ -61,6 +61,34 @@ function rowsLikePostgres(args: { where: { round?: string }; orderBy?: unknown }
   return Promise.resolve(ordered ? rows : [...rows].reverse())
 }
 
+describe("advanceRound: Halbfinale aus dem Viertelfinale", () => {
+  const QUARTERS = ["a", "b", "c", "d"].map((x, i) => ({
+    id: `q${i}`,
+    round: "QUARTER_FINAL",
+    status: "COMPLETED",
+    winsA: 3,
+    winsB: 0,
+    participantAId: `${x}1`,
+    participantBId: `${x}2`,
+  }))
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    getAuthSession.mockResolvedValue({ user: { id: "u1", role: "MANAGER" } })
+    findMany.mockImplementation((args: { where: { round?: string } }) =>
+      Promise.resolve(QUARTERS.filter((m) => !args.where.round || m.round === args.where.round))
+    )
+    createMany.mockResolvedValue({ count: 2 })
+  })
+
+  it("legt das Halbfinale an und schreibt „Playoff-Runde angelegt“ mit dieser Runde", async () => {
+    expect(await advanceRound("c1")).toEqual({ success: true })
+    expect(createMany).toHaveBeenCalledTimes(1)
+    expect(auditLogCreate).toHaveBeenCalledTimes(1)
+    expect(auditLogCreate.mock.calls[0][0].data.details).toEqual({ round: "SEMI_FINAL" })
+  })
+})
+
 describe("advanceRound: Finale", () => {
   beforeEach(() => {
     vi.clearAllMocks()
