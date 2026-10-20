@@ -66,6 +66,14 @@ app-übergreifende Komponenten gehören in diese Liste (in `MUST_MATCH` des Gate
 - **Bestätigungen:** `<DecisionDialog>` mit den Folgen aus `lib/consequences.ts` der App (§10 „Kein Knopf ohne
   Folge“). Geht eine Aktion an dieser Stelle nicht, sagt `<NoticeDialog>` warum, statt einer Rückfrage, die danach
   scheitert. Nie native `confirm()`.
+- **Hilfe:** Eine Zahl oder Überschrift, die Leser nicht von selbst verstehen, trägt ein „?“ (`HelpButton` aus
+  `design2/help`). Es öffnet die Erklärung als Blatt (`HelpSheet`, einmal im Rahmen der App, geöffnet über `useHelp`),
+  nie nur als Tooltip. Die Texte stehen an einer Stelle: Spiegel `@vereinsheim/shot-help`, Treffsicher und Ringwerk
+  `src/lib/help/topics.ts` (Tests halten Felder und Schreibregeln, in Ringwerk auch den Wortlaut des Textbuchs).
+- **„–“ mit Grund:** Wo kein Wert steht, steht „–“ und leise daneben der Grund, in schmalen Zellen als Tooltip und für
+  Screenreader. Keine 0 und kein leeres Feld für „kein Wert“. Die Gründe kommen aus einer reinen Funktion der App
+  (Treffsicher `src/lib/missing.ts`, Ringwerk `src/lib/help/missing.ts`). In Ringwerk nur auf dem Bildschirm, die PDFs
+  bleiben, wie sie sind.
 - **Feldfehler:** `getFieldError`/`getGeneralError` (`lib/forms/fieldErrors.ts`) + `<FieldError>` mit
   `aria-invalid`/`aria-describedby`.
 - **Toasts:** nach jeder mutierenden Server-Action `toast.success(...)` bzw. `toast.error(...)` (sonner).
@@ -280,7 +288,7 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
   Ein `pnpm install --frozen-lockfile` verlinkt neu. Den Lockfile-Diff auf Änderungen in fremden
   Importern prüfen: Sie invalidieren deren Image-Build-Cache.
 
-## 10. Design 2 (Spiegel und Treffsicher, ADR-030, ADR-032)
+## 10. Design 2 (alle Apps, ADR-030, ADR-032)
 
 - **Tokens aus `@vereinsheim/ui/design2.css`** statt `theme.css`: dieselben Namen, die die
   ui-Primitives nutzen (auch `rank-1` … `rank-3` und `chart-1` … `chart-5`, Akzent je App über `data-app` in beiden
@@ -308,8 +316,8 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
 - **Kein Knopf ohne Folge:** Jede Aktion, die bestätigt, ablehnt, entfernt, widerruft, umstellt oder ein Konto ändert, fragt
   über `DecisionDialog` (`@vereinsheim/ui/design2/decision-dialog`) und sagt in Alltagsworten, worum es geht, was vorher zu
   prüfen ist, was dann passiert, was **nicht** passiert und wie es rückgängig geht. Die Texte stehen an einer Stelle
-  (`apps/spiegel/src/lib/admin/consequences.ts`, `apps/treffsicher/src/lib/consequences.ts`; Tests halten den
-  Wortlaut), ohne Pronomen für Personen. Keine
+  (`apps/spiegel/src/lib/admin/consequences.ts`, `apps/treffsicher/src/lib/consequences.ts`,
+  `apps/ringwerk/src/lib/consequences.ts`; Tests halten den Wortlaut), ohne Pronomen für Personen. Keine
   Fachbegriffe in der Oberfläche; als Aufgabe erscheint im Admin nur, was ein Mensch entscheiden muss, Technisches regelt
   Spiegel selbst und zeigt es höchstens als Zustand.
 - **So schreiben wir** ([[spiegel-dialog-texts-not-understood]]):

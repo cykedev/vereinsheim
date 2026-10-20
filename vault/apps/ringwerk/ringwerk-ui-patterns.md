@@ -157,7 +157,8 @@ Opacity-Werte: `opacity-60` (inaktiv/deaktiviert), `opacity-70` (zurückgezogen)
 </div>
 ```
 
-**Pflicht: `bg-card` auf dem äusseren Container** — ohne `bg-card` erscheinen Listen/Tabellen im Dark Mode tiefschwarz und sind vom Seitenhintergrund nicht unterscheidbar.
+**Pflicht: `bg-card` auf dem äusseren Container**, in Design 2 mit `rounded-2xl`: ohne `bg-card` hebt sich die Tabelle
+in keinem der beiden Themes vom Seitenhintergrund ab.
 
 ---
 
@@ -182,13 +183,14 @@ Wenn eine Paarung mindestens einen zurückgezogenen Teilnehmer hat (`isVoid`):
 - Zeile: `opacity-50`, kein `hover:bg-muted/20`
 - **Beide** Namen: `line-through text-muted-foreground`
 - Kein Ergebnis anzeigen (auch wenn es in der DB steht)
-- Keine Gewinner-Hervorhebung (`bg-emerald-500/10` nur bei `!isVoid`)
+- Keine Gewinner-Hervorhebung (`bg-success/10` nur bei `!isVoid`)
+- Status: „–“ mit dem Grund „nicht gewertet“ (`<Missing kind="notScored" />`)
 
 ```tsx
 const isVoid = m.homeParticipant.withdrawn || m.awayParticipant?.withdrawn === true
 
 // Zelle:
-className={`px-2 py-3 sm:px-4 ${homeOutcome === "WIN" && !isVoid ? "bg-emerald-500/10" : ""}`}
+className={`px-2 py-3 sm:px-4 ${homeOutcome === "WIN" && !isVoid ? "bg-success/10" : ""}`}
 
 // ParticipantResult mit isVoid-Prop:
 <ParticipantResult participant={m.homeParticipant} result={homeResult} isVoid={isVoid} />
@@ -200,15 +202,25 @@ className={`px-2 py-3 sm:px-4 ${homeOutcome === "WIN" && !isVoid ? "bg-emerald-5
 
 ## Farbpalette (Bedeutungsträger)
 
-| Farbe       | Token / Klasse                               | Bedeutung                   |
-| ----------- | -------------------------------------------- | --------------------------- |
-| Grün        | `bg-emerald-500/10`, `text-emerald-400`      | Sieg, abgeschlossen         |
-| Gelb        | `ring-yellow-400`, `bg-yellow-400/15`        | Platz 1                     |
-| Grau/Silber | `ring-slate-400`, `bg-slate-400/15`          | Platz 2                     |
-| Orange      | `ring-orange-500`, `bg-orange-500/15`        | Platz 3                     |
-| Amber       | `text-amber-400`                             | Unentschieden               |
-| Destructive | `text-destructive/70 hover:text-destructive` | Löschen, gefährliche Aktion |
-| Muted       | `bg-muted/40` (thead), `bg-muted/20` (hover) | Neutrale Hintergründe       |
+Nur Tokens aus `design2.css`, keine Palette-Klassen ([[color-semantics]]):
+
+| Bedeutung                   | Token / Klasse                               |
+| --------------------------- | -------------------------------------------- |
+| Sieg, abgeschlossen         | `bg-success/10`, `text-success`              |
+| Platz 1, 2, 3               | `rank-1`, `rank-2`, `rank-3`                 |
+| Unentschieden, offen        | `text-warning`                               |
+| Löschen, gefährliche Aktion | `text-destructive`                           |
+| Neutrale Hintergründe       | `bg-muted/40` (thead), `bg-muted/20` (hover) |
+
+## Hilfe und „–“ mit Grund
+
+- „?“ an einer Zahl oder Überschrift: `<HelpMark id="…" />` (`components/app/help/HelpMark.tsx`) öffnet das Blatt der
+  Hilfe im Rahmen. Im sortierbaren Spaltenkopf ordnet ein Tipp auf das „?“ nicht um.
+- Kein Wert: `<Missing kind="…" />` (`components/app/shell/Missing.tsx`) zeigt „–“ und leise den Grund, mit `quiet`
+  nur als Tooltip und für Screenreader. Die Gründe stehen in `src/lib/help/missing.ts`.
+- Beides nur auf dem Bildschirm. PDFs bleiben unverändert, auch wo sie denselben Formatierer nutzen
+  (`formatDirectComparison` zeigt im PDF weiter „—“). Ein Grund enthält keine Zahl und kein Wort aus `DATA_WORDS` des
+  Abgleichs (Test).
 
 ---
 

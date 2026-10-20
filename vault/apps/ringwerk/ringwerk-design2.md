@@ -2,7 +2,7 @@
 id: ringwerk-design2
 type: subsystem
 title: "Ringwerk in Design 2"
-keywords: [Design 2, Darstellung, hell, dunkel, Messing, untere Leiste, Seitenleiste, Profil, Konto, Anmeldung, Reiter, Unternavigation, Wettbewerb, Tabellen, Rang, Bracket, Skriptprüfung, pruefen, AppShell, AppFrame, DecisionDialog, NoticeDialog, Folgen, Bestätigung]
+keywords: [Design 2, Darstellung, hell, dunkel, Messing, untere Leiste, Seitenleiste, Profil, Konto, Anmeldung, Reiter, Unternavigation, Wettbewerb, Tabellen, Rang, Bracket, Skriptprüfung, pruefen, AppShell, AppFrame, DecisionDialog, NoticeDialog, Folgen, Bestätigung, Hilfe, Erklärung, Fragezeichen, Blatt, HelpMark, Teiler, Ringteiler, Turnierbaum, Strich mit Grund, Missing]
 tags: [ui, design]
 feature_of: ["[[ringwerk]]"]
 governed_by: ["[[adr-032]]"]
@@ -11,8 +11,8 @@ relates_to: ["[[conventions]]", "[[ringwerk-pruefbestand]]", "[[treffsicher-desi
 
 **TL;DR** Seit Teil W (Abschnitt „Basis“) von SP-4.3 läuft Ringwerk in Design 2 wie Spiegel und Treffsicher: hell und
 dunkel mit Wahl je Gerät, Akzent Messing, untere Leiste ohne Mitte und Seitenleiste ab 1024 px, Profil statt Konto,
-Reiter für die Seiten eines Wettbewerbs, Ergebnisse in Mono-Ziffern. Daten und PDFs sind unverändert (Abgleich aus
-[[ringwerk-pruefbestand]]). Dialoge mit Folgen und die Hilfe folgen in den Abschnitten „Dialoge“ und „Hilfe“.
+Reiter für die Seiten eines Wettbewerbs, Ergebnisse in Mono-Ziffern, Dialoge mit Folgen, Hilfe als Blatt an den
+schwierigen Zahlen und „–“ mit Grund. Daten und PDFs sind unverändert (Abgleich aus [[ringwerk-pruefbestand]]).
 
 ## Rahmen
 
@@ -68,13 +68,39 @@ Sportleitung, Wettbewerb mit Einschreibungen), zeigt `NoticeDialog` den Grund. F
 Toast, weil der Dialog schließt. `src/components/app/confirmations.test.tsx` hält je Dialog fest, welche Action mit
 welchen Werten genau einmal läuft (Stellvertreter in `src/test/confirm-capture.ts`, ohne jsdom).
 
+## Hilfe und „–“ mit Grund
+
+Die Erklärungen stehen in `src/lib/help/topics.ts`, freigegeben im Textbuch (Abschnitt „Ringwerk: Hilfe (WD0)“); ein
+Test hält den Wortlaut gleich mit dem Textbuch. `AppShell` hängt das Blatt einmal ein (`HelpProvider`, `HelpSheet`),
+`HelpMark` setzt das „?“:
+
+| Thema                | Ort                                                                          |
+| -------------------- | ---------------------------------------------------------------------------- |
+| `teiler`             | Spaltenkopf Teiler der Saison und des Events                                 |
+| `corrected-teiler`   | derselbe Kopf in gemischten Wettbewerben („korr.“)                           |
+| `ringteiler`         | „Best. Ringteiler“ (Saison), „Ringteiler“ (Event), „Best. RT“ (Liga)         |
+| `season-order`       | Zeile „Sortierung: …“ über der klassischen Rangliste einer Saison           |
+| `season-alternating` | Satz über der abwechselnden Rangliste                                        |
+| `league-table`       | Überschrift „Tabelle“ einer Liga mit Hin- und Rückrunde                      |
+| `best-of-table`      | Überschrift „Tabelle“ einer Liga im Best-of                                  |
+| `playoffs`           | Zeile „Turnierbaum“ über dem Baum (die Zeile der Rundennamen bleibt)        |
+| `finale`             | Überschrift „Finale“ unter dem Baum                                          |
+
+`Missing` zeigt „–“ mit dem Grund aus `src/lib/help/missing.ts`: Saison ohne Serie (einmal sichtbar je Zeile, sonst
+Tooltip), „Best. RT“ ohne Duell, Platz eines Zurückgezogenen (Tooltip), Direktvergleich nicht nötig, Gegner bei
+Freilos, Paarung mit Zurückgezogenem nicht gewertet, Uhr einer offenen Paarung (Tooltip), Liga ohne Stichtag
+(Tooltip). Der Strich in den leeren Feldern der Bracket-Vorschau bleibt und nennt den Grund nur als Tooltip. Gründe
+ohne Zahl und ohne Wort aus `DATA_WORDS`, damit der Abgleich die Datenfolge jeder Seite gleich liest. Die PDFs
+bleiben, wie sie sind.
+
 ## Skriptprüfung
 
 `pnpm --filter ringwerk pruefen` startet den gebauten Stand auf :3013 gegen die Prüfdatenbank (vorher `pruefdaten`)
 und prüft als Admin, Sportleitung und Mitglied: Rahmen und Leisten je Rolle, Profil, Breiten 375 bis 1280 px ohne
 seitliches Scrollen, die untere Leiste, die Reiter, das Bracket, keine versteckte Kopie im Hintergrund, Darstellung
-ohne Aufblitzen und den Fokus im Dialog „Spielplan neu generieren“ (nur geöffnet und mit Escape geschlossen). Es
-schreibt nichts. Dazu vor jedem Merge und Release der Abgleich aus [[ringwerk-pruefbestand]].
+ohne Aufblitzen, den Fokus in acht Dialogen mit Folgen (nur geöffnet und mit Escape geschlossen) und die Hilfe: jedes
+sichtbare „?“ öffnet sein Thema, am Telefon und am Desktop, ohne die Tabelle umzuordnen, jedes Thema hat ein „?“,
+jedes „–“ nennt seinen Grund. Mit `--bilder` dazu die Blätter der Hilfe. Es schreibt nichts. Dazu vor jedem Merge und Release der Abgleich aus [[ringwerk-pruefbestand]].
 
 ## Drift-Gate
 
