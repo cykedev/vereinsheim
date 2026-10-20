@@ -3,7 +3,7 @@ id: spiegel-navigation
 type: concept
 title: "Spiegel — Navigation, Einstieg und Auswahl"
 aliases: [navigation-spiegel, einstieg, scheiben-liste-konzept, app-rahmen]
-keywords: [art der scheibe, wettkampf, training, kindchoice, navigation, einstieg, startseite, start, scheiben-liste, übersicht, auswahl, auswahlmodus, abend, trainingsabend, einheit, mischabend, familie, blättern, vorige, nächste, zurück, adresse, url, query, deep link, routen, seitenleiste, untere leiste, bottom navigation, scan, offen, bestätigen, eingang, löschen, papierkorb, rückgängig, weiche sperre, löschsperre, grabstein, wiederherstellen, admin, profil, fortschritt, schnitt davor, wertung, zehntel, ganze ringe, wertung der scheibe, wertung der familie, wie am stand, amtliche wertung, liste aus meyton, rangliste, filter liste, zeitraum merken, gemerkter zeitraum, kalender blättern, früher, später, darstellung, cookie]
+keywords: [art der scheibe, wettkampf, training, kindchoice, navigation, einstieg, startseite, start, scheiben-liste, übersicht, auswahl, auswahlmodus, abend, trainingsabend, einheit, mischabend, familie, blättern, vorige, nächste, zurück, adresse, url, query, deep link, routen, seitenleiste, untere leiste, bottom navigation, scan, offen, bestätigen, eingang, löschen, papierkorb, rückgängig, weiche sperre, löschsperre, grabstein, wiederherstellen, admin, profil, fortschritt, schnitt davor, wertung, zehntel, ganze ringe, wertung der scheibe, wertung der familie, wie am stand, amtliche wertung, liste aus meyton, rangliste, filter liste, zeitraum merken, gemerkter zeitraum, kalender blättern, früher, später, darstellung, cookie, teilen, link teilen, geteilte scheibe, share, uuid, ohne anmeldung]
 part_of: ["[[spiegel]]"]
 governed_by: ["[[adr-030]]"]
 relates_to: ["[[spiegel-ui-design]]", "[[spiegel-langzeit]]", "[[spiegel-assignment]]", "[[spiegel-mobile]]", "[[spiegel-roadmap]]", "[[spiegel-privacy]]", "[[spiegel-edge-cases]]", "[[spiegel-durchsicht]]", "[[navigation-pattern]]"]
@@ -60,6 +60,7 @@ Seiten ohne eigenen Bereich:
 | Scheibe | `/cards/<id>?from=progress&family=lg-freihand&series=2&shot=23#position` |
 | Offen | `/open` |
 | Papierkorb | `/profile/trash` |
+| Geteilte Scheibe | `/share/<uuid>`: ohne Anmeldung und ohne Rahmen der App (siehe „Teilen per Link“) |
 | Vergleich zweier Scheiben | `/compare?a=<id>&b=<id>`: kennt das Routen-Modell, eine Seite gibt es noch nicht (C2, SP-2.2); ein Vergleich als Zeitraum aus je einer Scheibe steht in [[spiegel-langzeit]] |
 
 ## Routen-Modell
@@ -316,6 +317,23 @@ Eine eigene Scheibe lässt sich löschen, über Papierkorb und weiche Sperre ([[
   Meldungen „nicht meine“ einer Nummer hebt ein Admin am Konto auf (`liftNotMine`); die Scheiben kommen wartend wieder.
 - Der Papierkorb zeigt auch, was nicht von selbst wiederkommt: eigene endgültig gelöschte Scheiben und eigene Meldungen
   „nicht meine“.
+
+## Teilen per Link
+
+Eine eigene Scheibe lässt sich per Link zeigen, ohne dass die andere Seite ein Konto braucht ([[spiegel-privacy]]):
+
+- **Teilen:** am Ende der Seite einer Scheibe, über dem Löschen (`ShareCard`). „Scheibe teilen“ fragt mit Folgen
+  (`cardShare`), dann steht der Link `/share/<uuid>` da, mit „Geteilt seit“, „Link kopieren“, „Senden…“ (nur mit dem
+  Teilen-Menü des Geräts) und „Teilen beenden“ (`cardShareStop`). Ein Link je Scheibe, ohne Ablauf; die UUID kommt aus
+  `randomUUID()` und steht an der Scheibe (`Card.shareId`, `sharedAt`).
+- **Die geteilte Seite** (`src/app/share/[shareId]`, frei in `proxy.ts`) ist die Seite einer Scheibe mit `own={null}`:
+  ohne Rahmen der App, Rückweg, Blättern, Kreise für Art und Wertung, Teilen und Löschen. Sie öffnet in der Wertung der
+  Scheibe; Ebenen, Ausschnitt, Serie, Schuss, Lineal, Reiter, Sprungleiste und Hilfe gehen, ändern aber nur die Ansicht.
+  Die Adresse bleibt die des Links, nur der Anker des Reiters wechselt. `noindex`, kein Referrer.
+- **Wann der Link nicht geht** (Hinweis aus `not-found.tsx`, 404): Teilen beendet, Scheibe gelöscht (`deleteCard`
+  beendet das Teilen; Wiederherstellen bringt den Link nicht zurück), wartend, Disziplin ignoriert, Konto deaktiviert.
+  Geprüft beim Lesen in `sharedCard` (`VISIBLE_CARD`, aktives Konto).
+- **Neu teilen** gibt eine neue UUID; der alte Link bleibt aus.
 
 ## Wertung je Scheibe und je Familie
 

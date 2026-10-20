@@ -3,7 +3,7 @@ id: spiegel-privacy
 type: concept
 title: "Spiegel — Datenschutz und Rollen"
 aliases: [spiegel-datenschutz, spiegel-rollen, dsgvo-spiegel]
-keywords: [datenschutz, dsgvo, einwilligung, hinweistext, sp-0.5, widerruf, verantwortlicher, auftragsverarbeitung, avv, datensparsamkeit, verdeckte wertung, preisschießen, königsschießen, rollen, trainer, admin, freigabe, export, löschen, jugendliche, erziehungsberechtigte, fixtures, öffentliches repo, probe-puffer, nicht meine, gäste-lan, netztrennung, protokolle, doppelt geprüft]
+keywords: [datenschutz, dsgvo, einwilligung, hinweistext, sp-0.5, widerruf, verantwortlicher, auftragsverarbeitung, avv, datensparsamkeit, verdeckte wertung, preisschießen, königsschießen, rollen, trainer, admin, freigabe, export, löschen, jugendliche, erziehungsberechtigte, fixtures, öffentliches repo, probe-puffer, nicht meine, gäste-lan, netztrennung, protokolle, doppelt geprüft, teilen, link, geteilte scheibe, ohne anmeldung]
 part_of: ["[[spiegel]]"]
 relates_to: ["[[spiegel-assignment]]", "[[spiegel-bridge]]", "[[treffsicher-user-isolation]]"]
 ---
@@ -26,6 +26,11 @@ relates_to: ["[[spiegel-assignment]]", "[[spiegel-bridge]]", "[[treffsicher-user
 - **Protokolle ohne Namen:** Diagnose und Logs der Brücke enthalten keine Namen und Sportpassnummern.
 - **Verdeckte Wertung** (Meyton-Modus 5: Wert und Lage verdeckt, Modus 10: Wert verdeckt, unbekannte Modi) wird nie hochgeladen. Nach einem Preis- oder Königsschießen kann ein Admin freigeben.
 - **Privat ist Standard.** Jeder sieht nur seine Scheiben (wie die Per-User-Isolation in Treffsicher, [[treffsicher-user-isolation]]).
+- **Teilen nur auf ausdrücklichen Wunsch, je Scheibe** ([[spiegel-navigation]] „Teilen per Link“): Der Schütze erstellt
+  auf der Seite einer Scheibe einen Link mit UUID. Wer ihn hat, sieht genau diese Scheibe mit allen Schüssen und Zahlen,
+  ohne Anmeldung, ohne Namen, Sportpassnummer oder Konto, und kann nichts ändern. Der Dialog sagt das vorher, auch dass
+  ein Link weitergegeben werden kann. „Teilen beenden“ und Löschen machen den Link sofort ungültig, neu teilen gibt einen
+  neuen. Der Hinweistext (v2, „Deine Scheiben siehst nur du“) bleibt: Teilen ist eine eigene Handlung des Schützen.
 - **Export und Löschen auf Knopfdruck** (noch nicht gebaut, [[spiegel-roadmap]] „Offene Einzelpunkte“): JSON und CSV; Löschen entfernt Rohdaten (alle Zeilenversionen), Ableitungen und PDFs und setzt Grabsteine; aus den Backups auf dem Server verschwinden die Daten mit deren Rotation (14 Tage). **Ausnahme:** Kopien der Sicherungen auf dem Rechner des Betreibers (`vereinsheim local-pull` nach `./backups/`, `dev-restore`, lokaler Stack) rotieren nicht; dort bleiben auch gelöschte Daten, bis der Betreiber die Kopie ersetzt oder löscht.
 - **Keine echten personenbezogenen Daten im öffentlichen Repo:** Test-PDFs und Beispieldaten anonymisiert oder synthetisch ([[adr-029]]).
 
@@ -36,7 +41,7 @@ relates_to: ["[[spiegel-assignment]]", "[[spiegel-bridge]]", "[[treffsicher-user
 | Schütze | eigene Scheiben, Verläufe, Vergleiche | zuordnen, Notizen, Freigaben, Export, Löschen |
 | Trainer | was Schützen freigegeben haben, später auch live | kommentieren, Gruppen vergleichen |
 | Vereinsadmin | Anlagen, Brücken-Status, Zuordnungen; je Konto nur Zahl der Scheiben, Tag der letzten und Wartende; je Disziplin nur Zahlen der ganzen Anlage (Scheiben, Schützen, letzte Scheibe als Monat, Anzeige am Stand und häufigste Schusszahl erst ab drei Schützen, darunter verlassen sie den Server nicht), nie je Konto; das Ignorieren einer Disziplin ändert keine Zahl je Konto | verbinden, Sportpassnummern bestätigen, Scheibenbilder pflegen; keine Schussbilder, keine Ergebnisse ohne Freigabe |
-| Gast ohne Konto | nichts | vorerst nicht vorgesehen |
+| Gast ohne Konto | eine geteilte Scheibe über ihren Link | nichts ändern; ein Konto für Gäste ist nicht vorgesehen |
 
 ## Offene Abwägung
 

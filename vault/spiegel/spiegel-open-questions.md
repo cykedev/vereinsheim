@@ -76,7 +76,7 @@ Der Katalog steht in [[spiegel-edge-cases]].
 - **Liga-Ergebnisse für Ringwerk?** → offen.
 - **Notizen, Tags, Ausrüstung schon in Version 1?** → nein, sie kommen mit SP-2.3.
 - **Trainer: wer sieht wessen Daten?** → offen.
-- **Ergebnis per Link teilen?** → offen.
+- **Ergebnis per Link teilen?** → ja, je Scheibe und nur auf Wunsch des Schützen, beendbar ([[spiegel-privacy]], [[spiegel-navigation]] „Teilen per Link“).
 
 ## Open Source
 

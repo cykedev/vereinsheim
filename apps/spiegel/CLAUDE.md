@@ -34,7 +34,8 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
 - `src/app/login` ohne Rahmen; `src/app/(app)/*` mit Anmeldepflicht (`requireSession` im Layout, `proxy.ts` davor):
   Start `/`, Scheiben `/cards`, Scheibe `/cards/[id]`, Fortschritt `/progress`, Profil, Papierkorb `/profile/trash`,
   Offen `/open`, Platzhalter Scannen `/scan` (nicht in der Navigation, `scan={false}` im `AppShell`),
-  Admin `/admin/users`, `/admin/disciplines{/[id]}`, `/admin/site`.
+  Admin `/admin/users`, `/admin/disciplines{/[id]}`, `/admin/site`. `src/app/share/[shareId]` ohne Anmeldung und ohne
+  `AppShell` (`SharedShell`: Kopfzeile als Text, Blatt der Hilfe): eine geteilte Scheibe.
 - Seiten sind Server-Komponenten: Sitzung, Daten (`src/lib/db/reads.ts`), Kontext (`pageContext`: Zone, „jetzt“,
   benannte Zeiträume). Die Hüllen in `src/components/*/…Screen.tsx` sind Client-Komponenten und
   bauen Routen und Rückrufe (Funktionen gehen nicht vom Server zum Client).
@@ -53,13 +54,14 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
   Scheibe öffnet ohne Wertung in der Adresse (in ihrer). Die Liste liest ihre Abfrage auf dem Server (`searchOf` in
   `src/lib/search.ts`), ein Filter schreibt die Adresse, und die Seite rechnet neu. Gemessen bei 1.564 Scheiben: Start
   70 ms und 5 KB statt 8 MB an den Browser ([[spiegel-db-schema]]). Nur die Seite einer Scheibe lädt Schüsse
-  (`cardWithShots`, immer mit `ownerId`).
+  (`cardWithShots`, immer mit `ownerId`; die geteilte über `sharedCard`, nur mit ihrem Link).
 - **Fortschritt** (`/progress`): Der Server rechnet `periodModel` über `progressPageData` (`src/lib/overview.ts`, wie
   Start und Liste) und gibt `lightPeriodModel` weiter. Filter gehen über `router.push`; die Wahl (Verlauf, Liste, Rekord)
   bleibt im Browser und schreibt `pick` mit `replaceState`, die Lagen der Ablesung holt `cardMarksAction`
   (`src/lib/marks-actions.ts`) nach. Gerechnet in der Wertung der Familie; ein `scoring` in der Adresse gilt nicht.
 - **Privat ist Standard** ([[spiegel-privacy]]): Jeder Lesezugriff filtert nach dem angemeldeten Schützen, auch für
-  Admins. Admin verwaltet Konten und sieht keine fremden Schüsse.
+  Admins. Admin verwaltet Konten und sieht keine fremden Schüsse. Einzige Ausnahme: eine Scheibe, die ihr Schütze per
+  Link geteilt hat (`sharedCard`, siehe „Teilen per Link“).
 - **Anmeldung wie Ringwerk:** `getAuthSession` prüft gegen die Datenbank (aktiv, `sessionVersion`, einmal je Anfrage
   über `cache`), Server Actions geben `ActionResult` zurück (nie werfen). Ablauf von `authorize`, Store und
   Admin-Auswertung der Sperren kommen aus `@vereinsheim/lib/auth/*`, gemeinsam mit Ringwerk und Treffsicher. Neue
@@ -270,6 +272,13 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
   einer Zustimmung auf (`liftNotMine` in `src/lib/consent/actions.ts`, am Konto): Grabsteine der Nummer an der Anlage weg,
   `historyLoadedAt` und `firstCardConfirmedAt` null, die Scheiben kommen wartend wieder. Profil und Übersicht zeigen den
   Stand des Nachladens als Zustand.
+- **Teilen per Link** ([[spiegel-navigation]] „Teilen per Link“): `Card.shareId` (UUID aus `randomUUID`, eindeutig) und
+  `sharedAt`; `shareCard`/`stopSharingCard` in `src/lib/share-actions.ts` (unter `lockCard`, ohne `revalidatePath`,
+  den Stand hält `CardScreen` und gibt ihn an `ShareCard` und `DeleteCard`). `deleteCard` beendet das Teilen. Die
+  geteilte Seite liest nur über `sharedCard` (`PAGE_CARD_SELECT` mit `VISIBLE_CARD` und aktivem Konto, nie Angaben zum
+  Besitzer) und rendert `CardScreen` mit `own={null}`: ohne Kontextleiste, Art, Wertung, Teilen, Löschen und ohne
+  Fortschreiben der Adresse. `proxy.ts` lässt `share/` frei (`src/proxy.test.ts`); die Kennung prüft `isShareId`, bevor
+  eine Abfrage läuft. Skriptprüfung „Geteilte Scheibe“ in einem Fenster ohne Cookies (`newPage({ isolated: true })`).
 - **Blättern hängt die Seite neu ein** (`key={card.id}`) und liest den Anker nur auf der eigenen Adresse (`useHash`): Next
   rendert die nächste Scheibe, solange die Adresse noch die der vorigen ist, und ihr `#position` war sonst der Reiter der
   nächsten.
