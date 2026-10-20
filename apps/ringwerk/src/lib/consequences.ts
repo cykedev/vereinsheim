@@ -342,7 +342,7 @@ export function minSeriesExemptionUnset({
     about: `${name} wird in dieser Saison ohne Mindestzahl gewertet. Bisher zählt jede Serie ab der ersten.`,
     happens: [
       `Für einen Platz braucht ${name} dann ${minSeries} Serien wie alle anderen.`,
-      ...(seriesCount < minSeries
+      ...(seriesCount > 0 && seriesCount < minSeries
         ? [
             `${name} hat ${count(seriesCount, "Serie", "Serien")} und steht danach ohne Platz in der Rangliste.`,
           ]

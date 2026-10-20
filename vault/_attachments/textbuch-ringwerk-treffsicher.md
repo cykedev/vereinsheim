@@ -1652,14 +1652,14 @@ Leitfaden sagt deshalb an beiden Stellen „jede fünfte“.
 
 ## Ringwerk: Saison ohne Mindestzahl
 
-Stand 20. Oktober 2026, im Plan `plans/2026-10-20-ringwerk-season-no-min-series.md` vom User gelesen, umgesetzt auf
-`feat/ringwerk-season-no-min-series`, **Freigabe des Wortlauts vor dem Merge**. Anlass: Im Verein braucht die Jugend
+Stand 20. Oktober 2026, als Entwurf vom User gelesen, umgesetzt auf `feat/ringwerk-season-no-min-series`, **Freigabe
+des Wortlauts vor dem Merge**. Technik: [[season-mode]]. Anlass: Im Verein braucht die Jugend
 keine Mindestzahl an Serien. Ringwerk führt dafür eine Ausnahme an der Einschreibung, keine Altersklasse. Für eine
 Zeile mit Ausnahme ist die Mindestzahl 1.
 
 ### 1. Einschreiben
 
-Ort: Teilnehmerverwaltung einer Saison mit Mindestzahl, Formular „Einschreiben“.
+Ort: Teilnehmerverwaltung einer aktiven Saison mit einer Mindestzahl über 1, Formular „Einschreiben“.
 
 - **Kästchen:** Keine Mindestzahl an Serien
 - **Darunter leise:** Zählt in der Rangliste ab der ersten Serie. Etwa für die Jugend.
@@ -1675,7 +1675,8 @@ Rangliste, PDF und „Serien erfassen“ zeigen kein Zeichen. Dort steht die Min
 
 ### 3. Ohne Mindestzahl werten
 
-Ort: Teilnehmerverwaltung einer Saison mit Mindestzahl, Knopf in der Zeile einer aktiven Einschreibung.
+Ort: Teilnehmerverwaltung einer aktiven Saison mit einer Mindestzahl über 1, Knopf in der Zeile einer aktiven
+Einschreibung.
 
 - **Titel:** {Anna Birke} ohne Mindestzahl werten?
 - **Worum:** {Anna Birke} ist in dieser Saison eingeschrieben. Für einen Platz braucht es {20} Serien.
@@ -1699,7 +1700,7 @@ Ort: wie 3, bei einer Einschreibung mit Ausnahme.
 - **Worum:** {Anna Birke} wird in dieser Saison ohne Mindestzahl gewertet. Bisher zählt jede Serie ab der ersten.
 - **Was dann passiert:**
   - Für einen Platz braucht {Anna Birke} dann {20} Serien wie alle anderen.
-  - (nur wenn weniger Serien) {Anna Birke} hat {3} Serien und steht danach ohne Platz in der Rangliste.
+  - (nur mit 1 bis {19} Serien) {Anna Birke} hat {3} Serien und steht danach ohne Platz in der Rangliste.
   - Im Protokoll des Wettbewerbs steht die Änderung.
 - **Was nicht passiert:**
   - Die Serien von {Anna Birke} bleiben, wie sie sind.

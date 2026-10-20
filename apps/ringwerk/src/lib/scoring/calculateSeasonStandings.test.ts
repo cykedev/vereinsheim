@@ -326,6 +326,8 @@ describe("calculateSeasonStandings", () => {
     it("bietet die Ausnahme nur in einer Saison mit Mindestzahl an", () => {
       expect(offersMinSeriesExemption({ type: "SEASON", minSeries: 20 })).toBe(true)
       expect(offersMinSeriesExemption({ type: "SEASON", minSeries: null })).toBe(false)
+      // bei einer Mindestzahl von 1 änderte die Ausnahme nichts
+      expect(offersMinSeriesExemption({ type: "SEASON", minSeries: 1 })).toBe(false)
       expect(offersMinSeriesExemption({ type: "EVENT", minSeries: 20 })).toBe(false)
       expect(offersMinSeriesExemption({ type: "LEAGUE", minSeries: null })).toBe(false)
     })
@@ -335,6 +337,8 @@ describe("calculateSeasonStandings", () => {
       expect(requiredSeries(null, true)).toBeNull()
       expect(requiredSeries(20, false)).toBe(20)
       expect(requiredSeries(20, true)).toBe(1)
+      // nie strenger als die Saison selbst
+      expect(requiredSeries(0, true)).toBe(0)
     })
 
     // Die Ausnahme hat den besten Wert. Würde sie ignoriert, hielte der Gewertete Rang 1 und die

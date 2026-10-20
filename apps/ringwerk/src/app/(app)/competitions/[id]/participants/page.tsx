@@ -66,8 +66,11 @@ export default async function CompetitionParticipantsPage({ params }: Props) {
   const isSeason = competition.type === "SEASON"
   const isMixed = !competition.disciplineId
 
-  // Saison mit Mindestzahl: Ausnahme beim Einschreiben, als Zeichen und als Knopf in der Zeile
-  const exemptionMinSeries = offersMinSeriesExemption(competition) ? competition.minSeries : null
+  // Saison mit Mindestzahl: die Ausnahme steht als Zeichen am Namen. Setzen und umstellen lässt sie sich
+  // nur in einer aktiven Saison, sonst lehnte die Action nach der Rückfrage ab.
+  const offersExemption = offersMinSeriesExemption(competition)
+  const exemptionMinSeries =
+    offersExemption && competition.status === "ACTIVE" ? competition.minSeries : null
 
   // Für gemischte Wettbewerbe: Disziplinen für Einschreibung bereitstellen
   const enrollDisciplines = isMixed ? allDisciplines : undefined
@@ -142,7 +145,7 @@ export default async function CompetitionParticipantsPage({ params }: Props) {
                           {cp.discipline.name}
                         </Badge>
                       )}
-                      {exemptionMinSeries !== null && cp.exemptFromMinSeries && (
+                      {offersExemption && cp.exemptFromMinSeries && (
                         <Badge variant="outline" className="text-xs">
                           ohne Mindestzahl
                         </Badge>

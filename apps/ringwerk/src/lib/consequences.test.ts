@@ -545,6 +545,10 @@ describe("Saison ohne Mindestzahl, Wortlaut wie im Textbuch", () => {
     expect(
       minSeriesExemptionUnset({ name: "Anna Birke", minSeries: 20, seriesCount: 20 }).happens
     ).toHaveLength(2)
+    // ohne Serie hat die Zeile schon jetzt keinen Platz
+    expect(
+      minSeriesExemptionUnset({ name: "Anna Birke", minSeries: 20, seriesCount: 0 }).happens
+    ).toHaveLength(2)
     expect(
       minSeriesExemptionUnset({ name: "Anna Birke", minSeries: 20, seriesCount: 1 }).happens[1]
     ).toBe("Anna Birke hat 1 Serie und steht danach ohne Platz in der Rangliste.")

@@ -18,18 +18,19 @@ Ausnahme an der Einschreibung: `CompetitionParticipant.exemptFromMinSeries`. Wer
 der Wertung: oberer Block, Metrik-Ränge, Podium. Eine gemeinsame Rangliste, keine eigene Jugendwertung.
 
 - **Eine Regel an einer Stelle:** `requiredSeries(minSeries, exempt)` in `lib/scoring/calculateSeasonStandings.ts`
-  liefert die Mindestzahl der Zeile (`null` ohne Mindestzahl, `1` mit Ausnahme, sonst `minSeries`). Jede Zeile trägt
+  liefert die Mindestzahl der Zeile (`null` ohne Mindestzahl, mit Ausnahme höchstens `1`, sonst `minSeries`). Jede Zeile trägt
   sie als `requiredSeries`, `meetsMinSeries` folgt daraus. Sortierung, Plätze und Rang-Pool arbeiten unverändert nur mit
   `meetsMinSeries`. Mit Ausnahme und ohne Serie bleibt eine Zeile unten bei denen ohne Serie.
-- **Wo sie wirkt:** `offersMinSeriesExemption` (gleiche Datei): nur `type=SEASON` mit `minSeries`. Nur dort bieten
+- **Wo sie wirkt:** `offersMinSeriesExemption` (gleiche Datei): nur `type=SEASON` mit `minSeries` über 1. Nur dort bieten
   Einschreiben (Kästchen „Keine Mindestzahl an Serien“) und Teilnehmerverwaltung (Zeichen „ohne Mindestzahl“, Knopf
-  mit `DecisionDialog`) sie an, und nur dort speichern `enrollParticipant` und `updateMinSeriesExemption` sie. Bekommt
+  mit `DecisionDialog`, nur in einer aktiven Saison) sie an, und nur dort speichern `enrollParticipant` und `updateMinSeriesExemption` sie. Bekommt
   eine Saison später eine Mindestzahl, gilt der gespeicherte Wert wieder.
 - **Anzeige:** Spalte „Serien“ und Zusatz am Telefon in Tabelle, PDF und Vorschau über `seasonSeriesLabel` (`3/1`
   statt `3/20`); „Serien erfassen“ zeigt `3 Serien / 1 Mindest`. Kein Zeichen am Namen in Rangliste und PDF, die Zahl
   hinter dem Strich zeigt die Ausnahme offen. Die Hilfe „Reihenfolge der Rangliste“ erklärt die 1.
 - **Umstellen** geht jederzeit (Saison und Einschreibung aktiv), auch mit Serien. Update und Protokolleintrag
-  `MIN_SERIES_EXEMPTION_CHANGED` laufen in einer Transaktion. Texte: Textbuch, Abschnitt „Ringwerk: Saison ohne
+  `MIN_SERIES_EXEMPTION_CHANGED` laufen in einer Transaktion; die Bedingungen stehen im `updateMany` selbst, ändert
+  sich keine Zeile, gibt es keinen Eintrag. Texte: Textbuch, Abschnitt „Ringwerk: Saison ohne
   Mindestzahl“.
 
 ## Anzeigereihenfolge der Rangliste

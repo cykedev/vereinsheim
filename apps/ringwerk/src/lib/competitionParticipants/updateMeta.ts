@@ -85,6 +85,8 @@ export async function updateMinSeriesExemption(
   const session = await getAuthSession()
   if (!session) return { error: "Nicht angemeldet" }
   if (!canManage(session.user.role)) return { error: "Keine Berechtigung" }
+  // Argumente einer Server Action kommen ungeprüft vom Client
+  if (typeof exempt !== "boolean") return { error: "Ungültige Eingabe." }
 
   const cp = await db.competitionParticipant.findUnique({
     where: { id: competitionParticipantId },
@@ -108,12 +110,20 @@ export async function updateMinSeriesExemption(
   if (cp.status !== "ACTIVE") return { error: "Nur bei aktiven Teilnehmern möglich." }
   if (cp.exemptFromMinSeries === exempt) return { success: true }
 
-  await db.$transaction([
-    db.competitionParticipant.update({
-      where: { id: competitionParticipantId },
+  // Die Bedingungen stehen auch im Update selbst: Hat eine andere Sitzung inzwischen umgestellt oder die Saison
+  // abgeschlossen, ändert sich keine Zeile, und das Protokoll bekommt keinen Eintrag mit veraltetem Vorher.
+  await db.$transaction(async (tx) => {
+    const { count } = await tx.competitionParticipant.updateMany({
+      where: {
+        id: competitionParticipantId,
+        status: "ACTIVE",
+        exemptFromMinSeries: !exempt,
+        competition: { status: "ACTIVE" },
+      },
       data: { exemptFromMinSeries: exempt },
-    }),
-    db.auditLog.create({
+    })
+    if (count === 0) return
+    await tx.auditLog.create({
       data: {
         eventType: "MIN_SERIES_EXEMPTION_CHANGED",
         entityType: "COMPETITION_PARTICIPANT",
@@ -123,12 +133,12 @@ export async function updateMinSeriesExemption(
         details: {
           participantId: cp.participantId,
           name: [cp.participant.firstName, cp.participant.lastName].filter(Boolean).join(" "),
-          before: { exemptFromMinSeries: cp.exemptFromMinSeries },
+          before: { exemptFromMinSeries: !exempt },
           after: { exemptFromMinSeries: exempt },
         },
       },
-    }),
-  ])
+    })
+  })
 
   revalidateCompetitionParticipantPaths(cp.competitionId)
   revalidateSeasonPaths(cp.competitionId)

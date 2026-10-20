@@ -35,18 +35,20 @@ type ParticipantInput = {
  */
 export function requiredSeries(minSeries: number | null, exempt: boolean): number | null {
   if (minSeries === null) return null
-  return exempt ? 1 : minSeries
+  return exempt ? Math.min(1, minSeries) : minSeries
 }
 
 /**
- * Die Ausnahme wirkt nur in einer Saison mit Mindestzahl. Nur dort bieten Einschreiben und
- * Teilnehmerverwaltung sie an, und nur dort speichern die Actions sie.
+ * Die Ausnahme wirkt nur in einer Saison mit einer Mindestzahl über 1. Nur dort bieten Einschreiben
+ * und Teilnehmerverwaltung sie an, und nur dort speichern die Actions sie.
  */
 export function offersMinSeriesExemption(competition: {
   type: CompetitionType
   minSeries: number | null
 }): boolean {
-  return competition.type === "SEASON" && competition.minSeries !== null
+  return (
+    competition.type === "SEASON" && competition.minSeries !== null && competition.minSeries > 1
+  )
 }
 
 /**

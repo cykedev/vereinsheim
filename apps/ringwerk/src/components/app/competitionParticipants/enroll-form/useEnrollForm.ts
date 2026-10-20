@@ -16,19 +16,19 @@ export function useEnrollForm({ action }: Args) {
 
   function handleSubmit() {
     if (!formRef.current) return
-    // FormData vor dem State-Reset erfassen — hidden inputs haben noch ihre aktuellen Werte
     const formData = new FormData(formRef.current)
-
-    setIsGuest(false)
-    setNewTeam(false)
-    setExemptFromMinSeries(false)
-    setFormKey((k) => k + 1)
 
     startTransition(async () => {
       const result = await action(null, formData)
       if ("error" in result) {
+        // Eingaben bleiben stehen: nach dem Korrigieren geht nichts verloren, auch nicht die Ausnahme
         toast.error(typeof result.error === "string" ? result.error : "Fehler beim Einschreiben.")
+        return
       }
+      setIsGuest(false)
+      setNewTeam(false)
+      setExemptFromMinSeries(false)
+      setFormKey((k) => k + 1)
     })
   }
 

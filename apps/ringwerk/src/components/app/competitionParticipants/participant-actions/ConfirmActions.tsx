@@ -42,7 +42,6 @@ export function MinSeriesExemptionAction({
         className="h-10 w-10"
         title={decision.confirmLabel}
         aria-label={decision.confirmLabel}
-        aria-pressed={exempt}
         disabled={isPending}
         onClick={() => setOpen(true)}
       >

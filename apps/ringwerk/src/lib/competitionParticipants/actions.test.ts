@@ -9,6 +9,7 @@ const {
   competitionParticipantCreateMock,
   competitionParticipantDeleteMock,
   competitionParticipantUpdateMock,
+  competitionParticipantUpdateManyMock,
   matchupCountMock,
   playoffMatchCountMock,
   participantCreateMock,
@@ -26,6 +27,7 @@ const {
   competitionParticipantCreateMock: vi.fn(),
   competitionParticipantDeleteMock: vi.fn(),
   competitionParticipantUpdateMock: vi.fn(),
+  competitionParticipantUpdateManyMock: vi.fn(),
   matchupCountMock: vi.fn(),
   playoffMatchCountMock: vi.fn(),
   participantCreateMock: vi.fn(),
@@ -53,6 +55,7 @@ vi.mock("@/lib/db", () => ({
       create: competitionParticipantCreateMock,
       delete: competitionParticipantDeleteMock,
       update: competitionParticipantUpdateMock,
+      updateMany: competitionParticipantUpdateManyMock,
     },
     matchup: { count: matchupCountMock },
     playoffMatch: { count: playoffMatchCountMock },
@@ -765,7 +768,27 @@ describe("updateMinSeriesExemption", () => {
     vi.resetAllMocks()
     getAuthSessionMock.mockResolvedValue(adminSession)
     competitionParticipantFindUniqueMock.mockResolvedValue(seasonCp())
-    transactionMock.mockResolvedValue([{}, {}])
+    competitionParticipantUpdateManyMock.mockResolvedValue({ count: 1 })
+    // interaktive Transaktion: dieselben Mocks als `tx`
+    transactionMock.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) =>
+      fn({
+        competitionParticipant: { updateMany: competitionParticipantUpdateManyMock },
+        auditLog: { create: auditLogCreateMock },
+      })
+    )
+  })
+
+  it("lehnt ein Argument ab, das kein Wahrheitswert ist", async () => {
+    expect(await updateMinSeriesExemption("cp1", "true" as unknown as boolean)).toEqual({
+      error: "Ungültige Eingabe.",
+    })
+    expect(competitionParticipantFindUniqueMock).not.toHaveBeenCalled()
+  })
+
+  it("schreibt kein Protokoll, wenn sich zwischen Lesen und Schreiben etwas geändert hat", async () => {
+    competitionParticipantUpdateManyMock.mockResolvedValue({ count: 0 })
+    expect(await updateMinSeriesExemption("cp1", true)).toEqual({ success: true })
+    expect(auditLogCreateMock).not.toHaveBeenCalled()
   })
 
   it("liefert Fehler ohne Session", async () => {
@@ -824,8 +847,14 @@ describe("updateMinSeriesExemption", () => {
 
   it("setzt die Ausnahme mit Protokolleintrag und aktualisiert die Seiten", async () => {
     expect(await updateMinSeriesExemption("cp1", true)).toEqual({ success: true })
-    expect(competitionParticipantUpdateMock).toHaveBeenCalledWith({
-      where: { id: "cp1" },
+    // die Bedingungen stehen im Update selbst
+    expect(competitionParticipantUpdateManyMock).toHaveBeenCalledWith({
+      where: {
+        id: "cp1",
+        status: "ACTIVE",
+        exemptFromMinSeries: false,
+        competition: { status: "ACTIVE" },
+      },
       data: { exemptFromMinSeries: true },
     })
     expect(auditLogCreateMock).toHaveBeenCalledWith({
@@ -854,9 +883,8 @@ describe("updateMinSeriesExemption", () => {
     getAuthSessionMock.mockResolvedValue(managerSession)
     competitionParticipantFindUniqueMock.mockResolvedValue(seasonCp({ exemptFromMinSeries: true }))
     expect(await updateMinSeriesExemption("cp1", false)).toEqual({ success: true })
-    expect(competitionParticipantUpdateMock).toHaveBeenCalledWith({
-      where: { id: "cp1" },
-      data: { exemptFromMinSeries: false },
-    })
+    expect(competitionParticipantUpdateManyMock).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { exemptFromMinSeries: false } })
+    )
   })
 })
