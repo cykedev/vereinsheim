@@ -460,6 +460,9 @@ model Card {
   currentRevision   CardRevision?   @relation("CurrentRevision", fields: [currentRevisionId], references: [id])
   // Papierkorb: 30 Tage, danach endgültig gelöscht und gesperrt (DeleteLock)
   deletedAt         DateTime?       @db.Timestamptz(3)
+  // Link zum Teilen (`/share/<uuid>`), vom Schützen erzeugt; null: nicht geteilt. Neu teilen gibt eine neue UUID
+  shareId           String?         @unique @db.Uuid
+  sharedAt          DateTime?       @db.Timestamptz(3)
   // zuletzt bewegtes Lebenszeichen (Beobachtungszeit, um den Versatz verschoben); Grundlage des Zustands (SF-10)
   lifesignAt        DateTime?       @db.Timestamptz(3)
   // Versatz der Uhr des Stands, gemessen am laufenden Lebenszeichen (SF-73); ab fünf Minuten ausgeglichen
