@@ -7,6 +7,8 @@ export type CompetitionParticipantListItem = {
   startNumber: number | null
   withdrawnAt: Date | null
   isGuest: boolean
+  /** Saison: in der Wertung ab der ersten Serie, ohne Mindestzahl */
+  exemptFromMinSeries: boolean
   disciplineId: string | null
   discipline: {
     id: string

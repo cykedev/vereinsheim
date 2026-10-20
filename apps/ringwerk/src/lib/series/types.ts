@@ -58,5 +58,7 @@ export type SeasonParticipantEntry = {
   status: string
   disciplineId: string | null
   discipline: { id: string; name: string } | null
+  /** Ausnahme an der Einschreibung: in der Wertung ab der ersten Serie */
+  exemptFromMinSeries: boolean
   series: SeasonSeriesItem[]
 }

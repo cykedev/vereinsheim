@@ -100,6 +100,7 @@ export async function getSeasonWithSeries(id: string): Promise<{
       participantId: true,
       status: true,
       disciplineId: true,
+      exemptFromMinSeries: true,
       discipline: { select: { id: true, name: true } },
       participant: {
         select: {
@@ -163,6 +164,7 @@ export async function getSeasonWithSeries(id: string): Promise<{
     status: cp.status,
     disciplineId: cp.disciplineId,
     discipline: cp.discipline,
+    exemptFromMinSeries: cp.exemptFromMinSeries,
     series: seriesByParticipant.get(cp.participantId) ?? [],
   }))
 

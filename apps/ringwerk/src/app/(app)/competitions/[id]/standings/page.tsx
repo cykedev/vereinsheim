@@ -47,6 +47,7 @@ export default async function SeasonStandingsPage({ params }: Props) {
         participantId: p.participantId,
         participantName: `${p.lastName}, ${p.firstName}`,
         series: p.series,
+        exemptFromMinSeries: p.exemptFromMinSeries,
       })),
       competition.minSeries,
       competition.disciplineId

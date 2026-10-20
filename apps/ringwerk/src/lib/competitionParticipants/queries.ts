@@ -14,6 +14,7 @@ export async function getCompetitionParticipants(
       startNumber: true,
       withdrawnAt: true,
       isGuest: true,
+      exemptFromMinSeries: true,
       disciplineId: true,
       discipline: {
         select: { id: true, name: true, scoringType: true, teilerFaktor: true },

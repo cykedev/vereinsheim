@@ -71,6 +71,7 @@ async function loadSeasonPreview(c: CompetitionListItem): Promise<CompetitionPre
             participantId: p.participantId,
             participantName: `${p.lastName}, ${p.firstName}`,
             series: p.series,
+            exemptFromMinSeries: p.exemptFromMinSeries,
           })),
           data.competition.minSeries,
           data.competition.disciplineId
