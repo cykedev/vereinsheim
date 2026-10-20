@@ -52,4 +52,17 @@ describe("gemerkter Zeitraum im Fortschritt", () => {
     // ohne gemerkten Zeitraum die Vorgabe
     expect(withRememberedChoice(query, params(""), null)).toBe(query)
   })
+
+  it("die Kennzahl wählt keinen Zeitraum: der Weg von σ einer Scheibe öffnet im gemerkten", () => {
+    const remembered = { type: "rolling", days: 365 } as const
+    const query: ProgressQuery = {
+      ...DEFAULT_PROGRESS,
+      family: "lp-freihand",
+      metric: "group.sigma",
+    }
+    expect(
+      withRememberedChoice(query, params("family=lp-freihand&metric=sigma"), remembered)
+    ).toEqual({ ...query, choice: remembered })
+    expect(withRememberedChoice(query, params("metric=sigma&range=30d"), remembered)).toBe(query)
+  })
 })

@@ -10,6 +10,7 @@ import {
 import { computeMetric, inScoring, metricByKey } from "@vereinsheim/shot-core/metrics"
 
 import { axisText, formatValue, ringsText } from "../../format"
+import { RouteLink } from "../../nav/RouteLink"
 import { ChartSlot } from "../charts/frame"
 import { ShapeChart } from "../charts/ShapeChart"
 import { NO_OUTLIERS } from "../../reasons"
@@ -19,7 +20,7 @@ import type { CardContext, CardSpec } from "./index"
 const mm = (um: number) => formatValue(um / 1000, 2)
 
 /** Präzision: σ, Maße der Gruppe, Form der Gruppe, Ausreißer, alle über die Grundlage */
-export function precisionCards({ input, explain, onHelp }: CardContext): CardSpec[] {
+export function precisionCards({ input, explain, onHelp, sigmaRoute }: CardContext): CardSpec[] {
   const { base, scoring, target } = input
   const sigma = sigmaEstimate(base)
   const metric = (key: string) => computeMetric(inScoring(metricByKey(key)!, scoring), base)
@@ -63,8 +64,16 @@ export function precisionCards({ input, explain, onHelp }: CardContext): CardSpe
               </div>
               <KeyValues rows={[["95-%-Bereich", `${mm(sigma.low)} bis ${mm(sigma.high)} mm`]]} />
               <Note>
-                {`σ aus ${sigma.n} Schuss, für wenige Schüsse korrigiert: Er hängt kaum von der Schusszahl ab und taugt für den Vergleich über Abende.`}
+                {`σ aus ${sigma.n} Schuss, für wenige Schüsse korrigiert. Er hängt kaum von der Schusszahl ab.${sigmaRoute ? " Deshalb zeigt Fortschritt die Streuung über alle deine Scheiben als σ." : ""}`}
               </Note>
+              {sigmaRoute && (
+                <RouteLink
+                  route={sigmaRoute}
+                  className="w-fit text-[13px] font-semibold text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring"
+                >
+                  Streuung im Fortschritt ›
+                </RouteLink>
+              )}
             </>
           ) : (
             <Note>ab 3 Schuss</Note>
@@ -100,8 +109,8 @@ export function precisionCards({ input, explain, onHelp }: CardContext): CardSpe
             ]}
           />
           <Note>
-            Der Streukreis wird mit der Schusszahl größer, R50 fällt bei wenigen Schüssen leicht zu
-            klein aus; über Abende mit verschiedenen Schusszahlen vergleicht σ.
+            Der Streukreis wird mit der Schusszahl größer. R50 fällt bei wenigen Schüssen leicht zu
+            klein aus. Scheiben mit verschiedenen Schusszahlen vergleichst du deshalb über σ.
           </Note>
         </AnalysisCard>
       ),

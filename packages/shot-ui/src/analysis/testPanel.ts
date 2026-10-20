@@ -6,6 +6,7 @@ import { LP_10M, type TargetImage } from "@vereinsheim/shot-core/targets"
 import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 
+import type { Route } from "../nav/routes"
 import type { SeriesKey } from "../types"
 import { initialViewState, type Layer, type ViewState } from "../view-state"
 import { AnalysisPanel } from "./AnalysisPanel"
@@ -23,6 +24,7 @@ export interface RenderOptions {
   /** auf der Scheibe gewählter Schuss (Index in den Schüssen) */
   chosen?: ViewState["chosen"]
   onChoose?: (index: number, series: SeriesKey | null) => void
+  sigmaRoute?: Route
 }
 
 /** ein Reiter der Analyse als Markup; ohne Angaben die Beispielkarte „40 Schuss“ (LP) in Zehnteln */
@@ -43,6 +45,7 @@ export function renderTab(tab: AnalysisTab, options: RenderOptions = {}): string
       onToggleLayer: options.onToggleLayer ?? (() => {}),
       onHelp: options.onHelp ?? (() => {}),
       onChoose: options.onChoose,
+      sigmaRoute: options.sigmaRoute,
     })
   )
 }

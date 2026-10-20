@@ -130,7 +130,8 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
 - **Zeitraum des Fortschritts gemerkt:** Cookie
   `spiegel-period` in der Form von `range` (`src/lib/period-memory*.ts`). Geschrieben nur, wenn der Zeitraum im Blatt
   „Filter“ übernommen wird (`setFilters` in `ProgressScreen`, auch `setChoice`, das heute niemand schickt); gelesen auf dem Server, wenn `/progress`
-  keine eigene Abfrage hat außer `family` (die hängt die Navigation an). Ein benannter Zeitraum, den es nicht mehr gibt,
+  keine eigene Abfrage hat außer `family` und `metric` (die Familie hängt die Navigation an, die Kennzahl der Weg von σ
+  auf der Seite einer Scheibe, `sigmaRoute`). Ein benannter Zeitraum, den es nicht mehr gibt,
   gilt als keiner.
 - **Projektion nur aus dem Fachkern.** `cardProjection` und `cardMarks` rechnen, die App speichert. Steigt eine
   Kennzahl-`version` oder `PROJECTION_VERSION`, holt `refreshProjections` die veralteten nach (auch die einer früheren

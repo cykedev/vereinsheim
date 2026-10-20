@@ -20,8 +20,9 @@ export function parseRememberedChoice(
 }
 
 /**
- * Der Fortschritt ohne eigene Abfrage öffnet im gemerkten Zeitraum. Die Familie zählt nicht als eigene Abfrage: Die
- * Navigation hängt die zuletzt gewählte an (`areaLinks`). Ein Link mit eigener Abfrage (Start „Form“ mit Vergleich,
+ * Der Fortschritt ohne eigene Abfrage öffnet im gemerkten Zeitraum. Familie und Kennzahl zählen nicht als eigene
+ * Abfrage, denn sie wählen keinen Zeitraum: Die Navigation hängt die zuletzt gewählte Familie an (`areaLinks`), die
+ * Seite einer Scheibe die Kennzahl (Weg von σ). Ein Link mit eigener Abfrage (Start „Form“ mit Vergleich,
  * „Im Fortschritt zeigen“ mit Zeitraum, Rückweg einer Scheibe) gilt, wie er ist.
  */
 export function withRememberedChoice(
@@ -29,6 +30,6 @@ export function withRememberedChoice(
   params: URLSearchParams,
   remembered: PeriodChoice | null
 ): ProgressQuery {
-  const own = [...params.keys()].some((key) => key !== "family")
+  const own = [...params.keys()].some((key) => key !== "family" && key !== "metric")
   return own || !remembered ? query : { ...query, choice: remembered }
 }

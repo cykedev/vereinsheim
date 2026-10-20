@@ -4,6 +4,7 @@
 import type { MetricShot } from "@vereinsheim/shot-core/metrics"
 import type { ReactNode } from "react"
 
+import type { Route } from "../../nav/routes"
 import type { Layer } from "../../view-state"
 import type { AnalysisInput } from "../input"
 import { overviewCards } from "./OverviewTab"
@@ -27,6 +28,8 @@ export interface CardContext {
   chosenShot?: MetricShot | null
   /** „Auf der Scheibe“ im Lineal: diesen Schuss dort wählen und zu ihr springen */
   onShowShot?: (shot: MetricShot) => void
+  /** Fortschritt mit der Streuung σ der Familie dieser Scheibe; ohne sie kein Link an σ */
+  sigmaRoute?: Route
 }
 
 export interface CardSpec {

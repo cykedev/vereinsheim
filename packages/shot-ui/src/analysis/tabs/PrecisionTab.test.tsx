@@ -16,6 +16,7 @@ import { LP_10M } from "@vereinsheim/shot-core/targets"
 import { describe, expect, it } from "vitest"
 
 import { axisText, formatValue } from "../../format"
+import { DEFAULT_PROGRESS, urlFromRoute } from "../../nav/routes"
 import { fortyCard } from "../testCard"
 import { cardHtml, cardText, renderTab } from "../testPanel"
 
@@ -38,6 +39,33 @@ describe("Reiter Präzision", () => {
     const card = cardHtml(html, "praezision-sigma")
     const left = (sigma.low / 1000 / max) * 100
     expect(card).toMatch(new RegExp(`data-range="true"[^>]*style="left:${left}%`))
+  })
+
+  it("σ zeigt den Weg in den Fortschritt, wenn die Seite ihn gibt", () => {
+    const route = {
+      page: "progress",
+      query: { ...DEFAULT_PROGRESS, family: "lp-freihand", metric: "group.sigma" },
+      section: null,
+    } as const
+    const card = cardHtml(renderTab("precision", { sigmaRoute: route }), "praezision-sigma")
+    const href = card.match(/<a [^>]*href="([^"]+)"[^>]*>Streuung im Fortschritt ›<\/a>/)?.[1]
+    expect(href).toBe(urlFromRoute(route).replaceAll("&", "&amp;"))
+    expect(href).toContain("metric=sigma")
+    expect(href).toContain("family=lp-freihand")
+    expect(cardText(renderTab("precision", { sigmaRoute: route }), "praezision-sigma")).toContain(
+      "Er hängt kaum von der Schusszahl ab. Deshalb zeigt Fortschritt die Streuung über alle deine Scheiben als σ."
+    )
+    // ohne Weg kein Link und kein Verweis
+    const plain = cardText(html, "praezision-sigma")
+    expect(cardHtml(html, "praezision-sigma")).not.toContain("<a ")
+    expect(plain).not.toContain("Fortschritt")
+    expect(plain).not.toMatch(/über Abende|;/)
+  })
+
+  it("Maße der Gruppe: σ für Scheiben mit verschiedenen Schusszahlen", () => {
+    expect(cardText(html, "masse-der-gruppe")).toContain(
+      "Der Streukreis wird mit der Schusszahl größer. R50 fällt bei wenigen Schüssen leicht zu klein aus. Scheiben mit verschiedenen Schusszahlen vergleichst du deshalb über σ."
+    )
   })
 
   it("Maße der Gruppe aus den Kennzahlen, R50 in Ringbreiten", () => {

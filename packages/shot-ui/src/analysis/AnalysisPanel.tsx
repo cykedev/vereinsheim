@@ -11,6 +11,7 @@ import { useId, useMemo, type ReactNode } from "react"
 
 import { HelpButton } from "../help/HelpButton"
 import { JUMP_BAR } from "@vereinsheim/ui/design2/bar"
+import type { Route } from "../nav/routes"
 import { isProbeShot, seriesKeyOf } from "../shots"
 import type { SeriesKey } from "../types"
 import type { Layer, ViewState } from "../view-state"
@@ -138,6 +139,8 @@ export interface AnalysisPanelProps {
    * Seite springt dann zur Scheibe. Ohne den Rückruf gibt es den Knopf nicht.
    */
   onChoose?: (index: number, series: SeriesKey | null) => void
+  /** Fortschritt mit der Streuung σ der Familie dieser Scheibe; ohne sie kein Link an σ */
+  sigmaRoute?: Route
   className?: string
 }
 
@@ -157,6 +160,7 @@ export function AnalysisPanel({
   onToggleLayer,
   onHelp,
   onChoose,
+  sigmaRoute,
   action,
   className,
 }: AnalysisPanelProps) {
@@ -193,6 +197,7 @@ export function AnalysisPanel({
             onHelp,
             chosenShot,
             onShowShot,
+            sigmaRoute,
           })
         : [
             {
@@ -205,7 +210,18 @@ export function AnalysisPanel({
               ),
             },
           ],
-    [shots.length, tab, input, explain, state.layers, onToggleLayer, onHelp, chosenShot, onShowShot]
+    [
+      shots.length,
+      tab,
+      input,
+      explain,
+      state.layers,
+      onToggleLayer,
+      onHelp,
+      chosenShot,
+      onShowShot,
+      sigmaRoute,
+    ]
   )
   const tabLabel = ANALYSIS_TABS.find((t) => t.value === tab)?.label ?? ""
 
