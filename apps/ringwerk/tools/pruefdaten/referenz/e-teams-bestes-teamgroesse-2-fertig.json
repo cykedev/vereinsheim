@@ -24,12 +24,13 @@
  },
  "pages": {
   "audit-log@ADMIN@1280": [
-   "Teilnehmer",
-   "Spielplan & Tabelle",
-   "Playoffs",
-   "Zurück",
+   "Wettbewerbe",
    "E · Teams Bestes, Teamgröße 2, fertig",
    "Luftgewehr · Protokoll",
+   "Spielplan & Tabelle",
+   "Playoffs",
+   "Teilnehmer",
+   "Protokoll",
    "Wettbewerb-Status geändert",
    "E · Teams Bestes, Teamgröße 2, fertig: ACTIVE → COMPLETED",
    "Prüfung Sportleitung · 08.06.2026, 10:18",
@@ -72,8 +73,13 @@
    "Details"
   ],
   "audit-log@ADMIN@390": [
+   "Wettbewerbe",
    "E · Teams Bestes, Teamgröße 2, fertig",
    "Luftgewehr · Protokoll",
+   "Spielplan & Tabelle",
+   "Playoffs",
+   "Teilnehmer",
+   "Protokoll",
    "Wettbewerb-Status geändert",
    "E · Teams Bestes, Teamgröße 2, fertig: ACTIVE → COMPLETED",
    "Prüfung Sportleitung · 08.06.2026, 10:18",
@@ -116,12 +122,13 @@
    "Details"
   ],
   "participants@ADMIN@1280": [
+   "Wettbewerbe",
    "Starterliste drucken",
-   "Serien erfassen",
-   "Rangliste",
-   "Zurück",
    "E · Teams Bestes, Teamgröße 2, fertig",
    "Luftgewehr · Teilnehmerverwaltung",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Eingeschrieben (8)",
    "Esche, Olga",
    "Team 1",
@@ -143,8 +150,12 @@
    "Team 4"
   ],
   "participants@ADMIN@390": [
+   "Wettbewerbe",
    "E · Teams Bestes, Teamgröße 2, fertig",
    "Luftgewehr · Teilnehmerverwaltung",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Eingeschrieben (8)",
    "Esche, Olga",
    "Team 1",
@@ -166,43 +177,53 @@
    "Team 4"
   ],
   "playoffs@ADMIN@1280": [
-   "Teilnehmer",
-   "Spielplan & Tabelle",
-   "Zurück",
+   "Wettbewerbe",
    "E · Teams Bestes, Teamgröße 2, fertig",
    "Luftgewehr · Playoffs",
+   "Spielplan & Tabelle",
+   "Playoffs",
+   "Teilnehmer",
    "Playoffs noch nicht gestartet",
    "Top 8 von 8 Teilnehmern qualifizieren sich für das Viertelfinale.",
    "Playoffs starten"
   ],
   "playoffs@ADMIN@390": [
+   "Wettbewerbe",
    "E · Teams Bestes, Teamgröße 2, fertig",
    "Luftgewehr · Playoffs",
+   "Spielplan & Tabelle",
+   "Playoffs",
+   "Teilnehmer",
    "Playoffs noch nicht gestartet",
    "Top 8 von 8 Teilnehmern qualifizieren sich für das Viertelfinale.",
    "Playoffs starten"
   ],
   "playoffs@USER@1280": [
-   "Spielplan & Tabelle",
-   "Zurück",
+   "Wettbewerbe",
    "E · Teams Bestes, Teamgröße 2, fertig",
    "Luftgewehr · Playoffs",
+   "Spielplan & Tabelle",
+   "Playoffs",
    "Die Playoffs wurden noch nicht gestartet."
   ],
   "playoffs@USER@390": [
+   "Wettbewerbe",
    "E · Teams Bestes, Teamgröße 2, fertig",
    "Luftgewehr · Playoffs",
+   "Spielplan & Tabelle",
+   "Playoffs",
    "Die Playoffs wurden noch nicht gestartet."
   ],
   "ranking@ADMIN@1280": [
-   "Teilnehmer",
-   "Serien erfassen",
+   "Wettbewerbe",
    "Bearbeiten",
    "PDF exportieren",
-   "Zurück",
    "E · Teams Bestes, Teamgröße 2, fertig",
    "Luftgewehr · Rangliste",
    "08.06.2026",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Ringteiler",
    "10 Schuss",
    "Team-Rangliste",
@@ -247,9 +268,13 @@
    "Luftgewehr | 87 | 114,5 | 127,5"
   ],
   "ranking@ADMIN@390": [
+   "Wettbewerbe",
    "E · Teams Bestes, Teamgröße 2, fertig",
    "Luftgewehr · Rangliste",
    "08.06.2026",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Ringteiler",
    "10 Schuss",
    "Team-Rangliste",
@@ -294,8 +319,8 @@
    "87 | 127,5"
   ],
   "ranking@USER@1280": [
+   "Wettbewerbe",
    "PDF exportieren",
-   "Zurück",
    "E · Teams Bestes, Teamgröße 2, fertig",
    "Luftgewehr · Rangliste",
    "08.06.2026",
@@ -343,6 +368,7 @@
    "Luftgewehr | 87 | 114,5 | 127,5"
   ],
   "ranking@USER@390": [
+   "Wettbewerbe",
    "E · Teams Bestes, Teamgröße 2, fertig",
    "Luftgewehr · Rangliste",
    "08.06.2026",
@@ -390,11 +416,12 @@
    "87 | 127,5"
   ],
   "series@ADMIN@1280": [
-   "Teilnehmer",
-   "Rangliste",
-   "Zurück",
+   "Wettbewerbe",
    "E · Teams Bestes, Teamgröße 2, fertig",
    "Luftgewehr · Serien erfassen",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Esche, Olga",
    "Team 1",
    "89 Ringe · Teiler 18,3",
@@ -422,8 +449,12 @@
    "8 von 8 Ergebnissen erfasst"
   ],
   "series@ADMIN@390": [
+   "Wettbewerbe",
    "E · Teams Bestes, Teamgröße 2, fertig",
    "Luftgewehr · Serien erfassen",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Esche, Olga",
    "Team 1",
    "89 Ringe · Teiler 18,3",

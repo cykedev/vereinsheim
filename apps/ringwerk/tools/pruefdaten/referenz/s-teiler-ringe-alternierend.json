@@ -22,12 +22,13 @@
  },
  "pages": {
   "audit-log@ADMIN@1280": [
-   "Teilnehmer",
-   "Spielplan & Tabelle",
-   "Playoffs",
-   "Zurück",
+   "Wettbewerbe",
    "S · Teiler/Ringe alternierend",
    "Luftgewehr · Protokoll",
+   "Spielplan & Tabelle",
+   "Playoffs",
+   "Teilnehmer",
+   "Protokoll",
    "Saison-Serie erfasst",
    "Tilda Lech",
    "Prüfung Sportleitung · 20.06.2026, 10:39",
@@ -154,8 +155,13 @@
    "Details"
   ],
   "audit-log@ADMIN@390": [
+   "Wettbewerbe",
    "S · Teiler/Ringe alternierend",
    "Luftgewehr · Protokoll",
+   "Spielplan & Tabelle",
+   "Playoffs",
+   "Teilnehmer",
+   "Protokoll",
    "Saison-Serie erfasst",
    "Tilda Lech",
    "Prüfung Sportleitung · 20.06.2026, 10:39",
@@ -282,11 +288,12 @@
    "Details"
   ],
   "participants@ADMIN@1280": [
-   "Serien erfassen",
-   "Rangliste",
-   "Zurück",
+   "Wettbewerbe",
    "S · Teiler/Ringe alternierend",
    "Luftgewehr · Teilnehmerverwaltung",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Teilnehmer",
    "Teilnehmer wählen…",
    "Ahornberger-Ampermoos, Leopoldine",
@@ -350,8 +357,12 @@
    "Traun, Mara"
   ],
   "participants@ADMIN@390": [
+   "Wettbewerbe",
    "S · Teiler/Ringe alternierend",
    "Luftgewehr · Teilnehmerverwaltung",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Teilnehmer",
    "Teilnehmer wählen…",
    "Ahornberger-Ampermoos, Leopoldine",
@@ -415,40 +426,50 @@
    "Traun, Mara"
   ],
   "playoffs@ADMIN@1280": [
-   "Teilnehmer",
-   "Spielplan & Tabelle",
-   "Zurück",
+   "Wettbewerbe",
    "S · Teiler/Ringe alternierend",
    "Luftgewehr · Playoffs",
+   "Spielplan & Tabelle",
+   "Playoffs",
+   "Teilnehmer",
    "Playoffs noch nicht gestartet",
    "Top 8 von 8 Teilnehmern qualifizieren sich für das Viertelfinale.",
    "Playoffs starten"
   ],
   "playoffs@ADMIN@390": [
+   "Wettbewerbe",
    "S · Teiler/Ringe alternierend",
    "Luftgewehr · Playoffs",
+   "Spielplan & Tabelle",
+   "Playoffs",
+   "Teilnehmer",
    "Playoffs noch nicht gestartet",
    "Top 8 von 8 Teilnehmern qualifizieren sich für das Viertelfinale.",
    "Playoffs starten"
   ],
   "playoffs@USER@1280": [
-   "Spielplan & Tabelle",
-   "Zurück",
+   "Wettbewerbe",
    "S · Teiler/Ringe alternierend",
    "Luftgewehr · Playoffs",
+   "Spielplan & Tabelle",
+   "Playoffs",
    "Die Playoffs wurden noch nicht gestartet."
   ],
   "playoffs@USER@390": [
+   "Wettbewerbe",
    "S · Teiler/Ringe alternierend",
    "Luftgewehr · Playoffs",
+   "Spielplan & Tabelle",
+   "Playoffs",
    "Die Playoffs wurden noch nicht gestartet."
   ],
   "series@ADMIN@1280": [
-   "Teilnehmer",
-   "Rangliste",
-   "Zurück",
+   "Wettbewerbe",
    "S · Teiler/Ringe alternierend",
    "Luftgewehr · Serien erfassen",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Buche, Rita",
    "6 Serien / 5 Mindest",
    "Eiche, Florian",
@@ -468,8 +489,12 @@
    "30 Serien erfasst"
   ],
   "series@ADMIN@390": [
+   "Wettbewerbe",
    "S · Teiler/Ringe alternierend",
    "Luftgewehr · Serien erfassen",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Buche, Rita",
    "6 Serien / 5 Mindest",
    "Eiche, Florian",
@@ -489,14 +514,15 @@
    "30 Serien erfasst"
   ],
   "standings@ADMIN@1280": [
-   "Teilnehmer",
-   "Serien erfassen",
+   "Wettbewerbe",
    "Bearbeiten",
    "PDF exportieren",
-   "Zurück",
    "S · Teiler/Ringe alternierend",
    "Luftgewehr · Rangliste",
    "01.01.2026 – 30.09.2026",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "10 Schuss",
    "Mindest: 5 Serien",
    "Sortierung: Teiler/Ringe alternierend — hervorgehoben ist der Wert, der den Platz ergeben hat.",
@@ -560,9 +586,13 @@
    "–"
   ],
   "standings@ADMIN@390": [
+   "Wettbewerbe",
    "S · Teiler/Ringe alternierend",
    "Luftgewehr · Rangliste",
    "01.01.2026 – 30.09.2026",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "10 Schuss",
    "Mindest: 5 Serien",
    "Sortierung: Teiler/Ringe alternierend — hervorgehoben ist der Wert, der den Platz ergeben hat.",
@@ -607,8 +637,8 @@
    "–"
   ],
   "standings@USER@1280": [
+   "Wettbewerbe",
    "PDF exportieren",
-   "Zurück",
    "S · Teiler/Ringe alternierend",
    "Luftgewehr · Rangliste",
    "01.01.2026 – 30.09.2026",
@@ -675,6 +705,7 @@
    "–"
   ],
   "standings@USER@390": [
+   "Wettbewerbe",
    "S · Teiler/Ringe alternierend",
    "Luftgewehr · Rangliste",
    "01.01.2026 – 30.09.2026",

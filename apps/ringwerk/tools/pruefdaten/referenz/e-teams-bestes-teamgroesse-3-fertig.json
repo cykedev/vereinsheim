@@ -24,12 +24,13 @@
  },
  "pages": {
   "audit-log@ADMIN@1280": [
-   "Teilnehmer",
-   "Spielplan & Tabelle",
-   "Playoffs",
-   "Zurück",
+   "Wettbewerbe",
    "E · Teams Bestes, Teamgröße 3, fertig",
    "Luftgewehr · Protokoll",
+   "Spielplan & Tabelle",
+   "Playoffs",
+   "Teilnehmer",
+   "Protokoll",
    "Wettbewerb-Status geändert",
    "E · Teams Bestes, Teamgröße 3, fertig: ACTIVE → COMPLETED",
    "Prüfung Sportleitung · 10.06.2026, 10:26",
@@ -88,8 +89,13 @@
    "Details"
   ],
   "audit-log@ADMIN@390": [
+   "Wettbewerbe",
    "E · Teams Bestes, Teamgröße 3, fertig",
    "Luftgewehr · Protokoll",
+   "Spielplan & Tabelle",
+   "Playoffs",
+   "Teilnehmer",
+   "Protokoll",
    "Wettbewerb-Status geändert",
    "E · Teams Bestes, Teamgröße 3, fertig: ACTIVE → COMPLETED",
    "Prüfung Sportleitung · 10.06.2026, 10:26",
@@ -148,12 +154,13 @@
    "Details"
   ],
   "participants@ADMIN@1280": [
+   "Wettbewerbe",
    "Starterliste drucken",
-   "Serien erfassen",
-   "Rangliste",
-   "Zurück",
    "E · Teams Bestes, Teamgröße 3, fertig",
    "Luftgewehr · Teilnehmerverwaltung",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Eingeschrieben (12)",
    "Isar, Anja",
    "Team 1",
@@ -184,8 +191,12 @@
    "sven.saalach@example.test"
   ],
   "participants@ADMIN@390": [
+   "Wettbewerbe",
    "E · Teams Bestes, Teamgröße 3, fertig",
    "Luftgewehr · Teilnehmerverwaltung",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Eingeschrieben (12)",
    "Isar, Anja",
    "Team 1",
@@ -216,43 +227,53 @@
    "sven.saalach@example.test"
   ],
   "playoffs@ADMIN@1280": [
-   "Teilnehmer",
-   "Spielplan & Tabelle",
-   "Zurück",
+   "Wettbewerbe",
    "E · Teams Bestes, Teamgröße 3, fertig",
    "Luftgewehr · Playoffs",
+   "Spielplan & Tabelle",
+   "Playoffs",
+   "Teilnehmer",
    "Playoffs noch nicht gestartet",
    "Top 8 von 12 Teilnehmern qualifizieren sich für das Viertelfinale.",
    "Playoffs starten"
   ],
   "playoffs@ADMIN@390": [
+   "Wettbewerbe",
    "E · Teams Bestes, Teamgröße 3, fertig",
    "Luftgewehr · Playoffs",
+   "Spielplan & Tabelle",
+   "Playoffs",
+   "Teilnehmer",
    "Playoffs noch nicht gestartet",
    "Top 8 von 12 Teilnehmern qualifizieren sich für das Viertelfinale.",
    "Playoffs starten"
   ],
   "playoffs@USER@1280": [
-   "Spielplan & Tabelle",
-   "Zurück",
+   "Wettbewerbe",
    "E · Teams Bestes, Teamgröße 3, fertig",
    "Luftgewehr · Playoffs",
+   "Spielplan & Tabelle",
+   "Playoffs",
    "Die Playoffs wurden noch nicht gestartet."
   ],
   "playoffs@USER@390": [
+   "Wettbewerbe",
    "E · Teams Bestes, Teamgröße 3, fertig",
    "Luftgewehr · Playoffs",
+   "Spielplan & Tabelle",
+   "Playoffs",
    "Die Playoffs wurden noch nicht gestartet."
   ],
   "ranking@ADMIN@1280": [
-   "Teilnehmer",
-   "Serien erfassen",
+   "Wettbewerbe",
    "Bearbeiten",
    "PDF exportieren",
-   "Zurück",
    "E · Teams Bestes, Teamgröße 3, fertig",
    "Luftgewehr · Rangliste",
    "10.06.2026",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Ringteiler",
    "10 Schuss",
    "Team-Rangliste",
@@ -313,9 +334,13 @@
    "Luftgewehr | 93 | 239,1 | 246,1"
   ],
   "ranking@ADMIN@390": [
+   "Wettbewerbe",
    "E · Teams Bestes, Teamgröße 3, fertig",
    "Luftgewehr · Rangliste",
    "10.06.2026",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Ringteiler",
    "10 Schuss",
    "Team-Rangliste",
@@ -376,8 +401,8 @@
    "93 | 246,1"
   ],
   "ranking@USER@1280": [
+   "Wettbewerbe",
    "PDF exportieren",
-   "Zurück",
    "E · Teams Bestes, Teamgröße 3, fertig",
    "Luftgewehr · Rangliste",
    "10.06.2026",
@@ -441,6 +466,7 @@
    "Luftgewehr | 93 | 239,1 | 246,1"
   ],
   "ranking@USER@390": [
+   "Wettbewerbe",
    "E · Teams Bestes, Teamgröße 3, fertig",
    "Luftgewehr · Rangliste",
    "10.06.2026",
@@ -504,11 +530,12 @@
    "93 | 246,1"
   ],
   "series@ADMIN@1280": [
-   "Teilnehmer",
-   "Rangliste",
-   "Zurück",
+   "Wettbewerbe",
    "E · Teams Bestes, Teamgröße 3, fertig",
    "Luftgewehr · Serien erfassen",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Isar, Anja",
    "Team 1",
    "91 Ringe · Teiler 120,8",
@@ -548,8 +575,12 @@
    "12 von 12 Ergebnissen erfasst"
   ],
   "series@ADMIN@390": [
+   "Wettbewerbe",
    "E · Teams Bestes, Teamgröße 3, fertig",
    "Luftgewehr · Serien erfassen",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Isar, Anja",
    "Team 1",
    "91 Ringe · Teiler 120,8",

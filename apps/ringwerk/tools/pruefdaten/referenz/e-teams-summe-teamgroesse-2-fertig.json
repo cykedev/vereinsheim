@@ -24,12 +24,13 @@
  },
  "pages": {
   "audit-log@ADMIN@1280": [
-   "Teilnehmer",
-   "Spielplan & Tabelle",
-   "Playoffs",
-   "Zurück",
+   "Wettbewerbe",
    "E · Teams Summe, Teamgröße 2, fertig",
    "Luftgewehr · Protokoll",
+   "Spielplan & Tabelle",
+   "Playoffs",
+   "Teilnehmer",
+   "Protokoll",
    "Wettbewerb-Status geändert",
    "E · Teams Summe, Teamgröße 2, fertig: ACTIVE → COMPLETED",
    "Prüfung Sportleitung · 04.06.2026, 10:18",
@@ -72,8 +73,13 @@
    "Details"
   ],
   "audit-log@ADMIN@390": [
+   "Wettbewerbe",
    "E · Teams Summe, Teamgröße 2, fertig",
    "Luftgewehr · Protokoll",
+   "Spielplan & Tabelle",
+   "Playoffs",
+   "Teilnehmer",
+   "Protokoll",
    "Wettbewerb-Status geändert",
    "E · Teams Summe, Teamgröße 2, fertig: ACTIVE → COMPLETED",
    "Prüfung Sportleitung · 04.06.2026, 10:18",
@@ -116,12 +122,13 @@
    "Details"
   ],
   "participants@ADMIN@1280": [
+   "Wettbewerbe",
    "Starterliste drucken",
-   "Serien erfassen",
-   "Rangliste",
-   "Zurück",
    "E · Teams Summe, Teamgröße 2, fertig",
    "Luftgewehr · Teilnehmerverwaltung",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Eingeschrieben (8)",
    "Fichte, Zoe",
    "Team 1",
@@ -144,8 +151,12 @@
    "Team 4"
   ],
   "participants@ADMIN@390": [
+   "Wettbewerbe",
    "E · Teams Summe, Teamgröße 2, fertig",
    "Luftgewehr · Teilnehmerverwaltung",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Eingeschrieben (8)",
    "Fichte, Zoe",
    "Team 1",
@@ -168,43 +179,53 @@
    "Team 4"
   ],
   "playoffs@ADMIN@1280": [
-   "Teilnehmer",
-   "Spielplan & Tabelle",
-   "Zurück",
+   "Wettbewerbe",
    "E · Teams Summe, Teamgröße 2, fertig",
    "Luftgewehr · Playoffs",
+   "Spielplan & Tabelle",
+   "Playoffs",
+   "Teilnehmer",
    "Playoffs noch nicht gestartet",
    "Top 8 von 8 Teilnehmern qualifizieren sich für das Viertelfinale.",
    "Playoffs starten"
   ],
   "playoffs@ADMIN@390": [
+   "Wettbewerbe",
    "E · Teams Summe, Teamgröße 2, fertig",
    "Luftgewehr · Playoffs",
+   "Spielplan & Tabelle",
+   "Playoffs",
+   "Teilnehmer",
    "Playoffs noch nicht gestartet",
    "Top 8 von 8 Teilnehmern qualifizieren sich für das Viertelfinale.",
    "Playoffs starten"
   ],
   "playoffs@USER@1280": [
-   "Spielplan & Tabelle",
-   "Zurück",
+   "Wettbewerbe",
    "E · Teams Summe, Teamgröße 2, fertig",
    "Luftgewehr · Playoffs",
+   "Spielplan & Tabelle",
+   "Playoffs",
    "Die Playoffs wurden noch nicht gestartet."
   ],
   "playoffs@USER@390": [
+   "Wettbewerbe",
    "E · Teams Summe, Teamgröße 2, fertig",
    "Luftgewehr · Playoffs",
+   "Spielplan & Tabelle",
+   "Playoffs",
    "Die Playoffs wurden noch nicht gestartet."
   ],
   "ranking@ADMIN@1280": [
-   "Teilnehmer",
-   "Serien erfassen",
+   "Wettbewerbe",
    "Bearbeiten",
    "PDF exportieren",
-   "Zurück",
    "E · Teams Summe, Teamgröße 2, fertig",
    "Luftgewehr · Rangliste",
    "04.06.2026",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Ringteiler",
    "10 Schuss",
    "Team-Rangliste",
@@ -249,9 +270,13 @@
    "Luftgewehr | 91 | 248,0 | 257,0"
   ],
   "ranking@ADMIN@390": [
+   "Wettbewerbe",
    "E · Teams Summe, Teamgröße 2, fertig",
    "Luftgewehr · Rangliste",
    "04.06.2026",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Ringteiler",
    "10 Schuss",
    "Team-Rangliste",
@@ -296,8 +321,8 @@
    "91 | 257,0"
   ],
   "ranking@USER@1280": [
+   "Wettbewerbe",
    "PDF exportieren",
-   "Zurück",
    "E · Teams Summe, Teamgröße 2, fertig",
    "Luftgewehr · Rangliste",
    "04.06.2026",
@@ -345,6 +370,7 @@
    "Luftgewehr | 91 | 248,0 | 257,0"
   ],
   "ranking@USER@390": [
+   "Wettbewerbe",
    "E · Teams Summe, Teamgröße 2, fertig",
    "Luftgewehr · Rangliste",
    "04.06.2026",
@@ -392,11 +418,12 @@
    "91 | 257,0"
   ],
   "series@ADMIN@1280": [
-   "Teilnehmer",
-   "Rangliste",
-   "Zurück",
+   "Wettbewerbe",
    "E · Teams Summe, Teamgröße 2, fertig",
    "Luftgewehr · Serien erfassen",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Fichte, Zoe",
    "Team 1",
    "90 Ringe · Teiler 39,1",
@@ -424,8 +451,12 @@
    "8 von 8 Ergebnissen erfasst"
   ],
   "series@ADMIN@390": [
+   "Wettbewerbe",
    "E · Teams Summe, Teamgröße 2, fertig",
    "Luftgewehr · Serien erfassen",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Fichte, Zoe",
    "Team 1",
    "90 Ringe · Teiler 39,1",

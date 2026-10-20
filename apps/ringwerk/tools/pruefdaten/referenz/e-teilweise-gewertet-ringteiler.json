@@ -25,12 +25,13 @@
  },
  "pages": {
   "audit-log@ADMIN@1280": [
-   "Teilnehmer",
-   "Spielplan & Tabelle",
-   "Playoffs",
-   "Zurück",
+   "Wettbewerbe",
    "E · teilweise gewertet (Ringteiler)",
    "Luftgewehr · Protokoll",
+   "Spielplan & Tabelle",
+   "Playoffs",
+   "Teilnehmer",
+   "Protokoll",
    "Serie erfasst",
    "Olga Esche",
    "Prüfung Sportleitung · 05.05.2026, 10:14",
@@ -53,8 +54,13 @@
    "Details"
   ],
   "audit-log@ADMIN@390": [
+   "Wettbewerbe",
    "E · teilweise gewertet (Ringteiler)",
    "Luftgewehr · Protokoll",
+   "Spielplan & Tabelle",
+   "Playoffs",
+   "Teilnehmer",
+   "Protokoll",
    "Serie erfasst",
    "Olga Esche",
    "Prüfung Sportleitung · 05.05.2026, 10:14",
@@ -77,12 +83,13 @@
    "Details"
   ],
   "participants@ADMIN@1280": [
+   "Wettbewerbe",
    "Starterliste drucken",
-   "Serien erfassen",
-   "Rangliste",
-   "Zurück",
    "E · teilweise gewertet (Ringteiler)",
    "Luftgewehr · Teilnehmerverwaltung",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Gast-Schütze",
    "Teilnehmer",
    "Teilnehmer wählen…",
@@ -149,8 +156,12 @@
    "Traun, Vera"
   ],
   "participants@ADMIN@390": [
+   "Wettbewerbe",
    "E · teilweise gewertet (Ringteiler)",
    "Luftgewehr · Teilnehmerverwaltung",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Gast-Schütze",
    "Teilnehmer",
    "Teilnehmer wählen…",
@@ -217,43 +228,53 @@
    "Traun, Vera"
   ],
   "playoffs@ADMIN@1280": [
-   "Teilnehmer",
-   "Spielplan & Tabelle",
-   "Zurück",
+   "Wettbewerbe",
    "E · teilweise gewertet (Ringteiler)",
    "Luftgewehr · Playoffs",
+   "Spielplan & Tabelle",
+   "Playoffs",
+   "Teilnehmer",
    "Playoffs noch nicht gestartet",
    "Top 8 von 9 Teilnehmern qualifizieren sich für das Viertelfinale.",
    "Playoffs starten"
   ],
   "playoffs@ADMIN@390": [
+   "Wettbewerbe",
    "E · teilweise gewertet (Ringteiler)",
    "Luftgewehr · Playoffs",
+   "Spielplan & Tabelle",
+   "Playoffs",
+   "Teilnehmer",
    "Playoffs noch nicht gestartet",
    "Top 8 von 9 Teilnehmern qualifizieren sich für das Viertelfinale.",
    "Playoffs starten"
   ],
   "playoffs@USER@1280": [
-   "Spielplan & Tabelle",
-   "Zurück",
+   "Wettbewerbe",
    "E · teilweise gewertet (Ringteiler)",
    "Luftgewehr · Playoffs",
+   "Spielplan & Tabelle",
+   "Playoffs",
    "Die Playoffs wurden noch nicht gestartet."
   ],
   "playoffs@USER@390": [
+   "Wettbewerbe",
    "E · teilweise gewertet (Ringteiler)",
    "Luftgewehr · Playoffs",
+   "Spielplan & Tabelle",
+   "Playoffs",
    "Die Playoffs wurden noch nicht gestartet."
   ],
   "ranking@ADMIN@1280": [
-   "Teilnehmer",
-   "Serien erfassen",
+   "Wettbewerbe",
    "Bearbeiten",
    "PDF exportieren",
-   "Zurück",
    "E · teilweise gewertet (Ringteiler)",
    "Luftgewehr · Rangliste",
    "05.05.2026",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Ringteiler",
    "10 Schuss",
    "Pl. | Name | Disziplin | Ringe | Teiler | Ringteiler",
@@ -271,9 +292,13 @@
    "Luftgewehr | 89 | 281,1 | 292,1"
   ],
   "ranking@ADMIN@390": [
+   "Wettbewerbe",
    "E · teilweise gewertet (Ringteiler)",
    "Luftgewehr · Rangliste",
    "05.05.2026",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Ringteiler",
    "10 Schuss",
    "Pl. | Name | Ringe | Ringteiler",
@@ -291,8 +316,8 @@
    "89 | 292,1"
   ],
   "ranking@USER@1280": [
+   "Wettbewerbe",
    "PDF exportieren",
-   "Zurück",
    "E · teilweise gewertet (Ringteiler)",
    "Luftgewehr · Rangliste",
    "05.05.2026",
@@ -313,6 +338,7 @@
    "Luftgewehr | 89 | 281,1 | 292,1"
   ],
   "ranking@USER@390": [
+   "Wettbewerbe",
    "E · teilweise gewertet (Ringteiler)",
    "Luftgewehr · Rangliste",
    "05.05.2026",
@@ -333,11 +359,12 @@
    "89 | 292,1"
   ],
   "series@ADMIN@1280": [
-   "Teilnehmer",
-   "Rangliste",
-   "Zurück",
+   "Wettbewerbe",
    "E · teilweise gewertet (Ringteiler)",
    "Luftgewehr · Serien erfassen",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Elif Loisach",
    "Gast",
    "Noch kein Ergebnis",
@@ -360,8 +387,12 @@
    "4 von 9 Ergebnissen erfasst"
   ],
   "series@ADMIN@390": [
+   "Wettbewerbe",
    "E · teilweise gewertet (Ringteiler)",
    "Luftgewehr · Serien erfassen",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Elif Loisach",
    "Gast",
    "Noch kein Ergebnis",

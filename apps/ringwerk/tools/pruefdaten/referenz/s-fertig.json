@@ -22,12 +22,13 @@
  },
  "pages": {
   "audit-log@ADMIN@1280": [
-   "Teilnehmer",
-   "Spielplan & Tabelle",
-   "Playoffs",
-   "Zurück",
+   "Wettbewerbe",
    "S · fertig",
    "Luftgewehr · Protokoll",
+   "Spielplan & Tabelle",
+   "Playoffs",
+   "Teilnehmer",
+   "Protokoll",
    "Wettbewerb-Status geändert",
    "S · fertig: ACTIVE → COMPLETED",
    "Prüfung Sportleitung · 26.06.2026, 10:57",
@@ -226,8 +227,13 @@
    "Details"
   ],
   "audit-log@ADMIN@390": [
+   "Wettbewerbe",
    "S · fertig",
    "Luftgewehr · Protokoll",
+   "Spielplan & Tabelle",
+   "Playoffs",
+   "Teilnehmer",
+   "Protokoll",
    "Wettbewerb-Status geändert",
    "S · fertig: ACTIVE → COMPLETED",
    "Prüfung Sportleitung · 26.06.2026, 10:57",
@@ -426,11 +432,12 @@
    "Details"
   ],
   "participants@ADMIN@1280": [
-   "Serien erfassen",
-   "Rangliste",
-   "Zurück",
+   "Wettbewerbe",
    "S · fertig",
    "Luftgewehr · Teilnehmerverwaltung",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Eingeschrieben (8)",
    "Altmühl, Hannes",
    "hannes.altmuehl@example.test",
@@ -446,8 +453,12 @@
    "Würm, Yasmin"
   ],
   "participants@ADMIN@390": [
+   "Wettbewerbe",
    "S · fertig",
    "Luftgewehr · Teilnehmerverwaltung",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Eingeschrieben (8)",
    "Altmühl, Hannes",
    "hannes.altmuehl@example.test",
@@ -463,40 +474,50 @@
    "Würm, Yasmin"
   ],
   "playoffs@ADMIN@1280": [
-   "Teilnehmer",
-   "Spielplan & Tabelle",
-   "Zurück",
+   "Wettbewerbe",
    "S · fertig",
    "Luftgewehr · Playoffs",
+   "Spielplan & Tabelle",
+   "Playoffs",
+   "Teilnehmer",
    "Playoffs noch nicht gestartet",
    "Top 8 von 8 Teilnehmern qualifizieren sich für das Viertelfinale.",
    "Playoffs starten"
   ],
   "playoffs@ADMIN@390": [
+   "Wettbewerbe",
    "S · fertig",
    "Luftgewehr · Playoffs",
+   "Spielplan & Tabelle",
+   "Playoffs",
+   "Teilnehmer",
    "Playoffs noch nicht gestartet",
    "Top 8 von 8 Teilnehmern qualifizieren sich für das Viertelfinale.",
    "Playoffs starten"
   ],
   "playoffs@USER@1280": [
-   "Spielplan & Tabelle",
-   "Zurück",
+   "Wettbewerbe",
    "S · fertig",
    "Luftgewehr · Playoffs",
+   "Spielplan & Tabelle",
+   "Playoffs",
    "Die Playoffs wurden noch nicht gestartet."
   ],
   "playoffs@USER@390": [
+   "Wettbewerbe",
    "S · fertig",
    "Luftgewehr · Playoffs",
+   "Spielplan & Tabelle",
+   "Playoffs",
    "Die Playoffs wurden noch nicht gestartet."
   ],
   "series@ADMIN@1280": [
-   "Teilnehmer",
-   "Rangliste",
-   "Zurück",
+   "Wettbewerbe",
    "S · fertig",
    "Luftgewehr · Serien erfassen",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Altmühl, Hannes",
    "5 Serien / 5 Mindest",
    "Fichte, Olga",
@@ -516,8 +537,12 @@
    "47 Serien erfasst"
   ],
   "series@ADMIN@390": [
+   "Wettbewerbe",
    "S · fertig",
    "Luftgewehr · Serien erfassen",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Altmühl, Hannes",
    "5 Serien / 5 Mindest",
    "Fichte, Olga",
@@ -537,14 +562,15 @@
    "47 Serien erfasst"
   ],
   "standings@ADMIN@1280": [
-   "Teilnehmer",
-   "Serien erfassen",
+   "Wettbewerbe",
    "Bearbeiten",
    "PDF exportieren",
-   "Zurück",
    "S · fertig",
    "Luftgewehr · Rangliste",
    "01.01.2026 – 30.09.2026",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Ringteiler",
    "10 Schuss",
    "Mindest: 5 Serien",
@@ -608,9 +634,13 @@
    "42,7"
   ],
   "standings@ADMIN@390": [
+   "Wettbewerbe",
    "S · fertig",
    "Luftgewehr · Rangliste",
    "01.01.2026 – 30.09.2026",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Ringteiler",
    "10 Schuss",
    "Mindest: 5 Serien",
@@ -655,8 +685,8 @@
    "42,7"
   ],
   "standings@USER@1280": [
+   "Wettbewerbe",
    "PDF exportieren",
-   "Zurück",
    "S · fertig",
    "Luftgewehr · Rangliste",
    "01.01.2026 – 30.09.2026",
@@ -723,6 +753,7 @@
    "42,7"
   ],
   "standings@USER@390": [
+   "Wettbewerbe",
    "S · fertig",
    "Luftgewehr · Rangliste",
    "01.01.2026 – 30.09.2026",

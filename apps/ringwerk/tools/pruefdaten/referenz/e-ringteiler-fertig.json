@@ -24,12 +24,13 @@
  },
  "pages": {
   "audit-log@ADMIN@1280": [
-   "Teilnehmer",
-   "Spielplan & Tabelle",
-   "Playoffs",
-   "Zurück",
+   "Wettbewerbe",
    "E · Ringteiler, fertig",
    "Luftgewehr · Protokoll",
+   "Spielplan & Tabelle",
+   "Playoffs",
+   "Teilnehmer",
+   "Protokoll",
    "Wettbewerb-Status geändert",
    "E · Ringteiler, fertig: ACTIVE → COMPLETED",
    "Prüfung Sportleitung · 07.05.2026, 10:22",
@@ -80,8 +81,13 @@
    "Details"
   ],
   "audit-log@ADMIN@390": [
+   "Wettbewerbe",
    "E · Ringteiler, fertig",
    "Luftgewehr · Protokoll",
+   "Spielplan & Tabelle",
+   "Playoffs",
+   "Teilnehmer",
+   "Protokoll",
    "Wettbewerb-Status geändert",
    "E · Ringteiler, fertig: ACTIVE → COMPLETED",
    "Prüfung Sportleitung · 07.05.2026, 10:22",
@@ -132,12 +138,13 @@
    "Details"
   ],
   "participants@ADMIN@1280": [
+   "Wettbewerbe",
    "Starterliste drucken",
-   "Serien erfassen",
-   "Rangliste",
-   "Zurück",
    "E · Ringteiler, fertig",
    "Luftgewehr · Teilnehmerverwaltung",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Eingeschrieben (10)",
    "Greta Regen",
    "Gast",
@@ -156,8 +163,12 @@
    "Traun, Tilda"
   ],
   "participants@ADMIN@390": [
+   "Wettbewerbe",
    "E · Ringteiler, fertig",
    "Luftgewehr · Teilnehmerverwaltung",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Eingeschrieben (10)",
    "Greta Regen",
    "Gast",
@@ -176,43 +187,53 @@
    "Traun, Tilda"
   ],
   "playoffs@ADMIN@1280": [
-   "Teilnehmer",
-   "Spielplan & Tabelle",
-   "Zurück",
+   "Wettbewerbe",
    "E · Ringteiler, fertig",
    "Luftgewehr · Playoffs",
+   "Spielplan & Tabelle",
+   "Playoffs",
+   "Teilnehmer",
    "Playoffs noch nicht gestartet",
    "Top 8 von 10 Teilnehmern qualifizieren sich für das Viertelfinale.",
    "Playoffs starten"
   ],
   "playoffs@ADMIN@390": [
+   "Wettbewerbe",
    "E · Ringteiler, fertig",
    "Luftgewehr · Playoffs",
+   "Spielplan & Tabelle",
+   "Playoffs",
+   "Teilnehmer",
    "Playoffs noch nicht gestartet",
    "Top 8 von 10 Teilnehmern qualifizieren sich für das Viertelfinale.",
    "Playoffs starten"
   ],
   "playoffs@USER@1280": [
-   "Spielplan & Tabelle",
-   "Zurück",
+   "Wettbewerbe",
    "E · Ringteiler, fertig",
    "Luftgewehr · Playoffs",
+   "Spielplan & Tabelle",
+   "Playoffs",
    "Die Playoffs wurden noch nicht gestartet."
   ],
   "playoffs@USER@390": [
+   "Wettbewerbe",
    "E · Ringteiler, fertig",
    "Luftgewehr · Playoffs",
+   "Spielplan & Tabelle",
+   "Playoffs",
    "Die Playoffs wurden noch nicht gestartet."
   ],
   "ranking@ADMIN@1280": [
-   "Teilnehmer",
-   "Serien erfassen",
+   "Wettbewerbe",
    "Bearbeiten",
    "PDF exportieren",
-   "Zurück",
    "E · Ringteiler, fertig",
    "Luftgewehr · Rangliste",
    "07.05.2026",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Ringteiler",
    "10 Schuss",
    "Pl. | Name | Disziplin | Ringe | Teiler | Ringteiler",
@@ -250,9 +271,13 @@
    "Luftgewehr | 90 | 156,0 | 166,0"
   ],
   "ranking@ADMIN@390": [
+   "Wettbewerbe",
    "E · Ringteiler, fertig",
    "Luftgewehr · Rangliste",
    "07.05.2026",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Ringteiler",
    "10 Schuss",
    "Pl. | Name | Ringe | Ringteiler",
@@ -290,8 +315,8 @@
    "90 | 166,0"
   ],
   "ranking@USER@1280": [
+   "Wettbewerbe",
    "PDF exportieren",
-   "Zurück",
    "E · Ringteiler, fertig",
    "Luftgewehr · Rangliste",
    "07.05.2026",
@@ -332,6 +357,7 @@
    "Luftgewehr | 90 | 156,0 | 166,0"
   ],
   "ranking@USER@390": [
+   "Wettbewerbe",
    "E · Ringteiler, fertig",
    "Luftgewehr · Rangliste",
    "07.05.2026",
@@ -372,11 +398,12 @@
    "90 | 166,0"
   ],
   "series@ADMIN@1280": [
-   "Teilnehmer",
-   "Rangliste",
-   "Zurück",
+   "Wettbewerbe",
    "E · Ringteiler, fertig",
    "Luftgewehr · Serien erfassen",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Greta Regen",
    "Gast",
    "96 Ringe · Teiler 114,6",
@@ -402,8 +429,12 @@
    "10 von 10 Ergebnissen erfasst"
   ],
   "series@ADMIN@390": [
+   "Wettbewerbe",
    "E · Ringteiler, fertig",
    "Luftgewehr · Serien erfassen",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Greta Regen",
    "Gast",
    "96 Ringe · Teiler 114,6",

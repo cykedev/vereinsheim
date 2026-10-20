@@ -24,12 +24,13 @@
  },
  "pages": {
   "audit-log@ADMIN@1280": [
-   "Teilnehmer",
-   "Spielplan & Tabelle",
-   "Playoffs",
-   "Zurück",
+   "Wettbewerbe",
    "E · Zielwert über Teiler (50), fertig",
    "Luftgewehr · Protokoll",
+   "Spielplan & Tabelle",
+   "Playoffs",
+   "Teilnehmer",
+   "Protokoll",
    "Wettbewerb-Status geändert",
    "E · Zielwert über Teiler (50), fertig: ACTIVE → COMPLETED",
    "Prüfung Sportleitung · 29.05.2026, 10:18",
@@ -72,8 +73,13 @@
    "Details"
   ],
   "audit-log@ADMIN@390": [
+   "Wettbewerbe",
    "E · Zielwert über Teiler (50), fertig",
    "Luftgewehr · Protokoll",
+   "Spielplan & Tabelle",
+   "Playoffs",
+   "Teilnehmer",
+   "Protokoll",
    "Wettbewerb-Status geändert",
    "E · Zielwert über Teiler (50), fertig: ACTIVE → COMPLETED",
    "Prüfung Sportleitung · 29.05.2026, 10:18",
@@ -116,12 +122,13 @@
    "Details"
   ],
   "participants@ADMIN@1280": [
+   "Wettbewerbe",
    "Starterliste drucken",
-   "Serien erfassen",
-   "Rangliste",
-   "Zurück",
    "E · Zielwert über Teiler (50), fertig",
    "Luftgewehr · Teilnehmerverwaltung",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Eingeschrieben (8)",
    "Amper, Hannes",
    "Eibe, Greta",
@@ -136,8 +143,12 @@
    "paul.weide@example.test"
   ],
   "participants@ADMIN@390": [
+   "Wettbewerbe",
    "E · Zielwert über Teiler (50), fertig",
    "Luftgewehr · Teilnehmerverwaltung",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Eingeschrieben (8)",
    "Amper, Hannes",
    "Eibe, Greta",
@@ -152,43 +163,53 @@
    "paul.weide@example.test"
   ],
   "playoffs@ADMIN@1280": [
-   "Teilnehmer",
-   "Spielplan & Tabelle",
-   "Zurück",
+   "Wettbewerbe",
    "E · Zielwert über Teiler (50), fertig",
    "Luftgewehr · Playoffs",
+   "Spielplan & Tabelle",
+   "Playoffs",
+   "Teilnehmer",
    "Playoffs noch nicht gestartet",
    "Top 8 von 8 Teilnehmern qualifizieren sich für das Viertelfinale.",
    "Playoffs starten"
   ],
   "playoffs@ADMIN@390": [
+   "Wettbewerbe",
    "E · Zielwert über Teiler (50), fertig",
    "Luftgewehr · Playoffs",
+   "Spielplan & Tabelle",
+   "Playoffs",
+   "Teilnehmer",
    "Playoffs noch nicht gestartet",
    "Top 8 von 8 Teilnehmern qualifizieren sich für das Viertelfinale.",
    "Playoffs starten"
   ],
   "playoffs@USER@1280": [
-   "Spielplan & Tabelle",
-   "Zurück",
+   "Wettbewerbe",
    "E · Zielwert über Teiler (50), fertig",
    "Luftgewehr · Playoffs",
+   "Spielplan & Tabelle",
+   "Playoffs",
    "Die Playoffs wurden noch nicht gestartet."
   ],
   "playoffs@USER@390": [
+   "Wettbewerbe",
    "E · Zielwert über Teiler (50), fertig",
    "Luftgewehr · Playoffs",
+   "Spielplan & Tabelle",
+   "Playoffs",
    "Die Playoffs wurden noch nicht gestartet."
   ],
   "ranking@ADMIN@1280": [
-   "Teilnehmer",
-   "Serien erfassen",
+   "Wettbewerbe",
    "Bearbeiten",
    "PDF exportieren",
-   "Zurück",
    "E · Zielwert über Teiler (50), fertig",
    "Luftgewehr · Rangliste",
    "29.05.2026",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Zielwert über",
    "10 Schuss",
    "Zielwert: 50",
@@ -219,9 +240,13 @@
    "Luftgewehr | 90 | 9,7 | -40,3"
   ],
   "ranking@ADMIN@390": [
+   "Wettbewerbe",
    "E · Zielwert über Teiler (50), fertig",
    "Luftgewehr · Rangliste",
    "29.05.2026",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Zielwert über",
    "10 Schuss",
    "Zielwert: 50",
@@ -252,8 +277,8 @@
    "90 | -40,3"
   ],
   "ranking@USER@1280": [
+   "Wettbewerbe",
    "PDF exportieren",
-   "Zurück",
    "E · Zielwert über Teiler (50), fertig",
    "Luftgewehr · Rangliste",
    "29.05.2026",
@@ -287,6 +312,7 @@
    "Luftgewehr | 90 | 9,7 | -40,3"
   ],
   "ranking@USER@390": [
+   "Wettbewerbe",
    "E · Zielwert über Teiler (50), fertig",
    "Luftgewehr · Rangliste",
    "29.05.2026",
@@ -320,11 +346,12 @@
    "90 | -40,3"
   ],
   "series@ADMIN@1280": [
-   "Teilnehmer",
-   "Rangliste",
-   "Zurück",
+   "Wettbewerbe",
    "E · Zielwert über Teiler (50), fertig",
    "Luftgewehr · Serien erfassen",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Amper, Hannes",
    "90 Ringe · Teiler 9,7",
    "Eibe, Greta",
@@ -344,8 +371,12 @@
    "8 von 8 Ergebnissen erfasst"
   ],
   "series@ADMIN@390": [
+   "Wettbewerbe",
    "E · Zielwert über Teiler (50), fertig",
    "Luftgewehr · Serien erfassen",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Amper, Hannes",
    "90 Ringe · Teiler 9,7",
    "Eibe, Greta",

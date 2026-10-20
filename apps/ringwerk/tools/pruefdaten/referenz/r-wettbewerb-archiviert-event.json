@@ -24,12 +24,13 @@
  },
  "pages": {
   "audit-log@ADMIN@1280": [
-   "Teilnehmer",
-   "Spielplan & Tabelle",
-   "Playoffs",
-   "Zurück",
+   "Wettbewerbe",
    "R · Wettbewerb archiviert (Event)",
    "Luftgewehr · Protokoll",
+   "Spielplan & Tabelle",
+   "Playoffs",
+   "Teilnehmer",
+   "Protokoll",
    "Wettbewerb-Status geändert",
    "R · Wettbewerb archiviert (Event): COMPLETED → ARCHIVED",
    "Prüfung Sportleitung · 08.07.2026, 10:21",
@@ -80,8 +81,13 @@
    "Details"
   ],
   "audit-log@ADMIN@390": [
+   "Wettbewerbe",
    "R · Wettbewerb archiviert (Event)",
    "Luftgewehr · Protokoll",
+   "Spielplan & Tabelle",
+   "Playoffs",
+   "Teilnehmer",
+   "Protokoll",
    "Wettbewerb-Status geändert",
    "R · Wettbewerb archiviert (Event): COMPLETED → ARCHIVED",
    "Prüfung Sportleitung · 08.07.2026, 10:21",
@@ -132,12 +138,13 @@
    "Details"
   ],
   "participants@ADMIN@1280": [
+   "Wettbewerbe",
    "Starterliste drucken",
-   "Serien erfassen",
-   "Rangliste",
-   "Zurück",
    "R · Wettbewerb archiviert (Event)",
    "Luftgewehr · Teilnehmerverwaltung",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Eingeschrieben (9)",
    "Altmühl, Hannes",
    "hannes.altmuehl@example.test",
@@ -153,8 +160,12 @@
    "Traun, Mara"
   ],
   "participants@ADMIN@390": [
+   "Wettbewerbe",
    "R · Wettbewerb archiviert (Event)",
    "Luftgewehr · Teilnehmerverwaltung",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Eingeschrieben (9)",
    "Altmühl, Hannes",
    "hannes.altmuehl@example.test",
@@ -170,43 +181,53 @@
    "Traun, Mara"
   ],
   "playoffs@ADMIN@1280": [
-   "Teilnehmer",
-   "Spielplan & Tabelle",
-   "Zurück",
+   "Wettbewerbe",
    "R · Wettbewerb archiviert (Event)",
    "Luftgewehr · Playoffs",
+   "Spielplan & Tabelle",
+   "Playoffs",
+   "Teilnehmer",
    "Playoffs noch nicht gestartet",
    "Top 8 von 9 Teilnehmern qualifizieren sich für das Viertelfinale.",
    "Playoffs starten"
   ],
   "playoffs@ADMIN@390": [
+   "Wettbewerbe",
    "R · Wettbewerb archiviert (Event)",
    "Luftgewehr · Playoffs",
+   "Spielplan & Tabelle",
+   "Playoffs",
+   "Teilnehmer",
    "Playoffs noch nicht gestartet",
    "Top 8 von 9 Teilnehmern qualifizieren sich für das Viertelfinale.",
    "Playoffs starten"
   ],
   "playoffs@USER@1280": [
-   "Spielplan & Tabelle",
-   "Zurück",
+   "Wettbewerbe",
    "R · Wettbewerb archiviert (Event)",
    "Luftgewehr · Playoffs",
+   "Spielplan & Tabelle",
+   "Playoffs",
    "Die Playoffs wurden noch nicht gestartet."
   ],
   "playoffs@USER@390": [
+   "Wettbewerbe",
    "R · Wettbewerb archiviert (Event)",
    "Luftgewehr · Playoffs",
+   "Spielplan & Tabelle",
+   "Playoffs",
    "Die Playoffs wurden noch nicht gestartet."
   ],
   "ranking@ADMIN@1280": [
-   "Teilnehmer",
-   "Serien erfassen",
+   "Wettbewerbe",
    "Bearbeiten",
    "PDF exportieren",
-   "Zurück",
    "R · Wettbewerb archiviert (Event)",
    "Luftgewehr · Rangliste",
    "08.07.2026",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Ringteiler",
    "10 Schuss",
    "Pl. | Name | Disziplin | Ringe | Teiler | Ringteiler",
@@ -239,9 +260,13 @@
    "Luftgewehr | 86 | 179,8 | 193,8"
   ],
   "ranking@ADMIN@390": [
+   "Wettbewerbe",
    "R · Wettbewerb archiviert (Event)",
    "Luftgewehr · Rangliste",
    "08.07.2026",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Ringteiler",
    "10 Schuss",
    "Pl. | Name | Ringe | Ringteiler",
@@ -274,8 +299,8 @@
    "86 | 193,8"
   ],
   "ranking@USER@1280": [
+   "Wettbewerbe",
    "PDF exportieren",
-   "Zurück",
    "R · Wettbewerb archiviert (Event)",
    "Luftgewehr · Rangliste",
    "08.07.2026",
@@ -311,6 +336,7 @@
    "Luftgewehr | 86 | 179,8 | 193,8"
   ],
   "ranking@USER@390": [
+   "Wettbewerbe",
    "R · Wettbewerb archiviert (Event)",
    "Luftgewehr · Rangliste",
    "08.07.2026",
@@ -346,11 +372,12 @@
    "86 | 193,8"
   ],
   "series@ADMIN@1280": [
-   "Teilnehmer",
-   "Rangliste",
-   "Zurück",
+   "Wettbewerbe",
    "R · Wettbewerb archiviert (Event)",
    "Luftgewehr · Serien erfassen",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Altmühl, Hannes",
    "90 Ringe · Teiler 14,6",
    "Eiche, Yasmin",
@@ -372,8 +399,12 @@
    "9 von 9 Ergebnissen erfasst"
   ],
   "series@ADMIN@390": [
+   "Wettbewerbe",
    "R · Wettbewerb archiviert (Event)",
    "Luftgewehr · Serien erfassen",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Altmühl, Hannes",
    "90 Ringe · Teiler 14,6",
    "Eiche, Yasmin",

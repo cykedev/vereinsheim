@@ -22,12 +22,13 @@
  },
  "pages": {
   "audit-log@ADMIN@1280": [
-   "Teilnehmer",
-   "Spielplan & Tabelle",
-   "Playoffs",
-   "Zurück",
+   "Wettbewerbe",
    "S · klassisch nach Ringen, gemischt",
    "Luftgewehr · Protokoll",
+   "Spielplan & Tabelle",
+   "Playoffs",
+   "Teilnehmer",
+   "Protokoll",
    "Saison-Serie erfasst",
    "Bernd Würm",
    "Prüfung Sportleitung · 12.06.2026, 10:39",
@@ -154,8 +155,13 @@
    "Details"
   ],
   "audit-log@ADMIN@390": [
+   "Wettbewerbe",
    "S · klassisch nach Ringen, gemischt",
    "Luftgewehr · Protokoll",
+   "Spielplan & Tabelle",
+   "Playoffs",
+   "Teilnehmer",
+   "Protokoll",
    "Saison-Serie erfasst",
    "Bernd Würm",
    "Prüfung Sportleitung · 12.06.2026, 10:39",
@@ -282,11 +288,12 @@
    "Details"
   ],
   "participants@ADMIN@1280": [
-   "Serien erfassen",
-   "Rangliste",
-   "Zurück",
+   "Wettbewerbe",
    "S · klassisch nach Ringen, gemischt",
    "Luftgewehr · Teilnehmerverwaltung",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Teilnehmer",
    "Teilnehmer wählen…",
    "Ahornberger-Ampermoos, Leopoldine",
@@ -352,8 +359,12 @@
    "bernd.wuerm@example.test"
   ],
   "participants@ADMIN@390": [
+   "Wettbewerbe",
    "S · klassisch nach Ringen, gemischt",
    "Luftgewehr · Teilnehmerverwaltung",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Teilnehmer",
    "Teilnehmer wählen…",
    "Ahornberger-Ampermoos, Leopoldine",
@@ -419,40 +430,50 @@
    "bernd.wuerm@example.test"
   ],
   "playoffs@ADMIN@1280": [
-   "Teilnehmer",
-   "Spielplan & Tabelle",
-   "Zurück",
+   "Wettbewerbe",
    "S · klassisch nach Ringen, gemischt",
    "Luftgewehr · Playoffs",
+   "Spielplan & Tabelle",
+   "Playoffs",
+   "Teilnehmer",
    "Playoffs noch nicht gestartet",
    "Top 8 von 8 Teilnehmern qualifizieren sich für das Viertelfinale.",
    "Playoffs starten"
   ],
   "playoffs@ADMIN@390": [
+   "Wettbewerbe",
    "S · klassisch nach Ringen, gemischt",
    "Luftgewehr · Playoffs",
+   "Spielplan & Tabelle",
+   "Playoffs",
+   "Teilnehmer",
    "Playoffs noch nicht gestartet",
    "Top 8 von 8 Teilnehmern qualifizieren sich für das Viertelfinale.",
    "Playoffs starten"
   ],
   "playoffs@USER@1280": [
-   "Spielplan & Tabelle",
-   "Zurück",
+   "Wettbewerbe",
    "S · klassisch nach Ringen, gemischt",
    "Luftgewehr · Playoffs",
+   "Spielplan & Tabelle",
+   "Playoffs",
    "Die Playoffs wurden noch nicht gestartet."
   ],
   "playoffs@USER@390": [
+   "Wettbewerbe",
    "S · klassisch nach Ringen, gemischt",
    "Luftgewehr · Playoffs",
+   "Spielplan & Tabelle",
+   "Playoffs",
    "Die Playoffs wurden noch nicht gestartet."
   ],
   "series@ADMIN@1280": [
-   "Teilnehmer",
-   "Rangliste",
-   "Zurück",
+   "Wettbewerbe",
    "S · klassisch nach Ringen, gemischt",
    "Luftgewehr · Serien erfassen",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Amper, Hannes",
    "0 Serien / 5 Mindest",
    "Fichte, Olga",
@@ -472,8 +493,12 @@
    "30 Serien erfasst"
   ],
   "series@ADMIN@390": [
+   "Wettbewerbe",
    "S · klassisch nach Ringen, gemischt",
    "Luftgewehr · Serien erfassen",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Amper, Hannes",
    "0 Serien / 5 Mindest",
    "Fichte, Olga",
@@ -493,14 +518,15 @@
    "30 Serien erfasst"
   ],
   "standings@ADMIN@1280": [
-   "Teilnehmer",
-   "Serien erfassen",
+   "Wettbewerbe",
    "Bearbeiten",
    "PDF exportieren",
-   "Zurück",
    "S · klassisch nach Ringen, gemischt",
    "Luftgewehr · Rangliste",
    "01.01.2026 – 30.09.2026",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Ringe",
    "10 Schuss",
    "Mindest: 5 Serien",
@@ -565,9 +591,13 @@
    "–"
   ],
   "standings@ADMIN@390": [
+   "Wettbewerbe",
    "S · klassisch nach Ringen, gemischt",
    "Luftgewehr · Rangliste",
    "01.01.2026 – 30.09.2026",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Ringe",
    "10 Schuss",
    "Mindest: 5 Serien",
@@ -613,8 +643,8 @@
    "–"
   ],
   "standings@USER@1280": [
+   "Wettbewerbe",
    "PDF exportieren",
-   "Zurück",
    "S · klassisch nach Ringen, gemischt",
    "Luftgewehr · Rangliste",
    "01.01.2026 – 30.09.2026",
@@ -682,6 +712,7 @@
    "–"
   ],
   "standings@USER@390": [
+   "Wettbewerbe",
    "S · klassisch nach Ringen, gemischt",
    "Luftgewehr · Rangliste",
    "01.01.2026 – 30.09.2026",

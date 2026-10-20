@@ -24,12 +24,13 @@
  },
  "pages": {
   "audit-log@ADMIN@1280": [
-   "Teilnehmer",
-   "Spielplan & Tabelle",
-   "Playoffs",
-   "Zurück",
+   "Wettbewerbe",
    "R · Disziplin archiviert (Zimmerstutzen)",
    "Zimmerstutzen · Protokoll",
+   "Spielplan & Tabelle",
+   "Playoffs",
+   "Teilnehmer",
+   "Protokoll",
    "Wettbewerb-Status geändert",
    "R · Disziplin archiviert (Zimmerstutzen): ACTIVE → COMPLETED",
    "Prüfung Sportleitung · 06.07.2026, 10:14",
@@ -64,8 +65,13 @@
    "Details"
   ],
   "audit-log@ADMIN@390": [
+   "Wettbewerbe",
    "R · Disziplin archiviert (Zimmerstutzen)",
    "Zimmerstutzen · Protokoll",
+   "Spielplan & Tabelle",
+   "Playoffs",
+   "Teilnehmer",
+   "Protokoll",
    "Wettbewerb-Status geändert",
    "R · Disziplin archiviert (Zimmerstutzen): ACTIVE → COMPLETED",
    "Prüfung Sportleitung · 06.07.2026, 10:14",
@@ -100,12 +106,13 @@
    "Details"
   ],
   "participants@ADMIN@1280": [
+   "Wettbewerbe",
    "Starterliste drucken",
-   "Serien erfassen",
-   "Rangliste",
-   "Zurück",
    "R · Disziplin archiviert (Zimmerstutzen)",
    "Zimmerstutzen · Teilnehmerverwaltung",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Eingeschrieben (6)",
    "Altmühl, Hannes",
    "hannes.altmuehl@example.test",
@@ -118,8 +125,12 @@
    "Würm, Yasmin"
   ],
   "participants@ADMIN@390": [
+   "Wettbewerbe",
    "R · Disziplin archiviert (Zimmerstutzen)",
    "Zimmerstutzen · Teilnehmerverwaltung",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Eingeschrieben (6)",
    "Altmühl, Hannes",
    "hannes.altmuehl@example.test",
@@ -132,45 +143,55 @@
    "Würm, Yasmin"
   ],
   "playoffs@ADMIN@1280": [
-   "Teilnehmer",
-   "Spielplan & Tabelle",
-   "Zurück",
+   "Wettbewerbe",
    "R · Disziplin archiviert (Zimmerstutzen)",
    "Zimmerstutzen · Playoffs",
+   "Spielplan & Tabelle",
+   "Playoffs",
+   "Teilnehmer",
    "Playoffs noch nicht gestartet",
    "Zu wenige aktive Teilnehmer für Playoffs (mind. 8 erforderlich).",
    "Playoffs starten",
    "Mindestens 8 aktive Teilnehmer erforderlich."
   ],
   "playoffs@ADMIN@390": [
+   "Wettbewerbe",
    "R · Disziplin archiviert (Zimmerstutzen)",
    "Zimmerstutzen · Playoffs",
+   "Spielplan & Tabelle",
+   "Playoffs",
+   "Teilnehmer",
    "Playoffs noch nicht gestartet",
    "Zu wenige aktive Teilnehmer für Playoffs (mind. 8 erforderlich).",
    "Playoffs starten",
    "Mindestens 8 aktive Teilnehmer erforderlich."
   ],
   "playoffs@USER@1280": [
-   "Spielplan & Tabelle",
-   "Zurück",
+   "Wettbewerbe",
    "R · Disziplin archiviert (Zimmerstutzen)",
    "Zimmerstutzen · Playoffs",
+   "Spielplan & Tabelle",
+   "Playoffs",
    "Die Playoffs wurden noch nicht gestartet."
   ],
   "playoffs@USER@390": [
+   "Wettbewerbe",
    "R · Disziplin archiviert (Zimmerstutzen)",
    "Zimmerstutzen · Playoffs",
+   "Spielplan & Tabelle",
+   "Playoffs",
    "Die Playoffs wurden noch nicht gestartet."
   ],
   "ranking@ADMIN@1280": [
-   "Teilnehmer",
-   "Serien erfassen",
+   "Wettbewerbe",
    "Bearbeiten",
    "PDF exportieren",
-   "Zurück",
    "R · Disziplin archiviert (Zimmerstutzen)",
    "Zimmerstutzen · Rangliste",
    "06.07.2026",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Ringe",
    "10 Schuss",
    "Pl. | Name | Disziplin | Ringe | Teiler | Ringe",
@@ -194,9 +215,13 @@
    "Zimmerstutzen | 82 | 292,4 | 82"
   ],
   "ranking@ADMIN@390": [
+   "Wettbewerbe",
    "R · Disziplin archiviert (Zimmerstutzen)",
    "Zimmerstutzen · Rangliste",
    "06.07.2026",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Ringe",
    "10 Schuss",
    "Pl. | Name | Ringe | Ringe",
@@ -220,8 +245,8 @@
    "82 | 82"
   ],
   "ranking@USER@1280": [
+   "Wettbewerbe",
    "PDF exportieren",
-   "Zurück",
    "R · Disziplin archiviert (Zimmerstutzen)",
    "Zimmerstutzen · Rangliste",
    "06.07.2026",
@@ -248,6 +273,7 @@
    "Zimmerstutzen | 82 | 292,4 | 82"
   ],
   "ranking@USER@390": [
+   "Wettbewerbe",
    "R · Disziplin archiviert (Zimmerstutzen)",
    "Zimmerstutzen · Rangliste",
    "06.07.2026",
@@ -274,11 +300,12 @@
    "82 | 82"
   ],
   "series@ADMIN@1280": [
-   "Teilnehmer",
-   "Rangliste",
-   "Zurück",
+   "Wettbewerbe",
    "R · Disziplin archiviert (Zimmerstutzen)",
    "Zimmerstutzen · Serien erfassen",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Altmühl, Hannes",
    "95 Ringe · Teiler 0,5",
    "Fichte, Olga",
@@ -294,8 +321,12 @@
    "6 von 6 Ergebnissen erfasst"
   ],
   "series@ADMIN@390": [
+   "Wettbewerbe",
    "R · Disziplin archiviert (Zimmerstutzen)",
    "Zimmerstutzen · Serien erfassen",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Altmühl, Hannes",
    "95 Ringe · Teiler 0,5",
    "Fichte, Olga",

@@ -22,12 +22,13 @@
  },
  "pages": {
   "audit-log@ADMIN@1280": [
-   "Teilnehmer",
-   "Spielplan & Tabelle",
-   "Playoffs",
-   "Zurück",
+   "Wettbewerbe",
    "S · Faktor-Korrektur, gemischte Disziplinen",
    "Gemischt · Protokoll",
+   "Spielplan & Tabelle",
+   "Playoffs",
+   "Teilnehmer",
+   "Protokoll",
    "Saison-Serie erfasst",
    "Mara Traun",
    "Prüfung Sportleitung · 22.06.2026, 10:39",
@@ -154,8 +155,13 @@
    "Details"
   ],
   "audit-log@ADMIN@390": [
+   "Wettbewerbe",
    "S · Faktor-Korrektur, gemischte Disziplinen",
    "Gemischt · Protokoll",
+   "Spielplan & Tabelle",
+   "Playoffs",
+   "Teilnehmer",
+   "Protokoll",
    "Saison-Serie erfasst",
    "Mara Traun",
    "Prüfung Sportleitung · 22.06.2026, 10:39",
@@ -282,11 +288,12 @@
    "Details"
   ],
   "participants@ADMIN@1280": [
-   "Serien erfassen",
-   "Rangliste",
-   "Zurück",
+   "Wettbewerbe",
    "S · Faktor-Korrektur, gemischte Disziplinen",
    "Gemischt · Teilnehmerverwaltung",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Teilnehmer",
    "Teilnehmer wählen…",
    "Ahornberger-Ampermoos, Leopoldine",
@@ -368,8 +375,12 @@
    "Luftgewehr"
   ],
   "participants@ADMIN@390": [
+   "Wettbewerbe",
    "S · Faktor-Korrektur, gemischte Disziplinen",
    "Gemischt · Teilnehmerverwaltung",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Teilnehmer",
    "Teilnehmer wählen…",
    "Ahornberger-Ampermoos, Leopoldine",
@@ -451,40 +462,50 @@
    "Luftgewehr"
   ],
   "playoffs@ADMIN@1280": [
-   "Teilnehmer",
-   "Spielplan & Tabelle",
-   "Zurück",
+   "Wettbewerbe",
    "S · Faktor-Korrektur, gemischte Disziplinen",
    "Gemischt · Playoffs",
+   "Spielplan & Tabelle",
+   "Playoffs",
+   "Teilnehmer",
    "Playoffs noch nicht gestartet",
    "Top 8 von 8 Teilnehmern qualifizieren sich für das Viertelfinale.",
    "Playoffs starten"
   ],
   "playoffs@ADMIN@390": [
+   "Wettbewerbe",
    "S · Faktor-Korrektur, gemischte Disziplinen",
    "Gemischt · Playoffs",
+   "Spielplan & Tabelle",
+   "Playoffs",
+   "Teilnehmer",
    "Playoffs noch nicht gestartet",
    "Top 8 von 8 Teilnehmern qualifizieren sich für das Viertelfinale.",
    "Playoffs starten"
   ],
   "playoffs@USER@1280": [
-   "Spielplan & Tabelle",
-   "Zurück",
+   "Wettbewerbe",
    "S · Faktor-Korrektur, gemischte Disziplinen",
    "Gemischt · Playoffs",
+   "Spielplan & Tabelle",
+   "Playoffs",
    "Die Playoffs wurden noch nicht gestartet."
   ],
   "playoffs@USER@390": [
+   "Wettbewerbe",
    "S · Faktor-Korrektur, gemischte Disziplinen",
    "Gemischt · Playoffs",
+   "Spielplan & Tabelle",
+   "Playoffs",
    "Die Playoffs wurden noch nicht gestartet."
   ],
   "series@ADMIN@1280": [
-   "Teilnehmer",
-   "Rangliste",
-   "Zurück",
+   "Wettbewerbe",
    "S · Faktor-Korrektur, gemischte Disziplinen",
    "Gemischt · Serien erfassen",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Buche, Rita",
    "Luftpistole",
    "4 Serien / 5 Mindest",
@@ -512,8 +533,12 @@
    "30 Serien erfasst"
   ],
   "series@ADMIN@390": [
+   "Wettbewerbe",
    "S · Faktor-Korrektur, gemischte Disziplinen",
    "Gemischt · Serien erfassen",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Buche, Rita",
    "Luftpistole",
    "4 Serien / 5 Mindest",
@@ -541,14 +566,15 @@
    "30 Serien erfasst"
   ],
   "standings@ADMIN@1280": [
-   "Teilnehmer",
-   "Serien erfassen",
+   "Wettbewerbe",
    "Bearbeiten",
    "PDF exportieren",
-   "Zurück",
    "S · Faktor-Korrektur, gemischte Disziplinen",
    "Gemischt · Rangliste",
    "01.01.2026 – 30.09.2026",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Ringteiler",
    "10 Schuss",
    "Mindest: 5 Serien",
@@ -612,9 +638,13 @@
    "–"
   ],
   "standings@ADMIN@390": [
+   "Wettbewerbe",
    "S · Faktor-Korrektur, gemischte Disziplinen",
    "Gemischt · Rangliste",
    "01.01.2026 – 30.09.2026",
+   "Rangliste",
+   "Serien erfassen",
+   "Teilnehmer",
    "Ringteiler",
    "10 Schuss",
    "Mindest: 5 Serien",
@@ -659,8 +689,8 @@
    "–"
   ],
   "standings@USER@1280": [
+   "Wettbewerbe",
    "PDF exportieren",
-   "Zurück",
    "S · Faktor-Korrektur, gemischte Disziplinen",
    "Gemischt · Rangliste",
    "01.01.2026 – 30.09.2026",
@@ -727,6 +757,7 @@
    "–"
   ],
   "standings@USER@390": [
+   "Wettbewerbe",
    "S · Faktor-Korrektur, gemischte Disziplinen",
    "Gemischt · Rangliste",
    "01.01.2026 – 30.09.2026",
