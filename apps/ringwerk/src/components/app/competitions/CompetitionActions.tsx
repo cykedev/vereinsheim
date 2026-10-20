@@ -4,17 +4,9 @@ import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { ArrowLeft, Pencil, ScrollText, Trash2 } from "lucide-react"
 import { Button } from "@vereinsheim/ui/button"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@vereinsheim/ui/alert-dialog"
+import { DecisionDialog, NoticeDialog } from "@vereinsheim/ui/design2/decision-dialog"
 import { toast } from "sonner"
+import { competitionDelete, competitionDeleteBlocked } from "@/lib/consequences"
 import { deleteCompetition } from "@/lib/competitions/actions"
 import { DetailActionBar } from "@vereinsheim/ui/shell/DetailActionBar"
 import { CompetitionStatusActions } from "@/components/app/competitions/CompetitionStatusActions"
@@ -103,24 +95,24 @@ export function CompetitionActions({ competition, backHref }: Props) {
         )}
       </DetailActionBar>
 
-      {/* Löschen bestätigen */}
-      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Wettbewerb löschen?</AlertDialogTitle>
-            <AlertDialogDescription>{`Wettbewerb „${competition.name}" wirklich löschen?`}</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-destructive text-primary-foreground hover:bg-destructive/90"
-            >
-              Löschen
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Löschen bestätigen; mit Einschreibungen lehnt die Action ab, dann nur ein Hinweis */}
+      {competition._count.participants > 0 ? (
+        <NoticeDialog
+          {...competitionDeleteBlocked({
+            name: competition.name,
+            participants: competition._count.participants,
+          })}
+          open={deleteOpen}
+          onOpenChange={setDeleteOpen}
+        />
+      ) : (
+        <DecisionDialog
+          decision={competitionDelete({ name: competition.name })}
+          open={deleteOpen}
+          onOpenChange={setDeleteOpen}
+          onConfirm={handleDelete}
+        />
+      )}
     </>
   )
 }

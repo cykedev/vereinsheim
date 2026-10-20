@@ -49,7 +49,11 @@ export default async function EditCompetitionPage({ params }: Props) {
         playoffsStarted={playoffsStarted}
       />
       <div className="pt-6">
-        <ForceDeleteCompetitionSection competitionId={id} competitionName={competition.name} />
+        <ForceDeleteCompetitionSection
+          competitionId={id}
+          competitionName={competition.name}
+          isPublic={competition.isPublic}
+        />
       </div>
     </div>
   )
