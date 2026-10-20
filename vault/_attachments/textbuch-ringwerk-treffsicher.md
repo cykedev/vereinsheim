@@ -1437,3 +1437,65 @@ rechnet, und meiden die Fälle, in denen es anders zeigt als rechnet.
   Ringen entscheiden aber die meisten Ringe den Gleichstand, und die zeigt sie nicht.
 - **Faktor der Standarddisziplinen.** Ringwerk setzt den Faktor der vier Standarddisziplinen bei jedem Start zurück
   (`ensureSystemDisciplines`). Eine Änderung in der App hält nur bis zum nächsten Deploy.
+
+---
+
+## Ringwerk: Wertung richtig anzeigen (B1–B7)
+
+**Status: freigegeben am 20. Oktober 2026 (mit Nr. 7)**
+
+Neue und geänderte Texte zu den Befunden oben (Plan `plans/2026-10-20-ringwerk-befunde-wertung.md`, E1–E6). Die
+Häkchen „Finale: Gleichstand per Stechschuss“ und „Gleichstand per Stechschuss“ (Best-of) entfallen ohne neuen Text.
+
+### 1. Faktor einer genutzten Disziplin ändern (Meldung beim Speichern)
+
+Kommt nur, wenn die Seite veraltet ist; sonst ist das Feld schon gesperrt (Nr. 2).
+
+- **Genutzte Disziplin:** Der Faktor lässt sich nicht mehr ändern. Die Disziplin wird schon in einem Wettbewerb
+  verwendet. Für einen anderen Faktor eine neue Disziplin anlegen.
+- **Standarddisziplin:** Der Faktor einer Standarddisziplin lässt sich nicht ändern. Ringwerk legt ihn fest.
+
+„Verwendet“ heißt wie beim Löschen: Ein Wettbewerb hat diese Disziplin, oder jemand ist mit ihr eingeschrieben, oder
+es gibt eine Serie mit ihr.
+
+### 2. Hinweis unter dem Feld „Teiler-Faktor“
+
+Der bisherige Satz „Korrekturfaktor für gemischte Wertungen. Teiler wird mit diesem Faktor multipliziert.“ bleibt.
+Darunter, wenn das Feld gesperrt ist:
+
+- **Standarddisziplin:** Standarddisziplin: Ringwerk legt den Faktor fest.
+- **Genutzte Disziplin:** Gesperrt, weil die Disziplin schon in einem Wettbewerb verwendet wird.
+
+Das Feld bleibt sichtbar und lässt sich nicht ändern.
+
+### 3. Spaltenkopf der Tabelle der Liga bei Wertung nach Ringen
+
+**alt:** „Best. RT“ · **neu:** „Best. Ringe“, mit den meisten Ringen aus allen Duellen (Bildschirm und PDF). Das „?“
+an der Spalte entfällt dort; bei „Best. RT“ bleibt es (Thema 2 „Ringteiler“).
+
+### 4. Hilfe „Finale“ (Thema 9), Vorsicht
+
+**alt:** „Die Verlängerung gibt es, wenn der Wettbewerb sie vorsieht. Das ist der Standard.“
+
+**neu:** „Die Verlängerung hat keine Grenze. Es folgen so viele Duelle, bis eines entscheidet.“
+
+### 5. Hilfe „Tabelle der Liga“ (Thema 7), So liest du es
+
+**alt:** „… Dann zählt der beste Ringteiler aus allen Duellen, bei Wertung nach Ringen die meisten Ringe. …“
+
+**neu:** „… Dann zählt der beste Ringteiler aus allen Duellen („Best. RT“), bei Wertung nach Ringen die meisten Ringe
+(„Best. Ringe“). …“
+
+### 6. Karte des Finales
+
+Bleibt: „{Primär: Ringe} · bei Gleichstand Verlängerung“. Nach E1 gilt das immer.
+
+### 7. Hilfe „Korrigierter Teiler“ (Thema 3), So liest du es (Vorschlag, neu)
+
+**alt:** „Kleiner ist besser, wie beim Teiler. Die Spalte zeigt den Teiler nach der Korrektur. Der Ringteiler rechnet
+mit demselben Wert.“
+
+**neu:** „Kleiner ist besser, wie beim Teiler. Die Spalte zeigt den Teiler nach der Korrektur. Der Ringteiler rechnet
+mit demselben Wert. Auch ein Duell vergleicht den korrigierten Teiler.“
+
+Grund: Nach B3 entscheidet in gemischten Ligen, Playoffs und im Finale der korrigierte Teiler. Heute sagt das kein Text.
