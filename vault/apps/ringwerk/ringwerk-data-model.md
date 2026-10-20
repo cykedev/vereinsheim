@@ -94,6 +94,9 @@ part_of: ["[[ringwerk]]"]
 - startNumber: Int?
 - status: ACTIVE | WITHDRAWN
 - **isGuest: Boolean (default false)** — Gastteilnehmer bei Events; wird in der Event-Rangliste als "Gast"-Badge angezeigt
+- **exemptFromMinSeries: Boolean (default false)** — Saison mit Mindestzahl: gewertet ab der ersten Serie (etwa Jugend).
+  Wirkt nur bei `type=SEASON` mit `minSeries`; die Actions speichern sie sonst nicht. Regel in `requiredSeries`
+  ([[season-mode]])
 - **eventTeamId: String?** — Team-Zugehörigkeit bei Team-Events (FK auf EventTeam)
 - withdrawalReason, withdrawnAt, withdrawalDate
 

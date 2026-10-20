@@ -494,6 +494,9 @@ Ringteiler muss aus **derselben Serie** stammen (Ringe und Teiler gehören zusam
 - Nur Teilnehmer mit ≥ minSeries geschossenen Serien erscheinen in der Wertung
 - Teilnehmer mit weniger Serien werden angezeigt, aber ausgegraut / nicht gewertet
 - Fortschrittsanzeige: "12 / 20 Serien geschossen"
+- **Ohne Mindestzahl** (Ausnahme an der Einschreibung, etwa für die Jugend): gewertet ab der ersten Serie; Spalte
+  „Serien“ zeigt `3/1` statt `3/20`. Setzen beim Einschreiben oder per Knopf in der Teilnehmerverwaltung, mit Folgen-Dialog
+  und Protokolleintrag. Details: [[season-mode#Ohne Mindestzahl (Ausnahme an der Einschreibung)]]
 
 ---
 
