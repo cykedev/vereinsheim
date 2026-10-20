@@ -1258,8 +1258,9 @@ geschweiften Klammern ist die Spalte, nach der gerade geordnet ist: Beste Ringe,
   kleinsten Teiler und den kleinsten Ringteiler. Die Rangliste ordnet nach einem davon. Welcher es ist, legt der
   Wettbewerb fest. Ein Tipp auf einen anderen Spaltenkopf ordnet nach dieser Spalte.
 - **So liest du es:** Oben stehen alle, die genug Serien haben. Darunter stehen grau alle, denen noch Serien fehlen.
-  Wie viele Serien es braucht, steht oben bei „Mindest“. Ganz unten stehen alle ohne Serie. Bei gleichem Wert
-  entscheidet der kleinere Ringteiler. Ist auch der gleich, teilen sich beide den Platz. Die kleinen Plätze an den
+  Wie viele Serien es braucht, steht oben bei „Mindest“. Steht in der Spalte „Serien“ eine 1 hinter dem Strich, gilt
+  keine Mindestzahl. Dann zählt schon die erste Serie. Das gilt etwa für die Jugend. Ganz unten stehen alle ohne
+  Serie. Bei gleichem Wert entscheidet der kleinere Ringteiler. Ist auch der gleich, teilen sich beide den Platz. Die kleinen Plätze an den
   Werten zeigen die Plätze 1 bis 3 jeder Spalte unter denen mit genug Serien.
 - **Vorsicht:** Das PDF ordnet immer nach der Spalte, die der Wettbewerb festlegt. Ein Tipp auf einen Spaltenkopf
   ändert nur die Ansicht auf dem Bildschirm.
@@ -1648,3 +1649,79 @@ Bleibt, wie es ist: der Fehlschluss „Eine Scheibe ist kein Muster“ im Leitfa
 Mitgeändert: Mit dem Test bei der Ermüdung läuft auf jeder Scheibe ein Test mehr. Nachgerechnet zeigt nun etwa jede
 fünfte ganz normale Scheibe irgendwo einen Befund (18,9 % bei 40 Schuss, Beleg B1), nicht mehr jede sechste. Der
 Leitfaden sagt deshalb an beiden Stellen „jede fünfte“.
+
+## Ringwerk: Saison ohne Mindestzahl
+
+Stand 20. Oktober 2026, im Plan `plans/2026-10-20-ringwerk-season-no-min-series.md` vom User gelesen, umgesetzt auf
+`feat/ringwerk-season-no-min-series`, **Freigabe des Wortlauts vor dem Merge**. Anlass: Im Verein braucht die Jugend
+keine Mindestzahl an Serien. Ringwerk führt dafür eine Ausnahme an der Einschreibung, keine Altersklasse. Für eine
+Zeile mit Ausnahme ist die Mindestzahl 1.
+
+### 1. Einschreiben
+
+Ort: Teilnehmerverwaltung einer Saison mit Mindestzahl, Formular „Einschreiben“.
+
+- **Kästchen:** Keine Mindestzahl an Serien
+- **Darunter leise:** Zählt in der Rangliste ab der ersten Serie. Etwa für die Jugend.
+
+### 2. Zeichen am Namen
+
+Ort: Teilnehmerverwaltung einer Saison mit Mindestzahl, Zeile einer Einschreibung mit Ausnahme.
+
+- **Zeichen:** ohne Mindestzahl
+
+Rangliste, PDF und „Serien erfassen“ zeigen kein Zeichen. Dort steht die Mindestzahl der Zeile hinter dem Strich:
+{3}/1 statt {3}/{20}, „{3} Serien / 1 Mindest“ statt „{3} Serien / {20} Mindest“.
+
+### 3. Ohne Mindestzahl werten
+
+Ort: Teilnehmerverwaltung einer Saison mit Mindestzahl, Knopf in der Zeile einer aktiven Einschreibung.
+
+- **Titel:** {Anna Birke} ohne Mindestzahl werten?
+- **Worum:** {Anna Birke} ist in dieser Saison eingeschrieben. Für einen Platz braucht es {20} Serien.
+- **Vorher prüfen:** Gilt für {Anna Birke} eine Ausnahme? Etwa, weil {Anna Birke} zur Jugend gehört.
+- **Was dann passiert:**
+  - {Anna Birke} steht ab der ersten Serie mit Platz in der Rangliste.
+  - In der Spalte „Serien“ steht dann {3}/1 statt {3}/{20}, in der App und im PDF.
+  - Im Protokoll des Wettbewerbs steht die Änderung.
+- **Was nicht passiert:**
+  - Die Serien von {Anna Birke} bleiben, wie sie sind.
+  - Für alle anderen gilt die Mindestzahl weiter.
+  - Andere Saisons ändern sich nicht.
+- **Rückgängig:** Jederzeit über denselben Knopf in der Teilnehmerverwaltung.
+- **Knopf:** Ohne Mindestzahl werten
+
+### 4. Mindestzahl wieder verlangen
+
+Ort: wie 3, bei einer Einschreibung mit Ausnahme.
+
+- **Titel:** Für {Anna Birke} wieder {20} Serien verlangen?
+- **Worum:** {Anna Birke} wird in dieser Saison ohne Mindestzahl gewertet. Bisher zählt jede Serie ab der ersten.
+- **Was dann passiert:**
+  - Für einen Platz braucht {Anna Birke} dann {20} Serien wie alle anderen.
+  - (nur wenn weniger Serien) {Anna Birke} hat {3} Serien und steht danach ohne Platz in der Rangliste.
+  - Im Protokoll des Wettbewerbs steht die Änderung.
+- **Was nicht passiert:**
+  - Die Serien von {Anna Birke} bleiben, wie sie sind.
+- **Rückgängig:** Jederzeit über denselben Knopf in der Teilnehmerverwaltung.
+- **Knopf:** Mindestzahl verlangen
+
+### 5. Serie in der Saison löschen, mit Ausnahme
+
+Ort: wie „Serie in der Saison löschen“ oben. Bei einer Einschreibung mit Ausnahme steht statt der Zeile zur
+Mindestzahl, nur wenn es die letzte Serie ist:
+
+- Danach hat {Anna Birke} keine Serie mehr und steht ohne Platz in der Rangliste.
+
+### 6. Hilfe „Reihenfolge der Rangliste“
+
+Ort: Abschnitt „Ringwerk: Hilfe (WD0)“, Nr. 4, „So liest du es“, dort schon eingetragen. Neu nach „Wie viele Serien
+es braucht, steht oben bei „Mindest“.“:
+
+- Steht in der Spalte „Serien“ eine 1 hinter dem Strich, gilt keine Mindestzahl. Dann zählt schon die erste Serie. Das
+  gilt etwa für die Jugend.
+
+### 7. Protokoll
+
+- **Art:** Mindestzahl geändert
+- **Beschreibung:** {Anna Birke} ohne Mindestzahl gewertet · Für {Anna Birke} wieder die Mindestzahl verlangt

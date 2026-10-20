@@ -38,7 +38,7 @@ export const HELP_TOPICS = {
     title: "Reihenfolge der Rangliste",
     short: "Die Rangliste ordnet nach einem Bestwert. Bei Gleichstand entscheidet der Ringteiler.",
     what: "Jeder Teilnehmer hat drei Bestwerte, jeder aus einer einzelnen Serie: die meisten Ringe, den kleinsten Teiler und den kleinsten Ringteiler. Die Rangliste ordnet nach einem davon. Welcher es ist, legt der Wettbewerb fest. Ein Tipp auf einen anderen Spaltenkopf ordnet nach dieser Spalte.",
-    read: "Oben stehen alle, die genug Serien haben. Darunter stehen grau alle, denen noch Serien fehlen. Wie viele Serien es braucht, steht oben bei „Mindest“. Ganz unten stehen alle ohne Serie. Bei gleichem Wert entscheidet der kleinere Ringteiler. Ist auch der gleich, teilen sich beide den Platz. Die kleinen Plätze an den Werten zeigen die Plätze 1 bis 3 jeder Spalte unter denen mit genug Serien.",
+    read: "Oben stehen alle, die genug Serien haben. Darunter stehen grau alle, denen noch Serien fehlen. Wie viele Serien es braucht, steht oben bei „Mindest“. Steht in der Spalte „Serien“ eine 1 hinter dem Strich, gilt keine Mindestzahl. Dann zählt schon die erste Serie. Das gilt etwa für die Jugend. Ganz unten stehen alle ohne Serie. Bei gleichem Wert entscheidet der kleinere Ringteiler. Ist auch der gleich, teilen sich beide den Platz. Die kleinen Plätze an den Werten zeigen die Plätze 1 bis 3 jeder Spalte unter denen mit genug Serien.",
     caution:
       "Das PDF ordnet immer nach der Spalte, die der Wettbewerb festlegt. Ein Tipp auf einen Spaltenkopf ändert nur die Ansicht auf dem Bildschirm.",
   },
