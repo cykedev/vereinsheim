@@ -1,38 +1,21 @@
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@vereinsheim/ui/alert-dialog"
+import { DecisionDialog } from "@vereinsheim/ui/design2/decision-dialog"
+import { playoffDuelDelete } from "@/lib/consequences"
 
 interface Props {
   open: boolean
   onOpenChange: (open: boolean) => void
   onConfirm: () => void
+  /** was der Dialog über das Duell sagt (`playoffDuelDelete`) */
+  duel: Parameters<typeof playoffDuelDelete>[0]
 }
 
-export function DeleteDuelConfirm({ open, onOpenChange, onConfirm }: Props) {
+export function DeleteDuelConfirm({ open, onOpenChange, onConfirm, duel }: Props) {
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Duell löschen?</AlertDialogTitle>
-          <AlertDialogDescription>Dieses Duell wirklich löschen?</AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={onConfirm}
-            className="bg-destructive text-primary-foreground hover:bg-destructive/90"
-          >
-            Löschen
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <DecisionDialog
+      decision={playoffDuelDelete(duel)}
+      open={open}
+      onOpenChange={onOpenChange}
+      onConfirm={onConfirm}
+    />
   )
 }

@@ -4,6 +4,7 @@ import { Plus, Trophy } from "lucide-react"
 import { Badge } from "@vereinsheim/ui/badge"
 import { Button } from "@vereinsheim/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@vereinsheim/ui/design2/card"
+import type { RoundName } from "@/lib/consequences"
 import type { PlayoffMatchItem } from "@/lib/playoffs/types"
 import {
   DeleteDuelConfirm,
@@ -14,6 +15,24 @@ import {
   WINNER_BADGE,
   type PlayoffCardConfig,
 } from "./playoff-match-card"
+
+const ROUND_NAME: Record<PlayoffMatchItem["round"], RoundName> = {
+  EIGHTH_FINAL: "Achtelfinale",
+  QUARTER_FINAL: "Viertelfinale",
+  SEMI_FINAL: "Halbfinale",
+  FINAL: "Finale",
+}
+
+/** die Runde danach; im Finale keine */
+const NEXT_ROUND_NAME: Record<
+  PlayoffMatchItem["round"],
+  "Viertelfinale" | "Halbfinale" | "Finale" | null
+> = {
+  EIGHTH_FINAL: "Viertelfinale",
+  QUARTER_FINAL: "Halbfinale",
+  SEMI_FINAL: "Finale",
+  FINAL: null,
+}
 
 interface Props {
   match: PlayoffMatchItem
@@ -40,14 +59,30 @@ export function PlayoffMatchCard({ match, canManage, config }: Props) {
     nameA,
     nameB,
   } = card
+  // das Duell, um das der Dialog fragt; zu, solange keins gewählt ist, dann mit dem letzten
+  const shownDuel =
+    match.duels.find((d) => d.id === confirmDuelId) ?? match.duels[match.duels.length - 1]
 
   return (
     <>
-      <DeleteDuelConfirm
-        open={!!confirmDuelId}
-        onOpenChange={(open) => !open && setConfirmDuelId(null)}
-        onConfirm={handleDeleteDuel}
-      />
+      {shownDuel && (
+        <DeleteDuelConfirm
+          open={!!confirmDuelId}
+          onOpenChange={(open) => !open && setConfirmDuelId(null)}
+          onConfirm={handleDeleteDuel}
+          duel={{
+            duel: shownDuel.duelNumber,
+            round: ROUND_NAME[match.round],
+            next: NEXT_ROUND_NAME[match.round],
+            nameA,
+            nameB,
+            winsA: match.winsA,
+            winsB: match.winsB,
+            entered: shownDuel.isCompleted,
+            decided: isCompleted,
+          }}
+        />
+      )}
       <Card className={isCompleted ? "border-muted" : ""}>
         <CardHeader className="px-4 pb-2 sm:px-6">
           <div className="flex items-center justify-between gap-2">

@@ -52,13 +52,16 @@ export default async function CompetitionPlayoffsPage({ params }: Props) {
   const allSfComplete =
     bracket.semiFinals.length > 0 && bracket.semiFinals.every((m) => m.status === "COMPLETED")
 
-  let advanceLabel: string | null = null
+  let advance: {
+    round: "Viertelfinale" | "Halbfinale" | "Finale"
+    previous: "Achtelfinale" | "Viertelfinale" | "Halbfinale"
+  } | null = null
   if (allAfComplete && bracket.quarterFinals.length === 0) {
-    advanceLabel = "Viertelfinale anlegen"
+    advance = { round: "Viertelfinale", previous: "Achtelfinale" }
   } else if (allQfComplete && bracket.semiFinals.length === 0) {
-    advanceLabel = "Halbfinale anlegen"
+    advance = { round: "Halbfinale", previous: "Viertelfinale" }
   } else if (allSfComplete && bracket.final === null) {
-    advanceLabel = "Finale anlegen"
+    advance = { round: "Finale", previous: "Halbfinale" }
   }
 
   const hasAF = competition.playoffHasAchtelfinale
@@ -107,6 +110,9 @@ export default async function CompetitionPlayoffsPage({ params }: Props) {
               </div>
               <StartPlayoffsButton
                 competitionId={id}
+                name={competition.name}
+                round={hasAF ? "Achtelfinale" : hasVF ? "Viertelfinale" : "Halbfinale"}
+                active={activeCount}
                 disabled={!canStart}
                 disabledReason={disabledReason}
               />
@@ -116,12 +122,16 @@ export default async function CompetitionPlayoffsPage({ params }: Props) {
       )}
 
       {/* Nächste Runde anlegen (nur Admin, wenn aktuelle Runde abgeschlossen) */}
-      {canManage && advanceLabel && (
+      {canManage && advance && (
         <div className="flex items-center justify-between rounded-2xl border bg-card p-4">
           <p className="text-sm text-muted-foreground">
             Alle Matches der aktuellen Runde sind abgeschlossen.
           </p>
-          <AdvanceRoundButton competitionId={id} label={advanceLabel} />
+          <AdvanceRoundButton
+            competitionId={id}
+            round={advance.round}
+            previous={advance.previous}
+          />
         </div>
       )}
 

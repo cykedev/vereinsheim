@@ -1,29 +1,33 @@
 "use client"
 
-import { useTransition } from "react"
+import { useState, useTransition } from "react"
 import { Trophy } from "lucide-react"
 import { Button } from "@vereinsheim/ui/button"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@vereinsheim/ui/alert-dialog"
+import { DecisionDialog } from "@vereinsheim/ui/design2/decision-dialog"
 import { toast } from "sonner"
+import { playoffsStart } from "@/lib/consequences"
 import { startPlayoffs } from "@/lib/playoffs/actions"
 
 interface Props {
   competitionId: string
+  name: string
+  /** erste Runde laut Einstellungen */
+  round: "Achtelfinale" | "Viertelfinale" | "Halbfinale"
+  /** aktive Teilnehmer in der Tabelle */
+  active: number
   disabled?: boolean
   disabledReason?: string
 }
 
-export function StartPlayoffsButton({ competitionId, disabled, disabledReason }: Props) {
+export function StartPlayoffsButton({
+  competitionId,
+  name,
+  round,
+  active,
+  disabled,
+  disabledReason,
+}: Props) {
+  const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
 
   function handleConfirm() {
@@ -39,28 +43,16 @@ export function StartPlayoffsButton({ competitionId, disabled, disabledReason }:
 
   return (
     <div className="space-y-1">
-      <AlertDialog>
-        <AlertDialogTrigger asChild>
-          <Button disabled={isPending || disabled}>
-            <Trophy className="mr-2 h-4 w-4" />
-            {isPending ? "Starte…" : "Playoffs starten"}
-          </Button>
-        </AlertDialogTrigger>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Playoffs starten?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Die K.O.-Phase wird basierend auf der aktuellen Tabelle gestartet. Dieser Schritt kann
-              nicht rückgängig gemacht werden. Rückzüge von Teilnehmern sind danach nicht mehr
-              möglich.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirm}>Playoffs starten</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <Button disabled={isPending || disabled} onClick={() => setOpen(true)}>
+        <Trophy className="mr-2 h-4 w-4" />
+        {isPending ? "Starte…" : "Playoffs starten"}
+      </Button>
+      <DecisionDialog
+        decision={playoffsStart({ name, round, active })}
+        open={open}
+        onOpenChange={setOpen}
+        onConfirm={handleConfirm}
+      />
       {disabled && disabledReason && (
         <p className="text-xs text-muted-foreground">{disabledReason}</p>
       )}
