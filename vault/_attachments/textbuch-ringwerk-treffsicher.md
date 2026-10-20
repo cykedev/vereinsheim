@@ -1244,7 +1244,7 @@ Ort: Spaltenkopf „Best. Teiler korr.“ (Saison) und „Teiler korr.“ (Event
 - **So liest du es:** Kleiner ist besser, wie beim Teiler. Die Spalte zeigt den Teiler nach der Korrektur. Der
   Ringteiler rechnet mit demselben Wert.
 - **Vorsicht:** Die Korrektur gilt nur in gemischten Wettbewerben. Hat ein Wettbewerb eine feste Disziplin, zählt der
-  Teiler vom Ausdruck. Den Faktor jeder Disziplin legt die Sportleitung in der App unter „Disziplinen“ fest.
+  Teiler vom Ausdruck. Die Faktoren stehen in der App unter „Disziplinen“.
 - **Formel für Profis:** korrigierter Teiler = Teiler × Faktor der Disziplin.
 
 ### 4. Reihenfolge der Rangliste (klassisch)
@@ -1290,11 +1290,9 @@ Ort: Überschrift „Tabelle“ über der Tabelle einer Liga im Format Best-of, 
   zählt er für keinen. Wer mehr Sätze gewinnt, gewinnt die Begegnung. Steht es nach allen Sätzen gleich, entscheidet
   ein Stechschuss: ein Schuss in Zehnteln, der höhere Wert gewinnt. Die gleichen Sätze zählen dann für den Sieger.
 - **So liest du es:** Die Tabelle ordnet nach Siegen, dann nach der Satzdifferenz, dann nach den gewonnenen Sätzen.
-  Stehen danach zwei oder mehr gleich, entscheidet der direkte Vergleich: ihre Begegnungen untereinander. Die letzte
-  Spalte zeigt ihn. Bei zweien steht dort das Ergebnis ihrer Begegnung und der Gegner. Bei dreien oder mehr steht ihre
+  Stehen danach zwei oder mehr gleich, entscheidet der direkte Vergleich: ihre Begegnungen untereinander. Die Spalte „Direktvergleich“ zeigt ihn. Am Telefon steht sie nicht da, im PDF schon. Bei zweien steht dort das Ergebnis ihrer Begegnung und der Gegner. Bei dreien oder mehr steht ihre
   Bilanz untereinander. „offen“ heißt: Eine Begegnung untereinander fehlt noch. „ausgeglichen“ heißt: Alle haben
-  untereinander dieselbe Bilanz, etwa weil jeder einmal gewonnen hat. In beiden Fällen ordnet der Name. Wer nur noch
-  am Namen hängt, teilt sich den Platz.
+  untereinander dieselbe Bilanz, etwa weil jeder einmal gewonnen hat. Bei „offen“ zählt bis dahin die Bilanz der gespielten Begegnungen. Wo die Bilanz gleich ist, ordnet der Name. Wer nur noch am Namen hängt, teilt sich den Platz.
 - **Vorsicht:** Begegnungen mit einem zurückgezogenen Teilnehmer zählen für niemanden. Zurückgezogene stehen
   durchgestrichen am Ende.
 
@@ -1305,7 +1303,7 @@ Ort: Überschrift „Tabelle“ über der Tabelle einer Liga mit Hin- und Rückr
 - **Titel:** Tabelle der Liga
 - **Kurz:** Punkte zählen zuerst. Bei Gleichstand entscheiden der direkte Vergleich und dann der beste Ringteiler.
 - **Was es ist:** Jede Paarung ist ein Duell über eine Serie. Ein Sieg bringt 2 Punkte, ein Unentschieden 1 Punkt, eine
-  Niederlage keinen. Ein Freilos zählt wie ein Sieg. Wer das Duell gewinnt, hängt von der Wertung ab. Beim Ringteiler
+  Niederlage keinen. Ein Freilos bringt 2 Punkte. In „Sp.“ und „S“ zählt es nicht mit. Wer das Duell gewinnt, hängt von der Wertung ab. Beim Ringteiler
   gewinnt der kleinere, bei Gleichstand gewinnen mehr Ringe, dann der kleinere Teiler. Bei Ringen gewinnen mehr Ringe,
   dann der kleinere Teiler. Beim Teiler gewinnt der kleinere Teiler, dann mehr Ringe.
 - **So liest du es:** „Sp.“ sind gespielte Duelle. „S“, „U“ und „N“ sind Siege, Unentschieden und Niederlagen. Bei
@@ -1321,7 +1319,7 @@ Ort: neue Zeile „Turnierbaum“ über dem Turnierbaum auf der Seite „Playoff
 
 - **Titel:** Playoffs
 - **Kurz:** Die Besten der Gruppenphase spielen gegeneinander. Wer ein Match verliert, scheidet aus.
-- **Was es ist:** Die Playoffs beginnen, wenn alle Paarungen der Gruppenphase gespielt sind. Je nach Wettbewerb kommen
+- **Was es ist:** Die Sportleitung startet die Playoffs, wenn alle Paarungen der Gruppenphase gespielt sind. Je nach Wettbewerb kommen
   die besten 16 ins Achtelfinale, die besten 8 ins Viertelfinale oder die besten 4 ins Halbfinale. Zurückgezogene
   zählen nicht mit. Gesetzt wird nach der Tabelle der Gruppenphase. Der Erste trifft auf den Letzten der
   Qualifizierten, der Zweite auf den Vorletzten, und so weiter. Teilen sich zwei einen Platz, zählt die Reihenfolge,
@@ -1367,6 +1365,7 @@ liest (etwa „offen“, „Freilos“, „Zurückgezogen“, „Finale“). So 
 | Spielplan mit Hin- und Rückrunde, Gegner bei einem Freilos                 | „—“            | kein Gegner                                  |
 | Spielplan mit Hin- und Rückrunde, Paarung mit einem Zurückgezogenen        | „—“            | nicht gewertet                               |
 | Spielplan im Best-of, Gegner bei einem Freilos                             | „—“            | kein Gegner                                  |
+| Spielplan im Best-of, Paarung mit einem Zurückgezogenen                   | „—“            | nicht gewertet                               |
 | Spielplan, Paarung ohne Ergebnis (Uhr)                                     | Uhr ohne Text  | Uhr, Grund „noch kein Ergebnis“ als Tooltip  |
 | Liste der Wettbewerbe, Liga ohne Stichtag für Hin- oder Rückrunde          | „—“            | „–“, Grund „kein Stichtag“ als Tooltip       |
 
@@ -1378,6 +1377,38 @@ liest (etwa „offen“, „Freilos“, „Zurückgezogen“, „Finale“). So 
   den Aufbau des Turnierbaums Zeichen für Zeichen. Er bekommt nur den Grund „steht noch nicht fest“ als Tooltip. Die
   Ringteiler im Spielplan (`RT`), im Duell und im Event haben immer einen Wert, dort ändert sich nichts.
 
+
+### Nachtrag aus dem Review (R1–R6)
+
+**Status: freigegeben am 20. Oktober 2026, oben in die Themen und die Tabelle übernommen**
+
+Das Review hat sechs Sätze gefunden, die nicht in jedem Fall stimmen. Vorschlag „alt → neu“:
+
+- **R1 Tabelle im Best-of, „offen“ bei dreien oder mehr.** Ringwerk ordnet dann zuerst nach der Bilanz der schon
+  gespielten Begegnungen, nicht gleich nach dem Namen.
+  - alt: „In beiden Fällen ordnet der Name. Wer nur noch am Namen hängt, teilt sich den Platz.“
+  - neu: „Bei „offen“ zählt bis dahin die Bilanz der gespielten Begegnungen. Wo die Bilanz gleich ist, ordnet der
+    Name. Wer nur noch am Namen hängt, teilt sich den Platz.“
+- **R2 Tabelle im Best-of, Spalte am Telefon.** Die Spalte „Direktvergleich“ ist am Telefon ausgeblendet.
+  - alt: „Die letzte Spalte zeigt ihn.“
+  - neu: „Die Spalte „Direktvergleich“ zeigt ihn. Am Telefon steht sie nicht da, im PDF schon.“
+- **R3 Korrigierter Teiler, wer den Faktor festlegt.** Die vier Standarddisziplinen bekommen ihren Faktor bei jedem
+  Start zurück (Befund unten).
+  - alt: „Den Faktor jeder Disziplin legt die Sportleitung in der App unter „Disziplinen“ fest.“
+  - neu: „Die Faktoren stehen in der App unter „Disziplinen“.“
+- **R4 Tabelle der Liga, Freilos.** „S“ und „Sp.“ zählen ein Freilos nicht mit, nur die Punkte.
+  - alt: „Ein Freilos zählt wie ein Sieg.“
+  - neu: „Ein Freilos bringt 2 Punkte. In „Sp.“ und „S“ zählt es nicht mit.“
+- **R5 Playoffs, wer sie beginnt.** Die Sportleitung startet sie von Hand.
+  - alt: „Die Playoffs beginnen, wenn alle Paarungen der Gruppenphase gespielt sind.“
+  - neu: „Die Sportleitung startet die Playoffs, wenn alle Paarungen der Gruppenphase gespielt sind.“
+- **R6 „–“ mit Grund, eine Zeile mehr.** Der Spielplan im Best-of zeigt bei einer Paarung mit einem Zurückgezogenen
+  ebenfalls „–“ nicht gewertet (wie der Spielplan mit Hin- und Rückrunde). Neue Zeile in der Tabelle oben:
+  „Spielplan im Best-of, Paarung mit einem Zurückgezogenen | „—“ | nicht gewertet“.
+
+Dazu ohne neue Texte schon umgesetzt: Die Vorschauen auf Start und in der Liste der Wettbewerbe zeigen kein „?“.
+Zurückgezogene zeigen beim Ringteiler und beim Direktvergleich den Strich wie im PDF, nicht „noch kein Duell“ oder
+„nicht nötig“.
 ---
 
 ## Ringwerk: Befunde beim Ablesen für WD0 (nicht Teil dieses Abschnitts)
