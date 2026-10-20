@@ -1,6 +1,7 @@
 // Merkmale eines Wettbewerbs aus der Datenbank: was nachweislich darin steht, unabhängig davon, wie `build.ts` es
 // erzeugt hat. Für Tabellenplätze und den direkten Vergleich zählt Ringwerks eigene Tabellen-Abfrage.
 
+import { determineOutcome } from "@/lib/results/calculateResult"
 import { duelOutcome } from "@/lib/scoring/bestOf"
 
 import type { Ringwerk } from "./ringwerk"
@@ -63,11 +64,12 @@ export async function factsOf(rw: Ringwerk, competitionId: string): Promise<Set<
           status: true,
           winsA: true,
           winsB: true,
+          participantAId: true,
           duels: {
             select: {
               isSuddenDeath: true,
               isCompleted: true,
-              results: { select: { totalRings: true } },
+              results: { select: { participantId: true, totalRings: true, ringteiler: true } },
             },
           },
         },
@@ -198,8 +200,33 @@ export async function factsOf(rw: Ringwerk, competitionId: string): Promise<Set<
       const rows = await rw.getStandingsForCompetition(competitionId)
       const shared = (rank: number) => rows.filter((r) => r.rank === rank).length >= 2
       add("platz:geteilt-1-und-3", shared(1) && shared(3))
+      add("liga:ringe-gegen-ringteiler", ringsAgainstRingteiler(rows, m, c.scoringMode))
     }
   }
+
+  // Gemischt: eine fertige Paarung, die nach dem Teiler vom Ausdruck anders ausgeht als nach dem korrigierten
+  const factor = new Map(
+    enrolled.map((cp) => [cp.participantId, cp.discipline?.teilerFaktor.toNumber() ?? 1])
+  )
+  add(
+    "liga:teiler-roh-anders",
+    c.disciplineId === null &&
+      m.some((x) => {
+        if (x.status !== "COMPLETED" || x.awayParticipantId === null) return false
+        const home = x.series.find((s) => s.participantId === x.homeParticipantId)
+        const away = x.series.find((s) => s.participantId === x.awayParticipantId)
+        if (!home || !away) return false
+        const side = (s: typeof home, corrected: boolean) => ({
+          rings: s.rings.toNumber(),
+          teiler: s.teiler.toNumber() * (corrected ? factor.get(s.participantId)! : 1),
+          ringteiler: s.ringteiler.toNumber(),
+        })
+        return (
+          determineOutcome(side(home, false), side(away, false), c.scoringMode) !==
+          determineOutcome(side(home, true), side(away, true), c.scoringMode)
+        )
+      })
+  )
 
   // Liga: Playoffs
   const p = c.playoffMatches
@@ -239,6 +266,22 @@ export async function factsOf(rw: Ringwerk, competitionId: string): Promise<Set<
         add("finale:verlaengerung", sudden)
         add("finale:stichkriterium", !sudden && a !== undefined && a === b)
         add("finale:hauptwertung", !sudden && a !== undefined && a !== b)
+        // gleiche Ringe, der Sieger des Finales hat den kleineren Ringteiler
+        const winner = final.winsA > final.winsB ? final.participantAId : null
+        const rt = (won: boolean) =>
+          decisive?.results
+            .find((r) => (r.participantId === winner) === won)
+            ?.ringteiler?.toNumber()
+        const [rtWinner, rtLoser] = [rt(true), rt(false)]
+        add(
+          "finale:stichkriterium-entscheidet",
+          !sudden &&
+            a !== undefined &&
+            a === b &&
+            rtWinner !== undefined &&
+            rtLoser !== undefined &&
+            rtWinner < rtLoser
+        )
       }
     }
   }
@@ -329,4 +372,62 @@ function publicFact(scenario: Scenario): Fact {
   if (scenario.public === "passwort-qr") return "oeffentlich:qr"
   if (scenario.public === "passwort") return "oeffentlich:passwort"
   return "oeffentlich:offen"
+}
+
+/**
+ * Zwei oder mehr stehen gleich in Punkten und in den Punkten aus ihren Duellen untereinander, und die meisten Ringe
+ * ordnen sie anders als der beste Ringteiler.
+ */
+function ringsAgainstRingteiler(
+  rows: Awaited<ReturnType<Ringwerk["getStandingsForCompetition"]>>,
+  matchups: {
+    status: string
+    homeParticipantId: string
+    awayParticipantId: string | null
+    series: {
+      participantId: string
+      rings: { toNumber(): number }
+      teiler: { toNumber(): number }
+      ringteiler: { toNumber(): number }
+    }[]
+  }[],
+  scoringMode: Parameters<typeof determineOutcome>[2]
+): boolean {
+  const active = rows.filter((r) => !r.withdrawn)
+  for (const points of new Set(active.map((r) => r.points))) {
+    const group = active.filter((r) => r.points === points)
+    if (group.length < 2) continue
+    const ids = new Set(group.map((r) => r.participantId))
+    const direct = new Map<string, number>()
+    for (const x of matchups) {
+      if (x.status !== "COMPLETED" || x.awayParticipantId === null) continue
+      if (!ids.has(x.homeParticipantId) || !ids.has(x.awayParticipantId)) continue
+      const side = (id: string) => {
+        const s = x.series.find((y) => y.participantId === id)!
+        return {
+          rings: s.rings.toNumber(),
+          teiler: s.teiler.toNumber(),
+          ringteiler: s.ringteiler.toNumber(),
+        }
+      }
+      const outcome = determineOutcome(
+        side(x.homeParticipantId),
+        side(x.awayParticipantId),
+        scoringMode
+      )
+      const home = outcome === "HOME_WIN" ? 2 : outcome === "DRAW" ? 1 : 0
+      direct.set(x.homeParticipantId, (direct.get(x.homeParticipantId) ?? 0) + home)
+      direct.set(x.awayParticipantId, (direct.get(x.awayParticipantId) ?? 0) + 2 - home)
+    }
+    for (const a of group) {
+      for (const b of group) {
+        if (a === b || (direct.get(a.participantId) ?? 0) !== (direct.get(b.participantId) ?? 0))
+          continue
+        if (a.bestRings === null || b.bestRings === null) continue
+        if (a.bestRingteiler === null || b.bestRingteiler === null) continue
+        if (a.bestRings > b.bestRings && a.bestRingteiler > b.bestRingteiler) return true
+      }
+    }
+  }
+  return false
 }

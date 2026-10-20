@@ -530,7 +530,8 @@
    "10 Schuss",
    "Mindest: 5 Serien",
    "Sortierung: Ringe/Teiler alternierend — hervorgehoben ist der Wert, der den Platz ergeben hat.",
-   "Name | Serien | Beste Ringe | Best. Teiler | Best. Ringteiler",
+   "Name | Serien | Beste Ringe | Best. Teiler",
+   "Best. Ringteiler",
    "1",
    "Tanne, Yasmin",
    "5/5",
@@ -586,8 +587,11 @@
    "Lech, Carla",
    "0/5",
    "–",
+   "noch keine Serie",
    "–",
-   "–"
+   "noch keine Serie",
+   "–",
+   "noch keine Serie"
   ],
   "standings@ADMIN@390": [
    "Wettbewerbe",
@@ -638,7 +642,9 @@
    "8",
    "Lech, Carla(0/5)",
    "–",
-   "–"
+   "noch keine Serie",
+   "–",
+   "noch keine Serie"
   ],
   "standings@USER@1280": [
    "Wettbewerbe",
@@ -649,7 +655,8 @@
    "10 Schuss",
    "Mindest: 5 Serien",
    "Sortierung: Ringe/Teiler alternierend — hervorgehoben ist der Wert, der den Platz ergeben hat.",
-   "Name | Serien | Beste Ringe | Best. Teiler | Best. Ringteiler",
+   "Name | Serien | Beste Ringe | Best. Teiler",
+   "Best. Ringteiler",
    "1",
    "Tanne, Yasmin",
    "5/5",
@@ -705,8 +712,11 @@
    "Lech, Carla",
    "0/5",
    "–",
+   "noch keine Serie",
    "–",
-   "–"
+   "noch keine Serie",
+   "–",
+   "noch keine Serie"
   ],
   "standings@USER@390": [
    "Wettbewerbe",
@@ -754,7 +764,9 @@
    "8",
    "Lech, Carla(0/5)",
    "–",
-   "–"
+   "noch keine Serie",
+   "–",
+   "noch keine Serie"
   ]
  },
  "pdfs": {

@@ -530,6 +530,7 @@
    "Teiler",
    "10 Schuss",
    "Mindest: 5 Serien",
+   "Sortierung: Bester Teiler.",
    "Name | Serien | Beste Ringe | Best. Teiler",
    "Best. Ringteiler",
    "1",
@@ -587,8 +588,11 @@
    "Tanne, Yasmin",
    "0/5",
    "–",
+   "noch keine Serie",
    "–",
-   "–"
+   "noch keine Serie",
+   "–",
+   "noch keine Serie"
   ],
   "standings@ADMIN@390": [
    "Wettbewerbe",
@@ -601,6 +605,7 @@
    "Teiler",
    "10 Schuss",
    "Mindest: 5 Serien",
+   "Sortierung: Bester Teiler.",
    "Name | Beste Ringe | Best. Teiler",
    "1",
    "Traun, Mara",
@@ -639,7 +644,9 @@
    "8",
    "Tanne, Yasmin(0/5)",
    "–",
-   "–"
+   "noch keine Serie",
+   "–",
+   "noch keine Serie"
   ],
   "standings@USER@1280": [
    "Wettbewerbe",
@@ -650,6 +657,7 @@
    "Teiler",
    "10 Schuss",
    "Mindest: 5 Serien",
+   "Sortierung: Bester Teiler.",
    "Name | Serien | Beste Ringe | Best. Teiler",
    "Best. Ringteiler",
    "1",
@@ -707,8 +715,11 @@
    "Tanne, Yasmin",
    "0/5",
    "–",
+   "noch keine Serie",
    "–",
-   "–"
+   "noch keine Serie",
+   "–",
+   "noch keine Serie"
   ],
   "standings@USER@390": [
    "Wettbewerbe",
@@ -718,6 +729,7 @@
    "Teiler",
    "10 Schuss",
    "Mindest: 5 Serien",
+   "Sortierung: Bester Teiler.",
    "Name | Beste Ringe | Best. Teiler",
    "1",
    "Traun, Mara",
@@ -756,7 +768,9 @@
    "8",
    "Tanne, Yasmin(0/5)",
    "–",
-   "–"
+   "noch keine Serie",
+   "–",
+   "noch keine Serie"
   ]
  },
  "pdfs": {

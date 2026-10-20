@@ -9,6 +9,8 @@ import type {
   TeamScoring,
 } from "@/generated/prisma/client"
 
+import type { FixedCase } from "./results"
+
 export type Fact =
   // Status und Veröffentlichung
   | "status:ACTIVE"
@@ -56,6 +58,10 @@ export type Fact =
   | "finale:hauptwertung"
   | "finale:stichkriterium"
   | "finale:verlaengerung"
+  | "finale:stichkriterium-entscheidet"
+  // Liga: Wertung (Befunde B1, B3, B6)
+  | "liga:teiler-roh-anders"
+  | "liga:ringe-gegen-ringteiler"
   // Event
   | "serien:keine"
   | "serien:teilweise"
@@ -118,6 +124,14 @@ export interface LeagueScenario extends ScenarioBase {
   bracket?: Bracket
   discipline?: DisciplineKey
   longNames?: boolean
+  /** Wertung der Gruppenphase; ohne Angabe die des Formats. */
+  scoringMode?: ScoringMode
+  /** Gemischte Disziplinen (Faktor-Korrektur): gerade Plätze der Einschreibung Luftgewehr, ungerade Luftpistole. */
+  mixed?: boolean
+  /** Wertung des Finales; ohne Angabe Ringe, bei „L6-stichkriterium“ mit dem Teiler als Stichkriterium. */
+  finale?: { primary: ScoringMode; tiebreaker1?: ScoringMode }
+  /** Feste Serien statt Zufall, damit der Fall sicher vorkommt (`fixedSeries` in `results.ts`). */
+  fixed?: FixedCase
 }
 
 export type EventPhase = "leer" | "starterliste" | "teilweise" | "fertig" | "archiviert"
@@ -527,6 +541,49 @@ function edgeScenarios(): Scenario[] {
   ]
 }
 
+// ─── Wertung: Fälle, die Ringwerk anders anzeigte als rechnete ───────────────────────────────────
+
+function scoringScenarios(): LeagueScenario[] {
+  return [
+    {
+      kind: "LEAGUE",
+      code: "L-FIN-TB",
+      name: "L7 Finale per Stichkriterium (Hin/Rück)",
+      format: "DRR",
+      phase: "L7-mit-playoffs",
+      size: 4,
+      bracket: "HF",
+      finale: { primary: "RINGS", tiebreaker1: "RINGTEILER" },
+      expect: ["status:COMPLETED", "finale:stichkriterium-entscheidet"],
+    },
+    {
+      kind: "LEAGUE",
+      code: "L-MIX-T",
+      name: "L4 gemischt nach Teiler (Hin/Rück)",
+      format: "DRR",
+      phase: "L4",
+      size: 6,
+      bracket: "HF",
+      scoringMode: "TEILER",
+      mixed: true,
+      fixed: "teiler-roh-anders",
+      expect: ["gruppe:fertig", "faktor", "liga:teiler-roh-anders"],
+    },
+    {
+      kind: "LEAGUE",
+      code: "L-RINGE",
+      name: "L4 nach Ringen, Punktgleich (Hin/Rück)",
+      format: "DRR",
+      phase: "L4",
+      size: 6,
+      bracket: "HF",
+      scoringMode: "RINGS",
+      fixed: "ringe-gegen-ringteiler",
+      expect: ["gruppe:fertig", "liga:ringe-gegen-ringteiler"],
+    },
+  ]
+}
+
 export const SCENARIOS: Scenario[] = [
   ...leagueScenarios("DRR"),
   ...leagueScenarios("BO3"),
@@ -534,4 +591,5 @@ export const SCENARIOS: Scenario[] = [
   ...eventScenarios(),
   ...seasonScenarios(),
   ...edgeScenarios(),
+  ...scoringScenarios(),
 ]

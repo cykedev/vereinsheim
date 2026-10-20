@@ -527,7 +527,9 @@
    "Ringteiler",
    "10 Schuss",
    "Mindest: 5 Serien",
-   "Name | Serien | Beste Ringe | Best. Teiler | Best. Ringteiler",
+   "Sortierung: Bester Ringteiler.",
+   "Name | Serien | Beste Ringe | Best. Teiler",
+   "Best. Ringteiler",
    "1",
    "Eiche, Florian",
    "7/5",
@@ -583,8 +585,11 @@
    "Amper, Hannes",
    "0/5",
    "–",
+   "noch keine Serie",
    "–",
-   "–"
+   "noch keine Serie",
+   "–",
+   "noch keine Serie"
   ],
   "standings@ADMIN@390": [
    "Wettbewerbe",
@@ -597,6 +602,7 @@
    "Ringteiler",
    "10 Schuss",
    "Mindest: 5 Serien",
+   "Sortierung: Bester Ringteiler.",
    "Name | Beste Ringe | Best. Ringteiler",
    "1",
    "Eiche, Florian",
@@ -635,7 +641,9 @@
    "8",
    "Amper, Hannes(0/5)",
    "–",
-   "–"
+   "noch keine Serie",
+   "–",
+   "noch keine Serie"
   ],
   "standings@USER@1280": [
    "Wettbewerbe",
@@ -646,7 +654,9 @@
    "Ringteiler",
    "10 Schuss",
    "Mindest: 5 Serien",
-   "Name | Serien | Beste Ringe | Best. Teiler | Best. Ringteiler",
+   "Sortierung: Bester Ringteiler.",
+   "Name | Serien | Beste Ringe | Best. Teiler",
+   "Best. Ringteiler",
    "1",
    "Eiche, Florian",
    "7/5",
@@ -702,8 +712,11 @@
    "Amper, Hannes",
    "0/5",
    "–",
+   "noch keine Serie",
    "–",
-   "–"
+   "noch keine Serie",
+   "–",
+   "noch keine Serie"
   ],
   "standings@USER@390": [
    "Wettbewerbe",
@@ -713,6 +726,7 @@
    "Ringteiler",
    "10 Schuss",
    "Mindest: 5 Serien",
+   "Sortierung: Bester Ringteiler.",
    "Name | Beste Ringe | Best. Ringteiler",
    "1",
    "Eiche, Florian",
@@ -751,7 +765,9 @@
    "8",
    "Amper, Hannes(0/5)",
    "–",
-   "–"
+   "noch keine Serie",
+   "–",
+   "noch keine Serie"
   ]
  },
  "pdfs": {

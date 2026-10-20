@@ -8,7 +8,7 @@ import type { MatchStatus, Round, ScoringMode, ScoringType } from "@/generated/p
 import { advance } from "./clock"
 import { act, addDays, dateField, formData, type Context, type PoolParticipant } from "./context"
 import { createRandom, type Random } from "./random"
-import { forcedPair, seriesValue, type SeriesValue, type Winner } from "./results"
+import { fixedSeries, forcedPair, seriesValue, type SeriesValue, type Winner } from "./results"
 import type { LeagueScenario } from "./scenarios"
 
 interface Player extends PoolParticipant {
@@ -44,11 +44,14 @@ const SCORING_MODE: Record<LeagueScenario["format"], ScoringMode> = {
 export async function buildLeague(ctx: Context, s: LeagueScenario, start: Date): Promise<void> {
   const random = createRandom(s.code)
   const disciplineKey = s.discipline ?? (s.format === "BO3" ? "Luftpistole" : "Luftgewehr")
-  const disciplineId = ctx.disciplines[disciplineKey]
+  // Gemischt: Luftgewehr und Luftpistole, beide in ganzen Ringen
+  const disciplineId = s.mixed ? "mixed" : ctx.disciplines[disciplineKey]
+  const mixedDisciplines = [ctx.disciplines["Luftgewehr"], ctx.disciplines["Luftpistole"]]
   const discipline = await ctx.rw.db.discipline.findUniqueOrThrow({
-    where: { id: disciplineId },
+    where: { id: s.mixed ? mixedDisciplines[0] : disciplineId },
     select: { scoringType: true },
   })
+  const scoringMode = s.scoringMode ?? SCORING_MODE[s.format]
   const isBestOf = s.format !== "DRR"
   const bracket = s.bracket
   const slug = s.public ? s.code.toLowerCase() : undefined
@@ -59,7 +62,7 @@ export async function buildLeague(ctx: Context, s: LeagueScenario, start: Date):
       formData({
         name: s.name,
         type: "LEAGUE",
-        scoringMode: SCORING_MODE[s.format],
+        scoringMode,
         shotsPerSeries: 10,
         disciplineId,
         leagueFormat: isBestOf ? "BEST_OF_SINGLE" : "DOUBLE_ROUND_ROBIN",
@@ -74,8 +77,9 @@ export async function buildLeague(ctx: Context, s: LeagueScenario, start: Date):
         playoffBestOf: 5,
         playoffHasViertelfinale: bracket === undefined || bracket === "VF" || bracket === "AF",
         playoffHasAchtelfinale: bracket === "AF",
-        finalePrimary: "RINGS",
-        finaleTiebreaker1: s.phase === "L6-stichkriterium" ? "TEILER" : "none",
+        finalePrimary: s.finale?.primary ?? "RINGS",
+        finaleTiebreaker1:
+          s.finale?.tiebreaker1 ?? (s.phase === "L6-stichkriterium" ? "TEILER" : "none"),
         finaleTiebreaker2: "none",
         finaleHasSuddenDeath: true,
         isPublic: s.public !== undefined,
@@ -93,9 +97,16 @@ export async function buildLeague(ctx: Context, s: LeagueScenario, start: Date):
   const players: Player[] = source
     .slice(0, s.size)
     .map((p) => ({ ...p, strength: Math.round(random.next() * 100) / 100 }))
-  for (const player of players) {
+  for (const [i, player] of players.entries()) {
     await act(ctx, "einschreiben", () =>
-      ctx.rw.enrollParticipant(id, null, formData({ participantId: player.id }))
+      ctx.rw.enrollParticipant(
+        id,
+        null,
+        formData({
+          participantId: player.id,
+          disciplineId: s.mixed ? mixedDisciplines[i % 2] : undefined,
+        })
+      )
     )
   }
   if (s.phase === "L0-teilnehmer") return
@@ -109,7 +120,7 @@ export async function buildLeague(ctx: Context, s: LeagueScenario, start: Date):
     id,
     random,
     players,
-    scoringMode: SCORING_MODE[s.format],
+    scoringMode,
     scoringType: discipline.scoringType,
     bestOf: isBestOf ? (s.format === "BO3" ? 3 : 5) : null,
   }
@@ -160,6 +171,22 @@ async function playGroupPhase(league: League): Promise<void> {
   const { s } = league
   const matchups = await loadMatchups(league)
   const playable = matchups.filter(isPlayable)
+
+  if (s.fixed) {
+    const place = (id: string) => league.players.findIndex((p) => p.id === id)
+    for (const m of playable) {
+      const home = place(m.homeParticipantId)
+      const away = place(m.awayParticipantId!)
+      const firstLeg = m.round === "FIRST_LEG"
+      await saveDrr(
+        league,
+        m,
+        fixedSeries(s.fixed, home, away, firstLeg),
+        fixedSeries(s.fixed, away, home, firstLeg)
+      )
+    }
+    return
+  }
 
   if (s.phase === "gleichstand") {
     // Zwei Paare schießen in jeder Paarung dieselbe Serie: Beide Paare spielen gegeneinander unentschieden und
@@ -473,6 +500,20 @@ async function playPlayoffs(league: League): Promise<void> {
 
   const added = await act(ctx, "Finale: Duell hinzufügen", () => ctx.rw.addPlayoffDuel(final.id))
   const duelId = added!.duelId
+  if (s.finale) {
+    // Gleiche Ringe, das Stichkriterium des Szenarios (Ringteiler) entscheidet für A.
+    await act(ctx, "Finale eintragen", () =>
+      ctx.rw.savePlayoffDuelResult({
+        duelId,
+        totalRingsA: 96,
+        teilerA: 12.3,
+        totalRingsB: 96,
+        teilerB: 45.6,
+      })
+    )
+    await act(ctx, "abschließen", () => ctx.rw.setCompetitionStatus(id, "COMPLETED"))
+    return
+  }
   if (s.phase === "L6-stichkriterium") {
     // Gleiche Ringe, das Stichkriterium Teiler entscheidet.
     await act(ctx, "Finale eintragen", () =>

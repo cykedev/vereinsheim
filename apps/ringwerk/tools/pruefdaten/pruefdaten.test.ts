@@ -1,13 +1,14 @@
 import { afterEach, describe, expect, it } from "vitest"
 
 import { SLUG_REGEX } from "@/lib/competitions/publicSlug"
-import { calculateRingteiler, MAX_RINGS } from "@/lib/results/calculateResult"
+import { calculateRingteiler, determineOutcome, MAX_RINGS } from "@/lib/results/calculateResult"
 import { duelOutcome } from "@/lib/scoring/bestOf"
+import { calculateStandings, type StandingsMatchup } from "@/lib/standings/calculateStandings"
 
 import { advance, installClock, setClock, uninstallClock } from "./clock"
 import { inventNames, LONG_NAMES } from "./names"
 import { createRandom } from "./random"
-import { forcedPair, seriesValue } from "./results"
+import { fixedSeries, forcedPair, seriesValue, type FixedCase } from "./results"
 import { SCENARIOS } from "./scenarios"
 
 describe("Zufall mit festem Startwert", () => {
@@ -147,5 +148,77 @@ describe("Phasen-Matrix", () => {
         ).toBe(true)
       }
     }
+  })
+})
+
+describe("feste Fälle der Wertung", () => {
+  const LUFTPISTOLE = 0.3333333
+  const factorOf = (place: number) => (place % 2 === 1 ? LUFTPISTOLE : 1)
+
+  /** alle Paarungen einer vollen Hin- und Rückrunde mit sechs Teilnehmern */
+  function doubleRoundRobin(fixedCase: FixedCase, mixed: boolean): StandingsMatchup[] {
+    const matchups: StandingsMatchup[] = []
+    for (const firstLeg of [true, false]) {
+      for (let home = 0; home < 6; home++) {
+        for (let away = home + 1; away < 6; away++) {
+          const [h, a] = firstLeg ? [home, away] : [away, home]
+          const result = (self: number, other: number) => {
+            const v = fixedSeries(fixedCase, self, other, firstLeg)
+            const factor = mixed ? factorOf(self) : 1
+            return {
+              participantId: `p${self}`,
+              rings: v.rings,
+              teiler: v.teiler,
+              ringteiler: calculateRingteiler(v.rings, v.teiler, factor, MAX_RINGS.WHOLE),
+            }
+          }
+          matchups.push({
+            id: `${firstLeg ? "h" : "r"}-${h}-${a}`,
+            status: "COMPLETED",
+            homeParticipantId: `p${h}`,
+            awayParticipantId: `p${a}`,
+            results: [result(h, a), result(a, h)],
+          })
+        }
+      }
+    }
+    return matchups
+  }
+
+  const participants = Array.from({ length: 6 }, (_, i) => ({
+    id: `p${i}`,
+    firstName: "Vorname",
+    lastName: `Name ${i}`,
+    withdrawn: false,
+  }))
+
+  it("„teiler-roh-anders“: Teiler vom Ausdruck und korrigierter Teiler entscheiden Paarungen anders", () => {
+    const differing = doubleRoundRobin("teiler-roh-anders", true).filter((m) => {
+      const [home, away] = m.results
+      const side = (r: typeof home, corrected: boolean) => ({
+        ...r,
+        teiler: r.teiler * (corrected ? factorOf(Number(r.participantId.slice(1))) : 1),
+      })
+      return (
+        determineOutcome(side(home, false), side(away, false), "TEILER") !==
+        determineOutcome(side(home, true), side(away, true), "TEILER")
+      )
+    })
+    // Platz 1 gegen 0, 2 und 4, Platz 3 gegen 4, je in Hin- und Rückrunde
+    expect(differing).toHaveLength(8)
+  })
+
+  it("„ringe-gegen-ringteiler“: zwei Punktgleiche, die meisten Ringe und der beste Ringteiler trennen verschieden", () => {
+    const rows = calculateStandings(
+      participants,
+      doubleRoundRobin("ringe-gegen-ringteiler", false),
+      "RINGS"
+    )
+    const two = rows.find((r) => r.participantId === "p2")!
+    const three = rows.find((r) => r.participantId === "p3")!
+    expect(two.points).toBe(three.points)
+    expect(rows.filter((r) => r.points === two.points)).toHaveLength(2)
+    expect(two.bestRings).toBeGreaterThan(three.bestRings!)
+    expect(two.bestRingteiler).toBeGreaterThan(three.bestRingteiler!)
   })
 })

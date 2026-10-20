@@ -494,7 +494,9 @@
    "1 | Fichte, Olga | 3 | 2 | +1 | 8:7 | ausgeglichen",
    "1 | Mangfall, Mara | 3 | 2 | +1 | 8:7 | ausgeglichen",
    "1 | Saalach, Jonas | 3 | 2 | +1 | 8:7 | ausgeglichen",
-   "4 | Tanne, Uwe | 3 | 0 | -3 | 6:9 | —"
+   "4 | Tanne, Uwe | 3 | 0 | -3 | 6:9",
+   "–",
+   "nicht nötig"
   ],
   "schedule@ADMIN@390": [
    "Wettbewerbe",
@@ -537,7 +539,9 @@
    "1 | Fichte, Olga | 3 | 2 | +1 | 8:7 | ausgeglichen",
    "1 | Mangfall, Mara | 3 | 2 | +1 | 8:7 | ausgeglichen",
    "1 | Saalach, Jonas | 3 | 2 | +1 | 8:7 | ausgeglichen",
-   "4 | Tanne, Uwe | 3 | 0 | -3 | 6:9 | —"
+   "4 | Tanne, Uwe | 3 | 0 | -3 | 6:9",
+   "–",
+   "nicht nötig"
   ],
   "schedule@USER@390": [
    "Wettbewerbe",

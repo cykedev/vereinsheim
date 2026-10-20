@@ -398,7 +398,9 @@
    "1 | Mangfall, Mara | 3 | 2 | +1 | 5:4 | ausgeglichen",
    "1 | Pappel, Paul | 3 | 2 | +1 | 5:4 | ausgeglichen",
    "1 | Tanne, Yasmin | 3 | 2 | +1 | 5:4 | ausgeglichen",
-   "4 | Weide, Elif | 3 | 0 | -3 | 3:6 | —"
+   "4 | Weide, Elif | 3 | 0 | -3 | 3:6",
+   "–",
+   "nicht nötig"
   ],
   "schedule@ADMIN@390": [
    "Wettbewerbe",
@@ -441,7 +443,9 @@
    "1 | Mangfall, Mara | 3 | 2 | +1 | 5:4 | ausgeglichen",
    "1 | Pappel, Paul | 3 | 2 | +1 | 5:4 | ausgeglichen",
    "1 | Tanne, Yasmin | 3 | 2 | +1 | 5:4 | ausgeglichen",
-   "4 | Weide, Elif | 3 | 0 | -3 | 3:6 | —"
+   "4 | Weide, Elif | 3 | 0 | -3 | 3:6",
+   "–",
+   "nicht nötig"
   ],
   "schedule@USER@390": [
    "Wettbewerbe",

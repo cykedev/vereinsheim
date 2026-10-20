@@ -526,7 +526,8 @@
    "10 Schuss",
    "Mindest: 5 Serien",
    "Sortierung: Teiler/Ringe alternierend — hervorgehoben ist der Wert, der den Platz ergeben hat.",
-   "Name | Serien | Beste Ringe | Best. Teiler | Best. Ringteiler",
+   "Name | Serien | Beste Ringe | Best. Teiler",
+   "Best. Ringteiler",
    "1",
    "Lech, Tilda",
    "7/5",
@@ -582,8 +583,11 @@
    "Tanne, Yasmin",
    "0/5",
    "–",
+   "noch keine Serie",
    "–",
-   "–"
+   "noch keine Serie",
+   "–",
+   "noch keine Serie"
   ],
   "standings@ADMIN@390": [
    "Wettbewerbe",
@@ -634,7 +638,9 @@
    "8",
    "Tanne, Yasmin(0/5)",
    "–",
-   "–"
+   "noch keine Serie",
+   "–",
+   "noch keine Serie"
   ],
   "standings@USER@1280": [
    "Wettbewerbe",
@@ -645,7 +651,8 @@
    "10 Schuss",
    "Mindest: 5 Serien",
    "Sortierung: Teiler/Ringe alternierend — hervorgehoben ist der Wert, der den Platz ergeben hat.",
-   "Name | Serien | Beste Ringe | Best. Teiler | Best. Ringteiler",
+   "Name | Serien | Beste Ringe | Best. Teiler",
+   "Best. Ringteiler",
    "1",
    "Lech, Tilda",
    "7/5",
@@ -701,8 +708,11 @@
    "Tanne, Yasmin",
    "0/5",
    "–",
+   "noch keine Serie",
    "–",
-   "–"
+   "noch keine Serie",
+   "–",
+   "noch keine Serie"
   ],
   "standings@USER@390": [
    "Wettbewerbe",
@@ -750,7 +760,9 @@
    "8",
    "Tanne, Yasmin(0/5)",
    "–",
-   "–"
+   "noch keine Serie",
+   "–",
+   "noch keine Serie"
   ]
  },
  "pdfs": {
