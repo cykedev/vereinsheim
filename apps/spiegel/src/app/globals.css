@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 @import "@vereinsheim/ui/design2.css";
 
 /* Klassen aus der App und aus den Bausteinen von shot-ui */

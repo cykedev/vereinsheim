@@ -53,8 +53,10 @@
     "dotenv": "catalog:",
     "eslint": "catalog:",
     "prettier": "catalog:",
+    "shadcn": "catalog:",
     "tailwindcss": "catalog:",
     "tsx": "catalog:",
+    "tw-animate-css": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }

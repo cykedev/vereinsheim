@@ -3,11 +3,12 @@ import { afterEach, beforeAll, describe, expect, it, vi } from "vitest"
 vi.mock("server-only", () => ({}))
 
 let getDisplayTimeZone: (typeof import("./dateTime"))["getDisplayTimeZone"]
+let isValidIanaTimeZone: (typeof import("./dateTime"))["isValidIanaTimeZone"]
 
 const originalDisplayTimeZone = process.env.DISPLAY_TIME_ZONE
 
 beforeAll(async () => {
-  ;({ getDisplayTimeZone } = await import("./dateTime"))
+  ;({ getDisplayTimeZone, isValidIanaTimeZone } = await import("./dateTime"))
 })
 
 afterEach(() => {
@@ -41,5 +42,17 @@ describe("getDisplayTimeZone", () => {
     process.env.DISPLAY_TIME_ZONE = "   "
 
     expect(getDisplayTimeZone()).toBe("Europe/Berlin")
+  })
+})
+
+describe("isValidIanaTimeZone", () => {
+  it("kennt gueltige IANA-Zeitzonen", () => {
+    expect(isValidIanaTimeZone("Europe/Berlin")).toBe(true)
+    expect(isValidIanaTimeZone("UTC")).toBe(true)
+  })
+
+  it("lehnt unbekannte Zeitzonen ab", () => {
+    expect(isValidIanaTimeZone("invalid/time-zone")).toBe(false)
+    expect(isValidIanaTimeZone("Berlin")).toBe(false)
   })
 })

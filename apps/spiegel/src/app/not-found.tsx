@@ -1,6 +1,6 @@
 import Link from "next/link"
 
-// 404 in Design 2: unbekannte Adresse oder eine Scheibe, die es nicht gibt oder die einem anderen gehört
+// 404: unbekannte Adresse oder ein Eintrag, den es nicht gibt oder der einem anderen Konto gehört
 export default function NotFound() {
   return (
     <main className="mx-auto grid max-w-2xl gap-3 px-4 py-12">
@@ -8,7 +8,7 @@ export default function NotFound() {
         Nicht gefunden
       </h1>
       <p className="text-foreground-2">
-        Diese Seite oder Scheibe gibt es nicht, oder sie gehört nicht zu deinem Konto.
+        Diese Seite gibt es nicht, oder sie gehört zu einem anderen Konto.
       </p>
       <Link
         href="/"

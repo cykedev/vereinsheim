@@ -10,7 +10,7 @@
 #
 # Modi:
 #   (default) PUSH=1 : --platform linux/amd64 --push; verlangt committeten Stand
-#                      + Konsistenz-Gate.
+#                      + Konsistenz-Gate über alle Apps (consistency-check.sh).
 #   PUSH=0           : --load (native Plattform); erlaubt uncommittete Änderungen,
 #                      kein Push, kein Gate (lokale Testbuilds).
 #
@@ -47,8 +47,10 @@ if [[ "$PUSH" == "1" ]]; then
 		echo "  Für lokale Testbuilds: PUSH=0 ./scripts/build-and-push.sh" >&2
 		exit 1
 	fi
-	echo "==> Konsistenz-Check (apps/ringwerk × apps/treffsicher)"
-	RINGWERK_PATH="apps/ringwerk" TREFFSICHER_PATH="apps/treffsicher" "$(dirname "$0")/consistency-check.sh"
+	# Das Gate prüft immer alle Apps, auch wenn APPS nur einen Teil baut: Die geteilten Dateien
+	# müssen in allen gleich sein.
+	echo "==> Konsistenz-Check (${APPS[*]})"
+	"$(dirname "$0")/consistency-check.sh"
 fi
 
 SHA="$(git rev-parse --short HEAD)"

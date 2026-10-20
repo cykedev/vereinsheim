@@ -6,16 +6,16 @@ deshalb nicht.
 
 ## Was hier liegt (Subpath-Exports)
 
-| Export                                          | Datei                                 | Inhalt                                                                                           |
-| ----------------------------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| `@vereinsheim/lib/utils`                        | `src/utils.ts`                        | `cn()` (clsx + tailwind-merge)                                                                   |
-| `@vereinsheim/lib/forms/fieldErrors`            | `src/forms/fieldErrors.ts`            | `getFieldError`, `getGeneralError`                                                               |
-| `@vereinsheim/lib/hooks/useUnsavedChangesGuard` | `src/hooks/useUnsavedChangesGuard.ts` | `"use client"`                                                                                   |
-| `@vereinsheim/lib/hooks/useNavigationConfirm`   | `src/hooks/useNavigationConfirm.ts`   | `"use client"`                                                                                   |
-| `@vereinsheim/lib/format`                       | `src/format.ts`                       | isomorphe Anzeige-Formatierung, **ohne** `server-only` (auch für Client-Komponenten)             |
-| `@vereinsheim/lib/dateTime`                     | `src/dateTime.ts`                     | server-only: Anzeige-Zeitzone (`DISPLAY_TIME_ZONE`), re-exportiert `formatDateOnly` aus `format` |
-| `@vereinsheim/lib/auth/validation`              | `src/auth/validation.ts`              | Login- und Passwortregeln                                                                        |
-| `@vereinsheim/lib/auth/rate-limit/*`            | `src/auth/rate-limit/`                | `config`, `limiter`, `normalization`, `types`, `adminTypes`, dazu `stores` und `admin` (unten)   |
+| Export                                          | Datei                                 | Inhalt                                                                                                     |
+| ----------------------------------------------- | ------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `@vereinsheim/lib/utils`                        | `src/utils.ts`                        | `cn()` (clsx + tailwind-merge)                                                                             |
+| `@vereinsheim/lib/forms/fieldErrors`            | `src/forms/fieldErrors.ts`            | `getFieldError`, `getGeneralError`                                                                         |
+| `@vereinsheim/lib/hooks/useUnsavedChangesGuard` | `src/hooks/useUnsavedChangesGuard.ts` | `"use client"`                                                                                             |
+| `@vereinsheim/lib/hooks/useNavigationConfirm`   | `src/hooks/useNavigationConfirm.ts`   | `"use client"`                                                                                             |
+| `@vereinsheim/lib/format`                       | `src/format.ts`                       | isomorphe Anzeige-Formatierung, **ohne** `server-only` (auch für Client-Komponenten)                       |
+| `@vereinsheim/lib/dateTime`                     | `src/dateTime.ts`                     | server-only: Anzeige-Zeitzone (`DISPLAY_TIME_ZONE`), `isValidIanaTimeZone`, re-exportiert `formatDateOnly` |
+| `@vereinsheim/lib/auth/validation`              | `src/auth/validation.ts`              | Login- und Passwortregeln                                                                                  |
+| `@vereinsheim/lib/auth/rate-limit/*`            | `src/auth/rate-limit/`                | `config`, `limiter`, `normalization`, `types`, `adminTypes`, dazu `stores` und `admin` (unten)             |
 
 Am Prisma-Client hängende Teile bleiben app-lokal (`auth.ts` mit den NextAuth-Optionen, `auth-helpers.ts`,
 `startup.ts`, die Server Actions).

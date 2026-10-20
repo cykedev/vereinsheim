@@ -3,23 +3,29 @@
 import { useEffect } from "react"
 import { Button } from "@vereinsheim/ui/button"
 
-interface Props {
+// Fehler beim Rendern (etwa die Datenbank nicht erreichbar); „Nochmal“ rendert die Seite neu
+export default function ErrorPage({
+  error,
+  reset,
+}: {
   error: Error & { digest?: string }
   reset: () => void
-}
-
-export default function Error({ error, reset }: Props) {
+}) {
   useEffect(() => {
     console.error(error)
   }, [error])
 
   return (
-    <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 px-4 text-center">
-      <h2 className="text-lg font-semibold">Etwas ist schiefgelaufen</h2>
-      <p className="text-sm text-muted-foreground">Ein unerwarteter Fehler ist aufgetreten.</p>
-      <Button variant="outline" onClick={reset}>
-        Erneut versuchen
+    <main className="mx-auto grid max-w-2xl gap-3 px-4 py-12">
+      <h1 className="font-display text-[1.7rem] leading-tight font-bold tracking-tight">
+        Etwas ist schiefgegangen
+      </h1>
+      <p className="text-foreground-2">
+        Die Seite ließ sich nicht laden. Versuch es gleich noch einmal.
+      </p>
+      <Button className="h-10 justify-self-start" onClick={reset}>
+        Nochmal
       </Button>
-    </div>
+    </main>
   )
 }

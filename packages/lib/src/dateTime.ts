@@ -5,7 +5,8 @@ import { APP_LOCALE } from "./format"
 // DB speichert immer UTC. Diese Timezone wird ausschliesslich für die UI-Darstellung verwendet.
 const DEFAULT_DISPLAY_TIME_ZONE = "Europe/Berlin"
 
-function isValidIanaTimeZone(value: string): boolean {
+/** Kennt die Laufzeit diese IANA-Zeitzone (etwa „Europe/Berlin“)? */
+export function isValidIanaTimeZone(value: string): boolean {
   try {
     new Intl.DateTimeFormat(APP_LOCALE, { timeZone: value })
     return true

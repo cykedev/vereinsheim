@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
 
-import { getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
+import { getDisplayTimeZone, isValidIanaTimeZone } from "@vereinsheim/lib/dateTime"
 import { formatTimeOfDay } from "@vereinsheim/lib/format"
 
 import { adminActor } from "@/lib/action-guards"
@@ -16,21 +16,15 @@ import type { ActionResult } from "@/lib/types"
 // (Zustimmungen per Sportpass: `src/lib/consent/actions.ts`). Jede Action prüft selbst (`adminActor`) und gibt ein
 // ActionResult zurück.
 
-const isTimeZone = (value: string) => {
-  try {
-    new Intl.DateTimeFormat("de-DE", { timeZone: value })
-    return true
-  } catch {
-    return false
-  }
-}
-
 const SiteSchema = z.object({
   name: z.string().trim().min(1, "Bitte einen Namen eingeben.").max(80, "Höchstens 80 Zeichen."),
   timeZone: z
     .string()
     .trim()
-    .refine(isTimeZone, "Diese Zeitzone kennt Spiegel nicht. In Deutschland: Europe/Berlin."),
+    .refine(
+      isValidIanaTimeZone,
+      "Diese Zeitzone kennt Spiegel nicht. In Deutschland: Europe/Berlin."
+    ),
 })
 
 export async function saveSite(
