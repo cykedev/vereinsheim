@@ -268,7 +268,7 @@ export function disciplineDelete({ name, system }: { name: string; system: boole
       ? `„${name}“ ist eine Systemdisziplin von Ringwerk.`
       : `„${name}“ ist eine eigene Disziplin.`,
     check:
-      "Löschen kann nur ein Admin. Wird die Disziplin in einem Wettbewerb verwendet, geht das nicht. Dann archiviere sie.",
+      "Löschen kann nur ein Admin. Wird die Disziplin in einem Wettbewerb verwendet, auch nur für einzelne Teilnehmer, geht das nicht. Dann archiviere sie.",
     happens: [
       "Die Disziplin verschwindet unter „Disziplinen“ und aus der Auswahl bei neuen Wettbewerben.",
       ...(system ? ["Beim nächsten Start legt Ringwerk sie wieder an."] : []),

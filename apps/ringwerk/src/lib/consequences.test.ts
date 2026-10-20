@@ -282,6 +282,12 @@ describe("Wortlaut wie im Textbuch", () => {
     })
   })
 
+  it("7 Disziplin löschen: auch einzelne Teilnehmer sperren", () => {
+    expect(disciplineDelete({ name: "Luftgewehr Auflage", system: false }).check).toBe(
+      "Löschen kann nur ein Admin. Wird die Disziplin in einem Wettbewerb verwendet, auch nur für einzelne Teilnehmer, geht das nicht. Dann archiviere sie."
+    )
+  })
+
   it("7 Systemdisziplin kommt beim nächsten Start wieder", () => {
     expect(disciplineDelete({ name: "Luftgewehr", system: true }).happens).toEqual([
       "Die Disziplin verschwindet unter „Disziplinen“ und aus der Auswahl bei neuen Wettbewerben.",

@@ -147,29 +147,43 @@ export async function deleteDiscipline(id: string): Promise<ActionResult> {
   if (!session) return { error: "Nicht angemeldet" }
   if (!isAdmin(session.user.role)) return { error: "Keine Berechtigung" }
 
-  const discipline = await db.discipline.findUnique({
-    where: { id },
-    select: { id: true, name: true },
-  })
-  if (!discipline) return { error: "Disziplin nicht gefunden." }
+  // Löschen nur ohne jede Verwendung, Prüfung und Löschen in einer Transaktion. Eine Einschreibung in einem gemischten
+  // Wettbewerb hält die Disziplin über ON DELETE SET NULL; ohne Prüfung verlöre der Teilnehmer seine Disziplin lautlos.
+  // Serien halten sie über ON DELETE RESTRICT; ohne Prüfung käme statt einer Meldung ein Fehler.
+  const result = await db.$transaction(
+    async (tx): Promise<ActionResult> => {
+      const discipline = await tx.discipline.findUnique({
+        where: { id },
+        select: { id: true, name: true },
+      })
+      if (!discipline) return { error: "Disziplin nicht gefunden." }
 
-  // Endgültiges Löschen nur ohne Wettbewerbsverwendung, damit keine FK-Verweise brechen
-  const competitionCount = await db.competition.count({ where: { disciplineId: id } })
-  if (competitionCount > 0) {
-    return { error: "Disziplin kann nicht gelöscht werden — sie wird in Wettbewerben verwendet." }
-  }
+      const [competitions, enrolments, series] = await Promise.all([
+        tx.competition.count({ where: { disciplineId: id } }),
+        tx.competitionParticipant.count({ where: { disciplineId: id } }),
+        tx.series.count({ where: { disciplineId: id } }),
+      ])
+      if (competitions + enrolments + series > 0) {
+        return {
+          error: "Disziplin kann nicht gelöscht werden — sie wird in Wettbewerben verwendet.",
+        }
+      }
 
-  await db.auditLog.create({
-    data: {
-      eventType: "DISCIPLINE_DELETED" satisfies AuditEventType,
-      entityType: "DISCIPLINE",
-      entityId: id,
-      userId: session.user.id,
-      details: { name: discipline.name },
+      await tx.auditLog.create({
+        data: {
+          eventType: "DISCIPLINE_DELETED" satisfies AuditEventType,
+          entityType: "DISCIPLINE",
+          entityId: id,
+          userId: session.user.id,
+          details: { name: discipline.name },
+        },
+      })
+      await tx.discipline.delete({ where: { id } })
+      return { success: true }
     },
-  })
+    { isolationLevel: "Serializable" }
+  )
 
-  await db.discipline.delete({ where: { id } })
-  revalidateDisciplinePaths()
-  return { success: true }
+  if ("success" in result) revalidateDisciplinePaths()
+  return result
 }

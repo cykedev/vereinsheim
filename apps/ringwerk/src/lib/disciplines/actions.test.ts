@@ -8,6 +8,8 @@ const {
   updateMock,
   deleteMock,
   competitionCountMock,
+  enrolmentCountMock,
+  seriesCountMock,
   auditLogCreateMock,
 } = vi.hoisted(() => ({
   getAuthSessionMock: vi.fn(),
@@ -17,6 +19,8 @@ const {
   updateMock: vi.fn(),
   deleteMock: vi.fn(),
   competitionCountMock: vi.fn(),
+  enrolmentCountMock: vi.fn(),
+  seriesCountMock: vi.fn(),
   auditLogCreateMock: vi.fn(),
 }))
 
@@ -26,8 +30,8 @@ vi.mock("@/lib/auth-helpers", () => ({
   isAdmin: (role: string) => role === "ADMIN",
 }))
 vi.mock("next/cache", () => ({ revalidatePath: revalidatePathMock }))
-vi.mock("@/lib/db", () => ({
-  db: {
+vi.mock("@/lib/db", () => {
+  const db = {
     discipline: {
       findUnique: findUniqueMock,
       create: createMock,
@@ -35,9 +39,14 @@ vi.mock("@/lib/db", () => ({
       delete: deleteMock,
     },
     competition: { count: competitionCountMock },
+    competitionParticipant: { count: enrolmentCountMock },
+    series: { count: seriesCountMock },
     auditLog: { create: auditLogCreateMock },
-  },
-}))
+    // interaktive Transaktion: der Callback bekommt denselben Client
+    $transaction: (callback: (tx: unknown) => unknown) => callback(db),
+  }
+  return { db }
+})
 
 import {
   createDiscipline,
@@ -213,9 +222,21 @@ describe("updateDiscipline", () => {
 // ─── deleteDiscipline ────────────────────────────────────────────────────────
 
 describe("deleteDiscipline", () => {
+  /** Zeilen, die eine Disziplin tragen; die Zähl-Mocks filtern wie Prisma nach `where.disciplineId` */
+  let rows: { competitions: string[]; enrolments: string[]; series: string[] }
+  const byDiscipline =
+    (list: () => string[]) =>
+    ({ where }: { where: { disciplineId: string } }) =>
+      Promise.resolve(list().filter((d) => d === where.disciplineId).length)
+
   beforeEach(() => {
     vi.resetAllMocks()
     deleteMock.mockResolvedValue({})
+    // eine fremde Disziplin ist überall verwendet, die zu löschende nirgends
+    rows = { competitions: ["d2"], enrolments: ["d2"], series: ["d2"] }
+    competitionCountMock.mockImplementation(byDiscipline(() => rows.competitions))
+    enrolmentCountMock.mockImplementation(byDiscipline(() => rows.enrolments))
+    seriesCountMock.mockImplementation(byDiscipline(() => rows.series))
   })
 
   it("liefert Fehler ohne Session", async () => {
@@ -239,7 +260,7 @@ describe("deleteDiscipline", () => {
   it("blockiert Löschen wenn Ligen vorhanden", async () => {
     getAuthSessionMock.mockResolvedValue(adminSession)
     findUniqueMock.mockResolvedValue({ id: "d1", name: "Luftpistole" })
-    competitionCountMock.mockResolvedValue(1)
+    rows.competitions.push("d1")
 
     const result = await deleteDiscipline("d1")
 
@@ -247,15 +268,46 @@ describe("deleteDiscipline", () => {
     expect(deleteMock).not.toHaveBeenCalled()
   })
 
-  it("löscht Disziplin ohne Ligen", async () => {
+  it("sperrt, wenn nur eine Einschreibung die Disziplin trägt (gemischter Wettbewerb ohne Serie)", async () => {
     getAuthSessionMock.mockResolvedValue(adminSession)
     findUniqueMock.mockResolvedValue({ id: "d1", name: "Luftpistole" })
-    competitionCountMock.mockResolvedValue(0)
+    rows.enrolments.push("d1")
+
+    const result = await deleteDiscipline("d1")
+
+    expect(result).toEqual({
+      error: "Disziplin kann nicht gelöscht werden — sie wird in Wettbewerben verwendet.",
+    })
+    expect(deleteMock).not.toHaveBeenCalled()
+    expect(auditLogCreateMock).not.toHaveBeenCalled()
+  })
+
+  it("sperrt, wenn nur Serien die Disziplin tragen (gemischter Wettbewerb)", async () => {
+    getAuthSessionMock.mockResolvedValue(adminSession)
+    findUniqueMock.mockResolvedValue({ id: "d1", name: "Luftpistole" })
+    rows.series.push("d1")
+
+    const result = await deleteDiscipline("d1")
+
+    expect(result).toMatchObject({ error: expect.stringContaining("Wettbewerben") })
+    expect(deleteMock).not.toHaveBeenCalled()
+  })
+
+  it("löscht, wenn nur eine fremde Disziplin verwendet wird, mit einem Protokolleintrag", async () => {
+    getAuthSessionMock.mockResolvedValue(adminSession)
+    findUniqueMock.mockResolvedValue({ id: "d1", name: "Luftpistole" })
 
     const result = await deleteDiscipline("d1")
 
     expect(result).toEqual({ success: true })
+    expect(deleteMock).toHaveBeenCalledTimes(1)
     expect(deleteMock).toHaveBeenCalledWith({ where: { id: "d1" } })
+    expect(auditLogCreateMock).toHaveBeenCalledTimes(1)
+    expect(auditLogCreateMock.mock.calls[0][0].data).toMatchObject({
+      eventType: "DISCIPLINE_DELETED",
+      entityId: "d1",
+      details: { name: "Luftpistole" },
+    })
     expect(revalidatePathMock).toHaveBeenCalled()
   })
 })
