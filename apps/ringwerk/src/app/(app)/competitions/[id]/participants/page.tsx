@@ -20,6 +20,7 @@ import { CompetitionDetailHeader } from "@/components/app/shell/CompetitionDetai
 import { EmptyState } from "@vereinsheim/ui/empty-state"
 import { PdfDownloadButton } from "@/components/app/shared/PdfDownloadButton"
 import type { ActionResult } from "@/lib/types"
+import { offersMinSeriesExemption } from "@/lib/scoring/calculateSeasonStandings"
 
 interface Props {
   params: Promise<{ id: string }>
@@ -65,6 +66,9 @@ export default async function CompetitionParticipantsPage({ params }: Props) {
   const isSeason = competition.type === "SEASON"
   const isMixed = !competition.disciplineId
 
+  // Saison mit Mindestzahl: Ausnahme beim Einschreiben, als Zeichen und als Knopf in der Zeile
+  const exemptionMinSeries = offersMinSeriesExemption(competition) ? competition.minSeries : null
+
   // Für gemischte Wettbewerbe: Disziplinen für Einschreibung bereitstellen
   const enrollDisciplines = isMixed ? allDisciplines : undefined
 
@@ -101,6 +105,7 @@ export default async function CompetitionParticipantsPage({ params }: Props) {
           allowGuests={isEvent ? (competition.allowGuests ?? false) : false}
           teamSize={isEvent ? competition.teamSize : null}
           eventTeams={isEvent ? eventTeams : []}
+          offersMinSeriesExemption={exemptionMinSeries !== null}
           action={enrollAction}
         />
       )}
@@ -137,6 +142,11 @@ export default async function CompetitionParticipantsPage({ params }: Props) {
                           {cp.discipline.name}
                         </Badge>
                       )}
+                      {exemptionMinSeries !== null && cp.exemptFromMinSeries && (
+                        <Badge variant="outline" className="text-xs">
+                          ohne Mindestzahl
+                        </Badge>
+                      )}
                     </div>
                     {!cp.isGuest && (
                       <p className="text-xs text-muted-foreground">{cp.participant.contact}</p>
@@ -147,6 +157,7 @@ export default async function CompetitionParticipantsPage({ params }: Props) {
                     playoffsStarted={playoffsStarted}
                     disciplines={enrollDisciplines}
                     displayTimeZone={displayTimeZone}
+                    exemptionMinSeries={exemptionMinSeries}
                   />
                 </div>
               ))}

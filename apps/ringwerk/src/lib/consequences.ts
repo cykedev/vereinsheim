@@ -281,6 +281,69 @@ export function unenrollBlocked({
   }
 }
 
+/** Saison mit Mindestzahl: eine Einschreibung ab der ersten Serie werten (Textbuch „Saison ohne Mindestzahl“ 3) */
+export function minSeriesExemptionSet({
+  name,
+  minSeries,
+  seriesCount,
+}: {
+  name: string
+  /** Mindestzahl der Saison */
+  minSeries: number
+  /** Serien, die schon erfasst sind */
+  seriesCount: number
+}): Decision {
+  return {
+    title: `${name} ohne Mindestzahl werten?`,
+    about: `${name} ist in dieser Saison eingeschrieben. Für einen Platz braucht es ${minSeries} Serien.`,
+    check: `Gilt für ${name} eine Ausnahme? Etwa, weil ${name} zur Jugend gehört.`,
+    happens: [
+      `${name} steht ab der ersten Serie mit Platz in der Rangliste.`,
+      `In der Spalte „Serien“ steht dann ${seriesCount}/1 statt ${seriesCount}/${minSeries}, in der App und im PDF.`,
+      "Im Protokoll des Wettbewerbs steht die Änderung.",
+    ],
+    notHappening: [
+      `Die Serien von ${name} bleiben, wie sie sind.`,
+      "Für alle anderen gilt die Mindestzahl weiter.",
+      "Andere Saisons ändern sich nicht.",
+    ],
+    undo: "Jederzeit über denselben Knopf in der Teilnehmerverwaltung.",
+    confirmLabel: "Ohne Mindestzahl werten",
+    destructive: false,
+  }
+}
+
+/** Saison mit Mindestzahl: die Ausnahme zurücknehmen (Textbuch „Saison ohne Mindestzahl“ 4) */
+export function minSeriesExemptionUnset({
+  name,
+  minSeries,
+  seriesCount,
+}: {
+  name: string
+  /** Mindestzahl der Saison */
+  minSeries: number
+  /** Serien, die schon erfasst sind */
+  seriesCount: number
+}): Decision {
+  return {
+    title: `Für ${name} wieder ${minSeries} Serien verlangen?`,
+    about: `${name} wird in dieser Saison ohne Mindestzahl gewertet. Bisher zählt jede Serie ab der ersten.`,
+    happens: [
+      `Für einen Platz braucht ${name} dann ${minSeries} Serien wie alle anderen.`,
+      ...(seriesCount < minSeries
+        ? [
+            `${name} hat ${count(seriesCount, "Serie", "Serien")} und steht danach ohne Platz in der Rangliste.`,
+          ]
+        : []),
+      "Im Protokoll des Wettbewerbs steht die Änderung.",
+    ],
+    notHappening: [`Die Serien von ${name} bleiben, wie sie sind.`],
+    undo: "Jederzeit über denselben Knopf in der Teilnehmerverwaltung.",
+    confirmLabel: "Mindestzahl verlangen",
+    destructive: false,
+  }
+}
+
 // ---------------------------------------------------------------------------------------------------------------------
 // Disziplinen
 

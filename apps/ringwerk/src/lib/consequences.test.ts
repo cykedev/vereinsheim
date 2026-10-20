@@ -16,6 +16,8 @@ import {
   eventSeriesDelete,
   FORCE_DELETE_SECTION,
   leaveUnsaved,
+  minSeriesExemptionSet,
+  minSeriesExemptionUnset,
   nextRound,
   participantActivate,
   participantDeactivate,
@@ -114,6 +116,9 @@ const ALL: Decision[] = [
   accountDeactivate({ name: null, email: "erika@example.org" }),
   accountActivate({ name: "Erika Muster", email: "erika@example.org" }),
   leaveUnsaved(),
+  minSeriesExemptionSet({ name: "Anna Birke", minSeries: 20, seriesCount: 3 }),
+  minSeriesExemptionUnset({ name: "Anna Birke", minSeries: 20, seriesCount: 3 }),
+  minSeriesExemptionUnset({ name: "Anna Birke", minSeries: 20, seriesCount: 20 }),
 ]
 
 const NOTICES = [
@@ -465,5 +470,52 @@ describe("Wortlaut wie im Textbuch", () => {
       title: "Ohne Speichern verlassen?",
       confirmLabel: "Verwerfen",
     })
+  })
+})
+
+describe("Saison ohne Mindestzahl, Wortlaut wie im Textbuch", () => {
+  it("3 ohne Mindestzahl werten", () => {
+    expect(minSeriesExemptionSet({ name: "Anna Birke", minSeries: 20, seriesCount: 3 })).toEqual({
+      title: "Anna Birke ohne Mindestzahl werten?",
+      about:
+        "Anna Birke ist in dieser Saison eingeschrieben. Für einen Platz braucht es 20 Serien.",
+      check: "Gilt für Anna Birke eine Ausnahme? Etwa, weil Anna Birke zur Jugend gehört.",
+      happens: [
+        "Anna Birke steht ab der ersten Serie mit Platz in der Rangliste.",
+        "In der Spalte „Serien“ steht dann 3/1 statt 3/20, in der App und im PDF.",
+        "Im Protokoll des Wettbewerbs steht die Änderung.",
+      ],
+      notHappening: [
+        "Die Serien von Anna Birke bleiben, wie sie sind.",
+        "Für alle anderen gilt die Mindestzahl weiter.",
+        "Andere Saisons ändern sich nicht.",
+      ],
+      undo: "Jederzeit über denselben Knopf in der Teilnehmerverwaltung.",
+      confirmLabel: "Ohne Mindestzahl werten",
+      destructive: false,
+    })
+  })
+
+  it("4 Mindestzahl wieder verlangen, der Hinweis auf den Platz nur mit zu wenig Serien", () => {
+    expect(minSeriesExemptionUnset({ name: "Anna Birke", minSeries: 20, seriesCount: 3 })).toEqual({
+      title: "Für Anna Birke wieder 20 Serien verlangen?",
+      about:
+        "Anna Birke wird in dieser Saison ohne Mindestzahl gewertet. Bisher zählt jede Serie ab der ersten.",
+      happens: [
+        "Für einen Platz braucht Anna Birke dann 20 Serien wie alle anderen.",
+        "Anna Birke hat 3 Serien und steht danach ohne Platz in der Rangliste.",
+        "Im Protokoll des Wettbewerbs steht die Änderung.",
+      ],
+      notHappening: ["Die Serien von Anna Birke bleiben, wie sie sind."],
+      undo: "Jederzeit über denselben Knopf in der Teilnehmerverwaltung.",
+      confirmLabel: "Mindestzahl verlangen",
+      destructive: false,
+    })
+    expect(
+      minSeriesExemptionUnset({ name: "Anna Birke", minSeries: 20, seriesCount: 20 }).happens
+    ).toHaveLength(2)
+    expect(
+      minSeriesExemptionUnset({ name: "Anna Birke", minSeries: 20, seriesCount: 1 }).happens[1]
+    ).toBe("Anna Birke hat 1 Serie und steht danach ohne Platz in der Rangliste.")
   })
 })

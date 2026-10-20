@@ -5,6 +5,7 @@ import type { CompetitionParticipantListItem } from "@/lib/competitionParticipan
 import type { SerializableDiscipline } from "@/lib/disciplines/types"
 import {
   DisciplineEditDialog,
+  MinSeriesExemptionAction,
   RevokeWithdrawalAction,
   UnenrollAction,
   useParticipantActions,
@@ -18,6 +19,8 @@ interface Props {
   disciplines?: SerializableDiscipline[]
   /** Zeitzone der Anzeige für den Tag des Rückzugs */
   displayTimeZone: string
+  /** Mindestzahl, nur in einer Saison mit Mindestzahl: ermöglicht die Ausnahme davon */
+  exemptionMinSeries?: number | null
 }
 
 export function CompetitionParticipantActions({
@@ -25,6 +28,7 @@ export function CompetitionParticipantActions({
   playoffsStarted,
   disciplines,
   displayTimeZone,
+  exemptionMinSeries = null,
 }: Props) {
   const actions = useParticipantActions(entry)
 
@@ -54,6 +58,17 @@ export function CompetitionParticipantActions({
           fullName={fullName}
           disciplines={disciplines}
           currentDisciplineId={entry.disciplineId}
+        />
+      )}
+
+      {exemptionMinSeries !== null && entry.status === "ACTIVE" && (
+        <MinSeriesExemptionAction
+          name={name}
+          minSeries={exemptionMinSeries}
+          seriesCount={entry.seriesCount}
+          exempt={entry.exemptFromMinSeries}
+          isPending={actions.isPending}
+          onConfirm={actions.handleMinSeriesExemption}
         />
       )}
 

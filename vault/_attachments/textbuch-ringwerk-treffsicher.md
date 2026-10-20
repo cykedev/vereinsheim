@@ -1726,3 +1726,8 @@ es braucht, steht oben bei „Mindest“.“:
 - **Art:** Mindestzahl geändert
 - **Beschreibung:** {Anna Birke} ohne Mindestzahl gewertet · Für {Anna Birke} wieder die Mindestzahl verlangt
 - **Details:** Name {Anna Birke} · Mindestzahl „keine (ab der ersten Serie)“ bzw. „wie alle anderen“
+
+### 8. Erfolgsmeldungen
+
+- Ohne Mindestzahl werten: **Ohne Mindestzahl gewertet.**
+- Mindestzahl verlangen: **Mindestzahl wieder verlangt.**

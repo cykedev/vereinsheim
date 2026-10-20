@@ -20,6 +20,7 @@ const mocks = vi.hoisted(() => ({
   deleteParticipant: vi.fn(),
   revokeWithdrawal: vi.fn(),
   unenrollParticipant: vi.fn(),
+  updateMinSeriesExemption: vi.fn(),
   setDisciplineArchived: vi.fn(),
   deleteDiscipline: vi.fn(),
   setCompetitionStatus: vi.fn(),
@@ -83,6 +84,7 @@ vi.mock("@/lib/competitionParticipants/actions", () => ({
   revokeWithdrawal: mocks.revokeWithdrawal,
   unenrollParticipant: mocks.unenrollParticipant,
   updateParticipantDiscipline: vi.fn(),
+  updateMinSeriesExemption: mocks.updateMinSeriesExemption,
 }))
 vi.mock("@/lib/disciplines/actions", () => ({
   setDisciplineArchived: mocks.setDisciplineArchived,
@@ -179,6 +181,7 @@ const ACTIONS = [
   mocks.deleteParticipant,
   mocks.revokeWithdrawal,
   mocks.unenrollParticipant,
+  mocks.updateMinSeriesExemption,
   mocks.setDisciplineArchived,
   mocks.deleteDiscipline,
   mocks.setCompetitionStatus,
@@ -321,6 +324,7 @@ describe("Teilnehmer eines Wettbewerbs", () => {
     disciplineId: null,
     teamNumber: null,
     seriesCount: 0,
+    exemptFromMinSeries: false,
     participant: { id: "p1", firstName: "Anna", lastName: "Birke", contact: null },
   })
 
@@ -350,6 +354,52 @@ describe("Teilnehmer eines Wettbewerbs", () => {
     expect(mocks.unenrollParticipant).toHaveBeenCalledWith("cp1")
     expect(mocks.toastSuccess).toHaveBeenCalledWith("Aus dem Wettbewerb entfernt.")
     onlyCalled(mocks.unenrollParticipant)
+  })
+
+  it("Saison mit Mindestzahl: ohne Mindestzahl werten, updateMinSeriesExemption(Einschreibung, true)", async () => {
+    show(CompetitionParticipantActions, {
+      entry: entry("ACTIVE"),
+      playoffsStarted: false,
+      displayTimeZone: "Europe/Berlin",
+      exemptionMinSeries: 20,
+    })
+    // zuerst die Ausnahme, dann Entfernen
+    expect(confirms).toHaveLength(2)
+    await confirmAt(0)
+    expect(mocks.updateMinSeriesExemption).toHaveBeenCalledTimes(1)
+    expect(mocks.updateMinSeriesExemption).toHaveBeenCalledWith("cp1", true)
+    expect(mocks.toastSuccess).toHaveBeenCalledWith("Ohne Mindestzahl gewertet.")
+    onlyCalled(mocks.updateMinSeriesExemption)
+  })
+
+  it("mit Ausnahme: Mindestzahl verlangen, updateMinSeriesExemption(Einschreibung, false)", async () => {
+    show(CompetitionParticipantActions, {
+      entry: { ...entry("ACTIVE"), exemptFromMinSeries: true },
+      playoffsStarted: false,
+      displayTimeZone: "Europe/Berlin",
+      exemptionMinSeries: 20,
+    })
+    await confirmAt(0)
+    expect(mocks.updateMinSeriesExemption).toHaveBeenCalledWith("cp1", false)
+    expect(mocks.toastSuccess).toHaveBeenCalledWith("Mindestzahl wieder verlangt.")
+    onlyCalled(mocks.updateMinSeriesExemption)
+  })
+
+  it("ohne Mindestzahl in der Saison und zurückgezogen: kein Knopf dafür", () => {
+    show(CompetitionParticipantActions, {
+      entry: entry("ACTIVE"),
+      playoffsStarted: false,
+      displayTimeZone: "Europe/Berlin",
+    })
+    expect(confirms).toHaveLength(1)
+    reset()
+    show(CompetitionParticipantActions, {
+      entry: entry("WITHDRAWN"),
+      playoffsStarted: false,
+      displayTimeZone: "Europe/Berlin",
+      exemptionMinSeries: 20,
+    })
+    expect(confirms).toHaveLength(2)
   })
 
   it("nach dem Start der Playoffs: keine Bestätigung", () => {

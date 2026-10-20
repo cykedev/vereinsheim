@@ -1,8 +1,62 @@
 import { useState } from "react"
-import { UserCheck, Trash2 } from "lucide-react"
+import { CircleSlash, UserCheck, Trash2 } from "lucide-react"
 import { Button } from "@vereinsheim/ui/button"
 import { DecisionDialog, NoticeDialog } from "@vereinsheim/ui/design2/decision-dialog"
-import { unenroll, unenrollBlocked, withdrawalRevoke } from "@/lib/consequences"
+import {
+  minSeriesExemptionSet,
+  minSeriesExemptionUnset,
+  unenroll,
+  unenrollBlocked,
+  withdrawalRevoke,
+} from "@/lib/consequences"
+
+interface ExemptionProps {
+  name: string
+  /** Mindestzahl der Saison */
+  minSeries: number
+  seriesCount: number
+  /** wird die Einschreibung schon ohne Mindestzahl gewertet? */
+  exempt: boolean
+  isPending: boolean
+  onConfirm: (exempt: boolean) => void
+}
+
+// Saison mit Mindestzahl: eine Einschreibung ab der ersten Serie werten oder die Mindestzahl wieder verlangen.
+export function MinSeriesExemptionAction({
+  name,
+  minSeries,
+  seriesCount,
+  exempt,
+  isPending,
+  onConfirm,
+}: ExemptionProps) {
+  const [open, setOpen] = useState(false)
+  const decision = exempt
+    ? minSeriesExemptionUnset({ name, minSeries, seriesCount })
+    : minSeriesExemptionSet({ name, minSeries, seriesCount })
+  return (
+    <>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-10 w-10"
+        title={decision.confirmLabel}
+        aria-label={decision.confirmLabel}
+        aria-pressed={exempt}
+        disabled={isPending}
+        onClick={() => setOpen(true)}
+      >
+        <CircleSlash className="h-4 w-4" />
+      </Button>
+      <DecisionDialog
+        decision={decision}
+        open={open}
+        onOpenChange={setOpen}
+        onConfirm={() => onConfirm(!exempt)}
+      />
+    </>
+  )
+}
 
 interface RevokeProps {
   name: string

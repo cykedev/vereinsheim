@@ -10,6 +10,7 @@ export function useEnrollForm({ action }: Args) {
   const [isPending, startTransition] = useTransition()
   const [isGuest, setIsGuest] = useState(false)
   const [newTeam, setNewTeam] = useState(false)
+  const [exemptFromMinSeries, setExemptFromMinSeries] = useState(false)
   const [formKey, setFormKey] = useState(0)
   const formRef = useRef<HTMLFormElement>(null)
 
@@ -20,6 +21,7 @@ export function useEnrollForm({ action }: Args) {
 
     setIsGuest(false)
     setNewTeam(false)
+    setExemptFromMinSeries(false)
     setFormKey((k) => k + 1)
 
     startTransition(async () => {
@@ -36,6 +38,8 @@ export function useEnrollForm({ action }: Args) {
     setIsGuest,
     newTeam,
     setNewTeam,
+    exemptFromMinSeries,
+    setExemptFromMinSeries,
     formKey,
     formRef,
     handleSubmit,

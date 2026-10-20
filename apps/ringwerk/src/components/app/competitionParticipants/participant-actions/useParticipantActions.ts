@@ -5,6 +5,7 @@ import {
   revokeWithdrawal,
   unenrollParticipant,
   updateParticipantDiscipline,
+  updateMinSeriesExemption,
 } from "@/lib/competitionParticipants/actions"
 import type { CompetitionParticipantListItem } from "@/lib/competitionParticipants/types"
 
@@ -69,6 +70,19 @@ export function useParticipantActions(entry: CompetitionParticipantListItem) {
     })
   }
 
+  function handleMinSeriesExemption(exempt: boolean) {
+    startTransition(async () => {
+      const result = await updateMinSeriesExemption(entry.id, exempt)
+      if ("error" in result) {
+        toast.error(
+          typeof result.error === "string" ? result.error : "Fehler beim Ändern der Mindestzahl."
+        )
+      } else {
+        toast.success(exempt ? "Ohne Mindestzahl gewertet." : "Mindestzahl wieder verlangt.")
+      }
+    })
+  }
+
   return {
     isPending,
     withdrawOpen,
@@ -83,6 +97,7 @@ export function useParticipantActions(entry: CompetitionParticipantListItem) {
     handleRevokeWithdrawal,
     handleUnenroll,
     handleDisciplineSave,
+    handleMinSeriesExemption,
   }
 }
 

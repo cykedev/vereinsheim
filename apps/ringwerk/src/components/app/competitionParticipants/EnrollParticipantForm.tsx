@@ -19,6 +19,8 @@ interface Props {
   teamSize?: number | null
   /** Team-Events: bestehende Teams mit ihren Mitgliedern */
   eventTeams?: EventTeamItem[]
+  /** Saison mit Mindestzahl: Einschreiben ohne Mindestzahl möglich (etwa Jugend) */
+  offersMinSeriesExemption?: boolean
   action: (prevState: ActionResult | null, formData: FormData) => Promise<ActionResult>
 }
 
@@ -28,10 +30,19 @@ export function EnrollParticipantForm({
   allowGuests,
   teamSize,
   eventTeams,
+  offersMinSeriesExemption = false,
   action,
 }: Props) {
   const form = useEnrollForm({ action })
-  const { isPending, isGuest, setIsGuest, formKey, formRef } = form
+  const {
+    isPending,
+    isGuest,
+    setIsGuest,
+    exemptFromMinSeries,
+    setExemptFromMinSeries,
+    formKey,
+    formRef,
+  } = form
 
   const isMixed = !!disciplines && disciplines.length > 0
   const isTeamEvent = (teamSize ?? 0) >= 2
@@ -62,6 +73,33 @@ export function EnrollParticipantForm({
             Gast-Schütze
           </Label>
           <input type="hidden" name="isGuest" value={isGuest ? "true" : "false"} />
+        </div>
+      )}
+
+      {offersMinSeriesExemption && (
+        <div className="flex items-start gap-2">
+          <Checkbox
+            id="exemptFromMinSeries"
+            checked={exemptFromMinSeries}
+            onCheckedChange={(checked: boolean | "indeterminate") =>
+              setExemptFromMinSeries(checked === true)
+            }
+            disabled={isPending}
+            aria-describedby="exemptFromMinSeries-hint"
+          />
+          <div className="grid gap-0.5">
+            <Label htmlFor="exemptFromMinSeries" className="cursor-pointer text-sm">
+              Keine Mindestzahl an Serien
+            </Label>
+            <p id="exemptFromMinSeries-hint" className="text-xs text-muted-foreground">
+              Zählt in der Rangliste ab der ersten Serie. Etwa für die Jugend.
+            </p>
+          </div>
+          <input
+            type="hidden"
+            name="exemptFromMinSeries"
+            value={exemptFromMinSeries ? "true" : "false"}
+          />
         </div>
       )}
 
