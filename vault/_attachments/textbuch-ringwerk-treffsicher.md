@@ -1178,3 +1178,229 @@ Fall:
 
 Bei einem Ergebnis: „… und hat schon 1 Ergebnis. Das Ergebnis zählt nicht mehr, bleibt aber gespeichert. Damit es
 nicht verloren geht, …“
+
+---
+
+## Ringwerk: Hilfe (WD0)
+
+**Status: freigegeben am 20. Oktober 2026 (mit H1–H6)**
+
+Die Erklärung öffnet sich über „?“ als Blatt, wie in Treffsicher und Spiegel. Felder: Titel, Kurz, Was es ist, So
+liest du es, Vorsicht, dazu bei Bedarf „Formel für Profis“ (zugeklappt). Jede fachliche Aussage ist am Code geprüft
+(`lib/scoring`, `lib/standings`, `lib/playoffs`, `lib/results/calculateResult.ts`, Stand `feat/design2-all-apps`,
+abc9a3f2). Die Hilfe gibt es nur auf dem Bildschirm. Die PDFs bleiben, wie sie sind.
+
+Zum Freigeben gehören diese Entscheidungen:
+
+- **H1 Satz zur Reihenfolge auch klassisch.** Heute steht ein Satz über der Rangliste einer Saison nur bei
+  abwechselnder Reihenfolge. Vorschlag: auch klassisch eine Zeile „Sortierung: {Bester Ringteiler}.“ mit „?“. Sie nennt
+  die Spalte, nach der die Tabelle gerade ordnet. Sonst hat das Thema 4 keinen Platz.
+- **H2 Tabelle der Liga auch klassisch.** Der Plan nennt nur die Tabelle im Best-of. Vorschlag: auch die Tabelle einer
+  Liga mit Hin- und Rückrunde bekommt ihr „?“ an der Überschrift „Tabelle“ (Thema 7).
+- **H3 Eigenes Thema „Finale“.** Das „?“ am Turnierbaum erklärt Setzung und Runden (Thema 8). Das Finale bekommt ein
+  eigenes „?“ an seiner Überschrift unter dem Turnierbaum (Thema 9).
+- **H4 Platz für das „?“ am Turnierbaum.** Über dem Turnierbaum steht neu eine Zeile „Turnierbaum“ mit „?“ rechts. Die
+  Zeile mit den Rundennamen bleibt unverändert, der Abgleich aus Teil R erkennt den Turnierbaum an ihr.
+- **H5 In gemischten Wettbewerben** öffnet das „?“ am Teiler das Thema 3 „Korrigierter Teiler“ statt Thema 1.
+- **H6 Kein Schalter „Erklärungen“.** Anders als in Treffsicher gibt es keinen Schalter, der die Kurzsätze unter die
+  Titel schreibt. Die Tabellen haben dafür keinen Platz. Der Kurzsatz dient nur dem Blatt und dem Test.
+
+### 1. Teiler
+
+Ort: Spaltenkopf „Best. Teiler“ in der Rangliste einer Saison und „Teiler“ in der Rangliste eines Events.
+
+- **Titel:** Teiler
+- **Kurz:** Wie nah der beste Schuss einer Serie an der Mitte liegt. Kleiner ist besser.
+- **Was es ist:** Der Teiler misst den Abstand des besten Schusses einer Serie zur Mitte der Scheibe. Er steht auf dem
+  Ausdruck der Serie und wird zusammen mit den Ringen eingetragen.
+- **So liest du es:** Kleiner ist besser. In der Rangliste einer Saison steht der kleinste Teiler aus allen Serien. Er
+  kann aus einer anderen Serie stammen als die besten Ringe.
+- **Vorsicht:** Der Teiler sagt nichts über die übrigen Schüsse der Serie. Ein einziger sehr guter Schuss genügt.
+
+### 2. Ringteiler
+
+Ort: Spaltenkopf „Best. Ringteiler“ in der Rangliste einer Saison, „Ringteiler“ in der Rangliste eines Events (wenn
+nach Ringteiler gewertet wird) und „Best. RT“ in der Tabelle einer Liga.
+
+- **Titel:** Ringteiler
+- **Kurz:** Ringe und Teiler einer Serie in einer Zahl. Kleiner ist besser.
+- **Was es ist:** Der Ringteiler zählt die Ringe, die bis zur höchsten Ringzahl fehlen, und legt den Teiler dazu. Bei
+  zehn Schuss ist die höchste Ringzahl 100, in Zehnteln 109.
+- **So liest du es:** Kleiner ist besser. Beispiel: 96 Ringe und Teiler 35,0 ergeben 100 − 96 + 35,0 = 39,0. Ein Ring
+  weniger wiegt so viel wie ein Teiler, der um 1,0 größer ist.
+- **Vorsicht:** In einem gemischten Wettbewerb geht der korrigierte Teiler ein, nicht der Teiler vom Ausdruck.
+- **Formel für Profis:** Ringteiler = höchste Ringzahl − Ringe + Teiler × Faktor, auf eine Stelle gerundet. Höchste
+  Ringzahl bei zehn Schuss: 100, in Zehnteln 109. Faktor: der Faktor der Disziplin in gemischten Wettbewerben, sonst 1.
+
+### 3. Korrigierter Teiler
+
+Ort: Spaltenkopf „Best. Teiler korr.“ (Saison) und „Teiler korr.“ (Event) in gemischten Wettbewerben.
+
+- **Titel:** Korrigierter Teiler
+- **Kurz:** Der Teiler mal dem Faktor der Disziplin. So lassen sich verschiedene Disziplinen vergleichen.
+- **Was es ist:** In einem gemischten Wettbewerb schießen die Teilnehmer verschiedene Disziplinen. Ihre Teiler sind
+  nicht direkt vergleichbar. Ringwerk nimmt deshalb jeden Teiler mal den Faktor seiner Disziplin. Luftgewehr hat den
+  Faktor 1,0. Luftpistole hat als Standard 0,333. Ein Teiler von 90 mit der Luftpistole zählt dann wie 30,0.
+- **So liest du es:** Kleiner ist besser, wie beim Teiler. Die Spalte zeigt den Teiler nach der Korrektur. Der
+  Ringteiler rechnet mit demselben Wert.
+- **Vorsicht:** Die Korrektur gilt nur in gemischten Wettbewerben. Hat ein Wettbewerb eine feste Disziplin, zählt der
+  Teiler vom Ausdruck. Den Faktor jeder Disziplin legt die Sportleitung in der App unter „Disziplinen“ fest.
+- **Formel für Profis:** korrigierter Teiler = Teiler × Faktor der Disziplin.
+
+### 4. Reihenfolge der Rangliste (klassisch)
+
+Ort: Rangliste einer Saison, neue Zeile über der Tabelle „Sortierung: {Bester Ringteiler}.“ (H1). Der Wert in
+geschweiften Klammern ist die Spalte, nach der gerade geordnet ist: Beste Ringe, Bester Teiler oder Bester Ringteiler.
+
+- **Titel:** Reihenfolge der Rangliste
+- **Kurz:** Die Rangliste ordnet nach einem Bestwert. Bei Gleichstand entscheidet der Ringteiler.
+- **Was es ist:** Jeder Teilnehmer hat drei Bestwerte, jeder aus einer einzelnen Serie: die meisten Ringe, den
+  kleinsten Teiler und den kleinsten Ringteiler. Die Rangliste ordnet nach einem davon. Welcher es ist, legt der
+  Wettbewerb fest. Ein Tipp auf einen anderen Spaltenkopf ordnet nach dieser Spalte.
+- **So liest du es:** Oben stehen alle, die genug Serien haben. Darunter stehen grau alle, denen noch Serien fehlen.
+  Wie viele Serien es braucht, steht oben bei „Mindest“. Ganz unten stehen alle ohne Serie. Bei gleichem Wert
+  entscheidet der kleinere Ringteiler. Ist auch der gleich, teilen sich beide den Platz. Die kleinen Plätze an den
+  Werten zeigen die Plätze 1 bis 3 jeder Spalte unter denen mit genug Serien.
+- **Vorsicht:** Das PDF ordnet immer nach der Spalte, die der Wettbewerb festlegt. Ein Tipp auf einen Spaltenkopf
+  ändert nur die Ansicht auf dem Bildschirm.
+
+### 5. Abwechselnde Reihenfolge
+
+Ort: Satz über der Rangliste einer Saison „Sortierung: Ringe/Teiler alternierend — hervorgehoben ist der Wert, der den
+Platz ergeben hat.“, mit „?“ am Ende. Der Satz selbst bleibt.
+
+- **Titel:** Abwechselnde Reihenfolge
+- **Kurz:** Die Plätze gehen abwechselnd nach den besten Ringen und nach dem besten Teiler.
+- **Was es ist:** Platz 1 bekommt, wer die meisten Ringe hat. Platz 2 bekommt, wer unter den übrigen den kleinsten
+  Teiler hat. Platz 3 geht wieder nach Ringen, Platz 4 nach dem Teiler, und so weiter. Bei „Teiler/Ringe“ beginnt der
+  Teiler. Jeder Teilnehmer steht nur einmal in der Liste.
+- **So liest du es:** Hervorgehoben ist der Wert, der den Platz gebracht hat. Der andere ist zurückgenommen. Der
+  Ringteiler steht nur zur Information da. Erst kommen alle mit genug Serien, dann die übrigen, beide Gruppen
+  abwechselnd. Ganz unten stehen alle ohne Serie. Bei gleichem Wert entscheidet der Name.
+- **Vorsicht:** Die Spaltenköpfe ordnen hier nicht um. Die Reihenfolge ist die Wertung.
+
+### 6. Tabelle im Best-of
+
+Ort: Überschrift „Tabelle“ über der Tabelle einer Liga im Format Best-of, „?“ rechts.
+
+- **Titel:** Tabelle im Best-of
+- **Kurz:** Siege zählen zuerst. Bei Gleichstand entscheiden die Sätze, dann der direkte Vergleich.
+- **Was es ist:** Jede Begegnung besteht aus mehreren Duellen, den Sätzen. Einen Satz gewinnt, wer in der Wertung des
+  Wettbewerbs besser ist, zum Beispiel mit dem kleineren Ringteiler. Ist ein Satz auch nach den Stichkriterien gleich,
+  zählt er für keinen. Wer mehr Sätze gewinnt, gewinnt die Begegnung. Steht es nach allen Sätzen gleich, entscheidet
+  ein Stechschuss: ein Schuss in Zehnteln, der höhere Wert gewinnt. Die gleichen Sätze zählen dann für den Sieger.
+- **So liest du es:** Die Tabelle ordnet nach Siegen, dann nach der Satzdifferenz, dann nach den gewonnenen Sätzen.
+  Stehen danach zwei oder mehr gleich, entscheidet der direkte Vergleich: ihre Begegnungen untereinander. Die letzte
+  Spalte zeigt ihn. Bei zweien steht dort das Ergebnis ihrer Begegnung und der Gegner. Bei dreien oder mehr steht ihre
+  Bilanz untereinander. „offen“ heißt: Eine Begegnung untereinander fehlt noch. „ausgeglichen“ heißt: Alle haben
+  untereinander dieselbe Bilanz, etwa weil jeder einmal gewonnen hat. In beiden Fällen ordnet der Name. Wer nur noch
+  am Namen hängt, teilt sich den Platz.
+- **Vorsicht:** Begegnungen mit einem zurückgezogenen Teilnehmer zählen für niemanden. Zurückgezogene stehen
+  durchgestrichen am Ende.
+
+### 7. Tabelle der Liga (H2)
+
+Ort: Überschrift „Tabelle“ über der Tabelle einer Liga mit Hin- und Rückrunde, „?“ rechts.
+
+- **Titel:** Tabelle der Liga
+- **Kurz:** Punkte zählen zuerst. Bei Gleichstand entscheiden der direkte Vergleich und dann der beste Ringteiler.
+- **Was es ist:** Jede Paarung ist ein Duell über eine Serie. Ein Sieg bringt 2 Punkte, ein Unentschieden 1 Punkt, eine
+  Niederlage keinen. Ein Freilos zählt wie ein Sieg. Wer das Duell gewinnt, hängt von der Wertung ab. Beim Ringteiler
+  gewinnt der kleinere, bei Gleichstand gewinnen mehr Ringe, dann der kleinere Teiler. Bei Ringen gewinnen mehr Ringe,
+  dann der kleinere Teiler. Beim Teiler gewinnt der kleinere Teiler, dann mehr Ringe.
+- **So liest du es:** „Sp.“ sind gespielte Duelle. „S“, „U“ und „N“ sind Siege, Unentschieden und Niederlagen. Bei
+  gleichen Punkten zählen zuerst die Punkte aus den Duellen dieser Teilnehmer untereinander. Dann zählt der beste
+  Ringteiler aus allen Duellen, bei Wertung nach Ringen die meisten Ringe. Ist auch das gleich, teilen sich beide den
+  Platz.
+- **Vorsicht:** Paarungen mit einem zurückgezogenen Teilnehmer zählen nicht. Zurückgezogene stehen durchgestrichen am
+  Ende.
+
+### 8. Playoffs (Setzung und Runden)
+
+Ort: neue Zeile „Turnierbaum“ über dem Turnierbaum auf der Seite „Playoffs“, „?“ rechts (H4).
+
+- **Titel:** Playoffs
+- **Kurz:** Die Besten der Gruppenphase spielen gegeneinander. Wer ein Match verliert, scheidet aus.
+- **Was es ist:** Die Playoffs beginnen, wenn alle Paarungen der Gruppenphase gespielt sind. Je nach Wettbewerb kommen
+  die besten 16 ins Achtelfinale, die besten 8 ins Viertelfinale oder die besten 4 ins Halbfinale. Zurückgezogene
+  zählen nicht mit. Gesetzt wird nach der Tabelle der Gruppenphase. Der Erste trifft auf den Letzten der
+  Qualifizierten, der Zweite auf den Vorletzten, und so weiter. Teilen sich zwei einen Platz, zählt die Reihenfolge,
+  in der die Tabelle sie zeigt.
+- **So liest du es:** Ein Match gewinnt, wer zuerst genug Duelle gewinnt. Bei Best-of-5 sind das 3. Die Zahlen auf der
+  Karte sind die gewonnenen Duelle. Ein Duell gewinnt der kleinere Ringteiler. Bei Gleichstand gewinnen mehr Ringe,
+  dann der kleinere Teiler. Ist auch das gleich, zählt das Duell für keinen, und ein weiteres folgt. Für jede neue
+  Runde setzt Ringwerk neu: Der Beste der Verbliebenen nach der Tabelle der Gruppenphase trifft auf den Schwächsten.
+- **Vorsicht:** Die Paarungen einer Runde stehen erst fest, wenn die Runde davor fertig ist. Die Namen, die der
+  Turnierbaum vorher in den leeren Feldern zeigt, sind nur eine Vorschau. Die neue Setzung kann anders ausfallen.
+
+### 9. Finale (H3)
+
+Ort: Überschrift „Finale“ unter dem Turnierbaum, „?“ rechts.
+
+- **Titel:** Finale
+- **Kurz:** Ein Duell entscheidet. Bei Gleichstand zählen die Stichkriterien, dann folgt die Verlängerung.
+- **Was es ist:** Im Finale schießen beide eine Serie. Es zählt zuerst das Hauptkriterium des Wettbewerbs, als Standard
+  die Ringe. Ist es gleich, entscheidet das erste Stichkriterium, dann das zweite. Beides legt der Wettbewerb fest. Die
+  Karte des Finales nennt sie: „Primär“ ist das Hauptkriterium, „TB“ ein Stichkriterium.
+- **So liest du es:** Steht es nach allen Kriterien gleich, folgt die Verlängerung: ein weiteres Duell nach denselben
+  Regeln. Das geht so weiter, bis ein Duell entscheidet. Wer es gewinnt, hat das Finale gewonnen.
+- **Vorsicht:** Die Verlängerung gibt es, wenn der Wettbewerb sie vorsieht. Das ist der Standard.
+
+---
+
+## Ringwerk: „–“ mit Grund (WD3)
+
+**Status: freigegeben am 20. Oktober 2026 (mit H1–H6)**
+
+Wo heute ein Strich ohne Erklärung steht, steht künftig „–“ und daneben leise der Grund, wie in Treffsicher. Wo eine
+Zelle dafür zu schmal ist, steht der Grund als Tooltip und für Screenreader. Nur auf dem Bildschirm. Die PDFs zeigen
+weiter, was sie heute zeigen. Die Gründe enthalten keine Zahlen und keine Wörter, die der Abgleich aus Teil R als Daten
+liest (etwa „offen“, „Freilos“, „Zurückgezogen“, „Finale“). So bleibt die Datenfolge jeder Seite gleich.
+
+| Ort                                                                        | alt            | neu: Grund                                   |
+| -------------------------------------------------------------------------- | -------------- | -------------------------------------------- |
+| Rangliste einer Saison, Teilnehmer ohne Serie, Spalte „Beste Ringe“        | „–“            | noch keine Serie                             |
+| dieselbe Zeile, Spalten Teiler und Ringteiler                              | „–“            | „–“, Grund als Tooltip (E-W1)                |
+| Tabelle der Liga, „Best. RT“ ohne gespieltes Duell                          | „–“            | noch kein Duell                              |
+| Tabelle der Liga und im Best-of, Platz eines Zurückgezogenen               | „—“            | „–“, Grund „ohne Platz“ als Tooltip (E-W2)   |
+| Tabelle im Best-of, Direktvergleich, wenn ihn niemand braucht              | „—“            | nicht nötig                                  |
+| Spielplan mit Hin- und Rückrunde, Gegner bei einem Freilos                 | „—“            | kein Gegner                                  |
+| Spielplan mit Hin- und Rückrunde, Paarung mit einem Zurückgezogenen        | „—“            | nicht gewertet                               |
+| Spielplan im Best-of, Gegner bei einem Freilos                             | „—“            | kein Gegner                                  |
+| Spielplan, Paarung ohne Ergebnis (Uhr)                                     | Uhr ohne Text  | Uhr, Grund „noch kein Ergebnis“ als Tooltip  |
+| Liste der Wettbewerbe, Liga ohne Stichtag für Hin- oder Rückrunde          | „—“            | „–“, Grund „kein Stichtag“ als Tooltip       |
+
+- **E-W1 Ein Grund je Zeile.** In der Rangliste einer Saison fehlen bei einem Teilnehmer ohne Serie alle drei Werte. Der
+  Grund steht sichtbar nur einmal, bei den Ringen. Am Telefon passen sonst die zwei Zahlenspalten nicht.
+- **E-W2 Zurückgezogene.** Der Name trägt schon „(Zurückgezogen)“. Der Platz zeigt deshalb nur „–“ mit dem Grund als
+  Tooltip.
+- **E-W3 Was bleibt:** Der Strich in den leeren Feldern des Turnierbaums („—“ in der Vorschau) bleibt. Der Abgleich prüft
+  den Aufbau des Turnierbaums Zeichen für Zeichen. Er bekommt nur den Grund „steht noch nicht fest“ als Tooltip. Die
+  Ringteiler im Spielplan (`RT`), im Duell und im Event haben immer einen Wert, dort ändert sich nichts.
+
+---
+
+## Ringwerk: Befunde beim Ablesen für WD0 (nicht Teil dieses Abschnitts)
+
+Beim Prüfen am Code aufgefallen. Keiner davon ändert sich mit der Hilfe. Die Texte oben beschreiben, was Ringwerk heute
+rechnet, und meiden die Fälle, in denen es anders zeigt als rechnet.
+
+- **Finale: angezeigter Sieger eines Duells.** Die Karte des Finales markiert den Sieger eines Duells nur nach Ringen
+  (`lib/playoffs/queries.ts`, `determineFinaleRoundWinner` ohne Hauptkriterium und Stichkriterien). Gewertet wird nach
+  Hauptkriterium und Stichkriterien. Bei gleichen Ringen und Entscheid über ein Stichkriterium zeigt die Zeile
+  „Unentschieden“, das Match zählt aber einen Sieger. Ebenso bei einem Hauptkriterium außer Ringen.
+- **Finale ohne Verlängerung.** Die Karte sagt immer „bei Gleichstand Verlängerung“, auch wenn der Wettbewerb sie
+  ausschaltet. Steht es dann gleich, bleibt das Finale offen, und die Oberfläche bietet kein weiteres Duell an.
+- **Teiler in gemischten Ligen und Playoffs.** Liga-Duelle mit Hin- und Rückrunde, Playoff-Duelle und das Finale
+  vergleichen beim Teiler den Teiler vom Ausdruck, nicht den korrigierten (`determineOutcome`,
+  `determinePlayoffDuelWinner`, Kriterium „Teiler“ im Finale). Im Best-of und in der Saison zählt der korrigierte. Das
+  betrifft gemischte Wettbewerbe mit Wertung nach Teiler und den Teiler als Stichkriterium.
+- **Höchste Ringzahl in Duellen.** Liga, Best-of und Playoffs rechnen den Ringteiler immer mit 100 oder 109
+  (`MAX_RINGS`), Saison und Event mit 10 oder 10,9 je Schuss. Bei zehn Schuss ist das gleich. Bei einer anderen
+  Schusszahl in einem gemischten Wettbewerb mit ganzen Ringen und Zehnteln verschiebt es den Vergleich.
+- **Faktor nachträglich geändert.** Der Faktor einer Disziplin lässt sich jederzeit ändern. Eingetragene Ringteiler
+  behalten den alten Faktor, der korrigierte Teiler der Saison rechnet mit dem neuen.
+- **„Gleichstand per Stechschuss“ im Best-of.** Das Häkchen wird gespeichert, wirkt aber nicht. Ein Gleichstand geht
+  immer in den Stechschuss, ein Wiederholungsduell gibt es nicht.
+- **„Best. RT“ bei Wertung nach Ringen.** Die Tabelle der Liga zeigt immer den besten Ringteiler. Bei Wertung nach
+  Ringen entscheiden aber die meisten Ringe den Gleichstand, und die zeigt sie nicht.
