@@ -214,6 +214,7 @@ export function withdrawalRevoke({
   }
 }
 
+/** Entfernen aus dem Wettbewerb: für Mitglieder ohne Ergebnisse und für Gäste (Mitglieder mit Ergebnissen: `unenrollBlocked`) */
 export function unenroll({
   name,
   guest,
@@ -228,24 +229,16 @@ export function unenroll({
   /** Nummer des Teams, `null` ohne Team */
   team: number | null
 }): Decision {
-  const resultsText = count(results, "Ergebnis", "Ergebnisse")
   return {
     title: `${name} aus dem Wettbewerb entfernen?`,
     about:
-      results > 0
-        ? `${name} ist in diesem Wettbewerb eingeschrieben. Es gibt ${resultsText}.`
+      guest && results > 0
+        ? `${name} ist in diesem Wettbewerb eingeschrieben. Es gibt ${count(results, "Ergebnis", "Ergebnisse")}.`
         : `${name} ist in diesem Wettbewerb eingeschrieben.`,
     check: `Steht ${name} schon im Spielplan, geht das nicht. Dann „Zurückziehen“ nutzen.`,
     happens: [
       `Die Einschreibung wird gelöscht. ${name} verschwindet aus den Seiten des Wettbewerbs.`,
       ...(guest ? ["Der Gast und die Ergebnisse werden gelöscht."] : []),
-      ...(!guest && results > 0
-        ? [
-            results === 1
-              ? "Das Ergebnis erscheint nicht mehr. Gelöscht wird es nicht."
-              : `Die ${results} Ergebnisse erscheinen nicht mehr. Gelöscht werden sie nicht.`,
-          ]
-        : []),
       ...(team !== null ? [`Ist Team ${team} danach leer, wird es aufgelöst.`] : []),
     ],
     notHappening: [
@@ -255,6 +248,17 @@ export function unenroll({
     undo: guest ? "Den Gast neu anlegen und die Ergebnisse neu eintragen." : "Neu einschreiben.",
     confirmLabel: "Aus dem Wettbewerb entfernen",
     destructive: true,
+  }
+}
+
+/** Mitglied mit Ergebnissen: nur ein Hinweis, die Action lehnt ab (6b) */
+export function unenrollBlocked({ name, results }: { name: string; results: number }): Notice {
+  return {
+    title: `${name} lässt sich nicht entfernen`,
+    text:
+      results === 1
+        ? `${name} hat in diesem Wettbewerb schon 1 Ergebnis. Damit es nicht verloren geht, lässt sich ${name} nur zurückziehen. Dann zählt das Ergebnis nicht mehr, bleibt aber gespeichert.`
+        : `${name} hat in diesem Wettbewerb schon ${results} Ergebnisse. Damit sie nicht verloren gehen, lässt sich ${name} nur zurückziehen. Dann zählen die Ergebnisse nicht mehr, bleiben aber gespeichert.`,
   }
 }
 

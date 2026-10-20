@@ -1,8 +1,8 @@
 import { useState } from "react"
 import { UserCheck, Trash2 } from "lucide-react"
 import { Button } from "@vereinsheim/ui/button"
-import { DecisionDialog } from "@vereinsheim/ui/design2/decision-dialog"
-import { unenroll, withdrawalRevoke } from "@/lib/consequences"
+import { DecisionDialog, NoticeDialog } from "@vereinsheim/ui/design2/decision-dialog"
+import { unenroll, unenrollBlocked, withdrawalRevoke } from "@/lib/consequences"
 
 interface RevokeProps {
   name: string
@@ -48,7 +48,8 @@ interface UnenrollProps {
   onConfirm: () => void
 }
 
-// Teilnehmer aus dem Wettbewerb entfernen (nur ohne Paarungen; sonst zurückziehen).
+// Teilnehmer aus dem Wettbewerb entfernen (nur ohne Paarungen; sonst zurückziehen). Ein Mitglied mit Ergebnissen lässt
+// sich nur zurückziehen; dann zeigt der Knopf den Hinweis statt der Rückfrage.
 export function UnenrollAction({
   name,
   guest,
@@ -71,12 +72,16 @@ export function UnenrollAction({
       >
         <Trash2 className="h-4 w-4" />
       </Button>
-      <DecisionDialog
-        decision={unenroll({ name, guest, results, team })}
-        open={open}
-        onOpenChange={setOpen}
-        onConfirm={onConfirm}
-      />
+      {!guest && results > 0 ? (
+        <NoticeDialog {...unenrollBlocked({ name, results })} open={open} onOpenChange={setOpen} />
+      ) : (
+        <DecisionDialog
+          decision={unenroll({ name, guest, results, team })}
+          open={open}
+          onOpenChange={setOpen}
+          onConfirm={onConfirm}
+        />
+      )}
     </>
   )
 }

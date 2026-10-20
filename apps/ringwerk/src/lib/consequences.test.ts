@@ -29,6 +29,7 @@ import {
   scheduleRegenerate,
   seasonSeriesDelete,
   unenroll,
+  unenrollBlocked,
   withdrawalRevoke,
 } from "./consequences"
 
@@ -63,7 +64,7 @@ const ALL: Decision[] = [
   withdrawalRevoke({ name: "Anna Birke", since: "12.10.2026" }),
   withdrawalRevoke({ name: "Anna Birke", since: null }),
   unenroll({ name: "Anna Birke", guest: false, results: 0, team: null }),
-  unenroll({ name: "Anna Birke", guest: false, results: 1, team: 2 }),
+  unenroll({ name: "Anna Birke", guest: false, results: 0, team: 2 }),
   unenroll({ name: "Anna", guest: true, results: 2, team: null }),
   disciplineDelete({ name: "Luftgewehr Auflage", system: false }),
   disciplineDelete({ name: "Luftgewehr", system: true }),
@@ -120,6 +121,8 @@ const NOTICES = [
   participantDeleteBlocked({ name: "Anna Birke", competitions: 3 }),
   competitionDeleteBlocked({ name: "Rundenwettkampf 2026", participants: 1 }),
   competitionDeleteBlocked({ name: "Rundenwettkampf 2026", participants: 6 }),
+  unenrollBlocked({ name: "Anna Birke", results: 1 }),
+  unenrollBlocked({ name: "Anna Birke", results: 2 }),
 ]
 
 const LABELS = [
@@ -257,29 +260,34 @@ describe("Wortlaut wie im Textbuch", () => {
     )
   })
 
-  it("6 Entfernen: Gast mit Ergebnissen, Teilnehmer im Team mit Ergebnis", () => {
+  it("6 Entfernen: Gast mit Ergebnissen, Mitglied im Team ohne Ergebnis", () => {
     expect(unenroll({ name: "Anna", guest: true, results: 2, team: null })).toMatchObject({
       about: "Anna ist in diesem Wettbewerb eingeschrieben. Es gibt 2 Ergebnisse.",
       happens: [
         "Die Einschreibung wird gelöscht. Anna verschwindet aus den Seiten des Wettbewerbs.",
         "Der Gast und die Ergebnisse werden gelöscht.",
       ],
-      notHappening: ["Das Protokoll bekommt keinen Eintrag."],
       undo: "Den Gast neu anlegen und die Ergebnisse neu eintragen.",
     })
-    expect(unenroll({ name: "Anna Birke", guest: false, results: 2, team: 2 })).toMatchObject({
+    expect(unenroll({ name: "Anna Birke", guest: false, results: 0, team: 2 })).toMatchObject({
+      about: "Anna Birke ist in diesem Wettbewerb eingeschrieben.",
       happens: [
         "Die Einschreibung wird gelöscht. Anna Birke verschwindet aus den Seiten des Wettbewerbs.",
-        "Die 2 Ergebnisse erscheinen nicht mehr. Gelöscht werden sie nicht.",
         "Ist Team 2 danach leer, wird es aufgelöst.",
-      ],
-      notHappening: [
-        "Anna Birke bleibt unter „Teilnehmer“ und in anderen Wettbewerben.",
-        "Das Protokoll bekommt keinen Eintrag.",
       ],
       undo: "Neu einschreiben.",
       confirmLabel: "Aus dem Wettbewerb entfernen",
     })
+  })
+
+  it("6b Mitglied mit Ergebnissen: nur ein Hinweis, Einzahl und Mehrzahl", () => {
+    expect(unenrollBlocked({ name: "Anna Birke", results: 2 })).toEqual({
+      title: "Anna Birke lässt sich nicht entfernen",
+      text: "Anna Birke hat in diesem Wettbewerb schon 2 Ergebnisse. Damit sie nicht verloren gehen, lässt sich Anna Birke nur zurückziehen. Dann zählen die Ergebnisse nicht mehr, bleiben aber gespeichert.",
+    })
+    expect(unenrollBlocked({ name: "Anna Birke", results: 1 }).text).toBe(
+      "Anna Birke hat in diesem Wettbewerb schon 1 Ergebnis. Damit es nicht verloren geht, lässt sich Anna Birke nur zurückziehen. Dann zählt das Ergebnis nicht mehr, bleibt aber gespeichert."
+    )
   })
 
   it("7 Disziplin löschen: auch einzelne Teilnehmer sperren", () => {
