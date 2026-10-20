@@ -215,8 +215,12 @@ describe("enrollParticipant", () => {
 // ─── unenrollParticipant ────────────────────────────────────────────────────
 
 describe("unenrollParticipant", () => {
-  /** Serien je Teilnehmer und Wettbewerb; das Zähl-Mock filtert wie Prisma nach beiden */
-  let series: { participantId: string; competitionId: string }[]
+  /** Serien je Teilnehmer, Wettbewerb und Einschreibung; das Zähl-Mock filtert wie Prisma */
+  let series: {
+    participantId: string
+    competitionId: string
+    competitionParticipantId: string | null
+  }[]
   const seriesCountMock = vi.fn()
   const teamCountMock = vi.fn()
   const eventTeamDeleteMock = vi.fn()
@@ -224,7 +228,7 @@ describe("unenrollParticipant", () => {
   beforeEach(() => {
     vi.resetAllMocks()
     // derselbe Teilnehmer hat Ergebnisse in einem anderen Wettbewerb
-    series = [{ participantId: "p1", competitionId: "c2" }]
+    series = [{ participantId: "p1", competitionId: "c2", competitionParticipantId: "cp9" }]
     matchupCountMock.mockResolvedValue(0)
     competitionParticipantDeleteMock.mockResolvedValue({})
     participantDeleteMock.mockResolvedValue({})
@@ -232,11 +236,22 @@ describe("unenrollParticipant", () => {
     teamCountMock.mockResolvedValue(0)
     eventTeamDeleteMock.mockResolvedValue({})
     seriesCountMock.mockImplementation(
-      ({ where }: { where: { participantId: string; competitionId: string } }) =>
+      ({
+        where,
+      }: {
+        where: {
+          participantId: string
+          competitionId: string
+          OR?: { competitionParticipantId: string | null }[]
+        }
+      }) =>
         Promise.resolve(
           series.filter(
             (s) =>
-              s.participantId === where.participantId && s.competitionId === where.competitionId
+              s.participantId === where.participantId &&
+              s.competitionId === where.competitionId &&
+              (!where.OR ||
+                where.OR.some((o) => o.competitionParticipantId === s.competitionParticipantId))
           ).length
         )
     )
@@ -244,7 +259,11 @@ describe("unenrollParticipant", () => {
       fn({
         matchup: { count: matchupCountMock },
         series: { count: seriesCountMock, deleteMany: seriesDeleteManyMock },
-        competitionParticipant: { delete: competitionParticipantDeleteMock, count: teamCountMock },
+        competitionParticipant: {
+          findUnique: competitionParticipantFindUniqueMock,
+          delete: competitionParticipantDeleteMock,
+          count: teamCountMock,
+        },
         participant: { delete: participantDeleteMock },
         eventTeam: { delete: eventTeamDeleteMock },
         auditLog: { create: auditLogCreateMock },
@@ -295,15 +314,51 @@ describe("unenrollParticipant", () => {
   it("gesperrt: kein Eintrag", async () => {
     getAuthSessionMock.mockResolvedValue(adminSession)
     competitionParticipantFindUniqueMock.mockResolvedValue(member)
-    series.push({ participantId: "p1", competitionId: "c1" })
+    series.push({ participantId: "p1", competitionId: "c1", competitionParticipantId: "cp1" })
     await unenrollParticipant("cp1")
     expect(auditLogCreateMock).not.toHaveBeenCalled()
+  })
+
+  it("sperrt auch bei alten Serien ohne Verweis auf eine Einschreibung", async () => {
+    getAuthSessionMock.mockResolvedValue(adminSession)
+    competitionParticipantFindUniqueMock.mockResolvedValue(member)
+    series.push({ participantId: "p1", competitionId: "c1", competitionParticipantId: null })
+    const result = await unenrollParticipant("cp1")
+    expect(result).toMatchObject({ error: expect.stringContaining("Ergebnisse") })
+    expect(competitionParticipantDeleteMock).not.toHaveBeenCalled()
+  })
+
+  it("entfernt eine Team-Einschreibung ohne Ergebnis, auch wenn dasselbe Mitglied in einem anderen Team Ergebnisse hat", async () => {
+    getAuthSessionMock.mockResolvedValue(adminSession)
+    competitionParticipantFindUniqueMock.mockResolvedValue({ ...member, eventTeamId: "t2" })
+    series.push({ participantId: "p1", competitionId: "c1", competitionParticipantId: "cp-team-1" })
+    teamCountMock.mockResolvedValue(1)
+    const result = await unenrollParticipant("cp1")
+    expect(result).toEqual({ success: true })
+    expect(competitionParticipantDeleteMock).toHaveBeenCalledWith({ where: { id: "cp1" } })
+  })
+
+  it("meldet eine gleichzeitige Änderung, statt einen Fehler zu werfen", async () => {
+    getAuthSessionMock.mockResolvedValue(adminSession)
+    transactionMock.mockRejectedValue(Object.assign(new Error("conflict"), { code: "P2034" }))
+    const result = await unenrollParticipant("cp1")
+    expect(result).toEqual({
+      error:
+        "Die Daten wurden gleichzeitig geändert. Bitte die Seite neu laden und es noch einmal versuchen.",
+    })
+  })
+
+  it("Einschreibung schon weg: Meldung aus der Transaktion", async () => {
+    getAuthSessionMock.mockResolvedValue(adminSession)
+    competitionParticipantFindUniqueMock.mockResolvedValue(null)
+    expect(await unenrollParticipant("cp1")).toEqual({ error: "Einschreibung nicht gefunden." })
+    expect(competitionParticipantDeleteMock).not.toHaveBeenCalled()
   })
 
   it("sperrt ein Mitglied mit Ergebnissen in diesem Wettbewerb und löscht nichts", async () => {
     getAuthSessionMock.mockResolvedValue(adminSession)
     competitionParticipantFindUniqueMock.mockResolvedValue(member)
-    series.push({ participantId: "p1", competitionId: "c1" })
+    series.push({ participantId: "p1", competitionId: "c1", competitionParticipantId: "cp1" })
     const result = await unenrollParticipant("cp1")
     expect(result).toEqual({
       error: "Teilnehmer hat schon Ergebnisse und kann nicht entfernt werden. Bitte zurückziehen.",
@@ -338,9 +393,14 @@ describe("unenrollParticipant", () => {
       isGuest: true,
       participant: { firstName: "Anna", lastName: "" },
     })
-    series.push({ participantId: "gp1", competitionId: "c1" })
+    series.push({ participantId: "gp1", competitionId: "c1", competitionParticipantId: "cp1" })
     const result = await unenrollParticipant("cp1")
     expect(result).toEqual({ success: true })
+    expect(auditLogCreateMock.mock.calls[0][0].data.details).toEqual({
+      participantId: "gp1",
+      name: "Anna",
+      isGuest: true,
+    })
     expect(seriesDeleteManyMock).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({ participantId: "gp1", competitionId: "c1" }),
