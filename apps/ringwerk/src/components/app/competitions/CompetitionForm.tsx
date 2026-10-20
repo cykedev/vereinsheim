@@ -4,7 +4,8 @@ import { Button } from "@vereinsheim/ui/button"
 import type { SerializableDiscipline } from "@/lib/disciplines/types"
 import type { CompetitionDetail } from "@/lib/competitions/types"
 import type { ActionResult } from "@/lib/types"
-import { ConfirmDialog } from "@vereinsheim/ui/shell/ConfirmDialog"
+import { DecisionDialog } from "@vereinsheim/ui/design2/decision-dialog"
+import { leaveUnsaved } from "@/lib/consequences"
 import {
   BasicFieldsSection,
   EventFieldsSection,
@@ -74,13 +75,10 @@ export function CompetitionForm({
         </Button>
       </div>
 
-      <ConfirmDialog
+      <DecisionDialog
+        decision={leaveUnsaved()}
         open={nav.isConfirmOpen}
         onOpenChange={(o) => !o && nav.cancel()}
-        title="Ungespeicherte Änderungen verwerfen?"
-        description="Es gibt nicht gespeicherte Änderungen. Beim Verlassen gehen sie verloren."
-        confirmLabel="Verwerfen"
-        destructive
         onConfirm={nav.confirm}
       />
     </form>

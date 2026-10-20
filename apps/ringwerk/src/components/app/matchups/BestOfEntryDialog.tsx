@@ -94,6 +94,9 @@ export function BestOfEntryDialog({
 
   if (!canManage) return null
 
+  // das zuletzt eingetragene Duell (oder der Stechschuss): das nimmt „zurücknehmen“ weg
+  const latestDuel = Math.max(0, ...duelNumbers, ...stechschussNumbers)
+
   return (
     <>
       {/* Delete confirmation — rendered outside the main Dialog to avoid nesting issues */}
@@ -101,6 +104,14 @@ export function BestOfEntryDialog({
         open={confirmDelete}
         onOpenChange={setConfirmDelete}
         onConfirm={handleDeleteLatest}
+        duel={{
+          duel: latestDuel,
+          tiebreak: stechschussNumbers.includes(latestDuel),
+          nameA: homeName,
+          nameB: awayName,
+          winsA: homeWins,
+          winsB: awayWins,
+        }}
       />
 
       <EntryTriggerButton hasResults={hasResults} onClick={() => setOpen(true)} />

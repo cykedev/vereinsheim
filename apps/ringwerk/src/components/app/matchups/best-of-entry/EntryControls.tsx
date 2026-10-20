@@ -1,45 +1,25 @@
 import { Pencil, Plus } from "lucide-react"
 import { Button } from "@vereinsheim/ui/button"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@vereinsheim/ui/alert-dialog"
+import { DecisionDialog } from "@vereinsheim/ui/design2/decision-dialog"
+import { bestOfDuelDelete } from "@/lib/consequences"
 
 interface DeleteConfirmProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onConfirm: () => void
+  /** was der Dialog über das zuletzt eingetragene Duell sagt (`bestOfDuelDelete`) */
+  duel: Parameters<typeof bestOfDuelDelete>[0]
 }
 
-// Bestätigungsdialog zum Zurücknehmen des letzten Duells/Stechschusses.
-export function DeleteDuelConfirm({ open, onOpenChange, onConfirm }: DeleteConfirmProps) {
+// Bestätigung zum Zurücknehmen des letzten Duells oder Stechschusses.
+export function DeleteDuelConfirm({ open, onOpenChange, onConfirm, duel }: DeleteConfirmProps) {
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Letztes Ergebnis zurücknehmen?</AlertDialogTitle>
-          <AlertDialogDescription>
-            Das zuletzt eingetragene Duell (oder der letzte Stechschuss) wird gelöscht. Diese Aktion
-            kann nicht rückgängig gemacht werden.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={onConfirm}
-            className="bg-destructive text-primary-foreground hover:bg-destructive/90"
-          >
-            Zurücknehmen
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <DecisionDialog
+      decision={bestOfDuelDelete(duel)}
+      open={open}
+      onOpenChange={onOpenChange}
+      onConfirm={onConfirm}
+    />
   )
 }
 
