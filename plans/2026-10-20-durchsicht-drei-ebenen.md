@@ -48,15 +48,16 @@ Nicht in diesem Plan:
 
 ## Teil 1 — Klein, beide Apps
 
-- **1.1 Satz ohne Semikolon (T5).** `packages/shot-ui/src/period/sentence.ts`: „…; das ist ein klarer Unterschied“ und
+- **1.1 Satz ohne Semikolon (T5): umgesetzt (20. Oktober 2026),** samt Beobachtungen, Hinweisen und Start in
+  `shot-ui`; die Tabelle alt → neu steht im Textbuch, vom User noch nicht gelesen. Ursprünglich: `packages/shot-ui/src/period/sentence.ts`: „…; das ist ein klarer Unterschied“ und
   „…; ein klarer Unterschied ist das aber nicht“ als zwei Sätze („… höher als im Zeitraum davor. Das ist ein klarer
   Unterschied.“). Erst ins Textbuch (Abschnitt Spiegel und Treffsicher). Neuer Test `packages/shot-ui/src/period/sentence.test.ts`: kein `;` in allen
   Sätzen (über `forbiddenIn` aus `@vereinsheim/lib/wording`). Betrifft Spiegel und Treffsicher gleich.
-- **1.2 Eine Zeile Bedienung (T4).** Treffsichers Statistik (`src/app/(app)/statistics/`, Kopf aus
-  `shot-ui/period/PeriodHeader`): Disziplin, Zeitraum und Wertung in **einer** Zeile wie Spiegels Fortschritt (Familie
-  als Auswahl, Zeitraum als Chip, Wertung als Kreis). Markup-Test: die Bedienelemente vor der großen Zahl stehen in einem
-  Element. `pnpm --filter treffsicher pruefen --start` grün; `durchsicht` misst danach höchstens eine Zeile.
-- **1.3 Fehlerseiten.** Ringwerk `src/app/(public)/error.tsx` und Treffsicher `src/app/(app)/sessions/[id]/error.tsx` im
+- **1.2 Eine Zeile Bedienung (T4): zurückgestellt (20. Oktober 2026).** Die zweite Zeile entsteht in
+  `shot-ui/period/PeriodHeader` (`PeriodControls`), weil die Familie als Segment am Telefon mit langen Namen umbricht.
+  Eine kompakte Familienwahl änderte Spiegels Fortschritt gleich mit; sie gehört zu [[adr-033]] Stufe 2, wenn Treffsichers
+  Statistik in Spiegel aufgeht.
+- **1.3 Fehlerseiten: umgesetzt (20. Oktober 2026).** Ringwerk `src/app/(public)/error.tsx` und Treffsicher `src/app/(app)/sessions/[id]/error.tsx` im
   Stil der übrigen Fehlerseiten (Design 2). Ringwerk: Abgleich nach dem Prüfbestand ohne Fehler.
 
 **Prüfung Teil 1:** `pnpm check`, `./scripts/consistency-check.sh`, `pruefen` für Spiegel und Treffsicher,
