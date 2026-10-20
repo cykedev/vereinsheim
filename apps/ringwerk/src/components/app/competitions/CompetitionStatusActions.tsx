@@ -24,6 +24,13 @@ interface PendingStatus {
 export function CompetitionStatusActions({ competition, disabled = false }: Props) {
   const [isPending, startTransition] = useTransition()
   const [pendingStatus, setPendingStatus] = useState<PendingStatus | null>(null)
+  // die zuletzt gewählte Änderung; bleibt beim Schließen, damit der Dialog beim Ausblenden seinen Text behält
+  const [shownChange, setShownChange] = useState<StatusChange>("complete")
+
+  function ask(next: PendingStatus) {
+    setShownChange(next.change)
+    setPendingStatus(next)
+  }
 
   function handleStatusChange() {
     if (!pendingStatus) return
@@ -49,7 +56,7 @@ export function CompetitionStatusActions({ competition, disabled = false }: Prop
           disabled={busy}
           title="Als abgeschlossen markieren"
           aria-label="Als abgeschlossen markieren"
-          onClick={() => setPendingStatus({ status: "COMPLETED", change: "complete" })}
+          onClick={() => ask({ status: "COMPLETED", change: "complete" })}
         >
           <CheckCircle className="h-4 w-4" />
         </Button>
@@ -63,7 +70,7 @@ export function CompetitionStatusActions({ competition, disabled = false }: Prop
             disabled={busy}
             title="Wieder öffnen"
             aria-label="Wieder öffnen"
-            onClick={() => setPendingStatus({ status: "ACTIVE", change: "reopen" })}
+            onClick={() => ask({ status: "ACTIVE", change: "reopen" })}
           >
             <RotateCcw className="h-4 w-4" />
           </Button>
@@ -73,7 +80,7 @@ export function CompetitionStatusActions({ competition, disabled = false }: Prop
             disabled={busy}
             title="Archivieren"
             aria-label="Archivieren"
-            onClick={() => setPendingStatus({ status: "ARCHIVED", change: "archive" })}
+            onClick={() => ask({ status: "ARCHIVED", change: "archive" })}
           >
             <Archive className="h-4 w-4" />
           </Button>
@@ -87,7 +94,7 @@ export function CompetitionStatusActions({ competition, disabled = false }: Prop
           disabled={busy}
           title="Wiederherstellen"
           aria-label="Wiederherstellen"
-          onClick={() => setPendingStatus({ status: "COMPLETED", change: "restore" })}
+          onClick={() => ask({ status: "COMPLETED", change: "restore" })}
         >
           <ArchiveRestore className="h-4 w-4" />
         </Button>
@@ -95,7 +102,7 @@ export function CompetitionStatusActions({ competition, disabled = false }: Prop
 
       {/* Status-Änderung bestätigen */}
       <DecisionDialog
-        decision={competitionStatus(pendingStatus?.change ?? "complete", {
+        decision={competitionStatus(shownChange, {
           name: competition.name,
           publicSlug: competition.isPublic ? competition.publicSlug : null,
         })}
