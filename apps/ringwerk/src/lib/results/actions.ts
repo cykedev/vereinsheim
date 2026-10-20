@@ -5,7 +5,8 @@ import { db } from "@/lib/db"
 import { getAuthSession, canManage } from "@/lib/auth-helpers"
 import type { ActionResult } from "@/lib/types"
 import type { SaveMatchResultInput } from "./types"
-import { calculateRingteiler, MAX_RINGS } from "./calculateResult"
+import { calculateRingteiler } from "./calculateResult"
+import { getMaxRings } from "@/lib/series/scoring-format"
 import { effectiveTeilerFaktor } from "@/lib/scoring/calculateScore"
 import { revalidatePublicPdf } from "@/lib/competitions/publicPdfCache"
 
@@ -74,8 +75,8 @@ export async function saveMatchResult(
     return { error: "Disziplin nicht konfiguriert." }
   }
 
-  const homeMaxRings = MAX_RINGS[homeDiscipline.scoringType]
-  const awayMaxRings = MAX_RINGS[awayDiscipline.scoringType]
+  const homeMaxRings = getMaxRings(homeDiscipline.scoringType, matchup.competition.shotsPerSeries)
+  const awayMaxRings = getMaxRings(awayDiscipline.scoringType, matchup.competition.shotsPerSeries)
   const competitionDisciplineId = matchup.competition.disciplineId
   const homeFaktor = effectiveTeilerFaktor(
     competitionDisciplineId,

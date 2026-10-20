@@ -44,6 +44,7 @@ describe("computeDuelOutcome und storedDuelOutcome mit fester Disziplin", () => 
     competitionId: "c",
     competition: {
       disciplineId: "lg",
+      shotsPerSeries: 10,
       discipline: { scoringType: "WHOLE" as const, teilerFaktor: { toNumber: () => 1 } },
     },
   }
@@ -122,7 +123,7 @@ describe("gemischter Wettbewerb: der korrigierte Teiler zählt", () => {
     participantAId: "a",
     participantBId: "b",
     competitionId: "c",
-    competition: { disciplineId: null, discipline: null },
+    competition: { disciplineId: null, shotsPerSeries: 10, discipline: null },
   }
   const disciplines = () =>
     participantFindFirst.mockImplementation(async ({ where }) => ({
@@ -165,5 +166,34 @@ describe("gemischter Wettbewerb: der korrigierte Teiler zählt", () => {
     expect(
       storedDuelOutcome(result(95, 90, 35), result(95, 35, 40), true, "TEILER", null, null, factors)
     ).toBe("A")
+  })
+})
+
+describe("computeDuelOutcome: höchste Ringzahl je Schusszahl", () => {
+  it.each([
+    [10, "WHOLE", 95, 100 - 95 + 20],
+    [20, "WHOLE", 190, 200 - 190 + 20],
+    [20, "DECIMAL", 209, 218 - 209 + 20],
+  ] as const)("%i Schuss %s", async (shotsPerSeries, scoringType, rings, expected) => {
+    const computed = await computeDuelOutcome(
+      {
+        participantAId: "a",
+        participantBId: "b",
+        competitionId: "c",
+        competition: {
+          disciplineId: "d",
+          shotsPerSeries,
+          discipline: { scoringType, teilerFaktor: { toNumber: () => 1 } },
+        },
+      },
+      { totalRingsA: rings, teilerA: 20, totalRingsB: rings, teilerB: 20 },
+      false,
+      false,
+      "RINGS",
+      null,
+      null
+    )
+    if ("error" in computed) throw new Error(computed.error)
+    expect(computed.ringteilerA).toBeCloseTo(expected, 6)
   })
 })

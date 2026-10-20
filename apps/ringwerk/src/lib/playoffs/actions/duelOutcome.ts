@@ -1,5 +1,6 @@
 import { db } from "@/lib/db"
-import { calculateRingteiler, MAX_RINGS } from "@/lib/results/calculateResult"
+import { calculateRingteiler } from "@/lib/results/calculateResult"
+import { getMaxRings } from "@/lib/series/scoring-format"
 import { calculateCorrectedTeiler, effectiveTeilerFaktor } from "@/lib/scoring/calculateScore"
 import {
   determineFinaleRoundWinner,
@@ -88,6 +89,11 @@ interface DuelMatchContext {
   }
 }
 
+/** Für den Ringteiler: die Schusszahl einer Serie bestimmt die höchste Ringzahl */
+interface DuelScoringContext extends DuelMatchContext {
+  competition: DuelMatchContext["competition"] & { shotsPerSeries: number }
+}
+
 /** Disziplin je Seite: die des Wettbewerbs, im gemischten Wettbewerb die der Einschreibung */
 async function duelDisciplines(
   match: DuelMatchContext
@@ -136,7 +142,7 @@ interface ComputeOutcomeResult {
  *   berechnen und Outcome via Finale- bzw. Standard-Vergleich bestimmen.
  */
 export async function computeDuelOutcome(
-  match: DuelMatchContext,
+  match: DuelScoringContext,
   input: ComputeOutcomeInput,
   isFinal: boolean,
   finaleTeilerNeeded: boolean,
@@ -163,8 +169,8 @@ export async function computeDuelOutcome(
   const { a: disciplineA, b: disciplineB } = await duelDisciplines(match)
   if (!disciplineA || !disciplineB) return { error: "Disziplin nicht konfiguriert." }
 
-  const maxRingsA = MAX_RINGS[disciplineA.scoringType]
-  const maxRingsB = MAX_RINGS[disciplineB.scoringType]
+  const maxRingsA = getMaxRings(disciplineA.scoringType, match.competition.shotsPerSeries)
+  const maxRingsB = getMaxRings(disciplineB.scoringType, match.competition.shotsPerSeries)
   const competitionDisciplineId = match.competition.disciplineId
   const factorA = effectiveTeilerFaktor(
     competitionDisciplineId,

@@ -75,7 +75,7 @@ function makeMatchup(overrides: {
     awayParticipant: { firstName: "Klaus", lastName: "Meyer" },
     competitionId: "c1",
     competition: {
-      shotsPerSeries: 30,
+      shotsPerSeries: 10,
       disciplineId: overrides.disciplineId ?? "d1",
       discipline: {
         id: "d1",
@@ -436,11 +436,13 @@ describe("saveBestOfDuel", () => {
   })
 
   it.each([
-    ["WHOLE", 95, 12.3, 17.3],
-    ["DECIMAL", 104.5, 10, 14.5],
+    [10, "WHOLE", 95, 12.3, 17.3],
+    [10, "DECIMAL", 104.5, 10, 14.5],
+    [20, "WHOLE", 190, 12.3, 22.3],
+    [20, "DECIMAL", 209, 10, 19],
   ] as const)(
-    "zehn Schuss %s: Ringteiler mit höchster Ringzahl 100 bzw. 109",
-    async (scoringType, rings, teiler, expected) => {
+    "%i Schuss %s: Ringteiler mit höchster Ringzahl je Schusszahl (10 × 10 bzw. 10,9)",
+    async (shotsPerSeries, scoringType, rings, teiler, expected) => {
       getAuthSessionMock.mockResolvedValue(adminSession)
       let homeCreate: { ringteiler: number } | undefined
       transactionMock.mockImplementation(async (fn: (tx: unknown) => Promise<void>) =>
@@ -459,7 +461,7 @@ describe("saveBestOfDuel", () => {
         ...base,
         competition: {
           ...base.competition,
-          shotsPerSeries: 10,
+          shotsPerSeries,
           discipline: { id: "d1", scoringType, teilerFaktor: dec(1.0) },
         },
       })

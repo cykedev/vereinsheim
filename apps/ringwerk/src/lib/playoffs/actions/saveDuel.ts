@@ -40,6 +40,7 @@ export async function savePlayoffDuelResult(
           competition: {
             select: {
               disciplineId: true,
+              shotsPerSeries: true,
               discipline: { select: { scoringType: true, teilerFaktor: true } },
               playoffBestOf: true,
               finalePrimary: true,

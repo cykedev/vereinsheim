@@ -4,7 +4,8 @@ import { revalidatePath } from "next/cache"
 import { db } from "@/lib/db"
 import { getAuthSession, canManage } from "@/lib/auth-helpers"
 import type { ActionResult } from "@/lib/types"
-import { calculateRingteiler, MAX_RINGS } from "../calculateResult"
+import { calculateRingteiler } from "../calculateResult"
+import { getMaxRings } from "@/lib/series/scoring-format"
 import { effectiveTeilerFaktor } from "@/lib/scoring/calculateScore"
 import { revalidatePublicPdf } from "@/lib/competitions/publicPdfCache"
 import type { SaveBestOfDuelInput, PlainSeries } from "./types"
@@ -46,13 +47,13 @@ export async function saveBestOfDuel(input: SaveBestOfDuelInput): Promise<Action
     input.homeResult.rings,
     input.homeResult.teiler,
     homeFaktor,
-    MAX_RINGS[homeDiscipline.scoringType]
+    getMaxRings(homeDiscipline.scoringType, matchup.competition.shotsPerSeries)
   )
   const awayRingteiler = calculateRingteiler(
     input.awayResult.rings,
     input.awayResult.teiler,
     awayFaktor,
-    MAX_RINGS[awayDiscipline.scoringType]
+    getMaxRings(awayDiscipline.scoringType, matchup.competition.shotsPerSeries)
   )
 
   const sessionDate = matchup.dueDate ?? new Date()

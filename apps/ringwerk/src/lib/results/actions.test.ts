@@ -234,17 +234,19 @@ describe("saveMatchResult", () => {
   })
 
   it.each([
-    ["WHOLE", 95, 12.3, 17.3],
-    ["DECIMAL", 104.5, 10, 14.5],
+    [10, "WHOLE", 95, 12.3, 17.3],
+    [10, "DECIMAL", 104.5, 10, 14.5],
+    [20, "WHOLE", 190, 12.3, 22.3],
+    [20, "DECIMAL", 209, 10, 19],
   ] as const)(
-    "zehn Schuss %s: Ringteiler mit höchster Ringzahl 100 bzw. 109",
-    async (scoringType, rings, teiler, expected) => {
+    "%i Schuss %s: Ringteiler mit höchster Ringzahl je Schusszahl (10 × 10 bzw. 10,9)",
+    async (shotsPerSeries, scoringType, rings, teiler, expected) => {
       getAuthSessionMock.mockResolvedValue(adminSession)
       const seriesUpsertMock = vi.fn().mockResolvedValue({})
       matchupFindUniqueMock.mockResolvedValue({
         ...matchupBase,
         competition: {
-          shotsPerSeries: 10,
+          shotsPerSeries,
           disciplineId: "d1",
           discipline: { id: "d1", scoringType, teilerFaktor: { toNumber: () => 1.0 } },
         },
