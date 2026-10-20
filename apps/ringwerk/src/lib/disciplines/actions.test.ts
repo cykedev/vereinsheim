@@ -293,6 +293,16 @@ describe("deleteDiscipline", () => {
     expect(deleteMock).not.toHaveBeenCalled()
   })
 
+  it("meldet eine gleichzeitige Änderung, statt einen Fehler zu werfen", async () => {
+    getAuthSessionMock.mockResolvedValue(adminSession)
+    findUniqueMock.mockRejectedValue(Object.assign(new Error("conflict"), { code: "P2034" }))
+    expect(await deleteDiscipline("d1")).toEqual({
+      error:
+        "Die Daten wurden gleichzeitig geändert. Bitte die Seite neu laden und es noch einmal versuchen.",
+    })
+    expect(deleteMock).not.toHaveBeenCalled()
+  })
+
   it("löscht, wenn nur eine fremde Disziplin verwendet wird, mit einem Protokolleintrag", async () => {
     getAuthSessionMock.mockResolvedValue(adminSession)
     findUniqueMock.mockResolvedValue({ id: "d1", name: "Luftpistole" })

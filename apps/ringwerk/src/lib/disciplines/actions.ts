@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
 import { db } from "@/lib/db"
-import { serializable } from "@/lib/serializable"
+import { isConflict, serializable } from "@/lib/serializable"
 import { getAuthSession, canManage, isAdmin } from "@/lib/auth-helpers"
 import type { ActionResult } from "@/lib/types"
 import type { AuditEventType } from "@/lib/auditLog/types"
@@ -151,36 +151,48 @@ export async function deleteDiscipline(id: string): Promise<ActionResult> {
   // Löschen nur ohne jede Verwendung, Prüfung und Löschen in einer Transaktion. Eine Einschreibung in einem gemischten
   // Wettbewerb hält die Disziplin über ON DELETE SET NULL; ohne Prüfung verlöre der Teilnehmer seine Disziplin lautlos.
   // Serien halten sie über ON DELETE RESTRICT; ohne Prüfung käme statt einer Meldung ein Fehler.
-  const result = await serializable(async (tx): Promise<ActionResult> => {
-    const discipline = await tx.discipline.findUnique({
-      where: { id },
-      select: { id: true, name: true },
-    })
-    if (!discipline) return { error: "Disziplin nicht gefunden." }
+  let result: ActionResult
+  try {
+    result = await serializable(async (tx): Promise<ActionResult> => {
+      const discipline = await tx.discipline.findUnique({
+        where: { id },
+        select: { id: true, name: true },
+      })
+      if (!discipline) return { error: "Disziplin nicht gefunden." }
 
-    const [competitions, enrolments, series] = await Promise.all([
-      tx.competition.count({ where: { disciplineId: id } }),
-      tx.competitionParticipant.count({ where: { disciplineId: id } }),
-      tx.series.count({ where: { disciplineId: id } }),
-    ])
-    if (competitions + enrolments + series > 0) {
+      const [competitions, enrolments, series] = await Promise.all([
+        tx.competition.count({ where: { disciplineId: id } }),
+        tx.competitionParticipant.count({ where: { disciplineId: id } }),
+        tx.series.count({ where: { disciplineId: id } }),
+      ])
+      if (competitions + enrolments + series > 0) {
+        return {
+          error: "Disziplin kann nicht gelöscht werden — sie wird in Wettbewerben verwendet.",
+        }
+      }
+
+      await tx.auditLog.create({
+        data: {
+          eventType: "DISCIPLINE_DELETED" satisfies AuditEventType,
+          entityType: "DISCIPLINE",
+          entityId: id,
+          userId: session.user.id,
+          details: { name: discipline.name },
+        },
+      })
+      await tx.discipline.delete({ where: { id } })
+      return { success: true }
+    })
+  } catch (error) {
+    if (isConflict(error)) {
       return {
-        error: "Disziplin kann nicht gelöscht werden — sie wird in Wettbewerben verwendet.",
+        error:
+          "Die Daten wurden gleichzeitig geändert. Bitte die Seite neu laden und es noch einmal versuchen.",
       }
     }
-
-    await tx.auditLog.create({
-      data: {
-        eventType: "DISCIPLINE_DELETED" satisfies AuditEventType,
-        entityType: "DISCIPLINE",
-        entityId: id,
-        userId: session.user.id,
-        details: { name: discipline.name },
-      },
-    })
-    await tx.discipline.delete({ where: { id } })
-    return { success: true }
-  })
+    console.error("Disziplin löschen fehlgeschlagen:", error)
+    return { error: "Disziplin konnte nicht gelöscht werden. Bitte erneut versuchen." }
+  }
 
   if ("success" in result) revalidateDisciplinePaths()
   return result
