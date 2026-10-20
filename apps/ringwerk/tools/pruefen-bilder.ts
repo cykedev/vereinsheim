@@ -12,7 +12,7 @@ import type { Page } from "@vereinsheim/pruefen/browser"
 export interface Picture {
   title: string
   path: string
-  /** Beschriftung des Knopfs, der einen Dialog öffnet; dann zeigt das Bild den offenen Dialog */
+  /** der Knopf, der einen Dialog öffnet, als Ausdruck im Fenster; dann zeigt das Bild den offenen Dialog */
   opener?: string
 }
 
@@ -45,8 +45,7 @@ export async function pictures(page: Page, base: string, dir: string, list: Pict
         await page.ev(`localStorage.setItem("ringwerk-theme", ${JSON.stringify(theme)})`)
         await page.goto(`${base}${picture.path}`)
         await page.wait(400)
-        if (picture.opener)
-          await page.click(`button(${JSON.stringify(picture.opener)})`, { settle: 500 })
+        if (picture.opener) await page.click(picture.opener, { settle: 500 })
         const files: string[] = []
         const file = `${name}-${width}-${theme}.png`
         writeFileSync(path.join(dir, file), await page.screenshot())

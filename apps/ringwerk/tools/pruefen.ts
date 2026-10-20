@@ -61,6 +61,16 @@ const SAMPLES = [
 const REGENERATE = "L-DRR-6 · L1 Spielplan, kein Ergebnis (Hin/Rück)"
 /** eine fertige Gruppenphase: „Playoffs starten“ öffnet einen Dialog */
 const START = "L-BO5-4 · L4 Gruppenphase fertig (Best-of-5)"
+/** Löschen in der Liste: mit Teilnehmern ein Hinweis, ohne eine Rückfrage */
+const WITH_PARTICIPANTS = "E · Entwurf mit Starterliste (Ringteiler)"
+const EMPTY = "R · leerer Wettbewerb (Event)"
+
+/** der erste sichtbare Knopf mit dieser Beschriftung, als Ausdruck im Fenster */
+const button = (label: string) => `button(${JSON.stringify(label)})`
+
+/** der Knopf auf der Karte des Wettbewerbs mit diesem Namen (kleinster Eintrag mit Name und Knopf) */
+const onCard = (name: string, label: string) =>
+  `button(${JSON.stringify(label)}, $$("main li, main article, main div").filter((el) => visible(el) && el.textContent.includes(${JSON.stringify(name)}) && button(${JSON.stringify(label)}, el)).sort((a, b) => a.textContent.length - b.textContent.length)[0])`
 
 /** mit `--bilder`: je Phase eine Seite eines Wettbewerbs (Name im Prüfbestand, Seite) */
 const PHASES: readonly (readonly [string, string, string])[] = [
@@ -311,23 +321,32 @@ async function main() {
         ...PHASES.map(([, name]) => name),
       ]),
     ])
-    /** Dialoge mit Folgen: Seite, Knopf, der den Dialog öffnet, und was er fragt */
+    /** Dialoge mit Folgen: Seite, Knopf, der den Dialog öffnet (Ausdruck im Fenster), und was er fragt */
     const dialogs: readonly (readonly [string, string, string])[] = [
       [
         `/competitions/${ids.get(REGENERATE)}/schedule`,
-        "Spielplan neu generieren",
+        button("Spielplan neu generieren"),
         "Spielplan neu",
       ],
-      [`/competitions/${ids.get(START)}/playoffs`, "Playoffs starten", "Playoffs starten"],
+      [`/competitions/${ids.get(START)}/playoffs`, button("Playoffs starten"), "Playoffs starten"],
       [
         `/competitions/${ids.get(REGENERATE)}/edit`,
-        "Wettbewerb mit allen Daten löschen",
+        button("Wettbewerb mit allen Daten löschen"),
         "Wettbewerb mit allen Daten löschen",
       ],
-      ["/competitions", "Als abgeschlossen markieren", "Wettbewerb abschließen"],
-      ["/competitions", "Löschen", "Wettbewerb mit Teilnehmern löschen (Hinweis)"],
-      ["/participants", "Deaktivieren", "Teilnehmer deaktivieren"],
-      ["/disciplines", "Löschen", "Disziplin löschen"],
+      [
+        "/competitions",
+        onCard(REGENERATE, "Als abgeschlossen markieren"),
+        "Wettbewerb abschließen",
+      ],
+      [
+        "/competitions",
+        onCard(WITH_PARTICIPANTS, "Löschen"),
+        "Wettbewerb mit Teilnehmern löschen (Hinweis)",
+      ],
+      ["/competitions", onCard(EMPTY, "Löschen"), "Wettbewerb ohne Teilnehmer löschen"],
+      ["/participants", button("Deaktivieren"), "Teilnehmer deaktivieren"],
+      ["/disciplines", button("Löschen"), "Disziplin löschen"],
     ]
     const competitionPaths = SAMPLES.flatMap((s) =>
       s.pages.map((p) => `/competitions/${ids.get(s.name)}/${p}`)
@@ -365,9 +384,9 @@ async function main() {
         await themeNoFlash(page, { url: `${BASE}/competitions`, storageKey: "ringwerk-theme" })
       )
       // die Dialoge mit Folgen nur öffnen und mit Escape schließen: der Prüfbestand bleibt unverändert
-      for (const [where, opener] of dialogs) {
+      for (const [where, opener, title] of dialogs) {
         await page.goto(`${BASE}${where}`)
-        record(await dialogFocus(page, `button(${JSON.stringify(opener)})`, `Dialog „${opener}“`))
+        record(await dialogFocus(page, opener, `Dialog „${title}“`))
       }
     })
 
