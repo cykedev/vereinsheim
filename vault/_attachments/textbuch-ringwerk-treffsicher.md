@@ -1027,3 +1027,94 @@ kann nicht rückgängig gemacht werden“. Dazu die Grundregel: kein Semikolon, 
   Datenbank.
 - „Nächste Runde anlegen“, „Spielplan generieren“ und „Entfernen“ schreiben keinen Eintrag ins Protokoll.
 - Eine gelöschte Systemdisziplin legt Ringwerk beim nächsten Start wieder an.
+
+---
+
+## Ringwerk: Befunde (B0)
+
+**Status: freigegeben am 20. Oktober 2026**
+
+Zum Plan `plans/2026-10-20-ringwerk-dialog-befunde.md` (freigegeben am 20. Oktober 2026 mit E1–E5). Die Dialoge oben
+ändern sich nur an den genannten Zeilen, alles andere bleibt freigegeben, wie es steht.
+
+### Dialog 6 „Aus dem Wettbewerb entfernen“, neu
+
+Ringwerk sperrt das Entfernen jetzt, sobald ein Mitglied (kein Gast) in diesem Wettbewerb Ergebnisse hat. Dann kommt
+der Hinweis 6b. Der Dialog erscheint nur noch für Mitglieder ohne Ergebnisse und für Gäste.
+
+- **Worum:** {Anna Birke} ist in diesem Wettbewerb eingeschrieben. (nur Gast mit Ergebnissen) Es gibt {2} Ergebnisse.
+- **Vorher prüfen:** bleibt: „Steht {Anna Birke} schon im Spielplan, geht das nicht. Dann „Zurückziehen“ nutzen.“
+- **Was dann passiert:**
+  - bleibt: „Die Einschreibung wird gelöscht. {Anna Birke} verschwindet aus den Seiten des Wettbewerbs.“
+  - bleibt: „(nur Gast) Der Gast und die Ergebnisse werden gelöscht.“
+  - **entfällt:** „(nur mit Ergebnissen, kein Gast) Die {2} Ergebnisse erscheinen nicht mehr. Gelöscht werden sie
+    nicht.“
+  - bleibt: „(nur im Team) Ist Team {2} danach leer, wird es aufgelöst.“
+  - **neu:** Im Protokoll des Wettbewerbs steht danach ein Eintrag.
+- **Was nicht passiert:**
+  - bleibt: „(kein Gast) {Anna Birke} bleibt unter „Teilnehmer“ und in anderen Wettbewerben.“
+  - **entfällt:** „Das Protokoll bekommt keinen Eintrag.“
+  - **neu (Gast):** Andere Teilnehmer und ihre Ergebnisse bleiben.
+
+Die neue Zeile beim Gast steht da, weil „Was nicht passiert“ sonst leer wäre.
+
+### 6b. Mitglied mit Ergebnissen entfernen (nur ein Hinweis)
+
+- **Titel:** {Anna Birke} lässt sich nicht entfernen
+- **Text:** {Anna Birke} hat in diesem Wettbewerb schon {2} Ergebnisse. Damit sie nicht verloren gehen, lässt sich
+  {Anna Birke} nur zurückziehen. Dann zählen die Ergebnisse nicht mehr, bleiben aber gespeichert.
+- **Knopf:** Schließen
+
+Bei einem Ergebnis: „schon 1 Ergebnis. Damit es nicht verloren geht, …“.
+
+**Meldung der Action** im selben Fall (falls die Liste veraltet ist): „Teilnehmer hat schon Ergebnisse und kann nicht
+entfernt werden. Bitte zurückziehen.“
+
+### Dialog 7 „Disziplin löschen“, Vorher prüfen
+
+**alt:** „Löschen kann nur ein Admin. Wird die Disziplin in einem Wettbewerb verwendet, geht das nicht. Dann archiviere
+sie.“
+
+**neu:** Löschen kann nur ein Admin. Wird die Disziplin in einem Wettbewerb verwendet, auch nur für einzelne
+Teilnehmer, geht das nicht. Dann archiviere sie.
+
+### Dialog 12 „Nächste Runde anlegen“
+
+- **Was dann passiert, neu:** Im Protokoll des Wettbewerbs steht danach ein Eintrag.
+- **Was nicht passiert, entfällt:** „Das Protokoll bekommt keinen Eintrag.“ (Es bleibt: „Die Ergebnisse im
+  {Viertelfinale} bleiben.“)
+
+### Dialog 16 „Spielplan generieren“ und „Spielplan neu generieren“
+
+In beiden Varianten:
+
+- **Was dann passiert, neu:** Im Protokoll des Wettbewerbs steht danach ein Eintrag.
+- **Was nicht passiert, entfällt:** „Das Protokoll bekommt keinen Eintrag.“ (Es bleibt: „Zurückgezogene bekommen keine
+  Paarungen.“ bzw. „Einschreibungen bleiben.“)
+
+### Protokoll: neue Einträge
+
+| Ereignis | Bezeichnung | Darunter |
+| --- | --- | --- |
+| Spielplan erstmals erzeugt | Spielplan generiert | {30} Paarungen |
+| Spielplan ersetzt | Spielplan neu generiert | {30} Paarungen |
+| Runde der Playoffs angelegt | Playoff-Runde angelegt | Runde: {Halbfinale} |
+| Teilnehmer entfernt | Teilnehmer aus Wettbewerb entfernt | {Anna Birke} · (nur Gast) Gast |
+
+### Erfolgsmeldungen (unten, nach dem Bestätigen)
+
+- Ergebnis im Event gelöscht: **Ergebnis gelöscht.**
+- Serie in der Saison gelöscht: **Serie gelöscht.**
+- Wettbewerb mit allen Daten gelöscht: **Wettbewerb gelöscht.** (wie schon beim Löschen aus der Liste)
+
+### Teilnehmer mit allen Daten löschen: Meldung bei falschem Nachnamen
+
+Ringwerk prüft den getippten Nachnamen jetzt auch auf dem Server. Stimmt er nicht (etwa weil der Name sich inzwischen
+geändert hat):
+
+**Der eingegebene Nachname stimmt nicht mit dem Teilnehmer überein.**
+
+### Wettbewerb bearbeiten: Kasten „Wettbewerb löschen“
+
+Den Kasten sieht nur noch ein Admin. Sein Text bleibt: „Löscht den Wettbewerb mit allem, was dazu eingetragen ist. Nur
+ein Admin kann das.“
