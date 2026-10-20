@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@vereinsheim/ui/select"
-import type { SerializableDiscipline } from "@/lib/disciplines/types"
+import type { DisciplineFactorLock, SerializableDiscipline } from "@/lib/disciplines/types"
 import type { ActionResult } from "@/lib/types"
 import { getFieldError, getGeneralError } from "@vereinsheim/lib/forms/fieldErrors"
 import { FieldError } from "@vereinsheim/ui/field-error"
@@ -21,9 +21,16 @@ import { FieldError } from "@vereinsheim/ui/field-error"
 interface Props {
   discipline?: SerializableDiscipline
   action: (prevState: ActionResult | null, formData: FormData) => Promise<ActionResult>
+  /** Faktor nicht änderbar (`getDisciplineFactorLock`); das Feld bleibt im Formular und wird mitgeschickt */
+  factorLock?: DisciplineFactorLock
 }
 
-export function DisciplineForm({ discipline, action }: Props) {
+const FACTOR_LOCK_HINT: Record<NonNullable<DisciplineFactorLock>, string> = {
+  system: "Standarddisziplin: Ringwerk legt den Faktor fest.",
+  used: "Gesperrt, weil die Disziplin schon in einem Wettbewerb verwendet wird.",
+}
+
+export function DisciplineForm({ discipline, action, factorLock = null }: Props) {
   const router = useRouter()
   const [state, formAction, isPending] = useActionState(action, null)
   const [name, setName] = useState<string>(discipline?.name ?? "")
@@ -94,6 +101,7 @@ export function DisciplineForm({ discipline, action }: Props) {
           value={teilerFaktor}
           onChange={(e) => setTeilerFaktor(e.target.value)}
           placeholder="z.B. 0.333"
+          readOnly={factorLock !== null}
           disabled={isPending}
           aria-invalid={teilerFaktorError ? true : undefined}
           aria-describedby={teilerFaktorError ? "teilerFaktor-error" : undefined}
@@ -101,6 +109,9 @@ export function DisciplineForm({ discipline, action }: Props) {
         <p className="text-xs text-muted-foreground">
           Korrekturfaktor für gemischte Wertungen. Teiler wird mit diesem Faktor multipliziert.
         </p>
+        {factorLock && (
+          <p className="text-xs text-muted-foreground">{FACTOR_LOCK_HINT[factorLock]}</p>
+        )}
         <FieldError id="teilerFaktor-error" message={teilerFaktorError} />
       </div>
 

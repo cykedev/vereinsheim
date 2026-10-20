@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import { notFound, redirect } from "next/navigation"
 import { getAuthSession, canManage } from "@/lib/auth-helpers"
-import { getDisciplineById } from "@/lib/disciplines/queries"
+import { getDisciplineById, getDisciplineFactorLock } from "@/lib/disciplines/queries"
 import { updateDiscipline } from "@/lib/disciplines/actions"
 import { DisciplineForm } from "@/components/app/disciplines/DisciplineForm"
 import { PageHeader } from "@vereinsheim/ui/design2/page-header"
@@ -18,7 +18,11 @@ export const metadata: Metadata = {
 export default async function EditDisciplinePage({ params }: Props) {
   const { id } = await params
 
-  const [session, discipline] = await Promise.all([getAuthSession(), getDisciplineById(id)])
+  const [session, discipline, factorLock] = await Promise.all([
+    getAuthSession(),
+    getDisciplineById(id),
+    getDisciplineFactorLock(id),
+  ])
 
   if (!session || !canManage(session.user.role)) redirect("/")
   if (!discipline) notFound()
@@ -32,7 +36,7 @@ export default async function EditDisciplinePage({ params }: Props) {
   return (
     <div className="mx-auto max-w-lg space-y-6">
       <PageHeader title="Disziplin bearbeiten" />
-      <DisciplineForm discipline={discipline} action={action} />
+      <DisciplineForm discipline={discipline} action={action} factorLock={factorLock} />
     </div>
   )
 }

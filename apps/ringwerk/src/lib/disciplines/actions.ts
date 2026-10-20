@@ -60,6 +60,14 @@ export async function createDiscipline(
   return { success: true }
 }
 
+const FACTOR_USED =
+  "Der Faktor lässt sich nicht mehr ändern. Die Disziplin wird schon in einem Wettbewerb verwendet. Für einen anderen Faktor eine neue Disziplin anlegen."
+const FACTOR_SYSTEM =
+  "Der Faktor einer Standarddisziplin lässt sich nicht ändern. Ringwerk legt ihn fest."
+
+/** Faktoren auf die sieben Stellen der Spalte (`Decimal(9, 7)`) verglichen */
+const sameFactor = (a: number, b: number) => Math.round(a * 1e7) === Math.round(b * 1e7)
+
 export async function updateDiscipline(
   id: string,
   _prevState: ActionResult | null,
@@ -69,48 +77,94 @@ export async function updateDiscipline(
   if (!session) return { error: "Nicht angemeldet" }
   if (!canManage(session.user.role)) return { error: "Keine Berechtigung" }
 
-  const discipline = await db.discipline.findUnique({
-    where: { id },
-    select: { id: true, scoringType: true },
-  })
-  if (!discipline) return { error: "Disziplin nicht gefunden." }
-
   const parsed = DisciplineSchema.safeParse({
     name: formData.get("name"),
     scoringType: formData.get("scoringType"),
     teilerFaktor: Number(formData.get("teilerFaktor")),
   })
-  if (!parsed.success) return { error: parsed.error.flatten().fieldErrors }
 
-  if (parsed.data.scoringType !== discipline.scoringType) {
-    // Wertungsartwechsel verhindert inkonsistente historische Ergebnisse
-    const competitionCount = await db.competition.count({ where: { disciplineId: id } })
-    if (competitionCount > 0) {
+  // Der Faktor steckt in jedem gespeicherten Ringteiler. Sobald ein Wettbewerb, eine Einschreibung oder eine Serie die
+  // Disziplin verwendet, bleibt er fest (bei Standarddisziplinen immer); Prüfung und Update in einer Transaktion, das
+  // Update trägt die Sperre zusätzlich selbst.
+  let result: ActionResult
+  try {
+    result = await serializable(async (tx): Promise<ActionResult> => {
+      const discipline = await tx.discipline.findUnique({
+        where: { id },
+        select: { id: true, scoringType: true, teilerFaktor: true, isSystem: true },
+      })
+      if (!discipline) return { error: "Disziplin nicht gefunden." }
+      if (!parsed.success) return { error: parsed.error.flatten().fieldErrors }
+
+      const factorChanged = !sameFactor(
+        parsed.data.teilerFaktor,
+        discipline.teilerFaktor.toNumber()
+      )
+      if (factorChanged) {
+        if (discipline.isSystem) return { error: { teilerFaktor: [FACTOR_SYSTEM] } }
+        const [competitions, enrolments, series] = await Promise.all([
+          tx.competition.count({ where: { disciplineId: id } }),
+          tx.competitionParticipant.count({ where: { disciplineId: id } }),
+          tx.series.count({ where: { disciplineId: id } }),
+        ])
+        if (competitions + enrolments + series > 0) {
+          return { error: { teilerFaktor: [FACTOR_USED] } }
+        }
+      }
+
+      if (parsed.data.scoringType !== discipline.scoringType) {
+        // Wertungsartwechsel verhindert inkonsistente historische Ergebnisse
+        const competitionCount = await tx.competition.count({ where: { disciplineId: id } })
+        if (competitionCount > 0) {
+          return {
+            error:
+              "Wertungsart kann nicht geändert werden — die Disziplin wird bereits in Wettbewerben verwendet.",
+          }
+        }
+      }
+
+      const updated = await tx.discipline.updateMany({
+        where: factorChanged
+          ? {
+              id,
+              isSystem: false,
+              competitions: { none: {} },
+              competitionParticipants: { none: {} },
+              series: { none: {} },
+            }
+          : { id },
+        data: parsed.data,
+      })
+      if (updated.count === 0) return { error: { teilerFaktor: [FACTOR_USED] } }
+
+      await tx.auditLog.create({
+        data: {
+          eventType: "DISCIPLINE_UPDATED" satisfies AuditEventType,
+          entityType: "DISCIPLINE",
+          entityId: id,
+          userId: session.user.id,
+          details: {
+            name: parsed.data.name,
+            scoringType: parsed.data.scoringType,
+            teilerFaktor: parsed.data.teilerFaktor,
+          },
+        },
+      })
+      return { success: true }
+    })
+  } catch (error) {
+    if (isConflict(error)) {
       return {
         error:
-          "Wertungsart kann nicht geändert werden — die Disziplin wird bereits in Wettbewerben verwendet.",
+          "Die Daten wurden gleichzeitig geändert. Bitte die Seite neu laden und es noch einmal versuchen.",
       }
     }
+    console.error("Disziplin speichern fehlgeschlagen:", error)
+    return { error: "Disziplin konnte nicht gespeichert werden. Bitte erneut versuchen." }
   }
 
-  await db.discipline.update({ where: { id }, data: parsed.data })
-
-  await db.auditLog.create({
-    data: {
-      eventType: "DISCIPLINE_UPDATED" satisfies AuditEventType,
-      entityType: "DISCIPLINE",
-      entityId: id,
-      userId: session.user.id,
-      details: {
-        name: parsed.data.name,
-        scoringType: parsed.data.scoringType,
-        teilerFaktor: parsed.data.teilerFaktor,
-      },
-    },
-  })
-
-  revalidateDisciplinePaths()
-  return { success: true }
+  if ("success" in result) revalidateDisciplinePaths()
+  return result
 }
 
 export async function setDisciplineArchived(id: string, archive: boolean): Promise<ActionResult> {

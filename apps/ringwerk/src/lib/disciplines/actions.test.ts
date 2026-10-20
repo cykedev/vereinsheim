@@ -6,6 +6,7 @@ const {
   findUniqueMock,
   createMock,
   updateMock,
+  updateManyMock,
   deleteMock,
   competitionCountMock,
   enrolmentCountMock,
@@ -17,6 +18,7 @@ const {
   findUniqueMock: vi.fn(),
   createMock: vi.fn(),
   updateMock: vi.fn(),
+  updateManyMock: vi.fn(),
   deleteMock: vi.fn(),
   competitionCountMock: vi.fn(),
   enrolmentCountMock: vi.fn(),
@@ -36,6 +38,7 @@ vi.mock("@/lib/db", () => {
       findUnique: findUniqueMock,
       create: createMock,
       update: updateMock,
+      updateMany: updateManyMock,
       delete: deleteMock,
     },
     competition: { count: competitionCountMock },
@@ -151,9 +154,27 @@ describe("createDiscipline", () => {
 // ─── updateDiscipline ────────────────────────────────────────────────────────
 
 describe("updateDiscipline", () => {
+  /** gespeicherte Disziplin: Luftgewehr-artig, Faktor 1, keine Standarddisziplin */
+  const stored = (extra: Record<string, unknown> = {}) => ({
+    id: "d1",
+    scoringType: "WHOLE",
+    teilerFaktor: { toNumber: () => 1 },
+    isSystem: false,
+    ...extra,
+  })
+  const save = (fields: Record<string, string> = {}) =>
+    updateDiscipline(
+      "d1",
+      null,
+      makeFormData({ name: "LP", scoringType: "WHOLE", teilerFaktor: "1.0", ...fields })
+    )
+
   beforeEach(() => {
     vi.resetAllMocks()
-    updateMock.mockResolvedValue({})
+    updateManyMock.mockResolvedValue({ count: 1 })
+    competitionCountMock.mockResolvedValue(0)
+    enrolmentCountMock.mockResolvedValue(0)
+    seriesCountMock.mockResolvedValue(0)
   })
 
   it("liefert Fehler ohne Session", async () => {
@@ -168,7 +189,7 @@ describe("updateDiscipline", () => {
 
   it("liefert Fehler wenn kein Admin", async () => {
     getAuthSessionMock.mockResolvedValue(userSession)
-    findUniqueMock.mockResolvedValue({ id: "d1", scoringType: "WHOLE" })
+    findUniqueMock.mockResolvedValue(stored())
     const result = await updateDiscipline(
       "d1",
       null,
@@ -190,7 +211,7 @@ describe("updateDiscipline", () => {
 
   it("blockiert Wertungsartwechsel wenn Ligen vorhanden", async () => {
     getAuthSessionMock.mockResolvedValue(adminSession)
-    findUniqueMock.mockResolvedValue({ id: "d1", scoringType: "WHOLE" })
+    findUniqueMock.mockResolvedValue(stored())
     competitionCountMock.mockResolvedValue(2)
 
     const result = await updateDiscipline(
@@ -200,12 +221,12 @@ describe("updateDiscipline", () => {
     )
 
     expect(result).toMatchObject({ error: expect.stringContaining("Wertungsart") })
-    expect(updateMock).not.toHaveBeenCalled()
+    expect(updateManyMock).not.toHaveBeenCalled()
   })
 
   it("erlaubt Wertungsartwechsel ohne Ligen", async () => {
     getAuthSessionMock.mockResolvedValue(adminSession)
-    findUniqueMock.mockResolvedValue({ id: "d1", scoringType: "WHOLE" })
+    findUniqueMock.mockResolvedValue(stored())
     competitionCountMock.mockResolvedValue(0)
 
     const result = await updateDiscipline(
@@ -215,7 +236,74 @@ describe("updateDiscipline", () => {
     )
 
     expect(result).toEqual({ success: true })
-    expect(updateMock).toHaveBeenCalled()
+    expect(updateManyMock).toHaveBeenCalled()
+  })
+
+  // ── Faktor (E3) ──
+
+  const USED =
+    "Der Faktor lässt sich nicht mehr ändern. Die Disziplin wird schon in einem Wettbewerb verwendet. Für einen anderen Faktor eine neue Disziplin anlegen."
+
+  it.each([
+    ["einem Wettbewerb", competitionCountMock],
+    ["einer Einschreibung", enrolmentCountMock],
+    ["einer Serie", seriesCountMock],
+  ])("sperrt einen geänderten Faktor bei %s", async (_, countMock) => {
+    getAuthSessionMock.mockResolvedValue(adminSession)
+    findUniqueMock.mockResolvedValue(stored())
+    countMock.mockResolvedValue(1)
+    expect(await save({ teilerFaktor: "0.5" })).toEqual({ error: { teilerFaktor: [USED] } })
+    expect(updateManyMock).not.toHaveBeenCalled()
+  })
+
+  it("speichert eine genutzte Disziplin mit unverändertem Faktor (nur der Name ändert sich)", async () => {
+    getAuthSessionMock.mockResolvedValue(adminSession)
+    findUniqueMock.mockResolvedValue(stored({ teilerFaktor: { toNumber: () => 0.3333333 } }))
+    competitionCountMock.mockResolvedValue(3)
+    expect(await save({ name: "Luftpistole neu", teilerFaktor: "0.3333333" })).toEqual({
+      success: true,
+    })
+    expect(updateManyMock).toHaveBeenCalledWith({
+      where: { id: "d1" },
+      data: { name: "Luftpistole neu", scoringType: "WHOLE", teilerFaktor: 0.3333333 },
+    })
+  })
+
+  it("ändert den Faktor einer ungenutzten Disziplin, mit der Sperre auch im Update", async () => {
+    getAuthSessionMock.mockResolvedValue(adminSession)
+    findUniqueMock.mockResolvedValue(stored())
+    expect(await save({ teilerFaktor: "0.5" })).toEqual({ success: true })
+    expect(updateManyMock).toHaveBeenCalledWith({
+      where: {
+        id: "d1",
+        isSystem: false,
+        competitions: { none: {} },
+        competitionParticipants: { none: {} },
+        series: { none: {} },
+      },
+      data: { name: "LP", scoringType: "WHOLE", teilerFaktor: 0.5 },
+    })
+  })
+
+  it("meldet eine gleichzeitige Nutzung, wenn das Update mit Sperre nichts trifft", async () => {
+    getAuthSessionMock.mockResolvedValue(adminSession)
+    findUniqueMock.mockResolvedValue(stored())
+    updateManyMock.mockResolvedValue({ count: 0 })
+    expect(await save({ teilerFaktor: "0.5" })).toEqual({ error: { teilerFaktor: [USED] } })
+    expect(auditLogCreateMock).not.toHaveBeenCalled()
+  })
+
+  it("sperrt den Faktor einer Standarddisziplin", async () => {
+    getAuthSessionMock.mockResolvedValue(adminSession)
+    findUniqueMock.mockResolvedValue(stored({ isSystem: true }))
+    expect(await save({ teilerFaktor: "0.9" })).toEqual({
+      error: {
+        teilerFaktor: [
+          "Der Faktor einer Standarddisziplin lässt sich nicht ändern. Ringwerk legt ihn fest.",
+        ],
+      },
+    })
+    expect(updateManyMock).not.toHaveBeenCalled()
   })
 })
 

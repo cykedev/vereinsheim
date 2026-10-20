@@ -12,3 +12,6 @@ export type DisciplineUsage = {
   leagueCount: number
   canDelete: boolean
 }
+
+/** Warum der Faktor gesperrt ist (`getDisciplineFactorLock`); null: änderbar */
+export type DisciplineFactorLock = "system" | "used" | null
