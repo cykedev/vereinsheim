@@ -179,12 +179,12 @@ Ziel: **Mit Opt-in erscheint die Dienstagsscheibe von selbst in Spiegel; ohne Op
 - **Umfang:** Profi-Analysen, die viele Scheiben brauchen ([[spiegel-statistics]]): Schussposition in der Serie (I7), Reaktion nach schwachem Schuss (I8), erster Wertungsschuss (I9), Tempo gegen Wert (Z6, Z7), Ausreißerrichtung (L7), Langzeit-Trefferbild, Form über mehrere Scheiben und Lage über Zeit (L9, L10), Bedeutsamkeit und Trendsteigung (T3, T4), Munitionslos und Ausrüstung, Tageszeit, Pause, Stand (K1–K5), Wettkampf gegen Training (W1–W4). Jede Aussage mit Mindestzahl, Unsicherheit und „unklar“, wenn die Daten nicht reichen. **Hängt ab von:** SP-2.1, SP-2.3. **Status:** offen.
 
 ### SP-2.8 Training mit Messdaten
-- **Umfang:** systematisch trainieren mit messbaren Übungen: „Bleib drüber“ (Schwelle halten), Zehntel-Ziel, längste Folge, Soll-Schnitt zum Ziel (W5), Zielwahrscheinlichkeit (W6), Erfolgsserien und Meilensteine (T8, R9), Auswertung je Übung über die Zeit. Ziele, Absicht und Reflexion bleiben laut [[adr-026]] in Treffsicher; Spiegel liefert Messung und Kriterium (Verknüpfung über SP-3.1). **Offene Frage:** W5 und W6 brauchen ein Ziel; ob Messziele wie „R50 unter 1,5 mm“ in Spiegel liegen dürfen, öffnet ADR-026 wieder. **Hängt ab von:** SP-2.1, für Ziele aus Treffsicher SP-3.1. **Status:** offen.
+- **Umfang:** systematisch trainieren mit messbaren Übungen: „Bleib drüber“ (Schwelle halten), Zehntel-Ziel, längste Folge, Soll-Schnitt zum Ziel (W5), Zielwahrscheinlichkeit (W6), Erfolgsserien und Meilensteine (T8, R9), Auswertung je Übung über die Zeit. Ziele, Absicht und Reflexion liegen im Tagebuch von Spiegel, Spiegels Ergebnisteil liefert Messung und Kriterium ([[adr-033]]); damit ist auch geklärt, wo Messziele wie „R50 unter 1,5 mm“ liegen: im Tagebuch. **Hängt ab von:** SP-2.1, für Ziele das Tagebuch ([[adr-033]] Stufe 2). **Status:** offen.
 
 ## Phase 3 · Vernetzung
 
 ### SP-3.1 Treffsicher übernimmt aus Spiegel
-- **Umfang:** Konto-Verknüpfung, API, „Aus Spiegel übernehmen“ statt PDF-Import, Trefferbild mit `shot-ui` in der Treffsicher-Einheit. **Hängt ab von:** SP-1.8. **Status:** offen.
+- **Umfang:** Konto-Verknüpfung, API, „Aus Spiegel übernehmen“ statt PDF-Import, Trefferbild mit `shot-ui` in der Treffsicher-Einheit. **Status:** entfällt ([[adr-033]], 20. Oktober 2026): Das Tagebuch wird ein Teil von Spiegel, Treffsicher geht in den Ruhestand.
 
 ### SP-3.2 Trainer-Freigabe und Live
 - **Umfang:** Freigaben je Schütze, Trainer-Ansicht, Live-Ansicht am Abend (Server-Sent Events, eventuell SDF). **Hängt ab von:** SP-1.8. **Status:** offen.
@@ -195,19 +195,20 @@ Ziel: **Mit Opt-in erscheint die Dienstagsscheibe von selbst in Spiegel; ohne Op
 ## Phase 4 · Weichen stellen
 
 ### SP-4.1 Treffsicher ablösen oder behalten
-- Entscheidung anhand echter Nutzung ([[adr-026]]). **Status:** offen, Vorschlag liegt als Entwurf vor: [[adr-033]]
-  (Spiegel hält jede Scheibe mit Detailgrad und trägt allein die Statistik, Treffsichers Tagebuch zieht in die Einheit,
-  Treffsicher endet). Vier Stufen: vereinfachte Scheiben, Tagebuch in der Einheit, Datenübernahme mit Prüfbestand,
-  Ruhestand von Treffsicher. Frühestens nach SP-4.3.
+- Entscheidung anhand echter Nutzung ([[adr-026]]). **Status:** entschieden am 20. Oktober 2026: [[adr-033]]. Eine App
+  mit zwei streng getrennten Teilen: Spiegel hält jede Scheibe mit ihren Angaben und trägt allein die Statistik, das
+  Tagebuch ist ein eigener Teil ohne Ergebnisse; ein Login; Treffsicher geht in den Ruhestand. Vier Stufen:
+  vereinfachte Scheiben (mit dem QR-Weg zuerst), Tagebuch, verlustfreie Datenübernahme mit Prüfbestand, Ruhestand von
+  Treffsicher. Beginn nach SP-4.3; Treffsicher bekommt bis dahin nur Fehlerbehebungen.
 
 ### SP-4.2 Gemeinsame Anmeldung
-- Eine Anmeldung für alle Vereinsheim-Apps; eigene ADR. **Status:** offen.
+- Eine Anmeldung für alle Vereinsheim-Apps; eigene ADR. Nach [[adr-033]] betrifft das nur noch Ringwerk und Spiegel. **Status:** offen.
 
 ### SP-4.3 Design 2 für alle Apps
 - Ringwerk und Treffsicher ziehen auf Design 2 um ([[adr-030]], [[adr-032]]). **Status:** in Arbeit, nach `plans/2026-10-16-design2-all-apps.md`: erst die gemeinsame Schicht, dann der Prüfbestand für Ringwerk, Treffsicher samt Statistik, zuletzt Ringwerk und das Gate über drei Apps.
 
 ### SP-4.4 Weitere Quellen
-- DISAG, neue Meyton-Linie ESTANX, Handeingabe als weitere Adapter ([[meyton-interfaces]]). **Status:** offen.
+- DISAG, neue Meyton-Linie ESTANX, Handeingabe als weitere Adapter ([[meyton-interfaces]]). Die Handeingabe (je Serie, je Schuss, mit Beleg) ist Teil von Stufe 1 aus [[adr-033]]. **Status:** offen.
 
 ## Offene Einzelpunkte
 

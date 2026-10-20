@@ -183,7 +183,7 @@ Nur endgültige, vollständige Scheiben, ohne einen verdächtigen Schuss unter d
 | K3 | Wochentag | hängt an Training oder Wettkampf | C | SP-2.7 |
 | K4 | Trainingspause | Ø je Schuss gegen die Tage seit der letzten Einheit | C | SP-2.7 |
 | K5 | Stand | eigene Werte je Stand; für den Admin der Schwerpunkt je Stand über alle Freigaben (Messrahmen), nur aggregiert | C | SP-2.7 |
-| K6 | Befinden | Korrelation mit Schlaf, Energie, Stress nur über Treffsicher | C | SP-3.1 |
+| K6 | Befinden | Korrelation mit Schlaf, Energie, Stress aus dem Tagebuch (Einflüsse) | C | [[adr-033]] Stufe 2 |
 
 ### 12 Wettkampf und Druck
 

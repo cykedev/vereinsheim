@@ -9,7 +9,7 @@ governed_by: ["[[adr-026]]", "[[adr-029]]"]
 relates_to: ["[[target-architecture]]", "[[db-isolation-model]]", "[[build-deploy-pipeline]]"]
 ---
 
-**TL;DR** Zwischen Schützenhaus und Internet gibt es genau eine Verbindung: eine ausgehende HTTPS-Verbindung der Brücke zu Spiegel. Auf dem VPS ist Spiegel die einzige App mit Messdaten (eigene DB), Treffsicher und Ringwerk lesen über die API. Die Fachlogik liegt in geteilten Paketen.
+**TL;DR** Zwischen Schützenhaus und Internet gibt es genau eine Verbindung: eine ausgehende HTTPS-Verbindung der Brücke zu Spiegel. Auf dem VPS ist Spiegel die einzige App mit Messdaten (eigene DB); Ringwerk soll über die API lesen, Treffsicher geht in Spiegel auf ([[adr-033]]). Die Fachlogik liegt in geteilten Paketen.
 
 ## Komponenten
 
@@ -20,7 +20,8 @@ relates_to: ["[[target-architecture]]", "[[db-isolation-model]]", "[[build-deplo
 | Spiegel | VPS hinter Caddy | Konten, Ingest-API, Normalisierung, Kennzahlen, Oberfläche ([[spiegel-ingest-pipeline]]) |
 | Postgres `spiegel` | VPS, Netz `data` | Rohdaten, kanonisches Modell, Kennzahlwerte ([[spiegel-data-model]]) |
 | PDF-Speicher | VPS, Volume | Original-Ausdrucke aus dem QR-Weg ([[spiegel-assignment]]); kommt mit SP-1.7 b |
-| Treffsicher, Ringwerk | VPS | lesen Messdaten künftig über Spiegels API, nie über die DB ([[db-isolation-model]]; Phase 3) |
+| Ringwerk | VPS | liest Messdaten künftig über Spiegels API, nie über die DB ([[db-isolation-model]]; SP-3.3) |
+| Treffsicher | VPS | geht in den Ruhestand; das Tagebuch wird ein getrennter Teil von Spiegel ([[adr-033]]) |
 | qrcode.meyton.eu | Meyton | hält den PDF-Ausdruck eine Woche bereit ([[meyton-printout]]) |
 
 ## Datenfluss

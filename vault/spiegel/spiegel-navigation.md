@@ -25,7 +25,7 @@ Reiter einer App; das Rückgrat ist die Liste der Scheiben. Die Seiten einer Sch
 
 - **Die Liste gliedert sich nach Abend.** Im Modell heißt das „Einheit“ (Konto + Tag, [[spiegel-data-model]]), in der
   Oberfläche „Abend“. Ein Abend hat keine eigene Seite; eine Zeile öffnet die Scheibe. Eine Abend-Seite kommt erst, wenn
-  die Verknüpfung mit Treffsicher sie braucht (SP-3.1).
+  das Tagebuch sie braucht ([[adr-033]], Stufe 2).
 - **Liste und Fortschritt sind zwei verlinkte Bereiche:**
   - Beide haben dieselbe Filterzeile: Familie und ein Chip, der das Blatt „Filter“ öffnet.
   - „Im Fortschritt zeigen“ (im Blatt „Filter“ der Liste) führt in den Fortschritt, „Alle in Scheiben zeigen“ zurück in
@@ -419,7 +419,7 @@ Stand am Code (15. Oktober 2026):
   der Schnitt der fünf davor.
 - **„Kleine“ Scheiben (SF-11):** Einklappen entfällt. Ob Nebenscheiben (Einschießen, Neustart, Abbruch) im Verein
   vorkommen und ob sie im Fortschritt zählen, klären echte Daten.
-- **Abend-Seite:** erst mit der Verknüpfung mit Treffsicher (SP-3.1).
+- **Abend-Seite:** erst mit dem Tagebuch ([[adr-033]], Stufe 2).
 
 ## Skizze
 

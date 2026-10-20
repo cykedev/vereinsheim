@@ -43,7 +43,9 @@ Alles über die Meyton-Anlage steht im Thema [[meyton]]: die Datenbank [[meyton-
 
 ## Entscheidungen
 
-- [[adr-026]] — Spiegel als dritte App mit eigener DB, Treffsicher liest über die API.
+- [[adr-026]] — Spiegel als dritte App mit eigener DB; der Schnitt zu Treffsicher ist durch [[adr-033]] abgelöst.
+- [[adr-033]] — eine App mit zwei getrennten Teilen (Ergebnisse, Tagebuch), eine Statistik, Scheiben mit ihren
+  Angaben; Treffsicher geht in den Ruhestand.
 - [[adr-027]] — Brücke als lokaler Lese-Agent: nur lesend, nur ausgehend, Rohdaten unverändert.
 - [[adr-028]] — Zuordnung per Meyton-QR mit Original-PDF, Sportpass automatisch, Fundbüro als Rückfall.
 - [[adr-029]] — Apache-2.0 für das ganze Monorepo, Spiegel als selbst gehostete Software je Verein.
