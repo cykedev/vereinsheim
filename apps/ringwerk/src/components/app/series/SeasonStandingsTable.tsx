@@ -18,6 +18,9 @@ import { formatRings, formatDecimal1 } from "@/lib/series/scoring-format"
 import { cn } from "@vereinsheim/lib/utils"
 import { EmptyState } from "@vereinsheim/ui/empty-state"
 import { RankBadge } from "@/components/ui/rank-badge"
+import { HelpMark } from "@/components/app/help/HelpMark"
+import { Missing } from "@/components/app/shell/Missing"
+import type { HelpTopicId } from "@/lib/help/topics"
 import {
   Table,
   TableBody,
@@ -35,12 +38,15 @@ const HEAD_CLASS = "px-3 py-2 text-right font-medium text-muted-foreground"
 function SortHeader({
   col,
   label,
+  help,
   className,
   sortCol,
   setSortCol,
 }: {
   col: SortCol
   label: string
+  /** Erklärung hinter dem „?“ am Spaltenkopf; ein Tipp darauf ordnet nicht um */
+  help?: HelpTopicId
   className?: string
   sortCol: SortCol
   setSortCol: (col: SortCol) => void
@@ -54,15 +60,29 @@ function SortHeader({
       <span className="inline-flex items-center justify-end gap-1">
         {label}
         {active && <ChevronUp className="h-3 w-3" />}
+        {help && <HelpMark id={help} />}
       </span>
     </TableHead>
   )
 }
 
 /** Nicht klickbarer Spaltenkopf: in den alternierenden Modi ergibt manuelles Sortieren keinen Sinn. */
-function StaticHead({ label, className }: { label: string; className?: string }) {
+function StaticHead({
+  label,
+  help,
+  className,
+}: {
+  label: string
+  help?: HelpTopicId
+  className?: string
+}) {
   return (
-    <TableHead className={`${HEAD_CLASS}${className ? ` ${className}` : ""}`}>{label}</TableHead>
+    <TableHead className={`${HEAD_CLASS}${className ? ` ${className}` : ""}`}>
+      <span className="inline-flex items-center justify-end gap-1">
+        {label}
+        {help && <HelpMark id={help} />}
+      </span>
+    </TableHead>
   )
 }
 
@@ -105,6 +125,8 @@ export function SeasonStandingsTable({ entries, minSeries, sort, isMixed = false
   // Geteilter Platz, wo nur noch der Name trennt — dieselbe Quelle wie im PDF.
   const positions = seasonPositions(sorted, alternating ? sort : sortCol)
   const teilerLabel = isMixed ? "Best. Teiler korr." : "Best. Teiler"
+  // in gemischten Wettbewerben zählt der korrigierte Teiler, das „?“ erklärt die Korrektur
+  const teilerHelp: HelpTopicId = isMixed ? "corrected-teiler" : "teiler"
 
   // Auf dem Telefon ist neben dem Namen Platz für ZWEI Zahlenspalten. Sichtbar bleiben muss die,
   // die die Reihenfolge bestimmt: bei alternierender Sortierung Ringe UND Teiler, bei klassischer
@@ -117,10 +139,18 @@ export function SeasonStandingsTable({ entries, minSeries, sort, isMixed = false
 
   return (
     <div className="space-y-2">
-      {alternating && (
-        <p className="text-sm text-muted-foreground">
-          Sortierung: {SEASON_SORT_LABELS[sort]} — hervorgehoben ist der Wert, der den Platz ergeben
-          hat.
+      {alternating ? (
+        <p className="flex items-center gap-2 text-sm text-muted-foreground">
+          <span>
+            Sortierung: {SEASON_SORT_LABELS[sort]} — hervorgehoben ist der Wert, der den Platz
+            ergeben hat.
+          </span>
+          <HelpMark id="season-alternating" className="ml-auto" />
+        </p>
+      ) : (
+        <p className="flex items-center gap-2 text-sm text-muted-foreground">
+          <span>Sortierung: {SEASON_SORT_LABELS[sortCol]}.</span>
+          <HelpMark id="season-order" className="ml-auto" />
         </p>
       )}
       <div className="overflow-hidden rounded-2xl border bg-card">
@@ -138,8 +168,12 @@ export function SeasonStandingsTable({ entries, minSeries, sort, isMixed = false
               {alternating ? (
                 <>
                   <StaticHead label="Beste Ringe" />
-                  <StaticHead label={teilerLabel} className={teilerHidden} />
-                  <StaticHead label="Best. Ringteiler" className={ringteilerHidden} />
+                  <StaticHead label={teilerLabel} help={teilerHelp} className={teilerHidden} />
+                  <StaticHead
+                    label="Best. Ringteiler"
+                    help="ringteiler"
+                    className={ringteilerHidden}
+                  />
                 </>
               ) : (
                 <>
@@ -152,6 +186,7 @@ export function SeasonStandingsTable({ entries, minSeries, sort, isMixed = false
                   <SortHeader
                     col="teiler"
                     label={teilerLabel}
+                    help={teilerHelp}
                     className={teilerHidden}
                     sortCol={sortCol}
                     setSortCol={setSortCol}
@@ -159,6 +194,7 @@ export function SeasonStandingsTable({ entries, minSeries, sort, isMixed = false
                   <SortHeader
                     col="ringteiler"
                     label="Best. Ringteiler"
+                    help="ringteiler"
                     className={ringteilerHidden}
                     sortCol={sortCol}
                     setSortCol={setSortCol}
@@ -202,7 +238,7 @@ export function SeasonStandingsTable({ entries, minSeries, sort, isMixed = false
                           <MetricRank rank={entry.bestRings_rank} />
                         </>
                       ) : (
-                        <span className="text-muted-foreground">–</span>
+                        <Missing kind="noSeries" className="font-sans" />
                       )}
                     </div>
                   </TableCell>
@@ -216,7 +252,7 @@ export function SeasonStandingsTable({ entries, minSeries, sort, isMixed = false
                           <MetricRank rank={entry.bestTeiler_rank} />
                         </>
                       ) : (
-                        <span className="text-muted-foreground">–</span>
+                        <Missing kind="noSeries" quiet />
                       )}
                     </div>
                   </TableCell>
@@ -236,7 +272,7 @@ export function SeasonStandingsTable({ entries, minSeries, sort, isMixed = false
                           <MetricRank rank={entry.bestRingteiler_rank} />
                         </>
                       ) : (
-                        <span className="text-muted-foreground">–</span>
+                        <Missing kind="noSeries" quiet />
                       )}
                     </div>
                   </TableCell>

@@ -5,6 +5,7 @@ import type { ScoringMode, TargetValueType } from "@/generated/prisma/client"
 import { Badge } from "@vereinsheim/ui/badge"
 import { EmptyState } from "@vereinsheim/ui/empty-state"
 import { RankBadge } from "@/components/ui/rank-badge"
+import { HelpMark } from "@/components/app/help/HelpMark"
 import {
   Table,
   TableBody,
@@ -53,10 +54,16 @@ export function EventRankingTable({
               Ringe
             </TableHead>
             <TableHead className="px-3 py-2 text-right font-medium text-muted-foreground hidden sm:table-cell">
-              {isMixed ? "Teiler korr." : "Teiler"}
+              <span className="inline-flex items-center justify-end gap-1">
+                {isMixed ? "Teiler korr." : "Teiler"}
+                <HelpMark id={isMixed ? "corrected-teiler" : "teiler"} />
+              </span>
             </TableHead>
             <TableHead className="px-3 py-2 text-right font-medium text-muted-foreground">
-              {scoreLabel}
+              <span className="inline-flex items-center justify-end gap-1">
+                {scoreLabel}
+                {scoringMode === "RINGTEILER" && <HelpMark id="ringteiler" />}
+              </span>
             </TableHead>
           </TableRow>
         </TableHeader>

@@ -104,7 +104,10 @@ describe("SeasonStandingsTable — mobile Spaltenwahl", () => {
 describe("SeasonStandingsTable — manuelles Sortieren", () => {
   it.each(["alt-teiler", "alt-rings"] as const)("macht die Spaltenköpfe in '%s' inert", (sort) => {
     const html = render(sort)
-    expect(html).not.toContain("cursor-pointer")
+    // nur das „?“ darin ist ein Knopf
+    for (const label of ["Beste Ringe", "Best. Teiler korr.", "Best. Ringteiler"]) {
+      expect(headerCell(html, label)).not.toContain("cursor-pointer")
+    }
   })
 
   it.each(["rings", "teiler", "ringteiler"] as const)(
@@ -115,10 +118,43 @@ describe("SeasonStandingsTable — manuelles Sortieren", () => {
     }
   )
 
-  it("nennt die Sortierung nur in den alternierenden Modi über der Tabelle", () => {
+  it("nennt die Sortierung über der Tabelle, klassisch die Spalte, nach der sie ordnet", () => {
     expect(render("alt-teiler")).toContain("Teiler/Ringe alternierend")
     expect(render("alt-rings")).toContain("Ringe/Teiler alternierend")
-    expect(render("ringteiler")).not.toContain("Sortierung:")
+    expect(render("ringteiler")).toContain("Sortierung: Bester Ringteiler.")
+    expect(render("teiler")).toContain("Sortierung: Bester Teiler.")
+  })
+})
+
+describe("SeasonStandingsTable — Hilfe", () => {
+  it("erklärt die Reihenfolge: klassisch und abwechselnd mit eigenem Thema", () => {
+    expect(render("ringteiler")).toContain('data-help="season-order"')
+    expect(render("ringteiler")).not.toContain('data-help="season-alternating"')
+    expect(render("alt-rings")).toContain('data-help="season-alternating"')
+    expect(render("alt-rings")).not.toContain('data-help="season-order"')
+  })
+
+  it.each(["ringteiler", "alt-teiler"] as const)(
+    "hat in '%s' ein „?“ an Teiler und Ringteiler, gemischt mit dem korrigierten Teiler",
+    (sort) => {
+      const html = render(sort)
+      expect(headerCell(html, "Best. Ringteiler")).not.toContain("data-help")
+      expect(html).toContain('data-help="ringteiler"')
+      expect(html).toContain('data-help="corrected-teiler"')
+      expect(html).not.toContain('data-help="teiler"')
+    }
+  )
+
+  it("öffnet bei fester Disziplin das Thema Teiler", () => {
+    const html = renderToStaticMarkup(
+      createElement(SeasonStandingsTable, {
+        entries: [makeEntry("Anton", 98, 12.0, 14.0, null)],
+        minSeries: 2,
+        sort: "ringteiler",
+      })
+    )
+    expect(html).toContain('data-help="teiler"')
+    expect(html).not.toContain('data-help="corrected-teiler"')
   })
 })
 
@@ -150,6 +186,9 @@ describe("SeasonStandingsTable — geteilte Plätze", () => {
     ]
     expect(badges.map((m) => m[1])).toEqual(["1", "1"])
     expect(html).not.toContain("bg-rank-1/20")
+    // je Zeile der Grund einmal sichtbar bei den Ringen, bei Teiler und Ringteiler nur als Tooltip
+    expect(html.match(/class="text-xs font-normal">noch keine Serie</g)).toHaveLength(2)
+    expect(html.match(/title="noch keine Serie"/g)).toHaveLength(4)
   })
 
   it("gibt einer Zeile mit Serie auf Platz 1 die Podiumsfarbe", () => {
