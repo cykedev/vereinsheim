@@ -1,5 +1,5 @@
-/* Design 2 (ADR-030, ADR-032): Tokens für alle Apps, hell und dunkel. Eigenständig statt theme.css. Gleiche
-   Namen wie theme.css, damit die ui-Primitives passen; dazu Design-2-eigene Tokens. Werte aus dem Prototyp
+/* Design 2 (ADR-030, ADR-032): Tokens für alle Apps, hell und dunkel. Die Namen der shadcn-Tokens, damit die
+   ui-Primitives passen; dazu Design-2-eigene Tokens. Werte aus dem Prototyp
    (Spielwiese). Hell auf :root, dunkel unter .dark (Klassen-Strategie wie next-themes); keine dark:-Varianten
    im Code. Der Akzent je App kommt über `data-app` am <html>; ohne `data-app` gilt Spiegels Blau. */
 

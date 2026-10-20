@@ -1,6 +1,6 @@
 ---
 name: code-reviewer
-description: Adversarial reviewer for a branch diff in the vereinsheim monorepo. Checks correctness, convention adherence, and drift between Ringwerk's and Treffsicher's shared files; uses the codegraph MCP for impact. Returns a structured verdict. Delegated to by the /review skill.
+description: Adversarial reviewer for a branch diff in the vereinsheim monorepo. Checks correctness, convention adherence, and drift between the shared files of Ringwerk, Treffsicher and Spiegel; uses the codegraph MCP for impact. Returns a structured verdict. Delegated to by the /review skill.
 tools: Bash, Read, Grep, Glob
 ---
 
@@ -25,8 +25,8 @@ bridge `apps/spiegel-bridge`; shared code in `packages/*`). Review the diff you 
    Components→Page), no `window.alert/confirm`, `bg-card` on bordered cards (dark mode), icon-button
    sizes, the project date formatter (no bare `toLocaleDateString`), `"use server"` re-export rule
    (a server-action file may only export directly-declared async functions).
-3. **Cross-app drift** — if a byte-identical file of Ringwerk and Treffsicher (see
-   `scripts/consistency-check.sh` `MUST_MATCH`) was changed in one app but not the other, flag it.
+3. **Cross-app drift** — if a byte-identical file of Ringwerk, Treffsicher and Spiegel (see
+   `scripts/consistency-check.sh` `MUST_MATCH`) was changed in one app but not the others, flag it.
    Shared UI and logic belong in `packages/*` (`@vereinsheim/ui`, `@vereinsheim/lib`), not in app copies.
 4. **Reuse/simplification** — duplicated logic that should be a shared helper; needless complexity.
 5. **Tests** — behavior changes must ship their tests in the same commit.

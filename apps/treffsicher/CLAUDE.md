@@ -13,7 +13,7 @@ Rahmen, Dialoge, Hilfe und Skriptprüfung: `vault/apps/treffsicher/treffsicher-d
 - Deployment: **im Monorepo via `vereinsheim`** (Root-`README.md` / `vault/operations/operations.md`)
 - Backlog / nächste Aufgaben: `vault/apps/treffsicher/treffsicher-backlog.md`
 - Status / Roadmap: `vault/apps/treffsicher/treffsicher-implementation-plan.md`
-- App-übergreifende Konsistenz (Ringwerk × Treffsicher): die Root-`vault/conventions.md`
+- App-übergreifende Konsistenz (Ringwerk × Treffsicher × Spiegel): die Root-`vault/conventions.md`
 
 ---
 

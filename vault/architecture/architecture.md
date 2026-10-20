@@ -33,8 +33,8 @@ vereinsheim/                Code- + Deployment-Monorepo (pnpm + Turborepo)
 │                           useNavigationConfirm, dateTime (server-only), format (isomorph, Locale de-DE, Zeitzone als
 │                           Parameter) und der Auth-Kern (Validierung, Anmeldeablauf, IP aus Proxy-Headern,
 │                           Ratenbegrenzung mit Store und Admin-Auswertung) für alle drei Apps.
-├── packages/ui/            @vereinsheim/ui — ui-Primitives, shell/, admin/ (Rate-Limit-Oberfläche), theme.css
-│                           (Ringwerk, Treffsicher) und design2.css + design2/* (ADR-030, ADR-032): Tokens mit Akzent je
+├── packages/ui/            @vereinsheim/ui — ui-Primitives, shell/, admin/ (Rate-Limit-Oberfläche) und
+│                           design2.css + design2/* (ADR-030, ADR-032) für alle Apps: Tokens mit Akzent je
 │                           App, Darstellung, Rahmen, Seite, Folgen-Dialog, Rückgängig, Hilfe, Toasts, Trefferfarben.
 ├── packages/shot-core/     @vereinsheim/shot-core — Fachkern von Spiegel: Scheibenbilder, Wertung wie Meyton,
 │                           Disziplinen, Gegenprobe, Geometrie, Kennzahlen-Registry, Analyse einer Scheibe, Projektion
@@ -100,11 +100,10 @@ Detail (Komponenten, lib-Module, Datenfluss): die App-Notes im Vault und die `CL
 
 ## Cross-App-Konsistenz
 
-Ringwerk und Treffsicher teilen eine UI-/Pattern-Schicht über `@vereinsheim/ui`, `@vereinsheim/lib` und
-`@vereinsheim/config`. **Single Source der Konventionen:** [[conventions]]. Den Rest (`components.json`,
-`globals.css`-Stub, Error-Boundaries, einige Wrapper) und die Konventionen erzwingt `scripts/consistency-check.sh` als
-Release-Gate ([[drift-protection]]). Spiegel und Treffsicher nutzen Design 2 (ADR-030, ADR-032); bis Teil E von SP-4.3
-weicht Treffsichers `globals.css` deshalb von Ringwerk ab.
+Alle drei Apps laufen auf Design 2 (ADR-030, ADR-032) und teilen die UI-/Pattern-Schicht über `@vereinsheim/ui`,
+`@vereinsheim/lib` und `@vereinsheim/config`. **Single Source der Konventionen:** [[conventions]]. Den Rest
+(`components.json`, `globals.css`-Stub, Error-Boundaries, den Wrapper der Rate-Limit-Oberfläche) und die Regeln von
+Design 2 erzwingt `scripts/consistency-check.sh` als Release-Gate über alle drei Apps ([[drift-protection]]).
 
 ## Knowledge & Harness (ADR-016/017/018/023/024/025)
 

@@ -4,7 +4,7 @@
 
 **Sprache:** Alle Kommunikation mit dem User auf Deutsch. Code, Commit-Messages und Agent-Prompts bleiben auf Englisch.
 
-**App-übergreifende Konsistenz mit Treffsicher:** siehe die Root-`vault/conventions.md` (Single Source; UI/Config-Drift zwischen den Apps erzwingt `scripts/consistency-check.sh`).
+**App-übergreifende Konsistenz mit Treffsicher und Spiegel:** siehe die Root-`vault/conventions.md` (Single Source; UI/Config-Drift zwischen den Apps erzwingt `scripts/consistency-check.sh`).
 
 ## Hard Rules (non-negotiable, always active)
 

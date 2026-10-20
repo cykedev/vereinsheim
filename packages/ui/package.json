@@ -5,7 +5,6 @@
   "license": "Apache-2.0",
   "type": "module",
   "exports": {
-    "./theme.css": "./theme.css",
     "./design2.css": "./design2.css",
     "./design2/app-frame": "./src/design2/app-frame.tsx",
     "./design2/bar": "./src/design2/bar.ts",

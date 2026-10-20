@@ -1,58 +1,60 @@
 ---
 id: conventions
 type: guide
-title: "Shared Conventions — Treffsicher × Ringwerk"
-aliases: ["Shared Conventions — Treffsicher × Ringwerk"]
-keywords: [shared, conventions, treffsicher, ringwerk]
+title: "Shared Conventions — Ringwerk × Treffsicher × Spiegel"
+aliases: ["Shared Conventions — Ringwerk × Treffsicher × Spiegel", "Shared Conventions — Treffsicher × Ringwerk"]
+keywords: [shared, conventions, treffsicher, ringwerk, spiegel, konventionen, design 2, drift-gate]
 ---
 
-**TL;DR** Diese Dateien MÜSSEN in beiden Repos identisch sein (Gate = fatal bei Abweichung):
+**TL;DR** Die app-lokalen Stub-Dateien MÜSSEN in allen drei Apps byte-gleich sein, und alle drei folgen denselben Regeln von Design 2 (Gate = fatal bei Abweichung):
 
-# Shared Conventions — Treffsicher × Ringwerk
+# Shared Conventions — Ringwerk × Treffsicher × Spiegel
 
 > **Lebende Quelle der Wahrheit für app-übergreifende Konsistenz.** Eine Quelle am Root (`vault/conventions.md`),
-> per `@import` in der Root-`CLAUDE.md`. Die Gleichheit der geteilten Dateien erzwingt das Drift-Gate
-> (`scripts/consistency-check.sh`).
+> per `@import` in der Root-`CLAUDE.md`. Die Gleichheit der geteilten Dateien und die Regeln von Design 2 erzwingt das
+> Drift-Gate (`scripts/consistency-check.sh`) über alle Apps aus `scripts/lib/apps.sh`.
 
 ## 1. Byte-identische Shared-Schicht
 
-Diese Dateien MÜSSEN in beiden Repos identisch sein (Gate = fatal bei Abweichung):
+Diese Dateien MÜSSEN in allen drei Apps identisch sein (Gate = fatal bei Abweichung):
 
-- App-lokale Reste (weiter im Gate, Next/shadcn-erzwungen + trivial): `components.json` + der dünne
-  `src/app/globals.css`-Stub (nur die tailwindcss/tw-animate-css/shadcn-Imports + `@vereinsheim/ui/theme.css`;
-  der Theme-Kern liegt im Paket). shadcn-CLI läuft weiter im App-Kontext.
+- App-lokale Reste (im Gate, Next/shadcn-erzwungen + trivial): `components.json` + der dünne
+  `src/app/globals.css`-Stub (die Imports von tailwindcss, tw-animate-css, shadcn und `@vereinsheim/ui/design2.css`,
+  `@source` für die App und `packages/shot-ui/src`, die Schriften aus `next/font`; die Tokens liegen im Paket).
+  shadcn-CLI läuft weiter im App-Kontext.
+- Error-Boundaries: `src/app/error.tsx`, `src/app/(app)/error.tsx`, `src/app/not-found.tsx` (Design 2, Texte für
+  alle drei Apps).
 - **Geteilt via `@vereinsheim/config`** (packages/config — Drift dort **strukturell
   unmöglich**, daher *nicht* im Gate): `tsconfig.json`, `eslint.config.mjs`, `.prettierrc`,
   `postcss.config.mjs`, `next.config.ts`, `vitest.config.ts` (inkl. `server-only`-Alias
   auf einen Stub im Paket; die App ergänzt Eigenheiten wie `fileParallelism` per `mergeConfig`). Die App-Dateien sind nur noch dünne `extends`/Re-Export-Stubs
   (`.prettierrc` → `package.json`-Feld); Verhalten/Regeln ändert man **im Paket**, nicht in den Apps.
-- Error-Boundaries: `src/app/error.tsx`, `src/app/(app)/error.tsx`, `src/app/not-found.tsx`
 - **Geteilt via `@vereinsheim/ui`** (packages/ui — Drift **strukturell
   unmöglich**, daher *nicht* im Gate): die ui-Primitives (`button`, `card`, `dialog`, `table`,
   `skeleton`, …), die 3 shell-Komponenten (`DetailActionBar`,
   `PageHeader`, `Providers`), die Rate-Limit-Admin-Oberfläche
-  (`admin/LoginRateLimitTable`, `admin/LoginRateLimitInsights`) und der Tailwind-Theme-Kern
-  (`@vereinsheim/ui/theme.css`). Import via `@vereinsheim/ui/<name>` bzw.
+  (`admin/LoginRateLimitTable`, `admin/LoginRateLimitInsights`), die Bausteine von Design 2 (`design2/*`) und
+  die Tokens (`@vereinsheim/ui/design2.css`, §10). Import via `@vereinsheim/ui/<name>` bzw.
   `@vereinsheim/ui/shell/<name>`; Styles/Verhalten ändert man **im Paket**. App-spezifische `ui/*`
-  (chart/form in Treffsicher, checkbox/rank-badge in Ringwerk) + `Navigation` bleiben app-lokal.
+  (form in Treffsicher, checkbox/rank-badge in Ringwerk) bleiben app-lokal.
 - **Geteilt via `@vereinsheim/lib`** (packages/lib — Drift **strukturell
   unmöglich**, daher *nicht* im Gate): `cn` (`utils`), `forms/fieldErrors` (inkl. `getErrorMessage`),
   die Form-Hooks `useUnsavedChangesGuard` + `useNavigationConfirm`, `dateTime` (server-only, liefert
-  `getDisplayTimeZone`), `format` (**isomorphe** Anzeige-Formatierung, auch für
+  `getDisplayTimeZone` und `isValidIanaTimeZone`), `format` (**isomorphe** Anzeige-Formatierung, auch für
   Client-Komponenten) sowie der reine Auth-Kern `auth/validation` +
   `auth/rate-limit/{config,limiter,normalization,types,adminTypes}`, dazu Anmeldeablauf
   (`auth/credentials`, mit gleich langer Antwort für unbekannte Konten), IP aus Proxy-Headern (`auth/client-ip`), Store
   (`auth/rate-limit/stores`, Tabelle als Schnittstelle) und Admin-Auswertung der Sperren (`auth/rate-limit/admin`) für
   alle drei Apps. Import via `@vereinsheim/lib/<subpath>`; Logik ändert man **im Paket**, nicht in den Apps.
 
-Regel: Wer eine dieser Dateien ändert, ändert sie in **beiden** Repos gleich. Neue, klar
+Regel: Wer eine dieser Dateien ändert, ändert sie in **allen drei** Apps gleich. Neue, klar
 app-übergreifende Komponenten gehören in diese Liste (in `MUST_MATCH` des Gates ergänzen).
 
-**Zusätzlich in `MUST_MATCH`** (byte-identisch in beiden Apps):
+**Zusätzlich im Gate** (byte-identisch in allen drei Apps):
 
-- `src/components/app/admin/AdminLoginRateLimitTable.tsx` — dünner Wrapper um
-  `@vereinsheim/ui/admin/LoginRateLimitTable`; app-lokal, weil eine geteilte Datei keine
-  Server Action re-exportieren darf.
+- `AdminLoginRateLimitTable.tsx` — dünner Wrapper um `@vereinsheim/ui/admin/LoginRateLimitTable`; app-lokal, weil
+  eine geteilte Datei keine Server Action re-exportieren darf. Ringwerk und Treffsicher unter
+  `src/components/app/admin/`, Spiegel unter `src/components/admin/`.
 
 ## 2. Komponenten-Kanon
 
@@ -153,7 +155,7 @@ Reiter unter dem Namen.
   je App in `src/lib/types.ts`. Konsumenten narrowen über `"error" in result` bzw.
   `"success" in state` — **kein** `state?.success` (die Union hat die Felder nicht optional) und
   **kein** `success: false`. Einen einzeiligen Fehlertext liefert `getErrorMessage` aus
-  `@vereinsheim/lib/forms/fieldErrors`. _In beiden Apps umgesetzt._
+  `@vereinsheim/lib/forms/fieldErrors`. _In allen drei Apps umgesetzt._
 
 ## 7. Listen & Karten
 
@@ -175,19 +177,20 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
   die Brücke: ihre `inputs` nennen genau die Vertragsdateien, die die Go-Tests lesen. Prüfen mit
   `turbo run test lint --dry=json` vor und nach einer Änderung im Paket (siehe [[monorepo]]).
 - **Gate:** `vereinsheim/scripts/consistency-check.sh` läuft vor jedem Release (in
-  `build-and-push.sh`) und ist **fatal** bei Abweichung der Shared-Schicht/Configs, **warnend** bei
-  Dependency-Drift und Anti-Pattern.
+  `build-and-push.sh`, immer über alle Apps, auch wenn `APPS` nur eine baut) und ist **fatal** bei Abweichung der
+  Shared-Schicht (§1) und bei Verstößen gegen die Regeln unten, **warnend** bei Dependency-Drift und Anti-Pattern
+  (native Dialoge, `MoreHorizontal`). Die Apps kommen aus `scripts/lib/apps.sh`.
 - **Umgesetzt (Tier 1):** die Shared-Schicht liegt in gemeinsamen Paketen (`@vereinsheim/ui`,
   `@vereinsheim/lib`, `@vereinsheim/config`) — Drift ist dort strukturell unmöglich (siehe §1).
 - **Offene Angleichungen:** Dependency-Pins (inkl. TypeScript-Major).
-- **Erzwungen** (`consistency-check.sh`, Abschnitt „Konventionen (fatal)"), für Ringwerk und Treffsicher:
-  Palette-Klassen und `dark:`-Varianten (§4), Opazitäts-Modifier auf `text-muted-foreground` (§3), inline
-  `new Intl.*` und `toLocale*String()` (§6), ASCII-Ellipsen (§3) und „… →"-Buttons (§7). Die Regeln, die nur zu
-  `theme.css` gehörten (Schrift unter `text-xs`, Seiten-Container, `text-2xl font-bold`, Icon-Buttons unter
-  `h-10 w-10`, inline-Leerzustand), prüft das Gate seit dem Umzug beider Apps auf Design 2 nicht mehr; Regeln für
-  Design 2 über drei Apps folgen in Teil E.
-  Die Muster sind bewusst eng: ein „→" **darf** als Inhalt in Protokolltexten stehen, die Hex-Skala der
-  Trefferlage-Charts **darf** bleiben. Wer eine Regel ergänzt, prüft sie
+- **Erzwungen** (`consistency-check.sh`, Abschnitt „Konventionen von Design 2 (fatal)"), in `apps/*/src` aller drei
+  Apps und in den geteilten Paketen `packages/ui/src`, `packages/shot-ui/src`, `packages/shot-help/src` (ohne Tests):
+  Palette-Klassen und `dark:`-Varianten (§4, Farbe aus den Tokens), Opazitäts-Modifier auf `text-muted-foreground`
+  (§3), inline `new Intl.*` und `toLocale*String()` (§6), ASCII-Ellipsen (§3), „… →"-Buttons (§7) und Symbolknöpfe
+  (`size="icon…"`) mit einer Klasse `size-`, `h-` oder `w-` von 1 bis 5, also unter 24 px (§10; der kleinste ist
+  `icon-xs`). Ausgenommen von `dark:` sind nur die shadcn-Primitives in `packages/ui/src/ui` und Ringwerks
+  `components/ui/checkbox.tsx`, die ihre Varianten aus dem Generator mitbringen.
+  Die Muster sind bewusst eng: ein „→" **darf** als Inhalt in Protokolltexten stehen. Wer eine Regel ergänzt, prüft sie
   gegen eine Probe-Datei mit absichtlichen Verstößen **und** gegen den grünen Ist-Zustand.
 
 ## 9. Aus Lernlog übernommen
@@ -290,7 +293,7 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
 
 ## 10. Design 2 (alle Apps, ADR-030, ADR-032)
 
-- **Tokens aus `@vereinsheim/ui/design2.css`** statt `theme.css`: dieselben Namen, die die
+- **Tokens aus `@vereinsheim/ui/design2.css`**: dieselben Namen, die die
   ui-Primitives nutzen (auch `rank-1` … `rank-3` und `chart-1` … `chart-5`, Akzent je App über `data-app` in beiden
   Themes), dazu Design-2-eigene (`surface-2`, `line-strong`, `foreground-2`, `*-wash`, `gold` (ein Zeichen in Gold, goldener als das
   Text-Token `warning`), `quiet` (ein leises Zeichen, 3,6 : 1 auf der Kartenfläche, nie für Text), `gold-wash` (goldene Tönung deckend auf der
@@ -309,10 +312,10 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
   `@vereinsheim/pruefen`. Was
   den Fachkern braucht (Scheibe, Serien), in `@vereinsheim/shot-ui`, mit Markup-Tests; die Bedienung im Browser prüft
   die Skriptprüfung der App (`pnpm --filter spiegel pruefen`).
-- Treffsicher läuft seit Teil T von SP-4.3 auf Design 2 ([[treffsicher-design2]]), Ringwerk seit Teil W
-  ([[ringwerk-design2]]); `theme.css` nutzt keine App mehr. Bis das Drift-Gate in Teil E auf drei Apps umgestellt ist,
-  prüft es Ringwerk und Treffsicher mit den Regeln, die auch in Design 2 gelten (§8), und vergleicht ihre
-  `src/app/globals.css` wieder byte-genau.
+- Alle drei Apps laufen auf Design 2: Spiegel als Vorbild, Treffsicher ([[treffsicher-design2]]) und Ringwerk
+  ([[ringwerk-design2]]) seit Oktober 2026. Das Drift-Gate prüft sie mit denselben Regeln (§8).
+- **Symbolknöpfe** sind mindestens 24 px groß (`size="icon-xs"`), sonst `icon-sm` (32 px), `icon` (36 px) oder
+  `icon-lg` (40 px); eine Klasse, die sie kleiner macht, ist verboten (Gate).
 - **Kein Knopf ohne Folge:** Jede Aktion, die bestätigt, ablehnt, entfernt, widerruft, umstellt oder ein Konto ändert, fragt
   über `DecisionDialog` (`@vereinsheim/ui/design2/decision-dialog`) und sagt in Alltagsworten, worum es geht, was vorher zu
   prüfen ist, was dann passiert, was **nicht** passiert und wie es rückgängig geht. Die Texte stehen an einer Stelle

@@ -1,6 +1,6 @@
 # @vereinsheim/ui — Claude Scope-Notiz
 
-Geteilte **UI-Schicht** (shadcn-Primitives, App-Shell, Admin-Oberfläche der Login-Sperren, Theme und Design 2)
+Geteilte **UI-Schicht** (shadcn-Primitives, App-Shell, Admin-Oberfläche der Login-Sperren und Design 2)
 für alle drei Apps (ADR-015/016). Jede Komponente gibt es nur einmal — Drift damit **strukturell unmöglich**.
 
 ## Was hier liegt
@@ -10,7 +10,6 @@ für alle drei Apps (ADR-015/016). Jede Komponente gibt es nur einmal — Drift 
 | `@vereinsheim/ui/<name>`         | `src/ui/<name>.tsx` — shadcn-Primitives (button, card, dialog, …)                                                                 |
 | `@vereinsheim/ui/shell/<name>`   | `src/shell/<name>.tsx` — DetailActionBar, PageHeader, Providers                                                                   |
 | `@vereinsheim/ui/admin/<name>`   | `src/admin/<name>.tsx` — `LoginRateLimitInsights`, `LoginRateLimitTable` (Admin-Ansicht der Login-Sperren)                        |
-| `@vereinsheim/ui/theme.css`      | `theme.css` — Tailwind-Theme-Kern (@custom-variant, @theme, :root, .dark, @layer) + `@source` aufs Paket                          |
 | `@vereinsheim/ui/design2.css`    | `design2.css` — Design 2 (ADR-030, ADR-032): eigene Tokens, hell auf `:root`, dunkel unter `.dark`, Akzent je App über `data-app` |
 | `@vereinsheim/ui/design2/<name>` | `src/design2/<name>.tsx` — Design-2-Bausteine, siehe unten                                                                        |
 
@@ -43,13 +42,15 @@ für alle drei Apps (ADR-015/016). Jede Komponente gibt es nur einmal — Drift 
 - **`react`/`react-dom`/`next`/`next-auth` sind peerDependencies** (App liefert sie → eine Instanz).
   `radix-ui`/`@radix-ui/react-slider`/`class-variance-authority`/`next-themes` sind Paket-deps;
   `lucide-react`/`sonner` zusätzlich App-deps (App-Code nutzt sie auch). `cn` kommt aus `@vereinsheim/lib`.
-- **Tailwind `@source`**: `theme.css` nimmt die Paket-Sourcen ins Class-Scanning — sonst fehlen die
-  Klassen der Paket-Komponenten im App-Build (Tailwind v4 scannt sonst nur den App-Baum).
+- **Tailwind `@source`**: `design2.css` nimmt die Paket-Sourcen ins Class-Scanning — sonst fehlen die
+  Klassen der Paket-Komponenten im App-Build (Tailwind v4 scannt sonst nur den App-Baum). Die Bausteine aus
+  `@vereinsheim/shot-ui` nimmt der `globals.css`-Stub jeder App dazu.
 - **Kein `"use server"`**; **shadcn-CLI** läuft weiter im App-Kontext (`components.json` + der
   `globals.css`-Stub bleiben app-lokal).
 - Cross-Importe paket-intern **relativ** (`./button`, `../ui/alert-dialog`) — nicht über `@vereinsheim/ui`.
-- **Design 2** (`design2.css`, `src/design2/`) nutzen alle drei Apps (Ringwerk seit Teil W von ADR-032); `theme.css`
-  importiert keine App mehr und entfällt in Teil E. Jede Farbe, die zwischen hell und dunkel wechselt, steht in beiden Blöcken;
+- **Design 2** (`design2.css`, `src/design2/`) nutzen alle drei Apps; das Drift-Gate hält ihre `globals.css`-Stubs
+  byte-gleich und prüft die Regeln von Design 2 auch in `src/` dieses Pakets (ohne die shadcn-Primitives bei `dark:`,
+  `vault/conventions.md` §8). Jede Farbe, die zwischen hell und dunkel wechselt, steht in beiden Blöcken;
   die Scheibe (Papier, Spiegel, Ringwert-Farben) ist in beiden Themes gleich. Akzent, Schrift auf dem Akzent und
   `rank-*` tragen auf der Kartenfläche mindestens 4,5 : 1, `chart-*` mindestens 3 : 1, je App und Theme (Test
   `tokens.test.ts`).

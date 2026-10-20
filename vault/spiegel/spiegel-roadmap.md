@@ -205,7 +205,11 @@ Ziel: **Mit Opt-in erscheint die Dienstagsscheibe von selbst in Spiegel; ohne Op
 - Eine Anmeldung für alle Vereinsheim-Apps; eigene ADR. Nach [[adr-033]] betrifft das nur noch Ringwerk und Spiegel. **Status:** offen.
 
 ### SP-4.3 Design 2 für alle Apps
-- Ringwerk und Treffsicher ziehen auf Design 2 um ([[adr-030]], [[adr-032]]). **Status:** in Arbeit, nach `plans/2026-10-16-design2-all-apps.md`: erst die gemeinsame Schicht, dann der Prüfbestand für Ringwerk, Treffsicher samt Statistik, zuletzt Ringwerk und das Gate über drei Apps.
+- Ringwerk und Treffsicher ziehen auf Design 2 um ([[adr-030]], [[adr-032]]). **Status:** umgesetzt im Oktober 2026:
+  die gemeinsame Schicht in `@vereinsheim/ui/design2`, der Prüfbestand für Ringwerk ([[ringwerk-pruefbestand]]),
+  Treffsicher samt Statistik ([[treffsicher-design2]]), Ringwerk mit Dialogen und Hilfe ([[ringwerk-design2]]) und das
+  Drift-Gate über drei Apps mit den Regeln von Design 2 ([[drift-protection]], [[conventions]] §8). `theme.css` ist
+  entfernt. Offen bleibt die Durchsicht nach drei Ebenen (unten unter „Offene Einzelpunkte“).
 
 ### SP-4.4 Weitere Quellen
 - DISAG, neue Meyton-Linie ESTANX, Handeingabe als weitere Adapter ([[meyton-interfaces]]). Die Handeingabe (je Serie, je Schuss, mit Beleg) ist Teil von Stufe 1 aus [[adr-033]]. **Status:** offen.
@@ -213,6 +217,21 @@ Ziel: **Mit Opt-in erscheint die Dienstagsscheibe von selbst in Spiegel; ohne Op
 ## Offene Einzelpunkte
 
 Was zwischen den Features offen ist und keinen eigenen Abschnitt hat.
+
+- **Durchsicht von Treffsicher und Ringwerk nach drei Ebenen** (Rest von SP-4.3, bekommt einen eigenen Plan): erst
+  messen wie [[spiegel-durchsicht]] am Telefon (390 px, 772 px Inhalt über der Leiste): je Hauptseite Länge in
+  Bildschirmen, Bedienelemente und Zahlen (gesamt und im ersten Bildschirm), doppelte Zahlen, Fachbegriffe, und die
+  Kernfragen je App mit Urteil („Wie war meine letzte Einheit?“, „Werde ich besser?“, „Wo stehe ich in der Liga?“,
+  „Wann schieße ich wieder?“). Ringwerk an den Szenarien des Prüfbestands ([[ringwerk-pruefbestand]]), damit jede
+  Phase gemessen ist. Ergebnis als Notes `treffsicher-durchsicht` und `ringwerk-durchsicht`, danach `/plan` für die
+  Befunde (Antwort zuerst auf Dashboard, Statistik und Wettbewerbsseite, eine Zeile Bedienung vor dem Inhalt, Filter
+  im Blatt). Dabei auch: Disziplinen verwaltet jede App anders (Spiegel im Admin mit Wertung je Disziplin); ob eine
+  gemeinsame Form passt, ist ein Befund. Für Ringwerk nur Vorschläge, jede Änderung am Ablauf einer Seite gibt der
+  User einzeln frei. Mitnehmen: die Fehlerseiten Ringwerk `(public)/error.tsx` und Treffsicher
+  `sessions/[id]/error.tsx` stehen noch im alten Stil. Mit [[adr-033]] betrifft Treffsicher nur, was das Tagebuch
+  übernimmt.
+- **PDFs in Design 2:** Die PDFs von Ringwerk und Treffsicher zeigen Ringwerte schon in den Farben von Spiegel
+  (`SCORE_HEX`), Aufbau und Schrift sind noch die alten.
 
 - **Liste als Filter im Fortschritt** und auf der Seite einer Scheibe eine Verknüpfung „alle Scheiben dieser Liste“.
 - **Start des Laufs nach falscher Uhr** (SF-79): Startet die Brücke mit falscher Uhr, trägt `runStartedAt` den ganzen
