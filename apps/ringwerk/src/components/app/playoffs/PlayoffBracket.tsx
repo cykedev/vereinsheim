@@ -7,6 +7,7 @@ import {
   computePreviews,
 } from "./playoff-bracket"
 import type { PlayoffCardConfig } from "./playoff-match-card"
+import { HelpMark } from "@/components/app/help/HelpMark"
 
 interface Props {
   bracket: PlayoffBracketData
@@ -58,6 +59,11 @@ export function PlayoffBracket({
 
   return (
     <div className="space-y-8">
+      {/* eigene Zeile über dem Baum: die Zeile mit den Rundennamen bleibt, wie sie ist */}
+      <div className="-mb-4 flex items-center gap-2">
+        <h2 className="text-base font-semibold">Turnierbaum</h2>
+        <HelpMark id="playoffs" className="ml-auto" />
+      </div>
       <BracketDiagram
         bracket={bracket}
         layout={layout}

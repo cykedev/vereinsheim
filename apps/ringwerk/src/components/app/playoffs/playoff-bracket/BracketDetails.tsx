@@ -25,7 +25,15 @@ export function BracketDetails({ bracket, isAF, isVF, canManage, config }: Props
       {hf.length > 0 && (
         <RoundDetail title="Halbfinale" matches={hf} canManage={canManage} config={config} />
       )}
-      {fin && <RoundDetail title="Finale" matches={[fin]} canManage={canManage} config={config} />}
+      {fin && (
+        <RoundDetail
+          title="Finale"
+          matches={[fin]}
+          canManage={canManage}
+          config={config}
+          help="finale"
+        />
+      )}
     </div>
   )
 }
