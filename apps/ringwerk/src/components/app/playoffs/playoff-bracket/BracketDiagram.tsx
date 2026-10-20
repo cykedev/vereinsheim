@@ -2,6 +2,8 @@ import type { PlayoffBracketData } from "@/lib/playoffs/types"
 import { CONN_W, SLOT_W, type SlotPreview } from "./constants"
 import type { BracketLayout } from "./geometry"
 import { Connector, RoundCol } from "./BracketGrid"
+import { runningColumn } from "./runningColumn"
+import { ScrollToColumn } from "./ScrollToColumn"
 
 const labelClass =
   "text-center text-xs font-semibold uppercase tracking-widest text-muted-foreground"
@@ -31,7 +33,7 @@ export function BracketDiagram({
 
   return (
     <div className="relative">
-      <div className="overflow-x-auto">
+      <ScrollToColumn column={runningColumn(bracket, isAF, isVF)}>
         <div className="min-w-max">
           {/* Spaltenüberschriften */}
           <div className="mb-2 flex items-center">
@@ -98,7 +100,7 @@ export function BracketDiagram({
             />
           </div>
         </div>
-      </div>
+      </ScrollToColumn>
       {/* Scroll-Hinweis: rechter Fade-Schatten (nur auf Mobile sichtbar) */}
       <div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-background to-transparent md:hidden" />
     </div>
