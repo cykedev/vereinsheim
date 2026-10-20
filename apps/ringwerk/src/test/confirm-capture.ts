@@ -34,6 +34,8 @@ export const confirms: Confirm[] = []
 export const buttons: Pressable[] = []
 /** Titel der Hinweise ohne Bestätigung (`NoticeDialog`) */
 export const notices: string[] = []
+/** ihre Texte, in derselben Reihenfolge */
+export const noticeTexts: string[] = []
 const inputs = new Map<string, (value: string) => void>()
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -66,6 +68,7 @@ export function render(element: ReactElement): string {
   confirms.length = 0
   buttons.length = 0
   notices.length = 0
+  noticeTexts.length = 0
   inputs.clear()
   return renderToStaticMarkup(element)
 }
@@ -81,6 +84,7 @@ export function reset() {
   confirms.length = 0
   buttons.length = 0
   notices.length = 0
+  noticeTexts.length = 0
   inputs.clear()
   transitions.length = 0
 }
@@ -197,8 +201,9 @@ export function decisionDialogStub() {
         createElement("button", { "data-confirm": true })
       )
     },
-    NoticeDialog: ({ title }: { title: string }) => {
+    NoticeDialog: ({ title, text }: { title: string; text: string }) => {
       notices.push(title)
+      noticeTexts.push(text)
       return null
     },
   }

@@ -75,6 +75,7 @@ export function CompetitionParticipantActions({
         guest={entry.isGuest}
         results={entry.seriesCount}
         team={entry.teamNumber}
+        withdrawn={entry.status === "WITHDRAWN"}
         isPending={actions.isPending}
         onConfirm={actions.handleUnenroll}
       />

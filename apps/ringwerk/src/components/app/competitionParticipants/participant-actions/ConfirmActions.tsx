@@ -44,6 +44,8 @@ interface UnenrollProps {
   guest: boolean
   results: number
   team: number | null
+  /** schon zurückgezogen: der Hinweis sagt das statt „nur zurückziehen“ */
+  withdrawn: boolean
   isPending: boolean
   onConfirm: () => void
 }
@@ -55,6 +57,7 @@ export function UnenrollAction({
   guest,
   results,
   team,
+  withdrawn,
   isPending,
   onConfirm,
 }: UnenrollProps) {
@@ -73,7 +76,11 @@ export function UnenrollAction({
         <Trash2 className="h-4 w-4" />
       </Button>
       {!guest && results > 0 ? (
-        <NoticeDialog {...unenrollBlocked({ name, results })} open={open} onOpenChange={setOpen} />
+        <NoticeDialog
+          {...unenrollBlocked({ name, results, withdrawn })}
+          open={open}
+          onOpenChange={setOpen}
+        />
       ) : (
         <DecisionDialog
           decision={unenroll({ name, guest, results, team })}

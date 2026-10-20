@@ -253,14 +253,31 @@ export function unenroll({
   }
 }
 
-/** Mitglied mit Ergebnissen: nur ein Hinweis, die Action lehnt ab (6b) */
-export function unenrollBlocked({ name, results }: { name: string; results: number }): Notice {
+/** Mitglied mit Ergebnissen: nur ein Hinweis, die Action lehnt ab (6b; schon zurückgezogen: 6c) */
+export function unenrollBlocked({
+  name,
+  results,
+  withdrawn = false,
+}: {
+  name: string
+  results: number
+  /** schon aus dem Wettbewerb zurückgezogen */
+  withdrawn?: boolean
+}): Notice {
+  const one = results === 1
+  const title = `${name} lässt sich nicht entfernen`
+  if (withdrawn)
+    return {
+      title,
+      text: one
+        ? `${name} ist aus diesem Wettbewerb zurückgezogen und hat schon 1 Ergebnis. Das Ergebnis zählt nicht mehr, bleibt aber gespeichert. Damit es nicht verloren geht, bleibt ${name} als zurückgezogen eingetragen.`
+        : `${name} ist aus diesem Wettbewerb zurückgezogen und hat schon ${results} Ergebnisse. Die Ergebnisse zählen nicht mehr, bleiben aber gespeichert. Damit sie nicht verloren gehen, bleibt ${name} als zurückgezogen eingetragen.`,
+    }
   return {
-    title: `${name} lässt sich nicht entfernen`,
-    text:
-      results === 1
-        ? `${name} hat in diesem Wettbewerb schon 1 Ergebnis. Damit es nicht verloren geht, lässt sich ${name} nur zurückziehen. Dann zählt das Ergebnis nicht mehr, bleibt aber gespeichert.`
-        : `${name} hat in diesem Wettbewerb schon ${results} Ergebnisse. Damit sie nicht verloren gehen, lässt sich ${name} nur zurückziehen. Dann zählen die Ergebnisse nicht mehr, bleiben aber gespeichert.`,
+    title,
+    text: one
+      ? `${name} hat in diesem Wettbewerb schon 1 Ergebnis. Damit es nicht verloren geht, lässt sich ${name} nur zurückziehen. Dann zählt das Ergebnis nicht mehr, bleibt aber gespeichert.`
+      : `${name} hat in diesem Wettbewerb schon ${results} Ergebnisse. Damit sie nicht verloren gehen, lässt sich ${name} nur zurückziehen. Dann zählen die Ergebnisse nicht mehr, bleiben aber gespeichert.`,
   }
 }
 

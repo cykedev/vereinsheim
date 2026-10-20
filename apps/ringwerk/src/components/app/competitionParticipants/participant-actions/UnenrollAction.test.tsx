@@ -1,7 +1,7 @@
 import { createElement as h } from "react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-import { confirms, notices, render, reset } from "@/test/confirm-capture"
+import { confirms, notices, noticeTexts, render, reset } from "@/test/confirm-capture"
 
 // Ein Mitglied mit Ergebnissen lässt sich nur zurückziehen (die Action lehnt das Entfernen ab). Der Papierkorb zeigt
 // dann den Hinweis und bietet nichts zum Bestätigen an. Ein Gast geht mit seinen Ergebnissen, dort fragt der Dialog.
@@ -17,7 +17,13 @@ vi.mock("@vereinsheim/ui/design2/decision-dialog", async () =>
 
 const { UnenrollAction } = await import("./ConfirmActions")
 
-const props = { name: "Anna Birke", team: null, isPending: false, onConfirm: vi.fn() }
+const props = {
+  name: "Anna Birke",
+  team: null,
+  withdrawn: false,
+  isPending: false,
+  onConfirm: vi.fn(),
+}
 
 beforeEach(() => {
   reset()
@@ -28,6 +34,7 @@ describe("Aus dem Wettbewerb entfernen", () => {
   it("Mitglied mit Ergebnissen: nur der Hinweis, keine Bestätigung", () => {
     render(h(UnenrollAction, { ...props, guest: false, results: 2 }))
     expect(notices).toEqual(["Anna Birke lässt sich nicht entfernen"])
+    expect(noticeTexts[0]).toContain("nur zurückziehen")
     expect(confirms).toHaveLength(0)
   })
 
@@ -37,6 +44,14 @@ describe("Aus dem Wettbewerb entfernen", () => {
     expect(confirms).toHaveLength(1)
     confirms[0].run()
     expect(props.onConfirm).toHaveBeenCalledTimes(1)
+  })
+
+  it("schon zurückgezogen mit Ergebnissen: Hinweis, keine Bestätigung", () => {
+    render(h(UnenrollAction, { ...props, guest: false, results: 2, withdrawn: true }))
+    expect(notices).toEqual(["Anna Birke lässt sich nicht entfernen"])
+    expect(noticeTexts[0]).toContain("ist aus diesem Wettbewerb zurückgezogen")
+    expect(noticeTexts[0]).not.toContain("nur zurückziehen")
+    expect(confirms).toHaveLength(0)
   })
 
   it("Gast mit Ergebnissen: eine Bestätigung", () => {

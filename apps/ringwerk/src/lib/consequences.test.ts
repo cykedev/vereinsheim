@@ -123,6 +123,8 @@ const NOTICES = [
   competitionDeleteBlocked({ name: "Rundenwettkampf 2026", participants: 6 }),
   unenrollBlocked({ name: "Anna Birke", results: 1 }),
   unenrollBlocked({ name: "Anna Birke", results: 2 }),
+  unenrollBlocked({ name: "Anna Birke", results: 1, withdrawn: true }),
+  unenrollBlocked({ name: "Anna Birke", results: 2, withdrawn: true }),
 ]
 
 const LABELS = [
@@ -291,6 +293,16 @@ describe("Wortlaut wie im Textbuch", () => {
     })
     expect(unenrollBlocked({ name: "Anna Birke", results: 1 }).text).toBe(
       "Anna Birke hat in diesem Wettbewerb schon 1 Ergebnis. Damit es nicht verloren geht, lässt sich Anna Birke nur zurückziehen. Dann zählt das Ergebnis nicht mehr, bleibt aber gespeichert."
+    )
+  })
+
+  it("6c schon zurückgezogen: kein „nur zurückziehen“", () => {
+    expect(unenrollBlocked({ name: "Anna Birke", results: 2, withdrawn: true })).toEqual({
+      title: "Anna Birke lässt sich nicht entfernen",
+      text: "Anna Birke ist aus diesem Wettbewerb zurückgezogen und hat schon 2 Ergebnisse. Die Ergebnisse zählen nicht mehr, bleiben aber gespeichert. Damit sie nicht verloren gehen, bleibt Anna Birke als zurückgezogen eingetragen.",
+    })
+    expect(unenrollBlocked({ name: "Anna Birke", results: 1, withdrawn: true }).text).toBe(
+      "Anna Birke ist aus diesem Wettbewerb zurückgezogen und hat schon 1 Ergebnis. Das Ergebnis zählt nicht mehr, bleibt aber gespeichert. Damit es nicht verloren geht, bleibt Anna Birke als zurückgezogen eingetragen."
     )
   })
 
