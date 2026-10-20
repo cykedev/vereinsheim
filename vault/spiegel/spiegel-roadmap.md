@@ -218,7 +218,9 @@ Ziel: **Mit Opt-in erscheint die Dienstagsscheibe von selbst in Spiegel; ohne Op
 
 Was zwischen den Features offen ist und keinen eigenen Abschnitt hat.
 
-- **Durchsicht von Treffsicher und Ringwerk nach drei Ebenen** (Rest von SP-4.3, bekommt einen eigenen Plan): erst
+- **Durchsicht von Treffsicher und Ringwerk nach drei Ebenen** (Rest von SP-4.3). **Gemessen am 20. Oktober 2026**
+  ([[treffsicher-durchsicht]], [[ringwerk-durchsicht]]); der Plan für die Befunde wartet auf Freigabe
+  (`plans/2026-10-20-durchsicht-drei-ebenen.md`). Ursprünglicher Auftrag: erst
   messen wie [[spiegel-durchsicht]] am Telefon (390 px, 772 px Inhalt über der Leiste): je Hauptseite Länge in
   Bildschirmen, Bedienelemente und Zahlen (gesamt und im ersten Bildschirm), doppelte Zahlen, Fachbegriffe, und die
   Kernfragen je App mit Urteil („Wie war meine letzte Einheit?“, „Werde ich besser?“, „Wo stehe ich in der Liga?“,
