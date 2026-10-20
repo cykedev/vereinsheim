@@ -7,6 +7,8 @@ import {
   bridgeRevoke,
   cardDelete,
   cardPurgeNow,
+  cardShare,
+  cardShareStop,
   consentConfirm,
   consentReject,
   consentRemove,
@@ -382,6 +384,16 @@ describe("Löschen und Papierkorb", () => {
     })
   })
 
+  it("löschen einer geteilten Scheibe: der Link geht nicht mehr, auch nicht nach dem Wiederherstellen", () => {
+    const d = cardDelete({ evening, shared: true })
+    wellFormed(d)
+    expect(d.happens).toEqual([
+      ...cardDelete({ evening }).happens,
+      "Der geteilte Link geht nicht mehr. Auch nach dem Wiederherstellen bleibt er aus.",
+    ])
+    expect({ ...d, happens: [] }).toEqual({ ...cardDelete({ evening }), happens: [] })
+  })
+
   it("endgültig löschen: sofort, Spiegel merkt sich nur, dass es sie gab", () => {
     const d = cardPurgeNow({ evening })
     wellFormed(d)
@@ -395,6 +407,48 @@ describe("Löschen und Papierkorb", () => {
       notHappening: ["An der Meyton-Anlage ändert sich nichts."],
       undo: "Nicht möglich.",
       confirmLabel: "Endgültig löschen",
+      destructive: true,
+    })
+  })
+})
+
+describe("Teilen", () => {
+  const evening = "Di 13.10.2026 · 19:12"
+
+  it("teilen: wer den Link hat, sieht diese eine Scheibe ohne Anmeldung, ohne Namen, ohne etwas zu ändern", () => {
+    const d = cardShare({ evening })
+    wellFormed(d)
+    expect(d).toEqual({
+      title: "Scheibe teilen?",
+      about: "Du teilst die Scheibe vom Di 13.10.2026 um 19:12.",
+      check: "Den Link bekommt nur, wem du ihn schickst. Wer ihn hat, kann ihn weitergeben.",
+      happens: [
+        "Spiegel erstellt einen Link zu dieser einen Scheibe.",
+        "Wer den Link öffnet, sieht die Scheibe mit allen Schüssen und Zahlen. Eine Anmeldung braucht es dafür nicht.",
+      ],
+      notHappening: [
+        "Dein Name und deine Sportpassnummer stehen nicht dabei.",
+        "Deine anderen Scheiben bleiben privat.",
+        "Wer den Link öffnet, kann nichts ändern und nichts löschen.",
+      ],
+      undo: "Hier auf der Seite der Scheibe jederzeit „Teilen beenden“. Danach geht der Link nicht mehr.",
+      confirmLabel: "Link erstellen",
+      destructive: false,
+    })
+  })
+
+  it("teilen beenden: der Link geht sofort nicht mehr, neu teilen gibt einen neuen", () => {
+    const d = cardShareStop({ evening })
+    wellFormed(d)
+    expect(d).toEqual({
+      title: "Teilen beenden?",
+      about: "Die Scheibe vom Di 13.10.2026 um 19:12 ist geteilt.",
+      happens: [
+        "Der Link geht sofort nicht mehr. Wer ihn öffnet, sieht einen Hinweis statt der Scheibe.",
+      ],
+      notHappening: ["Die Scheibe bleibt in Spiegel, wie sie ist."],
+      undo: "Neu teilen geht jederzeit. Das gibt einen neuen Link. Der alte bleibt aus.",
+      confirmLabel: "Teilen beenden",
       destructive: true,
     })
   })
@@ -452,7 +506,10 @@ describe("Schreibregeln", () => {
     ["nicht meine, mehrere", notMine({ evening, more: 35, sportpassId })],
     ["nicht meine, ohne Nummer", notMine({ evening, more: 0, sportpassId: null })],
     ["löschen", cardDelete({ evening })],
+    ["löschen, geteilt", cardDelete({ evening, shared: true })],
     ["endgültig löschen", cardPurgeNow({ evening })],
+    ["teilen", cardShare({ evening })],
+    ["teilen beenden", cardShareStop({ evening })],
     ["wieder zulassen", notMineLift({ who, sportpassId, cards: 2, consentActive: true })],
     [
       "wieder zulassen, Nummer nicht aktiv",

@@ -357,17 +357,63 @@ export function notMine({
 }
 
 /** eine eigene Scheibe in den Papierkorb */
-export function cardDelete({ evening }: { evening: string }): Decision {
+export function cardDelete({
+  evening,
+  shared = false,
+}: {
+  evening: string
+  /** die Scheibe ist geteilt: Löschen beendet das Teilen */
+  shared?: boolean
+}): Decision {
   return {
     title: "Scheibe löschen?",
     about: `Du löschst die Scheibe vom ${spoken(evening)}.`,
     happens: [
       "Sie liegt 30 Tage im Papierkorb (im Profil). So lange zählt sie nirgends mit, auch nicht in Rekorden und Verläufen.",
       "Danach löscht Spiegel sie endgültig, mit allen Schüssen. Sie kommt nicht von selbst wieder.",
+      ...(shared
+        ? ["Der geteilte Link geht nicht mehr. Auch nach dem Wiederherstellen bleibt er aus."]
+        : []),
     ],
     notHappening: ["Deine anderen Scheiben bleiben.", "An der Meyton-Anlage ändert sich nichts."],
     undo: "30 Tage lang im Papierkorb wiederherstellen.",
     confirmLabel: "Löschen",
+    destructive: true,
+  }
+}
+
+/** eine eigene Scheibe per Link teilen: wer den Link hat, sieht diese eine Scheibe ohne Anmeldung */
+export function cardShare({ evening }: { evening: string }): Decision {
+  return {
+    title: "Scheibe teilen?",
+    about: `Du teilst die Scheibe vom ${spoken(evening)}.`,
+    check: "Den Link bekommt nur, wem du ihn schickst. Wer ihn hat, kann ihn weitergeben.",
+    happens: [
+      "Spiegel erstellt einen Link zu dieser einen Scheibe.",
+      "Wer den Link öffnet, sieht die Scheibe mit allen Schüssen und Zahlen. Eine Anmeldung braucht es dafür nicht.",
+    ],
+    notHappening: [
+      "Dein Name und deine Sportpassnummer stehen nicht dabei.",
+      "Deine anderen Scheiben bleiben privat.",
+      "Wer den Link öffnet, kann nichts ändern und nichts löschen.",
+    ],
+    undo: "Hier auf der Seite der Scheibe jederzeit „Teilen beenden“. Danach geht der Link nicht mehr.",
+    confirmLabel: "Link erstellen",
+    destructive: false,
+  }
+}
+
+/** das Teilen einer Scheibe beenden: der Link geht sofort nicht mehr */
+export function cardShareStop({ evening }: { evening: string }): Decision {
+  return {
+    title: "Teilen beenden?",
+    about: `Die Scheibe vom ${spoken(evening)} ist geteilt.`,
+    happens: [
+      "Der Link geht sofort nicht mehr. Wer ihn öffnet, sieht einen Hinweis statt der Scheibe.",
+    ],
+    notHappening: ["Die Scheibe bleibt in Spiegel, wie sie ist."],
+    undo: "Neu teilen geht jederzeit. Das gibt einen neuen Link. Der alte bleibt aus.",
+    confirmLabel: "Teilen beenden",
     destructive: true,
   }
 }
