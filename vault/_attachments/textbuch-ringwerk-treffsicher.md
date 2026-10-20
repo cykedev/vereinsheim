@@ -1447,7 +1447,7 @@ rechnet, und meiden die Fälle, in denen es anders zeigt als rechnet.
 
 **Status: freigegeben am 20. Oktober 2026 (mit Nr. 7), Nr. 4, 5 und 7 oben in die Themen übernommen**
 
-Neue und geänderte Texte zu den Befunden oben (Plan `plans/2026-10-20-ringwerk-befunde-wertung.md`, E1–E6). Die
+Neue und geänderte Texte zu den Befunden oben (Plan „Ringwerk — Befunde aus dem Ablesen für die Hilfe“, E1–E6; umgesetzt, was gilt, steht in [[ringwerk]] und den Notes zu Faktor, Playoffs, Best-of und Tabelle). Die
 Häkchen „Finale: Gleichstand per Stechschuss“ und „Gleichstand per Stechschuss“ (Best-of) entfallen ohne neuen Text.
 
 ### 1. Faktor einer genutzten Disziplin ändern (Meldung beim Speichern)

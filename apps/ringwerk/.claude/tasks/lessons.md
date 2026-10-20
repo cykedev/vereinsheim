@@ -13,6 +13,9 @@ Format: Datum | Fehler | Regel die ihn verhindert
 
 ## Offen
 
+| 2026-10-20 | Der Prüfbestand sah den falsch markierten Sieger im Finale schon seit Wochen (L6c in drei Formaten zeigte „Unentschieden“ bei 1:0), der Abgleich nahm es als Ausgangsstand hin | Ein Ausgangsstand hält fest, was ist, nicht was richtig ist; beim Aufnehmen neuer Szenarien die Seiten fachlich lesen (Sieger, Zählung), nicht nur auf Gleichheit prüfen |
+| 2026-10-20 | Hört Ringwerk auf, eine Spalte zu schreiben (E1), ändert sich die Prüfsumme des Prüfbestands; `pruefen:vergleichen` verweigert dann den Vergleich mit dem Ausgangsstand | Alten Stand in einem zweiten Worktree auf demselben neuen Aufbau aufnehmen (`--referenz`) und dagegen vergleichen; den Unterschied der Daten mit `pruefdaten --zeilen` alt gegen neu belegen |
+| 2026-10-20 | Der korrigierte Teiler wurde an drei Wegen behoben, die Anzeige im Best-of (Label, Eingabedialog, PDF) rechnete weiter mit dem Teiler vom Ausdruck; erst das Review fand es, kein Szenario hatte ein gemischtes Best-of | Bei einer Regel „überall“ alle Aufrufer der Vergleichsfunktion suchen (`duelOutcome`, `determineOutcome`), nicht nur die im Plan genannten; die Seite eines Duells aus einer Funktion bauen (`bestOfDuelSide`, `duelSide`, `pairingOutcome`) |
 | 2026-10-20 | Das „?“ am Turnierbaum war vom Baum verdeckt (negative Marge der Zeile darüber), `ml-auto` am Knopf statt an seiner Hülle wirkte nicht; die Markup-Tests sahen beides nicht | Jedes „?“ klickt die Skriptprüfung im Browser (`help()` in `tools/pruefen.ts`); Layout-Klassen eines Wrappers gehören an die äußerste Hülle |
 | 2026-10-20 | Hilfetexte beschrieben den Normalfall; das Review fand Randfälle, in denen ein Satz nicht stimmt („offen“ bei drei Punktgleichen, Freilos zählt nicht in „S“, Faktor der Standarddisziplinen wird beim Start zurückgesetzt) | Jeden Satz eines Hilfetexts an einem Randfall der Funktion gegenprüfen, bevor er ins Textbuch geht |
 
