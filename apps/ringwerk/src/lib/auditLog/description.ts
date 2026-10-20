@@ -77,6 +77,14 @@ export function getAuditDescription(eventType: string, details: unknown): string
     case "PARTICIPANT_UNENROLLED":
       return d.name ? `${s(d.name)}${d.isGuest ? " · Gast" : ""}` : null
 
+    case "MIN_SERIES_EXEMPTION_CHANGED": {
+      if (!d.name) return null
+      const after = d.after as { exemptFromMinSeries?: boolean } | undefined
+      return after?.exemptFromMinSeries
+        ? `${s(d.name)} ohne Mindestzahl gewertet`
+        : `Für ${s(d.name)} wieder die Mindestzahl verlangt`
+    }
+
     default:
       return null
   }

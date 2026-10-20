@@ -74,6 +74,7 @@ import {
   revokeWithdrawal,
   updateStartNumber,
   updateParticipantDiscipline,
+  updateMinSeriesExemption,
 } from "@/lib/competitionParticipants/actions"
 
 const adminSession = { user: { id: "u1", role: "ADMIN" } }
@@ -704,5 +705,158 @@ describe("updateParticipantDiscipline", () => {
     getAuthSessionMock.mockResolvedValue(managerSession)
     const result = await updateParticipantDiscipline("cp1", "d2")
     expect(result).toEqual({ success: true })
+  })
+})
+
+// ─── Ohne Mindestzahl ─────────────────────────────────────────────────────────
+
+describe("enrollParticipant — ohne Mindestzahl", () => {
+  beforeEach(() => {
+    vi.resetAllMocks()
+    getAuthSessionMock.mockResolvedValue(adminSession)
+    competitionParticipantFindUniqueMock.mockResolvedValue(null)
+    competitionParticipantCreateMock.mockResolvedValue({})
+  })
+
+  const enrollWith = (
+    competition: Record<string, unknown>,
+    fields = { exemptFromMinSeries: "on" }
+  ) => {
+    competitionFindUniqueMock.mockResolvedValue({ ...activeCompetition, ...competition })
+    return enrollParticipant("c1", null, makeFormData({ participantId: "p1", ...fields }))
+  }
+  const savedExemption = () =>
+    competitionParticipantCreateMock.mock.calls[0][0].data.exemptFromMinSeries
+
+  it("speichert die Ausnahme in einer Saison mit Mindestzahl", async () => {
+    expect(await enrollWith({ type: "SEASON", minSeries: 20 })).toEqual({ success: true })
+    expect(savedExemption()).toBe(true)
+  })
+
+  it("speichert sie nicht in einer Saison ohne Mindestzahl", async () => {
+    await enrollWith({ type: "SEASON", minSeries: null })
+    expect(savedExemption()).toBe(false)
+  })
+
+  it("speichert sie nicht in einem Event", async () => {
+    await enrollWith({ type: "EVENT", minSeries: null })
+    expect(savedExemption()).toBe(false)
+  })
+
+  it("ohne Kästchen bleibt die Mindestzahl", async () => {
+    await enrollWith({ type: "SEASON", minSeries: 20 }, {} as { exemptFromMinSeries: string })
+    expect(savedExemption()).toBe(false)
+  })
+})
+
+describe("updateMinSeriesExemption", () => {
+  const seasonCp = (overrides: Record<string, unknown> = {}) => ({
+    id: "cp1",
+    competitionId: "c1",
+    participantId: "p1",
+    status: "ACTIVE",
+    exemptFromMinSeries: false,
+    participant: { firstName: "Anna", lastName: "Birke" },
+    competition: { type: "SEASON", status: "ACTIVE", minSeries: 20 },
+    ...overrides,
+  })
+
+  beforeEach(() => {
+    vi.resetAllMocks()
+    getAuthSessionMock.mockResolvedValue(adminSession)
+    competitionParticipantFindUniqueMock.mockResolvedValue(seasonCp())
+    transactionMock.mockResolvedValue([{}, {}])
+  })
+
+  it("liefert Fehler ohne Session", async () => {
+    getAuthSessionMock.mockResolvedValue(null)
+    expect(await updateMinSeriesExemption("cp1", true)).toEqual({ error: "Nicht angemeldet" })
+  })
+
+  it("liefert Fehler ohne Rechte", async () => {
+    getAuthSessionMock.mockResolvedValue(userSession)
+    expect(await updateMinSeriesExemption("cp1", true)).toEqual({ error: "Keine Berechtigung" })
+    expect(transactionMock).not.toHaveBeenCalled()
+  })
+
+  it("liefert Fehler, wenn die Einschreibung fehlt", async () => {
+    competitionParticipantFindUniqueMock.mockResolvedValue(null)
+    expect(await updateMinSeriesExemption("cp1", true)).toEqual({
+      error: "Einschreibung nicht gefunden.",
+    })
+  })
+
+  it.each([
+    ["einer Liga", { type: "LEAGUE", status: "ACTIVE", minSeries: null }],
+    ["einer Saison ohne Mindestzahl", { type: "SEASON", status: "ACTIVE", minSeries: null }],
+  ])("lehnt die Ausnahme in %s ab", async (_, competition) => {
+    competitionParticipantFindUniqueMock.mockResolvedValue(seasonCp({ competition }))
+    expect(await updateMinSeriesExemption("cp1", true)).toEqual({
+      error: "Eine Ausnahme von der Mindestzahl gibt es nur in einer Saison mit Mindestzahl.",
+    })
+    expect(transactionMock).not.toHaveBeenCalled()
+  })
+
+  it("lehnt sie in einer abgeschlossenen Saison ab", async () => {
+    competitionParticipantFindUniqueMock.mockResolvedValue(
+      seasonCp({ competition: { type: "SEASON", status: "COMPLETED", minSeries: 20 } })
+    )
+    expect(await updateMinSeriesExemption("cp1", true)).toEqual({
+      error: "Die Saison ist nicht mehr aktiv.",
+    })
+    expect(transactionMock).not.toHaveBeenCalled()
+  })
+
+  it("lehnt sie bei einer zurückgezogenen Einschreibung ab", async () => {
+    competitionParticipantFindUniqueMock.mockResolvedValue(seasonCp({ status: "WITHDRAWN" }))
+    expect(await updateMinSeriesExemption("cp1", true)).toEqual({
+      error: "Nur bei aktiven Teilnehmern möglich.",
+    })
+    expect(transactionMock).not.toHaveBeenCalled()
+  })
+
+  it("schreibt nichts, wenn sich nichts ändert", async () => {
+    competitionParticipantFindUniqueMock.mockResolvedValue(seasonCp({ exemptFromMinSeries: true }))
+    expect(await updateMinSeriesExemption("cp1", true)).toEqual({ success: true })
+    expect(transactionMock).not.toHaveBeenCalled()
+    expect(auditLogCreateMock).not.toHaveBeenCalled()
+  })
+
+  it("setzt die Ausnahme mit Protokolleintrag und aktualisiert die Seiten", async () => {
+    expect(await updateMinSeriesExemption("cp1", true)).toEqual({ success: true })
+    expect(competitionParticipantUpdateMock).toHaveBeenCalledWith({
+      where: { id: "cp1" },
+      data: { exemptFromMinSeries: true },
+    })
+    expect(auditLogCreateMock).toHaveBeenCalledWith({
+      data: {
+        eventType: "MIN_SERIES_EXEMPTION_CHANGED",
+        entityType: "COMPETITION_PARTICIPANT",
+        entityId: "cp1",
+        userId: "u1",
+        competitionId: "c1",
+        details: {
+          participantId: "p1",
+          name: "Anna Birke",
+          before: { exemptFromMinSeries: false },
+          after: { exemptFromMinSeries: true },
+        },
+      },
+    })
+    expect(transactionMock).toHaveBeenCalledTimes(1)
+    expect(revalidatePathMock).toHaveBeenCalledWith("/competitions/c1/participants")
+    expect(revalidatePathMock).toHaveBeenCalledWith("/competitions/c1/standings")
+    expect(revalidatePathMock).toHaveBeenCalledWith("/competitions/c1/series")
+    expect(revalidateTagMock).toHaveBeenCalledWith("public-pdf:c1", "max")
+  })
+
+  it("nimmt die Ausnahme zurück, auch als MANAGER", async () => {
+    getAuthSessionMock.mockResolvedValue(managerSession)
+    competitionParticipantFindUniqueMock.mockResolvedValue(seasonCp({ exemptFromMinSeries: true }))
+    expect(await updateMinSeriesExemption("cp1", false)).toEqual({ success: true })
+    expect(competitionParticipantUpdateMock).toHaveBeenCalledWith({
+      where: { id: "cp1" },
+      data: { exemptFromMinSeries: false },
+    })
   })
 })

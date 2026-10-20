@@ -163,6 +163,16 @@ export function formatAuditDetails(eventType: string, details: unknown): DetailR
       rows.push({ label: "Name", value: str(d.name) })
       if (d.isGuest) rows.push({ label: "Gast", value: "ja" })
       break
+
+    case "MIN_SERIES_EXEMPTION_CHANGED": {
+      const after = d.after as { exemptFromMinSeries?: boolean } | undefined
+      rows.push({ label: "Name", value: str(d.name) })
+      rows.push({
+        label: "Mindestzahl",
+        value: after?.exemptFromMinSeries ? "keine (ab der ersten Serie)" : "wie alle anderen",
+      })
+      break
+    }
   }
 
   return rows

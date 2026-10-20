@@ -34,6 +34,7 @@ export type AuditEventType =
   | "SCHEDULE_REGENERATED"
   | "PLAYOFF_ROUND_CREATED"
   | "PARTICIPANT_UNENROLLED"
+  | "MIN_SERIES_EXEMPTION_CHANGED"
 
 export const AUDIT_EVENT_LABELS: Record<string, string> = {
   PARTICIPANT_WITHDRAWN: "Teilnehmer zurückgezogen",
@@ -71,6 +72,7 @@ export const AUDIT_EVENT_LABELS: Record<string, string> = {
   SCHEDULE_REGENERATED: "Spielplan neu generiert",
   PLAYOFF_ROUND_CREATED: "Playoff-Runde angelegt",
   PARTICIPANT_UNENROLLED: "Teilnehmer aus Wettbewerb entfernt",
+  MIN_SERIES_EXEMPTION_CHANGED: "Mindestzahl geändert",
 }
 
 export type AuditEventCategory = "participant" | "result" | "playoff" | "destructive" | "admin"
@@ -111,6 +113,7 @@ export const AUDIT_EVENT_CATEGORY: Record<string, AuditEventCategory> = {
   SCHEDULE_REGENERATED: "destructive",
   PLAYOFF_ROUND_CREATED: "playoff",
   PARTICIPANT_UNENROLLED: "participant",
+  MIN_SERIES_EXEMPTION_CHANGED: "participant",
 }
 
 // Detail-Formatierung liegt in ./formatDetails und ./description; hier

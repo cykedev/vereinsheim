@@ -4,6 +4,7 @@ import { z } from "zod"
 import { db } from "@/lib/db"
 import { getAuthSession, canManage } from "@/lib/auth-helpers"
 import type { ActionResult } from "@/lib/types"
+import { offersMinSeriesExemption } from "@/lib/scoring/calculateSeasonStandings"
 import { revalidateCompetitionParticipantPaths } from "./_shared"
 
 const EnrollSchema = z
@@ -48,6 +49,12 @@ const EnrollSchema = z
       .nullable()
       .optional()
       .transform((v) => v === "true" || v === "on"),
+    // Saison mit Mindestzahl: in der Wertung ab der ersten Serie (etwa Jugend)
+    exemptFromMinSeries: z
+      .string()
+      .nullable()
+      .optional()
+      .transform((v) => v === "true" || v === "on"),
   })
   .superRefine((data, ctx) => {
     if (data.isGuest) {
@@ -80,7 +87,14 @@ export async function enrollParticipant(
 
   const competition = await db.competition.findUnique({
     where: { id: competitionId },
-    select: { id: true, status: true, disciplineId: true, teamSize: true },
+    select: {
+      id: true,
+      status: true,
+      type: true,
+      disciplineId: true,
+      teamSize: true,
+      minSeries: true,
+    },
   })
   if (!competition) return { error: "Wettbewerb nicht gefunden." }
   if (competition.status !== "ACTIVE") {
@@ -95,8 +109,13 @@ export async function enrollParticipant(
     disciplineId: formData.get("disciplineId"),
     teamId: formData.get("teamId"),
     newTeam: formData.get("newTeam"),
+    exemptFromMinSeries: formData.get("exemptFromMinSeries"),
   })
   if (!parsed.success) return { error: parsed.error.flatten().fieldErrors }
+
+  // Die Ausnahme wirkt nur in einer Saison mit Mindestzahl; sonst wird sie nicht gespeichert.
+  const exemptFromMinSeries =
+    offersMinSeriesExemption(competition) && parsed.data.exemptFromMinSeries
 
   // Bei gemischtem Wettbewerb (disciplineId = null) muss Disziplin gewählt werden
   if (!competition.disciplineId && !parsed.data.disciplineId) {
@@ -195,6 +214,7 @@ export async function enrollParticipant(
         participantId: parsed.data.participantId!,
         startNumber: parsed.data.startNumber,
         isGuest: false,
+        exemptFromMinSeries,
         disciplineId: parsed.data.disciplineId,
         eventTeamId: resolvedTeamId,
       },

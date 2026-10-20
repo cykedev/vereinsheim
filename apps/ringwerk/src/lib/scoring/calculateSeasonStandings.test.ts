@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest"
-import { calculateSeasonStandings, requiredSeries } from "./calculateSeasonStandings"
+import {
+  calculateSeasonStandings,
+  offersMinSeriesExemption,
+  requiredSeries,
+} from "./calculateSeasonStandings"
 import { seasonPositions, sortSeasonStandings } from "./sortSeasonStandings"
 import type { SeasonSeriesItem } from "@/lib/series/types"
 
@@ -319,6 +323,13 @@ describe("calculateSeasonStandings", () => {
   })
 
   describe("Ohne Mindestzahl (Ausnahme an der Einschreibung)", () => {
+    it("bietet die Ausnahme nur in einer Saison mit Mindestzahl an", () => {
+      expect(offersMinSeriesExemption({ type: "SEASON", minSeries: 20 })).toBe(true)
+      expect(offersMinSeriesExemption({ type: "SEASON", minSeries: null })).toBe(false)
+      expect(offersMinSeriesExemption({ type: "EVENT", minSeries: 20 })).toBe(false)
+      expect(offersMinSeriesExemption({ type: "LEAGUE", minSeries: null })).toBe(false)
+    })
+
     it("liefert die Mindestzahl je Zeile: keine, 1 mit Ausnahme, sonst die des Wettbewerbs", () => {
       expect(requiredSeries(null, false)).toBeNull()
       expect(requiredSeries(null, true)).toBeNull()

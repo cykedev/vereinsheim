@@ -1,6 +1,6 @@
 import { calculateCorrectedTeiler, effectiveTeilerFaktor } from "./calculateScore"
 import type { SeasonSeriesItem } from "@/lib/series/types"
-import type { ScoringType } from "@/generated/prisma/client"
+import type { CompetitionType, ScoringType } from "@/generated/prisma/client"
 
 export type SeasonStandingsEntry = {
   participantId: string
@@ -36,6 +36,17 @@ type ParticipantInput = {
 export function requiredSeries(minSeries: number | null, exempt: boolean): number | null {
   if (minSeries === null) return null
   return exempt ? 1 : minSeries
+}
+
+/**
+ * Die Ausnahme wirkt nur in einer Saison mit Mindestzahl. Nur dort bieten Einschreiben und
+ * Teilnehmerverwaltung sie an, und nur dort speichern die Actions sie.
+ */
+export function offersMinSeriesExemption(competition: {
+  type: CompetitionType
+  minSeries: number | null
+}): boolean {
+  return competition.type === "SEASON" && competition.minSeries !== null
 }
 
 /**

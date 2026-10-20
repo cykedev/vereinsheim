@@ -46,3 +46,33 @@ describe("Protokoll: Spielplan, Playoff-Runde, Entfernen", () => {
     ])
   })
 })
+
+describe("Protokoll: Mindestzahl geändert", () => {
+  const set = { name: "Anna Birke", after: { exemptFromMinSeries: true } }
+  const unset = { name: "Anna Birke", after: { exemptFromMinSeries: false } }
+
+  it("Bezeichnung und Art wie im Textbuch", () => {
+    expect(AUDIT_EVENT_LABELS.MIN_SERIES_EXEMPTION_CHANGED).toBe("Mindestzahl geändert")
+    expect(AUDIT_EVENT_CATEGORY.MIN_SERIES_EXEMPTION_CHANGED).toBe("participant")
+  })
+
+  it("darunter: was sich geändert hat", () => {
+    expect(getAuditDescription("MIN_SERIES_EXEMPTION_CHANGED", set)).toBe(
+      "Anna Birke ohne Mindestzahl gewertet"
+    )
+    expect(getAuditDescription("MIN_SERIES_EXEMPTION_CHANGED", unset)).toBe(
+      "Für Anna Birke wieder die Mindestzahl verlangt"
+    )
+  })
+
+  it("Details", () => {
+    expect(formatAuditDetails("MIN_SERIES_EXEMPTION_CHANGED", set)).toEqual([
+      { label: "Name", value: "Anna Birke" },
+      { label: "Mindestzahl", value: "keine (ab der ersten Serie)" },
+    ])
+    expect(formatAuditDetails("MIN_SERIES_EXEMPTION_CHANGED", unset)).toEqual([
+      { label: "Name", value: "Anna Birke" },
+      { label: "Mindestzahl", value: "wie alle anderen" },
+    ])
+  })
+})

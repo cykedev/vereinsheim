@@ -4,4 +4,8 @@
 export { enrollParticipant } from "./enroll"
 export { unenrollParticipant } from "./unenroll"
 export { withdrawParticipant, revokeWithdrawal } from "./withdraw"
-export { updateStartNumber, updateParticipantDiscipline } from "./updateMeta"
+export {
+  updateStartNumber,
+  updateParticipantDiscipline,
+  updateMinSeriesExemption,
+} from "./updateMeta"
