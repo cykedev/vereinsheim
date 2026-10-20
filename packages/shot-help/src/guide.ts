@@ -14,7 +14,7 @@ export const READING_GUIDE: readonly GuideItem[] = [
   },
   {
     title: "„Sicher“ und „kann Zufall sein“",
-    text: "„Sicher“ heißt: Reiner Zufall brächte ein so deutliches Ergebnis nur in 5 von 100 Fällen. Weil auf einer Scheibe mehrere Tests laufen, zeigt trotzdem etwa jede sechste ganz normale Scheibe irgendwo ein „sicher versetzt“, „gestreckt“, „klar“ oder einen Ausreißer. „Kann Zufall sein“ heißt nicht „gibt es nicht“, sondern: Diese Schüsse reichen nicht, um es zu zeigen oder auszuschließen. Mehr Schüsse oder mehrere Scheiben klären es. „Passt“ an der Lage heißt dasselbe: kein Versatz belegt. Auf den Karten heißt das auch „nicht klar“ oder „kein Versatz nachweisbar“; es ist ein ehrliches Ergebnis, kein Fehler.",
+    text: "„Sicher“ heißt: Reiner Zufall brächte ein so deutliches Ergebnis nur in 5 von 100 Fällen. Weil auf einer Scheibe mehrere Tests laufen, zeigt trotzdem etwa jede fünfte ganz normale Scheibe irgendwo ein „sicher versetzt“, „gestreckt“, „klar“ oder einen Ausreißer. „Kann Zufall sein“ heißt nicht „gibt es nicht“, sondern: Diese Schüsse reichen nicht, um es zu zeigen oder auszuschließen. Mehr Schüsse oder mehrere Scheiben klären es. „Passt“ an der Lage heißt dasselbe: kein Versatz belegt. Auf den Karten heißt das auch „nicht klar“ oder „kein Versatz nachweisbar“; es ist ein ehrliches Ergebnis, kein Fehler.",
   },
   {
     title: "Ganze Ringe oder Zehntel",
@@ -50,7 +50,7 @@ export const VIEW_HELP: readonly ViewHelp[] = [
     id: "beobachtungen",
     title: "Beobachtungen in Worten",
     what: "Die wichtigsten Befunde dieser Scheibe als Sätze, gebildet aus denselben Zahlen wie die Karten.",
-    read: "„Sicher“ oder „klar“ steht nur, wenn ein Test es zeigt: Reiner Zufall brächte das nur in 5 von 100 Fällen. Sonst sagt der Satz ehrlich, dass die Schüsse nicht reichen. Weil mehrere Tests laufen, trifft es bei etwa jeder sechsten ganz normalen Scheibe einmal zufällig zu.",
+    read: "„Sicher“ oder „klar“ steht nur, wenn ein Test es zeigt: Reiner Zufall brächte das nur in 5 von 100 Fällen. Sonst sagt der Satz ehrlich, dass die Schüsse nicht reichen. Weil mehrere Tests laufen, trifft es bei etwa jeder fünften ganz normalen Scheibe einmal zufällig zu.",
   },
 ]
 

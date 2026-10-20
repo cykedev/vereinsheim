@@ -126,7 +126,7 @@ const out = (id: string, text: string) => lines.push(`${id.padEnd(4)} ${text}`)
 out("B0", `innerhalb σ ${share(1 - Math.exp(-0.5), 1)}, innerhalb 2σ ${share(1 - Math.exp(-2), 1)}`)
 
 // B1: ganz normale Scheiben (rund, zentriert, ohne Trend, n Wertungsschüsse wie am Ausdruck): mindestens ein
-// Befund unter „sicher versetzt“, „gestreckt“, Ausreißer, Trend klar
+// Befund unter „sicher versetzt“, „gestreckt“, Ausreißer, Trend klar, Ermüdung klar
 for (const n of [20, 40, 60]) {
   let hits = 0
   const times = 20_000
@@ -136,7 +136,8 @@ for (const n of [20, 40, 60]) {
       mpiConfidence(match)?.real === true ||
       groupShape(match)?.elongated === true ||
       (outliers(match)?.flagged.length ?? 0) > 0 ||
-      cardTrend(match, "decimal")?.clear === true
+      cardTrend(match, "decimal")?.clear === true ||
+      fatigue(match, "decimal")?.clear === true
     if (found) hits++
   })
   out(
@@ -521,6 +522,31 @@ const perShot = metric("result.decimalMean")
     "B20",
     `Scheiben im Formband (60 Scheiben, ab der zehnten): Median ${pct(quantile(inside, 0.5))}, 95 % zwischen ${pct(quantile(inside, 0.025))} und ${pct(quantile(inside, 0.975))}`
   )
+}
+
+// B21: Ermüdung (Mann-Whitney, letzte zehn gegen erste zehn): Fehlalarm ohne Effekt, Trennschärfe, wenn σ der
+// letzten zehn Schuss um 60 % größer ist
+for (const [label, base, seed] of [
+  ["LG σ 1,5 mm", LG, 21011],
+  ["LP σ 15 mm", LP, 21010],
+] as const) {
+  for (const n of [20, 40]) {
+    const counts = { decimal: [0, 0], rings: [0, 0] }
+    repeat(5_000, seed + n, (rand) => {
+      const steady = card(rand, { ...base, n })
+      const tiring = card(rand, { ...base, n, scale: (i) => (i >= n - 10 ? 1.6 : 1) })
+      for (const scoring of ["decimal", "rings"] as const) {
+        if (fatigue(steady, scoring)?.clear) counts[scoring][0]++
+        if (fatigue(tiring, scoring)?.direction === "down") counts[scoring][1]++
+      }
+    })
+    out(
+      "B21",
+      `Ermüdung ${label}, ${n} Schuss: Fehlalarm Zehntel ${share(counts.decimal[0], 5_000)}, ganze Ringe ` +
+        `${share(counts.rings[0], 5_000)}; Nachlassen erkannt Zehntel ${share(counts.decimal[1], 5_000)}, ` +
+        `ganze Ringe ${share(counts.rings[1], 5_000)}`
+    )
+  }
 }
 
 process.stdout.write(`${lines.join("\n")}\n`)
