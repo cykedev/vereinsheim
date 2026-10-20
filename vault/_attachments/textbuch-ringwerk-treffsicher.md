@@ -1308,8 +1308,8 @@ Ort: Überschrift „Tabelle“ über der Tabelle einer Liga mit Hin- und Rückr
   dann der kleinere Teiler. Beim Teiler gewinnt der kleinere Teiler, dann mehr Ringe.
 - **So liest du es:** „Sp.“ sind gespielte Duelle. „S“, „U“ und „N“ sind Siege, Unentschieden und Niederlagen. Bei
   gleichen Punkten zählen zuerst die Punkte aus den Duellen dieser Teilnehmer untereinander. Dann zählt der beste
-  Ringteiler aus allen Duellen, bei Wertung nach Ringen die meisten Ringe. Ist auch das gleich, teilen sich beide den
-  Platz.
+  Ringteiler aus allen Duellen („Best. RT“), bei Wertung nach Ringen die meisten Ringe („Best. Ringe“). Ist auch das
+  gleich, teilen sich beide den Platz.
 - **Vorsicht:** Paarungen mit einem zurückgezogenen Teilnehmer zählen nicht. Zurückgezogene stehen durchgestrichen am
   Ende.
 
@@ -1442,7 +1442,7 @@ rechnet, und meiden die Fälle, in denen es anders zeigt als rechnet.
 
 ## Ringwerk: Wertung richtig anzeigen (B1–B7)
 
-**Status: freigegeben am 20. Oktober 2026 (mit Nr. 7)**
+**Status: freigegeben am 20. Oktober 2026 (mit Nr. 7), Nr. 4, 5 und 7 oben in die Themen übernommen**
 
 Neue und geänderte Texte zu den Befunden oben (Plan `plans/2026-10-20-ringwerk-befunde-wertung.md`, E1–E6). Die
 Häkchen „Finale: Gleichstand per Stechschuss“ und „Gleichstand per Stechschuss“ (Best-of) entfallen ohne neuen Text.

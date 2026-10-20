@@ -63,7 +63,7 @@ export const HELP_TOPICS = {
     short:
       "Punkte zählen zuerst. Bei Gleichstand entscheiden der direkte Vergleich und dann der beste Ringteiler.",
     what: "Jede Paarung ist ein Duell über eine Serie. Ein Sieg bringt 2 Punkte, ein Unentschieden 1 Punkt, eine Niederlage keinen. Ein Freilos bringt 2 Punkte. In „Sp.“ und „S“ zählt es nicht mit. Wer das Duell gewinnt, hängt von der Wertung ab. Beim Ringteiler gewinnt der kleinere, bei Gleichstand gewinnen mehr Ringe, dann der kleinere Teiler. Bei Ringen gewinnen mehr Ringe, dann der kleinere Teiler. Beim Teiler gewinnt der kleinere Teiler, dann mehr Ringe.",
-    read: "„Sp.“ sind gespielte Duelle. „S“, „U“ und „N“ sind Siege, Unentschieden und Niederlagen. Bei gleichen Punkten zählen zuerst die Punkte aus den Duellen dieser Teilnehmer untereinander. Dann zählt der beste Ringteiler aus allen Duellen, bei Wertung nach Ringen die meisten Ringe. Ist auch das gleich, teilen sich beide den Platz.",
+    read: "„Sp.“ sind gespielte Duelle. „S“, „U“ und „N“ sind Siege, Unentschieden und Niederlagen. Bei gleichen Punkten zählen zuerst die Punkte aus den Duellen dieser Teilnehmer untereinander. Dann zählt der beste Ringteiler aus allen Duellen („Best. RT“), bei Wertung nach Ringen die meisten Ringe („Best. Ringe“). Ist auch das gleich, teilen sich beide den Platz.",
     caution:
       "Paarungen mit einem zurückgezogenen Teilnehmer zählen nicht. Zurückgezogene stehen durchgestrichen am Ende.",
   },

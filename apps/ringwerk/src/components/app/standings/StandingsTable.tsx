@@ -1,6 +1,6 @@
+import type { ScoringMode, ScoringType } from "@/generated/prisma/client"
 import type { StandingRow } from "@/lib/standings/queries"
-import { hasLeagueResult } from "@/lib/standings/standingsSort"
-import { formatDecimal1 } from "@/lib/series/scoring-format"
+import { hasLeagueResult, leagueTieColumn } from "@/lib/standings/standingsSort"
 import { EmptyState } from "@vereinsheim/ui/empty-state"
 import { RankBadge } from "@/components/ui/rank-badge"
 import { HelpMark } from "@/components/app/help/HelpMark"
@@ -16,6 +16,8 @@ import {
 
 interface Props {
   rows: StandingRow[]
+  scoringMode: ScoringMode
+  scoringType: ScoringType
   /** „?“ am Spaltenkopf; die Vorschau auf Start und in der Liste zeigt keine Hilfe */
   help?: boolean
 }
@@ -26,7 +28,8 @@ const ROW_HIGHLIGHT: Record<number, string> = {
   3: "bg-rank-3/10",
 }
 
-export function StandingsTable({ rows, help = true }: Props) {
+export function StandingsTable({ rows, scoringMode, scoringType, help = true }: Props) {
+  const tie = leagueTieColumn(scoringMode)
   if (rows.length === 0) {
     return <EmptyState title="Keine Teilnehmer eingeschrieben" />
   }
@@ -57,8 +60,8 @@ export function StandingsTable({ rows, help = true }: Props) {
             <TableHead className="px-2 py-2.5 text-center font-semibold sm:px-4">Pkt.</TableHead>
             <TableHead className="hidden px-4 py-2.5 text-right font-medium text-muted-foreground sm:table-cell">
               <span className="inline-flex items-center justify-end gap-1">
-                Best. RT
-                {help && <HelpMark id="ringteiler" />}
+                {tie.label}
+                {help && tie.help && <HelpMark id={tie.help} />}
               </span>
             </TableHead>
           </TableRow>
@@ -122,10 +125,10 @@ export function StandingsTable({ rows, help = true }: Props) {
                 </TableCell>
                 <TableCell className="hidden px-4 py-3 text-right font-mono text-muted-foreground tabular-nums sm:table-cell">
                   {/* ein Zurückgezogener hat keine gewerteten Duelle: dort „–“ ohne Grund wie im PDF */}
-                  {row.bestRingteiler === null && !row.withdrawn ? (
+                  {tie.value(row) === null && !row.withdrawn ? (
                     <Missing kind="noDuel" className="font-sans" />
                   ) : (
-                    formatDecimal1(row.bestRingteiler)
+                    tie.format(tie.value(row), scoringType)
                   )}
                 </TableCell>
               </TableRow>

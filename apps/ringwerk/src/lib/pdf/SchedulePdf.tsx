@@ -4,7 +4,7 @@ import type { ScoringMode, ScoringType } from "@/generated/prisma/client"
 import { pairingOutcome } from "@/lib/matchups/outcome"
 import type { MatchResultSummary, MatchupListItem } from "@/lib/matchups/types"
 import type { StandingRow } from "@/lib/standings/calculateStandings"
-import { hasLeagueResult } from "@/lib/standings/standingsSort"
+import { hasLeagueResult, leagueTieColumn } from "@/lib/standings/standingsSort"
 import { formatRings, formatDecimal1 } from "@/lib/series/scoring-format"
 import { styles } from "@/lib/pdf/styles"
 import { HeaderMeta } from "@/lib/pdf/HeaderMeta"
@@ -88,7 +88,16 @@ function PdfHeader({
 // Spaltenbreiten (in pt, Summe ≤ 515pt bei A4 portrait mit 40pt Rand je Seite)
 const W = { rank: 28, name: 165, sp: 28, s: 28, u: 28, n: 28, pkt: 32, rt: 50 }
 
-function StandingsSection({ rows }: { rows: StandingRow[] }): ReactElement {
+function StandingsSection({
+  rows,
+  scoringMode,
+  scoringType,
+}: {
+  rows: StandingRow[]
+  scoringMode: ScoringMode
+  scoringType: ScoringType
+}): ReactElement {
+  const tie = leagueTieColumn(scoringMode)
   return (
     <View>
       <Text style={styles.sectionTitle}>Tabelle</Text>
@@ -102,7 +111,7 @@ function StandingsSection({ rows }: { rows: StandingRow[] }): ReactElement {
           <Text style={[styles.tableHeaderCell, { width: W.u }]}>U</Text>
           <Text style={[styles.tableHeaderCell, { width: W.n }]}>N</Text>
           <Text style={[styles.tableHeaderCell, { width: W.pkt }]}>Pkt.</Text>
-          <Text style={[styles.tableHeaderCell, { width: W.rt }]}>Best. RT</Text>
+          <Text style={[styles.tableHeaderCell, { width: W.rt }]}>{tie.label}</Text>
         </View>
 
         {/* Zeilen */}
@@ -146,7 +155,7 @@ function StandingsSection({ rows }: { rows: StandingRow[] }): ReactElement {
               <Text style={[styles.tableCell, { width: W.n }]}>{row.losses}</Text>
               <Text style={[styles.tableCellBold, { width: W.pkt }]}>{row.points}</Text>
               <Text style={[styles.tableCell, { width: W.rt }]}>
-                {formatDecimal1(row.bestRingteiler)}
+                {tie.format(tie.value(row), scoringType)}
               </Text>
             </View>
           )
@@ -348,7 +357,9 @@ export function SchedulePdf({
         />
 
         {/* Tabelle */}
-        {standings.length > 0 && <StandingsSection rows={standings} />}
+        {standings.length > 0 && (
+          <StandingsSection rows={standings} scoringMode={scoringMode} scoringType={scoringType} />
+        )}
 
         {/* Hinrunde */}
         {firstLeg.length > 0 && (

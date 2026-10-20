@@ -137,7 +137,11 @@ export default async function CompetitionSchedulePage({ params }: Props) {
                 <h2 className="text-base font-semibold">Tabelle</h2>
                 <HelpMark id="league-table" className="ml-auto" />
               </div>
-              <StandingsTable rows={classicStandings} />
+              <StandingsTable
+                rows={classicStandings}
+                scoringMode={competition.scoringMode}
+                scoringType={scoringType}
+              />
             </div>
           )}
     </div>

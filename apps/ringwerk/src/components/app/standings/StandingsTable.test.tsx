@@ -24,8 +24,8 @@ function row(lastName: string, rank: number, played: number, byes = 0): Standing
   }
 }
 
-const render = (rows: StandingRow[]) =>
-  renderToStaticMarkup(createElement(StandingsTable, { rows }))
+const render = (rows: StandingRow[], scoringMode: "RINGTEILER" | "RINGS" = "RINGTEILER") =>
+  renderToStaticMarkup(createElement(StandingsTable, { rows, scoringMode, scoringType: "WHOLE" }))
 
 describe("StandingsTable — Podiumsfarben", () => {
   it("ohne Ergebnis: Platz 1 für alle, aber neutral und ohne Zeilen-Highlight", () => {
@@ -62,8 +62,29 @@ describe("StandingsTable — Hilfe und „–“ mit Grund", () => {
 
   it("in der Vorschau ohne „?“", () => {
     const html = renderToStaticMarkup(
-      createElement(StandingsTable, { rows: [row("Alpha", 1, 1)], help: false })
+      createElement(StandingsTable, {
+        rows: [row("Alpha", 1, 1)],
+        scoringMode: "RINGTEILER",
+        scoringType: "WHOLE",
+        help: false,
+      })
     )
     expect(html).not.toContain("data-help")
+  })
+})
+
+describe("StandingsTable — Spalte bei Gleichstand", () => {
+  it("Wertung nach Ringen: „Best. Ringe“ mit den meisten Ringen, ohne „?“", () => {
+    const html = render([row("Alpha", 1, 1)], "RINGS")
+    expect(html).toContain("Best. Ringe")
+    expect(html).not.toContain("Best. RT")
+    expect(html).toContain(">95<")
+    expect(html).not.toContain('data-help="ringteiler"')
+  })
+
+  it("Wertung nach Ringteiler: „Best. RT“ mit dem besten Ringteiler", () => {
+    const html = render([row("Alpha", 1, 1)])
+    expect(html).toContain("Best. RT")
+    expect(html).toContain(">10,0<")
   })
 })

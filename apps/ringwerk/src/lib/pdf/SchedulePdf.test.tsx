@@ -118,3 +118,54 @@ describe("pairingWinner — markierter Sieger im Spielplan", () => {
     expect(pairingWinner(result(95, 20, 25), result(95, 20, 25), "RINGTEILER")).toBeNull()
   })
 })
+
+describe("SchedulePdf — Spalte bei Gleichstand", () => {
+  const standings = [
+    {
+      participantId: "p1",
+      firstName: "Anna",
+      lastName: "Schuetz",
+      withdrawn: false,
+      played: 2,
+      wins: 2,
+      draws: 0,
+      losses: 0,
+      byes: 0,
+      points: 4,
+      bestRingteiler: 9.5,
+      bestRings: 97,
+      rank: 1,
+    },
+  ]
+  const props = (scoringMode: SchedulePdfProps["scoringMode"]): SchedulePdfProps => ({
+    leagueName: "Bezirksliga 2026",
+    disciplineName: "Luftgewehr",
+    scoringType: "WHOLE",
+    scoringMode,
+    standings,
+    matchups: [],
+    firstLegDeadline: null,
+    secondLegDeadline: null,
+    generatedAt: new Date("2026-05-24T10:00:00.000Z"),
+    displayTimeZone: "Europe/Berlin",
+  })
+  const text = async (scoringMode: SchedulePdfProps["scoringMode"]) =>
+    extractPdfText(
+      await renderToBuffer(
+        createElement(SchedulePdf, props(scoringMode)) as ReactElement<DocumentProps>
+      )
+    )
+
+  it("Wertung nach Ringen: „Best. Ringe“ mit den meisten Ringen", async () => {
+    const pdf = await text("RINGS")
+    expect(pdf).toContain("Best. Ringe")
+    expect(pdf).not.toContain("Best. RT")
+    expect(pdf).not.toContain("9,5")
+  })
+
+  it("Wertung nach Ringteiler: „Best. RT“ mit dem besten Ringteiler", async () => {
+    const pdf = await text("RINGTEILER")
+    expect(pdf).toContain("Best. RT")
+    expect(pdf).toContain("9,5")
+  })
+})

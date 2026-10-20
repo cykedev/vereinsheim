@@ -84,7 +84,12 @@ function PreviewTable({ preview }: Props) {
     return preview.isBestOf ? (
       <BestOfStandingsTable rows={preview.bestOfStandings.slice(0, PREVIEW_ROWS)} />
     ) : (
-      <StandingsTable rows={preview.standings.slice(0, PREVIEW_ROWS)} help={false} />
+      <StandingsTable
+        rows={preview.standings.slice(0, PREVIEW_ROWS)}
+        scoringMode={c.scoringMode}
+        scoringType={getEffectiveScoringType(c.scoringMode, c.discipline)}
+        help={false}
+      />
     )
   }
 

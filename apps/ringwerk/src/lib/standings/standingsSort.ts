@@ -1,4 +1,5 @@
-import type { ScoringMode } from "@/generated/prisma/client"
+import type { ScoringMode, ScoringType } from "@/generated/prisma/client"
+import { formatDecimal1, formatRings } from "@/lib/series/scoring-format"
 import { determineOutcome } from "@/lib/results/calculateResult"
 import { assignSharedRanks } from "@/lib/scoring/sharedRanks"
 import { duelSide, type StandingRow, type StandingsMatchup } from "./standingsTypes"
@@ -10,6 +11,33 @@ import { involvesWithdrawn } from "./withdrawn"
  */
 export function hasLeagueResult(row: Pick<StandingRow, "played" | "byes">): boolean {
   return row.played + row.byes > 0
+}
+
+/** Die Spalte der Tabelle, die nach Punkten und direktem Vergleich trennt (Bildschirm und PDF) */
+export interface LeagueTieColumn {
+  label: "Best. RT" | "Best. Ringe"
+  value: (row: Pick<StandingRow, "bestRingteiler" | "bestRings">) => number | null
+  format: (value: number | null, scoringType: ScoringType) => string
+  /** Thema des „?“ am Spaltenkopf; die meisten Ringe erklärt die Hilfe zur Tabelle */
+  help: "ringteiler" | null
+}
+
+/** Bei Wertung nach Ringen trennen die meisten Ringe, sonst der beste Ringteiler */
+export function leagueTieColumn(scoringMode: ScoringMode): LeagueTieColumn {
+  if (scoringMode === "RINGS" || scoringMode === "RINGS_DECIMAL") {
+    return {
+      label: "Best. Ringe",
+      value: (row) => row.bestRings,
+      format: (value, scoringType) => formatRings(value, scoringType),
+      help: null,
+    }
+  }
+  return {
+    label: "Best. RT",
+    value: (row) => row.bestRingteiler,
+    format: (value) => formatDecimal1(value),
+    help: "ringteiler",
+  }
 }
 
 /**
@@ -34,7 +62,7 @@ export function sortWithDirectComparison(
 
   const isRingsMode = scoringMode === "RINGS" || scoringMode === "RINGS_DECIMAL"
   // Der Bestwert, nach dem innerhalb einer Gruppe sortiert wird — spiegelt den Sortierzweig unten.
-  const tieValue = (r: StandingRow) => (isRingsMode ? r.bestRings : r.bestRingteiler)
+  const tieValue = leagueTieColumn(scoringMode).value
 
   const result: StandingRow[] = []
   // Direktpunkte über alle Gruppen; Einzelgruppen bleiben bei 0 (dort trennen schon die Punkte).
