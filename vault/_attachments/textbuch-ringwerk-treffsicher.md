@@ -1540,8 +1540,7 @@ gelesen**, nicht released.
 
 ## Spiegel: Eine Scheibe sagt, was sie zeigt
 
-**Status: freigegeben am 20. Oktober 2026**, noch nicht umgesetzt. Plan:
-`plans/2026-10-20-spiegel-single-card-hints.md`.
+**Status: freigegeben am 20. Oktober 2026**, umgesetzt auf `feat/spiegel-single-card-hints`, nicht released.
 
 Grund: Auf der Seite einer Scheibe stehen Sätze wie „Ein Muster zeigt erst der Vergleich über mehrere Scheiben.“ Auf
 der Scheibe lässt sich aber nichts vergleichen, und für Ermüdung, Pausen, Form und Richtungsuhr zeigt auch
@@ -1640,6 +1639,6 @@ mit verschiedenen Schusszahlen vergleichst du deshalb über σ.“
 
 Bleibt, wie es ist: der Fehlschluss „Eine Scheibe ist kein Muster“ im Leitfaden. Dort gehört die Aussage hin.
 
-Kann sich ändern: Mit dem Test bei der Ermüdung läuft auf jeder Scheibe ein Test mehr. „Etwa jede sechste ganz normale
-Scheibe zeigt irgendwo einen Befund“ (Leitfaden, „Sicher“ und „kann Zufall sein“) wird neu nachgerechnet. Ist es danach
-etwa jede fünfte, steht dort „jede fünfte“.
+Mitgeändert: Mit dem Test bei der Ermüdung läuft auf jeder Scheibe ein Test mehr. Nachgerechnet zeigt nun etwa jede
+fünfte ganz normale Scheibe irgendwo einen Befund (18,9 % bei 40 Schuss, Beleg B1), nicht mehr jede sechste. Der
+Leitfaden sagt deshalb an beiden Stellen „jede fünfte“.
