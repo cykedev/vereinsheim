@@ -11,4 +11,11 @@ describe("HelpMark", () => {
     expect(html).toContain('data-help="ringteiler"')
     expect(html).toContain('type="button"')
   })
+
+  it("setzt die Klasse an die Hülle, damit ml-auto in einer Zeile wirkt", () => {
+    const html = renderToStaticMarkup(
+      createElement(HelpMark, { id: "playoffs", className: "ml-auto" })
+    )
+    expect(html).toMatch(/^<span class="inline-flex ml-auto">/)
+  })
 })
