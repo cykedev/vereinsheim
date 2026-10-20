@@ -7,6 +7,7 @@ import { SeasonSeriesDialog } from "./SeasonSeriesDialog"
 import { DeleteSeasonSeriesButton } from "./DeleteSeasonSeriesButton"
 import type { ScoringMode, ScoringType } from "@/generated/prisma/client"
 import { formatRings, formatDecimal1, getEffectiveScoringType } from "@/lib/series/scoring-format"
+import { requiredSeries } from "@/lib/scoring/calculateSeasonStandings"
 
 interface Series {
   id: string
@@ -26,7 +27,10 @@ interface Props {
   lastName: string
   disciplineName?: string
   series: Series[]
+  /** Mindestzahl der Saison, `null` ohne */
   minSeries: number | null
+  /** ohne Mindestzahl gewertet (Ausnahme an der Einschreibung) */
+  exemptFromMinSeries: boolean
   isMixed: boolean
   scoringMode: ScoringMode
   shotsPerSeries: number
@@ -42,6 +46,7 @@ export function SeasonParticipantItem({
   disciplineName,
   series,
   minSeries,
+  exemptFromMinSeries,
   isMixed,
   scoringMode,
   shotsPerSeries,
@@ -50,6 +55,7 @@ export function SeasonParticipantItem({
 }: Props) {
   const [expanded, setExpanded] = useState(false)
   const hasSeries = series.length > 0
+  const required = requiredSeries(minSeries, exemptFromMinSeries)
 
   return (
     <div>
@@ -81,7 +87,7 @@ export function SeasonParticipantItem({
             </div>
             <p className="text-xs text-muted-foreground">
               {series.length} Serie{series.length !== 1 ? "n" : ""}
-              {minSeries !== null && ` / ${minSeries} Mindest`}
+              {required !== null && ` / ${required} Mindest`}
             </p>
           </div>
         </button>
@@ -140,6 +146,8 @@ export function SeasonParticipantItem({
                   name={`${firstName} ${lastName}`}
                   date={s.sessionDate}
                   minSeries={minSeries}
+                  exempt={exemptFromMinSeries}
+                  seriesCount={series.length}
                 />
               </div>
             </div>

@@ -242,6 +242,8 @@ describe("Ergebnisse", () => {
       name: "Anna Birke",
       date: "12.10.2026",
       minSeries: 10,
+      exempt: false,
+      seriesCount: 4,
     })
     expect(confirms).toHaveLength(1)
     await confirmAt(0)

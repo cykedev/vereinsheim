@@ -52,23 +52,35 @@ export function seasonSeriesDelete({
   name,
   date,
   minSeries,
+  exempt = false,
+  seriesCount = 0,
 }: {
   name: string
   /** Tag der Serie, wie in der Liste („12.10.2026“) */
   date: string
   /** Mindestzahl an Serien für einen Platz, `null` ohne */
   minSeries: number | null
+  /** ohne Mindestzahl gewertet: dann zählt nur, ob es die letzte Serie ist */
+  exempt?: boolean
+  /** Serien vor dem Löschen */
+  seriesCount?: number
 }): Decision {
+  const minSeriesLine =
+    minSeries === null
+      ? []
+      : exempt
+        ? seriesCount === 1
+          ? [`Danach hat ${name} keine Serie mehr und steht ohne Platz in der Rangliste.`]
+          : []
+        : [
+            `Gelten ${minSeries} Serien als Mindestzahl und hat ${name} danach weniger, steht ${name} ohne Platz in der Rangliste.`,
+          ]
   return {
     title: `Serie vom ${date} löschen?`,
     about: `${name} hat am ${date} diese Serie geschossen. Sie zählt in der Saison.`,
     happens: [
       "Die Serie verschwindet. Die Rangliste rechnet ohne sie.",
-      ...(minSeries !== null
-        ? [
-            `Gelten ${minSeries} Serien als Mindestzahl und hat ${name} danach weniger, steht ${name} ohne Platz in der Rangliste.`,
-          ]
-        : []),
+      ...minSeriesLine,
       "Im Protokoll des Wettbewerbs steht danach, dass die Serie gelöscht wurde, mit Datum, Ringen und Teiler.",
     ],
     notHappening: [`Die anderen Serien von ${name} bleiben.`],

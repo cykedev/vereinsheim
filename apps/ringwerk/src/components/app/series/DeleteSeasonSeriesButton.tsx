@@ -16,6 +16,10 @@ interface Props {
   date: string
   /** Mindestzahl an Serien für einen Platz, `null` ohne */
   minSeries: number | null
+  /** ohne Mindestzahl gewertet (Ausnahme an der Einschreibung) */
+  exempt: boolean
+  /** Serien vor dem Löschen */
+  seriesCount: number
 }
 
 export function DeleteSeasonSeriesButton({
@@ -24,6 +28,8 @@ export function DeleteSeasonSeriesButton({
   name,
   date,
   minSeries,
+  exempt,
+  seriesCount,
 }: Props) {
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
@@ -53,7 +59,7 @@ export function DeleteSeasonSeriesButton({
         <Trash2 className="h-4 w-4" />
       </Button>
       <DecisionDialog
-        decision={seasonSeriesDelete({ name, date, minSeries })}
+        decision={seasonSeriesDelete({ name, date, minSeries, exempt, seriesCount })}
         open={open}
         onOpenChange={setOpen}
         onConfirm={handleDelete}

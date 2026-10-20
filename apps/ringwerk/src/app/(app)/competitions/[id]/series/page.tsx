@@ -231,6 +231,7 @@ async function SeasonSeriesPageContent({ id }: { id: string }) {
                   disciplineId: s.disciplineId,
                 }))}
                 minSeries={competition.minSeries}
+                exemptFromMinSeries={cp.exemptFromMinSeries}
                 isMixed={isMixed}
                 scoringMode={competition.scoringMode}
                 shotsPerSeries={competition.shotsPerSeries}

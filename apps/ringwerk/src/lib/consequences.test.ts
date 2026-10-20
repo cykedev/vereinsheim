@@ -58,6 +58,13 @@ const ALL: Decision[] = [
   eventSeriesDelete({ name: "Anna Birke", teams: true }),
   seasonSeriesDelete({ name: "Anna Birke", date: "12.10.2026", minSeries: null }),
   seasonSeriesDelete({ name: "Anna Birke", date: "12.10.2026", minSeries: 10 }),
+  seasonSeriesDelete({
+    name: "Anna Birke",
+    date: "12.10.2026",
+    minSeries: 10,
+    exempt: true,
+    seriesCount: 1,
+  }),
   participantDelete({ name: "Anna Birke" }),
   participantForceDelete({ name: "Anna Birke", competitions: 1 }),
   participantForceDelete({ name: "Anna Birke", competitions: 3 }),
@@ -214,6 +221,30 @@ describe("Wortlaut wie im Textbuch", () => {
       "Gelten 10 Serien als Mindestzahl und hat Anna Birke danach weniger, steht Anna Birke ohne Platz in der Rangliste."
     )
     expect(seasonSeriesDelete({ name: "x", date: "y", minSeries: null }).happens).toHaveLength(2)
+  })
+
+  it("Saison ohne Mindestzahl 5: Serie löschen mit Ausnahme, Hinweis nur bei der letzten Serie", () => {
+    const last = seasonSeriesDelete({
+      name: "Anna Birke",
+      date: "12.10.2026",
+      minSeries: 10,
+      exempt: true,
+      seriesCount: 1,
+    })
+    expect(last.happens).toEqual([
+      "Die Serie verschwindet. Die Rangliste rechnet ohne sie.",
+      "Danach hat Anna Birke keine Serie mehr und steht ohne Platz in der Rangliste.",
+      "Im Protokoll des Wettbewerbs steht danach, dass die Serie gelöscht wurde, mit Datum, Ringen und Teiler.",
+    ])
+    const more = seasonSeriesDelete({
+      name: "Anna Birke",
+      date: "12.10.2026",
+      minSeries: 10,
+      exempt: true,
+      seriesCount: 3,
+    })
+    expect(more.happens).toHaveLength(2)
+    expect(more.happens.join(" ")).not.toContain("Mindestzahl")
   })
 
   it("3 Teilnehmer löschen: ohne Wettbewerb, Hinweis für die Sportleitung, mit allen Daten", () => {
