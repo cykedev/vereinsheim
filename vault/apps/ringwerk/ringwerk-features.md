@@ -527,7 +527,21 @@ Ringteiler muss aus **derselben Serie** stammen (Ringe und Teiler gehören zusam
   2. Historie vorhanden + kein Admin → Info "Löschen nicht möglich"
   3. Historie vorhanden + Admin → Namenseingabe zur Bestätigung
 - Force-Delete löscht kaskadierend: PlayoffMatches, PlayoffDuels, Matchups inkl. Serien des Gegners, verbleibende Serien, CompetitionParticipant, Participant
+- Force-Delete verlangt den Nachnamen; die Action prüft ihn selbst (`deleteParticipant(id, true, nachname)`)
 - Protokollierung: `PARTICIPANT_DELETED` (normales Löschen) / `PARTICIPANT_FORCE_DELETED` (Admin-Force-Delete)
+
+### Entfernen aus einem Wettbewerb
+
+- Nur ohne Paarungen und, bei Mitgliedern, ohne Ergebnisse in diesem Wettbewerb; sonst „Zurückziehen“. Der Papierkorb
+  zeigt dann einen Hinweis statt der Rückfrage. So bleibt keine Serie ohne Einschreibung zurück.
+- Ein Gast geht mit seinen Ergebnissen (Serien, Einschreibung, stiller Teilnehmer); ein leeres Team wird aufgelöst.
+- Prüfen, Löschen und Protokoll (`PARTICIPANT_UNENROLLED`) in einer serialisierbaren Transaktion.
+
+### Disziplin löschen
+
+- Nur Admin, nur ohne jede Verwendung: kein Wettbewerb, keine Einschreibung (gemischter Wettbewerb) und keine Serie
+  trägt die Disziplin. Eine Einschreibung hielte sie über `ON DELETE SET NULL` und verlöre ihre Disziplin lautlos.
+- Prüfen und Löschen in einer serialisierbaren Transaktion; sonst archivieren.
 
 ### Rückzug (nur Liga)
 
@@ -619,10 +633,11 @@ Wettbewerbe können mit `isPublic = true` und einem `publicSlug` markiert werden
 
 ### Kategorie: Teilnehmer (participant)
 
-| Ereignis              | Auslöser                           |
-| --------------------- | ---------------------------------- |
-| PARTICIPANT_WITHDRAWN | Rückzug eines Teilnehmers aus Liga |
-| WITHDRAWAL_REVOKED    | Rückzug rückgängig gemacht         |
+| Ereignis               | Auslöser                                               |
+| ---------------------- | ------------------------------------------------------ |
+| PARTICIPANT_WITHDRAWN  | Rückzug eines Teilnehmers aus Liga                     |
+| WITHDRAWAL_REVOKED     | Rückzug rückgängig gemacht                             |
+| PARTICIPANT_UNENROLLED | Teilnehmer aus dem Wettbewerb entfernt (Details: Gast) |
 
 ### Kategorie: Ergebnis (result)
 
@@ -642,6 +657,7 @@ Wettbewerbe können mit `isPublic = true` und einem `publicSlug` markiert werden
 | PLAYOFFS_STARTED         | Playoff-Phase gestartet            |
 | PLAYOFF_RESULT_ENTERED   | Playoff-Duell-Ergebnis eingetragen |
 | PLAYOFF_RESULT_CORRECTED | Playoff-Duell korrigiert           |
+| PLAYOFF_ROUND_CREATED    | Nächste Runde angelegt (Runde)     |
 
 ### Kategorie: Destruktiv (destructive)
 
@@ -652,6 +668,7 @@ Wettbewerbe können mit `isPublic = true` und einem `publicSlug` markiert werden
 | SEASON_SERIES_DELETED     | Serie bei Saison gelöscht                         |
 | PARTICIPANT_DELETED       | Inaktiver Teilnehmer ohne Historien gelöscht      |
 | PARTICIPANT_FORCE_DELETED | Admin-Force-Delete inkl. aller historischen Daten |
+| SCHEDULE_REGENERATED      | Spielplan ersetzt (Zahl der Paarungen)            |
 
 ### Kategorie: Admin (admin)
 
@@ -674,6 +691,7 @@ Stammdaten-Änderungen — erscheinen nur im globalen Protokoll (kein competitio
 | COMPETITION_CREATED        | Neuer Wettbewerb angelegt                 | neue ID       |
 | COMPETITION_UPDATED        | Wettbewerbsdaten geändert                 | bestehende ID |
 | COMPETITION_STATUS_CHANGED | Wettbewerb-Status geändert (z.B. → Aktiv) | bestehende ID |
+| SCHEDULE_GENERATED         | Erster Spielplan erzeugt (Paarungen)      | bestehende ID |
 
 - Details-JSON als Snapshot (denormalisiert, kein Verweis)
 - Wettbewerb-Protokoll: pro Wettbewerb (nur Events mit competitionId); Globales Protokoll: alle Wettbewerbe

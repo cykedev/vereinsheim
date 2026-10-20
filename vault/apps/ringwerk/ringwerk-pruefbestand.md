@@ -98,6 +98,17 @@ vergleicht alt gegen neu auf demselben Aufbau.
    Freigabe durch den User neu auf, in einem eigenen Commit.
 6. Release nach [[operations#Release von Ringwerk]].
 
+## Stand 20. Oktober 2026
+
+- Ausgangsstand neu aufgenommen auf `6b8a4ca0` (Design 2 mit den Dialogen, vom User freigegeben). Grund: Spielplan und
+  nächste Runde schreiben jetzt einen Protokolleintrag, `pruefdaten` erzeugt also 72 Protokollzeilen mehr
+  (54 „Spielplan generiert“, 18 „Playoff-Runde angelegt“). Belegt über `pruefdaten --zeilen` auf altem und neuem Stand:
+  alle Tabellen außer `AuditLog` gleich, dort nichts entfallen. Danach Vergleich 0 Fehler, 0 Hinweise; Abläufe grün bis
+  auf den bekannten Befund.
+- Seit dieser Aufnahme ist der Ausgangsstand Design 2: Hinweise zu Beschriftungen und die Bilder vorher/nachher beziehen
+  sich auf Design 2. Die Bilder vor Design 2 liegen weiter unter `reports/aus-worktree-happy-leakey/ringwerk-referenz/`
+  der Hauptcheckout.
+
 ## Stand 18. Oktober 2026
 
 - Ausgangsstand vom User bestätigt, aufgenommen auf `28f34bd1` (Ringwerk wie `main`), am selben Tag mit eindeutiger

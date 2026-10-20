@@ -1019,6 +1019,9 @@ kann nicht rückgängig gemacht werden“. Dazu die Grundregel: kein Semikolon, 
 
 ### Befunde beim Ablesen (nicht Teil dieses Abschnitts)
 
+Die ersten vier sind erledigt (Plan `2026-10-20-ringwerk-dialog-befunde.md`, Abschnitt „Ringwerk: Befunde (B0)“). Die
+gelöschte Systemdisziplin, die beim Start wiederkommt, ist so gewollt und steht im Dialog.
+
 - Der Kasten „Gefahrenzone“ steht auch für die Sportleitung da. Löschen darf nur ein Admin, sonst kommt „Keine
   Berechtigung“.
 - Eine Disziplin, die nur in gemischten Wettbewerben Serien hat, lässt sich nicht löschen. Statt einer Meldung kommt ein
