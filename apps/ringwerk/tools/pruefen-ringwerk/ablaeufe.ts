@@ -352,7 +352,7 @@ async function leagueClassic(run: Run, ui: Ui, db: Db, pass: Pass) {
     await ui.fill("name", `${name} geändert`)
     await ui.press("Abbrechen", "$('form')")
     await ui.until(
-      `txt(dlg()).includes("Ungespeicherte Änderungen")`,
+      `txt(dlg()).includes("Ohne Speichern verlassen")`,
       "keine Frage nach ungespeicherten Änderungen"
     )
     await ui.pressInDialog("Abbrechen")
