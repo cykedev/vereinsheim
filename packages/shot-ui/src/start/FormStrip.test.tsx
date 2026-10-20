@@ -62,7 +62,7 @@ describe("Formband als kleiner Verlauf", () => {
 
   it("der Name sagt Folge, Abend und Band in Worten", () => {
     expect(html).toContain(
-      'aria-label="Die letzten 7 Scheiben in zeitlicher Folge, die des Abends (Sa 26.09.) hervorgehoben; Formband zuletzt 8,78 bis 9,14"'
+      'aria-label="Die letzten 7 Scheiben in zeitlicher Folge, die des Abends (Sa 26.09.) hervorgehoben. Formband zuletzt 8,78 bis 9,14"'
     )
     const one = renderToStaticMarkup(
       h(FormStrip, {

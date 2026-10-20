@@ -78,7 +78,7 @@ describe("was auffällt, an echten Scheiben", () => {
     const key = keyObservations(all)
     expect(key.map((k) => k.icon)).toEqual(["position", "outlier"])
     expect(key[0].text).toMatch(
-      /^Deine Gruppe liegt .* neben der Mitte; das ist sicher kein Zufall\.$/
+      /^Deine Gruppe liegt .* neben der Mitte, und das ist sicher kein Zufall\.$/
     )
     expect(key[1].text).toBe("Schuss 27 fällt als Ausreißer aus der Gruppe.")
   })

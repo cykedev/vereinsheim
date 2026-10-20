@@ -119,7 +119,7 @@ describe("Reiter Lage", () => {
 
   it("Ellipse auf der Scheibe und Urteil: wofür jedes gilt", () => {
     expect(cardText(html, "lage-echt")).toContain(
-      "Auf der Scheibe gilt die Ellipse für die Auswahl dort; dieses Urteil für alle Wertungsschüsse."
+      "Auf der Scheibe gilt die Ellipse für die Auswahl dort. Dieses Urteil gilt für alle Wertungsschüsse."
     )
   })
 
@@ -159,7 +159,7 @@ describe("Reiter Lage", () => {
     // die Legende nennt keine Zahl, nur der Satz mit dem Grund
     expect(text).toContain(`Lage kostet nichts Streuung ${formatValue(split.total!.decimal, 1)}`)
     expect(text).toContain(
-      `Deine Gruppe sitzt schon gut; in die Mitte geschoben brächte sie rechnerisch nichts (Lage ${formatValue(split.positionLoss.decimal, 1)} Ringe).`
+      `Deine Gruppe sitzt schon gut. In die Mitte geschoben brächte sie rechnerisch nichts (Lage ${formatValue(split.positionLoss.decimal, 1)} Ringe).`
     )
     expect(cardText(html, "ringverlust-nach-ursache")).not.toContain("kostet nichts")
     // dieselbe Gruppe um die Mitte: der Versatz ist nicht belegt

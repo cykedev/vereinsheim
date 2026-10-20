@@ -58,7 +58,7 @@ export function observations(input: AnalysisInput): Observation[] {
   if (confidence) {
     if (confidence.real) {
       // Alltagsworte: „Gruppe“ statt „Schwerpunkt“, „sicher“ statt „mit 95 %“; die Fachbegriffe im Blatt
-      let text = `Deine Gruppe liegt ${directionWords(confidence.center)} neben der Mitte; das ist sicher kein Zufall.`
+      let text = `Deine Gruppe liegt ${directionWords(confidence.center)} neben der Mitte, und das ist sicher kein Zufall.`
       const split = ringLossSplit(base, target)
       if (split?.reliable) {
         // die Summe über alle Schüsse mit Lage, darum mit ihrem n und je Schuss
@@ -73,7 +73,7 @@ export function observations(input: AnalysisInput): Observation[] {
       out.push({
         icon: "position",
         notable: true,
-        text: `Deine Gruppe liegt ${mm(Math.hypot(confidence.center.xUm, confidence.center.yUm))} neben der Mitte; das kann Zufall sein, ein Versatz ist nicht belegt.`,
+        text: `Deine Gruppe liegt ${mm(Math.hypot(confidence.center.xUm, confidence.center.yUm))} neben der Mitte, das kann aber Zufall sein. Ein Versatz ist nicht belegt.`,
       })
     }
   }
@@ -151,11 +151,14 @@ export function observations(input: AnalysisInput): Observation[] {
               ? "genau im Schnitt deiner übrigen Schüsse"
               : `im Schnitt ${formatValue(Math.abs(d), 2)} Ringe je Schuss ${d < 0 ? "unter" : "über"} deinen übrigen Schüssen`
           }`
-    const text = recovery.effects.map((e) => effect(e.afterShot, e.deltaRings)).join("; ")
+    const text = recovery.effects
+      .map((e) => effect(e.afterShot, e.deltaRings))
+      .map((t) => `${t[0].toUpperCase()}${t.slice(1)}`)
+      .join(". ")
     out.push({
       icon: "pause",
       notable: false,
-      text: `${text[0].toUpperCase()}${text.slice(1)}. Drei Schuss sind wenig; ein Urteil braucht mehrere Abende.`,
+      text: `${text}. Drei Schuss sind wenig. Ein Urteil braucht mehrere Abende.`,
     })
   }
 
@@ -164,7 +167,7 @@ export function observations(input: AnalysisInput): Observation[] {
     out.push({
       icon: "clock",
       notable: false,
-      text: `Tempo: meist ${formatValue(pace.medianMs / 1000, 0)} s je Schuss; die Hälfte der Abstände liegt in einem Fenster von ${formatValue(pace.iqrMs / 1000, 0)} s.`,
+      text: `Tempo: meist ${formatValue(pace.medianMs / 1000, 0)} s je Schuss. Die Hälfte der Abstände liegt in einem Fenster von ${formatValue(pace.iqrMs / 1000, 0)} s.`,
     })
   }
 

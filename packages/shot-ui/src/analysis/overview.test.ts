@@ -185,8 +185,8 @@ describe("Beobachtungen in Worten", () => {
     expect(sentences[0].icon).toBe("position")
     expect(sentences[0].text).toMatch(
       mpiConfidence(base)!.real
-        ? /^Deine Gruppe liegt .* neben der Mitte; das ist sicher kein Zufall\./
-        : /das kann Zufall sein/
+        ? /^Deine Gruppe liegt .* neben der Mitte, und das ist sicher kein Zufall\./
+        : /das kann aber Zufall sein/
     )
     expect(sentences.map((s) => s.icon)).toContain("spread")
   })
@@ -258,7 +258,7 @@ describe("Beobachtungen in Worten", () => {
     )
     const text = observations(analysisInput(centered, "decimal", LP_10M))[0].text
     expect(text).toMatch(
-      /^Deine Gruppe liegt [\d,]+ mm neben der Mitte; das kann Zufall sein, ein Versatz ist nicht belegt\.$/
+      /^Deine Gruppe liegt [\d,]+ mm neben der Mitte, das kann aber Zufall sein\. Ein Versatz ist nicht belegt\.$/
     )
   })
 

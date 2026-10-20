@@ -37,7 +37,7 @@ const LEVEL = 0.005
 /**
  * Ein Satz zum Zeitraum: Er beantwortet „Werde ich besser?“ im Ø je Schuss wie die Ergebnis-Box. Er
  * vergleicht mit dem gewählten Vergleich, sonst still mit dem Zeitraum davor, bei „Alles“ die letzten 90 Tage mit den
- * 90 davor (`PeriodModel.form`); „ein klarer Unterschied“ nur bei einem Urteil, in denselben Worten wie `verdictText`.
+ * 90 davor (`PeriodModel.form`). „Ein klarer Unterschied“ steht nur bei einem Urteil, in denselben Worten wie `verdictText`.
  * Ohne Scheiben keiner.
  */
 export function periodSentence(
@@ -65,8 +65,8 @@ export function periodSentence(
   // „…, nicht nachweisbar“ klingt wie ein Widerspruch zur Zahl davor
   const proven =
     c.verdict === "unclear"
-      ? "ein klarer Unterschied ist das aber nicht"
-      : "das ist ein klarer Unterschied"
+      ? "Ein klarer Unterschied ist das aber nicht"
+      : "Das ist ein klarer Unterschied"
   const direction = c.delta > 0 ? "höher" : "tiefer"
-  return `${subject} ${formatValue(Math.abs(c.delta), 2)} ${direction} als ${other.als}; ${proven}.`
+  return `${subject} ${formatValue(Math.abs(c.delta), 2)} ${direction} als ${other.als}. ${proven}.`
 }

@@ -92,7 +92,7 @@ describe("Form der letzten 90 Tage", () => {
 
   it("ohne Vergleich „zu wenige Scheiben“, ohne Wert nichts", () => {
     expect(line({ ...form, comparison: null })).toBe(
-      "Form der letzten 90 Tage Luftgewehr: Ø 10,27 je Schuss; für einen Vergleich mit den 90 Tagen davor zu wenige Scheiben. ›"
+      "Form der letzten 90 Tage Luftgewehr: Ø 10,27 je Schuss. Für einen Vergleich mit den 90 Tagen davor sind es zu wenige Scheiben. ›"
     )
     expect(
       renderToStaticMarkup(

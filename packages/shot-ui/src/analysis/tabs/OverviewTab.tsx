@@ -116,7 +116,7 @@ export function overviewCards({ input, explain, onHelp }: CardContext): CardSpec
             <li data-guide="true">
               <b>Jede Karte erklärt sich</b>
               {
-                " über ihr „?“; den Kurzsatz an jeder Karte und Kachel zeigt der Schalter „Erklärungen“."
+                " über ihr „?“. Den Kurzsatz an jeder Karte und Kachel zeigt der Schalter „Erklärungen“."
               }
             </li>
           </ul>

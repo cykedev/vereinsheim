@@ -50,7 +50,7 @@ export function FormStrip({ strip, band, dateLabel, className }: FormStripProps)
     band ? `Formband zuletzt ${formatValue(band.low, 2)} bis ${formatValue(band.high, 2)}` : null,
   ]
     .filter(Boolean)
-    .join("; ")
+    .join(". ")
 
   return (
     <div data-form-strip className={cn("min-w-0", className)}>

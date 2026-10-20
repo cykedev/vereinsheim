@@ -64,7 +64,7 @@ export function pauseRuleText(rule: PauseRule): string {
     case "mindestens":
       return `${over}: Das ${factor} deines üblichen Abstands von ${typical} wäre kürzer, eine Pause dauert aber mindestens ${durationText(PAUSE_MIN_MS)}.`
     case "hoechstens":
-      return `${over}: Dein üblicher Abstand von ${typical} ist lang; über ${durationText(PAUSE_ALWAYS_MS)} ist es immer eine Pause.`
+      return `${over}: Dein üblicher Abstand von ${typical} ist lang. Über ${durationText(PAUSE_ALWAYS_MS)} ist es immer eine Pause.`
     case "fest":
       return `${over}: Deinen üblichen Abstand gibt es erst ab ${PAUSE_MIN_INTERVALS} Abständen.`
   }

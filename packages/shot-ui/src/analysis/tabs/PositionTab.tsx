@@ -74,8 +74,8 @@ export function positionCards({
               </div>
               <Note>
                 Die Ellipse umschließt mit 95 % den wahren Schwerpunkt. Liegt die Mitte darin, ist
-                ein Versatz nicht belegt. Auf der Scheibe gilt die Ellipse für die Auswahl dort;
-                dieses Urteil für alle Wertungsschüsse.
+                ein Versatz nicht belegt. Auf der Scheibe gilt die Ellipse für die Auswahl dort.
+                Dieses Urteil gilt für alle Wertungsschüsse.
               </Note>
             </>
           ) : (
@@ -241,7 +241,7 @@ function RingLoss({
         )}
       </div>
       {shown.negative !== null && (
-        <Note>{`Deine Gruppe sitzt schon gut; in die Mitte geschoben brächte sie rechnerisch nichts (Lage ${ringsText(shown.negative, digits)}).`}</Note>
+        <Note>{`Deine Gruppe sitzt schon gut. In die Mitte geschoben brächte sie rechnerisch nichts (Lage ${ringsText(shown.negative, digits)}).`}</Note>
       )}
       <Note>
         Jeder Treffer um den Schwerpunkt der übrigen verschoben und neu gewertet: So schätzt

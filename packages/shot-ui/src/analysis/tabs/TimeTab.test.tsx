@@ -29,7 +29,7 @@ describe("was als Pause gilt, nach der Grundlage der Schwelle", () => {
       "Als Pause gilt ein Abstand über 1:00 min: Das Doppelte deines üblichen Abstands von 20,0 s wäre kürzer, eine Pause dauert aber mindestens 1:00 min."
     )
     expect(pauseRuleText({ thresholdMs: 180_000, typicalMs: 90_000, basis: "hoechstens" })).toBe(
-      "Als Pause gilt ein Abstand über 3:00 min: Dein üblicher Abstand von 90,0 s ist lang; über 3:00 min ist es immer eine Pause."
+      "Als Pause gilt ein Abstand über 3:00 min: Dein üblicher Abstand von 90,0 s ist lang. Über 3:00 min ist es immer eine Pause."
     )
     expect(pauseRuleText({ thresholdMs: 180_000, typicalMs: null, basis: "fest" })).toBe(
       "Als Pause gilt ein Abstand über 3:00 min: Deinen üblichen Abstand gibt es erst ab 5 Abständen."

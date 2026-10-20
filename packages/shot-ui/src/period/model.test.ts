@@ -93,7 +93,7 @@ describe("Vergleich und Satz", () => {
     expect(m.comparison?.delta).toBeCloseTo(5, 12)
     expect(m.tiles[0].compare?.comparison?.verdict).toBe("higher")
     expect(periodSentence(m)).toBe(
-      "Dein Ø je Schuss liegt 5,00 höher als im Zeitraum davor; das ist ein klarer Unterschied."
+      "Dein Ø je Schuss liegt 5,00 höher als im Zeitraum davor. Das ist ein klarer Unterschied."
     )
   })
 
@@ -101,7 +101,7 @@ describe("Vergleich und Satz", () => {
     // 6,0 … 10,0 gegen 6,5 … 10,5: 0,50 tiefer, ohne Urteil
     const near = [65, 75, 85, 95, 105].map((t, i) => periodCard(`v${i}`, 100 + i, [t]))
     expect(periodSentence(model([...now, ...near], { compare: { type: "previous" } }))).toBe(
-      "Dein Ø je Schuss liegt 0,50 tiefer als im Zeitraum davor; ein klarer Unterschied ist das aber nicht."
+      "Dein Ø je Schuss liegt 0,50 tiefer als im Zeitraum davor. Ein klarer Unterschied ist das aber nicht."
     )
     const same = [60, 70, 80, 90, 100].map((t, i) => periodCard(`v${i}`, 100 + i, [t]))
     const flat = model([...now, ...same], { compare: { type: "previous" } })
@@ -118,13 +118,13 @@ describe("Vergleich und Satz", () => {
     // die Scheiben 100 bis 104 Tage vor jetzt liegen zwischen dem 18. und 22. Juni, in „Vorbereitung“
     const m = model([...now, ...before], { compare: { type: "named", id: "lm" } })
     expect(periodSentence(m)).toBe(
-      "Dein Ø je Schuss liegt 5,00 höher als in „Vorbereitung“; das ist ein klarer Unterschied."
+      "Dein Ø je Schuss liegt 5,00 höher als in „Vorbereitung“. Das ist ein klarer Unterschied."
     )
   })
 
   it("ohne gewählten Vergleich: still gegen den Zeitraum davor, nie die 30 Tage", () => {
     expect(periodSentence(model([...now, ...before]))).toBe(
-      "Dein Ø je Schuss liegt 5,00 höher als im Zeitraum davor; das ist ein klarer Unterschied."
+      "Dein Ø je Schuss liegt 5,00 höher als im Zeitraum davor. Das ist ein klarer Unterschied."
     )
     // ohne Scheiben im Zeitraum davor kein Vergleich
     expect(periodSentence(model(now))).toBe(
@@ -137,7 +137,7 @@ describe("Vergleich und Satz", () => {
 
   it("„Alles“: die letzten 90 Tage gegen die 90 davor, und der Satz sagt es", () => {
     expect(periodSentence(model([...now, ...before], { choice: { type: "all" } }))).toBe(
-      "In den letzten 90 Tagen liegt dein Ø je Schuss 5,00 höher als in den 90 Tagen davor; das ist ein klarer Unterschied."
+      "In den letzten 90 Tagen liegt dein Ø je Schuss 5,00 höher als in den 90 Tagen davor. Das ist ein klarer Unterschied."
     )
     expect(periodSentence(model(now, { choice: { type: "all" } }))).toBe(
       "Für einen Vergleich der letzten 90 Tage mit den 90 Tagen davor sind es zu wenige Scheiben."

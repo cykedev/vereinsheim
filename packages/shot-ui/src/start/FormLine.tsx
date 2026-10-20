@@ -12,7 +12,7 @@ function formSentence(form: StartForm, familyLabel: string): string {
   const mean = `${familyLabel}: Ø ${formatValue(form.mean as number, 2)} je Schuss`
   const c = form.comparison
   if (!c || c.test === null)
-    return `${mean}; für einen Vergleich mit den 90 Tagen davor zu wenige Scheiben.`
+    return `${mean}. Für einen Vergleich mit den 90 Tagen davor sind es zu wenige Scheiben.`
   const verdict = verdictText(c, "higher")
   const delta = formatSigned(c.delta, 2)
   return c.verdict === "unclear"

@@ -1502,3 +1502,28 @@ mit demselben Wert.“
 mit demselben Wert. Auch ein Duell vergleicht den korrigierten Teiler.“
 
 Grund: Nach B3 entscheidet in gemischten Ligen, Playoffs und im Finale der korrigierte Teiler. Heute sagt das kein Text.
+
+## Spiegel und Treffsicher: Sätze ohne Semikolon (Durchsicht 1.1)
+
+Stand 20. Oktober 2026, vom Agenten entworfen und schon umgesetzt, **vom User noch nicht gelesen**. Grund: Schreibregel
+„keine Semikolons“ (conventions §10). Die Sätze stehen in `@vereinsheim/shot-ui` und erscheinen in Spiegel und
+Treffsicher gleich. Der Kopf einer Scheibe zeigt nur den ersten Satz einer Beobachtung; deshalb bleibt bei der Lage das
+Urteil im ersten Satz.
+
+| Wo | alt | neu |
+|---|---|---|
+| Satz im Kopf des Zeitraums | „… höher als im Zeitraum davor; das ist ein klarer Unterschied.“ | „… höher als im Zeitraum davor. Das ist ein klarer Unterschied.“ |
+| ebenda, ohne Urteil | „…; ein klarer Unterschied ist das aber nicht.“ | „…. Ein klarer Unterschied ist das aber nicht.“ |
+| Beobachtung Lage, belegt | „Deine Gruppe liegt … neben der Mitte; das ist sicher kein Zufall.“ | „Deine Gruppe liegt … neben der Mitte, und das ist sicher kein Zufall.“ |
+| Beobachtung Lage, nicht belegt | „…; das kann Zufall sein, ein Versatz ist nicht belegt.“ | „…, das kann aber Zufall sein. Ein Versatz ist nicht belegt.“ |
+| Beobachtung Pause | „Nach der Pause vor Schuss 12 …; nach der Pause vor Schuss 25 …. Drei Schuss sind wenig; ein Urteil braucht mehrere Abende.“ | „Nach der Pause vor Schuss 12 …. Nach der Pause vor Schuss 25 …. Drei Schuss sind wenig. Ein Urteil braucht mehrere Abende.“ |
+| Beobachtung Tempo | „Tempo: meist 38 s je Schuss; die Hälfte der Abstände …“ | „Tempo: meist 38 s je Schuss. Die Hälfte der Abstände …“ |
+| Analyse, Einstieg | „Jede Karte erklärt sich über ihr „?“; den Kurzsatz …“ | „Jede Karte erklärt sich über ihr „?“. Den Kurzsatz …“ |
+| Reiter Zeit, Pause | „Dein üblicher Abstand von … ist lang; über 3:00 min ist es immer eine Pause.“ | „Dein üblicher Abstand von … ist lang. Über 3:00 min ist es immer eine Pause.“ |
+| Reiter Lage, Gruppe sitzt gut | „Deine Gruppe sitzt schon gut; in die Mitte geschoben …“ | „Deine Gruppe sitzt schon gut. In die Mitte geschoben …“ |
+| Reiter Lage, Ellipse | „… für die Auswahl dort; dieses Urteil für alle Wertungsschüsse.“ | „… für die Auswahl dort. Dieses Urteil gilt für alle Wertungsschüsse.“ |
+| Start, Form ohne Vergleich | „…: Ø 10,27 je Schuss; für einen Vergleich mit den 90 Tagen davor zu wenige Scheiben.“ | „…: Ø 10,27 je Schuss. Für einen Vergleich mit den 90 Tagen davor sind es zu wenige Scheiben.“ |
+| Start, Formband (Screenreader) | „… hervorgehoben; Formband zuletzt …“ | „… hervorgehoben. Formband zuletzt …“ |
+
+Offen: Die Hilfetexte in `@vereinsheim/shot-help` (`topics.ts`) enthalten noch 51 Semikolons. Das ist ein eigener
+Durchgang durch Spiegels Hilfe, erst im Textbuch.
