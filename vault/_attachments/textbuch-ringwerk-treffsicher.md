@@ -1019,8 +1019,8 @@ kann nicht rückgängig gemacht werden“. Dazu die Grundregel: kein Semikolon, 
 
 ### Befunde beim Ablesen (nicht Teil dieses Abschnitts)
 
-Die ersten vier sind erledigt (Plan `2026-10-20-ringwerk-dialog-befunde.md`, Abschnitt „Ringwerk: Befunde (B0)“). Die
-gelöschte Systemdisziplin, die beim Start wiederkommt, ist so gewollt und steht im Dialog.
+Die ersten vier sind erledigt, siehe den Abschnitt „Ringwerk: Befunde (B0)“ unten. Die gelöschte Systemdisziplin, die
+beim Start wiederkommt, ist so gewollt und steht im Dialog.
 
 - Der Kasten „Gefahrenzone“ steht auch für die Sportleitung da. Löschen darf nur ein Admin, sonst kommt „Keine
   Berechtigung“.
@@ -1037,8 +1037,8 @@ gelöschte Systemdisziplin, die beim Start wiederkommt, ist so gewollt und steht
 
 **Status: freigegeben am 20. Oktober 2026**
 
-Zum Plan `plans/2026-10-20-ringwerk-dialog-befunde.md` (freigegeben am 20. Oktober 2026 mit E1–E5). Die Dialoge oben
-ändern sich nur an den genannten Zeilen, alles andere bleibt freigegeben, wie es steht.
+Neue und geänderte Texte zu den Befunden oben. Die Dialoge oben ändern sich nur an den genannten Zeilen, alles andere
+bleibt freigegeben, wie es steht.
 
 ### Dialog 6 „Aus dem Wettbewerb entfernen“, neu
 
@@ -1121,3 +1121,16 @@ geändert hat):
 
 Den Kasten sieht nur noch ein Admin. Sein Text bleibt: „Löscht den Wettbewerb mit allem, was dazu eingetragen ist. Nur
 ein Admin kann das.“
+
+### Nachtrag aus dem Review: Meldungen bei gleichzeitiger Änderung
+
+Ändert jemand zur selben Zeit dieselben Daten und Ringwerk kann es auch nach drei Versuchen nicht sauber zu Ende
+bringen, ändert sich nichts. Statt eines Fehlers kommt beim Entfernen aus dem Wettbewerb und beim Löschen einer Disziplin
+die Meldung, wie schon bei Spielplan und Playoffs:
+
+**Die Daten wurden gleichzeitig geändert. Bitte die Seite neu laden und es noch einmal versuchen.**
+
+Bei einem anderen Fehler: **Teilnehmer konnte nicht entfernt werden. Bitte erneut versuchen.** bzw. **Disziplin konnte
+nicht gelöscht werden. Bitte erneut versuchen.**
+
+Der Eintrag „Spielplan generiert“ zählt die Paarungen ohne Freilose.
