@@ -138,6 +138,17 @@ describe("eine Scheibe sagt, was sie zeigt", () => {
     expect(trend?.notable).toBe(true)
   })
 
+  it("im Kopf steht dann der Satz zur Ermüdung, nicht „Kein klarer Trend“", () => {
+    const list = observations(analysisInput(withValues(100, 108, 92), "decimal", LP_10M))
+    const head = keyObservations(list).find((k) => k.icon === "trend")
+    expect(head?.text).toMatch(
+      /^Die letzten zehn Schuss lagen im Schnitt 0,80 Ringe je Schuss unter den ersten zehn \(zusammen −8,0 Ringe\).* Am Ende hast du klar nachgelassen\.$/
+    )
+    // ohne klare Ermüdung bleibt es beim ersten Satz
+    const plain = observations(analysisInput(fortyCard(), "decimal", LP_10M))
+    expect(plain.find((x) => x.icon === "trend")?.headline).toBeUndefined()
+  })
+
   it("klar stärker geworden", () => {
     const trend = trendOf(withValues(100, 92, 108))
     expect(trend?.text).toMatch(/^Kein klarer Trend über die Scheibe/)

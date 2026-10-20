@@ -25,10 +25,12 @@ export interface Observation {
   icon: ObservationIcon
   text: string
   /**
-   * fällt auf und gehört in den Kopf der Seite: die Lage immer, Ausreißer nur wenn es welche gibt, ein Trend nur
-   * wenn er klar ist; Präzision, Pausen und Tempo nie. Probe gegen Wertung gibt es nicht
+   * fällt auf und gehört in den Kopf der Seite: die Lage immer, Ausreißer nur wenn es welche gibt, Trend und
+   * Ermüdung nur wenn sie klar sind; Präzision, Pausen und Tempo nie. Probe gegen Wertung gibt es nicht
    */
   notable: boolean
+  /** was im Kopf steht, wenn nicht der erste Satz das Auffällige sagt (eine klare Ermüdung ohne klaren Trend) */
+  headline?: string
 }
 
 /** der erste Satz: bis zum Punkt, auf den ein Leerzeichen und ein Großbuchstabe folgen (ein Komma in Zahlen trennt nicht) */
@@ -38,7 +40,7 @@ export function firstSentence(text: string): string {
 
 /**
  * Die wichtigsten Beobachtungen für den Kopf der Seite: die Lage zuerst, dann die auffälligen in ihrer
- * Reihenfolge, höchstens `max`, je ihr erster Satz. Ohne Lage nur die auffälligen,
+ * Reihenfolge, höchstens `max`, je ihr erster Satz oder ihre `headline`. Ohne Lage nur die auffälligen,
  * ohne beides keine.
  */
 export function keyObservations(list: readonly Observation[], max = 3): Observation[] {
@@ -46,7 +48,7 @@ export function keyObservations(list: readonly Observation[], max = 3): Observat
   const rest = list.filter((o) => o.icon !== "position" && o.notable)
   return [...(position ? [position] : []), ...rest]
     .slice(0, max)
-    .map((o) => ({ ...o, text: firstSentence(o.text) }))
+    .map((o) => ({ ...o, text: o.headline ?? firstSentence(o.text) }))
 }
 
 export function observations(input: AnalysisInput): Observation[] {
@@ -122,6 +124,7 @@ export function observations(input: AnalysisInput): Observation[] {
       ? `Über die Scheibe klar ${trend.direction === "up" ? "steigend" : "fallend"}: Der Wert je Schuss ${trend.direction === "up" ? "steigt" : "sinkt"} um ${formatValue(Math.abs(trend.perTenShots), 2)} Ringe alle zehn Schuss, eine Zehnerserie um ${formatValue(Math.abs(trend.perTenShots * 10), 1)} Ringe.`
       : `Kein klarer Trend über die Scheibe (Wert je Schuss ${formatSigned(trend.perTenShots, 2)} Ringe alle zehn Schuss, je Zehnerserie ${perSeries} Ringe).`
     const tired = fatigue(base, scoring)
+    let fatigueText = ""
     if (tired) {
       // der Unterschied gilt je Schuss; zehn Schuss zusammen das Zehnfache
       const d = tired.deltaRings
@@ -143,9 +146,17 @@ export function observations(input: AnalysisInput): Observation[] {
             : Math.abs(d) < 0.005
               ? ""
               : " Der Unterschied kann Zufall sein."
-      text += ` Die letzten zehn Schuss lagen ${where}${group}.${verdict}`
+      fatigueText = `Die letzten zehn Schuss lagen ${where}${group}.${verdict}`
+      text += ` ${fatigueText}`
     }
-    out.push({ icon: "trend", text, notable: trend.clear || tired?.clear === true })
+    // fällt nur die Ermüdung auf, steht im Kopf ihr Satz, nicht der erste Satz zum Trend
+    const headline = !trend.clear && tired?.clear ? fatigueText : undefined
+    out.push({
+      icon: "trend",
+      text,
+      notable: trend.clear || tired?.clear === true,
+      ...(headline ? { headline } : {}),
+    })
   }
 
   const recovery = pauseRecovery(base, scoring, card)

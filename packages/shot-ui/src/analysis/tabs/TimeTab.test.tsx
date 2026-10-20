@@ -255,6 +255,11 @@ describe("Reiter Zeit und Verlauf, Karten", () => {
     expect(cardText(html, "ermuedung")).toContain(
       "„Klar“ heißt: Reiner Zufall brächte einen so großen Unterschied nur in 5 von 100 Fällen. Das Urteil gilt für den Wert, nicht für die Gruppe."
     )
+    // genau im Schnitt der ersten zehn: kein Etikett
+    const even = BASE.map((s, i) =>
+      i < 10 || i >= 30 ? { ...s, decimalTenths: 100, ring: 10 } : s
+    )
+    expect(cardHtml(renderTab("time", { shots: even }), "ermuedung")).not.toContain("data-verdict")
   })
 
   it("Pausen und Ermüdung ohne Verweis auf andere Scheiben oder Abende", () => {

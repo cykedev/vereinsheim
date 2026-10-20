@@ -1570,6 +1570,10 @@ Ringe), die Gruppe {0,40} mm weiter. Ein Muster zeigt erst der Vergleich über m
 „Klar“ entscheidet ein Test über die Werte der ersten und der letzten zehn Schuss, wie beim Trend. Die Gruppe (R50)
 geht nicht ins Urteil ein.
 
+Nachtrag aus dem Review (kein neuer Wortlaut): Im Kopf der Scheibe steht sonst nur der erste Satz einer Beobachtung,
+hier also der zum Trend. Ist nur die Ermüdung klar, steht im Kopf stattdessen der Teil zur Ermüdung: „Die letzten zehn
+Schuss lagen … Am Ende hast du klar nachgelassen.“ bzw. „… klar stärker geworden.“
+
 ### 2. Karte „Ermüdung“
 
 Ort: Seite einer Scheibe, Analyse, Reiter „Zeit und Verlauf“.
@@ -1583,6 +1587,8 @@ verrauscht; ein Muster zeigt erst der Vergleich über mehrere Scheiben.“
 
 Darunter: „„Klar“ heißt: Reiner Zufall brächte einen so großen Unterschied nur in 5 von 100 Fällen. Das Urteil gilt für
 den Wert, nicht für die Gruppe.“
+
+Nachtrag aus dem Review: Ist der Unterschied genau 0, steht kein Etikett, wie in Nr. 1 kein Zusatz.
 
 ### 3. Beobachtung zu Pausen
 

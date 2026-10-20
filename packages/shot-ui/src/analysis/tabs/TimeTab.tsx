@@ -302,7 +302,8 @@ export function timeCards({
                 <Verdict tone="warn">klar schwächer</Verdict>
               ) : tired.direction === "up" ? (
                 <Verdict tone="ok">klar stärker</Verdict>
-              ) : (
+              ) : tired.deltaRings === 0 ? null : (
+                // genau im Schnitt braucht kein Urteil, wie der Satz in den Beobachtungen
                 <Verdict tone="none">kann Zufall sein</Verdict>
               )}
               <Note>
