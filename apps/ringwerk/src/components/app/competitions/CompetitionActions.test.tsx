@@ -3,9 +3,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { confirms, notices, press, render, reset } from "@/test/confirm-capture"
 
-// Ein Wettbewerb mit Einschreibungen lässt sich nicht löschen (die Action lehnt ab). Statt einer Rückfrage, die
-// danach scheitert, zeigt der Papierkorb gleich den Hinweis (Textbuch, Entscheidung E1). Wer bestätigt was, für den
-// leeren Wettbewerb, steht in `../confirmations.test.tsx`.
+// Ein Wettbewerb mit Einschreibungen lässt sich nicht löschen (die Action lehnt ab). Der Papierkorb zeigt dann den
+// Hinweis, warum, und bietet nichts zum Bestätigen an. Wer bestätigt was beim leeren Wettbewerb, steht in
+// `../confirmations.test.tsx`.
 
 const mocks = vi.hoisted(() => ({ deleteCompetition: vi.fn(), setCompetitionStatus: vi.fn() }))
 

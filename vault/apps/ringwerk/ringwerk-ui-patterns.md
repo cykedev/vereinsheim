@@ -61,31 +61,30 @@ Referenzimplementierungen sind die zuerst genannten Dateien.
 
 Ausnahme: Ligen-Karten (`LeagueActions`) mit vielen status-abhängigen Optionen — dort ist Dropdown akzeptabel.
 
-### Destruktive Aktion: AlertDialog statt `confirm()`
+### Bestätigung mit Folgen: DecisionDialog statt `confirm()`
+
+Der Wortlaut steht nur in `src/lib/consequences.ts` (erst ins Textbuch, dann in den Code); die Komponente hält nur, ob
+der Dialog offen ist. Details in [[ringwerk-design2#Dialoge mit Folgen]].
 
 ```tsx
-<AlertDialog>
-  <AlertDialogTrigger asChild>
-    <Button
-      variant="ghost"
-      size="icon"
-      className="h-10 w-10 text-destructive/70 hover:text-destructive"
-    >
-      <Trash2 className="h-4 w-4" />
-    </Button>
-  </AlertDialogTrigger>
-  <AlertDialogContent>
-    <AlertDialogHeader>
-      <AlertDialogTitle>Wirklich löschen?</AlertDialogTitle>
-      <AlertDialogDescription>...</AlertDialogDescription>
-    </AlertDialogHeader>
-    <AlertDialogFooter>
-      <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-      <AlertDialogAction onClick={handleDelete}>Löschen</AlertDialogAction>
-    </AlertDialogFooter>
-  </AlertDialogContent>
-</AlertDialog>
+const [open, setOpen] = useState(false)
+
+<Button variant="ghost" size="icon" className="h-10 w-10" title="Löschen" aria-label="Löschen"
+  disabled={isPending} onClick={() => setOpen(true)}>
+  <Trash2 className="h-4 w-4" />
+</Button>
+<DecisionDialog
+  decision={disciplineDelete({ name, system })}
+  open={open}
+  onOpenChange={setOpen}
+  onConfirm={handleDelete}
+  confirmDisabled={isPending}
+/>
 ```
+
+- Löschen mit allen Daten: das Feld für den Namen als `children`, `confirmDisabled` bis der Name stimmt.
+- Geht die Aktion an dieser Stelle nicht (die Action würde ablehnen), zeigt `NoticeDialog` den Grund mit „Schließen“.
+- Fehler nach dem Bestätigen als `toast.error`: Der Dialog schließt beim Bestätigen.
 
 ### Bearbeiten-Dialog (inline, kein Seitennavigation)
 
@@ -256,10 +255,12 @@ Page-Header-Pattern:
 
 ### Interaktion
 
-- **Kein `prompt()`/`confirm()`/`alert()` in async-Callbacks**: Wird auf iOS Safari geblockt. Immer shadcn `Dialog` (Formulare) oder `AlertDialog` (Bestätigung) verwenden.
+- **Kein `prompt()`/`confirm()`/`alert()` in async-Callbacks**: Wird auf iOS Safari geblockt. Immer shadcn `Dialog` (Formulare) oder `DecisionDialog` (Bestätigung) verwenden.
 - **SVG-Icon als einziger Zelleninhalt**: In `<span className="inline-flex items-center justify-center">` wrappen für zuverlässige Zentrierung in `<td>`.
 - **Spacing-Verhältnis für gestapelte Karten**: `cardHeight × 0.5 = gap` als Faustregel. Bei 80px Kartenhöhe mindestens 40–48px Gap für optisches Gleichgewicht.
-- **Adaptive AlertDialogs mit mehreren Varianten**: Mehrere `AlertDialogContent`-Blöcke in einem `AlertDialog` funktionieren korrekt, wenn ihre Bedingungen sich gegenseitig ausschliessen (z.B. `!hasData`, `hasData && !isAdmin`, `hasData && isAdmin`). Kein separater Dialog-State pro Variante nötig — Bedingung direkt auf den Content-Block anwenden.
+- **Bestätigung je Fall**: Hat eine Aktion mehrere Fälle (etwa Teilnehmer ohne Wettbewerb, mit Wettbewerben als
+  Sportleitung, als Admin), rendert die Komponente je Fall einen eigenen `DecisionDialog` oder `NoticeDialog` unter
+  sich gegenseitig ausschließenden Bedingungen, alle mit demselben `open`.
 
 ### PDF-Rendering (react-pdf)
 

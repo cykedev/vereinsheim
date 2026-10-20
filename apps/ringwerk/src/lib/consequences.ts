@@ -1,5 +1,6 @@
 // Folgen jeder Aktion in Alltagsworten: „Kein Knopf ohne Folge“. Eine Quelle für Dialoge und Tests; die Komponenten
-// erfinden keine Texte. Ohne Pronomen für Personen. Reine Funktionen.
+// erfinden keine Texte. Ohne Pronomen für die Personen, um die es geht; nur „Ohne Speichern verlassen“ spricht wie in
+// Treffsicher den Bediener an. Reine Funktionen.
 //
 // Der Wortlaut ist im Textbuch freigegeben (vault/_attachments/textbuch-ringwerk-treffsicher.md, Abschnitt „Ringwerk:
 // Folgen vor dem Bestätigen“) und folgt den Schreibregeln ([[conventions]] §10). Die Folgen sind aus den Actions
