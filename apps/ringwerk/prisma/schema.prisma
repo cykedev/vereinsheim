@@ -346,6 +346,8 @@ model CompetitionParticipant {
   discipline    Discipline?       @relation(fields: [disciplineId], references: [id])
   // Gast-Schütze (nur für Events relevant)
   isGuest       Boolean           @default(false)
+  // Saison: in der Wertung ab der ersten Serie, auch wenn der Wettbewerb eine Mindestzahl verlangt (etwa Jugend)
+  exemptFromMinSeries Boolean     @default(false)
   // Team-Zugehörigkeit (nur bei type=EVENT mit teamSize >= 2)
   eventTeamId   String?
   eventTeam     EventTeam?        @relation(fields: [eventTeamId], references: [id])
