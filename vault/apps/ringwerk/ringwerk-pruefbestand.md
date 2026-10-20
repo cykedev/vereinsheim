@@ -105,6 +105,10 @@ vergleicht alt gegen neu auf demselben Aufbau.
   (54 „Spielplan generiert“, 18 „Playoff-Runde angelegt“). Belegt über `pruefdaten --zeilen` auf altem und neuem Stand:
   alle Tabellen außer `AuditLog` gleich, dort nichts entfallen. Danach Vergleich 0 Fehler, 0 Hinweise; Abläufe grün bis
   auf den bekannten Befund.
+- Am selben Tag noch einmal aufgenommen auf `ef05d181` (vom User freigegeben): „Spielplan generiert“ zählt die
+  Paarungen ohne Freilose. Anders waren nur 9 Protokollzeilen der Ligen mit ungerader Teilnehmerzahl (etwa 30 → 20
+  Paarungen bei 5 Teilnehmern in Hin- und Rückrunde). Danach Vergleich 0 Fehler, 0 Hinweise; Abläufe grün bis auf den
+  bekannten Befund.
 - Seit dieser Aufnahme ist der Ausgangsstand Design 2: Hinweise zu Beschriftungen und die Bilder vorher/nachher beziehen
   sich auf Design 2. Die Bilder vor Design 2 liegen weiter unter `reports/aus-worktree-happy-leakey/ringwerk-referenz/`
   der Hauptcheckout.
