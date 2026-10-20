@@ -1,9 +1,9 @@
 // Verlauf in der Einheit: Serienkurve, Ermüdung, Trend in der Scheibe, gleitender Schnitt, Streuung
 // und Schwerpunkt je Serie, längste Folge über einer Schwelle (Katalog I1–I6, I10). Grundlage sind
 // die Wertungsschüsse in Abgabefolge, Werte in der gewählten Wertung. Einzelne Scheiben sind
-// verrauscht: Ermüdung und Trend sagen erst als Muster über mehrere Scheiben etwas. Der Trend heißt
-// nur „klar“, wenn Mann-Kendall (zweiseitig, 95 %) eine Richtung zeigt und die Ausgleichsgerade ihr
-// folgt.
+// verrauscht: Ermüdung und Trend heißen nur „klar“, wenn ein Test es zeigt, und auch dann gilt es für
+// diese Scheibe. Der Trend heißt „klar“, wenn Mann-Kendall (zweiseitig, 95 %) eine Richtung zeigt und die
+// Ausgleichsgerade ihr folgt, die Ermüdung, wenn Mann-Whitney sie zeigt und das Mittel ihr folgt.
 
 import { centroid, r50, type Point } from "../geometry"
 import {
@@ -14,7 +14,7 @@ import {
   type Scoring,
   type ShotKind,
 } from "../metrics"
-import { leastSquaresSlope, mannKendall, Z95 } from "../stats"
+import { leastSquaresSlope, mannKendall, mannWhitney, Z95 } from "../stats"
 import { valueNeed, valueRings, valueTenths } from "./values"
 
 const MATCH: readonly ShotKind[] = ["match"]
@@ -59,7 +59,11 @@ export function seriesCurve(shots: readonly MetricShot[], scoring: Scoring): Ser
     .map((e) => ({ series: e.series, shots: e.shots, total: e.complete ? e.tenths / 10 : null }))
 }
 
-/** Ermüdung (I2): Ø der letzten zehn minus der ersten zehn, R50 ebenso; ab 20 Wertungsschüssen */
+/**
+ * Ermüdung (I2): Ø der letzten zehn minus der ersten zehn, R50 ebenso; ab 20 Wertungsschüssen. „Klar“ nach
+ * Mann-Whitney über die Werte (zweiseitig, 95 %, zehn gegen zehn genau ausgezählt), und nur, wenn das Mittel
+ * dieselbe Richtung zeigt: Ein sehr schwacher Schuss kann das Mittel gegen die Ränge kippen. R50 ohne Urteil.
+ */
 export function fatigue(
   shots: readonly MetricShot[],
   scoring: Scoring
@@ -69,11 +73,21 @@ export function fatigue(
   lastMeanRings: number
   deltaRings: number
   deltaR50Um: number | null
+  clear: boolean
+  /** Richtung des Werts am Ende, nur wenn klar */
+  direction: "up" | "down" | null
 } | null {
   const values = valued(shots, scoring).map((shot) => valueRings(shot, scoring))
   if (values.length < 20) return null
-  const firstMeanRings = meanOf(values.slice(0, 10))
-  const lastMeanRings = meanOf(values.slice(-10))
+  const first = values.slice(0, 10)
+  const last = values.slice(-10)
+  const firstMeanRings = meanOf(first)
+  const lastMeanRings = meanOf(last)
+  const deltaRings = lastMeanRings - firstMeanRings
+  const test = mannWhitney(last, first)
+  // wie beim Trend: ein Urteil nur, wenn Test und Mittel in dieselbe Richtung zeigen
+  const side = test ? Math.sign(test.u - (last.length * first.length) / 2) : 0
+  const clear = test !== null && test.p < 0.05 && side !== 0 && side === Math.sign(deltaRings)
   const positioned = selectShots(inShotOrder(shots), {
     kinds: MATCH,
     need: "position",
@@ -87,8 +101,10 @@ export function fatigue(
     n: values.length,
     firstMeanRings,
     lastMeanRings,
-    deltaRings: lastMeanRings - firstMeanRings,
+    deltaRings,
     deltaR50Um,
+    clear,
+    direction: clear ? (deltaRings > 0 ? "up" : "down") : null,
   }
 }
 

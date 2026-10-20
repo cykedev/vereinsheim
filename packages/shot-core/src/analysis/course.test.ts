@@ -113,6 +113,45 @@ describe("Ermüdung und Trend (I2, I3)", () => {
     expect(tired?.deltaRings).toBe(0)
   })
 
+  // Folge von Zehntelwerten als Wertungsschüsse in Abgabefolge, alle in der Mitte
+  const valued = (tenths: readonly number[]) => tenths.map((t, i) => shot(i, t))
+  const ten = (t: number) => Array.from({ length: 10 }, () => t)
+
+  it("klar schwächer oder stärker nach Mann-Whitney, in beiden Wertungen", () => {
+    // zehnmal 10,8, dann zehnmal 9,2: jeder der letzten zehn unter jedem der ersten (in ganzen Ringen 10 gegen 9)
+    const down = valued([...ten(108), ...ten(92)])
+    for (const scoring of ["decimal", "rings"] as const) {
+      expect(fatigue(down, scoring)).toMatchObject({ clear: true, direction: "down" })
+    }
+    expect(fatigue(valued([...ten(92), ...ten(108)]), "decimal")).toMatchObject({
+      clear: true,
+      direction: "up",
+    })
+  })
+
+  it("kein Urteil, wenn die Werte nur schwanken", () => {
+    const alternating = valued(Array.from({ length: 20 }, (_, i) => (i % 2 ? 99 : 101)))
+    expect(fatigue(alternating, "decimal")).toMatchObject({ clear: false, direction: null })
+  })
+
+  it("der Test urteilt, nicht die Größe des Unterschieds", () => {
+    // die letzten zehn je 0,5 Ringe unter den ersten zehn, aber weit gestreut: kein Urteil
+    const first = [109, 70, 108, 71, 107, 72, 106, 73, 105, 74]
+    const tired = fatigue(valued([...first, ...first.map((t) => t - 5)]), "decimal")
+    expect(tired?.deltaRings).toBeCloseTo(-0.5, 9)
+    expect(tired).toMatchObject({ clear: false, direction: null })
+  })
+
+  it("kein Urteil, wenn Test und Mittel in verschiedene Richtungen zeigen", () => {
+    // neun der letzten zehn über allen ersten, einer weit darunter: Ränge steigen, das Mittel fällt
+    const tired = fatigue(
+      valued([...ten(100), ...Array.from({ length: 9 }, () => 105), 30]),
+      "decimal"
+    )
+    expect(tired?.deltaRings).toBeCloseTo(-0.25, 9)
+    expect(tired).toMatchObject({ clear: false, direction: null })
+  })
+
   it("Trend je zehn Schuss: Ausgleichsgerade, klar nach Mann-Kendall, ohne Intervall", () => {
     const rising = Array.from({ length: 20 }, (_, i) => shot(i, 90 + i))
     const trend = cardTrend(rising, "decimal")
