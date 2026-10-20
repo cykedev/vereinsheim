@@ -42,21 +42,31 @@ Playoffs): Arbeitsansichten, gewollt. Fachbegriffe: die Kürzel „RT“, „Bes
 | Wann schieße ich wieder? | nicht beantwortbar: Konten und Teilnehmer sind nicht verknüpft, das Mitglied sucht sich im Spielplan |
 | Wie steht das Achtelfinale? | mühsam: der Einstieg zeigt die Gruppenphase, die Playoffs sind ein Reiter weiter |
 
-## Befunde (Vorschläge)
+## Befunde
 
-- **R1 Tabelle vor dem Spielplan:** `competitions/[id]/schedule/page.tsx` setzt den Spielplan vor die Tabelle. Die
+- **R1 Tabelle vor dem Spielplan (umgesetzt am 20. Oktober 2026, nach dem Wettkampf am 23. Oktober auszuliefern):** `competitions/[id]/schedule/page.tsx` setzt den Spielplan vor die Tabelle. Die
   Antwort („Wo stehe ich?“) gehört nach oben, der Spielplan darunter, nach Spieltagen gegliedert, der laufende
   aufgeklappt.
-- **R2 Einstieg folgt der Phase:** `competitions/[id]/page.tsx` leitet eine Liga immer auf „Spielplan & Tabelle“.
+- **R2 Einstieg folgt der Phase (umgesetzt, `entryPage`):** `competitions/[id]/page.tsx` leitet eine Liga immer auf „Spielplan & Tabelle“.
   Laufen die Playoffs, wäre der Turnierbaum die Antwort.
 - **R3 Start knapp:** Jede Karte auf Start zeigt ihre ganze Tabelle oder den ganzen Baum. Eine Karte mit einem Satz
   (Stand, Spitze, nächste Runde) und dem Weg zum Wettbewerb hielte Start bei vielen Wettbewerben kurz. Gemessen ist das
   am Prüfbestand mit 95 Wettbewerben; die echten Daten haben 11.
-- **R4 Kürzel in Tabellen:** „RT“, „Pkt.“, „Sp.“, „korr.“ ausschreiben, wo Platz ist; am Telefon mit „?“
+- **R4 Kürzel in Tabellen (umgesetzt als `<abbr>` mit vollem Namen im Kopf der Liga-Tabelle):** „RT“, „Pkt.“, „Sp.“, „korr.“ ausschreiben, wo Platz ist; am Telefon mit „?“
   ([[ringwerk-design2]], Hilfe). Die PDFs bleiben, wie sie sind.
 - **R5 „Wann schieße ich wieder?“:** braucht eine Verknüpfung von Konto und Teilnehmer. Das ist eine Änderung am
   Datenmodell und eine eigene Entscheidung, keine Anpassung der Oberfläche.
-- **R6 Turnierbaum mit 16:** 4–9 Bildschirme am Telefon; der erste zeigt das Achtelfinale. Die laufende Runde zuerst
+- **R6 Turnierbaum mit 16 (umgesetzt, `runningColumn`):** 4–9 Bildschirme am Telefon; der erste zeigt das Achtelfinale. Die laufende Runde zuerst
   wäre die Antwort.
 
 Nicht gemessen: Start und Liste an der Kopie der echten Daten (nur ein Admin-Konto aktiv).
+
+## Offen
+
+- **R1, zweiter Teil:** den Spielplan nach Spieltagen gliedern, den laufenden offen. Berührt das Eintragen von
+  Ergebnissen; erst mit der Sportleitung besprechen.
+- **R3 Start knapp:** erst an den echten Daten messen (`durchsicht` kennt bisher nur den Prüfbestand); lang machen
+  Start vor allem die ganzen Turnierbäume in Karten laufender Playoffs.
+- **R5 „Wann schieße ich wieder?“:** Verknüpfung von Konto und Teilnehmer, eigene Entscheidung (ADR).
+- **Bekannt aus den Abläufen:** Nach einem Feldfehler beim Anlegen eines Wettbewerbs springt die Disziplin auf
+  „Gemischt“ zurück (Radix-Auswahl mit `name`, conventions §9).

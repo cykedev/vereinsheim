@@ -13,8 +13,8 @@ relates_to: ["[[spiegel-durchsicht]]", "[[treffsicher-design2]]", "[[statistics-
 eine Saison (52 Einheiten in 26 Wochen, Ziele, Abläufe; `pnpm --filter treffsicher durchsicht`). Die Statistik folgt
 schon den drei Ebenen (Zahl und Satz zuerst). Start und Einheit zeigen Ergebnisse ohne Bezug, die Antwort auf „Wie war
 meine letzte Einheit?“ fehlt. Ein echter Fehler, Ergebnisse und Schüsse mit Dezimalpunkt statt Komma, ist behoben.
-Die übrigen Befunde stehen im Plan `plans/2026-10-20-durchsicht-drei-ebenen.md`. Mit [[adr-033]] betrifft Treffsicher
-nur, was das Tagebuch nach Spiegel mitnimmt.
+Mit [[adr-033]] betrifft Treffsicher nur, was das Tagebuch nach Spiegel mitnimmt; die übrigen Befunde stehen unter
+„Offen“.
 
 # Treffsicher-Durchsicht
 
@@ -57,10 +57,17 @@ Liste und in der Tabelle der Werte), dort gewollt.
   (Spiegels Ablesung in der Liste) gäbe die Antwort; die Rechnung liegt in `shot-core` (`periodModel`).
 - **T4 Statistik mit zwei Zeilen Bedienung vor der Antwort:** Disziplin als Segment, darunter Zeitraum und Wertung.
   Die Leitlinie ist eine Zeile ([[spiegel-durchsicht]]); in Spiegel stehen Familie, „Filter“ und Wertung in einer.
-- **T5 Satz mit Semikolon:** „…; das ist ein klarer Unterschied.“ widerspricht den Schreibregeln (conventions §10).
+- **T5 Satz mit Semikolon (umgesetzt am 20. Oktober 2026, samt Beobachtungen und Hinweisen in `shot-ui`):** „…; das ist ein klarer Unterschied.“ widerspricht den Schreibregeln (conventions §10).
   Der Satz kommt aus `shot-ui` (`period/sentence.ts`) und steht so auch in Spiegel.
 - **T6 Tagebuch lang:** 12,8 Bildschirme bei 52 Einheiten, alle Einheiten untereinander. Spiegels Liste zeigt je Abend
   gruppiert und kürzt am Telefon („Alle zeigen“).
 
 Nicht gemessen: die Kopie der echten Daten (Treffsicher-Konten gehören Mitgliedern); die Längen hängen an der Zahl der
 Einheiten.
+
+## Offen
+
+- **T2, T3, T6** (Start, Einheit, Tagebuch): kommen mit [[adr-033]] Stufe 2 aus Spiegel.
+- **T4 eine Zeile Bedienung:** Die Familie als Segment bricht am Telefon mit langen Namen um (`PeriodControls` in
+  `shot-ui`); eine kompakte Familienwahl ändert Spiegel mit, deshalb zu [[adr-033]] Stufe 2.
+- **Hilfetexte in `shot-help`:** noch 51 Semikolons; eigener Durchgang über das Textbuch.

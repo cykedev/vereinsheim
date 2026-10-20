@@ -218,20 +218,11 @@ Ziel: **Mit Opt-in erscheint die Dienstagsscheibe von selbst in Spiegel; ohne Op
 
 Was zwischen den Features offen ist und keinen eigenen Abschnitt hat.
 
-- **Durchsicht von Treffsicher und Ringwerk nach drei Ebenen** (Rest von SP-4.3). **Gemessen am 20. Oktober 2026**
-  ([[treffsicher-durchsicht]], [[ringwerk-durchsicht]]); der Plan für die Befunde wartet auf Freigabe
-  (`plans/2026-10-20-durchsicht-drei-ebenen.md`). Ursprünglicher Auftrag: erst
-  messen wie [[spiegel-durchsicht]] am Telefon (390 px, 772 px Inhalt über der Leiste): je Hauptseite Länge in
-  Bildschirmen, Bedienelemente und Zahlen (gesamt und im ersten Bildschirm), doppelte Zahlen, Fachbegriffe, und die
-  Kernfragen je App mit Urteil („Wie war meine letzte Einheit?“, „Werde ich besser?“, „Wo stehe ich in der Liga?“,
-  „Wann schieße ich wieder?“). Ringwerk an den Szenarien des Prüfbestands ([[ringwerk-pruefbestand]]), damit jede
-  Phase gemessen ist. Ergebnis als Notes `treffsicher-durchsicht` und `ringwerk-durchsicht`, danach `/plan` für die
-  Befunde (Antwort zuerst auf Dashboard, Statistik und Wettbewerbsseite, eine Zeile Bedienung vor dem Inhalt, Filter
-  im Blatt). Dabei auch: Disziplinen verwaltet jede App anders (Spiegel im Admin mit Wertung je Disziplin); ob eine
-  gemeinsame Form passt, ist ein Befund. Für Ringwerk nur Vorschläge, jede Änderung am Ablauf einer Seite gibt der
-  User einzeln frei. Mitnehmen: die Fehlerseiten Ringwerk `(public)/error.tsx` und Treffsicher
-  `sessions/[id]/error.tsx` stehen noch im alten Stil. Mit [[adr-033]] betrifft Treffsicher nur, was das Tagebuch
-  übernimmt.
+- **Durchsicht von Treffsicher und Ringwerk nach drei Ebenen** (Rest von SP-4.3): **gemessen und zum Teil umgesetzt
+  am 20. Oktober 2026** ([[treffsicher-durchsicht]], [[ringwerk-durchsicht]]; Werkzeug `pnpm --filter <app> durchsicht`).
+  Umgesetzt: Dezimalkomma in Treffsicher, Sätze ohne Semikolon in `shot-ui`, Fehlerseiten, in Ringwerk die Tabelle vor
+  dem Spielplan, der Einstieg nach Phase, der Turnierbaum ab der laufenden Runde und die Kürzel mit vollem Namen.
+  Offen: die Befunde, die dort unter „Offen“ stehen.
 - **PDFs in Design 2:** Die PDFs von Ringwerk und Treffsicher zeigen Ringwerte schon in den Farben von Spiegel
   (`SCORE_HEX`), Aufbau und Schrift sind noch die alten.
 - **Liste als Filter im Fortschritt** und auf der Seite einer Scheibe eine Verknüpfung „alle Scheiben dieser Liste“.
