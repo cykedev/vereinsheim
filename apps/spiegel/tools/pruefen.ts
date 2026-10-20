@@ -790,6 +790,139 @@ async function trash(page: Page) {
   )
 }
 
+/**
+ * Teilen per Link: auf der Seite einer Scheibe teilen, den Link in einem Fenster ohne Anmeldung öffnen (nur Ansicht,
+ * keine Wege aus der Seite, keine Knöpfe mit Folgen, Analyse und Hilfe gehen), dann das Teilen beenden. Am Ende ist die
+ * Scheibe wieder ungeteilt.
+ */
+async function sharing(browser: Browser, page: Page, href: string) {
+  await page.viewport(1280, 900)
+  await page.goto(`${BASE}${href}`)
+  // ein abgebrochener Lauf ließ die Scheibe geteilt: erst beenden
+  if (await page.ev<boolean>(`!!button("Teilen beenden")`)) {
+    await page.click(`button("Teilen beenden")`)
+    await page.waitFor(`!!$('[role="alertdialog"]')`)
+    await page.click(`button("Teilen beenden", $('[role="alertdialog"]'))`)
+    await page.waitFor(`!!button("Scheibe teilen")`)
+  }
+  await page.click(`button("Scheibe teilen")`)
+  await page.waitFor(`!!$('[role="alertdialog"]')`)
+  const dialog = await page.ev<string>(`txt($('[role="alertdialog"]'))`)
+  check(
+    "Teilen: Dialog sagt, wer was sieht und was nicht",
+    dialog.includes("Eine Anmeldung braucht es dafür nicht") &&
+      dialog.includes("Dein Name und deine Sportpassnummer stehen nicht dabei") &&
+      dialog.includes("Teilen beenden"),
+    dialog.slice(0, 200)
+  )
+  await page.click(`button("Link erstellen", $('[role="alertdialog"]'))`)
+  await page.waitFor(`!!$("[data-share-link]") && !$('[role="alertdialog"]')`)
+  const link = await page.ev<string>(`txt($("[data-share-link]"))`)
+  const path = link.slice(BASE.length)
+  check(
+    "Teilen: der Link mit UUID, „Geteilt seit“, Kopieren und Beenden",
+    /^\/share\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(path) &&
+      link.startsWith(BASE) &&
+      (await page.ev<boolean>(
+        `txt($("[data-share-card]")).includes("Geteilt seit") && !!button("Link kopieren") && !!button("Teilen beenden")`
+      )),
+    link
+  )
+
+  const guest = await browser.newPage({ isolated: true })
+  try {
+    await guest.viewport(1280, 900)
+    const ready = '$("[data-shared-header]")'
+    await guest.goto(link, ready)
+    const view = await guest.ev<{
+      path: string
+      shots: number
+      leaving: string[]
+      frame: boolean
+      buttons: string[]
+      toggles: number
+      status: number
+      email: boolean
+    }>(`(async () => {
+      const r = await fetch(location.href)
+      const html = await r.text()
+      return {
+        path: location.pathname,
+        shots: $$("#shot-table tr[data-row]").length,
+        leaving: $$("a[href]").map((a) => a.getAttribute("href")).filter((h) => !h.startsWith("#")),
+        frame: !!$("[data-app-frame]"),
+        buttons: ["Scheibe löschen", "Scheibe teilen", "Teilen beenden", "Link kopieren"].filter((b) => !!button(b)),
+        toggles: $$("[data-result-actions], [data-share-card], [data-delete-card]").length,
+        status: r.status,
+        email: html.includes(${JSON.stringify(DEMO_EMAIL)}),
+      }
+    })()`)
+    check(
+      "Geteilte Scheibe ohne Anmeldung: die Scheibe mit Schüssen, Status 200, ohne Konto im HTML",
+      view.path === path && view.shots > 0 && view.status === 200 && !view.email,
+      view
+    )
+    check(
+      "Geteilte Scheibe: kein Rahmen, kein Link aus der Seite, keine Knöpfe für Art, Wertung, Teilen, Löschen",
+      !view.frame && view.leaving.length === 0 && view.buttons.length === 0 && view.toggles === 0,
+      view
+    )
+    await guest.click(`tab("Zeit und Verlauf")`, { settle: 300 })
+    const tabbed = await guest.ev<{ tab: string; hash: string; path: string }>(
+      `({ tab: activeTab(), hash: location.hash, path: location.pathname })`
+    )
+    check(
+      "Geteilte Scheibe: Reiter der Analyse wechseln, die Adresse bleibt die des Links",
+      tabbed.tab === "Zeit und Verlauf" && tabbed.hash === "#time" && tabbed.path === path,
+      tabbed
+    )
+    await guest.click(`button("Erklärung: Trefferbild")`, { settle: 300 })
+    const help = await guest.ev<string>(`txt(sheet() && $("h2", sheet()))`)
+    check("Geteilte Scheibe: das „?“ öffnet die Erklärung", help.startsWith("Trefferbild"), help)
+    await guest.key("Escape")
+    for (const width of [390, 375]) {
+      await guest.viewport(width, 844)
+      await guest.goto(link, ready)
+      const sw = await guest.ev<{ sw: number; widest: string[] }>(
+        `({ sw: document.documentElement.scrollWidth, widest: widest(${width}) })`
+      )
+      check(
+        `Geteilte Scheibe am Telefon ${width} px ohne seitliches Scrollen`,
+        sw.sw <= width,
+        `${sw.sw} ${sw.widest.join(" | ")}`
+      )
+    }
+    check(
+      "Geteilte Scheibe: keine Skriptfehler",
+      guest.errors.length === 0,
+      guest.errors.slice(0, 5).join(" · ")
+    )
+
+    await page.click(`button("Teilen beenden")`)
+    await page.waitFor(`!!$('[role="alertdialog"]')`)
+    await page.click(`button("Teilen beenden", $('[role="alertdialog"]'))`)
+    check(
+      "Teilen beenden: zurück zum Knopf „Scheibe teilen“",
+      await page.waitFor(`!!button("Scheibe teilen") && !$("[data-share-link]")`),
+      ""
+    )
+    await guest.viewport(1280, 900)
+    await guest.goto(link, '$("[data-share-gone]")')
+    const gone = await guest.ev<{ status: number; text: string; links: number }>(`(async () => ({
+      status: (await fetch(location.href)).status,
+      text: txt($("[data-share-gone]")),
+      links: $$("a[href]").length,
+    }))()`)
+    check(
+      "Nach dem Beenden: Hinweis statt Scheibe, Status 404, kein Weg in die App",
+      gone.status === 404 && gone.text.includes("nicht mehr geteilt") && gone.links === 0,
+      gone
+    )
+  } finally {
+    await guest.close()
+  }
+}
+
 async function language(page: Page) {
   await page.viewport(1280, 900)
   for (const [path, selectors] of [
@@ -1256,6 +1389,7 @@ async function main() {
       throw new Error(`${BASE} ist kein lokaler Server; --fremder-host, wenn das gewollt ist`)
     server = START ? await startServer({ app: "spiegel", port: START_PORT, out }) : null
     browser = await Browser.launch()
+    const chrome = browser
     const page = await browser.newPage()
     await login(page)
     const href = await pickCard(page)
@@ -1272,6 +1406,7 @@ async function main() {
     await section("Offen und Leiste", () => openAndBar(page))
     await section("Papierkorb", () => trash(page))
     await section("Admin ohne Rolle", () => adminWithoutRole(page))
+    await section("Geteilte Scheibe", () => sharing(chrome, page, href))
     await section("Gemeinsame Prüfungen", () => commonChecks(page, href))
     // React meldet in der Entwicklung manches über console.error; jede Meldung zählt, damit keine untergeht
     check("Keine Skriptfehler", page.errors.length === 0, page.errors.slice(0, 5).join(" · "))

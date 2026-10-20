@@ -112,15 +112,24 @@ export class Browser {
     return () => this.listeners.delete(listener)
   }
 
-  async newPage(): Promise<Page> {
+  /**
+   * ein neues Fenster; mit `isolated` in einem eigenen Browser-Kontext ohne die Cookies der übrigen Fenster (wie ein
+   * privates Fenster: ohne Anmeldung)
+   */
+  async newPage({ isolated = false }: { isolated?: boolean } = {}): Promise<Page> {
+    const context = isolated
+      ? (await this.send<{ browserContextId: string }>("Target.createBrowserContext"))
+          .browserContextId
+      : null
     const { targetId } = await this.send<{ targetId: string }>("Target.createTarget", {
       url: "about:blank",
+      ...(context ? { browserContextId: context } : {}),
     })
     const { sessionId } = await this.send<{ sessionId: string }>("Target.attachToTarget", {
       targetId,
       flatten: true,
     })
-    const page = new Page(this, sessionId, targetId)
+    const page = new Page(this, sessionId, targetId, context)
     await page.init()
     return page
   }
@@ -174,7 +183,9 @@ export class Page {
   constructor(
     private readonly browser: Browser,
     private readonly sessionId: string,
-    readonly targetId: string
+    readonly targetId: string,
+    /** der eigene Browser-Kontext eines isolierten Fensters; null im gemeinsamen */
+    private readonly contextId: string | null = null
   ) {}
 
   private send<T = unknown>(method: string, params: Record<string, unknown> = {}) {
@@ -440,6 +451,8 @@ export class Page {
 
   async close(): Promise<void> {
     await this.browser.send("Target.closeTarget", { targetId: this.targetId })
+    if (this.contextId)
+      await this.browser.send("Target.disposeBrowserContext", { browserContextId: this.contextId })
   }
 }
 
