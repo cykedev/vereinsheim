@@ -1540,7 +1540,7 @@ gelesen**, nicht released.
 
 ## Spiegel: Eine Scheibe sagt, was sie zeigt
 
-Stand 20. Oktober 2026, vom Agenten entworfen, **vom User noch nicht gelesen**, nicht umgesetzt. Plan:
+**Status: freigegeben am 20. Oktober 2026**, noch nicht umgesetzt. Plan:
 `plans/2026-10-20-spiegel-single-card-hints.md`.
 
 Grund: Auf der Seite einer Scheibe stehen Sätze wie „Ein Muster zeigt erst der Vergleich über mehrere Scheiben.“ Auf
