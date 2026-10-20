@@ -48,6 +48,7 @@ describe("DisciplineForm: Faktor", () => {
     expect(input).toMatch(READ_ONLY)
     expect(input).not.toMatch(/ disabled=""/)
     expect(html).toContain("Gesperrt, weil die Disziplin schon in einem Wettbewerb verwendet wird.")
+    expect(input).toContain('aria-describedby="teilerFaktor-lock"')
   })
 
   it("Standarddisziplin: nur lesbar, Ringwerk legt den Faktor fest", () => {

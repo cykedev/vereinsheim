@@ -59,7 +59,7 @@ export type Fact =
   | "finale:stichkriterium"
   | "finale:verlaengerung"
   | "finale:stichkriterium-entscheidet"
-  // Liga: Wertung (Befunde B1, B3, B6)
+  // Liga: Wertung (Stichkriterium im Finale, korrigierter Teiler, Spalte bei Wertung nach Ringen)
   | "liga:teiler-roh-anders"
   | "liga:ringe-gegen-ringteiler"
   // Event
@@ -541,7 +541,7 @@ function edgeScenarios(): Scenario[] {
   ]
 }
 
-// ─── Wertung: Fälle, die Ringwerk anders anzeigte als rechnete ───────────────────────────────────
+// ─── Wertung: Fälle, in denen Anzeige und Wertung übereinstimmen müssen ──────────────────────────
 
 function scoringScenarios(): LeagueScenario[] {
   return [

@@ -65,6 +65,7 @@ export async function factsOf(rw: Ringwerk, competitionId: string): Promise<Set<
           winsA: true,
           winsB: true,
           participantAId: true,
+          participantBId: true,
           duels: {
             select: {
               isSuddenDeath: true,
@@ -267,7 +268,12 @@ export async function factsOf(rw: Ringwerk, competitionId: string): Promise<Set<
         add("finale:stichkriterium", !sudden && a !== undefined && a === b)
         add("finale:hauptwertung", !sudden && a !== undefined && a !== b)
         // gleiche Ringe, der Sieger des Finales hat den kleineren Ringteiler
-        const winner = final.winsA > final.winsB ? final.participantAId : null
+        const winner =
+          final.winsA > final.winsB
+            ? final.participantAId
+            : final.winsB > final.winsA
+              ? final.participantBId
+              : null
         const rt = (won: boolean) =>
           decisive?.results
             .find((r) => (r.participantId === winner) === won)

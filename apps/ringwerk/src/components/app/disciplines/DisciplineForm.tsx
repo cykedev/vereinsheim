@@ -104,13 +104,19 @@ export function DisciplineForm({ discipline, action, factorLock = null }: Props)
           readOnly={factorLock !== null}
           disabled={isPending}
           aria-invalid={teilerFaktorError ? true : undefined}
-          aria-describedby={teilerFaktorError ? "teilerFaktor-error" : undefined}
+          aria-describedby={
+            [teilerFaktorError && "teilerFaktor-error", factorLock && "teilerFaktor-lock"]
+              .filter(Boolean)
+              .join(" ") || undefined
+          }
         />
         <p className="text-xs text-muted-foreground">
           Korrekturfaktor für gemischte Wertungen. Teiler wird mit diesem Faktor multipliziert.
         </p>
         {factorLock && (
-          <p className="text-xs text-muted-foreground">{FACTOR_LOCK_HINT[factorLock]}</p>
+          <p id="teilerFaktor-lock" className="text-xs text-muted-foreground">
+            {FACTOR_LOCK_HINT[factorLock]}
+          </p>
         )}
         <FieldError id="teilerFaktor-error" message={teilerFaktorError} />
       </div>

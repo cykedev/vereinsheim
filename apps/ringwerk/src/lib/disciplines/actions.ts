@@ -82,6 +82,8 @@ export async function updateDiscipline(
     scoringType: formData.get("scoringType"),
     teilerFaktor: Number(formData.get("teilerFaktor")),
   })
+  if (!parsed.success) return { error: parsed.error.flatten().fieldErrors }
+  const data = parsed.data
 
   // Der Faktor steckt in jedem gespeicherten Ringteiler. Sobald ein Wettbewerb, eine Einschreibung oder eine Serie die
   // Disziplin verwendet, bleibt er fest (bei Standarddisziplinen immer); Prüfung und Update in einer Transaktion, das
@@ -94,12 +96,8 @@ export async function updateDiscipline(
         select: { id: true, scoringType: true, teilerFaktor: true, isSystem: true },
       })
       if (!discipline) return { error: "Disziplin nicht gefunden." }
-      if (!parsed.success) return { error: parsed.error.flatten().fieldErrors }
 
-      const factorChanged = !sameFactor(
-        parsed.data.teilerFaktor,
-        discipline.teilerFaktor.toNumber()
-      )
+      const factorChanged = !sameFactor(data.teilerFaktor, discipline.teilerFaktor.toNumber())
       if (factorChanged) {
         if (discipline.isSystem) return { error: { teilerFaktor: [FACTOR_SYSTEM] } }
         const [competitions, enrolments, series] = await Promise.all([
@@ -112,7 +110,7 @@ export async function updateDiscipline(
         }
       }
 
-      if (parsed.data.scoringType !== discipline.scoringType) {
+      if (data.scoringType !== discipline.scoringType) {
         // Wertungsartwechsel verhindert inkonsistente historische Ergebnisse
         const competitionCount = await tx.competition.count({ where: { disciplineId: id } })
         if (competitionCount > 0) {
@@ -133,7 +131,7 @@ export async function updateDiscipline(
               series: { none: {} },
             }
           : { id },
-        data: parsed.data,
+        data,
       })
       if (updated.count === 0) return { error: { teilerFaktor: [FACTOR_USED] } }
 
@@ -144,9 +142,9 @@ export async function updateDiscipline(
           entityId: id,
           userId: session.user.id,
           details: {
-            name: parsed.data.name,
-            scoringType: parsed.data.scoringType,
-            teilerFaktor: parsed.data.teilerFaktor,
+            name: data.name,
+            scoringType: data.scoringType,
+            teilerFaktor: data.teilerFaktor,
           },
         },
       })

@@ -239,7 +239,7 @@ describe("updateDiscipline", () => {
     expect(updateManyMock).toHaveBeenCalled()
   })
 
-  // ── Faktor (E3) ──
+  // ── Faktor gesperrt ──
 
   const USED =
     "Der Faktor lässt sich nicht mehr ändern. Die Disziplin wird schon in einem Wettbewerb verwendet. Für einen anderen Faktor eine neue Disziplin anlegen."

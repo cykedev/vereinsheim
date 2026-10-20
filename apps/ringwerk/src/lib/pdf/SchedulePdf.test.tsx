@@ -160,6 +160,7 @@ describe("SchedulePdf — Spalte bei Gleichstand", () => {
     const pdf = await text("RINGS")
     expect(pdf).toContain("Best. Ringe")
     expect(pdf).not.toContain("Best. RT")
+    expect(pdf).toContain("97")
     expect(pdf).not.toContain("9,5")
   })
 
