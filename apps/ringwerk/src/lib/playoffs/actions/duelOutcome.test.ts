@@ -5,7 +5,7 @@ vi.mock("@/lib/db", () => ({
   db: { competitionParticipant: { findFirst: participantFindFirst } },
 }))
 
-import { computeDuelOutcome, storedDuelOutcome } from "./duelOutcome"
+import { computeDuelOutcome, duelFactors, storedDuelOutcome } from "./duelOutcome"
 
 /** feste Disziplin: der Teiler vom Ausdruck zählt */
 const FIXED = { a: 1, b: 1 }
@@ -195,5 +195,36 @@ describe("computeDuelOutcome: höchste Ringzahl je Schusszahl", () => {
     )
     if ("error" in computed) throw new Error(computed.error)
     expect(computed.ringteilerA).toBeCloseTo(expected, 6)
+  })
+})
+
+describe("duelFactors", () => {
+  const match = (disciplineId: string | null) => ({
+    participantAId: "a",
+    participantBId: "b",
+    competitionId: "c",
+    competition: {
+      disciplineId,
+      discipline:
+        disciplineId === null
+          ? null
+          : { scoringType: "WHOLE" as const, teilerFaktor: { toNumber: () => 0.3333333 } },
+    },
+  })
+
+  it("feste Disziplin: 1 auf beiden Seiten, ohne Abfrage", async () => {
+    participantFindFirst.mockReset()
+    expect(await duelFactors(match("lp"))).toEqual({ a: 1, b: 1 })
+    expect(participantFindFirst).not.toHaveBeenCalled()
+  })
+
+  it("gemischt: der Faktor der Einschreibung je Seite, ohne Disziplin 1", async () => {
+    participantFindFirst.mockReset()
+    participantFindFirst.mockImplementation(async ({ where }) =>
+      where.participantId === "a"
+        ? { discipline: { scoringType: "WHOLE", teilerFaktor: { toNumber: () => 0.3333333 } } }
+        : { discipline: null }
+    )
+    expect(await duelFactors(match(null))).toEqual({ a: 0.3333333, b: 1 })
   })
 })

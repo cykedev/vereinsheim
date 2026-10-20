@@ -139,6 +139,21 @@ describe("getPlayoffBracket: Sieger eines Duells", () => {
     ).toBe("a")
   })
 
+  it("feste Disziplin: kein Faktor, auch wenn die Einschreibungen einen hätten", async () => {
+    competitionFindUnique.mockResolvedValue(rules("TEILER"))
+    participantFindMany.mockResolvedValue([
+      { participantId: "a", discipline: { teilerFaktor: decimal(0.3333333) } },
+      { participantId: "b", discipline: { teilerFaktor: decimal(1) } },
+    ])
+    expect(
+      await finalDuelWinner([
+        { rings: 95, teiler: 90, ringteiler: 95 },
+        { rings: 95, teiler: 35, ringteiler: 40 },
+      ])
+    ).toBe("b")
+    expect(participantFindMany).not.toHaveBeenCalled()
+  })
+
   it("markiert in jedem Duell den Sieger, den das Zählen der Siege nimmt", async () => {
     const sides: Side[] = [
       { rings: 96, teiler: 12.3, ringteiler: 16.3 },
