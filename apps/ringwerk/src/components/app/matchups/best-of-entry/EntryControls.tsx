@@ -9,16 +9,25 @@ interface DeleteConfirmProps {
   onConfirm: () => void
   /** was der Dialog über das zuletzt eingetragene Duell sagt (`bestOfDuelDelete`) */
   duel: Parameters<typeof bestOfDuelDelete>[0]
+  /** solange das Zurücknehmen läuft */
+  pending: boolean
 }
 
 // Bestätigung zum Zurücknehmen des letzten Duells oder Stechschusses.
-export function DeleteDuelConfirm({ open, onOpenChange, onConfirm, duel }: DeleteConfirmProps) {
+export function DeleteDuelConfirm({
+  open,
+  onOpenChange,
+  onConfirm,
+  duel,
+  pending,
+}: DeleteConfirmProps) {
   return (
     <DecisionDialog
       decision={bestOfDuelDelete(duel)}
       open={open}
       onOpenChange={onOpenChange}
       onConfirm={onConfirm}
+      confirmDisabled={pending}
     />
   )
 }

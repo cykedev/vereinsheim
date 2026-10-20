@@ -75,7 +75,8 @@ function Section({ title, lines, marker }: { title: string; lines: string[]; mar
  * `AlertDialogTrigger` gäbe Radix ihn an einen leeren Trigger, und er fiele auf <body>.
  *
  * `children` steht unter den Folgen, etwa ein Feld, in das zur Bestätigung ein Name getippt wird; `confirmDisabled`
- * sperrt den Knopf, bis es stimmt.
+ * sperrt den Knopf, bis es stimmt. Bestätigt wird nur, solange der Dialog offen ist: Während er ausblendet, ist der Knopf
+ * noch zu treffen, und ein zweiter Klick liefe sonst ein zweites Mal.
  */
 export function DecisionDialog({
   decision,
@@ -123,7 +124,9 @@ export function DecisionDialog({
         <AlertDialogFooter>
           <AlertDialogCancel>Abbrechen</AlertDialogCancel>
           <AlertDialogAction
-            onClick={onConfirm}
+            onClick={() => {
+              if (open) onConfirm()
+            }}
             disabled={confirmDisabled}
             className={
               decision.destructive

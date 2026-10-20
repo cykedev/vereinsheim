@@ -55,6 +55,7 @@ export function DeleteSeasonSeriesButton({
         open={open}
         onOpenChange={setOpen}
         onConfirm={handleDelete}
+        confirmDisabled={isPending}
       />
     </>
   )

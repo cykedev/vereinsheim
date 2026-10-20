@@ -104,6 +104,7 @@ export function BestOfEntryDialog({
         open={confirmDelete}
         onOpenChange={setConfirmDelete}
         onConfirm={handleDeleteLatest}
+        pending={isPending}
         duel={{
           duel: latestDuel,
           tiebreak: stechschussNumbers.includes(latestDuel),

@@ -48,6 +48,7 @@ export function DeleteEventSeriesButton({ seriesId, competitionId, name, teams }
         open={open}
         onOpenChange={setOpen}
         onConfirm={handleDelete}
+        confirmDisabled={isPending}
       />
     </>
   )
