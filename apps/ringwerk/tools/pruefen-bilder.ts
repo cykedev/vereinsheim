@@ -1,5 +1,5 @@
 // Bilder für die Sichtprüfung durch den User: je Phase eine Seite eines Wettbewerbs, dazu die Seiten über alle
-// Wettbewerbe und die Dialoge mit Folgen, hell und dunkel, am Telefon und am Desktop. Der erste Bildschirm der Seite,
+// Wettbewerbe, die Dialoge mit Folgen und die Blätter der Hilfe, hell und dunkel, am Telefon und am Desktop. Der erste Bildschirm der Seite,
 // dazu das Bracket und die erste Tabelle für sich, beim Dialog der Dialog für sich. Eine Übersicht `index.html` stellt
 // alles nebeneinander. Liest nur: Ein Dialog wird nur geöffnet und mit Escape geschlossen.
 
@@ -51,7 +51,7 @@ export async function pictures(page: Page, base: string, dir: string, list: Pict
         writeFileSync(path.join(dir, file), await page.screenshot())
         files.push(file)
         const parts = picture.opener
-          ? ([["dialog", `$('[role="alertdialog"]')`]] as const)
+          ? ([["dialog", `$('[role="alertdialog"]') ?? $$("dialog").find((d) => d.open)`]] as const)
           : ([
               [
                 "bracket",

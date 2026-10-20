@@ -1,6 +1,7 @@
 // Skriptprüfung von Ringwerk in Design 2: Bedienung, die kein Test im Node sieht (Rahmen und Leisten je Rolle, kein
 // seitliches Scrollen bei mehreren Fensterbreiten, Reiter eines Wettbewerbs, Bracket, Darstellung ohne Aufblitzen,
-// Fokus im Dialog, keine versteckte Kopie im Hintergrund), gegen den gebauten Stand auf dem Prüfbestand. Liest nur.
+// Fokus im Dialog, keine versteckte Kopie im Hintergrund, Hilfe als Blatt und „–“ mit Grund), gegen den gebauten
+// Stand auf dem Prüfbestand. Liest nur.
 // Nicht im Gate: braucht Chrome, den Dev-Postgres mit der Prüfdatenbank und einen Build.
 //
 //   pnpm --filter ringwerk pruefdaten        Prüfdatenbank (einmal vorher)
@@ -26,6 +27,9 @@ import {
   themeNoFlash,
 } from "@vereinsheim/pruefen/common"
 import { startServer } from "@vereinsheim/pruefen/server"
+
+import { HELP_TOPICS, type HelpTopicId } from "../src/lib/help/topics"
+import { MISSING_KINDS, missingReason, type MissingKind } from "../src/lib/help/missing"
 
 import { PRUEF_ACCOUNTS } from "./pruefdaten/accounts"
 import { pruefDatabaseUrl } from "./pruefdaten/db"
@@ -72,6 +76,30 @@ const button = (label: string) => `button(${JSON.stringify(label)})`
 const onCard = (name: string, label: string) =>
   `button(${JSON.stringify(label)}, $$("main li, main article, main div").filter((el) => visible(el) && el.textContent.includes(${JSON.stringify(name)}) && button(${JSON.stringify(label)}, el)).sort((a, b) => a.textContent.length - b.textContent.length)[0])`
 
+/** mit `--bilder`: je Thema das Blatt, geöffnet auf einer Seite aus `HELP_PAGES` (Index), am Telefon sichtbar */
+const HELP_SHEETS: readonly (readonly [HelpTopicId, number])[] = [
+  ["ringteiler", 0],
+  ["season-order", 0],
+  ["season-alternating", 1],
+  ["teiler", 1],
+  ["league-table", 5],
+  ["best-of-table", 6],
+  ["playoffs", 7],
+  ["finale", 7],
+]
+
+/** Seiten mit „?“ und „–“ mit Grund (Name im Prüfbestand, Seite); zusammen tragen sie jedes Thema der Hilfe */
+const HELP_PAGES: readonly (readonly [string, string])[] = [
+  ["S · klassisch nach Ringteiler, gemischt", "standings"],
+  ["S · Ringe/Teiler alternierend", "standings"],
+  ["S · Faktor-Korrektur, gemischte Disziplinen", "standings"],
+  ["E · teilweise gewertet (Ringteiler)", "ranking"],
+  [REGENERATE, "schedule"],
+  ["L-DRR-6 · L3 Rückrunde läuft (Hin/Rück)", "schedule"],
+  [START, "schedule"],
+  ["L-BO5-4 · L6 Finale in der Verlängerung (Best-of-5)", "playoffs"],
+]
+
 /** mit `--bilder`: je Phase eine Seite eines Wettbewerbs (Name im Prüfbestand, Seite) */
 const PHASES: readonly (readonly [string, string, string])[] = [
   ["L1 Spielplan, kein Ergebnis", REGENERATE, "schedule"],
@@ -111,6 +139,7 @@ const PHASES: readonly (readonly [string, string, string])[] = [
   ["Event Serien erfassen", "E · teilweise gewertet (Ringteiler)", "series"],
   ["Saison klassisch nach Ringteiler", "S · klassisch nach Ringteiler, gemischt", "standings"],
   ["Saison wenige Serien", "S · wenige Serien", "standings"],
+  ["Saison abwechselnd", "S · Ringe/Teiler alternierend", "standings"],
 ]
 
 const out = (text = "") => process.stdout.write(`${text}\n`)
@@ -272,6 +301,68 @@ async function bracket(page: Page, playoffs: string) {
   check("390 px: Bracket scrollt in sich, die Seite nicht", s.scrolls && s.page <= 390, s)
 }
 
+/**
+ * Jedes sichtbare „?“ öffnet das Blatt mit seinem Thema, am Telefon und am Desktop; zusammen tragen die Seiten jedes
+ * Thema. Ein „?“ im Spaltenkopf ordnet die Tabelle nicht um. Jedes sichtbare „–“ mit Grund nennt ihn, als Text oder
+ * als Tooltip.
+ */
+async function help(page: Page, paths: string[]) {
+  for (const [width, height] of [
+    [390, 844],
+    [1280, 900],
+  ] as const) {
+    await page.viewport(width, height)
+    const seen = new Set<string>()
+    const missing = new Set<string>()
+    for (const p of paths) {
+      await page.goto(`${BASE}${p}`)
+      const ids = await page.ev<string[]>(
+        `$$("[data-help]").filter(visible).map((b) => b.dataset.help)`
+      )
+      for (const id of ids) {
+        const order = `$$("main p").map(txt).find((t) => t.startsWith("Sortierung:")) ?? ""`
+        const before = await page.ev<string>(order)
+        await page.click(`$$('[data-help="${id}"]').filter(visible)[0]`, { settle: 400 })
+        const title = await page.ev<string>(
+          `txt($$("dialog").find((d) => d.open)?.querySelector("h2") ?? null)`
+        )
+        const expected = HELP_TOPICS[id as HelpTopicId]?.title
+        check(`${width} px: ${p} „?“ ${id} öffnet „${expected}“`, title === expected, title)
+        await page.key("Escape")
+        await page.wait(300)
+        const after = await page.ev<string>(order)
+        if (before !== after) check(`${width} px: ${p} „?“ ${id} ordnet nicht um`, false, after)
+        seen.add(id)
+      }
+      const reasons = await page.ev<{ kind: string; text: string; title: string }[]>(
+        `$$("[data-missing]").filter(visible).map((el) => ({ kind: el.dataset.missing, text: el.textContent, title: el.title }))`
+      )
+      for (const r of reasons) {
+        const reason = MISSING_KINDS.includes(r.kind as MissingKind)
+          ? missingReason(r.kind as MissingKind)
+          : null
+        if (!reason || !r.text.includes(reason))
+          check(`${width} px: ${p} „–“ ${r.kind} nennt den Grund`, false, r)
+        missing.add(r.kind)
+      }
+    }
+    // am Telefon klappt der Teiler der klassischen Rangliste weg, also auch der korrigierte des gemischten Wettbewerbs
+    const all = Object.keys(HELP_TOPICS)
+    const expected = width === 390 ? all.filter((id) => id !== "corrected-teiler") : all
+    check(
+      `${width} px: jedes Thema der Hilfe hat ein sichtbares „?“`,
+      expected.every((id) => seen.has(id)),
+      [...seen]
+    )
+    const kinds = width === 390 ? ["noSeries", "noResult"] : ["noSeries", "noResult", "noDuel"]
+    check(
+      `${width} px: „–“ mit Grund in Saison und Spielplan`,
+      kinds.every((kind) => missing.has(kind)),
+      [...missing]
+    )
+  }
+}
+
 /** ein Konto ohne Admin-Rolle landet auf /admin am Start, nicht auf der Anmeldung */
 async function adminWithoutRole(page: Page, role: Role) {
   for (const p of ["/admin", "/admin/users"]) {
@@ -319,6 +410,7 @@ async function main() {
         REGENERATE,
         START,
         ...PHASES.map(([, name]) => name),
+        ...HELP_PAGES.map(([name]) => name),
       ]),
     ])
     /** Dialoge mit Folgen: Seite, Knopf, der den Dialog öffnet (Ausdruck im Fenster), und was er fragt */
@@ -348,6 +440,7 @@ async function main() {
       ["/participants", button("Deaktivieren"), "Teilnehmer deaktivieren"],
       ["/disciplines", button("Löschen"), "Disziplin löschen"],
     ]
+    const helpPaths = HELP_PAGES.map(([name, p]) => `/competitions/${ids.get(name)}/${p}`)
     const competitionPaths = SAMPLES.flatMap((s) =>
       s.pages.map((p) => `/competitions/${ids.get(s.name)}/${p}`)
     )
@@ -370,6 +463,7 @@ async function main() {
     )
     await section("Reiter", () => tabs(page, competitionPaths))
     await section("Bracket", () => bracket(page, competitionPaths[1]))
+    await section("Hilfe", () => help(page, helpPaths))
     await section("Versteckte Kopie", async () => {
       record(
         await noHiddenCopy(chrome, page, {
@@ -408,6 +502,11 @@ async function main() {
             title: `Dialog: ${title}`,
             path: where,
             opener,
+          })),
+          ...HELP_SHEETS.map(([id, at]) => ({
+            title: `Hilfe: ${HELP_TOPICS[id].title}`,
+            path: helpPaths[at],
+            opener: `$$('[data-help="${id}"]').filter(visible)[0]`,
           })),
         ])
       )
