@@ -629,6 +629,12 @@ bleiben; nur die Bilder der Seiten dürfen sich ändern, die der PDFs nicht.
 - **WD4 Doku.** conventions §2–§5 ohne Ringwerk-Ausnahme, `navigation-pattern`, `color-semantics`, `component-canon`,
   `vault/apps/ringwerk/*` mit Navigation, Theme, Dialogen, Hilfe.
 
+- **Stand (20. Oktober 2026, Branch `feat/design2-ringwerk-hilfe`, zurückgeführt bis 748805b0):** WD0–WD4 umgesetzt,
+  Textbuch freigegeben mit H1–H6 und dem Nachtrag R1–R6 aus dem Review. Abweichend vom Text oben: auch die Tabelle der
+  Liga und das Finale haben ein „?“, über dem Turnierbaum steht eine Zeile „Turnierbaum“, die Vorschauen auf Start und
+  in der Liste zeigen keine Hilfe, kein Schalter „Erklärungen“. Abgleich 0 Fehler, Abläufe 64/66 (2 bekannt).
+  Befunde aus dem Ablesen stehen in [[ringwerk]] („Fehler und Lücken im Code“).
+
 **Prüfung Teil W (je Merge):** `pnpm check`; `pnpm --filter ringwerk pruefen:vergleichen` ohne Abweichung in Zahlen,
 Reihenfolge, Plätzen, Paarungen, Siegern und PDF-Text, PDF-Bilder gleich; `pruefen:ablaeufe` grün am Telefon und am
 Desktop; R7 an den echten Daten ohne Abweichung; Sichtprüfung der Seiten und Brackets durch den User (Bilder
