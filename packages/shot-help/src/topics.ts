@@ -74,7 +74,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     read: "Kleine Spanne heißt gleichmäßig. Die Spanne wächst aber mit der Zahl der Serien; Scheiben mit verschieden vielen Serien vergleichst du über die Standardabweichung. Verglichen werden nur Serien der häufigsten Länge; fehlt einem Schuss der Wert, hat seine Serie keine Summe.",
     act: "Fällt eine Serie ab, sieh im Reiter „Zeit und Verlauf“ nach, ob davor eine Pause lag („Pausen und Wiedereinstieg“) oder ob es zum Ende hin nachlässt („Ermüdung“).",
     caution:
-      "Ein einzelner Fehlschuss oder Abreißer hebt die Abweichung je Schuss deutlich. Wie gleichmäßig du wirklich schießt, zeigt erst der Vergleich über mehrere Scheiben.",
+      "Ein einzelner Fehlschuss oder Abreißer hebt die Abweichung je Schuss deutlich. Sie sagt deshalb, wie gleichmäßig du an diesem Abend geschossen hast. Wie gleichmäßig du sonst schießt, sagt sie nicht.",
     minimum:
       "Ab 1 Schuss; die Abweichung je Schuss ab 2, SD und Spanne der Serien ab 2 Serien gleicher Länge.",
     formula:
@@ -137,7 +137,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     what: "Die Streuung als Ellipse, ohne die Ausreißer: Das Verhältnis a/b sagt, wie gestreckt sie ist, der Winkel, in welche Richtung. Ein einzelner Abreißer zöge die Ellipse sonst in seine Richtung. a und b sind die Streuung entlang der langen und der kurzen Achse, gemessen wie Streuung x und y, aber ohne die Ausreißer.",
     read: "„Gestreckt“ steht nur, wenn ein Test zeigt, dass es kein Zufall ist. Daneben steht, ab welchem a/b das bei deiner Schusszahl gilt: bei 20 Schuss ab 1,81, bei 40 ab 1,50, bei 120 ab 1,25.",
     caution:
-      "Auch eine vollkommen runde Gruppe sieht zufällig gestreckt aus: bei 20 Schuss im Median a/b 1,32, bei 40 Schuss 1,21. Eine leichte echte Streckung zeigt eine einzelne Scheibe deshalb selten; sichtbar wird sie über mehrere Scheiben. Ist deine Gruppe deutlich gestreckt, hält der Ausreißer-Test manchmal einen Schuss an der Spitze für einen Ausreißer, und ohne ihn wirkt die Gruppe runder. Steht „ohne Ausreißer“, schau, ob der Schuss in Richtung der Streckung liegt.",
+      "Auch eine vollkommen runde Gruppe sieht zufällig gestreckt aus: bei 20 Schuss im Median a/b 1,32, bei 40 Schuss 1,21. Eine leichte echte Streckung erkennt Spiegel auf einer Scheibe deshalb selten. „Gestreckt“ steht erst, wenn die Gruppe deutlich gestreckt ist. Ist deine Gruppe deutlich gestreckt, hält der Ausreißer-Test manchmal einen Schuss an der Spitze für einen Ausreißer, und ohne ihn wirkt die Gruppe runder. Steht „ohne Ausreißer“, schau, ob der Schuss in Richtung der Streckung liegt.",
     minimum:
       "Ab 3 Schuss ohne Ausreißer; den Winkel zeigt Spiegel nur bei einer gestreckten Gruppe ab 10 Schuss ohne Ausreißer.",
     formula:
@@ -152,7 +152,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     short: "Schüsse, die nicht zur Gruppe passen, und was sie dich kosten.",
     what: "Spiegel prüft die Treffer Schritt für Schritt: zuerst den, der am weitesten von den übrigen liegt, gemessen an ihrer Streuung. Ab 10 Schuss prüft es danach ohne ihn den nächsten, bis zu zwei Schüsse, ab 30 Schuss bis zu jedem zehnten. So verdecken sich zwei nahe Ausreißer nicht gegenseitig. Bei einer ganz normalen, runden Gruppe meldet die Regel in höchstens etwa 5 % der Scheiben fälschlich einen Ausreißer. Ist die Gruppe deutlich gestreckt (a/b um 2), passiert das öfter, umso öfter, je mehr Schüsse die Scheibe hat: bei 10 Schuss in etwa 11 %, bei 60 Schuss in etwa 18 % der Scheiben.",
     read: "Ein markierter Schuss ist ein Kandidat für die Frage „Was war da los?“ und bleibt in der Wertung. Darunter steht, wie viele Ringe die markierten Schüsse gegenüber deinem typischen Schuss (Median) gekostet haben.",
-    act: "Kosten dich Ausreißer über mehrere Scheiben viele Ringe, lohnt die Arbeit an einem gleichmäßigen Ablauf mehr als an der Präzision.",
+    act: "Kosten dich Ausreißer viele Ringe, lohnt die Arbeit an einem gleichmäßigen Ablauf mehr als an der Präzision. Ein einzelner Abend kann aber auch Pech sein.",
     caution:
       "Ein Ausreißer liegt weit von deiner Gruppe, nicht unbedingt weit von der Mitte: Liegt die Gruppe neben der Mitte, kann er sogar Ringe bringen. Unter 10 Schuss prüft Spiegel nur einen Schritt, dort können sich zwei gleich weite Ausreißer noch verdecken. Bei 10 Schuss findet die Regel einen einzelnen Schuss fünfmal σ neben der Gruppe (Luftgewehr bei σ 1,5 mm: 7,5 mm, drei Ringbreiten) in knapp neun von zehn Fällen, von zwei nah beieinander in etwa acht von zehn Fällen beide.",
     minimum: "Ab 5 Schuss mit Lage.",
@@ -199,7 +199,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     what: "Wie viele Treffer in welche Richtung gehen, 12 Uhr ist oben, um die Mitte oder um den Schwerpunkt.",
     read: "Um die Mitte zeigt sie, wohin deine Treffer gehen; um den Schwerpunkt, in welche Richtungen deine Gruppe streut, etwa vor allem nach oben und unten. Jeder Treffer zählt gleich, ein weiter so viel wie ein naher.",
     caution:
-      "Erst ab 30 Schuss mehr als ein Bild, und auch dann schwankt sie stark: Bei 30 Schuss hat der stärkste Keil zufällig meist doppelt so viele Treffer wie der Schnitt. Ein Befund ist erst, was sich über mehrere Scheiben wiederholt.",
+      "Erst ab 30 Schuss mehr als ein Bild, und auch dann schwankt sie stark: Bei 30 Schuss hat der stärkste Keil zufällig meist doppelt so viele Treffer wie der Schnitt. Ein starker Keil auf einer Scheibe ist deshalb noch kein Befund.",
     minimum: "Ab 1 Schuss, aussagekräftig ab 30.",
     formula: "Anzahl je 30°-Sektor um die Mitte oder um m",
   },
@@ -269,7 +269,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     short: "Deine Pausen und ob die Schüsse danach besser oder schwächer waren als deine übrigen.",
     what: "Jede Pause und ob die bis zu drei Wertungsschüsse danach im Schnitt mehr oder weniger Ringe brachten als deine übrigen Schüsse. Pause ist ein Abstand, der deutlich länger ist als dein üblicher Abstand auf dieser Scheibe: über dem Doppelten deines üblichen Abstands, mindestens eine Minute; über drei Minuten immer. Bei einem üblichen Abstand von 40 s ist das über 1:20 min; genau 1:20 min ist noch keine Pause. Die Karte nennt die Schwelle deiner Scheibe. Probeschüsse in der Pause gehören zur Pause.",
     caution:
-      "Drei Schüsse sind wenig: Auch wenn die Pause nichts ausmacht, liegen sie zufällig bis zu etwa einen halben Ring (Luftgewehr, σ 1,5 mm) bzw. anderthalb Ringe (Luftpistole, σ 15 mm) je Schuss neben deinem Schnitt. Ob dir Pausen schaden, zeigt erst der Vergleich über mehrere Abende.",
+      "Drei Schüsse sind wenig: Auch wenn die Pause nichts ausmacht, liegen sie zufällig bis zu etwa einen halben Ring (Luftgewehr, σ 1,5 mm) bzw. anderthalb Ringe (Luftpistole, σ 15 mm) je Schuss neben deinem Schnitt. Eine Pause auf einer Scheibe zeigt deshalb nicht, ob dir Pausen schaden.",
     minimum:
       "Pausen ab 2 Wertungsschüssen mit Zeit; deinen üblichen Abstand erst ab 5 Abständen, davor gilt nur „über drei Minuten“. Was danach kam, nur über Schüsse mit Wert.",
     formula:
@@ -283,11 +283,12 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     metrics: [],
     short: "Ob deine letzten zehn Schuss schwächer sind als die ersten zehn.",
     what: "Die letzten zehn Schuss gegen die ersten zehn, im Wert und in der Streuung (R50).",
-    read: "Ein Minus beim Wert oder ein Plus bei R50 heißt: am Ende schwächer. Der Unterschied im Wert gilt je Schuss; über die zehn Schuss zusammen ist es das Zehnfache.",
+    read: "Ein Minus beim Wert oder ein Plus bei R50 heißt: am Ende schwächer. „Klar schwächer“ oder „klar stärker“ steht nur, wenn ein Test es zeigt. Der Unterschied im Wert gilt je Schuss; über die zehn Schuss zusammen ist es das Zehnfache.",
     caution:
-      "Eine einzelne Scheibe ist verrauscht: Auch ohne jede Ermüdung unterscheiden sich die ersten und die letzten zehn zufällig um bis zu etwa 0,35 Ringe je Schuss (Luftgewehr, σ 1,5 mm; in ganzen Ringen etwa 0,4) bzw. 1,1 (Luftpistole, σ 15 mm), R50 um bis zu gut die Hälfte. Ein Muster wird es erst, wenn es auf mehreren Scheiben so ist.",
+      "Eine einzelne Scheibe ist verrauscht: Auch ohne jede Ermüdung unterscheiden sich die ersten und die letzten zehn zufällig um bis zu etwa 0,35 Ringe je Schuss (Luftgewehr, σ 1,5 mm; in ganzen Ringen etwa 0,4) bzw. 1,1 (Luftpistole, σ 15 mm), R50 um bis zu gut die Hälfte. Deshalb steht „klar“ erst bei einem größeren Unterschied. Auch dann gilt es nur für diesen Abend.",
     minimum: "Ab 20 Wertungsschüssen mit Wert, R50 ab 20 mit Lage ohne Fehlschüsse.",
-    formula: "Ø der letzten 10 − Ø der ersten 10; ebenso R50",
+    formula:
+      "Ø der letzten 10 − Ø der ersten 10; ebenso R50; klar nach Mann-Whitney (zweiseitig, 95 %, genau), wenn das Mittel dieselbe Richtung zeigt",
   },
   {
     id: "serien-im-vergleich",

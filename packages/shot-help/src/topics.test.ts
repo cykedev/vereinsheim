@@ -102,3 +102,22 @@ describe("Zahlen in Texten, exakt nachgerechnet", () => {
     )
   })
 })
+
+describe("eine Scheibe sagt, was sie zeigt", () => {
+  it("kein Auftrag, über mehrere Scheiben oder Abende zu vergleichen (das sagt nur der Leitfaden)", () => {
+    for (const topic of HELP_TOPICS)
+      for (const field of ["read", "act", "caution"] as const)
+        expect(topic[field] ?? "", `${topic.id}.${field}`).not.toMatch(
+          /Vergleich über mehrere|über mehrere (Scheiben|Abende)|auf mehreren Scheiben/
+        )
+  })
+
+  it("Ermüdung: das Urteil steht in der Erklärung", () => {
+    const tired = HELP_TOPICS.find((topic) => topic.id === "ermuedung")!
+    expect(tired.read).toContain(
+      "„Klar schwächer“ oder „klar stärker“ steht nur, wenn ein Test es zeigt."
+    )
+    expect(tired.caution).toMatch(/Auch dann gilt es nur für diesen Abend\.$/)
+    expect(tired.formula).toContain("Mann-Whitney")
+  })
+})

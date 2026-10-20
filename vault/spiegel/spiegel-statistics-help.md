@@ -128,8 +128,9 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   werden nur Serien der häufigsten Länge; fehlt einem Schuss der Wert, hat seine Serie keine Summe.
 - *Was du tun kannst:* Fällt eine Serie ab, sieh im Reiter „Zeit und Verlauf“ nach, ob davor eine
   Pause lag („Pausen und Wiedereinstieg“) oder ob es zum Ende hin nachlässt („Ermüdung“).
-- *Vorsicht:* Ein einzelner Fehlschuss oder Abreißer hebt die Abweichung je Schuss deutlich. Wie
-  gleichmäßig du wirklich schießt, zeigt erst der Vergleich über mehrere Scheiben.
+- *Vorsicht:* Ein einzelner Fehlschuss oder Abreißer hebt die Abweichung je Schuss deutlich. Sie
+  sagt deshalb, wie gleichmäßig du an diesem Abend geschossen hast. Wie gleichmäßig du sonst
+  schießt, sagt sie nicht.
 - *Mindestzahl:* Ab 1 Schuss; die Abweichung je Schuss ab 2, SD und Spanne der Serien ab 2 Serien
   gleicher Länge.
 - *Formel:* `SD und Spanne der Serien gleicher Länge; Abweichung je Schuss = SD der Schusswerte (n −
@@ -193,10 +194,11 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   steht, ab welchem a/b das bei deiner Schusszahl gilt: bei 20 Schuss ab 1,81, bei 40 ab 1,50, bei
   120 ab 1,25.
 - *Vorsicht:* Auch eine vollkommen runde Gruppe sieht zufällig gestreckt aus: bei 20 Schuss im
-  Median a/b 1,32, bei 40 Schuss 1,21. Eine leichte echte Streckung zeigt eine einzelne Scheibe
-  deshalb selten; sichtbar wird sie über mehrere Scheiben. Ist deine Gruppe deutlich gestreckt, hält
-  der Ausreißer-Test manchmal einen Schuss an der Spitze für einen Ausreißer, und ohne ihn wirkt die
-  Gruppe runder. Steht „ohne Ausreißer“, schau, ob der Schuss in Richtung der Streckung liegt.
+  Median a/b 1,32, bei 40 Schuss 1,21. Eine leichte echte Streckung erkennt Spiegel auf einer
+  Scheibe deshalb selten. „Gestreckt“ steht erst, wenn die Gruppe deutlich gestreckt ist. Ist deine
+  Gruppe deutlich gestreckt, hält der Ausreißer-Test manchmal einen Schuss an der Spitze für einen
+  Ausreißer, und ohne ihn wirkt die Gruppe runder. Steht „ohne Ausreißer“, schau, ob der Schuss in
+  Richtung der Streckung liegt.
 - *Mindestzahl:* Ab 3 Schuss ohne Ausreißer; den Winkel zeigt Spiegel nur bei einer gestreckten
   Gruppe ab 10 Schuss ohne Ausreißer.
 - *Formel:* `Halbachsen a, b aus der Kovarianz der Schüsse ohne Ausreißer; gestreckt, wenn W = 4a²b²
@@ -214,8 +216,8 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 - *So liest du es:* Ein markierter Schuss ist ein Kandidat für die Frage „Was war da los?“ und
   bleibt in der Wertung. Darunter steht, wie viele Ringe die markierten Schüsse gegenüber deinem
   typischen Schuss (Median) gekostet haben.
-- *Was du tun kannst:* Kosten dich Ausreißer über mehrere Scheiben viele Ringe, lohnt die Arbeit an
-  einem gleichmäßigen Ablauf mehr als an der Präzision.
+- *Was du tun kannst:* Kosten dich Ausreißer viele Ringe, lohnt die Arbeit an einem gleichmäßigen
+  Ablauf mehr als an der Präzision. Ein einzelner Abend kann aber auch Pech sein.
 - *Vorsicht:* Ein Ausreißer liegt weit von deiner Gruppe, nicht unbedingt weit von der Mitte: Liegt
   die Gruppe neben der Mitte, kann er sogar Ringe bringen. Unter 10 Schuss prüft Spiegel nur einen
   Schritt, dort können sich zwei gleich weite Ausreißer noch verdecken. Bei 10 Schuss findet die
@@ -275,8 +277,8 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   Richtungen deine Gruppe streut, etwa vor allem nach oben und unten. Jeder Treffer zählt gleich,
   ein weiter so viel wie ein naher.
 - *Vorsicht:* Erst ab 30 Schuss mehr als ein Bild, und auch dann schwankt sie stark: Bei 30 Schuss
-  hat der stärkste Keil zufällig meist doppelt so viele Treffer wie der Schnitt. Ein Befund ist
-  erst, was sich über mehrere Scheiben wiederholt.
+  hat der stärkste Keil zufällig meist doppelt so viele Treffer wie der Schnitt. Ein starker Keil
+  auf einer Scheibe ist deshalb noch kein Befund.
 - *Mindestzahl:* Ab 1 Schuss, aussagekräftig ab 30.
 - *Formel:* `Anzahl je 30°-Sektor um die Mitte oder um m`
 
@@ -347,7 +349,8 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   Pause gehören zur Pause.
 - *Vorsicht:* Drei Schüsse sind wenig: Auch wenn die Pause nichts ausmacht, liegen sie zufällig bis
   zu etwa einen halben Ring (Luftgewehr, σ 1,5 mm) bzw. anderthalb Ringe (Luftpistole, σ 15 mm) je
-  Schuss neben deinem Schnitt. Ob dir Pausen schaden, zeigt erst der Vergleich über mehrere Abende.
+  Schuss neben deinem Schnitt. Eine Pause auf einer Scheibe zeigt deshalb nicht, ob dir Pausen
+  schaden.
 - *Mindestzahl:* Pausen ab 2 Wertungsschüssen mit Zeit; deinen üblichen Abstand erst ab 5 Abständen,
   davor gilt nur „über drei Minuten“. Was danach kam, nur über Schüsse mit Wert.
 - *Formel:* `Pause = Abstand über max(60 s, min(180 s, 2 × Median aller Abstände bis 180 s, auch
@@ -356,14 +359,16 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 
 **Ermüdung (I2)**
 - *Was:* Die letzten zehn Schuss gegen die ersten zehn, im Wert und in der Streuung (R50).
-- *So liest du es:* Ein Minus beim Wert oder ein Plus bei R50 heißt: am Ende schwächer. Der
-  Unterschied im Wert gilt je Schuss; über die zehn Schuss zusammen ist es das Zehnfache.
+- *So liest du es:* Ein Minus beim Wert oder ein Plus bei R50 heißt: am Ende schwächer. „Klar
+  schwächer“ oder „klar stärker“ steht nur, wenn ein Test es zeigt. Der Unterschied im Wert gilt je
+  Schuss; über die zehn Schuss zusammen ist es das Zehnfache.
 - *Vorsicht:* Eine einzelne Scheibe ist verrauscht: Auch ohne jede Ermüdung unterscheiden sich die
   ersten und die letzten zehn zufällig um bis zu etwa 0,35 Ringe je Schuss (Luftgewehr, σ 1,5 mm; in
-  ganzen Ringen etwa 0,4) bzw. 1,1 (Luftpistole, σ 15 mm), R50 um bis zu gut die Hälfte. Ein Muster
-  wird es erst, wenn es auf mehreren Scheiben so ist.
+  ganzen Ringen etwa 0,4) bzw. 1,1 (Luftpistole, σ 15 mm), R50 um bis zu gut die Hälfte. Deshalb
+  steht „klar“ erst bei einem größeren Unterschied. Auch dann gilt es nur für diesen Abend.
 - *Mindestzahl:* Ab 20 Wertungsschüssen mit Wert, R50 ab 20 mit Lage ohne Fehlschüsse.
-- *Formel:* `Ø der letzten 10 − Ø der ersten 10; ebenso R50`
+- *Formel:* `Ø der letzten 10 − Ø der ersten 10; ebenso R50; klar nach Mann-Whitney (zweiseitig, 95
+  %, genau), wenn das Mittel dieselbe Richtung zeigt`
 
 **Serien im Vergleich (I1, I5, I6)**
 - *Was:* Je Serie das Ergebnis, die Streuung (R50) und wie weit ihr Schwerpunkt vom Schwerpunkt der
