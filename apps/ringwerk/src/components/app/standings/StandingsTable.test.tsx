@@ -88,3 +88,18 @@ describe("StandingsTable — Spalte bei Gleichstand", () => {
     expect(html).toContain(">10,0<")
   })
 })
+
+describe("StandingsTable — Kürzel im Kopf", () => {
+  it("jedes Kürzel nennt seinen vollen Namen (Tooltip und Screenreader)", () => {
+    const html = render([row("Alpha", 1, 2)])
+    for (const [short, full] of [
+      ["Pl.", "Platz"],
+      ["Sp.", "Spiele"],
+      ["S", "Siege"],
+      ["U", "Unentschieden"],
+      ["N", "Niederlagen"],
+      ["Pkt.", "Punkte"],
+    ])
+      expect(html).toContain(`<abbr title="${full}" class="no-underline">${short}</abbr>`)
+  })
+})

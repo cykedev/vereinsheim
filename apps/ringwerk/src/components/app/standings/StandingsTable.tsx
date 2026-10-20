@@ -40,24 +40,38 @@ export function StandingsTable({ rows, scoringMode, scoringType, help = true }: 
         <TableHeader>
           <TableRow className="border-b bg-muted/40">
             <TableHead className="w-10 px-2 py-2.5 text-center font-medium text-muted-foreground sm:px-4">
-              Pl.
+              <abbr title="Platz" className="no-underline">
+                Pl.
+              </abbr>
             </TableHead>
             <TableHead className="px-2 py-2.5 text-left font-medium text-muted-foreground sm:px-4">
               Name
             </TableHead>
             <TableHead className="px-2 py-2.5 text-center font-medium text-muted-foreground sm:px-4">
-              Sp.
+              <abbr title="Spiele" className="no-underline">
+                Sp.
+              </abbr>
             </TableHead>
             <TableHead className="px-2 py-2.5 text-center font-medium text-muted-foreground sm:px-4">
-              S
+              <abbr title="Siege" className="no-underline">
+                S
+              </abbr>
             </TableHead>
             <TableHead className="hidden px-4 py-2.5 text-center font-medium text-muted-foreground sm:table-cell">
-              U
+              <abbr title="Unentschieden" className="no-underline">
+                U
+              </abbr>
             </TableHead>
             <TableHead className="hidden px-4 py-2.5 text-center font-medium text-muted-foreground sm:table-cell">
-              N
+              <abbr title="Niederlagen" className="no-underline">
+                N
+              </abbr>
             </TableHead>
-            <TableHead className="px-2 py-2.5 text-center font-semibold sm:px-4">Pkt.</TableHead>
+            <TableHead className="px-2 py-2.5 text-center font-semibold sm:px-4">
+              <abbr title="Punkte" className="no-underline">
+                Pkt.
+              </abbr>
+            </TableHead>
             <TableHead className="hidden px-4 py-2.5 text-right font-medium text-muted-foreground sm:table-cell">
               <span className="inline-flex items-center justify-end gap-1">
                 {tie.label}
