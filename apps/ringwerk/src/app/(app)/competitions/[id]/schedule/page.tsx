@@ -49,6 +49,7 @@ export default async function CompetitionSchedulePage({ params }: Props) {
   ])
 
   const canManage = session.user.role === "ADMIN" || session.user.role === "MANAGER"
+  const hasTable = isBestOf ? bestOfStandings.length > 0 : classicStandings.length > 0
   const scoringType = getEffectiveScoringType(competition.scoringMode, competition.discipline)
 
   return (
@@ -87,7 +88,32 @@ export default async function CompetitionSchedulePage({ params }: Props) {
           <p className="text-sm text-muted-foreground">{scheduleStatus.regenerationBlocker}</p>
         )}
 
-      {/* Spielplan */}
+      {/* Tabelle */}
+      {isBestOf
+        ? bestOfStandings.length > 0 && (
+            <div className="space-y-3 pt-2">
+              <div className="flex items-center gap-2">
+                <h2 className="text-base font-semibold">Tabelle</h2>
+                <HelpMark id="best-of-table" className="ml-auto" />
+              </div>
+              <BestOfStandingsTable rows={bestOfStandings} />
+            </div>
+          )
+        : classicStandings.length > 0 && (
+            <div className="space-y-3 pt-2">
+              <div className="flex items-center gap-2">
+                <h2 className="text-base font-semibold">Tabelle</h2>
+                <HelpMark id="league-table" className="ml-auto" />
+              </div>
+              <StandingsTable
+                rows={classicStandings}
+                scoringMode={competition.scoringMode}
+                scoringType={scoringType}
+              />
+            </div>
+          )}
+      {/* Spielplan unter der Tabelle: zuerst die Antwort „Wo stehe ich?“, dann die Paarungen */}
+      {hasTable && <h2 className="pt-2 text-base font-semibold">Spielplan</h2>}
       <ScheduleView
         matchups={matchups}
         hinrundeDeadline={competition.hinrundeDeadline}
@@ -119,31 +145,6 @@ export default async function CompetitionSchedulePage({ params }: Props) {
             : undefined
         }
       />
-
-      {/* Tabelle */}
-      {isBestOf
-        ? bestOfStandings.length > 0 && (
-            <div className="space-y-3 pt-2">
-              <div className="flex items-center gap-2">
-                <h2 className="text-base font-semibold">Tabelle</h2>
-                <HelpMark id="best-of-table" className="ml-auto" />
-              </div>
-              <BestOfStandingsTable rows={bestOfStandings} />
-            </div>
-          )
-        : classicStandings.length > 0 && (
-            <div className="space-y-3 pt-2">
-              <div className="flex items-center gap-2">
-                <h2 className="text-base font-semibold">Tabelle</h2>
-                <HelpMark id="league-table" className="ml-auto" />
-              </div>
-              <StandingsTable
-                rows={classicStandings}
-                scoringMode={competition.scoringMode}
-                scoringType={scoringType}
-              />
-            </div>
-          )}
     </div>
   )
 }

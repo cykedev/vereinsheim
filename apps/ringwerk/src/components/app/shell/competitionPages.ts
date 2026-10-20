@@ -47,3 +47,16 @@ export function competitionTabs(
     label: LABEL[page],
   }))
 }
+
+/**
+ * Wohin der Einstieg in einen Wettbewerb führt: Event zur Rangliste, Saison zur Rangliste der Saison, Liga zu
+ * Spielplan und Tabelle, sobald die Playoffs laufen aber zu den Playoffs. Dort steht dann die Antwort, wie es steht.
+ */
+export function entryPage(
+  type: "LEAGUE" | "EVENT" | "SEASON",
+  playoffsStarted: boolean
+): CompetitionPage {
+  if (type === "EVENT") return "ranking"
+  if (type === "SEASON") return "standings"
+  return playoffsStarted ? "playoffs" : "schedule"
+}

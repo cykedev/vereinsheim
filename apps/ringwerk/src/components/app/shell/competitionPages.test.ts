@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { competitionTabs } from "./competitionPages"
+import { competitionTabs, entryPage } from "./competitionPages"
 
 describe("competitionTabs", () => {
   it("die gezeigte Seite und ihre Ziele in fester Reihenfolge", () => {
@@ -18,5 +18,17 @@ describe("competitionTabs", () => {
     expect(competitionTabs("c1", "standings", []).map((t) => t.href)).toEqual([
       "/competitions/c1/standings",
     ])
+  })
+})
+
+describe("entryPage", () => {
+  it("Event und Saison zu ihrer Rangliste", () => {
+    expect(entryPage("EVENT", false)).toBe("ranking")
+    expect(entryPage("SEASON", true)).toBe("standings")
+  })
+
+  it("Liga: Spielplan und Tabelle, mit laufenden Playoffs die Playoffs", () => {
+    expect(entryPage("LEAGUE", false)).toBe("schedule")
+    expect(entryPage("LEAGUE", true)).toBe("playoffs")
   })
 })
