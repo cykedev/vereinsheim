@@ -29,13 +29,13 @@ import { hashFor, parseHash } from "@vereinsheim/shot-ui/layout/sections"
 import { useActiveSection } from "@vereinsheim/shot-ui/layout/useActiveSection"
 import { useReturnJump } from "@vereinsheim/shot-ui/layout/useReturnJump"
 import { CardContextBar } from "@vereinsheim/shot-ui/nav/CardContextBar"
-import { backLabel, backRoute, siblingRoute } from "@vereinsheim/shot-ui/nav/navigate"
 import {
-  DEFAULT_PROGRESS,
-  urlFromRoute,
-  type CardRoute,
-  type Route,
-} from "@vereinsheim/shot-ui/nav/routes"
+  backLabel,
+  backRoute,
+  progressWithMetric,
+  siblingRoute,
+} from "@vereinsheim/shot-ui/nav/navigate"
+import { urlFromRoute, type CardRoute } from "@vereinsheim/shot-ui/nav/routes"
 import { KindToggle } from "@vereinsheim/shot-ui/controls/KindToggle"
 import { ScoringToggle } from "@vereinsheim/shot-ui/controls/ScoringToggle"
 import { probeOnlyShots } from "@vereinsheim/shot-ui/period/model"
@@ -194,15 +194,8 @@ export function CardScreen({
   )
   // Weg von σ in den Fortschritt: die Familie der Scheibe, der gemerkte Zeitraum (die Kennzahl wählt keinen)
   const familySlug = card.family?.slug ?? null
-  const sigmaRoute = useMemo<Route | undefined>(
-    () =>
-      familySlug
-        ? {
-            page: "progress",
-            query: { ...DEFAULT_PROGRESS, family: familySlug, metric: "group.sigma" },
-            section: null,
-          }
-        : undefined,
+  const sigmaRoute = useMemo(
+    () => (familySlug ? progressWithMetric(familySlug, "group.sigma") : undefined),
     [familySlug]
   )
 

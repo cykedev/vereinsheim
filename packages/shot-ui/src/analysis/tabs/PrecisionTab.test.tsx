@@ -16,7 +16,8 @@ import { LP_10M } from "@vereinsheim/shot-core/targets"
 import { describe, expect, it } from "vitest"
 
 import { axisText, formatValue } from "../../format"
-import { DEFAULT_PROGRESS, urlFromRoute } from "../../nav/routes"
+import { progressWithMetric } from "../../nav/navigate"
+import { urlFromRoute } from "../../nav/routes"
 import { fortyCard } from "../testCard"
 import { cardHtml, cardText, renderTab } from "../testPanel"
 
@@ -42,11 +43,7 @@ describe("Reiter Präzision", () => {
   })
 
   it("σ zeigt den Weg in den Fortschritt, wenn die Seite ihn gibt", () => {
-    const route = {
-      page: "progress",
-      query: { ...DEFAULT_PROGRESS, family: "lp-freihand", metric: "group.sigma" },
-      section: null,
-    } as const
+    const route = progressWithMetric("lp-freihand", "group.sigma")
     const card = cardHtml(renderTab("precision", { sigmaRoute: route }), "praezision-sigma")
     const href = card.match(/<a [^>]*href="([^"]+)"[^>]*>Streuung im Fortschritt ›<\/a>/)?.[1]
     expect(href).toBe(urlFromRoute(route).replaceAll("&", "&amp;"))

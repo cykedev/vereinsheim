@@ -5,7 +5,7 @@ import type { Scoring } from "@vereinsheim/shot-core/metrics"
 
 import type { PeriodSection } from "../layout/sections"
 import { resolveRange, type NamedPeriod } from "../period/calendar"
-import type { PeriodState } from "../period/state"
+import type { PeriodMetricKey, PeriodState } from "../period/state"
 
 import {
   DEFAULT_LIST,
@@ -111,6 +111,14 @@ export function progressFromList(list: ListRoute, scoring: Scoring = "decimal"):
     query: { ...DEFAULT_PROGRESS, family, kind, scoring, choice: range ?? { type: "all" } },
     section: null,
   }
+}
+
+/**
+ * Eine Kennzahl einer Familie im Fortschritt, etwa σ von der Seite einer Scheibe. Sonst die Vorgaben: Die App öffnet
+ * ihn dann im gemerkten Zeitraum, denn Familie und Kennzahl wählen keinen.
+ */
+export function progressWithMetric(family: string, metric: PeriodMetricKey): ProgressRoute {
+  return { page: "progress", query: { ...DEFAULT_PROGRESS, family, metric }, section: null }
 }
 
 /**

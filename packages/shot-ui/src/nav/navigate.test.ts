@@ -8,6 +8,7 @@ import {
   periodStateFromRoute,
   progressFromList,
   progressRoute,
+  progressWithMetric,
   siblingRoute,
 } from "./navigate"
 import { initialPeriodState, periodReducer, type PeriodState } from "../period/state"
@@ -154,6 +155,16 @@ describe("Wege zwischen den Seiten", () => {
     ).toEqual({ type: "rolling", days: 30 })
     // die Liste hat keine Wertung; es gilt die des Geräts wie bei `openCard`
     expect(progressFromList(LIST, "rings").query.scoring).toBe("rings")
+  })
+
+  it("eine Kennzahl einer Familie: nur Familie und Kennzahl in der Adresse", () => {
+    const route = progressWithMetric("lp-freihand", "group.sigma")
+    expect(route).toEqual({
+      page: "progress",
+      query: { ...DEFAULT_PROGRESS, family: "lp-freihand", metric: "group.sigma" },
+      section: null,
+    })
+    expect(urlFromRoute(route)).toBe("/progress?family=lp-freihand&metric=sigma")
   })
 })
 
