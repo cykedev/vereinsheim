@@ -150,7 +150,18 @@ export default async function SeriesPage({ params }: Props) {
                       )}
                       existingSeries={series}
                     />
-                    {series && <DeleteEventSeriesButton seriesId={series.id} competitionId={id} />}
+                    {series && (
+                      <DeleteEventSeriesButton
+                        seriesId={series.id}
+                        competitionId={id}
+                        name={
+                          cp.isGuest
+                            ? cp.participant.firstName
+                            : `${cp.participant.firstName} ${cp.participant.lastName}`
+                        }
+                        teams={cp.teamNumber != null}
+                      />
+                    )}
                   </div>
                 </div>
               )

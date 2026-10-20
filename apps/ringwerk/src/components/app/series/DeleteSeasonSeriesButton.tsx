@@ -2,66 +2,60 @@
 
 import { useState, useTransition } from "react"
 import { Trash2 } from "lucide-react"
+import { toast } from "sonner"
 import { Button } from "@vereinsheim/ui/button"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@vereinsheim/ui/alert-dialog"
+import { DecisionDialog } from "@vereinsheim/ui/design2/decision-dialog"
+import { seasonSeriesDelete } from "@/lib/consequences"
 import { deleteSeasonSeries } from "@/lib/series/actions"
 
 interface Props {
   seriesId: string
   competitionId: string
+  name: string
+  /** Tag der Serie im Anzeigeformat */
+  date: string
+  /** Mindestzahl an Serien für einen Platz, `null` ohne */
+  minSeries: number | null
 }
 
-export function DeleteSeasonSeriesButton({ seriesId, competitionId }: Props) {
+export function DeleteSeasonSeriesButton({
+  seriesId,
+  competitionId,
+  name,
+  date,
+  minSeries,
+}: Props) {
+  const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
-  const [error, setError] = useState<string | null>(null)
 
   function handleDelete() {
     startTransition(async () => {
       const result = await deleteSeasonSeries(seriesId, competitionId)
       if ("error" in result && typeof result.error === "string") {
-        setError(result.error)
+        toast.error(result.error)
       }
     })
   }
 
   return (
-    <AlertDialog>
-      <AlertDialogTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-10 w-10 text-destructive hover:text-destructive"
-          title="Serie löschen"
-          disabled={isPending}
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Serie löschen?</AlertDialogTitle>
-          <AlertDialogDescription>
-            Die Serie wird endgültig gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        {error && <p className="text-sm text-destructive">{error}</p>}
-        <AlertDialogFooter>
-          <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-          <AlertDialogAction onClick={handleDelete} disabled={isPending}>
-            {isPending ? "Löschen…" : "Löschen"}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-10 w-10 text-destructive hover:text-destructive"
+        title="Serie löschen"
+        aria-label="Serie löschen"
+        disabled={isPending}
+        onClick={() => setOpen(true)}
+      >
+        <Trash2 className="h-4 w-4" />
+      </Button>
+      <DecisionDialog
+        decision={seasonSeriesDelete({ name, date, minSeries })}
+        open={open}
+        onOpenChange={setOpen}
+        onConfirm={handleDelete}
+      />
+    </>
   )
 }

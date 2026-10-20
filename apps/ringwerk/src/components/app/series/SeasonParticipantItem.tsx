@@ -134,7 +134,13 @@ export function SeasonParticipantItem({
                     disciplineId: s.disciplineId,
                   }}
                 />
-                <DeleteSeasonSeriesButton seriesId={s.id} competitionId={competitionId} />
+                <DeleteSeasonSeriesButton
+                  seriesId={s.id}
+                  competitionId={competitionId}
+                  name={`${firstName} ${lastName}`}
+                  date={s.sessionDate}
+                  minSeries={minSeries}
+                />
               </div>
             </div>
           ))}
