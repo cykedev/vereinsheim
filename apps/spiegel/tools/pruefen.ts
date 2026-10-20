@@ -968,6 +968,45 @@ async function backPaths(page: Page) {
 // Fortschritt
 // ─────────────────────────────────────────────────────────────────────────────
 
+/**
+ * Eine Scheibe sagt, was sie zeigt: die Ermüdung mit Urteil, σ mit dem Weg in den Fortschritt (Familie der Scheibe,
+ * Kennzahl „Streuung“)
+ */
+async function singleCardHints(page: Page, href: string) {
+  await page.viewport(1280, 900)
+  await page.goto(`${BASE}${href}#time`)
+  await page.wait(300)
+  const verdict = await page.ev<string>(`txt(card("ermuedung")?.querySelector("[data-verdict]"))`)
+  check(
+    "Ermüdung: Urteil als Etikett",
+    ["klar schwächer", "klar stärker", "kann Zufall sein"].includes(verdict),
+    verdict
+  )
+  await page.click(`tab("Präzision")`, { settle: 300 })
+  const target = await page.ev<string | null>(
+    `link("Streuung im Fortschritt ›", card("praezision-sigma"))?.getAttribute("href") ?? null`
+  )
+  check("σ: Link „Streuung im Fortschritt ›“", target !== null, target ?? "kein Link")
+  if (!target) return
+  await page.click(`link("Streuung im Fortschritt ›", card("praezision-sigma"))`, { settle: 300 })
+  const arrived = await page.waitFor(`location.pathname === "/progress"`, 8_000)
+  await page.waitFor(`!!$('[role="radiogroup"][aria-label="Kennzahl"] [aria-checked="true"]')`)
+  const where = await page.ev<{ path: string; search: string; metric: string }>(`({
+    path: location.pathname,
+    search: location.search,
+    metric: txt($('[role="radiogroup"][aria-label="Kennzahl"] [aria-checked="true"]')),
+  })`)
+  check(
+    "σ: der Link öffnet Fortschritt mit Familie und „Streuung“",
+    arrived &&
+      where.path === "/progress" &&
+      /[?&]metric=sigma\b/.test(where.search) &&
+      /[?&]family=/.test(where.search) &&
+      where.metric === "Streuung",
+    where
+  )
+}
+
 async function progress(page: Page) {
   for (const [width, height, shown] of [
     [390, 844, "[data-card-line]"],
@@ -1228,6 +1267,7 @@ async function main() {
     await section("Blättern", () => paging(page, href))
     await section("Rückwege", () => backPaths(page))
     await section("Fortschritt", () => progress(page))
+    await section("Eine Scheibe sagt, was sie zeigt", () => singleCardHints(page, href))
     await section("Sprache und Hilfe", () => language(page))
     await section("Offen und Leiste", () => openAndBar(page))
     await section("Papierkorb", () => trash(page))
