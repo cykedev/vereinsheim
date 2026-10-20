@@ -66,6 +66,7 @@ export async function GET(
       leagueName: competition.name,
       disciplineName,
       scoringType,
+      scoringMode: competition.scoringMode,
       standings: standingsClassic,
       matchups,
       firstLegDeadline: competition.hinrundeDeadline,

@@ -1,7 +1,8 @@
 import { Document, Page, View, Text } from "@react-pdf/renderer"
 import type { ReactElement } from "react"
-import type { ScoringType } from "@/generated/prisma/client"
-import type { MatchupListItem } from "@/lib/matchups/types"
+import type { ScoringMode, ScoringType } from "@/generated/prisma/client"
+import { pairingOutcome } from "@/lib/matchups/outcome"
+import type { MatchResultSummary, MatchupListItem } from "@/lib/matchups/types"
 import type { StandingRow } from "@/lib/standings/calculateStandings"
 import { hasLeagueResult } from "@/lib/standings/standingsSort"
 import { formatRings, formatDecimal1 } from "@/lib/series/scoring-format"
@@ -17,6 +18,8 @@ export interface SchedulePdfProps {
   leagueName: string
   disciplineName: string
   scoringType: ScoringType
+  /** Wertung der Liga: entscheidet, wer eine Paarung gewinnt */
+  scoringMode: ScoringMode
   standings: StandingRow[]
   matchups: MatchupListItem[]
   firstLegDeadline: Date | null
@@ -35,6 +38,18 @@ function rankBadgeColor(rank: number, podium: boolean): string {
   if (rank === 2) return "#6b7280"
   if (rank === 3) return "#c2410c"
   return "#9ca3af"
+}
+
+type PairingResult = Pick<MatchResultSummary, "rings" | "correctedTeiler" | "ringteiler">
+
+/** Wer eine Paarung gewonnen hat, nach der Wertung der Liga wie auf dem Bildschirm (`pairingOutcome`) */
+export function pairingWinner(
+  home: PairingResult,
+  away: PairingResult,
+  scoringMode: ScoringMode
+): "home" | "away" | null {
+  const outcome = pairingOutcome(home, away, scoringMode)
+  return outcome === "HOME_WIN" ? "home" : outcome === "AWAY_WIN" ? "away" : null
 }
 
 // ─── Kopfzeile ────────────────────────────────────────────────────────────────
@@ -202,11 +217,13 @@ function MatchupSection({
   subtitle,
   matchups,
   scoringType,
+  scoringMode,
 }: {
   title: string
   subtitle: string
   matchups: MatchupListItem[]
   scoringType: ScoringType
+  scoringMode: ScoringMode
 }): ReactElement {
   const byRound = new Map<number, MatchupListItem[]>()
   for (const m of matchups) {
@@ -238,10 +255,10 @@ function MatchupSection({
                   ? m.results.find((r) => r.participantId === m.awayParticipant!.id)
                   : null
 
-                const homeWins =
-                  homeRes && awayRes ? homeRes.ringteiler < awayRes.ringteiler : false
-                const awayWins =
-                  homeRes && awayRes ? awayRes.ringteiler < homeRes.ringteiler : false
+                const winner =
+                  homeRes && awayRes ? pairingWinner(homeRes, awayRes, scoringMode) : null
+                const homeWins = winner === "home"
+                const awayWins = winner === "away"
 
                 const isCompleted = m.status === "COMPLETED"
                 const isPending = m.status === "PENDING"
@@ -306,6 +323,7 @@ export function SchedulePdf({
   leagueName,
   disciplineName,
   scoringType,
+  scoringMode,
   standings,
   matchups,
   firstLegDeadline,
@@ -343,6 +361,7 @@ export function SchedulePdf({
             }
             matchups={firstLeg}
             scoringType={scoringType}
+            scoringMode={scoringMode}
           />
         )}
 
@@ -357,6 +376,7 @@ export function SchedulePdf({
             }
             matchups={secondLeg}
             scoringType={scoringType}
+            scoringMode={scoringMode}
           />
         )}
 

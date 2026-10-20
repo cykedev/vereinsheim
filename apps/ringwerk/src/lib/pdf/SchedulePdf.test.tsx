@@ -8,7 +8,7 @@ import {
   pageCount,
   TEST_PUBLIC_LINK,
 } from "./pdfTestUtils"
-import { SchedulePdf, type SchedulePdfProps } from "@/lib/pdf/SchedulePdf"
+import { pairingWinner, SchedulePdf, type SchedulePdfProps } from "@/lib/pdf/SchedulePdf"
 
 describe("SchedulePdf — Abgabefristen", () => {
   // Mitternacht Europe/Berlin am 16.06. ist 22:00 UTC am 15.06. Ohne
@@ -20,6 +20,7 @@ describe("SchedulePdf — Abgabefristen", () => {
     leagueName: "Bezirksliga 2026",
     disciplineName: "Luftgewehr",
     scoringType: "WHOLE",
+    scoringMode: "RINGTEILER",
     standings: [],
     matchups: [
       {
@@ -78,6 +79,7 @@ describe("header on every page", () => {
         leagueName: "Bezirksliga 2026",
         disciplineName: "Luftgewehr",
         scoringType: "WHOLE",
+        scoringMode: "RINGTEILER",
         standings: [],
         matchups: manyMatchups("FIRST_LEG") as unknown as SchedulePdfProps["matchups"],
         firstLegDeadline: null,
@@ -92,5 +94,27 @@ describe("header on every page", () => {
     expect(pages).toBeGreaterThanOrEqual(2)
     expect(occurrences(text, "Erstellt:")).toBe(pages)
     expect(occurrences(text, "api/public/c/liga-2026/pdf")).toBe(pages)
+  })
+})
+
+describe("pairingWinner — markierter Sieger im Spielplan", () => {
+  const result = (rings: number, teiler: number, ringteiler: number, correctedTeiler = teiler) => ({
+    rings,
+    teiler,
+    correctedTeiler,
+    ringteiler,
+  })
+
+  it("Wertung nach Ringen: mehr Ringe gewinnen, auch mit schlechterem Ringteiler", () => {
+    expect(pairingWinner(result(97, 80, 83), result(96, 5, 9), "RINGS")).toBe("home")
+  })
+
+  it("Wertung nach Teiler, gemischt: der korrigierte Teiler gewinnt", () => {
+    expect(pairingWinner(result(95, 90, 35, 30), result(95, 35, 40), "TEILER")).toBe("home")
+  })
+
+  it("Wertung nach Ringteiler: der kleinere Ringteiler, Gleichstand ohne Sieger", () => {
+    expect(pairingWinner(result(97, 80, 83), result(96, 5, 9), "RINGTEILER")).toBe("away")
+    expect(pairingWinner(result(95, 20, 25), result(95, 20, 25), "RINGTEILER")).toBeNull()
   })
 })

@@ -262,6 +262,7 @@ async function buildScheduleElement(competitionId: string): Promise<ReactElement
     leagueName: competition.name,
     disciplineName,
     scoringType,
+    scoringMode: competition.scoringMode,
     standings: standingsClassic,
     matchups,
     firstLegDeadline: competition.hinrundeDeadline,
