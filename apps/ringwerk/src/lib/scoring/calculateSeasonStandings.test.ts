@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest"
-import { calculateSeasonStandings } from "./calculateSeasonStandings"
-import { sortSeasonStandings } from "./sortSeasonStandings"
+import { calculateSeasonStandings, requiredSeries } from "./calculateSeasonStandings"
+import { seasonPositions, sortSeasonStandings } from "./sortSeasonStandings"
 import type { SeasonSeriesItem } from "@/lib/series/types"
 
 function makeSeries(
@@ -315,6 +315,105 @@ describe("calculateSeasonStandings", () => {
       )
       expect(result[0].meetsMinSeries).toBe(true)
       expect(result[0].bestRings_rank).toBe(1)
+    })
+  })
+
+  describe("Ohne Mindestzahl (Ausnahme an der Einschreibung)", () => {
+    it("liefert die Mindestzahl je Zeile: keine, 1 mit Ausnahme, sonst die des Wettbewerbs", () => {
+      expect(requiredSeries(null, false)).toBeNull()
+      expect(requiredSeries(null, true)).toBeNull()
+      expect(requiredSeries(20, false)).toBe(20)
+      expect(requiredSeries(20, true)).toBe(1)
+    })
+
+    // Die Ausnahme hat den besten Wert. Würde sie ignoriert, hielte der Gewertete Rang 1 und die
+    // Ausnahme keinen Rang. So fällt ein Test, wenn die Ausnahme verloren geht.
+    const input = [
+      {
+        participantId: "gewertet",
+        participantName: "Gewertet, Gerd",
+        series: Array.from({ length: 3 }, () =>
+          makeSeries("gewertet", { rings: 95, teiler: 4.0, ringteiler: 9.0 })
+        ),
+      },
+      {
+        participantId: "ausnahme",
+        participantName: "Ausnahme, Anna",
+        exemptFromMinSeries: true,
+        series: [makeSeries("ausnahme", { rings: 98, teiler: 2.5, ringteiler: 4.5 })],
+      },
+      {
+        participantId: "ausnahme-leer",
+        participantName: "Leer, Lea",
+        exemptFromMinSeries: true,
+        series: [],
+      },
+      {
+        participantId: "zu-wenig",
+        participantName: "Wenig, Willi",
+        series: [makeSeries("zu-wenig", { rings: 99, teiler: 1.0, ringteiler: 2.0 })],
+      },
+    ]
+
+    it("wertet die Ausnahme ab der ersten Serie mit Rang", () => {
+      const result = calculateSeasonStandings(input, 3)
+      const byId = (id: string) => result.find((e) => e.participantId === id)!
+
+      expect(byId("ausnahme").requiredSeries).toBe(1)
+      expect(byId("ausnahme").meetsMinSeries).toBe(true)
+      expect(byId("ausnahme").bestRings_rank).toBe(1)
+      expect(byId("ausnahme").bestTeiler_rank).toBe(1)
+      expect(byId("ausnahme").bestRingteiler_rank).toBe(1)
+      expect(byId("gewertet").requiredSeries).toBe(3)
+      expect(byId("gewertet").bestRings_rank).toBe(2)
+    })
+
+    it("lässt die Ausnahme ohne Serie und alle anderen unter der Mindestzahl ohne Rang", () => {
+      const result = calculateSeasonStandings(input, 3)
+      const byId = (id: string) => result.find((e) => e.participantId === id)!
+
+      expect(byId("ausnahme-leer").requiredSeries).toBe(1)
+      expect(byId("ausnahme-leer").meetsMinSeries).toBe(false)
+      expect(byId("ausnahme-leer").bestRings_rank).toBeNull()
+      expect(byId("zu-wenig").requiredSeries).toBe(3)
+      expect(byId("zu-wenig").meetsMinSeries).toBe(false)
+      expect(byId("zu-wenig").bestRings_rank).toBeNull()
+    })
+
+    it("ändert ohne Mindestzahl nichts", () => {
+      const result = calculateSeasonStandings(input, null)
+      for (const entry of result) expect(entry.requiredSeries).toBeNull()
+      expect(result.find((e) => e.participantId === "zu-wenig")!.bestRings_rank).toBe(1)
+      expect(result.find((e) => e.participantId === "ausnahme")!.bestRings_rank).toBe(2)
+    })
+
+    it.each(["ringteiler", "alt-rings"] as const)(
+      "stellt die Ausnahme mit Serie in den oberen Block (%s)",
+      (sort) => {
+        const sorted = sortSeasonStandings(calculateSeasonStandings(input, 3), sort)
+        expect(sorted.map((e) => e.participantId)).toEqual([
+          "ausnahme",
+          "gewertet",
+          "zu-wenig",
+          "ausnahme-leer",
+        ])
+        expect(seasonPositions(sorted, sort)).toEqual([1, 2, 3, 4])
+      }
+    )
+
+    it("behandelt eine Zeile ohne Angabe wie ohne Ausnahme", () => {
+      const result = calculateSeasonStandings(
+        [
+          {
+            participantId: "p1",
+            participantName: "Müller, Max",
+            series: [makeSeries("p1", { rings: 96, teiler: 3.0, ringteiler: 7.0 })],
+          },
+        ],
+        2
+      )
+      expect(result[0].requiredSeries).toBe(2)
+      expect(result[0].meetsMinSeries).toBe(false)
     })
   })
 

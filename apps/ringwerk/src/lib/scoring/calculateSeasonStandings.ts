@@ -6,6 +6,8 @@ export type SeasonStandingsEntry = {
   participantId: string
   participantName: string
   seriesCount: number
+  /** Mindestzahl an Serien für diese Zeile: null ohne Mindestzahl, 1 mit Ausnahme (`requiredSeries`) */
+  requiredSeries: number | null
   meetsMinSeries: boolean
   // Beste Ringe (höchste Ringzahl einer einzelnen Serie)
   bestRings: number | null
@@ -23,6 +25,17 @@ type ParticipantInput = {
   participantId: string
   participantName: string
   series: SeasonSeriesItem[]
+  /** Ausnahme an der Einschreibung: in der Wertung ab der ersten Serie (etwa Jugend) */
+  exemptFromMinSeries?: boolean
+}
+
+/**
+ * Mindestzahl an Serien für eine Zeile — die einzige Stelle der Regel. Ohne Mindestzahl im
+ * Wettbewerb keine; mit Ausnahme an der Einschreibung genügt eine Serie; sonst die des Wettbewerbs.
+ */
+export function requiredSeries(minSeries: number | null, exempt: boolean): number | null {
+  if (minSeries === null) return null
+  return exempt ? 1 : minSeries
 }
 
 /**
@@ -31,7 +44,8 @@ type ParticipantInput = {
  *   1. Beste Ringe — höchste Ringzahl
  *   2. Bester Teiler — niedrigster korrigierter Teiler (teiler × faktor)
  *   3. Bester Ringteiler — niedrigster Ringteiler
- * Teilnehmer unter minSeries werden ausgegraut (meetsMinSeries = false, Rang = null).
+ * Teilnehmer unter ihrer Mindestzahl (`requiredSeries`) werden ausgegraut (meetsMinSeries = false,
+ * Rang = null). Mit Ausnahme an der Einschreibung zählt schon die erste Serie.
  */
 export function calculateSeasonStandings(
   participants: ParticipantInput[],
@@ -46,13 +60,15 @@ export function calculateSeasonStandings(
     "bestRings_rank" | "bestTeiler_rank" | "bestRingteiler_rank"
   >[] = participants.map((p) => {
     const seriesCount = p.series.length
-    const meetsMinSeries = minSeries === null || seriesCount >= minSeries
+    const required = requiredSeries(minSeries, p.exemptFromMinSeries ?? false)
+    const meetsMinSeries = required === null || seriesCount >= required
 
     if (seriesCount === 0) {
       return {
         participantId: p.participantId,
         participantName: p.participantName,
         seriesCount,
+        requiredSeries: required,
         meetsMinSeries,
         bestRings: null,
         bestRingsScoringType: null,
@@ -87,6 +103,7 @@ export function calculateSeasonStandings(
       participantId: p.participantId,
       participantName: p.participantName,
       seriesCount,
+      requiredSeries: required,
       meetsMinSeries,
       bestRings,
       bestRingsScoringType,

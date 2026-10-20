@@ -25,6 +25,7 @@ function makeEntry(
     participantId: participantName,
     participantName,
     seriesCount: rings === null ? 0 : 2,
+    requiredSeries: null,
     meetsMinSeries,
     bestRings: rings,
     bestRingsScoringType: rings === null ? null : "WHOLE",
