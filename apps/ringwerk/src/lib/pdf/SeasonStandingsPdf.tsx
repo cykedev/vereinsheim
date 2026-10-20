@@ -7,6 +7,7 @@ import {
   metricAppearance,
   SEASON_SORT_LABELS,
   seasonPositions,
+  seasonSeriesLabel,
   type ResolvedSeasonSort,
   type SortedSeasonStandingsEntry,
 } from "@/lib/scoring/sortSeasonStandings"
@@ -173,8 +174,7 @@ function StandingsTable({
         const badgeColor = rankBadgeColor(position, hasSeasonResult(entry))
         const qualified = entry.meetsMinSeries
 
-        const seriesText =
-          hasSeries && minSeries !== null ? `${entry.seriesCount}/${minSeries}` : null
+        const seriesText = hasSeries ? seasonSeriesLabel(entry) : null
         const seriesColor = qualified ? "#16a34a" : "#dc2626"
 
         if (hasSeries) {

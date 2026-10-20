@@ -52,6 +52,14 @@ export const isPodiumRank = (rank: number | null): boolean => rank !== null && r
 export const hasSeasonResult = (e: Pick<SeasonStandingsEntry, "seriesCount">): boolean =>
   e.seriesCount > 0
 
+/**
+ * Serien der Zeile gegen ihre Mindestzahl („3/20“, mit Ausnahme „3/1“), ohne Mindestzahl `null`.
+ * Hier und nicht in Tabelle/PDF, damit Spalte, Zusatz am Telefon und PDF denselben Text zeigen.
+ */
+export const seasonSeriesLabel = (
+  e: Pick<SeasonStandingsEntry, "seriesCount" | "requiredSeries">
+): string | null => (e.requiredSeries === null ? null : `${e.seriesCount}/${e.requiredSeries}`)
+
 /** Darstellung eines Metrik-Werts: betont, zurückgenommen oder unverändert. */
 export type MetricAppearance = "emphasized" | "muted" | "default"
 

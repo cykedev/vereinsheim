@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest"
 import type { SeasonStandingsEntry } from "./calculateSeasonStandings"
 import {
+  seasonSeriesLabel,
   resolveSeasonSort,
   isAlternatingSort,
   hasSeasonResult,
@@ -259,6 +260,15 @@ describe("Darstellungsregeln (geteilt von Tabelle und PDF)", () => {
       expect(metricAppearance(entry, "teiler")).toBe("default")
       expect(metricAppearance(entry, "ringteiler")).toBe("default")
     }
+  })
+})
+
+describe("seasonSeriesLabel", () => {
+  it("Serien gegen die Mindestzahl der Zeile, ohne Mindestzahl nichts", () => {
+    expect(seasonSeriesLabel({ seriesCount: 3, requiredSeries: 20 })).toBe("3/20")
+    expect(seasonSeriesLabel({ seriesCount: 3, requiredSeries: 1 })).toBe("3/1")
+    expect(seasonSeriesLabel({ seriesCount: 0, requiredSeries: 1 })).toBe("0/1")
+    expect(seasonSeriesLabel({ seriesCount: 3, requiredSeries: null })).toBeNull()
   })
 })
 

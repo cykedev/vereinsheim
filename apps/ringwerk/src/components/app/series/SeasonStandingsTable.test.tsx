@@ -225,3 +225,46 @@ describe("SeasonStandingsTable — geteilte Plätze", () => {
     expect(html).toContain("bg-rank-1/20")
   })
 })
+
+describe("SeasonStandingsTable — ohne Mindestzahl", () => {
+  const row = (
+    name: string,
+    seriesCount: number,
+    requiredSeries: number,
+    rings: number | null
+  ): SortedSeasonStandingsEntry => ({
+    participantId: name,
+    participantName: name,
+    seriesCount,
+    requiredSeries,
+    meetsMinSeries: seriesCount >= requiredSeries,
+    bestRings: rings,
+    bestRingsScoringType: rings === null ? null : "WHOLE",
+    bestRings_rank: null,
+    bestCorrectedTeiler: rings === null ? null : 5,
+    bestTeiler_rank: null,
+    bestRingteiler: rings === null ? null : 105 - rings,
+    bestRingteiler_rank: null,
+    alternatingBy: null,
+  })
+
+  const html = renderToStaticMarkup(
+    createElement(SeasonStandingsTable, {
+      entries: [row("Anna", 1, 1, 98), row("Gerd", 20, 20, 95), row("Lea", 0, 1, null)],
+      minSeries: 20,
+      sort: "rings",
+    })
+  )
+
+  it("zeigt die Mindestzahl der Zeile: 1/1 grün, 20/20 grün, 0/1 rot", () => {
+    expect(html).toContain('<span class="text-success">1/1</span>')
+    expect(html).toContain('<span class="text-success">20/20</span>')
+    expect(html).toContain('<span class="text-destructive">0/1</span>')
+    expect(html).not.toContain(">1/20<")
+  })
+
+  it("die Ausnahme mit Serie steht nicht grau, nur die Zeile ohne Serie trägt den Zusatz am Telefon", () => {
+    expect(html).toContain('<span class="ml-1.5 text-xs sm:hidden">(0/1)</span>')
+    expect(html.match(/sm:hidden">\(/g)).toHaveLength(1)
+  })
+})

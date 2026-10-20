@@ -9,6 +9,7 @@ import {
   metricAppearance,
   SEASON_SORT_LABELS,
   seasonPositions,
+  seasonSeriesLabel,
   sortSeasonStandings,
   type MetricAppearance,
   type ResolvedSeasonSort,
@@ -230,7 +231,7 @@ export function SeasonStandingsTable({
                         {entry.participantName}
                         {!qualified && minSeries !== null && (
                           <span className="ml-1.5 text-xs sm:hidden">
-                            ({entry.seriesCount}/{minSeries})
+                            ({seasonSeriesLabel(entry)})
                           </span>
                         )}
                       </span>
@@ -239,7 +240,7 @@ export function SeasonStandingsTable({
                   {minSeries !== null && (
                     <TableCell className="px-3 py-2 text-right font-mono tabular-nums hidden sm:table-cell">
                       <span className={qualified ? "text-success" : "text-destructive"}>
-                        {entry.seriesCount}/{minSeries}
+                        {seasonSeriesLabel(entry)}
                       </span>
                     </TableCell>
                   )}
