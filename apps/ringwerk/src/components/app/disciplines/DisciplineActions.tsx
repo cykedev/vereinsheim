@@ -1,21 +1,12 @@
 "use client"
 
-import { useTransition } from "react"
+import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { Pencil, Archive, ArchiveRestore, Trash2 } from "lucide-react"
 import { Button } from "@vereinsheim/ui/button"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@vereinsheim/ui/alert-dialog"
+import { DecisionDialog } from "@vereinsheim/ui/design2/decision-dialog"
 import { toast } from "sonner"
+import { disciplineDelete } from "@/lib/consequences"
 import { setDisciplineArchived, deleteDiscipline } from "@/lib/disciplines/actions"
 import type { SerializableDiscipline } from "@/lib/disciplines/types"
 
@@ -26,6 +17,7 @@ interface Props {
 export function DisciplineActions({ discipline }: Props) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
+  const [deleteOpen, setDeleteOpen] = useState(false)
 
   function handleArchive(archive: boolean) {
     startTransition(async () => {
@@ -84,36 +76,23 @@ export function DisciplineActions({ discipline }: Props) {
         </Button>
       )}
 
-      <AlertDialog>
-        <AlertDialogTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-10 w-10 text-destructive hover:text-destructive"
-            title="Löschen"
-            disabled={isPending}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </AlertDialogTrigger>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Disziplin löschen?</AlertDialogTitle>
-            <AlertDialogDescription>
-              {`Disziplin „${discipline.name}" wirklich löschen?`}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-destructive text-primary-foreground hover:bg-destructive/90"
-            >
-              Löschen
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-10 w-10 text-destructive hover:text-destructive"
+        title="Löschen"
+        aria-label="Löschen"
+        disabled={isPending}
+        onClick={() => setDeleteOpen(true)}
+      >
+        <Trash2 className="h-4 w-4" />
+      </Button>
+      <DecisionDialog
+        decision={disciplineDelete({ name: discipline.name, system: discipline.isSystem })}
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        onConfirm={handleDelete}
+      />
     </div>
   )
 }

@@ -82,7 +82,12 @@ export default async function AdminUsersPage() {
                   </div>
                   <p className="text-xs text-muted-foreground">{user.email}</p>
                 </div>
-                <UserRowActions userId={user.id} userName={user.name} isActive={user.isActive} />
+                <UserRowActions
+                  userId={user.id}
+                  userName={user.name}
+                  email={user.email}
+                  isActive={user.isActive}
+                />
               </div>
             ))}
           </div>
@@ -114,7 +119,12 @@ export default async function AdminUsersPage() {
                     </div>
                     <p className="text-xs text-muted-foreground">{user.email}</p>
                   </div>
-                  <UserRowActions userId={user.id} userName={user.name} isActive={user.isActive} />
+                  <UserRowActions
+                    userId={user.id}
+                    userName={user.name}
+                    email={user.email}
+                    isActive={user.isActive}
+                  />
                 </div>
               ))}
             </div>
