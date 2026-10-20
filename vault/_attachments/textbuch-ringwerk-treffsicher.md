@@ -1134,3 +1134,47 @@ Bei einem anderen Fehler: **Teilnehmer konnte nicht entfernt werden. Bitte erneu
 nicht gelöscht werden. Bitte erneut versuchen.**
 
 Der Eintrag „Spielplan generiert“ zählt die Paarungen ohne Freilose.
+
+---
+
+## Ringwerk: Erfolgsmeldungen und Hinweis für Zurückgezogene (B9)
+
+**Status: freigegeben am 20. Oktober 2026**
+
+### Erfolgsmeldungen (unten, nach dem Bestätigen)
+
+Nach jeder Aktion sagt eine kurze Meldung, dass sie geklappt hat (conventions §2). Bisher fehlt sie hinter diesen
+Dialogen und Formularen:
+
+| Aktion | Meldung |
+| --- | --- |
+| Teilnehmer zurückziehen (Formular mit Grund) | **Teilnehmer zurückgezogen.** |
+| Rückzug zurücknehmen | **Rückzug zurückgenommen.** |
+| Aus dem Wettbewerb entfernen | **Aus dem Wettbewerb entfernt.** |
+| Disziplin eines Teilnehmers ändern (gemischter Wettbewerb) | **Disziplin geändert.** |
+| Teilnehmer deaktivieren / aktivieren | **Teilnehmer deaktiviert.** / **Teilnehmer aktiviert.** |
+| Teilnehmer löschen (auch mit allen Daten) | **Teilnehmer gelöscht.** |
+| Disziplin archivieren / wiederherstellen | **Disziplin archiviert.** / **Disziplin wiederhergestellt.** |
+| Disziplin löschen | **Disziplin gelöscht.** |
+| Konto deaktivieren / aktivieren (Admin) | **Konto deaktiviert.** / **Konto aktiviert.** |
+| Playoffs starten | **Playoffs gestartet.** |
+| Nächste Runde anlegen | **{Halbfinale} angelegt.** |
+| Duell in den Playoffs löschen | **Duell gelöscht.** |
+| Letztes Duell zurücknehmen (Best-of) | **Duell zurückgenommen.** / **Stechschuss zurückgenommen.** |
+
+Schon da und unverändert: „Status geändert.“, „Spielplan generiert.“ / „Spielplan neu generiert.“, „Wettbewerb
+gelöscht.“, „Ergebnis gelöscht.“, „Serie gelöscht.“
+
+### 6c. Zurückgezogenes Mitglied mit Ergebnissen entfernen (nur ein Hinweis)
+
+Heute sieht auch ein schon zurückgezogenes Mitglied den Hinweis 6b, es lasse sich „nur zurückziehen“. Neu für diesen
+Fall:
+
+- **Titel:** {Anna Birke} lässt sich nicht entfernen
+- **Text:** {Anna Birke} ist aus diesem Wettbewerb zurückgezogen und hat schon {2} Ergebnisse. Die Ergebnisse zählen
+  nicht mehr, bleiben aber gespeichert. Damit sie nicht verloren gehen, bleibt {Anna Birke} als zurückgezogen
+  eingetragen.
+- **Knopf:** Schließen
+
+Bei einem Ergebnis: „… und hat schon 1 Ergebnis. Das Ergebnis zählt nicht mehr, bleibt aber gespeichert. Damit es
+nicht verloren geht, …“
