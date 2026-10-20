@@ -115,3 +115,54 @@ describe("Sätze in Alltagsworten", () => {
     )
   })
 })
+
+describe("eine Scheibe sagt, was sie zeigt", () => {
+  // die Wertungsschüsse der Beispielscheibe mit neuen Werten: zehn am Anfang, zwanzig dazwischen, zehn am Ende;
+  // die Mitte hebt sich gegen beide Enden ab, damit der Trend über die ganze Scheibe nicht klar wird
+  const withValues = (firstTen: number, middle: number, lastTen: number) => {
+    let k = 0
+    return fortyCard().map((s) => {
+      if (s.kind !== "match") return s
+      const tenths = k < 10 ? firstTen : k < 30 ? middle : lastTen
+      k++
+      return { ...s, decimalTenths: tenths, ring: Math.floor(tenths / 10) }
+    })
+  }
+  const trendOf = (shots: ReturnType<typeof withValues>) =>
+    observations(analysisInput(shots, "decimal", LP_10M)).find((x) => x.icon === "trend")
+
+  it("klar nachgelassen fällt auf, auch ohne klaren Trend", () => {
+    const trend = trendOf(withValues(100, 108, 92))
+    expect(trend?.text).toMatch(/^Kein klarer Trend über die Scheibe/)
+    expect(trend?.text).toMatch(/ Am Ende hast du klar nachgelassen\.$/)
+    expect(trend?.notable).toBe(true)
+  })
+
+  it("klar stärker geworden", () => {
+    const trend = trendOf(withValues(100, 92, 108))
+    expect(trend?.text).toMatch(/^Kein klarer Trend über die Scheibe/)
+    expect(trend?.text).toMatch(/ Am Ende bist du klar stärker geworden\.$/)
+    expect(trend?.notable).toBe(true)
+  })
+
+  it("ohne Urteil: kann Zufall sein, und es fällt nicht auf", () => {
+    const trend = trendOf(fortyCard())
+    expect(trend?.text).toMatch(/ Der Unterschied kann Zufall sein\.$/)
+    expect(trend?.notable).toBe(false)
+  })
+
+  it("genau im Schnitt der ersten zehn: kein Zusatz", () => {
+    const trend = trendOf(withValues(100, 104, 100))
+    expect(trend?.text).toContain("genau im Schnitt der ersten zehn")
+    expect(trend?.text).not.toMatch(/Zufall|klar nachgelassen|klar stärker/)
+  })
+
+  it("Pausen: drei Schuss sind zu wenig, kein Verweis auf andere Abende", () => {
+    const list = observations(analysisInput(fortyCard(), "decimal", LP_10M))
+    expect(list.find((x) => x.icon === "pause")?.text).toMatch(
+      / Drei Schuss sind zu wenig, um zu zeigen, ob die Pause etwas ausmacht\.$/
+    )
+    for (const { text } of list)
+      expect(text).not.toMatch(/mehrere(n)? (Scheiben|Abende)|über Abende/)
+  })
+})

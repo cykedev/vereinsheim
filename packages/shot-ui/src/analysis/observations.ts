@@ -134,9 +134,18 @@ export function observations(input: AnalysisInput): Observation[] {
         tired.deltaR50Um === null
           ? ""
           : `, die Gruppe ${formatValue(Math.abs(tired.deltaR50Um) / 1000, 2)} mm ${tired.deltaR50Um >= 0 ? "weiter" : "enger"}`
-      text += ` Die letzten zehn Schuss lagen ${where}${group}. Ein Muster zeigt erst der Vergleich über mehrere Scheiben.`
+      // das Urteil gilt für den Wert, nicht für die Gruppe; genau im Schnitt braucht keins
+      const verdict =
+        tired.direction === "down"
+          ? " Am Ende hast du klar nachgelassen."
+          : tired.direction === "up"
+            ? " Am Ende bist du klar stärker geworden."
+            : Math.abs(d) < 0.005
+              ? ""
+              : " Der Unterschied kann Zufall sein."
+      text += ` Die letzten zehn Schuss lagen ${where}${group}.${verdict}`
     }
-    out.push({ icon: "trend", text, notable: trend.clear })
+    out.push({ icon: "trend", text, notable: trend.clear || tired?.clear === true })
   }
 
   const recovery = pauseRecovery(base, scoring, card)
@@ -158,7 +167,7 @@ export function observations(input: AnalysisInput): Observation[] {
     out.push({
       icon: "pause",
       notable: false,
-      text: `${text}. Drei Schuss sind wenig. Ein Urteil braucht mehrere Abende.`,
+      text: `${text}. Drei Schuss sind zu wenig, um zu zeigen, ob die Pause etwas ausmacht.`,
     })
   }
 
