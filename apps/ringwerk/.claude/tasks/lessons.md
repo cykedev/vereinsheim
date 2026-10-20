@@ -13,6 +13,9 @@ Format: Datum | Fehler | Regel die ihn verhindert
 
 ## Offen
 
+| 2026-10-20 | Das „?“ am Turnierbaum war vom Baum verdeckt (negative Marge der Zeile darüber), `ml-auto` am Knopf statt an seiner Hülle wirkte nicht; die Markup-Tests sahen beides nicht | Jedes „?“ klickt die Skriptprüfung im Browser (`help()` in `tools/pruefen.ts`); Layout-Klassen eines Wrappers gehören an die äußerste Hülle |
+| 2026-10-20 | Hilfetexte beschrieben den Normalfall; das Review fand Randfälle, in denen ein Satz nicht stimmt („offen“ bei drei Punktgleichen, Freilos zählt nicht in „S“, Faktor der Standarddisziplinen wird beim Start zurückgesetzt) | Jeden Satz eines Hilfetexts an einem Randfall der Funktion gegenprüfen, bevor er ins Textbuch geht |
+
 | 2026-10-18 | Zwei Aufbauten des Prüfbestands unterschieden sich nur in der Seite der Finalisten: `advanceRound` liest die Halbfinals mit `findMany` ohne `orderBy` und setzt `winners[0]` als A; die physische Zeilenfolge (Autovacuum, Statistik) entscheidet | Wo die Reihenfolge gelesener Zeilen Daten festlegt (Seite, Setzung), immer `orderBy`; Reproduzierbarkeit per Prüfsumme über zwei Läufe prüfen (`pruefdaten --erwartet`) |
 | 2026-10-18 | Nach einem Feldfehler im Formular „Neuer Wettbewerb“ stand die Disziplin wieder auf „Gemischt“, obwohl der State gesteuert ist: Die Radix-Auswahl mit `name` rendert ein verstecktes `<select>` und folgt dem Zurücksetzen des Formulars, das React 19 nach der Server Action auslöst. Kein Test sah es, erst der Ablauf im Browser | Gesteuerte Formulare mit Radix-Auswahl nach einem Feldfehler im Browser prüfen (`pruefen:ablaeufe`); jede Auswahl, nicht nur Textfelder |
 | 2026-10-18 | Die Skriptprüfung hing ohne Meldung: Nach einer ungespeicherten Eingabe öffnete Chrome beim nächsten Laden den `beforeunload`-Dialog, und `Page.navigate` wartete auf ihn | `@vereinsheim/pruefen` nimmt Browser-Dialoge an und schreibt sie in `page.dialogs`; eine Prüfung, die `beforeunload` erwartet, liest sie dort |
