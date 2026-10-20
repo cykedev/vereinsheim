@@ -482,3 +482,548 @@ Spiegels Ids in `apps/treffsicher/src/lib/help/statisticsTopics.ts`.
 - **So liest du es:** Plus heißt: besser als gedacht. Minus heißt: schlechter als gedacht. Ist ein Bereich oft im
   Minus, schätzt du ihn vorher zu gut ein.
 - **Vorsicht:** Beide Werte sind deine eigene Einschätzung. Ein Urteil gibt es nicht, dafür sind es zu wenige Einheiten.
+
+---
+
+## Ringwerk: Folgen vor dem Bestätigen (WC0)
+
+**Status: freigegeben am 20. Oktober 2026 (mit E1–E4)**
+
+Ringwerk trägt den Wettkampfbetrieb. Jeder Dialog unten sagt deshalb genau, was gelöscht wird, was im Protokoll bleibt
+und was danach gesperrt ist. Die Folgen sind aus den Actions abgelesen (Stand `feat/design2-all-apps`, a30c7432).
+Beispielnamen sind erfunden.
+
+Zum Freigeben gehören diese Entscheidungen:
+
+- **E1 Wettbewerb mit Teilnehmern löschen.** Heute fragt der Dialog, und Ringwerk lehnt danach mit einer Meldung ab.
+  Vorschlag: Bei eingeschriebenen Teilnehmern zeigt der Knopf gleich den Hinweis 10b mit „Schließen“, wie beim Löschen
+  eines Teilnehmers (3b).
+- **E2 Spielplan-Texte.** Die Texte stehen heute in `lib/matchups/regeneration.ts` (`scheduleDialogText`). Sie ziehen
+  nach `lib/consequences.ts`. In `regeneration.ts` entfallen dafür die Textfunktion und ihr Test. Die Regel, wann neu
+  generiert werden darf, bleibt unberührt.
+- **E3 Knöpfe sagen, was man will.** Aus „Bestätigen“, „Löschen“ und „Endgültig löschen“ werden „Abschließen“,
+  „Ergebnis löschen“, „Mit allen Daten löschen“ und so weiter. Die Abläufe aus Teil R drücken danach die neuen Knöpfe.
+  Was sie in der Datenbank nachprüfen, bleibt gleich.
+- **E4 Nicht in diesem Abschnitt:** „Zurückziehen“ (ein Formular mit Grund), Disziplin archivieren und
+  wiederherstellen (heute ohne Rückfrage). Sie bleiben, wie sie sind.
+
+### 1. Ergebnis im Event löschen
+
+Ort: Event, Reiter „Serien erfassen“, Papierkorb in der Zeile.
+
+**alt:** „Ergebnis löschen?“ · „Das Ergebnis wird endgültig gelöscht. Diese Aktion kann nicht rückgängig gemacht
+werden.“ · Knopf „Löschen“
+
+**neu:**
+
+- **Titel:** Ergebnis von {Anna Birke} löschen?
+- **Worum:** Für {Anna Birke} ist in diesem Event ein Ergebnis eingetragen.
+- **Was dann passiert:**
+  - Das Ergebnis verschwindet aus der Rangliste. Die Plätze werden ohne es neu berechnet.
+  - (nur mit Teams) Auch die Teamwertung rechnet ohne dieses Ergebnis.
+  - Im Protokoll des Wettbewerbs steht danach, dass das Ergebnis gelöscht wurde, mit Ringen und Teiler.
+- **Was nicht passiert:**
+  - {Anna Birke} bleibt eingeschrieben und kann ein neues Ergebnis bekommen.
+  - Die anderen Ergebnisse bleiben.
+- **Rückgängig:** Nicht möglich. Das Ergebnis lässt sich neu eintragen. Ringe und Teiler stehen im Protokoll.
+- **Knopf:** Ergebnis löschen
+
+### 2. Serie in der Saison löschen
+
+Ort: Saison, Reiter „Serien erfassen“, Papierkorb an einer Serie.
+
+**alt:** „Serie löschen?“ · „Die Serie wird endgültig gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.“ ·
+Knopf „Löschen“
+
+**neu:**
+
+- **Titel:** Serie vom {12.10.2026} löschen?
+- **Worum:** {Anna Birke} hat am {12.10.2026} diese Serie geschossen. Sie zählt in der Saison.
+- **Was dann passiert:**
+  - Die Serie verschwindet. Die Rangliste rechnet ohne sie.
+  - (nur mit Mindestzahl) Gelten {10} Serien als Mindestzahl und hat {Anna Birke} danach weniger, steht {Anna Birke}
+    ohne Platz in der Rangliste.
+  - Im Protokoll des Wettbewerbs steht danach, dass die Serie gelöscht wurde, mit Datum, Ringen und Teiler.
+- **Was nicht passiert:**
+  - Die anderen Serien von {Anna Birke} bleiben.
+- **Rückgängig:** Nicht möglich. Die Serie lässt sich neu eintragen. Datum, Ringe und Teiler stehen im Protokoll.
+- **Knopf:** Serie löschen
+
+### 3. Teilnehmer löschen
+
+Ort: Teilnehmer, Papierkorb in der Zeile. Den Knopf gibt es nur bei inaktiven Teilnehmern. Es gibt drei Fälle.
+
+**alt:** „Teilnehmer löschen?“ · „{Birke}, {Anna} wird endgültig gelöscht. Diese Aktion kann nicht rückgängig gemacht
+werden.“ · Knopf „Löschen“ — „Löschen nicht möglich“ · „Dieser Teilnehmer hat {3} Wettbewerbe und kann daher nicht
+gelöscht werden. Force-Delete ist nur für Admins möglich.“ · Knopf „Schließen“ — „Teilnehmer endgültig löschen?“ ·
+„Diese Aktion kann nicht rückgängig gemacht werden. Alle Daten dieses Teilnehmers werden dauerhaft gelöscht — inklusive
+{3} Wettbewerbe, alle Serien und Liga-Paarungen (inkl. der Serien des jeweiligen Gegners).“ · Knopf „Endgültig löschen“
+
+**neu, 3a: in keinem Wettbewerb:**
+
+- **Titel:** {Anna Birke} löschen?
+- **Worum:** {Anna Birke} ist inaktiv und in keinem Wettbewerb eingetragen.
+- **Was dann passiert:**
+  - {Anna Birke} verschwindet aus der Teilnehmerliste.
+  - Im Protokoll unter „Admin“ steht danach ein Eintrag mit dem Namen.
+- **Was nicht passiert:**
+  - Kein Wettbewerb ändert sich.
+- **Rückgängig:** Nicht möglich. {Anna Birke} lässt sich neu anlegen.
+- **Knopf:** Teilnehmer löschen
+
+**neu, 3b: in Wettbewerben, Sportleitung (nur ein Hinweis):**
+
+- **Titel:** {Anna Birke} lässt sich hier nicht löschen
+- **Text:** {Anna Birke} ist in {3} Wettbewerben eingetragen. Damit Tabellen und Ergebnisse dort stimmen, löscht nur
+  ein Admin so einen Teilnehmer, mit allen Daten. Als inaktiv steht {Anna Birke} bei neuen Wettbewerben schon nicht
+  mehr zur Auswahl.
+- **Knopf:** Schließen
+
+**neu, 3c: in Wettbewerben, Admin:**
+
+- **Titel:** {Anna Birke} mit allen Daten löschen?
+- **Worum:** {Anna Birke} ist inaktiv und in {3} Wettbewerben eingetragen.
+- **Vorher prüfen:** Läuft einer dieser Wettbewerbe noch? Dann ändern sich dort Tabelle, Spielplan und Playoffs. Meist
+  genügt es, {Anna Birke} inaktiv zu lassen. Dann bleiben die alten Ergebnisse stehen.
+- **Was dann passiert:**
+  - {Anna Birke} verschwindet aus der Teilnehmerliste und aus allen {3} Wettbewerben.
+  - Alle Serien und Ergebnisse von {Anna Birke} werden gelöscht.
+  - Liga-Paarungen mit {Anna Birke} werden gelöscht, mit den Serien der Gegner. Die Tabellen rechnen ohne diese
+    Paarungen.
+  - Playoff-Paarungen mit {Anna Birke} werden mit allen Duellen gelöscht.
+  - Im Protokoll unter „Admin“ steht danach, dass {Anna Birke} mit allen Daten gelöscht wurde.
+- **Was nicht passiert:**
+  - Die Wettbewerbe bleiben. Die anderen Teilnehmer bleiben eingeschrieben.
+  - Frühere Einträge im Protokoll bleiben.
+- **Rückgängig:** Nicht möglich. Auch die Serien der Gegner kommen nicht zurück.
+- **Feld:** Zur Bestätigung den Nachnamen eingeben: {Birke}
+- **Knopf:** Mit allen Daten löschen
+
+### 4. Teilnehmer deaktivieren und aktivieren
+
+Ort: Teilnehmer, Knopf in der Zeile.
+
+**alt:** „Teilnehmer deaktivieren?“ · „{Birke}, {Anna} wird deaktiviert und kann keinen Ligen mehr hinzugefügt werden.“ ·
+Knopf „Deaktivieren“ — „Teilnehmer aktivieren?“ · „{Birke}, {Anna} wird wieder aktiviert.“ · Knopf „Aktivieren“
+
+**neu, deaktivieren:**
+
+- **Titel:** {Anna Birke} deaktivieren?
+- **Worum:** {Anna Birke} ist aktiv und steht beim Einschreiben in Wettbewerbe zur Auswahl.
+- **Vorher prüfen:** Ist {Anna Birke} in einem laufenden Wettbewerb noch aktiv eingeschrieben? Dann geht das nicht.
+  Zuerst dort zurückziehen.
+- **Was dann passiert:**
+  - Beim Einschreiben steht {Anna Birke} nicht mehr zur Auswahl.
+  - In der Teilnehmerliste lässt sich {Anna Birke} danach löschen.
+  - Im Protokoll unter „Admin“ steht danach ein Eintrag.
+- **Was nicht passiert:**
+  - Einschreibungen und Ergebnisse bleiben, auch in abgeschlossenen Wettbewerben.
+- **Rückgängig:** Unter „Teilnehmer“ mit „Aktivieren“.
+- **Knopf:** Deaktivieren
+
+**neu, aktivieren:**
+
+- **Titel:** {Anna Birke} wieder aktivieren?
+- **Worum:** {Anna Birke} ist inaktiv.
+- **Was dann passiert:**
+  - Beim Einschreiben steht {Anna Birke} wieder zur Auswahl.
+  - Im Protokoll unter „Admin“ steht danach ein Eintrag.
+- **Was nicht passiert:**
+  - In bestehenden Wettbewerben ändert sich nichts.
+- **Rückgängig:** Mit „Deaktivieren“.
+- **Knopf:** Aktivieren
+
+### 5. Rückzug zurücknehmen
+
+Ort: Wettbewerb, Reiter „Teilnehmer“, Knopf bei einem zurückgezogenen Teilnehmer. Den Knopf gibt es nur, bis die
+Playoffs starten.
+
+**alt:** „Rückzug rückgängig machen?“ · „{Birke}, {Anna} wird wieder als aktiv eingeschrieben.“ · Knopf „Rückgängig
+machen“
+
+**neu:**
+
+- **Titel:** Rückzug von {Anna Birke} zurücknehmen?
+- **Worum:** {Anna Birke} ist seit dem {12.10.2026} aus diesem Wettbewerb zurückgezogen.
+- **Was dann passiert:**
+  - {Anna Birke} ist im Wettbewerb wieder aktiv.
+  - Paarungen und Ergebnisse von {Anna Birke} zählen wieder in Tabelle und Rangliste, auch die schon gespielten.
+  - Im Protokoll des Wettbewerbs steht danach ein Eintrag.
+- **Was nicht passiert:**
+  - Der Spielplan ändert sich nicht.
+  - Der Eintrag zum Rückzug bleibt im Protokoll.
+- **Rückgängig:** Mit „Zurückziehen“, solange die Playoffs nicht gestartet sind.
+- **Knopf:** Rückzug zurücknehmen
+
+### 6. Aus dem Wettbewerb entfernen
+
+Ort: Wettbewerb, Reiter „Teilnehmer“, Papierkorb in der Zeile. Den Knopf gibt es nur, bis die Playoffs starten.
+
+**alt:** „Aus Wettbewerb entfernen?“ · „{Birke}, {Anna} wird dauerhaft aus diesem Wettbewerb entfernt.“ · Knopf
+„Entfernen“
+
+**neu:**
+
+- **Titel:** {Anna Birke} aus dem Wettbewerb entfernen?
+- **Worum:** {Anna Birke} ist in diesem Wettbewerb eingeschrieben. (nur mit Ergebnissen) Es gibt {2} Ergebnisse.
+- **Vorher prüfen:** Steht {Anna Birke} schon im Spielplan, geht das nicht. Dann „Zurückziehen“ nutzen.
+- **Was dann passiert:**
+  - Die Einschreibung wird gelöscht. {Anna Birke} verschwindet aus den Seiten des Wettbewerbs.
+  - (nur Gast) Der Gast und die Ergebnisse werden gelöscht.
+  - (nur mit Ergebnissen, kein Gast) Die {2} Ergebnisse erscheinen nicht mehr. Gelöscht werden sie nicht.
+  - (nur im Team) Ist Team {2} danach leer, wird es aufgelöst.
+- **Was nicht passiert:**
+  - (kein Gast) {Anna Birke} bleibt unter „Teilnehmer“ und in anderen Wettbewerben.
+  - Das Protokoll bekommt keinen Eintrag.
+- **Rückgängig:** (kein Gast) Neu einschreiben. (Gast) Den Gast neu anlegen und die Ergebnisse neu eintragen.
+- **Knopf:** Aus dem Wettbewerb entfernen
+
+Beim Gast steht nur der Vorname, wie in der Liste.
+
+### 7. Disziplin löschen
+
+Ort: Disziplinen, Papierkorb in der Zeile.
+
+**alt:** „Disziplin löschen?“ · „Disziplin „{Name}" wirklich löschen?“ · Knopf „Löschen“
+
+**neu:**
+
+- **Titel:** Disziplin „{Luftgewehr Auflage}“ löschen?
+- **Worum:** „{Luftgewehr Auflage}“ ist eine eigene Disziplin. (Systemdisziplin) „{Luftgewehr}“ ist eine
+  Systemdisziplin von Ringwerk.
+- **Vorher prüfen:** Löschen kann nur ein Admin. Wird die Disziplin in einem Wettbewerb verwendet, geht das nicht. Dann
+  archiviere sie.
+- **Was dann passiert:**
+  - Die Disziplin verschwindet unter „Disziplinen“ und aus der Auswahl bei neuen Wettbewerben.
+  - (nur Systemdisziplin) Beim nächsten Start legt Ringwerk sie wieder an.
+  - Im Protokoll unter „Admin“ steht danach ein Eintrag.
+- **Was nicht passiert:**
+  - Kein Wettbewerb und kein Ergebnis wird gelöscht.
+- **Rückgängig:** Nicht möglich. Die Disziplin lässt sich neu anlegen, mit Wertung und Faktor. Soll sie nur aus der
+  Auswahl verschwinden, archiviere sie stattdessen.
+- **Knopf:** Disziplin löschen
+
+### 8. Status eines Wettbewerbs
+
+Ort: Wettbewerbe, Knöpfe auf der Karte eines Wettbewerbs.
+
+**alt:** „Wettbewerb {als abgeschlossen markieren | wieder öffnen | archivieren | wiederherstellen (als
+abgeschlossen)}?“ · „Wettbewerb „{Name}" wird {…}.“ · Knopf „Bestätigen“
+
+**neu, 8a abschließen:**
+
+- **Titel:** „{Rundenwettkampf 2026}“ abschließen?
+- **Worum:** „{Rundenwettkampf 2026}“ läuft.
+- **Vorher prüfen:** Sind alle Ergebnisse eingetragen?
+- **Was dann passiert:**
+  - Der Wettbewerb steht in der Liste als abgeschlossen.
+  - Einschreiben geht nicht mehr. Spielplan und Playoffs lassen sich nicht mehr starten.
+  - (nur öffentlich) Der öffentliche Link zeigt den Wettbewerb weiter. Startet ein anderer Wettbewerb unter derselben
+    Adresse, zeigt der Link diesen.
+  - Im Protokoll des Wettbewerbs steht danach ein Eintrag.
+- **Was nicht passiert:**
+  - Tabellen, Plätze und Ergebnisse bleiben, wie sie sind.
+- **Rückgängig:** Mit „Wieder öffnen“.
+- **Knopf:** Abschließen
+
+**neu, 8b wieder öffnen:**
+
+- **Titel:** „{Rundenwettkampf 2026}“ wieder öffnen?
+- **Worum:** „{Rundenwettkampf 2026}“ ist abgeschlossen.
+- **Vorher prüfen:** (nur öffentlich) Läuft schon ein anderer Wettbewerb unter der Adresse „{rwk-2026}“? Dann geht das
+  nicht.
+- **Was dann passiert:**
+  - Der Wettbewerb läuft wieder. Einschreiben, Spielplan und Playoffs gehen wieder.
+  - Im Protokoll des Wettbewerbs steht danach ein Eintrag.
+- **Was nicht passiert:**
+  - Ergebnisse ändern sich nicht.
+- **Rückgängig:** Mit „Abschließen“.
+- **Knopf:** Wieder öffnen
+
+**neu, 8c archivieren:**
+
+- **Titel:** „{Rundenwettkampf 2026}“ archivieren?
+- **Worum:** „{Rundenwettkampf 2026}“ ist abgeschlossen.
+- **Was dann passiert:**
+  - Der Wettbewerb steht in der Liste unter „Archiviert“.
+  - Bearbeiten geht nicht mehr.
+  - Im Protokoll des Wettbewerbs steht danach ein Eintrag.
+- **Was nicht passiert:**
+  - Nichts wird gelöscht. Seiten und PDFs bleiben erreichbar.
+- **Rückgängig:** Mit „Wiederherstellen“. Der Wettbewerb ist dann wieder abgeschlossen.
+- **Knopf:** Archivieren
+
+**neu, 8d wiederherstellen:**
+
+- **Titel:** „{Rundenwettkampf 2026}“ wiederherstellen?
+- **Worum:** „{Rundenwettkampf 2026}“ ist archiviert.
+- **Was dann passiert:**
+  - Der Wettbewerb ist wieder abgeschlossen und lässt sich bearbeiten.
+  - Im Protokoll des Wettbewerbs steht danach ein Eintrag.
+- **Was nicht passiert:**
+  - Er läuft nicht wieder. Dafür danach „Wieder öffnen“.
+- **Rückgängig:** Mit „Archivieren“.
+- **Knopf:** Wiederherstellen
+
+### 9. Wettbewerb mit allen Daten löschen
+
+Ort: Wettbewerb bearbeiten, unten. Der Kasten heißt heute „Gefahrenzone“.
+
+**alt, Kasten:** „Gefahrenzone“ · „Der Wettbewerb und alle zugehörigen Daten (Teilnehmer-Einschreibungen, Spielplan,
+Ergebnisse, Playoffs, Audit-Einträge) werden unwiderruflich gelöscht.“ · Knopf „Wettbewerb endgültig löschen“
+
+**neu, Kasten:**
+
+- **Überschrift:** Wettbewerb löschen
+- **Text:** Löscht den Wettbewerb mit allem, was dazu eingetragen ist. Nur ein Admin kann das.
+- **Knopf:** Wettbewerb mit allen Daten löschen
+
+**alt, Dialog:** „Wettbewerb endgültig löschen?“ · „Diese Aktion kann nicht rückgängig gemacht werden. Alle Daten
+dieses Wettbewerbs werden dauerhaft gelöscht.“ · Feld „Zur Bestätigung den Wettbewerb-Namen eingeben“ · Knopf
+„Endgültig löschen“
+
+**neu, Dialog:**
+
+- **Titel:** „{Rundenwettkampf 2026}“ mit allen Daten löschen?
+- **Worum:** In „{Rundenwettkampf 2026}“ stehen Einschreibungen, Ergebnisse und das Protokoll.
+- **Vorher prüfen:** Wird der Wettbewerb noch gebraucht, auch zum Nachschauen? Archivieren behält alles.
+- **Was dann passiert:**
+  - Der Wettbewerb verschwindet aus der Liste.
+  - Gelöscht werden Einschreibungen, Teams, Spielplan, alle Serien und Ergebnisse, die Playoffs mit allen Duellen.
+  - Auch das Protokoll des Wettbewerbs wird gelöscht. Danach lässt sich nicht mehr sehen, wer was eingetragen hat.
+  - (nur öffentlich) Der öffentliche Link führt nicht mehr zu diesem Wettbewerb.
+- **Was nicht passiert:**
+  - Die Teilnehmer bleiben unter „Teilnehmer“ und in anderen Wettbewerben. Die Disziplin bleibt.
+- **Rückgängig:** Nicht möglich. Nur eine Sicherung des Servers hat die Daten noch.
+- **Feld:** Zur Bestätigung den Namen des Wettbewerbs eingeben: {Rundenwettkampf 2026}
+- **Knopf:** Mit allen Daten löschen
+
+### 10. Wettbewerb löschen
+
+Ort: Wettbewerbe, Papierkorb auf der Karte eines Wettbewerbs.
+
+**alt:** „Wettbewerb löschen?“ · „Wettbewerb „{Name}" wirklich löschen?“ · Knopf „Löschen“ (mit Teilnehmern danach die
+Meldung „Wettbewerb kann nicht gelöscht werden — es sind bereits Daten verknüpft. Bitte archivieren.“)
+
+**neu, 10a: niemand eingeschrieben:**
+
+- **Titel:** „{Rundenwettkampf 2026}“ löschen?
+- **Worum:** In „{Rundenwettkampf 2026}“ ist niemand eingeschrieben.
+- **Was dann passiert:**
+  - Der Wettbewerb verschwindet aus der Liste.
+  - Seine Einträge im Protokoll bleiben unter „Admin“, ohne Verweis auf den Wettbewerb.
+- **Was nicht passiert:**
+  - Keine Disziplin und kein Teilnehmer wird gelöscht.
+- **Rückgängig:** Nicht möglich. Der Wettbewerb lässt sich neu anlegen.
+- **Knopf:** Wettbewerb löschen
+
+**neu, 10b: mit Teilnehmern (nur ein Hinweis, E1):**
+
+- **Titel:** „{Rundenwettkampf 2026}“ lässt sich hier nicht löschen
+- **Text:** In „{Rundenwettkampf 2026}“ sind {6} Teilnehmer eingeschrieben. So ein Wettbewerb wird archiviert, nicht
+  gelöscht. Ein Admin kann ihn unter „Bearbeiten“ mit allen Daten löschen.
+- **Knopf:** Schließen
+
+### 11. Playoffs starten
+
+Ort: Liga, Reiter „Playoffs“, Knopf „Playoffs starten“.
+
+**alt:** „Playoffs starten?“ · „Die K.O.-Phase wird basierend auf der aktuellen Tabelle gestartet. Dieser Schritt kann
+nicht rückgängig gemacht werden. Rückzüge von Teilnehmern sind danach nicht mehr möglich.“ · Knopf „Playoffs starten“
+
+**neu:**
+
+- **Titel:** Playoffs für „{Rundenwettkampf 2026}“ starten?
+- **Worum:** Die Gruppenphase ist fertig. Die besten {8} von {11} aktiven Teilnehmern kommen ins {Viertelfinale}.
+- **Vorher prüfen:** Stimmt die Tabelle? Die Setzung folgt genau ihren Plätzen.
+- **Was dann passiert:**
+  - Ringwerk legt das {Viertelfinale} an. Platz 1 trifft auf Platz {8}, Platz 2 auf Platz {7} und so weiter.
+  - Zurückziehen, Rückzug zurücknehmen und Entfernen gehen in diesem Wettbewerb nicht mehr.
+  - Unter „Bearbeiten“ sind die Einstellungen für Playoffs und Finale danach gesperrt.
+  - Das öffentliche PDF zeigt ab jetzt die Playoffs statt des Spielplans.
+  - Im Protokoll des Wettbewerbs steht danach ein Eintrag.
+- **Was nicht passiert:**
+  - Tabelle und Ergebnisse der Gruppenphase bleiben.
+- **Rückgängig:** Nicht möglich.
+- **Knopf:** Playoffs starten
+
+### 12. Nächste Runde anlegen
+
+Ort: Liga, Reiter „Playoffs“, Knopf „{Halbfinale} anlegen“, sobald alle Paarungen der Runde entschieden sind.
+
+**alt:** „{Halbfinale anlegen} anlegen?“ · „Die nächste Runde wird basierend auf den aktuellen Ergebnissen angelegt.“ ·
+Knopf „{Halbfinale anlegen} anlegen“ (heute steht „anlegen“ doppelt)
+
+**neu:**
+
+- **Titel:** {Halbfinale} anlegen?
+- **Worum:** Alle Paarungen im {Viertelfinale} sind entschieden.
+- **Was dann passiert:**
+  - Ringwerk setzt das {Halbfinale} aus den Siegern. Der beste Platz aus der Gruppenphase trifft auf den schlechtesten.
+    (Finale) Im Finale treffen die Sieger der beiden Halbfinale aufeinander.
+  - Das öffentliche PDF zeigt die neue Runde.
+- **Was nicht passiert:**
+  - Die Ergebnisse im {Viertelfinale} bleiben.
+  - Das Protokoll bekommt keinen Eintrag.
+- **Rückgängig:** Nicht direkt. Ändert eine Korrektur im {Viertelfinale} einen Sieger, entfernt Ringwerk das
+  {Halbfinale} wieder. Das geht nur, solange dort kein Duell angelegt ist.
+- **Knopf:** {Halbfinale} anlegen
+
+### 13. Duell in den Playoffs löschen
+
+Ort: Liga, Reiter „Playoffs“, Papierkorb am letzten Duell einer Paarung.
+
+**alt:** „Duell löschen?“ · „Dieses Duell wirklich löschen?“ · Knopf „Löschen“
+
+**neu:**
+
+- **Titel:** Duell {3} im {Halbfinale} löschen?
+- **Worum:** {Anna Birke} gegen {Bert Eiche} steht {2 : 1}. Duell {3} ist das letzte dieser Paarung. (eingetragen) Sein
+  Ergebnis ist eingetragen. (offen) Es ist noch offen.
+- **Vorher prüfen:** (nicht im Finale) Hat das {Finale} schon ein Duell, geht das nicht. Dann zuerst dort die Duelle
+  löschen.
+- **Was dann passiert:**
+  - Das Duell wird mit seinen Ergebnissen gelöscht. Der Stand wird aus den übrigen Duellen neu gezählt.
+  - (nur wenn die Paarung entschieden ist) Die Paarung ist danach wieder offen.
+  - (nur wenn entschieden, nicht im Finale) Ist das {Finale} schon angelegt, entfernt Ringwerk es. Es entsteht neu mit
+    „{Finale} anlegen“.
+  - Im Protokoll des Wettbewerbs steht danach, dass das Duell gelöscht wurde, mit Ringen und Teiler.
+- **Was nicht passiert:**
+  - Die anderen Duelle und Paarungen bleiben.
+- **Rückgängig:** Nicht möglich. Das Duell lässt sich neu anlegen und eintragen. Die Werte stehen im Protokoll.
+- **Knopf:** Duell löschen
+
+### 14. Letztes Duell zurücknehmen (Best-of)
+
+Ort: Best-of-Liga, Fenster „Duelle eintragen“, Knopf „Letztes Duell/Stechschuss zurücknehmen“.
+
+**alt:** „Letztes Ergebnis zurücknehmen?“ · „Das zuletzt eingetragene Duell (oder der letzte Stechschuss) wird gelöscht.
+Diese Aktion kann nicht rückgängig gemacht werden.“ · Knopf „Zurücknehmen“
+
+**neu:**
+
+- **Titel:** Duell {3} zurücknehmen? (Stechschuss) Stechschuss zurücknehmen?
+- **Worum:** {Anna Birke} gegen {Bert Eiche} steht {2 : 1}. Zuletzt eingetragen ist Duell {3}. (Stechschuss) Zuletzt
+  eingetragen ist der Stechschuss.
+- **Vorher prüfen:** Die Ringe dieses Duells stehen danach nirgends mehr, auch nicht im Protokoll. Bei Bedarf vorher
+  notieren.
+- **Was dann passiert:**
+  - Die beiden Serien des Duells werden gelöscht.
+  - Die Paarung ist danach offen, auch wenn sie schon entschieden war. Die Tabelle rechnet ohne das Duell.
+  - Im Protokoll des Wettbewerbs steht danach, dass das Duell zurückgenommen wurde.
+- **Was nicht passiert:**
+  - Die früheren Duelle bleiben.
+- **Rückgängig:** Nicht möglich. Das Duell lässt sich neu eintragen.
+- **Knopf:** Duell zurücknehmen (Stechschuss) Stechschuss zurücknehmen
+
+### 15. Konto deaktivieren und aktivieren (Admin)
+
+Ort: Admin, Liste der Konten, Knopf in der Zeile.
+
+**alt:** „Nutzer deaktivieren?“ · „{Name} wird deaktiviert und kann sich nicht mehr einloggen.“ · Knopf „Deaktivieren“ —
+„Nutzer aktivieren?“ · „{Name} wird wieder aktiviert.“ · Knopf „Aktivieren“
+
+**neu, deaktivieren:**
+
+- **Titel:** Konto von {Erika Muster} deaktivieren?
+- **Worum:** {Erika Muster} meldet sich mit {erika@example.org} an.
+- **Vorher prüfen:** Das eigene Konto und das letzte aktive Admin-Konto lassen sich nicht deaktivieren.
+- **Was dann passiert:**
+  - {Erika Muster} kann sich nicht mehr anmelden.
+  - Ist {Erika Muster} gerade angemeldet, endet das beim nächsten Klick.
+  - Im Protokoll unter „Admin“ steht danach ein Eintrag.
+- **Was nicht passiert:**
+  - Es wird nichts gelöscht. Was {Erika Muster} eingetragen hat, bleibt, auch im Protokoll.
+- **Rückgängig:** Unter „Admin“ mit „Aktivieren“. Danach gilt das bisherige Passwort wieder.
+- **Knopf:** Deaktivieren
+
+**neu, aktivieren:**
+
+- **Titel:** Konto von {Erika Muster} wieder aktivieren?
+- **Worum:** Das Konto von {Erika Muster} ist deaktiviert.
+- **Was dann passiert:**
+  - {Erika Muster} kann sich wieder anmelden, mit dem bisherigen Passwort und der bisherigen Rolle.
+  - Im Protokoll unter „Admin“ steht danach ein Eintrag.
+- **Rückgängig:** Mit „Deaktivieren“.
+- **Knopf:** Aktivieren
+
+Ohne Namen steht die E-Mail-Adresse an der Stelle des Namens.
+
+### 16. Spielplan generieren und neu generieren
+
+Ort: Liga, Reiter „Spielplan & Tabelle“, Knopf „Spielplan generieren“ bzw. „Spielplan neu generieren“. Den Knopf gibt
+es nur, solange kein Ergebnis eingetragen ist.
+
+**alt, generieren:** „Spielplan generieren?“ · „Es wird ein Doppelrunden-Spielplan (Hin- und Rückrunde) für alle aktiven
+Teilnehmer generiert.“ (Best-of: „Es wird ein Spielplan „Jeder gegen jeden“ (eine Runde) für alle aktiven Teilnehmer
+generiert.“) · Knopf „Generieren“
+
+**neu, generieren:**
+
+- **Titel:** Spielplan generieren?
+- **Worum:** Die Liga hat noch keinen Spielplan.
+- **Vorher prüfen:** Sind alle eingeschrieben? Wer später dazukommt, braucht einen neuen Spielplan. Das geht nur,
+  solange kein Ergebnis eingetragen ist.
+- **Was dann passiert:**
+  - Ringwerk erstellt Hin- und Rückrunde, jeder gegen jeden. (Best-of) Ringwerk erstellt eine Runde, jeder gegen jeden.
+  - Bei ungerader Zahl hat in jeder Runde jemand ein Freilos.
+  - Die Abgabefristen aus den Einstellungen stehen an den Paarungen.
+  - Das öffentliche PDF zeigt den Spielplan.
+- **Was nicht passiert:**
+  - Zurückgezogene bekommen keine Paarungen.
+  - Das Protokoll bekommt keinen Eintrag.
+- **Rückgängig:** Solange kein Ergebnis eingetragen ist, mit „Spielplan neu generieren“.
+- **Knopf:** Spielplan generieren
+
+**alt, neu generieren:** „Spielplan neu generieren?“ · „Der bestehende Spielplan wird gelöscht und für alle aktiven
+Teilnehmer neu erstellt. Spieltage und Gegner ändern sich dabei. Bereits verteilte oder ausgedruckte Spielpläne sind
+danach veraltet.“ · Knopf „Neu generieren“
+
+**neu, neu generieren:**
+
+- **Titel:** Spielplan neu generieren?
+- **Worum:** Die Liga hat einen Spielplan. Noch ist kein Ergebnis eingetragen.
+- **Vorher prüfen:** Ist der Spielplan schon verteilt oder ausgedruckt? Dann ist er danach veraltet.
+- **Was dann passiert:**
+  - Der bisherige Spielplan wird gelöscht.
+  - Ringwerk erstellt ihn neu für alle aktiven Teilnehmer. Spieltage und Gegner können sich dabei ändern.
+- **Was nicht passiert:**
+  - Einschreibungen bleiben.
+  - Das Protokoll bekommt keinen Eintrag.
+- **Rückgängig:** Nicht möglich. Der alte Spielplan kommt nicht zurück.
+- **Knopf:** Spielplan neu generieren
+
+### 17. Ohne Speichern verlassen
+
+Ort: Wettbewerb anlegen und bearbeiten, wenn mit Änderungen „Abbrechen“ getippt oder die Seite verlassen wird.
+
+**alt:** „Ungespeicherte Änderungen verwerfen?“ · „Es gibt nicht gespeicherte Änderungen. Beim Verlassen gehen sie
+verloren.“ · Knopf „Verwerfen“
+
+**neu:** wie Treffsicher (9):
+
+- **Titel:** Ohne Speichern verlassen?
+- **Worum:** Du hast hier etwas geändert und noch nicht gespeichert.
+- **Was dann passiert:**
+  - Deine Änderungen gehen verloren.
+- **Was nicht passiert:**
+  - Was vorher gespeichert war, bleibt.
+- **Rückgängig:** Nicht möglich. Mit „Abbrechen“ bleibst du hier und kannst speichern.
+- **Knopf:** Verwerfen
+
+### Alte Wörter (Ringwerk)
+
+Diese Wörter dürfen in den Dialogen nicht mehr stehen (Test): „Nutzer“, „Account“, „einloggen“, „endgültig“,
+„dauerhaft“, „unwiderruflich“, „Force-Delete“, „Gefahrenzone“, „Audit“, „K.O.-Phase“, „wirklich löschen“, „Diese Aktion
+kann nicht rückgängig gemacht werden“. Dazu die Grundregel: kein Semikolon, keine drei Punkte.
+
+### Befunde beim Ablesen (nicht Teil dieses Abschnitts)
+
+- Der Kasten „Gefahrenzone“ steht auch für die Sportleitung da. Löschen darf nur ein Admin, sonst kommt „Keine
+  Berechtigung“.
+- Eine Disziplin, die nur in gemischten Wettbewerben Serien hat, lässt sich nicht löschen. Statt einer Meldung kommt ein
+  Fehler (die Serien halten die Disziplin fest).
+- Entfernen eines eingeschriebenen Teilnehmers (kein Gast) mit Ergebnissen lässt die Serien ohne Einschreibung in der
+  Datenbank.
+- „Nächste Runde anlegen“, „Spielplan generieren“ und „Entfernen“ schreiben keinen Eintrag ins Protokoll.
+- Eine gelöschte Systemdisziplin legt Ringwerk beim nächsten Start wieder an.
