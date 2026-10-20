@@ -17,6 +17,7 @@
     "check-types": "tsc --noEmit",
     "db:generate": "prisma generate",
     "pruefen": "tsx tools/pruefen.ts",
+    "durchsicht": "tsx tools/durchsicht.ts",
     "pruefen:konto": "tsx tools/pruefen-account.ts"
   },
   "dependencies": {

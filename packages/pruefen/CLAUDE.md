@@ -12,6 +12,7 @@ Bilder von PDFs. Nicht im Gate (braucht Chrome, einen laufenden Server und Daten
 | `@vereinsheim/pruefen/server`  | `src/server.ts`  | `startServer({ app, port, secret?, hostname? })` startet `.next` der App, `appDir(app)`                                                                                                                         |
 | `@vereinsheim/pruefen/common`  | `src/common.ts`  | `noSideScroll`, `barDoesNotCover`, `themeNoFlash`, `dialogFocus`, `noHiddenCopy` (Tab im Hintergrund), `pageText`; je `Check`                                                                                   |
 | `@vereinsheim/pruefen/pdf`     | `src/pdf.ts`     | `pdfText` (`pdftotext -layout`), `pdfPages` (`pdftoppm -png -r 100`), `pdfTextAndPages` (beides, ohne zu blockieren)                                                                                            |
+| `@vereinsheim/pruefen/measure` | `src/measure.ts` | `measurePage` (Länge in Bildschirmen, Bedienelemente und Zahlen gesamt und im ersten Bildschirm, mehrfache Werte, Fachbegriffe), `measureTable` für die Durchsicht nach drei Ebenen                             |
 
 ## Regeln
 
