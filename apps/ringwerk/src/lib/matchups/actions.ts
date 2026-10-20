@@ -107,7 +107,7 @@ export async function generateCompetitionSchedule(competitionId: string): Promis
           entityId: competitionId,
           userId: session.user.id,
           competitionId,
-          details: { matchups: matchupData.length },
+          details: { matchups: matchupData.filter((m) => m.status !== "BYE").length },
         },
       })
       return null

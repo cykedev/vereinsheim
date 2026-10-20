@@ -457,10 +457,18 @@ describe("generateCompetitionSchedule — Protokoll", () => {
   })
 
   /** offene Paarungen eines bestehenden Spielplans: zählen nur ohne Statusfilter (entschieden: keine) */
-  const existingSchedule = (open: number) =>
+  const existingSchedule = (open: number) => {
+    // das Löschen der offenen Paarungen leert den Bestand, wie in der Datenbank: wer erst danach zählt, sieht 0
+    let rows = open
     matchupCountMock.mockImplementation(({ where }: { where: { status?: string } }) =>
-      Promise.resolve(where.status ? 0 : open)
+      Promise.resolve(where.status ? 0 : rows)
     )
+    matchupDeleteManyMock.mockImplementation(() => {
+      const count = rows
+      rows = 0
+      return Promise.resolve({ count })
+    })
+  }
 
   it("erster Spielplan: ein Eintrag „Spielplan generiert“ mit der Zahl der Paarungen", async () => {
     existingSchedule(0)
@@ -484,6 +492,17 @@ describe("generateCompetitionSchedule — Protokoll", () => {
       eventType: "SCHEDULE_REGENERATED",
       details: { matchups: 6 },
     })
+  })
+
+  it("zählt Paarungen ohne Freilose", async () => {
+    existingSchedule(0)
+    competitionParticipantFindManyMock.mockResolvedValue([
+      ...FOUR_PARTICIPANTS,
+      { participantId: "p5" },
+    ])
+    expect(await generateCompetitionSchedule("c1")).toEqual({ success: true })
+    // fünf Teilnehmer, jeder gegen jeden: 10 Paarungen, dazu 5 Freilose
+    expect(auditLogCreateMock.mock.calls[0][0].data.details).toEqual({ matchups: 10 })
   })
 
   it("Abbruch vor dem Anlegen: kein Eintrag", async () => {
