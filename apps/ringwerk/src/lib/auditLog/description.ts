@@ -65,6 +65,18 @@ export function getAuditDescription(eventType: string, details: unknown): string
     case "COMPETITION_STATUS_CHANGED":
       return d.name ? `${s(d.name)}: ${s(d.from)} → ${s(d.to)}` : null
 
+    case "SCHEDULE_GENERATED":
+    case "SCHEDULE_REGENERATED":
+      return typeof d.matchups === "number"
+        ? `${d.matchups} ${d.matchups === 1 ? "Paarung" : "Paarungen"}`
+        : null
+
+    case "PLAYOFF_ROUND_CREATED":
+      return d.round ? `Runde: ${ROUND_LABELS[s(d.round)] ?? s(d.round)}` : null
+
+    case "PARTICIPANT_UNENROLLED":
+      return d.name ? `${s(d.name)}${d.isGuest ? " · Gast" : ""}` : null
+
     default:
       return null
   }

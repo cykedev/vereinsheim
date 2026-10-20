@@ -12,6 +12,7 @@ const {
   seriesCountMock,
   playoffMatchCountMock,
   revalidatePublicPdfMock,
+  auditLogCreateMock,
 } = vi.hoisted(() => ({
   getAuthSessionMock: vi.fn(),
   revalidatePathMock: vi.fn(),
@@ -24,6 +25,7 @@ const {
   seriesCountMock: vi.fn(),
   playoffMatchCountMock: vi.fn(),
   revalidatePublicPdfMock: vi.fn(),
+  auditLogCreateMock: vi.fn(),
 }))
 
 vi.mock("@/lib/auth-helpers", () => ({
@@ -77,6 +79,7 @@ const txClient = {
   },
   series: { count: seriesCountMock },
   playoffMatch: { count: playoffMatchCountMock },
+  auditLog: { create: auditLogCreateMock },
 }
 
 function setupTransaction() {
@@ -432,5 +435,60 @@ describe("generateCompetitionSchedule — DOUBLE_ROUND_ROBIN regression", () => 
     const secondLeg = rows.filter((r) => r.round === "SECOND_LEG")
     expect(firstLeg.length).toBe(6)
     expect(secondLeg.length).toBe(6)
+  })
+})
+
+// ─── Protokoll ────────────────────────────────────────────────────────────────
+
+describe("generateCompetitionSchedule — Protokoll", () => {
+  beforeEach(() => {
+    vi.resetAllMocks()
+    getAuthSessionMock.mockResolvedValue(adminSession)
+    competitionFindUniqueMock.mockResolvedValue({
+      id: "c1",
+      status: "ACTIVE",
+      leagueFormat: "BEST_OF_SINGLE",
+      hinrundeDeadline: null,
+      rueckrundeDeadline: null,
+    })
+    competitionParticipantFindManyMock.mockResolvedValue(FOUR_PARTICIPANTS)
+    noResults()
+    setupTransaction()
+  })
+
+  /** offene Paarungen eines bestehenden Spielplans: zählen nur ohne Statusfilter (entschieden: keine) */
+  const existingSchedule = (open: number) =>
+    matchupCountMock.mockImplementation(({ where }: { where: { status?: string } }) =>
+      Promise.resolve(where.status ? 0 : open)
+    )
+
+  it("erster Spielplan: ein Eintrag „Spielplan generiert“ mit der Zahl der Paarungen", async () => {
+    existingSchedule(0)
+    expect(await generateCompetitionSchedule("c1")).toEqual({ success: true })
+    expect(auditLogCreateMock).toHaveBeenCalledTimes(1)
+    expect(auditLogCreateMock.mock.calls[0][0].data).toEqual({
+      eventType: "SCHEDULE_GENERATED",
+      entityType: "COMPETITION",
+      entityId: "c1",
+      userId: "u1",
+      competitionId: "c1",
+      details: { matchups: 6 },
+    })
+  })
+
+  it("Spielplan ersetzt: ein Eintrag „Spielplan neu generiert“", async () => {
+    existingSchedule(6)
+    expect(await generateCompetitionSchedule("c1")).toEqual({ success: true })
+    expect(auditLogCreateMock).toHaveBeenCalledTimes(1)
+    expect(auditLogCreateMock.mock.calls[0][0].data).toMatchObject({
+      eventType: "SCHEDULE_REGENERATED",
+      details: { matchups: 6 },
+    })
+  })
+
+  it("Abbruch vor dem Anlegen: kein Eintrag", async () => {
+    competitionParticipantFindManyMock.mockResolvedValue(FOUR_PARTICIPANTS.slice(0, 3))
+    expect(await generateCompetitionSchedule("c1")).toMatchObject({ error: expect.any(String) })
+    expect(auditLogCreateMock).not.toHaveBeenCalled()
   })
 })

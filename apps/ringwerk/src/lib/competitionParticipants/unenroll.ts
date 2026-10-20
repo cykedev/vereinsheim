@@ -4,6 +4,7 @@ import { db } from "@/lib/db"
 import { getAuthSession, canManage } from "@/lib/auth-helpers"
 import { serializable } from "@/lib/serializable"
 import type { ActionResult } from "@/lib/types"
+import type { AuditEventType } from "@/lib/auditLog/types"
 import { revalidateCompetitionParticipantPaths } from "./_shared"
 
 export async function unenrollParticipant(competitionParticipantId: string): Promise<ActionResult> {
@@ -19,6 +20,7 @@ export async function unenrollParticipant(competitionParticipantId: string): Pro
       participantId: true,
       isGuest: true,
       eventTeamId: true,
+      participant: { select: { firstName: true, lastName: true } },
     },
   })
   if (!cp) return { error: "Einschreibung nicht gefunden." }
@@ -58,6 +60,21 @@ export async function unenrollParticipant(competitionParticipantId: string): Pro
       }
       await tx.competitionParticipant.delete({ where: { id: competitionParticipantId } })
     }
+
+    await tx.auditLog.create({
+      data: {
+        eventType: "PARTICIPANT_UNENROLLED" satisfies AuditEventType,
+        entityType: "COMPETITION_PARTICIPANT",
+        entityId: competitionParticipantId,
+        userId: session.user.id,
+        competitionId: cp.competitionId,
+        details: {
+          participantId: cp.participantId,
+          name: [cp.participant.firstName, cp.participant.lastName].filter(Boolean).join(" "),
+          isGuest: cp.isGuest,
+        },
+      },
+    })
 
     // Leeres Team aufräumen
     if (cp.eventTeamId) {

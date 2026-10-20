@@ -10,6 +10,7 @@ import { createNextRoundMatchups, getNextRound } from "../calculatePlayoffs"
 import type { PlayoffRound } from "../types"
 import { serializable } from "@/lib/serializable"
 import { playoffFailureMessage } from "./duelMutations"
+import type { AuditEventType } from "@/lib/auditLog/types"
 
 const MATCHES_PER_ROUND: Record<Exclude<PlayoffRound, "FINAL">, number> = {
   EIGHTH_FINAL: 8,
@@ -85,7 +86,19 @@ export async function advanceRound(competitionId: string): Promise<ActionResult>
         return "Noch nicht alle Matches der aktuellen Runde abgeschlossen."
       }
 
-      return handleMatchCompletion(tx, competitionId, roundToAdvance)
+      const incomplete = await handleMatchCompletion(tx, competitionId, roundToAdvance)
+      if (incomplete) return incomplete
+      await tx.auditLog.create({
+        data: {
+          eventType: "PLAYOFF_ROUND_CREATED" satisfies AuditEventType,
+          entityType: "COMPETITION",
+          entityId: competitionId,
+          userId: session.user.id,
+          competitionId,
+          details: { round: getNextRound(roundToAdvance) },
+        },
+      })
+      return null
     })
   } catch (error) {
     return {

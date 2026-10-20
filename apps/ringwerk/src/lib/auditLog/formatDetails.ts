@@ -149,6 +149,20 @@ export function formatAuditDetails(eventType: string, details: unknown): DetailR
       rows.push({ label: "Von", value: str(d.from) })
       rows.push({ label: "Nach", value: str(d.to) })
       break
+
+    case "SCHEDULE_GENERATED":
+    case "SCHEDULE_REGENERATED":
+      rows.push({ label: "Paarungen", value: str(d.matchups) })
+      break
+
+    case "PLAYOFF_ROUND_CREATED":
+      rows.push({ label: "Runde", value: ROUND_LABELS[str(d.round)] ?? str(d.round) })
+      break
+
+    case "PARTICIPANT_UNENROLLED":
+      rows.push({ label: "Name", value: str(d.name) })
+      if (d.isGuest) rows.push({ label: "Gast", value: "ja" })
+      break
   }
 
   return rows

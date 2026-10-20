@@ -240,10 +240,12 @@ export function unenroll({
       `Die Einschreibung wird gelöscht. ${name} verschwindet aus den Seiten des Wettbewerbs.`,
       ...(guest ? ["Der Gast und die Ergebnisse werden gelöscht."] : []),
       ...(team !== null ? [`Ist Team ${team} danach leer, wird es aufgelöst.`] : []),
+      "Im Protokoll des Wettbewerbs steht danach ein Eintrag.",
     ],
     notHappening: [
-      ...(guest ? [] : [`${name} bleibt unter „Teilnehmer“ und in anderen Wettbewerben.`]),
-      "Das Protokoll bekommt keinen Eintrag.",
+      guest
+        ? "Andere Teilnehmer und ihre Ergebnisse bleiben."
+        : `${name} bleibt unter „Teilnehmer“ und in anderen Wettbewerben.`,
     ],
     undo: guest ? "Den Gast neu anlegen und die Ergebnisse neu eintragen." : "Neu einschreiben.",
     confirmLabel: "Aus dem Wettbewerb entfernen",
@@ -452,11 +454,9 @@ export function scheduleGenerate({ leagueFormat }: { leagueFormat: LeagueFormat 
       "Bei ungerader Zahl hat in jeder Runde jemand ein Freilos.",
       "Die Abgabefristen aus den Einstellungen stehen an den Paarungen.",
       "Das öffentliche PDF zeigt den Spielplan.",
+      "Im Protokoll des Wettbewerbs steht danach ein Eintrag.",
     ],
-    notHappening: [
-      "Zurückgezogene bekommen keine Paarungen.",
-      "Das Protokoll bekommt keinen Eintrag.",
-    ],
+    notHappening: ["Zurückgezogene bekommen keine Paarungen."],
     undo: "Solange kein Ergebnis eingetragen ist, mit „Spielplan neu generieren“.",
     confirmLabel: "Spielplan generieren",
     destructive: false,
@@ -471,8 +471,9 @@ export function scheduleRegenerate(): Decision {
     happens: [
       "Der bisherige Spielplan wird gelöscht.",
       "Ringwerk erstellt ihn neu für alle aktiven Teilnehmer. Spieltage und Gegner können sich dabei ändern.",
+      "Im Protokoll des Wettbewerbs steht danach ein Eintrag.",
     ],
-    notHappening: ["Einschreibungen bleiben.", "Das Protokoll bekommt keinen Eintrag."],
+    notHappening: ["Einschreibungen bleiben."],
     undo: "Nicht möglich. Der alte Spielplan kommt nicht zurück.",
     confirmLabel: "Spielplan neu generieren",
     destructive: true,
@@ -534,11 +535,9 @@ export function nextRound({
         ? "Im Finale treffen die Sieger der beiden Halbfinale aufeinander."
         : `Ringwerk setzt das ${round} aus den Siegern. Der beste Platz aus der Gruppenphase trifft auf den schlechtesten.`,
       "Das öffentliche PDF zeigt die neue Runde.",
+      "Im Protokoll des Wettbewerbs steht danach ein Eintrag.",
     ],
-    notHappening: [
-      `Die Ergebnisse im ${previous} bleiben.`,
-      "Das Protokoll bekommt keinen Eintrag.",
-    ],
+    notHappening: [`Die Ergebnisse im ${previous} bleiben.`],
     undo: `Nicht direkt. Ändert eine Korrektur im ${previous} einen Sieger, entfernt Ringwerk das ${round} wieder. Das geht nur, solange dort kein Duell angelegt ist.`,
     confirmLabel: `${round} anlegen`,
     destructive: false,

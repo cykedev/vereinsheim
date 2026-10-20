@@ -30,6 +30,10 @@ export type AuditEventType =
   | "COMPETITION_CREATED"
   | "COMPETITION_UPDATED"
   | "COMPETITION_STATUS_CHANGED"
+  | "SCHEDULE_GENERATED"
+  | "SCHEDULE_REGENERATED"
+  | "PLAYOFF_ROUND_CREATED"
+  | "PARTICIPANT_UNENROLLED"
 
 export const AUDIT_EVENT_LABELS: Record<string, string> = {
   PARTICIPANT_WITHDRAWN: "Teilnehmer zurückgezogen",
@@ -63,6 +67,10 @@ export const AUDIT_EVENT_LABELS: Record<string, string> = {
   COMPETITION_CREATED: "Wettbewerb angelegt",
   COMPETITION_UPDATED: "Wettbewerb bearbeitet",
   COMPETITION_STATUS_CHANGED: "Wettbewerb-Status geändert",
+  SCHEDULE_GENERATED: "Spielplan generiert",
+  SCHEDULE_REGENERATED: "Spielplan neu generiert",
+  PLAYOFF_ROUND_CREATED: "Playoff-Runde angelegt",
+  PARTICIPANT_UNENROLLED: "Teilnehmer aus Wettbewerb entfernt",
 }
 
 export type AuditEventCategory = "participant" | "result" | "playoff" | "destructive" | "admin"
@@ -99,6 +107,10 @@ export const AUDIT_EVENT_CATEGORY: Record<string, AuditEventCategory> = {
   COMPETITION_CREATED: "admin",
   COMPETITION_UPDATED: "admin",
   COMPETITION_STATUS_CHANGED: "admin",
+  SCHEDULE_GENERATED: "admin",
+  SCHEDULE_REGENERATED: "destructive",
+  PLAYOFF_ROUND_CREATED: "playoff",
+  PARTICIPANT_UNENROLLED: "participant",
 }
 
 // Detail-Formatierung liegt in ./formatDetails und ./description; hier

@@ -9,6 +9,7 @@ import { generateBestOfSchedule } from "./generateBestOfSchedule"
 import { getScheduleResultCounts } from "./queries"
 import { scheduleRegenerationBlocker } from "./regeneration"
 import { revalidatePublicPdf } from "@/lib/competitions/publicPdfCache"
+import type { AuditEventType } from "@/lib/auditLog/types"
 
 /**
  * Generiert den Spielplan für einen aktiven Wettkampf.
@@ -88,12 +89,27 @@ export async function generateCompetitionSchedule(competitionId: string): Promis
                   : competition.rueckrundeDeadline,
             }))
 
+      // Gibt es schon Paarungen, ersetzt dieser Lauf einen Spielplan (fürs Protokoll)
+      const existing = await tx.matchup.count({ where: { competitionId } })
+
       // Offene Paarungen und Freilose (BYE) gehören zum alten Plan — blieben Freilose stehen,
       // hätte jeder Teilnehmer danach zwei je Runde.
       await tx.matchup.deleteMany({
         where: { competitionId, status: { in: ["PENDING", "BYE"] }, series: { none: {} } },
       })
       await tx.matchup.createMany({ data: matchupData })
+      await tx.auditLog.create({
+        data: {
+          eventType: (existing > 0
+            ? "SCHEDULE_REGENERATED"
+            : "SCHEDULE_GENERATED") satisfies AuditEventType,
+          entityType: "COMPETITION",
+          entityId: competitionId,
+          userId: session.user.id,
+          competitionId,
+          details: { matchups: matchupData.length },
+        },
+      })
       return null
     })
   } catch (error) {

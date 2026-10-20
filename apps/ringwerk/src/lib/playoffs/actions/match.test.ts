@@ -14,13 +14,18 @@ vi.mock("@/lib/auth-helpers", () => ({
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }))
 vi.mock("@/lib/competitions/publicPdfCache", () => ({ revalidatePublicPdf: vi.fn() }))
 vi.mock("@/lib/playoffs/queries", () => ({ getSeedingStandings: vi.fn().mockResolvedValue([]) }))
-const { transaction } = vi.hoisted(() => ({ transaction: vi.fn() }))
+const { transaction, auditLogCreate } = vi.hoisted(() => ({
+  transaction: vi.fn(),
+  auditLogCreate: vi.fn(),
+}))
 vi.mock("@/lib/db", () => {
   const playoffMatch = { findMany, create, createMany, count: vi.fn().mockResolvedValue(4) }
-  transaction.mockImplementation((fn: (tx: { playoffMatch: typeof playoffMatch }) => unknown) =>
-    fn({ playoffMatch })
+  const auditLog = { create: auditLogCreate }
+  transaction.mockImplementation(
+    (fn: (tx: { playoffMatch: typeof playoffMatch; auditLog: typeof auditLog }) => unknown) =>
+      fn({ playoffMatch, auditLog })
   )
-  return { db: { playoffMatch, $transaction: transaction } }
+  return { db: { playoffMatch, auditLog, $transaction: transaction } }
 })
 
 import { advanceRound } from "./match"
@@ -75,6 +80,19 @@ describe("advanceRound: Finale", () => {
     })
   })
 
+  it("schreibt einen Eintrag „Playoff-Runde angelegt“ in der Transaktion", async () => {
+    expect(await advanceRound("c1")).toEqual({ success: true })
+    expect(auditLogCreate).toHaveBeenCalledTimes(1)
+    expect(auditLogCreate.mock.calls[0][0].data).toEqual({
+      eventType: "PLAYOFF_ROUND_CREATED",
+      entityType: "COMPETITION",
+      entityId: "c1",
+      userId: "u1",
+      competitionId: "c1",
+      details: { round: "FINAL" },
+    })
+  })
+
   it("meldet eine unvollständige Runde, statt ein Finale mit nur einem Teilnehmer anzulegen", async () => {
     // der Runde fehlt ein Halbfinale
     findMany.mockImplementation((args: { where: { round?: string }; orderBy?: unknown }) =>
@@ -84,5 +102,6 @@ describe("advanceRound: Finale", () => {
     expect(result).toMatchObject({ error: expect.stringContaining("fehlt eine Paarung") })
     expect(result).toMatchObject({ error: expect.stringContaining("Halbfinale anlegen") })
     expect(create).not.toHaveBeenCalled()
+    expect(auditLogCreate).not.toHaveBeenCalled()
   })
 })

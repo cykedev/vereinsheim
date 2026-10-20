@@ -266,7 +266,9 @@ describe("Wortlaut wie im Textbuch", () => {
       happens: [
         "Die Einschreibung wird gelöscht. Anna verschwindet aus den Seiten des Wettbewerbs.",
         "Der Gast und die Ergebnisse werden gelöscht.",
+        "Im Protokoll des Wettbewerbs steht danach ein Eintrag.",
       ],
+      notHappening: ["Andere Teilnehmer und ihre Ergebnisse bleiben."],
       undo: "Den Gast neu anlegen und die Ergebnisse neu eintragen.",
     })
     expect(unenroll({ name: "Anna Birke", guest: false, results: 0, team: 2 })).toMatchObject({
@@ -274,7 +276,9 @@ describe("Wortlaut wie im Textbuch", () => {
       happens: [
         "Die Einschreibung wird gelöscht. Anna Birke verschwindet aus den Seiten des Wettbewerbs.",
         "Ist Team 2 danach leer, wird es aufgelöst.",
+        "Im Protokoll des Wettbewerbs steht danach ein Eintrag.",
       ],
+      notHappening: ["Anna Birke bleibt unter „Teilnehmer“ und in anderen Wettbewerben."],
       undo: "Neu einschreiben.",
       confirmLabel: "Aus dem Wettbewerb entfernen",
     })
@@ -358,6 +362,19 @@ describe("Wortlaut wie im Textbuch", () => {
       "Ringwerk legt das Halbfinale an. Platz 1 trifft auf Platz 4, Platz 2 auf Platz 3."
     )
     expect(vf.undo).toBe("Nicht möglich.")
+  })
+
+  it("6, 12, 16: das Protokoll bekommt einen Eintrag", () => {
+    const decisions = [
+      unenroll({ name: "x", guest: false, results: 0, team: null }),
+      nextRound({ round: "Halbfinale", previous: "Viertelfinale" }),
+      scheduleGenerate({ leagueFormat: "DOUBLE_ROUND_ROBIN" }),
+      scheduleRegenerate(),
+    ]
+    for (const decision of decisions) {
+      expect(decision.happens).toContain("Im Protokoll des Wettbewerbs steht danach ein Eintrag.")
+      expect(texts(decision).join(" ")).not.toContain("Das Protokoll bekommt keinen Eintrag")
+    }
   })
 
   it("12 nächste Runde: „anlegen“ steht einmal", () => {

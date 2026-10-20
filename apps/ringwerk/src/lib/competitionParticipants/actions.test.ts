@@ -252,7 +252,13 @@ describe("unenrollParticipant", () => {
     )
   })
 
-  const member = { id: "cp1", competitionId: "c1", participantId: "p1", isGuest: false }
+  const member = {
+    id: "cp1",
+    competitionId: "c1",
+    participantId: "p1",
+    isGuest: false,
+    participant: { firstName: "Anna", lastName: "Birke" },
+  }
 
   it("liefert Fehler ohne Session", async () => {
     getAuthSessionMock.mockResolvedValue(null)
@@ -269,6 +275,29 @@ describe("unenrollParticipant", () => {
     expect(competitionParticipantDeleteMock).toHaveBeenCalledTimes(1)
     expect(competitionParticipantDeleteMock).toHaveBeenCalledWith({ where: { id: "cp1" } })
     expect(seriesDeleteManyMock).not.toHaveBeenCalled()
+  })
+
+  it("schreibt einen Eintrag „Teilnehmer aus Wettbewerb entfernt“ in der Transaktion", async () => {
+    getAuthSessionMock.mockResolvedValue(adminSession)
+    competitionParticipantFindUniqueMock.mockResolvedValue(member)
+    await unenrollParticipant("cp1")
+    expect(auditLogCreateMock).toHaveBeenCalledTimes(1)
+    expect(auditLogCreateMock.mock.calls[0][0].data).toEqual({
+      eventType: "PARTICIPANT_UNENROLLED",
+      entityType: "COMPETITION_PARTICIPANT",
+      entityId: "cp1",
+      userId: "u1",
+      competitionId: "c1",
+      details: { participantId: "p1", name: "Anna Birke", isGuest: false },
+    })
+  })
+
+  it("gesperrt: kein Eintrag", async () => {
+    getAuthSessionMock.mockResolvedValue(adminSession)
+    competitionParticipantFindUniqueMock.mockResolvedValue(member)
+    series.push({ participantId: "p1", competitionId: "c1" })
+    await unenrollParticipant("cp1")
+    expect(auditLogCreateMock).not.toHaveBeenCalled()
   })
 
   it("sperrt ein Mitglied mit Ergebnissen in diesem Wettbewerb und löscht nichts", async () => {
@@ -307,6 +336,7 @@ describe("unenrollParticipant", () => {
       competitionId: "c1",
       participantId: "gp1",
       isGuest: true,
+      participant: { firstName: "Anna", lastName: "" },
     })
     series.push({ participantId: "gp1", competitionId: "c1" })
     const result = await unenrollParticipant("cp1")
