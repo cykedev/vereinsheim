@@ -3,9 +3,8 @@
 // hält den Zustand zwischen zwei Renderläufen, so wie React es täte, solange die Hooks in derselben Reihenfolge laufen.
 //
 // Ein Test rendert die Komponente, drückt einen Knopf („Löschen“), tippt einen Namen, rendert neu, bestätigt und prüft,
-// welche Action mit welchen Werten genau einmal läuft. Dieselben Stellvertreter gibt es für die alten Dialoge
-// (`AlertDialog`, `ConfirmDialog`) und die neuen (`DecisionDialog`, `NoticeDialog`), damit ein Test den Umbau
-// unverändert übersteht.
+// welche Action mit welchen Werten genau einmal läuft. Dieselben Stellvertreter gibt es für den Baustein `AlertDialog`
+// und für `DecisionDialog` und `NoticeDialog`, damit ein Test einen Umbau von einem zum anderen unverändert übersteht.
 
 import {
   createContext,
@@ -201,15 +200,6 @@ export function decisionDialogStub() {
     NoticeDialog: ({ title }: { title: string }) => {
       notices.push(title)
       return null
-    },
-  }
-}
-
-export function confirmDialogStub() {
-  return {
-    ConfirmDialog: ({ onConfirm }: { onConfirm: () => void }) => {
-      confirms.push({ run: onConfirm, disabled: false })
-      return createElement("button", { "data-confirm": true })
     },
   }
 }

@@ -39,7 +39,6 @@
     "./select": "./src/ui/select.tsx",
     "./selectable-row": "./src/ui/selectable-row.tsx",
     "./separator": "./src/ui/separator.tsx",
-    "./shell/ConfirmDialog": "./src/shell/ConfirmDialog.tsx",
     "./shell/DetailActionBar": "./src/shell/DetailActionBar.tsx",
     "./shell/PageHeader": "./src/shell/PageHeader.tsx",
     "./shell/Providers": "./src/shell/Providers.tsx",

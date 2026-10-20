@@ -29,8 +29,8 @@ Diese Dateien MÜSSEN in beiden Repos identisch sein (Gate = fatal bei Abweichun
 - Error-Boundaries: `src/app/error.tsx`, `src/app/(app)/error.tsx`, `src/app/not-found.tsx`
 - **Geteilt via `@vereinsheim/ui`** (packages/ui — Drift **strukturell
   unmöglich**, daher *nicht* im Gate): die ui-Primitives (`button`, `card`, `dialog`, `table`,
-  `skeleton`, …), die 4 shell-Komponenten (`ConfirmDialog`,
-  `DetailActionBar`, `PageHeader`, `Providers`), die Rate-Limit-Admin-Oberfläche
+  `skeleton`, …), die 3 shell-Komponenten (`DetailActionBar`,
+  `PageHeader`, `Providers`), die Rate-Limit-Admin-Oberfläche
   (`admin/LoginRateLimitTable`, `admin/LoginRateLimitInsights`) und der Tailwind-Theme-Kern
   (`@vereinsheim/ui/theme.css`). Import via `@vereinsheim/ui/<name>` bzw.
   `@vereinsheim/ui/shell/<name>`; Styles/Verhalten ändert man **im Paket**. App-spezifische `ui/*`
@@ -64,12 +64,13 @@ app-übergreifende Komponenten gehören in diese Liste (in `MUST_MATCH` des Gate
 - **Leerzustände:** `<EmptyState title description icon actionLabel actionHref />`. Kein inline
   `Keine … vorhanden`.
 - **Bestätigungen:** `<DecisionDialog>` mit den Folgen aus `lib/consequences.ts` der App (§10 „Kein Knopf ohne
-  Folge“); Ringwerk nutzt bis zum Abschnitt „Dialoge“ von Teil W (SP-4.3) noch `<ConfirmDialog>`. Nie native `confirm()`.
+  Folge“). Geht eine Aktion an dieser Stelle nicht, sagt `<NoticeDialog>` warum, statt einer Rückfrage, die danach
+  scheitert. Nie native `confirm()`.
 - **Feldfehler:** `getFieldError`/`getGeneralError` (`lib/forms/fieldErrors.ts`) + `<FieldError>` mit
   `aria-invalid`/`aria-describedby`.
 - **Toasts:** nach jeder mutierenden Server-Action `toast.success(...)` bzw. `toast.error(...)` (sonner).
 - **Datenverlust:** Langformulare nutzen `useUnsavedChangesGuard` + `useNavigationConfirm` + den Verwerfen-Dialog
-  der App (Treffsicher `DiscardChangesDialog` mit `DecisionDialog`, Ringwerk noch `ConfirmDialog`).
+  der App (Treffsicher `DiscardChangesDialog`, Ringwerk im Formular des Wettbewerbs, beide mit `DecisionDialog`).
 
 ## 3. Typografie & Layout
 

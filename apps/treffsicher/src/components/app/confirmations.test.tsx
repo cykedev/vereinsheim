@@ -40,9 +40,6 @@ vi.mock("@vereinsheim/ui/alert-dialog", async () =>
 vi.mock("@vereinsheim/ui/design2/decision-dialog", async () =>
   (await import("@/test/confirm-capture")).decisionDialogStub()
 )
-vi.mock("@vereinsheim/ui/shell/ConfirmDialog", async () =>
-  (await import("@/test/confirm-capture")).confirmDialogStub()
-)
 vi.mock("@/lib/sessions/actions", () => ({ deleteSession: mocks.deleteSession }))
 vi.mock("@/lib/shot-routines/actions", () => ({ deleteShotRoutine: mocks.deleteShotRoutine }))
 vi.mock("@/lib/disciplines/actions", () => ({

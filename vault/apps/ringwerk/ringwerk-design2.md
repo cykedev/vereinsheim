@@ -2,7 +2,7 @@
 id: ringwerk-design2
 type: subsystem
 title: "Ringwerk in Design 2"
-keywords: [Design 2, Darstellung, hell, dunkel, Messing, untere Leiste, Seitenleiste, Profil, Konto, Anmeldung, Reiter, Unternavigation, Wettbewerb, Tabellen, Rang, Bracket, Skriptprüfung, pruefen, AppShell, AppFrame, ConfirmDialog]
+keywords: [Design 2, Darstellung, hell, dunkel, Messing, untere Leiste, Seitenleiste, Profil, Konto, Anmeldung, Reiter, Unternavigation, Wettbewerb, Tabellen, Rang, Bracket, Skriptprüfung, pruefen, AppShell, AppFrame, DecisionDialog, NoticeDialog, Folgen, Bestätigung]
 tags: [ui, design]
 feature_of: ["[[ringwerk]]"]
 governed_by: ["[[adr-032]]"]
@@ -55,9 +55,18 @@ Playoffs, Serien, Teilnehmer, Protokoll). Damit ist jede Seite in jeder Phase so
 ## Geteilte Primitives
 
 Dialoge (`ui/dialog`, `ui/alert-dialog`) stehen auf der Kartenfläche mit `rounded-2xl` über `scrim`, Titel in
-`font-display`; der Leerzustand nutzt `design2/card`. `shell/ConfirmDialog` gibt den Fokus dem Knopf zurück, der ihn
-öffnete, und schreibt auf Rot in `primary-foreground` (Design 2 hat kein `destructive-foreground`). Bis zum Abschnitt
-„Dialoge“ nutzt Ringwerk noch `ConfirmDialog`.
+`font-display`; der Leerzustand nutzt `design2/card`.
+
+## Dialoge mit Folgen
+
+Jede Bestätigung läuft über `DecisionDialog` (`@vereinsheim/ui/design2/decision-dialog`), der Wortlaut steht nur in
+`src/lib/consequences.ts` und ist im Textbuch freigegeben (`vault/_attachments/textbuch-ringwerk-treffsicher.md`,
+Abschnitt „Ringwerk: Folgen vor dem Bestätigen“). Der Dialog gibt den Fokus dem Knopf zurück, der ihn öffnete, und
+schreibt auf Rot in `primary-foreground`. Löschen mit allen Daten (Teilnehmer, Wettbewerb) verlangt den Namen im Feld
+unter den Folgen (`children`, `confirmDisabled`). Wo die Action ablehnen würde (Teilnehmer mit Wettbewerben für die
+Sportleitung, Wettbewerb mit Einschreibungen), zeigt `NoticeDialog` den Grund. Fehler nach dem Bestätigen kommen als
+Toast, weil der Dialog schließt. `src/components/app/confirmations.test.tsx` hält je Dialog fest, welche Action mit
+welchen Werten genau einmal läuft (Stellvertreter in `src/test/confirm-capture.ts`, ohne jsdom).
 
 ## Skriptprüfung
 

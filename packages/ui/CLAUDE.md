@@ -8,7 +8,7 @@ für alle drei Apps (ADR-015/016). Jede Komponente gibt es nur einmal — Drift 
 | Export                           | Inhalt                                                                                                                            |
 | -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
 | `@vereinsheim/ui/<name>`         | `src/ui/<name>.tsx` — shadcn-Primitives (button, card, dialog, …)                                                                 |
-| `@vereinsheim/ui/shell/<name>`   | `src/shell/<name>.tsx` — ConfirmDialog, DetailActionBar, PageHeader, Providers                                                    |
+| `@vereinsheim/ui/shell/<name>`   | `src/shell/<name>.tsx` — DetailActionBar, PageHeader, Providers                                                                   |
 | `@vereinsheim/ui/admin/<name>`   | `src/admin/<name>.tsx` — `LoginRateLimitInsights`, `LoginRateLimitTable` (Admin-Ansicht der Login-Sperren)                        |
 | `@vereinsheim/ui/theme.css`      | `theme.css` — Tailwind-Theme-Kern (@custom-variant, @theme, :root, .dark, @layer) + `@source` aufs Paket                          |
 | `@vereinsheim/ui/design2.css`    | `design2.css` — Design 2 (ADR-030, ADR-032): eigene Tokens, hell auf `:root`, dunkel unter `.dark`, Akzent je App über `data-app` |

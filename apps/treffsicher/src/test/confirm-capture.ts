@@ -1,7 +1,7 @@
 // Charakterisierung der Bestätigungen ohne DOM: Die Dialog-Bausteine werden durch Stellvertreter ersetzt, die ihren
 // Bestätigen-Knopf hier ablegen. Ein Test rendert die Komponente, ruft die Bestätigung auf und prüft, welche Action mit
-// welchen Werten läuft. Dieselben Stellvertreter gibt es für den alten Dialog (`AlertDialog`, `ConfirmDialog`) und den
-// neuen (`DecisionDialog`), damit der Test den Umbau unverändert übersteht.
+// welchen Werten läuft. Dieselben Stellvertreter gibt es für `AlertDialog` und `DecisionDialog`, damit ein Test einen
+// Umbau vom einen zum anderen unverändert übersteht.
 
 import { createElement, Fragment, type ReactNode } from "react"
 
@@ -30,15 +30,6 @@ export function alertDialogStub() {
 export function decisionDialogStub() {
   return {
     DecisionDialog: ({ onConfirm }: { onConfirm: () => void }) => {
-      confirms.push(onConfirm)
-      return createElement("button", { "data-confirm": true })
-    },
-  }
-}
-
-export function confirmDialogStub() {
-  return {
-    ConfirmDialog: ({ onConfirm }: { onConfirm: () => void }) => {
       confirms.push(onConfirm)
       return createElement("button", { "data-confirm": true })
     },

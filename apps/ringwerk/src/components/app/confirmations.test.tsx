@@ -56,9 +56,6 @@ vi.mock("@vereinsheim/ui/alert-dialog", async () =>
 vi.mock("@vereinsheim/ui/design2/decision-dialog", async () =>
   (await import("@/test/confirm-capture")).decisionDialogStub()
 )
-vi.mock("@vereinsheim/ui/shell/ConfirmDialog", async () =>
-  (await import("@/test/confirm-capture")).confirmDialogStub()
-)
 vi.mock("@vereinsheim/ui/dialog", async () => {
   const { Fragment } = await import("react")
   const pass = ({ children }: { children?: unknown }) => h(Fragment, null, children as never)

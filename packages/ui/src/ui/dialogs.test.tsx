@@ -17,7 +17,7 @@ const { Dialog, DialogContent, DialogTitle } = await import("./dialog")
 const { AlertDialog, AlertDialogContent, AlertDialogTitle, AlertDialogDescription } =
   await import("./alert-dialog")
 const { EmptyState } = await import("./empty-state")
-const { ConfirmDialog } = await import("../shell/ConfirmDialog")
+const { DecisionDialog, NoticeDialog } = await import("../design2/decision-dialog")
 
 describe("Dialoge in Design 2", () => {
   it("Dialog: Kartenfläche mit großem Radius über abgedunkeltem Hintergrund, Titel in der Schrift der Marke", () => {
@@ -51,20 +51,55 @@ describe("Dialoge in Design 2", () => {
 })
 
 describe("Bestätigung mit Folge", () => {
+  const decision = {
+    title: "Löschen?",
+    about: "Satz",
+    happens: ["Weg."],
+    notHappening: ["Rest bleibt."],
+    undo: "Nicht möglich.",
+    confirmLabel: "Löschen",
+    destructive: true,
+  }
+
   it("Knopf einer zerstörenden Aktion: Schrift auf dem Rot aus einem Token, das es gibt", () => {
     const html = renderToStaticMarkup(
-      h(ConfirmDialog, {
-        open: true,
-        onOpenChange: () => {},
-        title: "Löschen?",
-        description: "Satz",
-        confirmLabel: "Löschen",
-        destructive: true,
-        onConfirm: () => {},
-      })
+      h(DecisionDialog, { decision, open: true, onOpenChange: () => {}, onConfirm: () => {} })
     )
     expect(html).toMatch(/class="[^"]*bg-destructive text-primary-foreground[^"]*"[^>]*>Löschen</)
     expect(html).not.toContain("destructive-foreground")
+  })
+
+  it("ein Feld unter den Folgen; der Knopf bleibt gesperrt, bis es stimmt", () => {
+    const html = renderToStaticMarkup(
+      h(
+        DecisionDialog,
+        {
+          decision,
+          open: true,
+          onOpenChange: () => {},
+          onConfirm: () => {},
+          confirmDisabled: true,
+        },
+        h("input", { id: "confirm-name" })
+      )
+    )
+    expect(html.indexOf('id="confirm-name"')).toBeGreaterThan(html.indexOf("Rückgängig"))
+    expect(html).toMatch(/<button[^>]*disabled=""[^>]*>Löschen</)
+  })
+
+  it("Hinweis: nur „Schließen“, kein Knopf, der etwas auslöst", () => {
+    const html = renderToStaticMarkup(
+      h(NoticeDialog, {
+        title: "Geht hier nicht",
+        text: "Darum.",
+        open: true,
+        onOpenChange: () => {},
+      })
+    )
+    expect(html).toContain("Geht hier nicht")
+    expect(html).toContain("Darum.")
+    expect(html.match(/<button/g)).toHaveLength(1)
+    expect(html).toContain(">Schließen<")
   })
 })
 
