@@ -108,9 +108,17 @@ interface Props {
   /** Aufgelöste Sortierung des Wettbewerbs — bestimmt Default-Spalte bzw. die feste Reihenfolge. */
   sort: ResolvedSeasonSort
   isMixed?: boolean
+  /** „?“ und die Zeile „Sortierung“ der klassischen Reihenfolge; die Vorschau auf Start und in der Liste zeigt sie nicht */
+  help?: boolean
 }
 
-export function SeasonStandingsTable({ entries, minSeries, sort, isMixed = false }: Props) {
+export function SeasonStandingsTable({
+  entries,
+  minSeries,
+  sort,
+  isMixed = false,
+  help = true,
+}: Props) {
   const alternating = isAlternatingSort(sort)
   const [sortCol, setSortCol] = useState<SortCol>(
     sort === "rings" || sort === "teiler" ? sort : "ringteiler"
@@ -126,7 +134,12 @@ export function SeasonStandingsTable({ entries, minSeries, sort, isMixed = false
   const positions = seasonPositions(sorted, alternating ? sort : sortCol)
   const teilerLabel = isMixed ? "Best. Teiler korr." : "Best. Teiler"
   // in gemischten Wettbewerben zählt der korrigierte Teiler, das „?“ erklärt die Korrektur
-  const teilerHelp: HelpTopicId = isMixed ? "corrected-teiler" : "teiler"
+  const teilerHelp: HelpTopicId | undefined = help
+    ? isMixed
+      ? "corrected-teiler"
+      : "teiler"
+    : undefined
+  const ringteilerHelp: HelpTopicId | undefined = help ? "ringteiler" : undefined
 
   // Auf dem Telefon ist neben dem Namen Platz für ZWEI Zahlenspalten. Sichtbar bleiben muss die,
   // die die Reihenfolge bestimmt: bei alternierender Sortierung Ringe UND Teiler, bei klassischer
@@ -145,13 +158,15 @@ export function SeasonStandingsTable({ entries, minSeries, sort, isMixed = false
             Sortierung: {SEASON_SORT_LABELS[sort]} — hervorgehoben ist der Wert, der den Platz
             ergeben hat.
           </span>
-          <HelpMark id="season-alternating" className="ml-auto" />
+          {help && <HelpMark id="season-alternating" className="ml-auto" />}
         </p>
       ) : (
-        <p className="flex items-center gap-2 text-sm text-muted-foreground">
-          <span>Sortierung: {SEASON_SORT_LABELS[sortCol]}.</span>
-          <HelpMark id="season-order" className="ml-auto" />
-        </p>
+        help && (
+          <p className="flex items-center gap-2 text-sm text-muted-foreground">
+            <span>Sortierung: {SEASON_SORT_LABELS[sortCol]}.</span>
+            <HelpMark id="season-order" className="ml-auto" />
+          </p>
+        )
       )}
       <div className="overflow-hidden rounded-2xl border bg-card">
         <Table>
@@ -171,7 +186,7 @@ export function SeasonStandingsTable({ entries, minSeries, sort, isMixed = false
                   <StaticHead label={teilerLabel} help={teilerHelp} className={teilerHidden} />
                   <StaticHead
                     label="Best. Ringteiler"
-                    help="ringteiler"
+                    help={ringteilerHelp}
                     className={ringteilerHidden}
                   />
                 </>
@@ -194,7 +209,7 @@ export function SeasonStandingsTable({ entries, minSeries, sort, isMixed = false
                   <SortHeader
                     col="ringteiler"
                     label="Best. Ringteiler"
-                    help="ringteiler"
+                    help={ringteilerHelp}
                     className={ringteilerHidden}
                     sortCol={sortCol}
                     setSortCol={setSortCol}

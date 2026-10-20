@@ -24,7 +24,8 @@ export function BracketSlot({
           <div className="flex h-full flex-col divide-y divide-border/50">
             {([preview.nameA, preview.nameB] as const).map((name, i) => (
               <div key={i} className="flex flex-1 items-center px-2.5">
-                {/* der Strich bleibt: der Abgleich aus Teil R liest den Turnierbaum Zeichen für Zeichen */}
+                {/* der Strich ist Teil des Baums, den der Abgleich (`tools/pruefen-ringwerk`, BRACKET) Zeichen für
+                    Zeichen liest; der Grund steht deshalb nur im Tooltip */}
                 <span
                   title={name ? undefined : missingReason("notYetKnown")}
                   className="min-w-0 truncate text-xs text-muted-foreground italic"

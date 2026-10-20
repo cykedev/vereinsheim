@@ -54,4 +54,16 @@ describe("StandingsTable — Hilfe und „–“ mit Grund", () => {
     expect(html).toContain('title="ohne Platz"')
     expect(html).not.toContain("—")
   })
+
+  it("ein Zurückgezogener ohne gewertetes Duell zeigt beim Ringteiler nur „–“", () => {
+    const html = render([{ ...row("Alpha", 1, 0), withdrawn: true }])
+    expect(html).not.toContain('data-missing="noDuel"')
+  })
+
+  it("in der Vorschau ohne „?“", () => {
+    const html = renderToStaticMarkup(
+      createElement(StandingsTable, { rows: [row("Alpha", 1, 1)], help: false })
+    )
+    expect(html).not.toContain("data-help")
+  })
 })

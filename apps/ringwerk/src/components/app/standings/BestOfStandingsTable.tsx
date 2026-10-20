@@ -122,8 +122,9 @@ export function BestOfStandingsTable({ rows }: Props) {
                   {row.duelsWon}:{row.duelsLost}
                 </TableCell>
                 <TableCell className="hidden px-4 py-3 text-right sm:table-cell">
-                  {/* ohne Direktvergleich trennen schon die Spalten davor; das PDF zeigt dort weiter „—“ */}
-                  {row.directComparison === null ? (
+                  {/* ohne Direktvergleich trennen schon die Spalten davor (das PDF zeigt „—“); ein Zurückgezogener
+                      steht außerhalb der Wertung und zeigt den Text wie im PDF */}
+                  {row.directComparison === null && !row.withdrawn ? (
                     <Missing kind="notNeeded" />
                   ) : (
                     <span className={DIRECT_TONE_CLASS[direct.tone]}>{direct.text}</span>

@@ -16,6 +16,8 @@ import {
 
 interface Props {
   rows: StandingRow[]
+  /** „?“ am Spaltenkopf; die Vorschau auf Start und in der Liste zeigt keine Hilfe */
+  help?: boolean
 }
 
 const ROW_HIGHLIGHT: Record<number, string> = {
@@ -24,7 +26,7 @@ const ROW_HIGHLIGHT: Record<number, string> = {
   3: "bg-rank-3/10",
 }
 
-export function StandingsTable({ rows }: Props) {
+export function StandingsTable({ rows, help = true }: Props) {
   if (rows.length === 0) {
     return <EmptyState title="Keine Teilnehmer eingeschrieben" />
   }
@@ -56,7 +58,7 @@ export function StandingsTable({ rows }: Props) {
             <TableHead className="hidden px-4 py-2.5 text-right font-medium text-muted-foreground sm:table-cell">
               <span className="inline-flex items-center justify-end gap-1">
                 Best. RT
-                <HelpMark id="ringteiler" />
+                {help && <HelpMark id="ringteiler" />}
               </span>
             </TableHead>
           </TableRow>
@@ -119,7 +121,8 @@ export function StandingsTable({ rows }: Props) {
                   </span>
                 </TableCell>
                 <TableCell className="hidden px-4 py-3 text-right font-mono text-muted-foreground tabular-nums sm:table-cell">
-                  {row.bestRingteiler === null ? (
+                  {/* ein Zurückgezogener hat keine gewerteten Duelle: dort „–“ ohne Grund wie im PDF */}
+                  {row.bestRingteiler === null && !row.withdrawn ? (
                     <Missing kind="noDuel" className="font-sans" />
                   ) : (
                     formatDecimal1(row.bestRingteiler)

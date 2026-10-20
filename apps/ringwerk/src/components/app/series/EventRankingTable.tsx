@@ -21,6 +21,8 @@ interface Props {
   targetValueType?: TargetValueType | null
   isMixed?: boolean
   showTeam?: boolean
+  /** „?“ an den Spaltenköpfen; die Vorschau auf Start und in der Liste zeigt keine Hilfe */
+  help?: boolean
 }
 
 export function EventRankingTable({
@@ -29,6 +31,7 @@ export function EventRankingTable({
   targetValueType,
   isMixed = false,
   showTeam = false,
+  help = true,
 }: Props) {
   if (entries.length === 0) {
     return <EmptyState title="Noch keine Ergebnisse erfasst" />
@@ -56,13 +59,13 @@ export function EventRankingTable({
             <TableHead className="px-3 py-2 text-right font-medium text-muted-foreground hidden sm:table-cell">
               <span className="inline-flex items-center justify-end gap-1">
                 {isMixed ? "Teiler korr." : "Teiler"}
-                <HelpMark id={isMixed ? "corrected-teiler" : "teiler"} />
+                {help && <HelpMark id={isMixed ? "corrected-teiler" : "teiler"} />}
               </span>
             </TableHead>
             <TableHead className="px-3 py-2 text-right font-medium text-muted-foreground">
               <span className="inline-flex items-center justify-end gap-1">
                 {scoreLabel}
-                {scoringMode === "RINGTEILER" && <HelpMark id="ringteiler" />}
+                {help && scoringMode === "RINGTEILER" && <HelpMark id="ringteiler" />}
               </span>
             </TableHead>
           </TableRow>

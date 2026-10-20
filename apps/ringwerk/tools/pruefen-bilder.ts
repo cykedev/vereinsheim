@@ -1,7 +1,7 @@
 // Bilder für die Sichtprüfung durch den User: je Phase eine Seite eines Wettbewerbs, dazu die Seiten über alle
-// Wettbewerbe, die Dialoge mit Folgen und die Blätter der Hilfe, hell und dunkel, am Telefon und am Desktop. Der erste Bildschirm der Seite,
-// dazu das Bracket und die erste Tabelle für sich, beim Dialog der Dialog für sich. Eine Übersicht `index.html` stellt
-// alles nebeneinander. Liest nur: Ein Dialog wird nur geöffnet und mit Escape geschlossen.
+// Wettbewerbe, die Dialoge mit Folgen und die Blätter der Hilfe, hell und dunkel, am Telefon und am Desktop. Der erste
+// Bildschirm der Seite, dazu das Bracket und die erste Tabelle für sich, beim Dialog oder Blatt dieses für sich. Eine
+// Übersicht `index.html` stellt alles nebeneinander. Liest nur: Ein Dialog wird nur geöffnet und mit Escape geschlossen.
 
 import { mkdirSync, writeFileSync } from "node:fs"
 import path from "node:path"

@@ -53,6 +53,12 @@ function headerCell(html: string, label: string): string {
   return html.slice(html.lastIndexOf("<th", labelAt), labelAt)
 }
 
+/** Das ganze <th> dieser Spalte bis zu seinem Ende, mit dem „?“ darin. */
+function wholeHeaderCell(html: string, label: string): string {
+  const start = html.lastIndexOf("<th", html.indexOf(`>${label}<`))
+  return html.slice(start, html.indexOf("</th>", start))
+}
+
 const isHiddenOnMobile = (html: string, label: string) =>
   headerCell(html, label).includes(MOBILE_HIDDEN)
 
@@ -138,9 +144,8 @@ describe("SeasonStandingsTable — Hilfe", () => {
     "hat in '%s' ein „?“ an Teiler und Ringteiler, gemischt mit dem korrigierten Teiler",
     (sort) => {
       const html = render(sort)
-      expect(headerCell(html, "Best. Ringteiler")).not.toContain("data-help")
-      expect(html).toContain('data-help="ringteiler"')
-      expect(html).toContain('data-help="corrected-teiler"')
+      expect(wholeHeaderCell(html, "Best. Ringteiler")).toContain('data-help="ringteiler"')
+      expect(wholeHeaderCell(html, "Best. Teiler korr.")).toContain('data-help="corrected-teiler"')
       expect(html).not.toContain('data-help="teiler"')
     }
   )
@@ -156,6 +161,22 @@ describe("SeasonStandingsTable — Hilfe", () => {
     expect(html).toContain('data-help="teiler"')
     expect(html).not.toContain('data-help="corrected-teiler"')
   })
+
+  it.each(["ringteiler", "alt-rings"] as const)(
+    "zeigt in der Vorschau ('%s') keine Hilfe und klassisch keine Zeile „Sortierung“",
+    (sort) => {
+      const html = renderToStaticMarkup(
+        createElement(SeasonStandingsTable, {
+          entries: [makeEntry("Anton", 98, 12.0, 14.0, sort === "alt-rings" ? "rings" : null)],
+          minSeries: 2,
+          sort,
+          help: false,
+        })
+      )
+      expect(html).not.toContain("data-help")
+      expect(html.includes("Sortierung:")).toBe(sort === "alt-rings")
+    }
+  )
 })
 
 describe("SeasonStandingsTable — geteilte Plätze", () => {

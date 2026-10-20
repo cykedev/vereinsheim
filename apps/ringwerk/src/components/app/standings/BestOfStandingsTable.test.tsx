@@ -53,9 +53,10 @@ describe("BestOfStandingsTable — „–“ mit Grund", () => {
     expect(html).toContain("offen · Gamma")
   })
 
-  it("ein Zurückgezogener hat keinen Platz, der Grund steht als Tooltip", () => {
+  it("ein Zurückgezogener hat keinen Platz, der Grund steht als Tooltip, beim Direktvergleich der Text wie im PDF", () => {
     const html = render([{ ...row("Alpha", 1, 1), withdrawn: true }])
     expect(html).toContain('title="ohne Platz"')
-    expect(html).not.toContain("—")
+    expect(html).not.toContain('data-missing="notNeeded"')
+    expect(html.match(/—/g)).toHaveLength(1)
   })
 })

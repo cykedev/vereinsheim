@@ -1,6 +1,6 @@
 import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 
 import type { PlayoffBracketData, PlayoffMatchItem } from "@/lib/playoffs/types"
 
@@ -8,6 +8,12 @@ import { PlayoffBracket } from "../PlayoffBracket"
 import { BracketSlot } from "./BracketSlot"
 import { RoundDetail } from "./RoundDetail"
 import type { PlayoffCardConfig } from "../playoff-match-card"
+
+// die Karten der Runden nutzen den Router; im Markup-Test genügt ein Stellvertreter
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: () => {}, push: () => {} }),
+  usePathname: () => "/",
+}))
 
 const config: PlayoffCardConfig = {
   scoringType: "WHOLE",
@@ -52,7 +58,6 @@ describe("Playoffs — Hilfe", () => {
         createElement(PlayoffBracket, {
           bracket: { ...bracket, semiFinals },
           canManage: false,
-          compact: true,
           scoringType: "WHOLE",
           shotsPerSeries: 10,
         })
@@ -64,6 +69,18 @@ describe("Playoffs — Hilfe", () => {
     expect(html.indexOf(">Halbfinale<")).toBeGreaterThan(help)
     // vor dem Start gibt es keinen Baum und kein „?“
     expect(render([])).not.toContain('data-help="playoffs"')
+    // die kompakte Vorschau zeigt keine Hilfe
+    expect(
+      renderToStaticMarkup(
+        createElement(PlayoffBracket, {
+          bracket,
+          canManage: false,
+          compact: true,
+          scoringType: "WHOLE",
+          shotsPerSeries: 10,
+        })
+      )
+    ).not.toContain("data-help")
   })
 
   it("ein leeres Feld der Vorschau behält seinen Strich und nennt den Grund als Tooltip", () => {

@@ -12,8 +12,12 @@ import type { CompetitionListItem } from "@/lib/competitions/types"
 import type { CompetitionPreview } from "@/lib/competitions/previewModel"
 import { Missing } from "@/components/app/shell/Missing"
 
-/** Datum oder, wo eine Liga keinen Stichtag hat, „–“ mit Grund */
-function formatDate(date: Date | null, tz: string): React.ReactNode {
+function formatDate(date: Date, tz: string): string {
+  return formatDateOnly(date, tz)
+}
+
+/** Stichtag einer Liga oder, wo keiner gesetzt ist, „–“ mit Grund */
+function formatDeadline(date: Date | null, tz: string): React.ReactNode {
   if (!date) return <Missing kind="noDeadline" quiet />
   return formatDateOnly(date, tz)
 }
@@ -90,8 +94,8 @@ function CardMeta({ c, tz }: { c: CompetitionListItem; tz: string }) {
   if (c.leagueFormat === "BEST_OF_SINGLE") return null
   return (
     <p className="text-xs text-muted-foreground">
-      Hinrunde bis {formatDate(c.hinrundeDeadline, tz)} · Rückrunde bis{" "}
-      {formatDate(c.rueckrundeDeadline, tz)}
+      Hinrunde bis {formatDeadline(c.hinrundeDeadline, tz)} · Rückrunde bis{" "}
+      {formatDeadline(c.rueckrundeDeadline, tz)}
     </p>
   )
 }

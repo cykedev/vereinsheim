@@ -59,11 +59,14 @@ export function PlayoffBracket({
 
   return (
     <div className="space-y-8">
-      {/* eigene Zeile über dem Baum: die Zeile mit den Rundennamen bleibt, wie sie ist */}
-      <div className="flex items-center gap-2">
-        <h2 className="text-base font-semibold">Turnierbaum</h2>
-        <HelpMark id="playoffs" className="ml-auto" />
-      </div>
+      {/* eigene Zeile über dem Baum: die Zeile der Rundennamen hat nur die Rundennamen als Kinder, daran erkennt der
+          Abgleich (`tools/pruefen-ringwerk`, BRACKET) den Baum. Die kompakte Vorschau zeigt keine Hilfe. */}
+      {!compact && (
+        <div className="flex items-center gap-2">
+          <h2 className="text-base font-semibold">Turnierbaum</h2>
+          <HelpMark id="playoffs" className="ml-auto" />
+        </div>
+      )}
       <BracketDiagram
         bracket={bracket}
         layout={layout}

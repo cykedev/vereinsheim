@@ -41,4 +41,8 @@ describe("EventRankingTable — Hilfe", () => {
   it("ohne Wertung nach Ringteiler kein „?“ an der Wertungsspalte", () => {
     expect(render({ scoringMode: "RINGS" })).not.toContain('data-help="ringteiler"')
   })
+
+  it("in der Vorschau ohne „?“", () => {
+    expect(render({ help: false })).not.toContain("data-help")
+  })
 })

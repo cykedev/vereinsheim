@@ -1,7 +1,7 @@
-// „–“ mit Grund statt eines Strichs ohne Erklärung, nur auf dem Bildschirm (die PDFs bleiben, wie sie sind). Die Gründe
+// „–“ mit dem Grund, warum kein Wert steht, nur auf dem Bildschirm (die PDFs zeigen ihren eigenen Strich). Die Gründe
 // sind im Textbuch freigegeben (vault/_attachments/textbuch-ringwerk-treffsicher.md, „Ringwerk: ‚–‘ mit Grund (WD3)“).
-// Sie enthalten keine Zahl und kein Wort, das der Abgleich aus Teil R als Daten liest (`DATA_WORDS`): Die Datenfolge
-// jeder Seite bleibt so gleich.
+// Sie enthalten keine Zahl und kein Wort, das der Abgleich (`tools/pruefen-ringwerk`, `DATA_WORDS`) als Daten liest: Die
+// Datenfolge jeder Seite hängt so nicht an ihnen.
 
 const MISSING_REASONS = {
   /** Rangliste einer Saison: Teilnehmer ohne Serie */

@@ -84,7 +84,7 @@ function PreviewTable({ preview }: Props) {
     return preview.isBestOf ? (
       <BestOfStandingsTable rows={preview.bestOfStandings.slice(0, PREVIEW_ROWS)} />
     ) : (
-      <StandingsTable rows={preview.standings.slice(0, PREVIEW_ROWS)} />
+      <StandingsTable rows={preview.standings.slice(0, PREVIEW_ROWS)} help={false} />
     )
   }
 
@@ -101,6 +101,7 @@ function PreviewTable({ preview }: Props) {
         scoringMode={c.scoringMode}
         targetValueType={c.targetValueType}
         isMixed={!c.discipline}
+        help={false}
       />
     )
   }
@@ -112,6 +113,7 @@ function PreviewTable({ preview }: Props) {
       minSeries={preview.minSeries}
       sort={preview.sort}
       isMixed={!c.discipline}
+      help={false}
     />
   )
 }
