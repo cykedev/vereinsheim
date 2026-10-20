@@ -435,6 +435,44 @@ describe("saveBestOfDuel", () => {
     expect(homeCreate?.ringteiler).toBe(40)
   })
 
+  it.each([
+    ["WHOLE", 95, 12.3, 17.3],
+    ["DECIMAL", 104.5, 10, 14.5],
+  ] as const)(
+    "zehn Schuss %s: Ringteiler mit höchster Ringzahl 100 bzw. 109",
+    async (scoringType, rings, teiler, expected) => {
+      getAuthSessionMock.mockResolvedValue(adminSession)
+      let homeCreate: { ringteiler: number } | undefined
+      transactionMock.mockImplementation(async (fn: (tx: unknown) => Promise<void>) =>
+        fn({
+          series: {
+            upsert: vi.fn().mockImplementation((args: { create: { ringteiler: number } }) => {
+              if (!homeCreate) homeCreate = args.create
+              return {}
+            }),
+          },
+          matchup: { update: vi.fn().mockResolvedValue({}) },
+        })
+      )
+      const base = makeMatchup({ series: [] })
+      matchupFindUniqueMock.mockResolvedValue({
+        ...base,
+        competition: {
+          ...base.competition,
+          shotsPerSeries: 10,
+          discipline: { id: "d1", scoringType, teilerFaktor: dec(1.0) },
+        },
+      })
+      await saveBestOfDuel({
+        matchupId: "m1",
+        duelNumber: 1,
+        homeResult: { rings, teiler },
+        awayResult: { rings: rings - 1, teiler },
+      })
+      expect(homeCreate?.ringteiler).toBe(expected)
+    }
+  )
+
   // ── Transaction errors ──
 
   it("liefert generischen Fehler bei Transaction-Exception", async () => {

@@ -387,3 +387,62 @@ describe("hasLeagueResult", () => {
     expect(hasLeagueResult({ played: 2, byes: 0 })).toBe(true)
   })
 })
+
+describe("calculateStandings – feste Disziplin, jede Wertung", () => {
+  // Vier Teilnehmer, eine Runde. Gleiche Ringe in A–B, gleicher Ringteiler in B–E, zwei Paarungen ganz gleich.
+  const pE: StandingsParticipant = { id: "E", firstName: "Eva", lastName: "Berg", withdrawn: false }
+  const duel = (
+    id: string,
+    home: [string, number, number, number],
+    away: [string, number, number, number]
+  ): StandingsMatchup => ({
+    id,
+    status: "COMPLETED",
+    homeParticipantId: home[0],
+    awayParticipantId: away[0],
+    results: [makeResult(...home), makeResult(...away)],
+  })
+  const matchups = [
+    duel("m1", ["A", 96, 10, 14], ["B", 96, 14, 18]),
+    duel("m2", ["A", 94, 30, 36], ["C", 97, 40, 43]),
+    duel("m3", ["A", 95, 20, 25], ["E", 95, 20, 25]),
+    duel("m4", ["B", 98, 50, 52], ["C", 96, 46, 50]),
+    duel("m5", ["B", 93, 8, 15], ["E", 94, 9, 15]),
+    duel("m6", ["C", 95, 12, 17], ["E", 95, 12, 17]),
+  ]
+  const table = (mode: "RINGTEILER" | "RINGS" | "TEILER") =>
+    calculateStandings([pA, pB, pC, pE], matchups, mode).map((r) => [
+      r.participantId,
+      r.points,
+      r.rank,
+      r.bestRingteiler,
+      r.bestRings,
+    ])
+
+  it("Ringteiler: kleinerer Ringteiler, bei gleichem mehr Ringe", () => {
+    expect(table("RINGTEILER")).toEqual([
+      ["A", 5, 1, 14, 96],
+      ["E", 4, 2, 15, 95],
+      ["C", 3, 3, 17, 97],
+      ["B", 0, 4, 15, 98],
+    ])
+  })
+
+  it("Ringe: mehr Ringe, bei gleichen der kleinere Teiler; Punktgleiche trennt der direkte Vergleich", () => {
+    expect(table("RINGS")).toEqual([
+      ["E", 4, 1, 15, 95],
+      ["C", 3, 2, 17, 97],
+      ["A", 3, 3, 14, 96],
+      ["B", 2, 4, 15, 98],
+    ])
+  })
+
+  it("Teiler: kleinerer Teiler, bei gleichem mehr Ringe", () => {
+    expect(table("TEILER")).toEqual([
+      ["A", 5, 1, 14, 96],
+      ["C", 3, 2, 17, 97],
+      ["B", 2, 3, 15, 98],
+      ["E", 2, 4, 15, 95],
+    ])
+  })
+})

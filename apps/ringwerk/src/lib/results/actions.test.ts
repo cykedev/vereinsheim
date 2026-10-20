@@ -232,4 +232,35 @@ describe("saveMatchResult", () => {
     expect(homeCall.create.ringteiler).toBe(70)
     expect(homeCall.update.ringteiler).toBe(70)
   })
+
+  it.each([
+    ["WHOLE", 95, 12.3, 17.3],
+    ["DECIMAL", 104.5, 10, 14.5],
+  ] as const)(
+    "zehn Schuss %s: Ringteiler mit höchster Ringzahl 100 bzw. 109",
+    async (scoringType, rings, teiler, expected) => {
+      getAuthSessionMock.mockResolvedValue(adminSession)
+      const seriesUpsertMock = vi.fn().mockResolvedValue({})
+      matchupFindUniqueMock.mockResolvedValue({
+        ...matchupBase,
+        competition: {
+          shotsPerSeries: 10,
+          disciplineId: "d1",
+          discipline: { id: "d1", scoringType, teilerFaktor: { toNumber: () => 1.0 } },
+        },
+        series: [],
+      })
+      transactionMock.mockImplementation(async (fn: (tx: unknown) => Promise<void>) =>
+        fn({
+          series: { upsert: seriesUpsertMock },
+          matchup: { update: vi.fn().mockResolvedValue({}) },
+        })
+      )
+      await saveMatchResult("m1", {
+        homeResult: { rings, teiler },
+        awayResult: { rings, teiler },
+      })
+      expect(seriesUpsertMock.mock.calls[0][0].create.ringteiler).toBe(expected)
+    }
+  )
 })
