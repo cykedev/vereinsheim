@@ -1,7 +1,7 @@
 # Plan: Ringwerk — Befunde aus dem Ablesen für die Hilfe (B1–B7)
 
-Stand: 20. Oktober 2026 · Branch: `feat/ringwerk-befunde-wertung` (von `feat/design2-all-apps`) · freigegeben: E1–E6
-am 20. Oktober 2026
+Stand: 20. Oktober 2026 · Branch: `feat/ringwerk-befunde-wertung` (von `feat/design2-all-apps`) · Plan und E1–E6 freigegeben
+am 20. Oktober 2026 · Umsetzung erst nach dem Release von Ringwerks Design 2 (E6)
 
 ## Kontext
 
