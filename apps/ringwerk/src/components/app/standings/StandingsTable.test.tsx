@@ -40,3 +40,18 @@ describe("StandingsTable — Podiumsfarben", () => {
     expect(html).toContain("bg-rank-1/10")
   })
 })
+
+describe("StandingsTable — Hilfe und „–“ mit Grund", () => {
+  it("erklärt „Best. RT“ und nennt ohne Duell den Grund", () => {
+    const html = render([row("Alpha", 1, 1), row("Beta", 2, 0)])
+    expect(html).toContain('data-help="ringteiler"')
+    expect(html.match(/data-missing="noDuel"/g)).toHaveLength(1)
+    expect(html).toContain(">noch kein Duell<")
+  })
+
+  it("ein Zurückgezogener hat keinen Platz, der Grund steht als Tooltip", () => {
+    const html = render([{ ...row("Alpha", 1, 1), withdrawn: true }])
+    expect(html).toContain('title="ohne Platz"')
+    expect(html).not.toContain("—")
+  })
+})

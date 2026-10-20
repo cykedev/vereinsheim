@@ -41,3 +41,21 @@ describe("BestOfStandingsTable — Podiumsfarben", () => {
     expect(html).toContain("bg-rank-1/10")
   })
 })
+
+describe("BestOfStandingsTable — „–“ mit Grund", () => {
+  it("ohne Direktvergleich: nicht nötig, mit Direktvergleich der Text wie im PDF", () => {
+    const html = render([
+      row("Alpha", 1, 2),
+      { ...row("Beta", 2, 1), directComparison: { kind: "open", opponent: "Gamma" } },
+    ])
+    expect(html.match(/data-missing="notNeeded"/g)).toHaveLength(1)
+    expect(html).toContain(">nicht nötig<")
+    expect(html).toContain("offen · Gamma")
+  })
+
+  it("ein Zurückgezogener hat keinen Platz, der Grund steht als Tooltip", () => {
+    const html = render([{ ...row("Alpha", 1, 1), withdrawn: true }])
+    expect(html).toContain('title="ohne Platz"')
+    expect(html).not.toContain("—")
+  })
+})

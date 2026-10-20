@@ -10,9 +10,11 @@ import {
 import { formatDateOnly } from "@vereinsheim/lib/dateTime"
 import type { CompetitionListItem } from "@/lib/competitions/types"
 import type { CompetitionPreview } from "@/lib/competitions/previewModel"
+import { Missing } from "@/components/app/shell/Missing"
 
-function formatDate(date: Date | null, tz: string): string {
-  if (!date) return "—"
+/** Datum oder, wo eine Liga keinen Stichtag hat, „–“ mit Grund */
+function formatDate(date: Date | null, tz: string): React.ReactNode {
+  if (!date) return <Missing kind="noDeadline" quiet />
   return formatDateOnly(date, tz)
 }
 

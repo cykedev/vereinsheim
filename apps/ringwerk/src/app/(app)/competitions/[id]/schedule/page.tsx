@@ -16,6 +16,7 @@ import { StandingsTable } from "@/components/app/standings/StandingsTable"
 import { BestOfStandingsTable } from "@/components/app/standings/BestOfStandingsTable"
 import { PdfDownloadButton } from "@/components/app/shared/PdfDownloadButton"
 import { CompetitionDetailHeader } from "@/components/app/shell/CompetitionDetailHeader"
+import { HelpMark } from "@/components/app/help/HelpMark"
 
 interface Props {
   params: Promise<{ id: string }>
@@ -123,13 +124,19 @@ export default async function CompetitionSchedulePage({ params }: Props) {
       {isBestOf
         ? bestOfStandings.length > 0 && (
             <div className="space-y-3 pt-2">
-              <h2 className="text-base font-semibold">Tabelle</h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-base font-semibold">Tabelle</h2>
+                <HelpMark id="best-of-table" className="ml-auto" />
+              </div>
               <BestOfStandingsTable rows={bestOfStandings} />
             </div>
           )
         : classicStandings.length > 0 && (
             <div className="space-y-3 pt-2">
-              <h2 className="text-base font-semibold">Tabelle</h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-base font-semibold">Tabelle</h2>
+                <HelpMark id="league-table" className="ml-auto" />
+              </div>
               <StandingsTable rows={classicStandings} />
             </div>
           )}

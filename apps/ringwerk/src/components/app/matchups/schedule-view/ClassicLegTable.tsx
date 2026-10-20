@@ -6,6 +6,7 @@ import type { ScoringMode } from "@/generated/prisma/client"
 import type { MatchupListItem, MatchResultSummary } from "@/lib/matchups/types"
 import { ParticipantResult, StatusBadge } from "./ParticipantResult"
 import { participantName } from "./types"
+import { Missing } from "@/components/app/shell/Missing"
 import {
   Table,
   TableBody,
@@ -147,15 +148,11 @@ export function ClassicLegTable({
                         isVoid={isVoid}
                       />
                     ) : (
-                      <span className="text-muted-foreground">—</span>
+                      <Missing kind="noOpponent" />
                     )}
                   </TableCell>
                   <TableCell className="px-2 py-3 text-center sm:px-4">
-                    {isVoid ? (
-                      <span className="text-muted-foreground">—</span>
-                    ) : (
-                      <StatusBadge status={m.status} />
-                    )}
+                    {isVoid ? <Missing kind="notScored" /> : <StatusBadge status={m.status} />}
                   </TableCell>
                   {canManage && (
                     <TableCell className="px-2 py-3 text-right sm:px-4">

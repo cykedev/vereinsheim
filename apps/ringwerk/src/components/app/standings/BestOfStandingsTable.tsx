@@ -6,6 +6,7 @@ import {
 } from "@/lib/standings/formatDirectComparison"
 import { EmptyState } from "@vereinsheim/ui/empty-state"
 import { RankBadge } from "@/components/ui/rank-badge"
+import { Missing } from "@/components/app/shell/Missing"
 import {
   Table,
   TableBody,
@@ -81,7 +82,7 @@ export function BestOfStandingsTable({ rows }: Props) {
               >
                 <TableCell className="px-2 py-3 text-center sm:px-4">
                   {row.withdrawn ? (
-                    <span className="text-muted-foreground">—</span>
+                    <Missing kind="noPlace" quiet />
                   ) : (
                     <RankBadge rank={row.rank} podium={podium} />
                   )}
@@ -121,7 +122,12 @@ export function BestOfStandingsTable({ rows }: Props) {
                   {row.duelsWon}:{row.duelsLost}
                 </TableCell>
                 <TableCell className="hidden px-4 py-3 text-right sm:table-cell">
-                  <span className={DIRECT_TONE_CLASS[direct.tone]}>{direct.text}</span>
+                  {/* ohne Direktvergleich trennen schon die Spalten davor; das PDF zeigt dort weiter „—“ */}
+                  {row.directComparison === null ? (
+                    <Missing kind="notNeeded" />
+                  ) : (
+                    <span className={DIRECT_TONE_CLASS[direct.tone]}>{direct.text}</span>
+                  )}
                 </TableCell>
               </TableRow>
             )

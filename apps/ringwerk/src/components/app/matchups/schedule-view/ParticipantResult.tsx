@@ -2,6 +2,7 @@ import { Clock } from "lucide-react"
 import { formatDecimal1, formatRings } from "@/lib/series/scoring-format"
 import type { ScoringType } from "@/generated/prisma/client"
 import type { MatchupParticipant, MatchResultSummary } from "@/lib/matchups/types"
+import { missingReason } from "@/lib/help/missing"
 import { participantName, STATUS_LABEL } from "./types"
 
 interface ParticipantResultProps {
@@ -60,16 +61,25 @@ export function StatusBadge({ status }: { status: string }) {
       </span>
     )
   }
-  if (status === "PENDING") {
-    return (
-      <span className="inline-flex items-center justify-center">
-        <Clock className="h-3.5 w-3.5 text-muted-foreground" />
-      </span>
-    )
-  }
+  if (status === "PENDING") return <PendingClock />
   return (
     <span className="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium text-muted-foreground">
       {STATUS_LABEL[status] ?? status}
+    </span>
+  )
+}
+
+/** Uhr einer Paarung ohne Ergebnis; der Grund als Tooltip und für Screenreader */
+export function PendingClock() {
+  const reason = missingReason("noResult")
+  return (
+    <span
+      data-missing="noResult"
+      title={reason}
+      className="inline-flex items-center justify-center"
+    >
+      <Clock aria-hidden="true" className="h-3.5 w-3.5 text-muted-foreground" />
+      <span className="sr-only">{reason}</span>
     </span>
   )
 }

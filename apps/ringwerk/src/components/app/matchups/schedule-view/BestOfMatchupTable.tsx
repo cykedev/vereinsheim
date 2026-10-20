@@ -1,10 +1,11 @@
-import { Clock } from "lucide-react"
 import { getEffectiveScoringType } from "@/lib/series/scoring-format"
 import { BestOfEntryDialog } from "@/components/app/matchups/BestOfEntryDialog"
 import type { ScoringMode } from "@/generated/prisma/client"
 import type { MatchupListItem } from "@/lib/matchups/types"
 import { deriveBestOfLabel } from "./bestOfLabel"
 import { participantName, type BestOfConfig } from "./types"
+import { PendingClock } from "./ParticipantResult"
+import { Missing } from "@/components/app/shell/Missing"
 import {
   Table,
   TableBody,
@@ -57,7 +58,9 @@ export function BestOfMatchupTable({
                   <TableCell className="px-2 py-3 whitespace-normal sm:px-4">
                     <span className="font-medium">{participantName(m.homeParticipant)}</span>
                   </TableCell>
-                  <TableCell className="px-2 py-3 text-muted-foreground sm:px-4">—</TableCell>
+                  <TableCell className="px-2 py-3 sm:px-4">
+                    <Missing kind="noOpponent" />
+                  </TableCell>
                   <TableCell className="px-2 py-3 text-center sm:px-4">
                     <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
                       Freilos
@@ -81,8 +84,8 @@ export function BestOfMatchupTable({
                       {participantName(m.awayParticipant!)}
                     </span>
                   </TableCell>
-                  <TableCell className="px-2 py-3 text-center text-muted-foreground sm:px-4">
-                    —
+                  <TableCell className="px-2 py-3 text-center sm:px-4">
+                    <Missing kind="notScored" />
                   </TableCell>
                   {canManage && <TableCell className="px-2 py-3 sm:px-4" />}
                 </TableRow>
@@ -128,9 +131,7 @@ export function BestOfMatchupTable({
                   ) : hasResults ? (
                     <span className="text-xs text-muted-foreground">{label}</span>
                   ) : (
-                    <span className="inline-flex items-center justify-center">
-                      <Clock className="h-3.5 w-3.5 text-muted-foreground" />
-                    </span>
+                    <PendingClock />
                   )}
                 </TableCell>
                 {canManage && (
