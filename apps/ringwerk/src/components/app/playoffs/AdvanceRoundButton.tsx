@@ -5,15 +5,15 @@ import { ArrowRight } from "lucide-react"
 import { Button } from "@vereinsheim/ui/button"
 import { DecisionDialog } from "@vereinsheim/ui/design2/decision-dialog"
 import { toast } from "sonner"
-import { nextRound } from "@/lib/consequences"
+import { nextRound, type RoundName } from "@/lib/consequences"
 import { advanceRound } from "@/lib/playoffs/actions"
 
 interface Props {
   competitionId: string
   /** die Runde, die angelegt wird */
-  round: "Viertelfinale" | "Halbfinale" | "Finale"
+  round: Exclude<RoundName, "Achtelfinale">
   /** die Runde, deren Paarungen entschieden sind */
-  previous: "Achtelfinale" | "Viertelfinale" | "Halbfinale"
+  previous: Exclude<RoundName, "Finale">
 }
 
 export function AdvanceRoundButton({ competitionId, round, previous }: Props) {

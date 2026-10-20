@@ -5,14 +5,14 @@ import { Trophy } from "lucide-react"
 import { Button } from "@vereinsheim/ui/button"
 import { DecisionDialog } from "@vereinsheim/ui/design2/decision-dialog"
 import { toast } from "sonner"
-import { playoffsStart } from "@/lib/consequences"
+import { playoffsStart, type RoundName } from "@/lib/consequences"
 import { startPlayoffs } from "@/lib/playoffs/actions"
 
 interface Props {
   competitionId: string
   name: string
   /** erste Runde laut Einstellungen */
-  round: "Achtelfinale" | "Viertelfinale" | "Halbfinale"
+  round: Exclude<RoundName, "Finale">
   /** aktive Teilnehmer in der Tabelle */
   active: number
   disabled?: boolean

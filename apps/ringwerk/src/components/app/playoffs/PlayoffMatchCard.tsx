@@ -16,17 +16,10 @@ import {
   type PlayoffCardConfig,
 } from "./playoff-match-card"
 
-const ROUND_NAME: Record<PlayoffMatchItem["round"], RoundName> = {
-  EIGHTH_FINAL: "Achtelfinale",
-  QUARTER_FINAL: "Viertelfinale",
-  SEMI_FINAL: "Halbfinale",
-  FINAL: "Finale",
-}
-
 /** die Runde danach; im Finale keine */
 const NEXT_ROUND_NAME: Record<
   PlayoffMatchItem["round"],
-  "Viertelfinale" | "Halbfinale" | "Finale" | null
+  Exclude<RoundName, "Achtelfinale"> | null
 > = {
   EIGHTH_FINAL: "Viertelfinale",
   QUARTER_FINAL: "Halbfinale",
@@ -72,7 +65,7 @@ export function PlayoffMatchCard({ match, canManage, config }: Props) {
           onConfirm={handleDeleteDuel}
           duel={{
             duel: shownDuel.duelNumber,
-            round: ROUND_NAME[match.round],
+            round: ROUND_LABEL[match.round],
             next: NEXT_ROUND_NAME[match.round],
             nameA,
             nameB,

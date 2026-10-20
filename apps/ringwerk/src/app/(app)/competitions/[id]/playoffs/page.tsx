@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import type { RoundName } from "@/lib/consequences"
 import { notFound, redirect } from "next/navigation"
 import { Trophy } from "lucide-react"
 import { getAuthSession } from "@/lib/auth-helpers"
@@ -53,8 +54,8 @@ export default async function CompetitionPlayoffsPage({ params }: Props) {
     bracket.semiFinals.length > 0 && bracket.semiFinals.every((m) => m.status === "COMPLETED")
 
   let advance: {
-    round: "Viertelfinale" | "Halbfinale" | "Finale"
-    previous: "Achtelfinale" | "Viertelfinale" | "Halbfinale"
+    round: Exclude<RoundName, "Achtelfinale">
+    previous: Exclude<RoundName, "Finale">
   } | null = null
   if (allAfComplete && bracket.quarterFinals.length === 0) {
     advance = { round: "Viertelfinale", previous: "Achtelfinale" }

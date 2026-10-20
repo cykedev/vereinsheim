@@ -1,4 +1,5 @@
-import type { ScoringMode, ScoringType } from "@/generated/prisma/client"
+import type { PlayoffRound, ScoringMode, ScoringType } from "@/generated/prisma/client"
+import type { RoundName } from "@/lib/consequences"
 import { SCORING_MODE_LABELS } from "@/lib/scoring/labels"
 
 // Gebündelte Konfiguration für eine Playoff-Match-Karte (Wertung + Finale-Regeln).
@@ -11,7 +12,7 @@ export interface PlayoffCardConfig {
   finaleTiebreaker2: ScoringMode | null
 }
 
-export const ROUND_LABEL: Record<string, string> = {
+export const ROUND_LABEL: Record<PlayoffRound, RoundName> = {
   EIGHTH_FINAL: "Achtelfinale",
   QUARTER_FINAL: "Viertelfinale",
   SEMI_FINAL: "Halbfinale",
