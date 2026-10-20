@@ -1537,3 +1537,109 @@ gelesen**, nicht released.
 |---|---|---|
 | Seite „Spielplan & Tabelle“ | Spielplan, darunter „Tabelle“ | „Tabelle“, darunter die neue Überschrift „Spielplan“ |
 | Kopf der Liga-Tabelle, Tooltip und Screenreader | Pl., Sp., S, U, N, Pkt. ohne Erklärung | dieselben Kürzel mit vollem Namen: Platz, Spiele, Siege, Unentschieden, Niederlagen, Punkte |
+
+## Spiegel: Eine Scheibe sagt, was sie zeigt
+
+Stand 20. Oktober 2026, vom Agenten entworfen, **vom User noch nicht gelesen**, nicht umgesetzt. Plan:
+`plans/2026-10-20-spiegel-single-card-hints.md`.
+
+Grund: Auf der Seite einer Scheibe stehen Sätze wie „Ein Muster zeigt erst der Vergleich über mehrere Scheiben.“ Auf
+der Scheibe lässt sich aber nichts vergleichen, und für Ermüdung, Pausen, Form und Richtungsuhr zeigt auch
+„Fortschritt“ keinen Vergleich (das kommt erst mit SP-2.7). Die Sätze fordern also etwas, wofür es keinen Weg gibt.
+
+Regel dafür: Ein Hinweis auf der Scheibe zeigt entweder auf etwas, das man öffnen kann, oder er sagt, was diese Scheibe
+zeigt. Die Unsicherheit steht im Ergebnis („kann Zufall sein“), wie schon bei Lage und Form. Dass eine Scheibe kein
+Muster ist, sagt die Hilfe als Tatsache, nicht als Auftrag.
+
+Zeichen: `{…}` ist ein Wert, den die App einsetzt. „(nur wenn …)“ heißt, die Zeile erscheint nur in diesem Fall.
+
+### 1. Beobachtung zu Trend und Ermüdung
+
+Ort: Seite einer Scheibe, Analyse, Reiter „Überblick“, „Beobachtungen in Worten“. Fällt das Ende klar ab oder klar
+besser aus, steht der Satz auch im Kopf der Scheibe.
+
+**alt:** „… Die letzten zehn Schuss lagen im Schnitt {0,21} Ringe je Schuss unter den ersten zehn (zusammen {−2,1}
+Ringe), die Gruppe {0,40} mm weiter. Ein Muster zeigt erst der Vergleich über mehrere Scheiben.“
+
+**neu:** Der erste Teil bleibt. Der letzte Satz hängt vom Urteil ab:
+
+- (nur wenn klar schwächer) „Am Ende hast du klar nachgelassen.“
+- (nur wenn klar stärker) „Am Ende bist du klar stärker geworden.“
+- (nur wenn nicht klar) „Der Unterschied kann Zufall sein.“
+- (nur wenn genau im Schnitt der ersten zehn) kein Zusatz.
+
+„Klar“ entscheidet ein Test über die Werte der ersten und der letzten zehn Schuss, wie beim Trend. Die Gruppe (R50)
+geht nicht ins Urteil ein.
+
+### 2. Karte „Ermüdung“
+
+Ort: Seite einer Scheibe, Analyse, Reiter „Zeit und Verlauf“.
+
+**alt:** Erste zehn, Letzte zehn, Unterschied je Schuss, R50 letzte gegen erste. Darunter: „Eine Scheibe ist
+verrauscht; ein Muster zeigt erst der Vergleich über mehrere Scheiben.“
+
+**neu:** Dieselben Zeilen, darunter das Urteil als Etikett:
+
+- „klar schwächer“ (gelb) · „klar stärker“ (grün) · „kann Zufall sein“ (grau)
+
+Darunter: „„Klar“ heißt: Reiner Zufall brächte einen so großen Unterschied nur in 5 von 100 Fällen. Das Urteil gilt für
+den Wert, nicht für die Gruppe.“
+
+### 3. Beobachtung zu Pausen
+
+Ort: wie 1.
+
+**alt:** „Nach der Pause vor Schuss {12} lagen die Schüsse danach (bis zu drei) im Schnitt {0,30} Ringe je Schuss unter
+deinen übrigen Schüssen. Drei Schuss sind wenig. Ein Urteil braucht mehrere Abende.“
+
+**neu:** „Nach der Pause vor Schuss {12} lagen die Schüsse danach (bis zu drei) im Schnitt {0,30} Ringe je Schuss unter
+deinen übrigen Schüssen. Drei Schuss sind zu wenig, um zu zeigen, ob die Pause etwas ausmacht.“
+
+### 4. Karte „Pausen und Wiedereinstieg“
+
+Ort: wie 2.
+
+**alt:** „„Danach“: Ø der bis zu drei Schüsse nach der Pause gegen den Ø deiner übrigen Schüsse. Drei Schuss sind wenig;
+ein Muster zeigt der Vergleich über Abende.“
+
+**neu:** „„Danach“: Ø der bis zu drei Schüsse nach der Pause gegen den Ø deiner übrigen Schüsse. Drei Schuss sind zu
+wenig für ein Urteil.“
+
+### 5. Karte „Streuung σ“
+
+Ort: Seite einer Scheibe, Analyse, Reiter „Präzision“.
+
+**alt:** „σ aus {40} Schuss, für wenige Schüsse korrigiert: Er hängt kaum von der Schusszahl ab und taugt für den
+Vergleich über Abende.“
+
+**neu:** „σ aus {40} Schuss, für wenige Schüsse korrigiert. Er hängt kaum von der Schusszahl ab. Deshalb zeigt
+Fortschritt die Streuung über alle deine Scheiben als σ.“ Darunter der Link „Streuung im Fortschritt ›“. Er öffnet
+Fortschritt mit der Familie der Scheibe und der Kennzahl „Streuung“, im zuletzt gewählten Zeitraum.
+
+### 6. Karte „Maße der Gruppe“
+
+Ort: wie 5.
+
+**alt:** „Der Streukreis wird mit der Schusszahl größer, R50 fällt bei wenigen Schüssen leicht zu klein aus; über Abende
+mit verschiedenen Schusszahlen vergleicht σ.“
+
+**neu:** „Der Streukreis wird mit der Schusszahl größer. R50 fällt bei wenigen Schüssen leicht zu klein aus. Scheiben
+mit verschiedenen Schusszahlen vergleichst du deshalb über σ.“
+
+### 7. Hilfe (Blatt „?“)
+
+| Thema | alt | neu |
+|---|---|---|
+| Serien und Konstanz, Vorsicht | „… Wie gleichmäßig du wirklich schießt, zeigt erst der Vergleich über mehrere Scheiben.“ | „… Sie sagt deshalb, wie gleichmäßig du an diesem Abend geschossen hast. Wie gleichmäßig du sonst schießt, sagt sie nicht.“ |
+| Form der Gruppe, Vorsicht | „Eine leichte echte Streckung zeigt eine einzelne Scheibe deshalb selten; sichtbar wird sie über mehrere Scheiben.“ | „Eine leichte echte Streckung erkennt Spiegel auf einer Scheibe deshalb selten. „Gestreckt“ steht erst, wenn die Gruppe deutlich gestreckt ist.“ |
+| Ausreißer, Was tun | „Kosten dich Ausreißer über mehrere Scheiben viele Ringe, lohnt die Arbeit an einem gleichmäßigen Ablauf mehr als an der Präzision.“ | „Kosten dich Ausreißer viele Ringe, lohnt die Arbeit an einem gleichmäßigen Ablauf mehr als an der Präzision. Ein einzelner Abend kann aber auch Pech sein.“ |
+| Richtungsuhr, Vorsicht | „… Ein Befund ist erst, was sich über mehrere Scheiben wiederholt.“ | „… Ein starker Keil auf einer Scheibe ist deshalb noch kein Befund.“ |
+| Pausen, Vorsicht | „… Ob dir Pausen schaden, zeigt erst der Vergleich über mehrere Abende.“ | „… Eine Pause auf einer Scheibe zeigt deshalb nicht, ob dir Pausen schaden.“ |
+| Ermüdung, So liest du es | „Ein Minus beim Wert oder ein Plus bei R50 heißt: am Ende schwächer. Der Unterschied im Wert gilt je Schuss …“ | „Ein Minus beim Wert oder ein Plus bei R50 heißt: am Ende schwächer. „Klar schwächer“ oder „klar stärker“ steht nur, wenn ein Test es zeigt. Der Unterschied im Wert gilt je Schuss …“ |
+| Ermüdung, Vorsicht | „… Ein Muster wird es erst, wenn es auf mehreren Scheiben so ist.“ | „… Deshalb steht „klar“ erst bei einem größeren Unterschied. Auch dann gilt es nur für diesen Abend.“ |
+
+Bleibt, wie es ist: der Fehlschluss „Eine Scheibe ist kein Muster“ im Leitfaden. Dort gehört die Aussage hin.
+
+Kann sich ändern: Mit dem Test bei der Ermüdung läuft auf jeder Scheibe ein Test mehr. „Etwa jede sechste ganz normale
+Scheibe zeigt irgendwo einen Befund“ (Leitfaden, „Sicher“ und „kann Zufall sein“) wird neu nachgerechnet. Ist es danach
+etwa jede fünfte, steht dort „jede fünfte“.
