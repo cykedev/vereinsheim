@@ -3,12 +3,12 @@
 import { useState, useTransition } from "react"
 import { CalendarPlus, RefreshCw } from "lucide-react"
 import { Button } from "@vereinsheim/ui/button"
-import { ConfirmDialog } from "@vereinsheim/ui/shell/ConfirmDialog"
+import { DecisionDialog } from "@vereinsheim/ui/design2/decision-dialog"
 import { getErrorMessage } from "@vereinsheim/lib/forms/fieldErrors"
 import { toast } from "sonner"
 import type { LeagueFormat } from "@/generated/prisma/client"
 import { generateCompetitionSchedule } from "@/lib/matchups/actions"
-import { scheduleDialogText } from "@/lib/matchups/regeneration"
+import { scheduleGenerate, scheduleRegenerate } from "@/lib/consequences"
 
 interface Props {
   competitionId: string
@@ -20,7 +20,7 @@ interface Props {
 export function GenerateScheduleButton({ competitionId, hasSchedule, leagueFormat }: Props) {
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
-  const text = scheduleDialogText({ hasSchedule, leagueFormat })
+  const decision = hasSchedule ? scheduleRegenerate() : scheduleGenerate({ leagueFormat })
   const label = hasSchedule ? "Spielplan neu generieren" : "Spielplan generieren"
   const Icon = hasSchedule ? RefreshCw : CalendarPlus
 
@@ -49,13 +49,10 @@ export function GenerateScheduleButton({ competitionId, hasSchedule, leagueForma
         <Icon className="h-4 w-4 sm:mr-1.5" />
         <span className="hidden sm:inline">{isPending ? "Generiere…" : label}</span>
       </Button>
-      <ConfirmDialog
+      <DecisionDialog
+        decision={decision}
         open={open}
         onOpenChange={setOpen}
-        title={text.title}
-        description={text.description}
-        confirmLabel={text.confirmLabel}
-        destructive={hasSchedule}
         onConfirm={handleConfirm}
       />
     </>

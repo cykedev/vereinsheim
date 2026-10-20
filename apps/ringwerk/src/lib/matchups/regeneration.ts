@@ -1,7 +1,5 @@
-// Wann ein Liga-Spielplan (neu) generiert werden darf — und wie die Bestätigung es beschreibt.
-// Rein, damit Seite (Button sichtbar? Hinweis?) und Action (Abbruch) dieselbe Regel nutzen.
-
-import type { LeagueFormat } from "@/generated/prisma/client"
+// Wann ein Liga-Spielplan (neu) generiert werden darf. Rein, damit Seite (Button sichtbar? Hinweis?) und Action
+// (Abbruch) dieselbe Regel nutzen. Die Texte der Bestätigung stehen in `lib/consequences.ts`.
 
 export interface ScheduleResultCounts {
   /** Paarungen mit Status COMPLETED */
@@ -33,28 +31,4 @@ export function scheduleRegenerationBlocker(c: ScheduleResultCounts): string | n
     return "Spielplan kann nicht neu generiert werden — es sind bereits Ergebnisse erfasst."
   }
   return null
-}
-
-/** Texte des Bestätigungsdialogs für „Spielplan (neu) generieren“. */
-export function scheduleDialogText(input: { hasSchedule: boolean; leagueFormat: LeagueFormat }): {
-  title: string
-  description: string
-  confirmLabel: string
-} {
-  if (input.hasSchedule) {
-    return {
-      title: "Spielplan neu generieren?",
-      description:
-        "Der bestehende Spielplan wird gelöscht und für alle aktiven Teilnehmer neu erstellt. Spieltage und Gegner ändern sich dabei. Bereits verteilte oder ausgedruckte Spielpläne sind danach veraltet.",
-      confirmLabel: "Neu generieren",
-    }
-  }
-  return {
-    title: "Spielplan generieren?",
-    description:
-      input.leagueFormat === "BEST_OF_SINGLE"
-        ? "Es wird ein Spielplan „Jeder gegen jeden“ (eine Runde) für alle aktiven Teilnehmer generiert."
-        : "Es wird ein Doppelrunden-Spielplan (Hin- und Rückrunde) für alle aktiven Teilnehmer generiert.",
-    confirmLabel: "Generieren",
-  }
 }
