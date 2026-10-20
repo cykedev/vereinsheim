@@ -21,3 +21,8 @@ export async function pageContext(ownerId: string): Promise<PageContext> {
     named: await namedPeriods(db, ownerId),
   }
 }
+
+/** für eine geteilte Scheibe: Anzeige-Zone und „jetzt“, ohne Zeiträume (die gehören einem Konto) */
+export function sharedPageContext(): PageContext {
+  return { timeZone: getDisplayTimeZone(), nowMs: Date.now(), named: [] }
+}
