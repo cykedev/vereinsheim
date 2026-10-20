@@ -7,7 +7,7 @@ import { routeFromUrl } from "@vereinsheim/shot-ui/nav/routes"
 import { CardScreen } from "@/components/card/CardScreen"
 import { requireSession } from "@/lib/auth-helpers"
 import { db } from "@/lib/db"
-import { cardWithShots, ownCardState, ownerCards } from "@/lib/db/reads"
+import { cardShare, cardWithShots, ownCardState, ownerCards } from "@/lib/db/reads"
 import { pageContext } from "@/lib/page-context"
 import { listable, withFamily } from "@/lib/pages"
 import { searchOf } from "@/lib/search"
@@ -15,7 +15,8 @@ import { targetDisplay } from "@/lib/target-display"
 
 export const metadata: Metadata = { title: "Scheibe" }
 
-// Seite einer Scheibe: nur die eigene; Rückweg und Blättern im Kontext der Herkunft (Liste, Start, Fortschritt)
+// Seite einer Scheibe: nur die eigene; Rückweg und Blättern im Kontext der Herkunft (Liste, Start, Fortschritt), dazu
+// der Link zum Teilen
 export default async function CardRoutePage({
   params,
   searchParams,
@@ -51,8 +52,12 @@ export default async function CardRoutePage({
     <CardScreen
       card={card}
       route={route}
-      near={ids ? neighbours(ids, id) : null}
-      paging={ids !== null}
+      own={{
+        near: ids ? neighbours(ids, id) : null,
+        paging: ids !== null,
+        share: await cardShare(db, { cardId: id, ownerId }),
+      }}
+      path={`/cards/${encodeURIComponent(id)}`}
       context={context}
       display={await targetDisplay()}
       // je Scheibe neu eingehängt: Blättern bleibt in derselben Route, und Reiter, Wahl und Lineal gehören zur Scheibe

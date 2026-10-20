@@ -15,7 +15,18 @@ import { deleteCard, restoreCard } from "@/lib/trash-actions"
  * Löschen am Ende der Seite einer Scheibe: fragt mit Folgen, legt die Scheibe in den Papierkorb, geht den
  * Rückweg und zeigt dort „Scheibe gelöscht · Rückgängig“.
  */
-export function DeleteCard({ cardId, when, back }: { cardId: string; when: string; back: string }) {
+export function DeleteCard({
+  cardId,
+  when,
+  back,
+  shared,
+}: {
+  cardId: string
+  when: string
+  back: string
+  /** die Scheibe ist geteilt: die Rückfrage sagt, dass der Link danach nicht mehr geht */
+  shared: boolean
+}) {
   const router = useRouter()
   const showUndo = useUndo()
   const [open, setOpen] = useState(false)
@@ -39,7 +50,7 @@ export function DeleteCard({ cardId, when, back }: { cardId: string; when: strin
         </p>
       )}
       <DecisionDialog
-        decision={cardDelete({ evening: when })}
+        decision={cardDelete({ evening: when, shared })}
         open={open}
         onOpenChange={setOpen}
         onConfirm={() =>

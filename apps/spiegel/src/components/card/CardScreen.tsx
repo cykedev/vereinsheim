@@ -64,6 +64,7 @@ import {
 import { ToggleChip } from "@vereinsheim/ui/design2/toggle-chip"
 
 import { DeleteCard } from "@/components/card/DeleteCard"
+import { ShareCard } from "@/components/card/ShareCard"
 import { Page } from "@vereinsheim/ui/design2/page"
 import { useSavedChoice } from "@/components/shell/useSavedChoice"
 import { useHelp } from "@vereinsheim/ui/design2/help-sheet"
@@ -73,6 +74,7 @@ import type { PageCard } from "@/lib/db/reads"
 import { setCardKind } from "@/lib/card-kind-actions"
 import { toggleOfficial } from "@/lib/scoring"
 import { setCardScoring } from "@/lib/scoring-actions"
+import type { Share } from "@/lib/share-actions"
 import { rememberTargetDisplay, savedTargetDisplay } from "@/lib/target-display-client"
 
 /** der Cookie meldet keine Änderung; gelesen wird bei jedem Zeichnen */
@@ -125,19 +127,27 @@ function stateFromRoute(
  * der Adresse (Reload und Zurück finden sie wieder), der Reiter der Analyse im Anker; Rückweg und Blättern im Kontext der
  * Herkunft rechnet der Server (`near`). Die Seite öffnet in der Wertung der Adresse, sonst der der Scheibe; Umschalten
  * speichert sie an der Scheibe (`setCardScoring`), die Adresse trägt sie nur, solange sie nicht die der Scheibe ist.
+ * Ohne `own` ist es die geteilte Seite (`/share/<uuid>`): nur Ansicht, ohne Rückweg, Blättern, Art, Wertung, Teilen und
+ * Löschen, und die Adresse bleibt, wie sie ist (nur der Anker des Reiters).
  */
 export function CardScreen({
   card,
   route: initialRoute,
-  near,
-  paging,
+  own,
+  path: ownPath,
   context: pageContext,
   display,
 }: {
   card: PageCard
   route: CardRoute
-  near: { prev: string | null; next: string | null } | null
-  paging: boolean
+  /** was nur der Besitzer hat: Rückweg und Blättern, Art und Wertung, Teilen, Löschen; null auf der geteilten Seite */
+  own: {
+    near: { prev: string | null; next: string | null } | null
+    paging: boolean
+    share: Share | null
+  } | null
+  /** die Adresse dieser Seite, für Anker und Fortschreiben (`/cards/<id>` bzw. `/share/<uuid>`) */
+  path: string
   context: PageContext
   /** die gemerkte Darstellung der Scheibe (Cookie), Anfang der Ebenen, von „übrige blass/aus“ und des Ausschnitts */
   display: TargetDisplay
@@ -175,7 +185,9 @@ export function CardScreen({
     setOthers(next.others)
   }
   const [explain, setExplain] = useState(false)
-  const ownPath = `/cards/${encodeURIComponent(card.id)}`
+  const owner = own !== null
+  // der Link zum Teilen: Teilen und Löschen sehen denselben Stand, ohne die Seite neu zu laden
+  const [share, setShare] = useState(own?.share ?? null)
   const hash = useHash(ownPath)
   // der Reiter: gewählt, sonst aus dem Anker beim Laden, sonst der erste (eine Scheibe beginnt mit ihm)
   const [chosenTab, setChosenTab] = useState<AnalysisTab | null>(null)
@@ -221,11 +233,11 @@ export function CardScreen({
   const address = urlFromRoute(route)
   const anchorChosen = route.anchor !== null
   useEffect(() => {
-    // nur die eigene Adresse fortschreiben, nie die einer Scheibe, von der aus geblättert wurde
-    if (window.location.pathname !== ownPath) return
+    // nur die eigene Adresse fortschreiben, nie die einer Scheibe, von der aus geblättert wurde; die geteilte Seite nie
+    if (!owner || window.location.pathname !== ownPath) return
     const next = nextCardAddress(window.location, address, anchorChosen)
     if (next) window.history.replaceState(null, "", next)
-  }, [address, anchorChosen, ownPath])
+  }, [address, anchorChosen, ownPath, owner])
 
   // jede Änderung der Darstellung ist die neue Voreinstellung; gemerkt nur beim Umschalten, nie beim Öffnen: sonst
   // überschriebe eine Seite aus dem Cache die zuletzt gewählte
@@ -330,7 +342,7 @@ export function CardScreen({
     <CardResult
       shots={shots}
       state={state}
-      actions={actions}
+      actions={own ? actions : undefined}
       notice={
         saveError && (
           <p role="alert" className="text-sm text-destructive">
@@ -343,13 +355,15 @@ export function CardScreen({
 
   return (
     <Page>
-      <CardContextBar
-        back={backRoute(route)}
-        backText={backLabel(route, { named: pageContext.named, timeZone: pageContext.timeZone })}
-        prev={near?.prev ? siblingRoute(route, near.prev) : null}
-        next={near?.next ? siblingRoute(route, near.next) : null}
-        paging={paging}
-      />
+      {own && (
+        <CardContextBar
+          back={backRoute(route)}
+          backText={backLabel(route, { named: pageContext.named, timeZone: pageContext.timeZone })}
+          prev={own.near?.prev ? siblingRoute(route, own.near.prev) : null}
+          next={own.near?.next ? siblingRoute(route, own.near.next) : null}
+          paging={own.paging}
+        />
+      )}
 
       <CardPage
         header={
@@ -467,11 +481,23 @@ export function CardScreen({
           },
         ]}
       />
-      <DeleteCard
-        cardId={card.id}
-        when={cardWhen(card.startedAtMs, pageContext.timeZone)}
-        back={urlFromRoute(backRoute(route))}
-      />
+      {own && (
+        <>
+          <ShareCard
+            cardId={card.id}
+            when={cardWhen(card.startedAtMs, pageContext.timeZone)}
+            share={share}
+            onChange={setShare}
+            timeZone={pageContext.timeZone}
+          />
+          <DeleteCard
+            cardId={card.id}
+            when={cardWhen(card.startedAtMs, pageContext.timeZone)}
+            back={urlFromRoute(backRoute(route))}
+            shared={share !== null}
+          />
+        </>
+      )}
       <ReturnPill label={pill?.label ?? null} onReturn={back} onDismiss={close} />
     </Page>
   )
