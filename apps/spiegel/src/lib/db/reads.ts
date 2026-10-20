@@ -260,6 +260,32 @@ export async function cardWithShots(
 }
 
 /**
+ * Geteilte Scheibe (`/share/<uuid>`): wie `cardWithShots`, aber über den Link statt über den Besitzer; null, wenn das
+ * Teilen beendet ist, die Scheibe gelöscht ist, wartet, ihre Disziplin ignoriert ist oder das Konto aus ist
+ */
+export async function sharedCard(db: Db, shareId: string): Promise<PageCard | null> {
+  const row = await db.card.findFirst({
+    where: { shareId, ...VISIBLE_CARD, owner: { isActive: true } },
+    select: PAGE_CARD_SELECT,
+  })
+  return row ? toPageCard(row) : null
+}
+
+/** der Link einer eigenen Scheibe; null, wenn sie nicht geteilt ist */
+export async function cardShare(
+  db: Db,
+  query: { cardId: string; ownerId: string }
+): Promise<{ shareId: string; sharedAtMs: number } | null> {
+  const row = await db.card.findFirst({
+    where: { id: query.cardId, ownerId: query.ownerId, shareId: { not: null } },
+    select: { shareId: true, sharedAt: true },
+  })
+  return row?.shareId && row.sharedAt
+    ? { shareId: row.shareId, sharedAtMs: row.sharedAt.getTime() }
+    : null
+}
+
+/**
  * Die Lagen der kleinen Scheiben (`cardMarks` der Projektion) für die Scheiben, die eine Seite zeigt, nur eigene und
  * sichtbare (`pending`: nur wartende, für „Offen“); nach Id. Eine Übersicht liest sie getrennt, damit Start für die Rechnung über die ganze Familie nicht
  * die Lagen jeder Scheibe lädt.
