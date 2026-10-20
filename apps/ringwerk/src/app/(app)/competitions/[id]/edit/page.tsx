@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import { notFound, redirect } from "next/navigation"
-import { getAuthSession, canManage } from "@/lib/auth-helpers"
+import { getAuthSession, canManage, isAdmin } from "@/lib/auth-helpers"
 import { getDisciplines } from "@/lib/disciplines/queries"
 import { getCompetitionById } from "@/lib/competitions/queries"
 import { hasPlayoffsStarted } from "@/lib/playoffs/queries"
@@ -48,13 +48,16 @@ export default async function EditCompetitionPage({ params }: Props) {
         hasMatchups={hasMatchups}
         playoffsStarted={playoffsStarted}
       />
-      <div className="pt-6">
-        <ForceDeleteCompetitionSection
-          competitionId={id}
-          competitionName={competition.name}
-          isPublic={competition.isPublic}
-        />
-      </div>
+      {/* Löschen mit allen Daten darf nur ein Admin (forceDeleteCompetition) */}
+      {isAdmin(session.user.role) && (
+        <div className="pt-6">
+          <ForceDeleteCompetitionSection
+            competitionId={id}
+            competitionName={competition.name}
+            isPublic={competition.isPublic}
+          />
+        </div>
+      )}
     </div>
   )
 }

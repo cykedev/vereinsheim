@@ -492,13 +492,15 @@ async function leagueClassic(run: Run, ui: Ui, db: Db, pass: Pass) {
   )
 
   await run.step(
-    pass.role === "ADMIN" ? "erzwungen löschen" : "erzwungen löschen verweigert (Sportleitung)",
+    pass.role === "ADMIN"
+      ? "erzwungen löschen"
+      : "kein Löschen mit allen Daten für die Sportleitung",
     async () => {
       await ui.open(`/competitions/${id}/edit`)
-      await ui.press("Wettbewerb mit allen Daten löschen")
-      await ui.fill("confirm-competition-name", name)
-      await ui.pressInDialog("Mit allen Daten löschen")
       if (pass.role === "ADMIN") {
+        await ui.press("Wettbewerb mit allen Daten löschen")
+        await ui.fill("confirm-competition-name", name)
+        await ui.pressInDialog("Mit allen Daten löschen")
         await ui.waitPath(/^\/competitions$/, "keine Rückkehr zur Liste")
         expect((await db.competition.count({ where: { name } })) === 0, "Wettbewerb weg")
         const left = await Promise.all([
@@ -512,12 +514,11 @@ async function leagueClassic(run: Run, ui: Ui, db: Db, pass: Pass) {
           left
         )
       } else {
-        // der Dialog schließt beim Bestätigen; die Ablehnung kommt als Meldung
-        await ui.until(
-          `toasts().some((t) => t.includes("Keine Berechtigung"))`,
-          "keine Meldung „Keine Berechtigung“"
+        // die Action lässt nur Admins zu; die Seite bietet es der Sportleitung gar nicht an
+        expect(
+          !(await ui.ev<boolean>(`!!btn("Wettbewerb mit allen Daten löschen")`)),
+          "kein Knopf „Wettbewerb mit allen Daten löschen“"
         )
-        await ui.dialogClosed("Dialog schließt nicht")
         expect((await db.competition.count({ where: { name } })) === 1, "Wettbewerb bleibt")
         expect((await db.series.count({ where: { matchupId } })) === 2, "Serien bleiben")
       }
