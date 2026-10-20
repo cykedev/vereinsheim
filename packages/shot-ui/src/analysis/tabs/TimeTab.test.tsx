@@ -238,4 +238,30 @@ describe("Reiter Zeit und Verlauf, Karten", () => {
     // schmal: mit Tempo, Pausen und Ermüdung zwei volle Zeilen im Raster
     expect(html).not.toMatch(/data-card="serien-im-vergleich" data-wide/)
   })
+
+  it("Ermüdung mit Urteil: klar schwächer oder kann Zufall sein", () => {
+    // die letzten zehn Werte je 1,6 Ringe unter den ersten: klar schwächer
+    const tiring = BASE.map((s, i) =>
+      i < 10
+        ? { ...s, decimalTenths: 100, ring: 10 }
+        : i >= 30
+          ? { ...s, decimalTenths: 84, ring: 8 }
+          : s
+    )
+    const clear = cardHtml(renderTab("time", { shots: tiring }), "ermuedung")
+    expect(clear).toMatch(/data-verdict="warn"[^>]*>klar schwächer</)
+    const plain = cardHtml(html, "ermuedung")
+    expect(plain).toMatch(/data-verdict="none"[^>]*>kann Zufall sein</)
+    expect(cardText(html, "ermuedung")).toContain(
+      "„Klar“ heißt: Reiner Zufall brächte einen so großen Unterschied nur in 5 von 100 Fällen. Das Urteil gilt für den Wert, nicht für die Gruppe."
+    )
+  })
+
+  it("Pausen und Ermüdung ohne Verweis auf andere Scheiben oder Abende", () => {
+    expect(cardText(html, "pausen")).toContain("Drei Schuss sind zu wenig für ein Urteil.")
+    for (const key of ["pausen", "ermuedung"]) {
+      const text = cardText(html, key)
+      expect(text).not.toMatch(/mehrere(n)? Scheiben|über Abende|;/)
+    }
+  })
 })

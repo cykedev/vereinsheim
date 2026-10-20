@@ -31,7 +31,7 @@ import { durationText, formatSigned, formatValue, percentText, ringsSigned } fro
 import { CourseChart } from "../charts/CourseChart"
 import { ChartSlot } from "../charts/frame"
 import { RhythmChart } from "../charts/RhythmChart"
-import { AnalysisCard, KeyValues, Muted, Note } from "../parts"
+import { AnalysisCard, KeyValues, Muted, Note, Verdict } from "../parts"
 import type { CardContext, CardSpec } from "./index"
 
 /** Zeichen der Legende im Verlauf, 14 px */
@@ -262,7 +262,7 @@ export function timeCards({
               />
               <Note>
                 „Danach“: Ø der bis zu drei Schüsse nach der Pause gegen den Ø deiner übrigen
-                Schüsse. Drei Schuss sind wenig; ein Muster zeigt der Vergleich über Abende.
+                Schüsse. Drei Schuss sind zu wenig für ein Urteil.
               </Note>
               <Note>{pauseRuleText(recovery.rule)}</Note>
             </>
@@ -298,9 +298,16 @@ export function timeCards({
                   ],
                 ]}
               />
+              {tired.direction === "down" ? (
+                <Verdict tone="warn">klar schwächer</Verdict>
+              ) : tired.direction === "up" ? (
+                <Verdict tone="ok">klar stärker</Verdict>
+              ) : (
+                <Verdict tone="none">kann Zufall sein</Verdict>
+              )}
               <Note>
-                Eine Scheibe ist verrauscht; ein Muster zeigt erst der Vergleich über mehrere
-                Scheiben.
+                „Klar“ heißt: Reiner Zufall brächte einen so großen Unterschied nur in 5 von 100
+                Fällen. Das Urteil gilt für den Wert, nicht für die Gruppe.
               </Note>
             </>
           ) : (
