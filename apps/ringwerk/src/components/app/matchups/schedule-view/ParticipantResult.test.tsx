@@ -16,6 +16,7 @@ const result = {
   participantId: "p1",
   rings: 88,
   teiler: 98.2,
+  correctedTeiler: 98.2,
   ringteiler: 110.2,
   duelNumber: null,
   isTiebreak: false,

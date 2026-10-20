@@ -4,6 +4,7 @@ import { db } from "@/lib/db"
 import { getAuthSession, canManage } from "@/lib/auth-helpers"
 import type { ActionResult } from "@/lib/types"
 import { revalidatePublicPdf } from "@/lib/competitions/publicPdfCache"
+import { duelFactors } from "./duelOutcome"
 import { playoffFailureMessage, removeLastDuel } from "./duelMutations"
 
 /**
@@ -26,6 +27,8 @@ export async function deleteLastPlayoffDuel(duelId: string): Promise<ActionResul
           competitionId: true,
           competition: {
             select: {
+              disciplineId: true,
+              discipline: { select: { scoringType: true, teilerFaktor: true } },
               playoffBestOf: true,
               finalePrimary: true,
               finaleTiebreaker1: true,
@@ -44,7 +47,7 @@ export async function deleteLastPlayoffDuel(duelId: string): Promise<ActionResul
 
   if (!duel) return { error: "Duell nicht gefunden." }
 
-  const match = duel.playoffMatch
+  const match = { ...duel.playoffMatch, factors: await duelFactors(duel.playoffMatch) }
 
   // Prüfungen (letztes Duell, Folge-Runde ohne Duelle), Siegstand und Folge-Runde in der Transaktion
   try {

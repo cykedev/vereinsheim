@@ -1,10 +1,11 @@
 import type { ScoringMode } from "@/generated/prisma/client"
 import { determineOutcome } from "@/lib/results/calculateResult"
-import type {
-  StandingsParticipant,
-  StandingsMatchup,
-  StandingRow,
-  ParticipantStats,
+import {
+  duelSide,
+  type StandingsParticipant,
+  type StandingsMatchup,
+  type StandingRow,
+  type ParticipantStats,
 } from "./standingsTypes"
 import { sortWithDirectComparison } from "./standingsSort"
 import { involvesWithdrawn } from "./withdrawn"
@@ -65,11 +66,7 @@ export function calculateStandings(
     const awayResult = matchup.results.find((r) => r.participantId === matchup.awayParticipantId)
     if (!homeResult || !awayResult) continue
 
-    const outcome = determineOutcome(
-      { rings: homeResult.rings, teiler: homeResult.teiler, ringteiler: homeResult.ringteiler },
-      { rings: awayResult.rings, teiler: awayResult.teiler, ringteiler: awayResult.ringteiler },
-      scoringMode
-    )
+    const outcome = determineOutcome(duelSide(homeResult), duelSide(awayResult), scoringMode)
 
     const homeStats = statsMap.get(matchup.homeParticipantId)!
     const awayStats = statsMap.get(matchup.awayParticipantId!)!

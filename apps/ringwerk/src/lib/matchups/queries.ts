@@ -1,4 +1,5 @@
 import { db } from "@/lib/db"
+import { calculateCorrectedTeiler, effectiveTeilerFaktor } from "@/lib/scoring/calculateScore"
 import type { MatchupListItem, MatchupParticipant, ScheduleStatus } from "./types"
 import { scheduleRegenerationBlocker, type ScheduleResultCounts } from "./regeneration"
 
@@ -44,6 +45,11 @@ function participantSelect(competitionId: string) {
 }
 
 export async function getMatchupsForCompetition(competitionId: string): Promise<MatchupListItem[]> {
+  const competition = await db.competition.findUnique({
+    where: { id: competitionId },
+    select: { disciplineId: true },
+  })
+  const competitionDisciplineId = competition?.disciplineId ?? null
   const rows = await db.matchup.findMany({
     where: { competitionId },
     select: {
@@ -62,6 +68,7 @@ export async function getMatchupsForCompetition(competitionId: string): Promise<
           ringteiler: true,
           duelNumber: true,
           isTiebreak: true,
+          discipline: { select: { teilerFaktor: true } },
         },
       },
     },
@@ -87,6 +94,10 @@ export async function getMatchupsForCompetition(competitionId: string): Promise<
       participantId: r.participantId,
       rings: r.rings.toNumber(),
       teiler: r.teiler.toNumber(),
+      correctedTeiler: calculateCorrectedTeiler(
+        r.teiler.toNumber(),
+        effectiveTeilerFaktor(competitionDisciplineId, r.discipline.teilerFaktor.toNumber())
+      ),
       ringteiler: r.ringteiler.toNumber(),
       duelNumber: r.duelNumber,
       isTiebreak: r.isTiebreak,

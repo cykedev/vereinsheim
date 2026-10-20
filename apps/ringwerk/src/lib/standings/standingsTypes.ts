@@ -10,7 +10,14 @@ export interface StandingsMatchupResult {
   participantId: string
   rings: number
   teiler: number
+  /** Teiler × Faktor der Disziplin im gemischten Wettbewerb, sonst der Teiler vom Ausdruck; entscheidet das Duell */
+  correctedTeiler: number
   ringteiler: number
+}
+
+/** Eine Seite eines Duells für `determineOutcome`: beim Teiler zählt der korrigierte */
+export function duelSide(r: StandingsMatchupResult) {
+  return { rings: r.rings, teiler: r.correctedTeiler, ringteiler: r.ringteiler }
 }
 
 export interface StandingsMatchup {

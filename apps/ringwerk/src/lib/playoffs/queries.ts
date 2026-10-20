@@ -4,7 +4,7 @@ import {
   getStandingsForCompetition,
 } from "@/lib/standings/queries"
 import { getNextRound } from "./calculatePlayoffs"
-import { storedDuelOutcome } from "./actions/duelOutcome"
+import { storedDuelOutcome, type DuelFactors } from "./actions/duelOutcome"
 import { involvesWithdrawn } from "@/lib/standings/withdrawn"
 import type { SeedingRow } from "./bracketSeeding"
 import type { ScoringMode } from "@/generated/prisma/client"
@@ -33,7 +33,8 @@ function mapDuelItem(
   participantAId: string,
   participantBId: string,
   round: PlayoffRound,
-  rules: FinaleRules
+  rules: FinaleRules,
+  factors: DuelFactors
 ): PlayoffDuelItem {
   const rawA = duel.results.find((r) => r.participantId === participantAId)
   const rawB = duel.results.find((r) => r.participantId === participantBId)
@@ -63,7 +64,8 @@ function mapDuelItem(
       round === "FINAL",
       rules.finalePrimary,
       rules.finaleTiebreaker1,
-      rules.finaleTiebreaker2
+      rules.finaleTiebreaker2,
+      factors
     )
     if (outcome === "A") winnerId = participantAId
     else if (outcome === "B") winnerId = participantBId
@@ -102,7 +104,8 @@ function mapMatchItem(
       }[]
     }[]
   },
-  rules: FinaleRules
+  rules: FinaleRules,
+  factorOf: (participantId: string) => number
 ): PlayoffMatchItem {
   return {
     id: raw.id,
@@ -113,7 +116,10 @@ function mapMatchItem(
     participantA: raw.participantA,
     participantB: raw.participantB,
     duels: raw.duels.map((d) =>
-      mapDuelItem(d, raw.participantA.id, raw.participantB.id, raw.round, rules)
+      mapDuelItem(d, raw.participantA.id, raw.participantB.id, raw.round, rules, {
+        a: factorOf(raw.participantA.id),
+        b: factorOf(raw.participantB.id),
+      })
     ),
     canCorrect: false, // wird in getPlayoffBracket korrekt gesetzt
   }
@@ -123,13 +129,29 @@ function mapMatchItem(
 export async function getPlayoffBracket(competitionId: string): Promise<PlayoffBracketData> {
   const competition = await db.competition.findUnique({
     where: { id: competitionId },
-    select: { finalePrimary: true, finaleTiebreaker1: true, finaleTiebreaker2: true },
+    select: {
+      finalePrimary: true,
+      finaleTiebreaker1: true,
+      finaleTiebreaker2: true,
+      disciplineId: true,
+    },
   })
   const rules: FinaleRules = {
     finalePrimary: competition?.finalePrimary ?? "RINGS",
     finaleTiebreaker1: competition?.finaleTiebreaker1 ?? null,
     finaleTiebreaker2: competition?.finaleTiebreaker2 ?? null,
   }
+  // Teiler-Faktor je Teilnehmer wie in `duelFactors`: im gemischten Wettbewerb der der Einschreibung, sonst 1
+  const factors = new Map<string, number>()
+  if (competition && competition.disciplineId === null) {
+    const enrolled = await db.competitionParticipant.findMany({
+      where: { competitionId },
+      select: { participantId: true, discipline: { select: { teilerFaktor: true } } },
+    })
+    for (const e of enrolled)
+      factors.set(e.participantId, e.discipline?.teilerFaktor.toNumber() ?? 1)
+  }
+  const factorOf = (participantId: string) => factors.get(participantId) ?? 1
   const matches = await db.playoffMatch.findMany({
     where: { competitionId },
     select: {
@@ -163,7 +185,7 @@ export async function getPlayoffBracket(competitionId: string): Promise<PlayoffB
     orderBy: [{ createdAt: "asc" }, { id: "asc" }],
   })
 
-  const base = matches.map((m) => mapMatchItem(m, rules))
+  const base = matches.map((m) => mapMatchItem(m, rules, factorOf))
 
   // canCorrect: FINAL immer; jede andere Runde, solange in der ganzen Folge-Runde kein Duell angelegt ist (sie entsteht
   // aus allen Siegern neu nach Rang, eine Korrektur kann jede ihrer Paarungen ändern)

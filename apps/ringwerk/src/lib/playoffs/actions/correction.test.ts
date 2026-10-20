@@ -28,6 +28,7 @@ vi.mock("@/lib/competitions/publicPdfCache", () => ({ revalidatePublicPdf: vi.fn
 vi.mock("./duelOutcome", async (original) => ({
   ...(await original<typeof import("./duelOutcome")>()),
   computeDuelOutcome,
+  duelFactors: async () => ({ a: 1, b: 1 }),
 }))
 
 import { deleteLastPlayoffDuel } from "./deleteDuel"

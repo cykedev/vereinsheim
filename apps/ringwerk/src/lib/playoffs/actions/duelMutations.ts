@@ -2,7 +2,7 @@ import type { Prisma, ScoringMode } from "@/generated/prisma/client"
 import { isConflict, serializable } from "@/lib/serializable"
 import { getNextRound, isPlayoffMatchComplete, requiredWinsFromBestOf } from "../calculatePlayoffs"
 import type { PlayoffRound } from "../types"
-import { storedDuelOutcome } from "./duelOutcome"
+import { storedDuelOutcome, type DuelFactors } from "./duelOutcome"
 
 type Tx = Prisma.TransactionClient
 
@@ -13,6 +13,8 @@ export interface MatchScope {
   competitionId: string
   participantAId: string
   participantBId: string
+  /** Teiler-Faktor je Seite (`duelFactors`) */
+  factors: DuelFactors
 }
 
 /** Regeln aus dem Wettbewerb, nach denen Duelle zählen. */
@@ -99,7 +101,8 @@ async function countWins(tx: Tx, match: MatchScope, rules: MatchRules) {
       match.round === "FINAL",
       rules.finalePrimary,
       rules.finaleTiebreaker1,
-      rules.finaleTiebreaker2
+      rules.finaleTiebreaker2,
+      match.factors
     )
     if (outcome === "A") winsA++
     else if (outcome === "B") winsB++

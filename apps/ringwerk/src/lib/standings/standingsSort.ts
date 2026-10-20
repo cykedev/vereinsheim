@@ -1,7 +1,7 @@
 import type { ScoringMode } from "@/generated/prisma/client"
 import { determineOutcome } from "@/lib/results/calculateResult"
 import { assignSharedRanks } from "@/lib/scoring/sharedRanks"
-import type { StandingRow, StandingsMatchup } from "./standingsTypes"
+import { duelSide, type StandingRow, type StandingsMatchup } from "./standingsTypes"
 import { involvesWithdrawn } from "./withdrawn"
 
 /**
@@ -68,11 +68,7 @@ export function sortWithDirectComparison(
         const awayResult = m.results.find((r) => r.participantId === m.awayParticipantId)
         if (!homeResult || !awayResult) continue
 
-        const outcome = determineOutcome(
-          { rings: homeResult.rings, teiler: homeResult.teiler, ringteiler: homeResult.ringteiler },
-          { rings: awayResult.rings, teiler: awayResult.teiler, ringteiler: awayResult.ringteiler },
-          scoringMode
-        )
+        const outcome = determineOutcome(duelSide(homeResult), duelSide(awayResult), scoringMode)
         if (outcome === "DRAW") {
           dp += 1
         } else if ((isHome && outcome === "HOME_WIN") || (isAway && outcome === "AWAY_WIN")) {

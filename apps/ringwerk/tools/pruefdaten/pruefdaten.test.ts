@@ -169,6 +169,7 @@ describe("feste Fälle der Wertung", () => {
               participantId: `p${self}`,
               rings: v.rings,
               teiler: v.teiler,
+              correctedTeiler: v.teiler * factor,
               ringteiler: calculateRingteiler(v.rings, v.teiler, factor, MAX_RINGS.WHOLE),
             }
           }

@@ -1,8 +1,14 @@
 import { describe, expect, it, vi } from "vitest"
 
-vi.mock("@/lib/db", () => ({ db: {} }))
+const { participantFindFirst } = vi.hoisted(() => ({ participantFindFirst: vi.fn() }))
+vi.mock("@/lib/db", () => ({
+  db: { competitionParticipant: { findFirst: participantFindFirst } },
+}))
 
 import { computeDuelOutcome, storedDuelOutcome } from "./duelOutcome"
+
+/** feste Disziplin: der Teiler vom Ausdruck zählt */
+const FIXED = { a: 1, b: 1 }
 
 const result = (rings: number, teiler: number, ringteiler: number) => ({
   totalRings: { toNumber: () => rings },
@@ -14,19 +20,19 @@ describe("storedDuelOutcome", () => {
   it("Finale mit Teiler als Stichkriterium: zuerst die Ringe, wie beim Eintragen", () => {
     // A hat mehr Ringe, B den kleineren Ringteiler: im Finale (Ringe, dann Teiler) gewinnt A
     expect(
-      storedDuelOutcome(result(95, 30, 35), result(94, 5, 11), true, "RINGS", "TEILER", null)
+      storedDuelOutcome(result(95, 30, 35), result(94, 5, 11), true, "RINGS", "TEILER", null, FIXED)
     ).toBe("A")
   })
 
   it("Finale mit Teiler als Stichkriterium: bei gleichen Ringen entscheidet der Teiler", () => {
     expect(
-      storedDuelOutcome(result(95, 30, 35), result(95, 5, 10), true, "RINGS", "TEILER", null)
+      storedDuelOutcome(result(95, 30, 35), result(95, 5, 10), true, "RINGS", "TEILER", null, FIXED)
     ).toBe("B")
   })
 
   it("Viertel- und Halbfinale: der kleinere Ringteiler", () => {
     expect(
-      storedDuelOutcome(result(95, 30, 35), result(94, 5, 11), false, "RINGS", null, null)
+      storedDuelOutcome(result(95, 30, 35), result(94, 5, 11), false, "RINGS", null, null, FIXED)
     ).toBe("B")
   })
 })
@@ -72,7 +78,8 @@ describe("computeDuelOutcome und storedDuelOutcome mit fester Disziplin", () => 
         false,
         "RINGS",
         null,
-        null
+        null,
+        FIXED
       )
     ).toBe(expected)
   })
@@ -99,8 +106,64 @@ describe("computeDuelOutcome und storedDuelOutcome mit fester Disziplin", () => 
         true,
         "RINGS",
         null,
-        null
+        null,
+        FIXED
       )
     ).toBe(expected)
+  })
+})
+
+describe("gemischter Wettbewerb: der korrigierte Teiler zählt", () => {
+  // A schießt Luftpistole (Faktor 0,333), B Luftgewehr (Faktor 1)
+  const factors = { a: 0.3333333, b: 1 }
+  const lp = { scoringType: "WHOLE" as const, teilerFaktor: { toNumber: () => 0.3333333 } }
+  const lg = { scoringType: "WHOLE" as const, teilerFaktor: { toNumber: () => 1 } }
+  const mixed = {
+    participantAId: "a",
+    participantBId: "b",
+    competitionId: "c",
+    competition: { disciplineId: null, discipline: null },
+  }
+  const disciplines = () =>
+    participantFindFirst.mockImplementation(async ({ where }) => ({
+      discipline: where.participantId === "a" ? lp : lg,
+    }))
+
+  it("Viertelfinale: bei gleichem Ringteiler und gleichen Ringen entscheidet der korrigierte Teiler", async () => {
+    disciplines()
+    // A: 95 Ringe, Teiler 90 → korrigiert 29,999997, Ringteiler 35,0. B: 95 Ringe, Teiler 30 → Ringteiler 35,0.
+    // Nach dem Teiler vom Ausdruck gewönne B (30 gegen 90).
+    const computed = await computeDuelOutcome(
+      mixed,
+      { totalRingsA: 95, teilerA: 90, totalRingsB: 95, teilerB: 30 },
+      false,
+      false,
+      "RINGS",
+      null,
+      null
+    )
+    if ("error" in computed) throw new Error(computed.error)
+    expect(computed.outcome).toBe("A")
+    expect(
+      storedDuelOutcome(result(95, 90, 35), result(95, 30, 35), false, "RINGS", null, null, factors)
+    ).toBe("A")
+  })
+
+  it("Finale mit Kriterium Teiler: Teiler 90 der Luftpistole schlägt Teiler 35 des Luftgewehrs", async () => {
+    disciplines()
+    const computed = await computeDuelOutcome(
+      mixed,
+      { totalRingsA: 95, teilerA: 90, totalRingsB: 95, teilerB: 35 },
+      true,
+      true,
+      "TEILER",
+      null,
+      null
+    )
+    if ("error" in computed) throw new Error(computed.error)
+    expect(computed.outcome).toBe("A")
+    expect(
+      storedDuelOutcome(result(95, 90, 35), result(95, 35, 40), true, "TEILER", null, null, factors)
+    ).toBe("A")
   })
 })

@@ -1,5 +1,5 @@
 import { formatDateOnly, getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
-import { determineOutcome } from "@/lib/results/calculateResult"
+import { pairingOutcome } from "@/lib/matchups/outcome"
 import { getEffectiveScoringType } from "@/lib/series/scoring-format"
 import { ResultEntryDialog } from "@/components/app/results/ResultEntryDialog"
 import type { ScoringMode } from "@/generated/prisma/client"
@@ -104,7 +104,7 @@ export function ClassicLegTable({
                 )
 
                 if (homeResult && awayResult) {
-                  const raw = determineOutcome(homeResult, awayResult, scoringMode)
+                  const raw = pairingOutcome(homeResult, awayResult, scoringMode)
                   if (raw === "HOME_WIN") {
                     homeOutcome = "WIN"
                     awayOutcome = "LOSS"

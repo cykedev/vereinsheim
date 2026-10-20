@@ -6,7 +6,7 @@ import type { ActionResult } from "@/lib/types"
 import { revalidatePublicPdf } from "@/lib/competitions/publicPdfCache"
 import { finaleNeedsTeiler } from "../calculatePlayoffs"
 import type { SavePlayoffDuelResultInput } from "../types"
-import { computeDuelOutcome } from "./duelOutcome"
+import { computeDuelOutcome, duelFactors } from "./duelOutcome"
 import { playoffFailureMessage, recordDuelResult } from "./duelMutations"
 
 /**
@@ -55,7 +55,7 @@ export async function savePlayoffDuelResult(
 
   if (!duel) return { error: "Duell nicht gefunden." }
 
-  const match = duel.playoffMatch
+  const match = { ...duel.playoffMatch, factors: await duelFactors(duel.playoffMatch) }
   const isFinal = match.round === "FINAL"
   const rules = {
     playoffBestOf: match.competition.playoffBestOf,

@@ -1,4 +1,5 @@
 import { db } from "@/lib/db"
+import { calculateCorrectedTeiler, effectiveTeilerFaktor } from "@/lib/scoring/calculateScore"
 import { calculateStandings } from "./calculateStandings"
 import type { StandingRow, StandingsMatchup, StandingsParticipant } from "./calculateStandings"
 import { calculateBestOfStandings } from "./calculateBestOfStandings"
@@ -15,9 +16,10 @@ export type { StandingRow, BestOfStandingRow }
 export async function getStandingsForCompetition(competitionId: string): Promise<StandingRow[]> {
   const competition = await db.competition.findUnique({
     where: { id: competitionId },
-    select: { scoringMode: true },
+    select: { scoringMode: true, disciplineId: true },
   })
   const scoringMode = competition?.scoringMode ?? "RINGTEILER"
+  const competitionDisciplineId = competition?.disciplineId ?? null
 
   const [enrollments, rawMatchups] = await Promise.all([
     db.competitionParticipant.findMany({
@@ -43,6 +45,7 @@ export async function getStandingsForCompetition(competitionId: string): Promise
             rings: true,
             teiler: true,
             ringteiler: true,
+            discipline: { select: { teilerFaktor: true } },
           },
         },
       },
@@ -66,6 +69,10 @@ export async function getStandingsForCompetition(competitionId: string): Promise
       participantId: r.participantId,
       rings: r.rings.toNumber(),
       teiler: r.teiler.toNumber(),
+      correctedTeiler: calculateCorrectedTeiler(
+        r.teiler.toNumber(),
+        effectiveTeilerFaktor(competitionDisciplineId, r.discipline.teilerFaktor.toNumber())
+      ),
       ringteiler: r.ringteiler.toNumber(),
     })),
   }))

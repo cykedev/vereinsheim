@@ -125,6 +125,20 @@ describe("getPlayoffBracket: Sieger eines Duells", () => {
     expect(bracket.semiFinals[0].duels[0].winnerId).toBe("b")
   })
 
+  it("gemischt, Finale nach Teiler: der korrigierte Teiler entscheidet", async () => {
+    competitionFindUnique.mockResolvedValue({ ...rules("TEILER"), disciplineId: null })
+    participantFindMany.mockResolvedValue([
+      { participantId: "a", discipline: { teilerFaktor: decimal(0.3333333) } },
+      { participantId: "b", discipline: { teilerFaktor: decimal(1) } },
+    ])
+    expect(
+      await finalDuelWinner([
+        { rings: 95, teiler: 90, ringteiler: 35 },
+        { rings: 95, teiler: 35, ringteiler: 40 },
+      ])
+    ).toBe("a")
+  })
+
   it("markiert in jedem Duell den Sieger, den das Zählen der Siege nimmt", async () => {
     const sides: Side[] = [
       { rings: 96, teiler: 12.3, ringteiler: 16.3 },
@@ -153,7 +167,7 @@ describe("getPlayoffBracket: Sieger eines Duells", () => {
             teiler: decimal(s.teiler),
             ringteiler: decimal(s.ringteiler),
           }))
-          const counted = storedDuelOutcome(a, b, round === "FINAL", ...chain)
+          const counted = storedDuelOutcome(a, b, round === "FINAL", ...chain, { a: 1, b: 1 })
           const expected = counted === "A" ? "a" : counted === "B" ? "b" : null
           expect(duel.winnerId, `${chain.join("/")} ${round} Duell ${i + 1}`).toBe(expected)
         })

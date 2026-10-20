@@ -17,6 +17,8 @@ export interface MatchResultSummary {
   participantId: string
   rings: number
   teiler: number
+  /** Teiler × Faktor der Disziplin im gemischten Wettbewerb, sonst der Teiler vom Ausdruck; entscheidet das Duell */
+  correctedTeiler: number
   ringteiler: number
   /** Present only for BEST_OF_SINGLE matchups — identifies which duel this result belongs to. */
   duelNumber: number | null

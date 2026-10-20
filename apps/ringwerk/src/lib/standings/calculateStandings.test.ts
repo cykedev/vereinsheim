@@ -3,9 +3,15 @@ import { calculateStandings } from "./calculateStandings"
 import { hasLeagueResult } from "./standingsSort"
 import type { StandingsParticipant, StandingsMatchup } from "./calculateStandings"
 
-// Hilfsfunktion: Ergebnis für einen Teilnehmer
-function makeResult(participantId: string, rings: number, teiler: number, ringteiler: number) {
-  return { participantId, rings, teiler, ringteiler }
+// Hilfsfunktion: Ergebnis für einen Teilnehmer; ohne Faktor ist der korrigierte Teiler der vom Ausdruck
+function makeResult(
+  participantId: string,
+  rings: number,
+  teiler: number,
+  ringteiler: number,
+  correctedTeiler = teiler
+) {
+  return { participantId, rings, teiler, ringteiler, correctedTeiler }
 }
 
 // Teilnehmer-Fixtures
@@ -443,6 +449,61 @@ describe("calculateStandings – feste Disziplin, jede Wertung", () => {
       ["C", 3, 2, 17, 97],
       ["B", 2, 3, 15, 98],
       ["E", 2, 4, 15, 95],
+    ])
+  })
+})
+
+describe("calculateStandings – gemischte Liga nach Teiler", () => {
+  // A schießt Luftpistole (Faktor 0,333): Teiler 90 zählt wie 30,0. B, C und D schießen Luftgewehr (Faktor 1).
+  const pDActive: StandingsParticipant = { ...pD, withdrawn: false }
+  const lp = (rings: number, teiler: number) =>
+    makeResult("A", rings, teiler, Math.round((100 - rings + teiler / 3) * 10) / 10, teiler / 3)
+  const lg = (id: string, rings: number, teiler: number) =>
+    makeResult(id, rings, teiler, 100 - rings + teiler)
+  const pairing = (id: string, home: string, away: string, results: StandingsMatchup["results"]) =>
+    ({
+      id,
+      status: "COMPLETED",
+      homeParticipantId: home,
+      awayParticipantId: away,
+      results,
+    }) as const
+
+  it("vergleicht den korrigierten Teiler, im Duell und im direkten Vergleich", () => {
+    const matchups: StandingsMatchup[] = [
+      pairing("m1", "A", "B", [lp(95, 90), lg("B", 95, 35)]),
+      pairing("m2", "A", "D", [lp(95, 90), lg("D", 95, 50)]),
+      pairing("m3", "C", "A", [lg("C", 95, 20), lp(95, 90)]),
+      pairing("m4", "B", "D", [lg("B", 95, 35), lg("D", 95, 50)]),
+      pairing("m5", "B", "C", [lg("B", 95, 10), lg("C", 95, 20)]),
+      pairing("m6", "C", "D", [lg("C", 95, 20), lg("D", 95, 50)]),
+    ]
+    // korrigiert: A schlägt B und D. A, B und C haben je 4 Punkte und untereinander je einen Sieg; der beste
+    // Ringteiler ordnet sie (B 15, C 25, A 35). Nach dem Teiler vom Ausdruck verlöre A alle drei.
+    const rows = calculateStandings([pA, pB, pC, pDActive], matchups, "TEILER")
+    expect(rows.map((r) => [r.participantId, r.points])).toEqual([
+      ["B", 4],
+      ["C", 4],
+      ["A", 4],
+      ["D", 0],
+    ])
+  })
+  it("der direkte Vergleich zählt nach dem korrigierten Teiler, nicht der beste Ringteiler", () => {
+    const matchups: StandingsMatchup[] = [
+      pairing("m1", "A", "B", [lp(95, 90), lg("B", 95, 35)]),
+      pairing("m2", "A", "C", [lp(95, 90), lg("C", 95, 10)]),
+      pairing("m3", "A", "D", [lp(95, 90), lg("D", 95, 20)]),
+      pairing("m4", "B", "C", [lg("B", 95, 35), lg("C", 95, 10)]),
+      pairing("m5", "B", "D", [lg("B", 95, 5), lg("D", 95, 20)]),
+      pairing("m6", "C", "D", [lg("C", 95, 10), lg("D", 95, 8)]),
+    ]
+    // A und B haben je 2 Punkte. A hat B geschlagen (korrigiert 30,0 gegen 35), B hat den besseren Ringteiler (10).
+    const rows = calculateStandings([pA, pB, pC, pDActive], matchups, "TEILER")
+    expect(rows.map((r) => [r.participantId, r.points])).toEqual([
+      ["D", 4],
+      ["C", 4],
+      ["A", 2],
+      ["B", 2],
     ])
   })
 })
