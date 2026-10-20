@@ -12,6 +12,7 @@ import { getDisciplines } from "@/lib/disciplines/queries"
 import { getEventTeamsForCompetition } from "@/lib/eventTeams/queries"
 import { enrollParticipant } from "@/lib/competitionParticipants/actions"
 import { hasPlayoffsStarted } from "@/lib/playoffs/queries"
+import { getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
 import { EnrollParticipantForm } from "@/components/app/competitionParticipants/EnrollParticipantForm"
 import { CompetitionParticipantActions } from "@/components/app/competitionParticipants/CompetitionParticipantActions"
 import { Badge } from "@vereinsheim/ui/badge"
@@ -44,6 +45,7 @@ export default async function CompetitionParticipantsPage({ params }: Props) {
   if (!competition) notFound()
 
   const isTeamEvent = (competition.teamSize ?? 0) >= 2
+  const displayTimeZone = getDisplayTimeZone()
 
   // Im Team-Modus darf jeder Teilnehmer mehrfach eingeschrieben werden → alle aktiven anzeigen
   const [available, eventTeams] = await Promise.all([
@@ -144,6 +146,7 @@ export default async function CompetitionParticipantsPage({ params }: Props) {
                     entry={cp}
                     playoffsStarted={playoffsStarted}
                     disciplines={enrollDisciplines}
+                    displayTimeZone={displayTimeZone}
                   />
                 </div>
               ))}
@@ -182,6 +185,7 @@ export default async function CompetitionParticipantsPage({ params }: Props) {
                     entry={cp}
                     playoffsStarted={playoffsStarted}
                     disciplines={enrollDisciplines}
+                    displayTimeZone={displayTimeZone}
                   />
                 </div>
               ))}

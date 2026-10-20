@@ -1,92 +1,82 @@
+import { useState } from "react"
 import { UserCheck, Trash2 } from "lucide-react"
 import { Button } from "@vereinsheim/ui/button"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@vereinsheim/ui/alert-dialog"
+import { DecisionDialog } from "@vereinsheim/ui/design2/decision-dialog"
+import { unenroll, withdrawalRevoke } from "@/lib/consequences"
 
 interface RevokeProps {
-  fullName: string
+  name: string
+  /** Tag des Rückzugs im Anzeigeformat, `null`, wenn unbekannt */
+  since: string | null
   isPending: boolean
   onConfirm: () => void
 }
 
-// Rückzug rückgängig machen (für zurückgezogene Teilnehmer).
-export function RevokeWithdrawalAction({ fullName, isPending, onConfirm }: RevokeProps) {
+// Rückzug zurücknehmen (für zurückgezogene Teilnehmer).
+export function RevokeWithdrawalAction({ name, since, isPending, onConfirm }: RevokeProps) {
+  const [open, setOpen] = useState(false)
   return (
-    <AlertDialog>
-      <AlertDialogTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-10 w-10"
-          title="Rückzug rückgängig"
-          disabled={isPending}
-        >
-          <UserCheck className="h-4 w-4" />
-        </Button>
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Rückzug rückgängig machen?</AlertDialogTitle>
-          <AlertDialogDescription>
-            {fullName} wird wieder als aktiv eingeschrieben.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm}>Rückgängig machen</AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-10 w-10"
+        title="Rückzug zurücknehmen"
+        aria-label="Rückzug zurücknehmen"
+        disabled={isPending}
+        onClick={() => setOpen(true)}
+      >
+        <UserCheck className="h-4 w-4" />
+      </Button>
+      <DecisionDialog
+        decision={withdrawalRevoke({ name, since })}
+        open={open}
+        onOpenChange={setOpen}
+        onConfirm={onConfirm}
+      />
+    </>
   )
 }
 
 interface UnenrollProps {
-  fullName: string
+  /** bei Gästen nur der Vorname */
+  name: string
+  guest: boolean
+  results: number
+  team: number | null
   isPending: boolean
   onConfirm: () => void
 }
 
-// Teilnehmer dauerhaft aus dem Wettbewerb entfernen.
-export function UnenrollAction({ fullName, isPending, onConfirm }: UnenrollProps) {
+// Teilnehmer aus dem Wettbewerb entfernen (nur ohne Paarungen; sonst zurückziehen).
+export function UnenrollAction({
+  name,
+  guest,
+  results,
+  team,
+  isPending,
+  onConfirm,
+}: UnenrollProps) {
+  const [open, setOpen] = useState(false)
   return (
-    <AlertDialog>
-      <AlertDialogTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-10 w-10 text-destructive/70 hover:text-destructive"
-          title="Aus Wettbewerb entfernen"
-          disabled={isPending}
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Aus Wettbewerb entfernen?</AlertDialogTitle>
-          <AlertDialogDescription>
-            {fullName} wird dauerhaft aus diesem Wettbewerb entfernt.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={onConfirm}
-            className="bg-destructive text-primary-foreground hover:bg-destructive/90"
-          >
-            Entfernen
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-10 w-10 text-destructive hover:text-destructive"
+        title="Aus Wettbewerb entfernen"
+        aria-label="Aus Wettbewerb entfernen"
+        disabled={isPending}
+        onClick={() => setOpen(true)}
+      >
+        <Trash2 className="h-4 w-4" />
+      </Button>
+      <DecisionDialog
+        decision={unenroll({ name, guest, results, team })}
+        open={open}
+        onOpenChange={setOpen}
+        onConfirm={onConfirm}
+      />
+    </>
   )
 }

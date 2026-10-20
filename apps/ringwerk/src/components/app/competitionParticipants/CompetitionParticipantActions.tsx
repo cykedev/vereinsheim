@@ -1,5 +1,6 @@
 "use client"
 
+import { formatDateOnly } from "@vereinsheim/lib/format"
 import type { CompetitionParticipantListItem } from "@/lib/competitionParticipants/types"
 import type { SerializableDiscipline } from "@/lib/disciplines/types"
 import {
@@ -15,14 +16,25 @@ interface Props {
   playoffsStarted: boolean
   /** Übergeben bei gemischten Wettbewerben — ermöglicht Disziplin-Edit */
   disciplines?: SerializableDiscipline[]
+  /** Zeitzone der Anzeige für den Tag des Rückzugs */
+  displayTimeZone: string
 }
 
-export function CompetitionParticipantActions({ entry, playoffsStarted, disciplines }: Props) {
+export function CompetitionParticipantActions({
+  entry,
+  playoffsStarted,
+  disciplines,
+  displayTimeZone,
+}: Props) {
   const actions = useParticipantActions(entry)
 
   const fullName = entry.isGuest
     ? entry.participant.firstName
     : `${entry.participant.lastName}, ${entry.participant.firstName}`
+  // in Sätzen der Dialoge: Vorname zuerst
+  const name = entry.isGuest
+    ? entry.participant.firstName
+    : `${entry.participant.firstName} ${entry.participant.lastName}`
 
   // Disziplin-Edit möglich wenn: gemischter WB, aktiv, keine Serien, kein Gast
   const canEditDiscipline =
@@ -49,14 +61,20 @@ export function CompetitionParticipantActions({ entry, playoffsStarted, discipli
 
       {entry.status === "WITHDRAWN" && (
         <RevokeWithdrawalAction
-          fullName={fullName}
+          name={name}
+          since={
+            entry.withdrawnAt ? formatDateOnly(new Date(entry.withdrawnAt), displayTimeZone) : null
+          }
           isPending={actions.isPending}
           onConfirm={actions.handleRevokeWithdrawal}
         />
       )}
 
       <UnenrollAction
-        fullName={fullName}
+        name={name}
+        guest={entry.isGuest}
+        results={entry.seriesCount}
+        team={entry.teamNumber}
         isPending={actions.isPending}
         onConfirm={actions.handleUnenroll}
       />
