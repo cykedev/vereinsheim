@@ -70,6 +70,7 @@ export function usePlayoffMatchCard({ match, canManage, playoffBestOf }: Args) {
       )
       return
     }
+    toast.success("Duell gelöscht.")
     router.refresh()
   }
 

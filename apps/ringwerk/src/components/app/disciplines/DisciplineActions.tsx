@@ -24,6 +24,8 @@ export function DisciplineActions({ discipline }: Props) {
       const result = await setDisciplineArchived(discipline.id, archive)
       if ("error" in result) {
         toast.error(typeof result.error === "string" ? result.error : "Fehler beim Archivieren.")
+      } else {
+        toast.success(archive ? "Disziplin archiviert." : "Disziplin wiederhergestellt.")
       }
     })
   }
@@ -33,6 +35,8 @@ export function DisciplineActions({ discipline }: Props) {
       const result = await deleteDiscipline(discipline.id)
       if ("error" in result) {
         toast.error(typeof result.error === "string" ? result.error : "Fehler beim Löschen.")
+      } else {
+        toast.success("Disziplin gelöscht.")
       }
     })
   }

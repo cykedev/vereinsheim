@@ -27,6 +27,8 @@ export function AdvanceRoundButton({ competitionId, round, previous }: Props) {
         toast.error(
           typeof result.error === "string" ? result.error : "Fehler beim Anlegen der Runde."
         )
+      } else {
+        toast.success(`${round} angelegt.`)
       }
     })
   }

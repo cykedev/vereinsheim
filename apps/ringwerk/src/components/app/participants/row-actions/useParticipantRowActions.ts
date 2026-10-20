@@ -13,6 +13,8 @@ export function useParticipantRowActions(participantId: string, isActive: boolea
       const result = await setParticipantActive(participantId, !isActive)
       if ("error" in result) {
         toast.error(typeof result.error === "string" ? result.error : "Fehler beim Statuswechsel.")
+      } else {
+        toast.success(isActive ? "Teilnehmer deaktiviert." : "Teilnehmer aktiviert.")
       }
     })
   }
@@ -25,6 +27,7 @@ export function useParticipantRowActions(participantId: string, isActive: boolea
       if ("error" in result) {
         toast.error(typeof result.error === "string" ? result.error : "Fehler beim Löschen.")
       } else {
+        toast.success("Teilnehmer gelöscht.")
         setDeleteOpen(false)
       }
     })

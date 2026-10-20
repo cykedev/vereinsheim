@@ -23,6 +23,7 @@ export function useParticipantActions(entry: CompetitionParticipantListItem) {
       if ("error" in result) {
         toast.error(typeof result.error === "string" ? result.error : "Fehler beim Rückzug.")
       } else {
+        toast.success("Teilnehmer zurückgezogen.")
         setWithdrawOpen(false)
         setReason("")
       }
@@ -36,6 +37,8 @@ export function useParticipantActions(entry: CompetitionParticipantListItem) {
         toast.error(
           typeof result.error === "string" ? result.error : "Fehler beim Rückgängigmachen."
         )
+      } else {
+        toast.success("Rückzug zurückgenommen.")
       }
     })
   }
@@ -45,6 +48,8 @@ export function useParticipantActions(entry: CompetitionParticipantListItem) {
       const result = await unenrollParticipant(entry.id)
       if ("error" in result) {
         toast.error(typeof result.error === "string" ? result.error : "Fehler beim Entfernen.")
+      } else {
+        toast.success("Aus dem Wettbewerb entfernt.")
       }
     })
   }
@@ -58,6 +63,7 @@ export function useParticipantActions(entry: CompetitionParticipantListItem) {
           typeof result.error === "string" ? result.error : "Fehler beim Ändern der Disziplin."
         )
       } else {
+        toast.success("Disziplin geändert.")
         setDisciplineOpen(false)
       }
     })

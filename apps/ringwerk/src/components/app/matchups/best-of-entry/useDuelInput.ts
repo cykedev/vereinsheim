@@ -1,4 +1,5 @@
 import { useState, useTransition } from "react"
+import { toast } from "sonner"
 import {
   saveBestOfDuel,
   saveStechschuss,
@@ -99,11 +100,14 @@ export function useDuelInput({ matchupId, nextDuelNumber }: Args) {
     })
   }
 
-  function handleDeleteLatest() {
+  /** nimmt das zuletzt eingetragene Duell zurück; `tiebreak`, wenn es ein Stechschuss ist (für die Meldung) */
+  function handleDeleteLatest(tiebreak = false) {
     startTransition(async () => {
       const result = await deleteLatestBestOfDuel(matchupId)
       if ("error" in result) {
         setError(typeof result.error === "string" ? result.error : "Fehler beim Zurücknehmen.")
+      } else {
+        toast.success(tiebreak ? "Stechschuss zurückgenommen." : "Duell zurückgenommen.")
       }
       setConfirmDelete(false)
     })

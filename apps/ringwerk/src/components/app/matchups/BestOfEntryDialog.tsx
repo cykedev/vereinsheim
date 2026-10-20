@@ -103,7 +103,7 @@ export function BestOfEntryDialog({
       <DeleteDuelConfirm
         open={confirmDelete}
         onOpenChange={setConfirmDelete}
-        onConfirm={handleDeleteLatest}
+        onConfirm={() => handleDeleteLatest(stechschussNumbers.includes(latestDuel))}
         pending={isPending}
         duel={{
           duel: latestDuel,

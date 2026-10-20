@@ -37,6 +37,8 @@ export function StartPlayoffsButton({
         toast.error(
           typeof result.error === "string" ? result.error : "Fehler beim Starten der Playoffs."
         )
+      } else {
+        toast.success("Playoffs gestartet.")
       }
     })
   }

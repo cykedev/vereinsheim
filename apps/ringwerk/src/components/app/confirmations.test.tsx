@@ -265,6 +265,7 @@ describe("Teilnehmer (Liste aller Teilnehmer)", () => {
     await confirmAt(0)
     expect(mocks.setParticipantActive).toHaveBeenCalledTimes(1)
     expect(mocks.setParticipantActive).toHaveBeenCalledWith("p1", false)
+    expect(mocks.toastSuccess).toHaveBeenCalledWith("Teilnehmer deaktiviert.")
     onlyCalled(mocks.setParticipantActive)
   })
 
@@ -274,6 +275,7 @@ describe("Teilnehmer (Liste aller Teilnehmer)", () => {
     await confirmAt(0)
     expect(mocks.setParticipantActive).toHaveBeenCalledTimes(1)
     expect(mocks.setParticipantActive).toHaveBeenCalledWith("p1", true)
+    expect(mocks.toastSuccess).toHaveBeenCalledWith("Teilnehmer aktiviert.")
     onlyCalled(mocks.setParticipantActive)
   })
 
@@ -282,6 +284,7 @@ describe("Teilnehmer (Liste aller Teilnehmer)", () => {
     await confirmAt(1)
     expect(mocks.deleteParticipant).toHaveBeenCalledTimes(1)
     expect(mocks.deleteParticipant).toHaveBeenCalledWith("p1", false)
+    expect(mocks.toastSuccess).toHaveBeenCalledWith("Teilnehmer gelöscht.")
     onlyCalled(mocks.deleteParticipant)
   })
 
@@ -331,6 +334,7 @@ describe("Teilnehmer eines Wettbewerbs", () => {
     await confirmAt(0)
     expect(mocks.revokeWithdrawal).toHaveBeenCalledTimes(1)
     expect(mocks.revokeWithdrawal).toHaveBeenCalledWith("cp1")
+    expect(mocks.toastSuccess).toHaveBeenCalledWith("Rückzug zurückgenommen.")
     onlyCalled(mocks.revokeWithdrawal)
   })
 
@@ -344,6 +348,7 @@ describe("Teilnehmer eines Wettbewerbs", () => {
     await confirmAt(0)
     expect(mocks.unenrollParticipant).toHaveBeenCalledTimes(1)
     expect(mocks.unenrollParticipant).toHaveBeenCalledWith("cp1")
+    expect(mocks.toastSuccess).toHaveBeenCalledWith("Aus dem Wettbewerb entfernt.")
     onlyCalled(mocks.unenrollParticipant)
   })
 
@@ -373,6 +378,7 @@ describe("Disziplinen und Konten", () => {
     await confirmAt(0)
     expect(mocks.deleteDiscipline).toHaveBeenCalledTimes(1)
     expect(mocks.deleteDiscipline).toHaveBeenCalledWith("d1")
+    expect(mocks.toastSuccess).toHaveBeenCalledWith("Disziplin gelöscht.")
     onlyCalled(mocks.deleteDiscipline)
   })
 
@@ -387,6 +393,7 @@ describe("Disziplinen und Konten", () => {
     await confirmAt(0)
     expect(mocks.setUserActive).toHaveBeenCalledTimes(1)
     expect(mocks.setUserActive).toHaveBeenCalledWith("u1", false)
+    expect(mocks.toastSuccess).toHaveBeenCalledWith("Konto deaktiviert.")
     onlyCalled(mocks.setUserActive)
   })
 
@@ -399,6 +406,7 @@ describe("Disziplinen und Konten", () => {
     })
     await confirmAt(0)
     expect(mocks.setUserActive).toHaveBeenCalledWith("u1", true)
+    expect(mocks.toastSuccess).toHaveBeenCalledWith("Konto aktiviert.")
     onlyCalled(mocks.setUserActive)
   })
 })
@@ -509,6 +517,7 @@ describe("Playoffs und Best-of", () => {
     await confirmAt(0)
     expect(mocks.startPlayoffs).toHaveBeenCalledTimes(1)
     expect(mocks.startPlayoffs).toHaveBeenCalledWith("c1")
+    expect(mocks.toastSuccess).toHaveBeenCalledWith("Playoffs gestartet.")
     onlyCalled(mocks.startPlayoffs)
   })
 
@@ -523,6 +532,7 @@ describe("Playoffs und Best-of", () => {
     await confirmAt(0)
     expect(mocks.advanceRound).toHaveBeenCalledTimes(1)
     expect(mocks.advanceRound).toHaveBeenCalledWith("c1")
+    expect(mocks.toastSuccess).toHaveBeenCalledWith("Halbfinale angelegt.")
     onlyCalled(mocks.advanceRound)
   })
 
@@ -570,6 +580,7 @@ describe("Playoffs und Best-of", () => {
     await confirmAt(0)
     expect(mocks.deleteLastPlayoffDuel).toHaveBeenCalledTimes(1)
     expect(mocks.deleteLastPlayoffDuel).toHaveBeenCalledWith("d4")
+    expect(mocks.toastSuccess).toHaveBeenCalledWith("Duell gelöscht.")
     expect(mocks.refresh).toHaveBeenCalledTimes(1)
     onlyCalled(mocks.deleteLastPlayoffDuel)
   })
@@ -609,6 +620,7 @@ describe("Playoffs und Best-of", () => {
     await confirmAt(0)
     expect(mocks.deleteLatestBestOfDuel).toHaveBeenCalledTimes(1)
     expect(mocks.deleteLatestBestOfDuel).toHaveBeenCalledWith("mu1")
+    expect(mocks.toastSuccess).toHaveBeenCalledWith("Duell zurückgenommen.")
     onlyCalled(mocks.deleteLatestBestOfDuel)
   })
 })

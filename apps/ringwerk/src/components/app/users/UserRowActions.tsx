@@ -26,6 +26,8 @@ export function UserRowActions({ userId, userName, email, isActive }: Props) {
       const result = await setUserActive(userId, !isActive)
       if ("error" in result) {
         toast.error(typeof result.error === "string" ? result.error : "Fehler beim Statuswechsel.")
+      } else {
+        toast.success(isActive ? "Konto deaktiviert." : "Konto aktiviert.")
       }
     })
   }
