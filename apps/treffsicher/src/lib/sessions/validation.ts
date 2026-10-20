@@ -1,3 +1,5 @@
+import { formatDecimal } from "@vereinsheim/lib/format"
+
 export type ScoringType = "WHOLE" | "TENTH"
 
 /**
@@ -55,5 +57,5 @@ export function isValidSeriesTotal(
  */
 export function formatSeriesMax(scoringType: ScoringType, shotsCount: number): string {
   const max = getSeriesMax(scoringType, shotsCount)
-  return scoringType === "TENTH" ? max.toFixed(1) : String(max)
+  return scoringType === "TENTH" ? formatDecimal(max, 1) : String(max)
 }

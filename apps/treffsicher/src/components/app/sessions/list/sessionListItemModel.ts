@@ -2,7 +2,7 @@ import { calculateTotalScore } from "@/lib/sessions/calculateScore"
 import { getSeriesMax, type ScoringType } from "@/lib/sessions/validation"
 import { SESSION_TYPE_BADGE_CLASS, SESSION_TYPE_LABELS } from "@/lib/sessions/presentation"
 import type { SessionWithDiscipline } from "@/lib/sessions/actions"
-import { formatDateTime } from "@vereinsheim/lib/format"
+import { formatDateTime, formatDecimal } from "@vereinsheim/lib/format"
 
 type NormalizedSeries = {
   scoreTotal: number | null
@@ -91,11 +91,12 @@ function buildResultModel(
   const displayShots = hasPracticeOnlyResult ? totalPracticeShots : totalScoringShots
   const displayMaxScore =
     scoringType && displayShots > 0 ? getSeriesMax(scoringType, displayShots) : 0
-  const formattedScore = scoringType === "TENTH" ? displayScore.toFixed(1) : String(displayScore)
+  const formattedScore =
+    scoringType === "TENTH" ? formatDecimal(displayScore, 1) : String(displayScore)
   const formattedMaxScore =
     displayMaxScore > 0
       ? scoringType === "TENTH"
-        ? displayMaxScore.toFixed(1)
+        ? formatDecimal(displayMaxScore, 1)
         : String(displayMaxScore)
       : null
 

@@ -105,6 +105,6 @@ describe("formatSeriesMax", () => {
   })
 
   it("formatiert Zehntel-Maximum mit einer Nachkommastelle", () => {
-    expect(formatSeriesMax("TENTH", 10)).toBe("109.0")
+    expect(formatSeriesMax("TENTH", 10)).toBe("109,0")
   })
 })

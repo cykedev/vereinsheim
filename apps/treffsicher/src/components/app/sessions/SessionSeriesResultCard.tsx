@@ -4,6 +4,7 @@ import { HitLocationVisualization } from "@/components/app/sessions/HitLocationV
 import { ShotValues } from "@/components/app/sessions/ShotValues"
 import { Missing } from "@/components/app/shell/Missing"
 import { Card, CardContent, CardHeader, CardTitle } from "@vereinsheim/ui/design2/card"
+import { formatDecimal } from "@vereinsheim/lib/format"
 
 interface Props {
   session: SessionDetail
@@ -90,7 +91,7 @@ export function SessionSeriesResultCard({ session, totalScore, isDecimal }: Prop
           <span className="font-display text-3xl font-bold tabular-nums">
             {totalScore !== null ? (
               isDecimal ? (
-                totalScore.toFixed(1)
+                formatDecimal(totalScore, 1)
               ) : (
                 totalScore
               )
@@ -118,7 +119,7 @@ export function SessionSeriesResultCard({ session, totalScore, isDecimal }: Prop
                 <p className="font-mono text-sm font-semibold tabular-nums">
                   {row.scoreValue !== null ? (
                     isDecimal ? (
-                      row.scoreValue.toFixed(1)
+                      formatDecimal(row.scoreValue, 1)
                     ) : (
                       row.scoreValue
                     )
@@ -165,7 +166,7 @@ export function SessionSeriesResultCard({ session, totalScore, isDecimal }: Prop
                   <td className="py-2 pr-4 font-mono font-medium tabular-nums">
                     {row.scoreValue !== null ? (
                       isDecimal ? (
-                        row.scoreValue.toFixed(1)
+                        formatDecimal(row.scoreValue, 1)
                       ) : (
                         row.scoreValue
                       )

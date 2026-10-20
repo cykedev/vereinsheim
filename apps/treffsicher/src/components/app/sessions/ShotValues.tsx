@@ -1,4 +1,11 @@
+import { formatDecimal } from "@vereinsheim/lib/format"
+
 import { scoreBgClass } from "@/lib/scoreColors"
+
+/** ein gespeicherter Schusswert („10.5“, „9“) in deutscher Schreibweise („10,5“); anderes bleibt, wie es ist */
+export function shotText(shot: string): string {
+  return /^\d+\.\d+$/.test(shot) ? formatDecimal(Number(shot), shot.split(".")[1].length) : shot
+}
 
 /**
  * Die Schusswerte einer Serie: vor jedem Wert ein Farbpunkt in der Ringwert-Farbe wie Spiegels Ablesung, der Wert
@@ -19,7 +26,7 @@ export function ShotValues({ shots, className }: { shots: string[]; className?: 
                 className={`inline-block size-2 rounded-full border border-shot-edge ${color}`}
               />
             )}
-            {shot}
+            {shotText(shot)}
           </span>
         )
       })}

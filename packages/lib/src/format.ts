@@ -205,3 +205,21 @@ export function formatInteger(value: number): string {
 export function formatNumber(value: number): string {
   return numberFormat.format(value)
 }
+
+const decimalFormats = new Map<number, Intl.NumberFormat>()
+
+/**
+ * Zahl mit fester Zahl an Nachkommastellen und deutschem Komma: `formatDecimal(392.2, 1)` → "392,2",
+ * `formatDecimal(109, 1)` → "109,0". Ersetzt `toFixed` in der Anzeige, das immer einen Punkt setzt.
+ */
+export function formatDecimal(value: number, digits: number): string {
+  let format = decimalFormats.get(digits)
+  if (!format) {
+    format = new Intl.NumberFormat(APP_LOCALE, {
+      minimumFractionDigits: digits,
+      maximumFractionDigits: digits,
+    })
+    decimalFormats.set(digits, format)
+  }
+  return format.format(value)
+}

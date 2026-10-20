@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest"
 import {
   APP_LOCALE,
   formatDateOnly,
+  formatDecimal,
   formatDateTime,
   formatDateTimeSeconds,
   formatInteger,
@@ -196,5 +197,15 @@ describe("zonedWallTimeMs", () => {
     expect(zonedWallTimeMs(wall(2026, 3, 29, 1, 59), "Europe/Berlin")).toBe(
       Date.UTC(2026, 2, 29, 0, 59)
     )
+  })
+})
+
+describe("formatDecimal", () => {
+  it("feste Nachkommastellen mit Komma, nie mit Punkt", () => {
+    expect(formatDecimal(392.2, 1)).toBe("392,2")
+    expect(formatDecimal(109, 1)).toBe("109,0")
+    expect(formatDecimal(10.5, 1)).toBe("10,5")
+    expect(formatDecimal(1234.5, 1)).toBe("1.234,5")
+    expect(formatDecimal(12.3456, 2)).toBe("12,35")
   })
 })

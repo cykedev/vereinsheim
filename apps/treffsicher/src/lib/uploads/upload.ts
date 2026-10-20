@@ -2,6 +2,8 @@ import { writeFile, mkdir } from "fs/promises"
 import { join } from "path"
 import { randomUUID } from "crypto"
 
+import { formatDecimal } from "@vereinsheim/lib/format"
+
 // Erlaubte MIME-Typen — nur Bilder und PDFs (keine ausführbaren Dateien)
 const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "application/pdf"] as const
 const MAX_SIZE_BYTES = 10 * 1024 * 1024 // 10 MB
@@ -31,7 +33,7 @@ export async function saveUpload(file: File): Promise<UploadResult> {
 
   // Dateigrösse prüfen
   if (file.size > MAX_SIZE_BYTES) {
-    const sizeMB = (file.size / 1024 / 1024).toFixed(1)
+    const sizeMB = formatDecimal(file.size / 1024 / 1024, 1)
     throw new Error(`Datei zu gross (${sizeMB} MB). Maximum: 10 MB`)
   }
 
