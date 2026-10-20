@@ -1527,3 +1527,13 @@ Urteil im ersten Satz.
 
 Offen: Die Hilfetexte in `@vereinsheim/shot-help` (`topics.ts`) enthalten noch 51 Semikolons. Das ist ein eigener
 Durchgang durch Spiegels Hilfe, erst im Textbuch.
+
+## Ringwerk: Liga zeigt zuerst die Tabelle (Durchsicht 2.1, 3.2)
+
+Stand 20. Oktober 2026, vom Agenten entworfen und umgesetzt auf `feat/ringwerk-liga-antwort`, **vom User noch nicht
+gelesen**, nicht released.
+
+| Wo | alt | neu |
+|---|---|---|
+| Seite „Spielplan & Tabelle“ | Spielplan, darunter „Tabelle“ | „Tabelle“, darunter die neue Überschrift „Spielplan“ |
+| Kopf der Liga-Tabelle, Tooltip und Screenreader | Pl., Sp., S, U, N, Pkt. ohne Erklärung | dieselben Kürzel mit vollem Namen: Platz, Spiele, Siege, Unentschieden, Niederlagen, Punkte |

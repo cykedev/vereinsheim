@@ -65,16 +65,16 @@ Nicht in diesem Plan:
 
 ## Teil 2 — Ringwerk, Liga (eigener Release)
 
-- **2.1 Tabelle vor dem Spielplan (R1).** `src/app/(app)/competitions/[id]/schedule/page.tsx`: die Tabelle
+- **2.1 Tabelle vor dem Spielplan (R1).** **Umgesetzt auf `feat/ringwerk-liga-antwort` (20. Oktober 2026),** ohne die Gliederung nach Spieltagen (zurückgestellt, sie berührte das Eintragen von Ergebnissen). Ursprünglich: `src/app/(app)/competitions/[id]/schedule/page.tsx`: die Tabelle
   (`StandingsTable` bzw. `BestOfStandingsTable`) vor `ScheduleView`. `ScheduleView` gliedert nach Spieltagen; der
   laufende Spieltag (der erste mit offener Paarung) ist offen, die übrigen zugeklappt (`<details>`, ohne Feld, das
   bedingt gerendert wird; Ergebnisse eintragen bleibt in jedem Spieltag erreichbar). Markup-Test: die Tabelle steht vor
   dem ersten Spieltag; der laufende Spieltag ist offen. Erwartet im Vergleich: andere Reihenfolge der Daten auf dieser
   Seite, sonst nichts (Haltepunkt).
-- **2.2 Einstieg nach Phase (R2).** `src/app/(app)/competitions/[id]/page.tsx`: Eine Liga mit gestarteten Playoffs
+- **2.2 Einstieg nach Phase (R2).** **Umgesetzt** (`entryPage` in `components/app/shell/competitionPages.ts`). `src/app/(app)/competitions/[id]/page.tsx`: Eine Liga mit gestarteten Playoffs
   (`hasPlayoffsStarted`) leitet auf `/playoffs`, sonst wie heute auf `/schedule`. Test der reinen Entscheidung
   (`entryPath(competition, playoffsStarted)`). Der Prüfbestand belegt beide Fälle (L4 und L5).
-- **2.3 Laufende Runde zuerst (R6).** `components/app/playoffs/playoff-bracket/BracketDiagram.tsx`: am Telefon scrollt
+- **2.3 Laufende Runde zuerst (R6).** **Umgesetzt** (`runningColumn`, `ScrollToColumn`). `components/app/playoffs/playoff-bracket/BracketDiagram.tsx`: am Telefon scrollt
   der Baum beim Öffnen zur laufenden Runde (die erste mit offener Paarung); die Seite selbst scrollt weiter nie seitlich.
   Skriptprüfung: bei L5 „Viertelfinale mitten in der Runde“ steht das Viertelfinale im ersten Bildschirm.
 
@@ -84,11 +84,11 @@ der frischen Kopie der echten Daten; `durchsicht`: „Wo stehe ich?“ im ersten
 
 ## Teil 3 — Ringwerk, Start und Kürzel (eigener Release)
 
-- **3.1 Knappe Karten auf Start (R3).** `components/app/dashboard/DashboardCompetitionCard.tsx`: je Wettbewerb ein Satz
+- **3.1 Knappe Karten auf Start (R3).** **Zurückgestellt:** Die Karten zeigen schon nur sechs Zeilen; lang wird Start durch den ganzen Baum in Karten laufender Playoffs und durch die 95 Wettbewerbe des Prüfbestands (echt: 11). Erst an den echten Daten messen. `components/app/dashboard/DashboardCompetitionCard.tsx`: je Wettbewerb ein Satz
   statt Tabelle oder Baum („Spieltag 3 von 7, vorn …“, „Halbfinale läuft“, „Rangliste: 12 Teilnehmer“) und der Weg
   zum Wettbewerb. Die Sätze stehen in einer reinen Funktion (`lib/dashboard/summary.ts`) mit Test; der Wortlaut erst ins
   Textbuch.
-- **3.2 Kürzel ausschreiben (R4).** Spaltenköpfe „RT“, „Best. RT“, „Pkt.“, „Sp.“, „korr.“ auf dem Bildschirm
+- **3.2 Kürzel ausschreiben (R4).** **Umgesetzt als `<abbr>` mit vollem Namen** im Kopf der Liga-Tabelle; die Spalten bleiben schmal. Spaltenköpfe „RT“, „Best. RT“, „Pkt.“, „Sp.“, „korr.“ auf dem Bildschirm
   ausschreiben, wo Platz ist (ab 768 px); am Telefon bleibt das Kürzel mit „?“ und ausgeschriebenem `aria-label`. PDFs
   bleiben, wie sie sind. Wortlaut erst ins Textbuch; Markup-Tests der Tabellen.
 
