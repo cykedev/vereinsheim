@@ -31,10 +31,11 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 - **„Sicher“ und „kann Zufall sein“.** „Sicher“ heißt: Reiner Zufall brächte ein so deutliches
   Ergebnis nur in 5 von 100 Fällen. Weil auf einer Scheibe mehrere Tests laufen, zeigt trotzdem etwa
   jede fünfte ganz normale Scheibe irgendwo ein „sicher versetzt“, „gestreckt“, „klar“ oder einen
-  Ausreißer. „Kann Zufall sein“ heißt nicht „gibt es nicht“, sondern: Diese Schüsse reichen nicht,
-  um es zu zeigen oder auszuschließen. Mehr Schüsse oder mehrere Scheiben klären es. „Passt“ an der
-  Lage heißt dasselbe: kein Versatz belegt. Auf den Karten heißt das auch „nicht klar“ oder „kein
-  Versatz nachweisbar“; es ist ein ehrliches Ergebnis, kein Fehler.
+  Ausreißer. Mit einer Pause ist es etwa jede vierte, denn auch jede Pause bekommt einen Test. „Kann
+  Zufall sein“ heißt nicht „gibt es nicht“, sondern: Diese Schüsse reichen nicht, um es zu zeigen
+  oder auszuschließen. Mehr Schüsse oder mehrere Scheiben klären es. „Passt“ an der Lage heißt
+  dasselbe: kein Versatz belegt. Auf den Karten heißt das auch „nicht klar“ oder „kein Versatz
+  nachweisbar“; es ist ein ehrliches Ergebnis, kein Fehler.
 - **Ganze Ringe oder Zehntel.** Auf der Scheibe und auf Start im Kreis neben der großen Zahl
   umschalten, unter Scheiben und im Fortschritt am Chip neben „Filter“. Ergebnis, Ø, Serien und
   Quoten gibt es in beiden. Einzelne Schüsse stehen immer in Zehnteln: in den Schüssen, in der
@@ -74,6 +75,7 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 - *So liest du es:* „Sicher“ oder „klar“ steht nur, wenn ein Test es zeigt: Reiner Zufall brächte
   das nur in 5 von 100 Fällen. Sonst sagt der Satz ehrlich, dass die Schüsse nicht reichen. Weil
   mehrere Tests laufen, trifft es bei etwa jeder fünften ganz normalen Scheibe einmal zufällig zu.
+  Mit einer Pause ist es etwa jede vierte.
 
 ## Ergebnis
 

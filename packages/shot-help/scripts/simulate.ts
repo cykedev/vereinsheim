@@ -146,6 +146,30 @@ for (const n of [20, 40, 60]) {
   )
 }
 
+// B1 mit Pause: dieselben ganz normalen Scheiben mit 40 Schuss und einer Pause von fünf Minuten nach Schuss 20, dazu
+// das Urteil der Pause
+{
+  let hits = 0
+  const times = 20_000
+  repeat(times, 1140, (rand) => {
+    const match = card(rand, { ...LG, n: 40 }).map((s, i) =>
+      i >= 20 ? { ...s, firedAtMs: (s.firedAtMs as number) + 300_000 } : s
+    )
+    const found =
+      mpiConfidence(match)?.real === true ||
+      groupShape(match)?.elongated === true ||
+      (outliers(match)?.flagged.length ?? 0) > 0 ||
+      cardTrend(match, "decimal")?.clear === true ||
+      fatigue(match, "decimal")?.clear === true ||
+      (pauseRecovery(match, "decimal")?.effects.some((e) => e.clear) ?? false)
+    if (found) hits++
+  })
+  out(
+    "B1",
+    `40 Schuss mit einer Pause: ${share(hits, times)} mit Befund, also etwa jede ${Math.round(times / hits)}.`
+  )
+}
+
 // B2: Ausreißer-Fehlalarm, rund und a/b 2
 for (const [label, sx, sy] of [
   ["rund", 1500, 1500],
@@ -547,6 +571,36 @@ for (const [label, base, seed] of [
         `ganze Ringe ${share(counts.rings[1], 5_000)}`
     )
   }
+}
+
+// B22: Wirkung einer Pause (exakter Permutationstest, drei Schuss danach gegen die übrigen): Fehlalarm ohne Wirkung,
+// Trennschärfe, wenn die drei Schuss nach der Pause σ ×1,6 bzw. ×2 haben; 40 Schuss, Pause von fünf Minuten nach
+// Schuss 20
+for (const [label, base, seed] of [
+  ["LG σ 1,5 mm", LG, 22011],
+  ["LP σ 15 mm", LP, 22010],
+] as const) {
+  const counts = { decimal: [0, 0, 0], rings: [0, 0, 0] }
+  const paused = (shots: MetricShot[]) =>
+    shots.map((s, i) => (i >= 20 ? { ...s, firedAtMs: (s.firedAtMs as number) + 300_000 } : s))
+  repeat(5_000, seed, (rand) => {
+    const steady = paused(card(rand, { ...base, n: 40 }))
+    const wider = paused(
+      card(rand, { ...base, n: 40, scale: (i) => (i >= 20 && i < 23 ? 1.6 : 1) })
+    )
+    const double = paused(card(rand, { ...base, n: 40, scale: (i) => (i >= 20 && i < 23 ? 2 : 1) }))
+    for (const scoring of ["decimal", "rings"] as const) {
+      if (pauseRecovery(steady, scoring)?.effects[0]?.clear) counts[scoring][0]++
+      if (pauseRecovery(wider, scoring)?.effects[0]?.direction === "down") counts[scoring][1]++
+      if (pauseRecovery(double, scoring)?.effects[0]?.direction === "down") counts[scoring][2]++
+    }
+  })
+  out(
+    "B22",
+    `Pause ${label}: Fehlalarm Zehntel ${share(counts.decimal[0], 5_000)}, ganze Ringe ${share(counts.rings[0], 5_000)}; ` +
+      `danach σ ×1,6 erkannt Zehntel ${share(counts.decimal[1], 5_000)}, ganze Ringe ${share(counts.rings[1], 5_000)}; ` +
+      `σ ×2 erkannt Zehntel ${share(counts.decimal[2], 5_000)}, ganze Ringe ${share(counts.rings[2], 5_000)}`
+  )
 }
 
 process.stdout.write(`${lines.join("\n")}\n`)

@@ -100,7 +100,7 @@ vᵢ ist der Zehntelwert, Ringᵢ der ganze Ring, n die Zahl der zählenden Sch�
 | Z1 | Tempo | Median der Intervalle ohne Pausen (Pause: über dem Doppelten des Medians der Abstände bis 180 s, mindestens 60 s, über 180 s immer; Schwelle der ganzen Karte; an echten Scheiben 18 Pausen in 789 Abständen; Version 4) | Serie, Scheibe, Zeitraum | A | vorhanden |
 | Z2 | Tempo-Konstanz | IQR (Q3 − Q1) der Abstände ohne Pausen (Pausen wie in Z1), auch relativ zum Median; konstanter ist nicht automatisch besser | Scheibe, Zeitraum | A | SP-1.10 |
 | Z3 | Dauer | erster bis letzter Schuss (`time.duration`); Netto-Zeit (Σ Abstände) und Schüsse je Stunde (3600 / Ø Abstand) führt Spiegel nicht | Scheibe, Zeitraum | A | SP-1.10 |
-| Z4 | Pausen und Wiedereinstieg | Pausen relativ zum Takt wie in Z1; Anzahl und Summe; Ø der bis zu drei Schüsse nach einer Pause gegen den Ø der übrigen, je Schuss (B10). Die Pausen kommen aus den Schüssen mit Zeit wie in Z5, die Schnitte nur aus Schüssen mit Wert (Prüfung, 9. Oktober 2026). Die längste Pause ist keine eigene Kennzahl | Scheibe, Zeitraum | A | SP-1.10 |
+| Z4 | Pausen und Wiedereinstieg | Pausen relativ zum Takt wie in Z1; Anzahl und Summe; Ø der bis zu drei Schüsse nach einer Pause gegen den Ø der übrigen, je Schuss (B10); „klar“ nach exaktem Permutationstest auf den Unterschied der Mittel (zweiseitig, 95 %, bei m Pausen 0,05/m je Pause), Richtung wie das Vorzeichen (B22). Die Pausen kommen aus den Schüssen mit Zeit wie in Z5, die Schnitte nur aus Schüssen mit Wert (Prüfung, 9. Oktober 2026). Die längste Pause ist keine eigene Kennzahl | Scheibe, Zeitraum | A | SP-1.10 |
 | Z5 | Rhythmus-Profil | Median der letzten fünf Abstände ohne Pausen (Pausen wie in Z1), über die Schussnummer | Scheibe | B | SP-1.10 |
 | Z6 | Tempo und Wert | Ø vᵢ je Klasse des Intervalls davor; einige hundert Schuss | Zeitraum | B | SP-2.7 |
 | Z7 | Tempo nach schwachem Schuss | Intervall nach schwachen gegen nach übrigen Schüssen | Zeitraum | C | SP-2.7 |
@@ -219,7 +219,7 @@ Nur endgültige, vollständige Scheiben, ohne einen verdächtigen Schuss unter d
 - **Gleiches n:** Streukreis, Extreme Spread und längste Folge wachsen mit n, der beste Teiler sinkt mit n (Streukreis über 40 gegen 10 Schuss +32 %, B3); R50 fällt bei kleinem n leicht zu klein aus (bei 10 Schuss −4 %, B4; der Faktor √((n − 1)/n) gilt genau nur für den mittleren Radius). σ̂ ist das stabilste Maß für Verläufe über unterschiedliche Schusszahlen.
 - **Robust als Standard in Verläufen:** Median, R50, MAD, Quantilbänder.
 - **Nur Gleiches vergleichen:** gleiche Familie, gleiche Wertung; mm-Werte von LG und LP nie.
-- **Viele Vergleiche erzeugen Zufallstreffer:** Mindest-n, Korrektur (Holm oder Benjamini-Hochberg) oder nur als Hinweis formulieren. Auf einer Scheibe laufen fünf Tests (Lage, Form, Ausreißer, Trend, Ermüdung): Etwa jede fünfte ganz normale Scheibe zeigt irgendwo einen Befund (B1).
+- **Viele Vergleiche erzeugen Zufallstreffer:** Mindest-n, Korrektur (Holm oder Benjamini-Hochberg) oder nur als Hinweis formulieren. Auf einer Scheibe laufen fünf Tests (Lage, Form, Ausreißer, Trend, Ermüdung), dazu einer je Pause: Etwa jede fünfte ganz normale Scheibe zeigt irgendwo einen Befund, mit einer Pause etwa jede vierte (B1).
 - **Regression zur Mitte und Auswahl:** Nach einem Rekord ist die nächste Scheibe meist schwächer; „beste Serie“ und korrigiertes Ergebnis sind aus denselben Daten gewählt und optimistisch.
 - **Bedeutsamkeit zusätzlich zur Signifikanz:** lohnend ab 0,3 × der Streuung der Scheiben (Hopkins), aber nur neben einem Urteil: Ohne Veränderung trifft es bei 5 gegen 5 Scheiben oft zu (T3, B19); „nicht nachweisbar“ ist ehrlich.
 - **Transparenz:** jede Zahl mit n, Zeitraum, Filter und Kennzahl-Version; Modellwerte als Modell gekennzeichnet.
@@ -236,13 +236,14 @@ Nur endgültige, vollständige Scheiben, ohne einen verdächtigen Schuss unter d
 
 ## Belege aus Simulationen
 
-Jede Zahl aus einer Simulation, die ein Hilfetext nennt ([[spiegel-statistics-help]]), steht hier und lässt sich nachrechnen: `pnpm --filter @vereinsheim/shot-help simulate` (`packages/shot-help/scripts/simulate.ts`). Methode: mulberry32 mit Box-Muller, fester Seed je Fall, Lagen auf ganze µm, Wertung über `scoreFromCoordinates`, nur die echten Funktionen aus `shot-core`; 5 000 Wiederholungen je Fall, beim Mehrfachtest (B1) 20 000. Normalgruppen: Luftgewehr σ 1,5 mm, Luftpistole σ 15 mm je Richtung. B19 und B20 mit 2 000 Wiederholungen je Fall, je Scheibe 40 Schuss Luftgewehr. Stand nach SP-1.12 (7. Oktober 2026), Ausreißer schrittweise, Form ohne Ausreißer, Zeiträume (8. Oktober 2026), B19 mit einer kleinen Veränderung und dem Unterschied je Schuss, B9 auch in ganzen Ringen, B21 neu (Prüfung, 9. Oktober 2026), Wertung mit Meytons Toleranz von 10 µm (SF-75, 9. Oktober 2026; dadurch neu B6, B10, B19, B20, alle übrigen Zeilen unverändert), B1 mit dem Urteil der Ermüdung und B21 neu (20. Oktober 2026):
+Jede Zahl aus einer Simulation, die ein Hilfetext nennt ([[spiegel-statistics-help]]), steht hier und lässt sich nachrechnen: `pnpm --filter @vereinsheim/shot-help simulate` (`packages/shot-help/scripts/simulate.ts`). Methode: mulberry32 mit Box-Muller, fester Seed je Fall, Lagen auf ganze µm, Wertung über `scoreFromCoordinates`, nur die echten Funktionen aus `shot-core`; 5 000 Wiederholungen je Fall, beim Mehrfachtest (B1) 20 000. Normalgruppen: Luftgewehr σ 1,5 mm, Luftpistole σ 15 mm je Richtung. B19 und B20 mit 2 000 Wiederholungen je Fall, je Scheibe 40 Schuss Luftgewehr. Stand nach SP-1.12 (7. Oktober 2026), Ausreißer schrittweise, Form ohne Ausreißer, Zeiträume (8. Oktober 2026), B19 mit einer kleinen Veränderung und dem Unterschied je Schuss, B9 auch in ganzen Ringen, B21 neu (Prüfung, 9. Oktober 2026), Wertung mit Meytons Toleranz von 10 µm (SF-75, 9. Oktober 2026; dadurch neu B6, B10, B19, B20, alle übrigen Zeilen unverändert), B1 mit dem Urteil der Ermüdung und B21 neu (20. Oktober 2026), B1 mit Pause und B22 neu (21. Oktober 2026):
 
 ```
 B0   innerhalb σ 39,3 %, innerhalb 2σ 86,5 %
 B1   20 Schuss: 19,4 % mit Befund, also etwa jede 5.
 B1   40 Schuss: 18,9 % mit Befund, also etwa jede 5.
 B1   60 Schuss: 20,0 % mit Befund, also etwa jede 5.
+B1   40 Schuss mit einer Pause: 22,3 % mit Befund, also etwa jede 4.
 B2   Ausreißer-Fehlalarm rund: 10: 4,7 %, 20: 4,1 %, 40: 4,2 %, 60: 4,1 %
 B2   Ausreißer-Fehlalarm a/b 2: 10: 10,9 %, 20: 14,1 %, 40: 15,5 %, 60: 17,5 %
 B3   Streukreis 40 gegen 10 Schuss: +32 %
@@ -286,6 +287,8 @@ B21  Ermüdung LG σ 1,5 mm, 20 Schuss: Fehlalarm Zehntel 4,5 %, ganze Ringe 0,9
 B21  Ermüdung LG σ 1,5 mm, 40 Schuss: Fehlalarm Zehntel 5,1 %, ganze Ringe 1,1 %; Nachlassen erkannt Zehntel 39,9 %, ganze Ringe 24,5 %
 B21  Ermüdung LP σ 15 mm, 20 Schuss: Fehlalarm Zehntel 4,9 %, ganze Ringe 4,4 %; Nachlassen erkannt Zehntel 40,2 %, ganze Ringe 39,1 %
 B21  Ermüdung LP σ 15 mm, 40 Schuss: Fehlalarm Zehntel 5,4 %, ganze Ringe 4,4 %; Nachlassen erkannt Zehntel 38,7 %, ganze Ringe 37,7 %
+B22  Pause LG σ 1,5 mm: Fehlalarm Zehntel 5,0 %, ganze Ringe 1,8 %; danach σ ×1,6 erkannt Zehntel 42,2 %, ganze Ringe 26,9 %; σ ×2 erkannt Zehntel 66,9 %, ganze Ringe 51,1 %
+B22  Pause LP σ 15 mm: Fehlalarm Zehntel 4,6 %, ganze Ringe 3,4 %; danach σ ×1,6 erkannt Zehntel 44,0 %, ganze Ringe 38,8 %; σ ×2 erkannt Zehntel 68,1 %, ganze Ringe 63,8 %
 ```
 
 Zusätzlich aus den drei Prüfungen vom 6./7. Oktober (nur lesend, eigene Skripte): Ausreißer-Fehlalarm bei a/b 1,5 und 3 (Einzeltest mit α 0,05), Trennschärfe der Form (a/b 1,3: 28 % bei 40 Schuss), Effizienz der Streumaße gegenüber σ̂ (Streukreis 0,77 bei 10 und 0,39 bei 60 Schuss, mittlerer Radius 0,92, Höhe/Breite 0,23–0,43), Teiler-Ø gegen Ø je Schuss r = −0,998.
