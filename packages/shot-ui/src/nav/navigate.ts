@@ -155,7 +155,7 @@ export function periodStateFromRoute(route: ProgressRoute, fallbackFamily: strin
 
 /** Seite Vergleichen mit zwei Scheiben: A und B, etwa diese Scheibe und die davor */
 export function compareCards(a: string, b: string): Route {
-  return { page: "compare", query: { type: "cards", a, b } }
+  return { page: "compare", query: { type: "cards", family: null, a, b } }
 }
 
 /** wie der Satz „Werde ich besser?“ bei „Alles“ rechnet: die letzten 90 Tage gegen die 90 davor */

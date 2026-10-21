@@ -64,6 +64,8 @@ export interface ComparePageData {
   /** die Zeiträume der Seiten, für „Frei“ in den Blättern; bei zwei Scheiben null */
   ranges: { a: DateRange; b: DateRange } | null
   targetId: TargetId
+  /** die Wertung der Familie, in der die Seite rechnet (Chip „In Zehnteln“ / „In ganzen Ringen“) */
+  scoring: Scoring
 }
 
 const metric = (key: string) => metricByKey(key) as Readonly<MetricDefinition>
@@ -119,7 +121,9 @@ export async function comparePageData(
   const ofFamily = (family: string) => familyCards.filter((card) => card.family?.slug === family)
 
   if (query.type === "cards") {
-    const newest = [...familyCards].sort((a, b) => byStart(b, a))
+    // ohne Ids die beiden neuesten der gewählten Familie, ohne Wahl der Familie der neuesten Scheibe
+    const wanted = (families.find((f) => f.value === query.family) ?? families[0]).value
+    const newest = ofFamily(wanted).sort((a, b) => byStart(b, a))
     const aId = query.a ?? newest[0]?.id ?? null
     const first = shown.find((card) => card.id === aId)
     const before = first
@@ -132,7 +136,7 @@ export async function comparePageData(
       aId ? cardWithShots(db, { cardId: aId, ownerId }) : null,
       bId ? cardWithShots(db, { cardId: bId, ownerId }) : null,
     ])
-    const family = a?.family?.slug ?? b?.family?.slug ?? families[0].value
+    const family = a?.family?.slug ?? b?.family?.slug ?? wanted
     const scoring = scoringOf(family)
     const option = families.find((f) => f.value === family) ?? families[0]
     const problem: CardProblem | null =
@@ -152,13 +156,14 @@ export async function comparePageData(
     return {
       model: problem || !a || !b ? null : cardCompareModel({ a, b, scoring, names }),
       problem: problem && problemText(problem),
-      query: { type: "cards", a: aId, b: bId },
+      query: { type: "cards", family, a: aId, b: bId },
       family,
       families,
       choices: choicesOf(ofFamily(family), scoring),
       names: { a: a ? names.a.name : "Scheibe wählen", b: b ? names.b.name : "Scheibe wählen" },
       ranges: null,
       targetId: a?.targetId ?? option.targetId,
+      scoring,
     }
   }
 
@@ -195,6 +200,7 @@ export async function comparePageData(
       names: { a: range.label, b: "" },
       ranges: { a: range, b: range },
       targetId: option.targetId,
+      scoring,
     }
   }
 
@@ -228,5 +234,6 @@ export async function comparePageData(
     names: { a: names.a.name, b: names.b.name },
     ranges: { a: rangeA, b: rangeB },
     targetId: option.targetId,
+    scoring,
   }
 }

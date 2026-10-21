@@ -97,11 +97,28 @@ describe("CompareControls", () => {
     expect(html).toContain("var(--compare-a)")
   })
 
-  it("zwei Scheiben: ohne Familie und ohne Art", () => {
-    const html = render({ type: "cards", a: "c2", b: "c1" })
-    expect(html).not.toContain("LP Freihand")
+  it("zwei Scheiben: mit Familie, ohne Art", () => {
+    const html = render({ type: "cards", family: null, a: "c2", b: "c1" })
+    expect(html).toContain("LP Freihand")
+    expect(html).toContain("LG Freihand")
     expect(html).not.toContain("Alle Arten")
     expect(html).toContain('data-compare-chip="b"')
+  })
+
+  it("am Ende der Zeile die Aktionen, in der App die Wertung", () => {
+    const html = renderToStaticMarkup(
+      h(CompareControls, {
+        query: DEFAULT_COMPARE,
+        family: "lp-freihand",
+        families: FAMILIES,
+        names: { a: "Letzte 90 Tage", b: "Zeitraum davor" },
+        newest: [],
+        onQuery: noop,
+        onPick: noop,
+        actions: h("span", null, "In Zehnteln"),
+      })
+    )
+    expect(html).toMatch(/data-compare-actions[^>]*><span>In Zehnteln/)
   })
 
   it("Wettkampf und Training: ein Chip für den Zeitraum", () => {

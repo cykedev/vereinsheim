@@ -9,6 +9,7 @@ import { CompareControls, type CompareSideKey } from "@vereinsheim/shot-ui/compa
 import { ComparePicture, SideLegend } from "@vereinsheim/shot-ui/compare/ComparePicture"
 import { CompareTable } from "@vereinsheim/shot-ui/compare/CompareTable"
 import { basisText, compareSentence, pictureLegend } from "@vereinsheim/shot-ui/compare/words"
+import { ScoringChip } from "@vereinsheim/shot-ui/controls/ScoringChip"
 import { HelpButton } from "@vereinsheim/shot-ui/help/HelpButton"
 import { CardContextBar } from "@vereinsheim/shot-ui/nav/CardContextBar"
 import { PAGE_COLUMNS } from "@vereinsheim/shot-ui/layout/columns"
@@ -23,8 +24,10 @@ import { useHelp } from "@vereinsheim/ui/design2/help-sheet"
 import { Page } from "@vereinsheim/ui/design2/page"
 import { cn } from "@vereinsheim/lib/utils"
 
+import { useSavedChoice } from "@/components/shell/useSavedChoice"
 import type { ComparePageData } from "@/lib/compare"
 import type { PageContext } from "@/lib/page-context"
+import { setFamilyScoring } from "@/lib/scoring-actions"
 
 /** der Rückweg zur Scheibe A, wenn zwei Scheiben verglichen werden; sonst führt der Umschalter oben zurück */
 function backToCard(data: ComparePageData): Route | null {
@@ -59,6 +62,13 @@ export function CompareScreen({
   const onHelp = useCallback((id: string) => help(id), [help])
   const [pending, startTransition] = useTransition()
   const [picking, setPicking] = useState<CompareSideKey | null>(null)
+  // die Wertung der Familie wie im Fortschritt: sichtbar und umschaltbar, gespeichert für alle Übersichten
+  const familyScoring = useSavedChoice({
+    value: data.scoring,
+    scope: data.family,
+    save: (scoring) => setFamilyScoring(data.family, scoring),
+    notSaved: "Die Wertung ließ sich nicht speichern.",
+  })
   const { query, model } = data
   const go = (next: CompareQuery) =>
     startTransition(() =>
@@ -102,7 +112,20 @@ export function CompareScreen({
           newest={data.choices.slice(0, 2).map((choice) => choice.id)}
           onQuery={go}
           onPick={setPicking}
+          actions={
+            <ScoringChip
+              scoring={familyScoring.shown}
+              texts={{ rings: "In ganzen Ringen", decimal: "In Zehnteln" }}
+              label="Wertung"
+              onChange={familyScoring.change}
+            />
+          }
         />
+        {familyScoring.error && (
+          <p role="alert" className="text-sm text-destructive">
+            {familyScoring.error}
+          </p>
+        )}
         <div
           data-compare-body
           aria-busy={pending || undefined}

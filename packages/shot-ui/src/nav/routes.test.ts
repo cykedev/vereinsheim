@@ -354,7 +354,7 @@ describe("die ganze Adresse", () => {
       ["/compare", { page: "compare", query: DEFAULT_COMPARE }],
       [
         "/compare?type=cards&a=c1&b=c2",
-        { page: "compare", query: { type: "cards", a: "c1", b: "c2" } },
+        { page: "compare", query: { type: "cards", family: null, a: "c1", b: "c2" } },
       ],
       ["/scan", { page: "scan" }],
       ["/open", { page: "open" }],
@@ -547,9 +547,9 @@ describe("Seite Vergleichen", () => {
 
   it("Rundreise: jede Art übersteht Schreiben und Lesen, Vorgaben fallen weg", () => {
     const queries: CompareQuery[] = [
-      { type: "cards", a: "c1", b: "c2" },
-      { type: "cards", a: "c1", b: null },
-      { type: "cards", a: null, b: null },
+      { type: "cards", family: null, a: "c1", b: "c2" },
+      { type: "cards", family: null, a: "c1", b: null },
+      { type: "cards", family: "lg-freihand", a: null, b: null },
       { ...DEFAULT_COMPARE, family: "lp-freihand" } as CompareQuery,
       {
         type: "periods",
@@ -605,6 +605,7 @@ describe("Seite Vergleichen", () => {
   it("eine alte Adresse mit a und b ohne Art: zwei Scheiben", () => {
     expect(compare("?from=list&family=lg-10m&a=c1&b=c2")).toEqual({
       type: "cards",
+      family: "lg-10m",
       a: "c1",
       b: "c2",
     })
@@ -612,7 +613,12 @@ describe("Seite Vergleichen", () => {
 
   it("Ungültiges gilt als Vorgabe", () => {
     expect(compare("?type=kaputt")).toEqual(DEFAULT_COMPARE)
-    expect(compare("?type=cards&a=a%20b")).toEqual({ type: "cards", a: null, b: null })
+    expect(compare("?type=cards&a=a%20b")).toEqual({
+      type: "cards",
+      family: null,
+      a: null,
+      b: null,
+    })
     expect(compare("?type=periods&a=2026-02-30..2026-03-01&b=Neu%20Mun")).toEqual(DEFAULT_COMPARE)
     expect(compare("?type=kind&range=kaputt%21")).toMatchObject({
       type: "kind",

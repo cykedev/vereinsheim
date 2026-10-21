@@ -120,7 +120,7 @@ describe("comparePageData: Gruppen", () => {
   })
 
   it("gelöschte und fremde Scheiben nie, auch nicht im Blatt", async () => {
-    const page = await data({ type: "cards", a: ids.lp[0], b: ids.lp[1] })
+    const page = await data({ type: "cards", family: null, a: ids.lp[0], b: ids.lp[1] })
     const choices = page!.choices.map((c) => c.id)
     expect(choices).not.toContain(ids.trash)
     expect(choices).not.toContain(ids.foreign)
@@ -134,10 +134,21 @@ describe("comparePageData: Gruppen", () => {
 
 describe("comparePageData: zwei Scheiben", () => {
   it("ohne Ids die neueste Scheibe und die davor in ihrer Familie", async () => {
-    const page = await data({ type: "cards", a: null, b: null })
-    expect(page?.query).toEqual({ type: "cards", a: ids.lp[11], b: ids.lp[10] })
+    const page = await data({ type: "cards", family: null, a: null, b: null })
+    expect(page?.query).toEqual({ type: "cards", family: lpFamily, a: ids.lp[11], b: ids.lp[10] })
+    // die Wertung der Familie: Luftpistole zählt amtlich ganze Ringe
+    expect(page?.scoring).toBe("rings")
     expect(page?.model?.unit).toBe("shot")
     expect(page?.problem).toBeNull()
+  })
+
+  it("eine andere Familie ohne Ids: deren neueste Scheibe, ihr Blatt", async () => {
+    const page = await data({ type: "cards", family: lgFamily.slug, a: null, b: null })
+    expect(page?.query).toMatchObject({ family: lgFamily.slug, a: ids.lg })
+    expect(page?.family).toBe(lgFamily.slug)
+    expect(page?.choices.map((c) => c.id)).toEqual([ids.lg])
+    // Luftgewehr hat nur eine Scheibe: B fehlt
+    expect(page?.problem).toBe("Wähle zwei Scheiben.")
   })
 
   it("dieselbe Scheibe, verschiedene Familien, fremde und gelöschte: ein Hinweis, kein Modell", async () => {
@@ -152,7 +163,7 @@ describe("comparePageData: zwei Scheiben", () => {
       [ids.trash, ids.lp[0], "Wähle zwei Scheiben."],
     ]
     for (const [a, b, problem] of cases) {
-      const page = await data({ type: "cards", a, b })
+      const page = await data({ type: "cards", family: null, a, b })
       expect(page?.model, `${a} ${b}`).toBeNull()
       expect(page?.problem).toBe(problem)
     }

@@ -2,6 +2,7 @@
 
 import { Segmented } from "@vereinsheim/ui/design2/segmented"
 import { cn } from "@vereinsheim/lib/utils"
+import type { ReactNode } from "react"
 
 import { CardFilters } from "../controls/CardFilters"
 import {
@@ -59,10 +60,10 @@ function SideChip({
 }
 
 /**
- * Kopf der Seite Vergleichen: oben die Art des Vergleichs, darunter in einer Zeile die Familie (nicht bei zwei
- * Scheiben, die Scheibe A bestimmt sie), die Chips der Seiten A und B, bei Wettkampf und Training ein Chip für den
- * Zeitraum, und bei zwei Zeiträumen die Art für beide Seiten. Ein Wechsel der Art beginnt mit ihren Vorgaben, bei zwei
- * Scheiben mit den beiden neuesten der Familie (`newest`).
+ * Kopf der Seite Vergleichen: oben die Art des Vergleichs, darunter in einer Zeile die Familie, die Chips der Seiten A
+ * und B, bei Wettkampf und Training ein Chip für den Zeitraum, bei zwei Zeiträumen die Art für beide Seiten und am Ende
+ * `actions` (in der App die Wertung der Familie, wie im Fortschritt). Ein Wechsel der Art beginnt mit ihren Vorgaben,
+ * bei zwei Scheiben mit den beiden neuesten der Familie (`newest`); ein Wechsel der Familie bei zwei Scheiben ebenso.
  */
 export function CompareControls({
   query,
@@ -72,6 +73,7 @@ export function CompareControls({
   newest,
   onQuery,
   onPick,
+  actions,
   className,
 }: {
   query: CompareQuery
@@ -84,11 +86,13 @@ export function CompareControls({
   newest: readonly string[]
   onQuery: (query: CompareQuery) => void
   onPick: (side: CompareSideKey) => void
+  /** weitere Chips am Ende der Zeile, wie `PeriodControls` (die Wertung der Familie) */
+  actions?: ReactNode
   className?: string
 }) {
   const changeType = (type: CompareType) => {
     if (type === query.type) return
-    if (type === "cards") onQuery({ type, a: newest[0] ?? null, b: newest[1] ?? null })
+    if (type === "cards") onQuery({ type, family, a: newest[0] ?? null, b: newest[1] ?? null })
     else if (type === "kind")
       onQuery({ type, family, range: DEFAULT_KIND_RANGE, includeProbeOnly: true })
     else onQuery({ ...DEFAULT_COMPARE, family } as CompareQuery)
@@ -103,13 +107,18 @@ export function CompareControls({
         wrap
       />
       <div className="flex flex-wrap items-center gap-2">
-        {query.type !== "cards" && (
-          <CardFilters
-            family={family}
-            families={families}
-            onFamily={(next) => onQuery({ ...query, family: next })}
-          />
-        )}
+        <CardFilters
+          family={family}
+          families={families}
+          // zwei Scheiben einer anderen Familie: die Seite nimmt deren neueste zwei
+          onFamily={(next) =>
+            onQuery(
+              query.type === "cards"
+                ? { type: "cards", family: next, a: null, b: null }
+                : { ...query, family: next }
+            )
+          }
+        />
         {query.type === "kind" ? (
           <SideChip side={null} name={names.a} onClick={() => onPick("a")} />
         ) : (
@@ -125,6 +134,11 @@ export function CompareControls({
             value={query.kind}
             onChange={(kind) => onQuery({ ...query, kind })}
           />
+        )}
+        {actions && (
+          <div data-compare-actions className="flex items-center gap-1.5">
+            {actions}
+          </div>
         )}
       </div>
     </div>

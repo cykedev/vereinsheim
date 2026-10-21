@@ -198,7 +198,12 @@ async function main() {
         pageContext
       )
     const compareCards = () =>
-      comparePageData(db, site.ownerId, { type: "cards", a: null, b: null }, pageContext)
+      comparePageData(
+        db,
+        site.ownerId,
+        { type: "cards", family: null, a: null, b: null },
+        pageContext
+      )
 
     // offener Durchgang: die Brücke schickt nach jedem Schuss den ganzen Stand (SF-03)
     const live = generateSeason({

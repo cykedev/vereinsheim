@@ -34,8 +34,10 @@ Fortschritt und am Desktop über einen Untereintrag. Der Vergleich aus dem Forts
 
 - **Oben die Art** als Segment: „Zwei Scheiben · Zwei Zeiträume · Wettkampf und Training“. Beide Seiten sind immer von
   derselben Art. Ein Wechsel beginnt mit den Vorgaben der Art, bei zwei Scheiben mit den beiden neuesten der Familie.
-- **Darunter eine Zeile:** die Familie (nicht bei zwei Scheiben, Scheibe A bestimmt sie), die Chips A (blau) und B
-  (orange), bei Wettkampf und Training ein Chip für den Zeitraum, bei zwei Zeiträumen die Art für beide Seiten.
+- **Darunter eine Zeile:** die Familie (auch bei zwei Scheiben: ein Wechsel nimmt die beiden neuesten der anderen
+  Familie), die Chips A (blau) und B (orange), bei Wettkampf und Training ein Chip für den Zeitraum, bei zwei Zeiträumen
+  die Art für beide Seiten, am Ende die Wertung der Familie („In Zehnteln“ / „In ganzen Ringen“) wie im Fortschritt;
+  umschalten speichert sie für alle Übersichten.
 - **Ein Tippen auf einen Chip** öffnet ein Blatt: bei Scheiben die Scheiben der Familie (die neueste zuerst, 30 auf einmal,
   „Mehr zeigen“, die Scheibe der anderen Seite geht nicht), bei Zeiträumen dieselben Felder wie im Blatt „Filter“
   (`PeriodChoiceFields`), bei B dazu „Zeitraum davor“.

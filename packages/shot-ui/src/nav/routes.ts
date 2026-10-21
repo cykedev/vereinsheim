@@ -254,7 +254,8 @@ export function progressQueryFromParams(
  * (B auch „Zeitraum davor“, die Art gilt für beide Seiten) oder Wettkampf (A) gegen Training (B) in einem Zeitraum
  */
 export type CompareQuery =
-  | { type: "cards"; a: string | null; b: string | null }
+  /** `family`: aus welcher Familie die Seite ohne Ids die beiden neuesten nimmt; mit Scheibe A gilt deren Familie */
+  | { type: "cards"; family: string | null; a: string | null; b: string | null }
   | {
       type: "periods"
       family: string | null
@@ -288,6 +289,7 @@ export function compareQueryToParams(query: CompareQuery): Param[] {
   if (query.type === "cards")
     return present([
       ["type", "cards"],
+      ["family", query.family],
       ["a", query.a],
       ["b", query.b],
     ])
@@ -318,7 +320,12 @@ export function compareQueryFromParams(params: URLSearchParams): CompareQuery {
   const family = slugOrNull(params.get("family"))
   const includeProbeOnly = params.get("sighters") !== "0"
   if (type === "cards" || (type === null && params.has("a") && params.has("b")))
-    return { type: "cards", a: idOrNull(params.get("a")), b: idOrNull(params.get("b")) }
+    return {
+      type: "cards",
+      family,
+      a: idOrNull(params.get("a")),
+      b: idOrNull(params.get("b")),
+    }
   if (type === "kind")
     return {
       type: "kind",

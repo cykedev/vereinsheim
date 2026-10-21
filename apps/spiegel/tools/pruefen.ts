@@ -1730,6 +1730,16 @@ async function compare(page: Page, href: string) {
       cards
     )
     await collect()
+    const head = await page.ev<{ scoring: string; family: boolean; families: number }>(`({
+      scoring: txt($("[data-compare-actions]")),
+      family: !!$('[data-compare-controls] [role="radiogroup"][aria-label="Familie"]'),
+      families: $$('[data-compare-controls] [role="radiogroup"][aria-label="Familie"] [role="radio"]').length,
+    })`)
+    check(
+      "Zwei Scheiben: die Wertung steht da, die Familie ist wählbar (bei mehr als einer)",
+      /In (Zehnteln|ganzen Ringen)/.test(head.scoring) && (head.family || head.families === 0),
+      head
+    )
     await page.click(`$('[data-compare-chip="a"]')`, { settle: 300 })
     const first = await page.ev<{ radios: number; more: boolean }>(`({
       radios: $$("dialog[open] input[type=radio]").length,

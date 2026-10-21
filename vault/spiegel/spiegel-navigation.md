@@ -80,7 +80,8 @@ und über `nav/navigate`.
     festen Werte gehen vor. In der Liste heißen `all` und ohne Angabe dasselbe: alle Abende.
   - `compare`: `previous` oder eine Id. Spiegel leitet eine solche Adresse auf die Seite Vergleichen um
     (`compareFromProgress`); Treffsicher nutzt den Vergleich im Blatt „Filter“ weiter.
-  - Vergleichen: `type` (`cards`, `kind`; ohne: zwei Zeiträume, mit B immer `type=periods`), `a` und `b` (Ids zweier
+  - Vergleichen: `type` (`cards`, `kind`; ohne: zwei Zeiträume, mit B immer `type=periods`), bei zwei Scheiben `family` (ohne Ids die
+    beiden neuesten dieser Familie; mit Scheibe A gilt deren Familie), `a` und `b` (Ids zweier
     Scheiben oder Zeiträume wie `range`, B auch `previous` als Vorgabe), `range` bei Wettkampf und Training (Vorgabe
     `12m`), dazu `family`, `kind`, `sighters=0`. Eine alte Adresse mit `a` und `b` ohne `type` sind zwei Scheiben.
   - Filter: `family`, `kind` (`training`, `competition`), `flag`; in der Liste dazu `list` (Kennung der Liste aus
