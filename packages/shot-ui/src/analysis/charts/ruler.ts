@@ -7,7 +7,7 @@ export const SAME_X_PX = 4
 /**
  * Index des nächsten Werts zu einer x-Position (Pixel im SVG); bei Gleichstand der frühere; leer: null. Mit Höhen
  * (`ys`, `y`): Unter dem nach x nächsten und allen, die höchstens `SAME_X_PX` weiter weg stehen, gewinnt der nach y
- * nächste. So wählt ein Tipp in einem Stapel (Scheiben eines Abends) den getroffenen Punkt, und waagrecht bleibt das
+ * nächste, bei gleicher Höhe wieder der nach x nächste. So wählt ein Tipp in einem Stapel (Scheiben eines Abends) den getroffenen Punkt, und waagrecht bleibt das
  * Lineal ein senkrechter Strich.
  */
 export function nearestIndex(
@@ -26,7 +26,10 @@ export function nearestIndex(
     if (Math.abs(xs[i] - x) > reach) continue
     const d = Math.abs(ys[i] - y)
     const dPick = Math.abs(ys[pick] - y)
-    if (d < dPick || (d === dPick && i < pick)) pick = i
+    // gleiche Höhe (gleicher Wert): der nach x nächste, sonst der frühere
+    const dx = Math.abs(xs[i] - x)
+    const dxPick = Math.abs(xs[pick] - x)
+    if (d < dPick || (d === dPick && (dx < dxPick || (dx === dxPick && i < pick)))) pick = i
   }
   return pick
 }

@@ -21,7 +21,11 @@ describe("Lineal: reine Funktionen", () => {
     expect(SAME_X_PX).toBe(4)
     expect(nearestIndex([100, 110], 101, [80, 20], 20)).toBe(0)
     expect(nearestIndex([100, 104], 101, [80, 20], 20)).toBe(1)
-    // Gleichstand in y: der frühere
+    // die Reichweite zählt ab dem nach x nächsten: der zweite liegt 5 px weg, aber innerhalb von 3 + 4 px
+    expect(nearestIndex([100, 108], 103, [80, 20], 20)).toBe(1)
+    // gleiche Höhe (gleicher Wert): der nach x nächste, also der Punkt, auf den der Finger zeigt
+    expect(nearestIndex([100, 100.3], 100.3, [50, 50], 50)).toBe(1)
+    // Gleichstand in y und x: der frühere
     expect(nearestIndex([100, 101], 100.5, [40, 60], 50)).toBe(0)
     // ohne y wie ohne Höhen
     expect(nearestIndex([100, 100.3, 100.6], 100.5, [20, 50, 80])).toBe(2)
