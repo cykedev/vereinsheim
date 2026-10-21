@@ -35,6 +35,7 @@ describe("ohne Scannen", () => {
       "start",
       "cards",
       "progress",
+      "compare",
       "profile",
       "admin",
     ])
@@ -52,11 +53,12 @@ describe("ohne Scannen", () => {
 describe("Rahmen der App", () => {
   const html = render()
 
-  it("Seitenleiste ab 1024 px: Start, Scheiben, Fortschritt, QR scannen, Profil, Admin zuletzt", () => {
+  it("Seitenleiste ab 1024 px: Start, Scheiben, Fortschritt mit Vergleichen, QR scannen, Profil, Admin zuletzt", () => {
     expect(areasIn(html, "data-app-sidebar")).toEqual([
       "start",
       "cards",
       "progress",
+      "compare",
       "scan",
       "profile",
       "admin",
@@ -100,6 +102,20 @@ describe("Rahmen der App", () => {
 
   it("keine Schrift unter text-xs (conventions §3)", () => {
     expect(html).not.toMatch(/text-\[(?:[0-9]|1[01])px\]/)
+  })
+
+  it("Vergleichen aktiv: in der Seitenleiste der Untereintrag, auf dem Telefon Fortschritt", () => {
+    const page = render({ current: "compare" })
+    const marked = (marker: string) => {
+      const start = page.indexOf(marker)
+      const part = page.slice(start, page.indexOf("</nav>", start))
+      return [...part.matchAll(/<a [^>]*>/g)]
+        .filter((m) => m[0].includes('aria-current="page"'))
+        .map((m) => /data-area="([a-z]+)"/.exec(m[0])?.[1])
+    }
+    expect(marked("data-app-sidebar")).toEqual(["compare"])
+    expect(marked("data-app-bar")).toEqual(["progress"])
+    expect(marked("data-app-rail")).toEqual(["progress"])
   })
 
   it("Admin aktiv: in der Seitenleiste Admin, auf dem Telefon Profil", () => {

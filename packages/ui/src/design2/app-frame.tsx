@@ -16,6 +16,11 @@ export interface FrameItem {
   badge?: number
   /** Name des Eintrags, solange ein Zeichen steht (etwa „Start, 2 offen“) */
   badgeLabel?: string
+  /**
+   * Unterseiten des Bereichs, nur in der Seitenleiste eingerückt unter ihm (Spiegel: Vergleichen unter Fortschritt); in
+   * den Leisten des Telefons führt der Bereich selbst dorthin
+   */
+  sub?: readonly FrameItem[]
 }
 
 /** was ein Link der Navigation bekommt; die App rendert damit ihren Link (`next/link`, eigener Router) */
@@ -113,14 +118,25 @@ export function AppFrame({
   )
   const sideEntry = (item: FrameItem) => {
     const { label, Icon } = item
-    return link(
-      item,
-      "flex items-center gap-3 rounded-lg px-3 py-2 text-[14px] font-semibold text-foreground-2 hover:bg-surface-2 aria-[current=page]:bg-accent-wash aria-[current=page]:text-foreground",
-      <>
-        <Icon aria-hidden="true" className="size-[18px] shrink-0" />
-        <span className="flex-1">{label}</span>
-        {badge(item, "")}
-      </>
+    return (
+      <Fragment key={item.key}>
+        {link(
+          item,
+          "flex items-center gap-3 rounded-lg px-3 py-2 text-[14px] font-semibold text-foreground-2 hover:bg-surface-2 aria-[current=page]:bg-accent-wash aria-[current=page]:text-foreground",
+          <>
+            <Icon aria-hidden="true" className="size-[18px] shrink-0" />
+            <span className="flex-1">{label}</span>
+            {badge(item, "")}
+          </>
+        )}
+        {item.sub?.map((sub) =>
+          link(
+            sub,
+            "ml-[2.375rem] flex items-center rounded-lg px-3 py-1.5 text-[13px] font-semibold text-muted-foreground hover:bg-surface-2 aria-[current=page]:bg-accent-wash aria-[current=page]:text-foreground",
+            <span data-sub-entry>{sub.label}</span>
+          )
+        )}
+      </Fragment>
     )
   }
 

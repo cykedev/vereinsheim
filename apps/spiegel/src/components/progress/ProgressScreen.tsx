@@ -35,6 +35,7 @@ import {
   openCard,
   progressRoute,
 } from "@vereinsheim/shot-ui/nav/navigate"
+import { ProgressSwitch } from "@vereinsheim/shot-ui/nav/ProgressSwitch"
 import { RouteLink } from "@vereinsheim/shot-ui/nav/RouteLink"
 import { isCardId, urlFromRoute } from "@vereinsheim/shot-ui/nav/routes"
 import { rangeDays } from "@vereinsheim/shot-ui/period/calendar"
@@ -267,6 +268,11 @@ export function ProgressScreen({
 
   return (
     <Page>
+      <ProgressSwitch
+        current="progress"
+        progress={progressRoute({ ...state, scoring: "decimal" }, null)}
+        compare={compareFromProgress(state, state.family)}
+      />
       <PeriodPage
         header={
           <PeriodHeader

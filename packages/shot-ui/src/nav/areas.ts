@@ -2,8 +2,10 @@
 // Bereich eine Seite gehört und wohin die Einträge der Navigation führen. Reine Funktionen.
 
 import {
+  DEFAULT_COMPARE,
   DEFAULT_LIST,
   DEFAULT_PROGRESS,
+  type CompareQuery,
   type CardOrigin,
   type ListRoute,
   type ProgressRoute,
@@ -11,13 +13,13 @@ import {
 } from "./routes"
 
 /** die Bereiche der Navigation; Admin sieht nur ein Admin */
-export type Area = "start" | "cards" | "scan" | "progress" | "profile" | "admin"
+export type Area = "start" | "cards" | "scan" | "progress" | "compare" | "profile" | "admin"
 
 /** der Bereich einer Herkunft: die Liste und ein direkter Link gehören zu Scheiben */
 const originArea = (origin: CardOrigin): Area =>
   origin?.from === "start" ? "start" : origin?.from === "progress" ? "progress" : "cards"
 
-/** der Bereich einer Seite; eine Scheibe gehört zu dem, aus dem sie kam, der Vergleich zum Fortschritt */
+/** der Bereich einer Seite; eine Scheibe gehört zu dem, aus dem sie kam; Vergleichen ist eine Unterseite von Fortschritt */
 export function areaOf(route: Route): Area | null {
   switch (route.page) {
     case "start":
@@ -37,7 +39,7 @@ export function areaOf(route: Route): Area | null {
     case "card":
       return originArea(route.origin)
     case "compare":
-      return "progress"
+      return "compare"
     case "unknown":
       return null
   }
@@ -78,6 +80,11 @@ export function areaLinks(memory: AreaMemory, family: string | null): Record<Are
           progress.family === null || progressFamily === progress.family ? progress.chosen : null,
       },
       section: null,
+    },
+    // Vergleichen beginnt mit seinen Vorgaben in der Familie des Fortschritts
+    compare: {
+      page: "compare",
+      query: { ...DEFAULT_COMPARE, family: progressFamily } as CompareQuery,
     },
     profile: { page: "profile" },
     admin: { page: "admin", section: null },

@@ -2,6 +2,7 @@
 
 import { AppFrame as Frame, type FrameItem } from "@vereinsheim/ui/design2/app-frame"
 import {
+  ArrowLeftRight,
   ChartLine,
   CircleUser,
   House,
@@ -21,6 +22,7 @@ const ITEMS: Readonly<Record<Area, { label: string; short: string; Icon: LucideI
   cards: { label: "Scheiben", short: "Scheiben", Icon: List },
   scan: { label: "QR scannen", short: "Scannen", Icon: ScanQrCode },
   progress: { label: "Fortschritt", short: "Fortschritt", Icon: ChartLine },
+  compare: { label: "Vergleichen", short: "Vergleichen", Icon: ArrowLeftRight },
   profile: { label: "Profil", short: "Profil", Icon: CircleUser },
   admin: { label: "Admin", short: "Admin", Icon: Shield },
 }
@@ -61,6 +63,9 @@ export function AppFrame({
     key: area,
     ...ITEMS[area],
     ...(area === "start" && { badge: openCount, badgeLabel: `Start, ${openCount} offen` }),
+    // Vergleichen steht in der Seitenleiste unter Fortschritt; in den Leisten des Telefons führt der Umschalter oben
+    // im Fortschritt dorthin
+    ...(area === "progress" && { sub: [item("compare")] }),
   })
   return (
     <Frame
@@ -70,8 +75,9 @@ export function AppFrame({
       action={scan ? item("scan") : undefined}
       bar={scan ? [...BAR] : BAR.filter((area) => area !== "scan")}
       current={current}
-      // auf dem Telefon steckt Admin in Profil: ist Admin offen, ist dort Profil der Bereich
-      barCurrent={current === "admin" ? "profile" : current}
+      // auf dem Telefon steckt Admin in Profil: ist Admin offen, ist dort Profil der Bereich.
+      // Vergleichen gehört zum Fortschritt
+      barCurrent={current === "admin" ? "profile" : current === "compare" ? "progress" : current}
       renderLink={({ key }, props) => <RouteLink route={links[key as Area]} {...props} />}
       sidebarFooter={sidebarFooter}
     >

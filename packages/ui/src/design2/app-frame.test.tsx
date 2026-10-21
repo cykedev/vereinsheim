@@ -93,6 +93,36 @@ describe("AppFrame", () => {
     expect(bar).not.toContain('data-area="admin"')
   })
 
+  it("Unterseiten nur in der Seitenleiste, eingerückt unter ihrem Bereich, mit eigenem aria-current", () => {
+    const compare: FrameItem = {
+      key: "compare",
+      label: "Vergleichen",
+      short: "Vergleichen",
+      Icon: ChartLine,
+    }
+    const nested = render({
+      primary: [start, diary, { ...stats, sub: [compare] }, goals],
+      current: "compare",
+      barCurrent: "stats",
+    })
+    expect(keysIn(nested, "data-app-sidebar")).toEqual([
+      "start",
+      "diary",
+      "stats",
+      "compare",
+      "goals",
+      "new",
+      "profile",
+      "admin",
+    ])
+    expect(nested).toMatch(
+      /data-area="compare" aria-current="page"[^>]*><span data-sub-entry="true">Vergleichen/
+    )
+    const bar = nested.slice(nested.indexOf("data-app-bar"))
+    expect(bar).not.toContain('data-area="compare"')
+    expect(bar).toMatch(/data-area="stats" aria-current="page"/)
+  })
+
   it("ein Zeichen mit Zahl trägt den Namen mit Zahl; ohne Zahl kein Zeichen", () => {
     expect(html).toMatch(/data-area="start" aria-label="Start, 3 offen"/)
     expect(html.match(/data-badge/g)).toHaveLength(3)
