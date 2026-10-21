@@ -3,17 +3,19 @@ id: spiegel-langzeit
 type: concept
 title: "Spiegel über viele Scheiben — Langzeit-Konzept"
 aliases: [spiegel-zeitraum, langzeit-konzept, fortschritt-konzept]
-keywords: [langzeit, zeitraum, saison, fortschritt, verlauf, formband, gleitender schnitt, rekorde, kalender, vergleich, zeitraum gegen zeitraum, besser werden, form, langzeit-trefferbild, dichte, filter, disziplin-familie, training, wettkampf, benannter zeitraum, auswahl, navigation, drill-down, ablesung, scheiben-liste, erkenntnisse, mindestzahl, nicht nachweisbar]
+keywords: [analyse über den zeitraum, erkenntnisse, trefferbild als hauptbild, langzeit, zeitraum, saison, fortschritt, verlauf, formband, gleitender schnitt, rekorde, kalender, vergleich, zeitraum gegen zeitraum, besser werden, form, langzeit-trefferbild, dichte, filter, disziplin-familie, training, wettkampf, benannter zeitraum, auswahl, navigation, drill-down, ablesung, scheiben-liste, erkenntnisse, mindestzahl, nicht nachweisbar]
 part_of: ["[[spiegel]]"]
 governed_by: ["[[adr-030]]"]
-relates_to: ["[[spiegel-ui-design]]", "[[spiegel-roadmap]]", "[[spiegel-statistics]]", "[[spiegel-metrics]]", "[[spiegel-mobile]]", "[[spiegel-data-model]]", "[[statistics-visualization]]"]
+relates_to: ["[[spiegel-vergleichen]]", "[[spiegel-ui-design]]", "[[spiegel-roadmap]]", "[[spiegel-statistics]]", "[[spiegel-metrics]]", "[[spiegel-mobile]]", "[[spiegel-data-model]]", "[[statistics-visualization]]"]
 ---
 
 **TL;DR** Die Seite eines Zeitraums (Bereich Fortschritt) ist für den Schützen selbst gebaut wie die Seite einer
 Scheibe, nur über viele: Statt der Scheibe steht der Verlauf fest im Bild, statt des Schusses wird eine Scheibe
 abgelesen, statt der Schusstabelle gibt es die Liste der Scheiben, darunter Zahlen und Analyse. Die Scheiben ergeben
-sich aus Zeitraum und Filter; Zeiträume sind rollend, frei oder vom Schützen benannt. Der Vergleich mit einem zweiten
-Zeitraum ist eingebaut und urteilt nur mit Test. Gebaut sind Fachkern (`shot-core/analysis/period.ts`, `records.ts`)
+sich aus Zeitraum und Filter; Zeiträume sind rollend, frei oder vom Schützen benannt. Vergleiche ziehen auf eine eigene
+Seite ([[spiegel-vergleichen]]); bis dahin ist der Vergleich mit einem zweiten Zeitraum eingebaut und urteilt nur mit
+Test. Die Analyse über den Zeitraum zeigt im Überblick nur Belegtes, das Trefferbild wird ein zweites Hauptbild neben
+dem Verlauf (Konzept vom 21. Oktober 2026). Gebaut sind Fachkern (`shot-core/analysis/period.ts`, `records.ts`)
 und Seite (`shot-ui/period/*`, `PeriodPage`, in der App `/progress`); offen sind Langzeit-Trefferbild, Erkenntnisse
 je Reiter und das Anlegen benannter Zeiträume. Treffsicher zeigt seine Statistik mit denselben Bausteinen
 ([[statistics-visualization]]).
@@ -24,7 +26,9 @@ je Reiter und das Anlegen benannter Zeiträume. Treffsicher zeigt seine Statisti
 2. **Zeitraum und Filter** bestimmen die Scheiben, nicht eine Auswahl von Hand und keine gepflegten Sammlungen. Die Menge wächst mit jedem Abend von selbst.
 3. **Wie die Seite einer Scheibe.** Dasselbe Gerüst, dieselben Bausteine und Regeln, auch auf dem Telefon ([[spiegel-mobile]], [[spiegel-ui-design]]).
 4. **Saison = eigene, benannte Zeiträume** des Schützen („Saison 26/27“, „Vorbereitung Landesmeisterschaft“), dazu rollende Vorgaben und ein freier Zeitraum. Keine Saison vom Verein, kein Kalenderjahr als Grenze.
-5. **Vergleich eingebaut:** „Vergleichen mit …“ im Blatt „Filter“. Jede Zahl zeigt dann beide Werte und den Unterschied, ein Urteil nur mit Test.
+5. **Vergleich auf einer eigenen Seite:** Bis zum 21. Oktober 2026 war der Vergleich eingebaut („Vergleichen mit …“
+   im Blatt „Filter“, jede Zahl mit beiden Werten). Er zieht auf die Seite „Vergleichen“ ([[spiegel-vergleichen]]), der
+   Fortschritt behält nur den stillen Bezug im Satz. Ein Urteil gibt es weiter nur mit Test.
 
 ## Fragen des Schützen
 
@@ -59,7 +63,8 @@ Die beiden letzten und „Wo verliere ich Ringe?“ brauchen, was noch offen ist
 ## Die Seite eines Zeitraums
 
 Der Bereich **Fortschritt** der App-Navigation ([[spiegel-ui-design]], „Navigation“) ist die Seite eines Zeitraums.
-Eine eigene Seite **Vergleich** gibt es nicht; der Vergleich ist eingebaut.
+Vergleiche stehen auf der eigenen Seite „Vergleichen“ unter Fortschritt ([[spiegel-vergleichen]]); bis sie gebaut ist,
+bleibt der eingebaute Vergleich.
 
 | Seite einer Scheibe | Seite eines Zeitraums |
 |---|---|
@@ -151,25 +156,64 @@ Eine eigene Seite **Vergleich** gibt es nicht; der Vergleich ist eingebaut.
     steht „außerhalb“ ohne Knopf.
 - **Training nur aus Probe** zählt als Vorgabe mit, denn so trainieren die meisten; im Fachkern bleibt
   `includeProbeOnly` eine Option, die Seite setzt sie als Vorgabe.
-- **Reiter der Analyse** über den Zeitraum (offen, SP-2.7), jeweils mit Mindestzahl an Scheiben:
+- **Analyse über den Zeitraum** (SP-2.7, Konzept vom 21. Oktober 2026, mit dem User abgestimmt): siehe den
+  folgenden Abschnitt.
+
+### Analyse über den Zeitraum: Fragen statt Kennzahlen
+
+Ziel ist ein Profi-Werkzeug, das nicht dazugebaut wirkt: Der Katalog hinter der Seite ist groß, die Seite bleibt kurz.
+Drei Grundsätze:
+
+1. **Der Überblick zeigt nur, was belegt ist.** Höchstens drei Erkenntnisse als Satz, jede mit Test und Mindestzahl,
+   geordnet nach den Ringen, die sie kosten („Rechts tief kostet die meisten Ringe“, „Nach Pausen schwächer“). Jeder
+   Satz führt in seinen Reiter, eine Erkenntnis über zwei Gruppen (Wettkampf gegen Training) auf die Seite
+   „Vergleichen“ ([[spiegel-vergleichen]]). Was nichts zeigt, steht leise in einer Zeile („Kein klarer Unterschied:
+   Tageszeit, Platz in der Serie, erster Schuss“). Weil der Überblick viele Fragen auf einmal prüft, korrigiert er für
+   Mehrfachtests (Holm), belegt per Simulation wie B19.
+2. **Die Reiter sind das Werkzeug**, mit wenigen Karten je Reiter und derselben Ordnung wie auf der Scheibe:
 
 | Reiter | Inhalt | Katalog |
 |---|---|---|
-| Überblick | Beobachtungen in Worten über den Zeitraum | – |
-| Ergebnis | Verteilung der Scheiben-Ø, Boden und Decke, Rekorde | T5, R1–R8, R10, R11 |
-| Präzision | σ̂ im Verlauf, Langzeit-Trefferbild, Form über mehrere Scheiben | L9 |
-| Lage | Lage über Zeit, Ausreißerrichtung, Richtungsuhr über alle Schüsse | L7, L10 |
-| Zeit | Umfang und Kalender, Tempo gegen Wert, Tageszeit, Pause | T6, T7, Z6, Z7, K1–K5 |
+| Überblick | höchstens drei belegte Erkenntnisse, darunter, was ohne klaren Unterschied blieb | – |
+| Ergebnis | Rekorde, Verteilung der Serien und Ringanteile über die Zeit, Abstandskurve | R1–R8, R10, R11, V3–V5 |
+| Präzision | Form über mehrere Scheiben (gepoolt, rund oder länglich) | L9 |
+| Lage | Lage über Zeit (Schwerpunkt je Scheibe), Ausreißerrichtung | L10, L7 |
+| Zeit | Platz in der Serie, Reaktion nach schwachem Schuss, erster Wertungsschuss, Tempo gegen Wert, Tageszeit, Pause, Trendsteigung | I7–I9, Z6, Z7, K2, K4, T4 |
 
-### Langzeit-Trefferbild (offen)
+3. **Das Trefferbild ist Hauptbild, keine Karte:** Wo auf der Scheibe die Scheibe steht, steht hier der Verlauf; ein
+   Umschalter „Verlauf | Trefferbild“ zeigt an derselben Stelle das Langzeit-Trefferbild (L9, unten). Ablesung, Liste
+   und Zahlen bleiben, wie sie sind.
+
+Was nicht hierher gehört: Wettkampf gegen Training (W1–W4) und jeder andere Vergleich stehen auf der Seite
+„Vergleichen“; Munitionslos und Ausrüstung (K1) brauchen Angaben (SP-2.3); Befinden (K6) und Selbstbild liegen im
+Tagebuch ([[adr-033]]), das denselben Fachkern nutzt.
+
+**Angaben und Grundlage ([[adr-033]]):** Jede Auswertung nennt die Angabe, die sie braucht (Lage je Schuss, Zeit,
+Serien), und zählt jede Scheibe, so weit ihre Angaben reichen. Die Grundlage steht dabei („über 31 von 38 Scheiben, 7
+ohne Lage“). Eine Trefferlage nur als Summe (Ausdruck, Handeingabe) zählt im Schwerpunkt je Scheibe (L10), nie im
+Dichtebild (L9) und nie in der Ausreißerrichtung (L7).
+
+**Gebaut wird in drei Plänen:** 1. Trefferbild und Lage (L9, L10, L7, Reiter Ergebnis, Präzision, Lage); 2. die Seite
+„Vergleichen“ samt Umzug des Vergleichs aus dem Fortschritt (C2, C3, W1); 3. Überblick und die Reiter Zeit und
+Ergebnis (I7–I9, Z6, Z7, K2, K4, T4, V3–V5, W2–W4 als Zeilen im Vergleich).
+
+### Langzeit-Trefferbild
 
 - **Zwei Sichten:** Bei **Form** ist jede Scheibe auf ihren eigenen Schwerpunkt geschoben; übrig bleibt die
   reine Streuung über die Abende. **Lage** zeigt die Schüsse, wo sie lagen; so wird ein Versatz sichtbar, der
-  immer wiederkehrt.
-- **Dichte statt Punkte:** Ab einigen hundert Schüssen zeigt das Bild die Dichte (Flächen oder Höhenlinien),
-  nicht mehr jeden Schuss.
+  immer wiederkehrt. Vorgabe ist Form.
+- **Dichte statt Punkte:** Unter 300 Schuss zeigt das Bild jeden Schuss als kleinen Punkt, ab 300 die Dichte als zwei
+  Flächen: innen die Hälfte der Schüsse, außen neun von zehn. Die Legende sagt es in diesen Worten.
+- **Ein Satz unter dem Bild** gibt die Antwort: in Form „rund“ oder „länglich, eher waagrecht“ (Test über die gepoolte
+  Form, sonst „zu wenige Schüsse für ein Urteil“), in Lage „passt“ oder „versetzt: rechts tief“ (Test über die
+  Schwerpunkte der Scheiben, Einheit die Scheibe).
+- **Rechnen auf dem Server:** aus den gespeicherten Lagen der Projektion (`marks`, 10 µm), erst wenn das Bild oder die
+  Reiter Präzision und Lage es brauchen; an den Browser geht ein Raster, keine Schüsse.
 
-### Vergleich (eingebaut)
+### Vergleich (eingebaut, zieht um)
+
+Bis die Seite „Vergleichen“ steht ([[spiegel-vergleichen]]), gilt im Fortschritt:
+
 
 - **Einheit des Tests ist die Scheibe:** Je Seite gehen die Werte der Scheiben in den Test, nicht alle Schüsse
   zusammen (Mann-Whitney auf den Scheibenwerten, C3). Unter fünf Scheiben je Seite steht „zu wenige Scheiben“ statt
@@ -238,7 +282,7 @@ Eingabe ist `PeriodItem`; was Spiegel anders braucht als Treffsicher, sind Param
 
 | Inhalt | Roadmap |
 |---|---|
-| Langzeit-Trefferbild mit Form, Lage und Dichte | SP-2.7 |
-| Erkenntnisse Reiter für Reiter, jede mit Mindestzahl und Simulation; Trendsteigung (T4) | SP-2.7 |
+| Langzeit-Trefferbild mit Form, Lage und Dichte; Reiter Präzision und Lage (L9, L10, L7) | SP-2.7, Plan 1 |
+| Seite „Vergleichen“ mit Scheibe gegen Scheibe (C2), Wettkampf gegen Training (W1), Umzug des Vergleichs | SP-2.2, Plan 2 |
+| Überblick mit belegten Erkenntnissen, Reiter Zeit und Ergebnis; Trendsteigung (T4) | SP-2.7, Plan 3 |
 | Benannte Zeiträume anlegen, ändern und löschen; Vergleich nach Merkmal nach SP-2.3 | SP-2.2, SP-2.3 |
-| Scheibe gegen Scheibe (C2) | SP-2.2 |
