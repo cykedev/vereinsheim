@@ -1,7 +1,7 @@
 {
-  "checksum": "eb8bd2ff30e29bc4f42730578e0127b22b740ac0f70385e1a9a7863816576b6d",
-  "build": "ec3950036e4fa4eff416aab9891a1e1b",
+  "checksum": "eceef1dedf9dffcb765f9830f407b7a2f2814c3d13a7d15622d2bf275060b0c0",
+  "build": "3ecdfdefacfb792fe35fe18f1ea5cc1c",
   "database": "ringwerk_pruef",
-  "commit": "3b555b5d",
-  "competitions": 95
+  "commit": "48dd7404",
+  "competitions": 96
 }

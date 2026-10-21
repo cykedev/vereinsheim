@@ -19,8 +19,8 @@
   "series@USER": "→ /",
   "standings@ADMIN": "nicht gefunden",
   "standings@USER": "nicht gefunden",
-  "start@ADMIN": "→ /competitions/:id/schedule",
-  "start@USER": "→ /competitions/:id/schedule"
+  "start@ADMIN": "→ /competitions/:id/playoffs",
+  "start@USER": "→ /competitions/:id/playoffs"
  },
  "pages": {
   "audit-log@ADMIN@1280": [
@@ -541,6 +541,13 @@
    "Spielplan & Tabelle",
    "Playoffs",
    "Teilnehmer",
+   "Tabelle",
+   "Pl. | Name | Sp. | S | U | N | Pkt. | Best. RT",
+   "1 | Altmühl, Hannes | 6 | 4 | 0 | 2 | 8 | 11,2",
+   "2 | Traun, Tilda | 6 | 3 | 0 | 3 | 6 | 4,3",
+   "3 | Lech, Bernd | 6 | 3 | 0 | 3 | 6 | 13,9",
+   "4 | Lech, Carla | 6 | 2 | 0 | 4 | 4 | 17,2",
+   "Spielplan",
    "Hinrunde",
    "· bis 24.08.2026",
    "Schütze 1 | Schütze 2 | Status",
@@ -606,13 +613,7 @@
    "96 R · 41,5 T · RT 45,5",
    "Lech, Carla",
    "91 R · 46,5 T · RT 55,5",
-   "✓",
-   "Tabelle",
-   "Pl. | Name | Sp. | S | U | N | Pkt. | Best. RT",
-   "1 | Altmühl, Hannes | 6 | 4 | 0 | 2 | 8 | 11,2",
-   "2 | Traun, Tilda | 6 | 3 | 0 | 3 | 6 | 4,3",
-   "3 | Lech, Bernd | 6 | 3 | 0 | 3 | 6 | 13,9",
-   "4 | Lech, Carla | 6 | 2 | 0 | 4 | 4 | 17,2"
+   "✓"
   ],
   "schedule@ADMIN@390": [
    "Wettbewerbe",
@@ -621,6 +622,13 @@
    "Spielplan & Tabelle",
    "Playoffs",
    "Teilnehmer",
+   "Tabelle",
+   "Pl. | Name | Sp. | S | Pkt.",
+   "1 | Altmühl, Hannes | 6 | 4 | 8",
+   "2 | Traun, Tilda | 6 | 3 | 6",
+   "3 | Lech, Bernd | 6 | 3 | 6",
+   "4 | Lech, Carla | 6 | 2 | 4",
+   "Spielplan",
    "Hinrunde",
    "· bis 24.08.2026",
    "Schütze 1 | Schütze 2 | Status",
@@ -686,13 +694,7 @@
    "96 R · 41,5 T · RT 45,5",
    "Lech, Carla",
    "91 R · 46,5 T · RT 55,5",
-   "✓",
-   "Tabelle",
-   "Pl. | Name | Sp. | S | Pkt.",
-   "1 | Altmühl, Hannes | 6 | 4 | 8",
-   "2 | Traun, Tilda | 6 | 3 | 6",
-   "3 | Lech, Bernd | 6 | 3 | 6",
-   "4 | Lech, Carla | 6 | 2 | 4"
+   "✓"
   ],
   "schedule@USER@1280": [
    "Wettbewerbe",
@@ -701,6 +703,13 @@
    "Luftgewehr · Spielplan & Tabelle",
    "Spielplan & Tabelle",
    "Playoffs",
+   "Tabelle",
+   "Pl. | Name | Sp. | S | U | N | Pkt. | Best. RT",
+   "1 | Altmühl, Hannes | 6 | 4 | 0 | 2 | 8 | 11,2",
+   "2 | Traun, Tilda | 6 | 3 | 0 | 3 | 6 | 4,3",
+   "3 | Lech, Bernd | 6 | 3 | 0 | 3 | 6 | 13,9",
+   "4 | Lech, Carla | 6 | 2 | 0 | 4 | 4 | 17,2",
+   "Spielplan",
    "Hinrunde",
    "· bis 24.08.2026",
    "Schütze 1 | Schütze 2 | Status",
@@ -766,13 +775,7 @@
    "96 R · 41,5 T · RT 45,5",
    "Lech, Carla",
    "91 R · 46,5 T · RT 55,5",
-   "✓",
-   "Tabelle",
-   "Pl. | Name | Sp. | S | U | N | Pkt. | Best. RT",
-   "1 | Altmühl, Hannes | 6 | 4 | 0 | 2 | 8 | 11,2",
-   "2 | Traun, Tilda | 6 | 3 | 0 | 3 | 6 | 4,3",
-   "3 | Lech, Bernd | 6 | 3 | 0 | 3 | 6 | 13,9",
-   "4 | Lech, Carla | 6 | 2 | 0 | 4 | 4 | 17,2"
+   "✓"
   ],
   "schedule@USER@390": [
    "Wettbewerbe",
@@ -780,6 +783,13 @@
    "Luftgewehr · Spielplan & Tabelle",
    "Spielplan & Tabelle",
    "Playoffs",
+   "Tabelle",
+   "Pl. | Name | Sp. | S | Pkt.",
+   "1 | Altmühl, Hannes | 6 | 4 | 8",
+   "2 | Traun, Tilda | 6 | 3 | 6",
+   "3 | Lech, Bernd | 6 | 3 | 6",
+   "4 | Lech, Carla | 6 | 2 | 4",
+   "Spielplan",
    "Hinrunde",
    "· bis 24.08.2026",
    "Schütze 1 | Schütze 2 | Status",
@@ -845,13 +855,7 @@
    "96 R · 41,5 T · RT 45,5",
    "Lech, Carla",
    "91 R · 46,5 T · RT 55,5",
-   "✓",
-   "Tabelle",
-   "Pl. | Name | Sp. | S | Pkt.",
-   "1 | Altmühl, Hannes | 6 | 4 | 8",
-   "2 | Traun, Tilda | 6 | 3 | 6",
-   "3 | Lech, Bernd | 6 | 3 | 6",
-   "4 | Lech, Carla | 6 | 2 | 4"
+   "✓"
   ]
  },
  "pdfs": {

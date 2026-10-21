@@ -237,7 +237,6 @@
    "Spielplan & Tabelle",
    "Playoffs",
    "Teilnehmer",
-   "Noch kein Spielplan generiert.",
    "Tabelle",
    "Pl. | Name | Begegn. | Siege | Satzdiff. | Satzverhältnis | Direktvergleich",
    "1 | Kiefer, Anja | 0 | 0 | 0 | 0:0 | offen",
@@ -245,7 +244,9 @@
    "1 | Pappel, Paul | 0 | 0 | 0 | 0:0 | offen",
    "1 | Saalach, Jonas | 0 | 0 | 0 | 0:0 | offen",
    "1 | Traun, Olga | 0 | 0 | 0 | 0:0 | offen",
-   "1 | Vils, Karin | 0 | 0 | 0 | 0:0 | offen"
+   "1 | Vils, Karin | 0 | 0 | 0 | 0:0 | offen",
+   "Spielplan",
+   "Noch kein Spielplan generiert."
   ],
   "schedule@ADMIN@390": [
    "Wettbewerbe",
@@ -254,7 +255,6 @@
    "Spielplan & Tabelle",
    "Playoffs",
    "Teilnehmer",
-   "Noch kein Spielplan generiert.",
    "Tabelle",
    "Pl. | Name | Siege",
    "1 | Kiefer, Anja | 0",
@@ -262,7 +262,9 @@
    "1 | Pappel, Paul | 0",
    "1 | Saalach, Jonas | 0",
    "1 | Traun, Olga | 0",
-   "1 | Vils, Karin | 0"
+   "1 | Vils, Karin | 0",
+   "Spielplan",
+   "Noch kein Spielplan generiert."
   ],
   "schedule@USER@1280": [
    "Wettbewerbe",
@@ -270,7 +272,6 @@
    "Luftpistole · Spielplan & Tabelle",
    "Spielplan & Tabelle",
    "Playoffs",
-   "Noch kein Spielplan generiert.",
    "Tabelle",
    "Pl. | Name | Begegn. | Siege | Satzdiff. | Satzverhältnis | Direktvergleich",
    "1 | Kiefer, Anja | 0 | 0 | 0 | 0:0 | offen",
@@ -278,7 +279,9 @@
    "1 | Pappel, Paul | 0 | 0 | 0 | 0:0 | offen",
    "1 | Saalach, Jonas | 0 | 0 | 0 | 0:0 | offen",
    "1 | Traun, Olga | 0 | 0 | 0 | 0:0 | offen",
-   "1 | Vils, Karin | 0 | 0 | 0 | 0:0 | offen"
+   "1 | Vils, Karin | 0 | 0 | 0 | 0:0 | offen",
+   "Spielplan",
+   "Noch kein Spielplan generiert."
   ],
   "schedule@USER@390": [
    "Wettbewerbe",
@@ -286,7 +289,6 @@
    "Luftpistole · Spielplan & Tabelle",
    "Spielplan & Tabelle",
    "Playoffs",
-   "Noch kein Spielplan generiert.",
    "Tabelle",
    "Pl. | Name | Siege",
    "1 | Kiefer, Anja | 0",
@@ -294,7 +296,9 @@
    "1 | Pappel, Paul | 0",
    "1 | Saalach, Jonas | 0",
    "1 | Traun, Olga | 0",
-   "1 | Vils, Karin | 0"
+   "1 | Vils, Karin | 0",
+   "Spielplan",
+   "Noch kein Spielplan generiert."
   ]
  },
  "pdfs": {

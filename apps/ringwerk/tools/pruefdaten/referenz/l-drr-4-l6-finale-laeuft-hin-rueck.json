@@ -19,8 +19,8 @@
   "series@USER": "→ /",
   "standings@ADMIN": "nicht gefunden",
   "standings@USER": "nicht gefunden",
-  "start@ADMIN": "→ /competitions/:id/schedule",
-  "start@USER": "→ /competitions/:id/schedule"
+  "start@ADMIN": "→ /competitions/:id/playoffs",
+  "start@USER": "→ /competitions/:id/playoffs"
  },
  "pages": {
   "audit-log@ADMIN@1280": [
@@ -646,6 +646,13 @@
    "Playoffs",
    "Teilnehmer",
    "Spielplan kann nicht neu generiert werden — die Playoffs wurden bereits gestartet.",
+   "Tabelle",
+   "Pl. | Name | Sp. | S | U | N | Pkt. | Best. RT",
+   "1 | Buche, Rita | 6 | 5 | 0 | 1 | 10 | 7,6",
+   "2 | Traun, Mara | 6 | 4 | 0 | 2 | 8 | 19,2",
+   "3 | Würm, Bernd | 6 | 3 | 0 | 3 | 6 | 13,6",
+   "4 | Eiche, Florian | 6 | 0 | 0 | 6 | 0 | 26,6",
+   "Spielplan",
    "Hinrunde",
    "· bis 19.03.2026",
    "Schütze 1 | Schütze 2 | Status",
@@ -711,13 +718,7 @@
    "94 R · 223,0 T · RT 229,0",
    "Buche, Rita",
    "92 R · 68,8 T · RT 76,8",
-   "✓",
-   "Tabelle",
-   "Pl. | Name | Sp. | S | U | N | Pkt. | Best. RT",
-   "1 | Buche, Rita | 6 | 5 | 0 | 1 | 10 | 7,6",
-   "2 | Traun, Mara | 6 | 4 | 0 | 2 | 8 | 19,2",
-   "3 | Würm, Bernd | 6 | 3 | 0 | 3 | 6 | 13,6",
-   "4 | Eiche, Florian | 6 | 0 | 0 | 6 | 0 | 26,6"
+   "✓"
   ],
   "schedule@ADMIN@390": [
    "Wettbewerbe",
@@ -727,6 +728,13 @@
    "Playoffs",
    "Teilnehmer",
    "Spielplan kann nicht neu generiert werden — die Playoffs wurden bereits gestartet.",
+   "Tabelle",
+   "Pl. | Name | Sp. | S | Pkt.",
+   "1 | Buche, Rita | 6 | 5 | 10",
+   "2 | Traun, Mara | 6 | 4 | 8",
+   "3 | Würm, Bernd | 6 | 3 | 6",
+   "4 | Eiche, Florian | 6 | 0 | 0",
+   "Spielplan",
    "Hinrunde",
    "· bis 19.03.2026",
    "Schütze 1 | Schütze 2 | Status",
@@ -792,13 +800,7 @@
    "94 R · 223,0 T · RT 229,0",
    "Buche, Rita",
    "92 R · 68,8 T · RT 76,8",
-   "✓",
-   "Tabelle",
-   "Pl. | Name | Sp. | S | Pkt.",
-   "1 | Buche, Rita | 6 | 5 | 10",
-   "2 | Traun, Mara | 6 | 4 | 8",
-   "3 | Würm, Bernd | 6 | 3 | 6",
-   "4 | Eiche, Florian | 6 | 0 | 0"
+   "✓"
   ],
   "schedule@USER@1280": [
    "Wettbewerbe",
@@ -807,6 +809,13 @@
    "Luftgewehr · Spielplan & Tabelle",
    "Spielplan & Tabelle",
    "Playoffs",
+   "Tabelle",
+   "Pl. | Name | Sp. | S | U | N | Pkt. | Best. RT",
+   "1 | Buche, Rita | 6 | 5 | 0 | 1 | 10 | 7,6",
+   "2 | Traun, Mara | 6 | 4 | 0 | 2 | 8 | 19,2",
+   "3 | Würm, Bernd | 6 | 3 | 0 | 3 | 6 | 13,6",
+   "4 | Eiche, Florian | 6 | 0 | 0 | 6 | 0 | 26,6",
+   "Spielplan",
    "Hinrunde",
    "· bis 19.03.2026",
    "Schütze 1 | Schütze 2 | Status",
@@ -872,13 +881,7 @@
    "94 R · 223,0 T · RT 229,0",
    "Buche, Rita",
    "92 R · 68,8 T · RT 76,8",
-   "✓",
-   "Tabelle",
-   "Pl. | Name | Sp. | S | U | N | Pkt. | Best. RT",
-   "1 | Buche, Rita | 6 | 5 | 0 | 1 | 10 | 7,6",
-   "2 | Traun, Mara | 6 | 4 | 0 | 2 | 8 | 19,2",
-   "3 | Würm, Bernd | 6 | 3 | 0 | 3 | 6 | 13,6",
-   "4 | Eiche, Florian | 6 | 0 | 0 | 6 | 0 | 26,6"
+   "✓"
   ],
   "schedule@USER@390": [
    "Wettbewerbe",
@@ -886,6 +889,13 @@
    "Luftgewehr · Spielplan & Tabelle",
    "Spielplan & Tabelle",
    "Playoffs",
+   "Tabelle",
+   "Pl. | Name | Sp. | S | Pkt.",
+   "1 | Buche, Rita | 6 | 5 | 10",
+   "2 | Traun, Mara | 6 | 4 | 8",
+   "3 | Würm, Bernd | 6 | 3 | 6",
+   "4 | Eiche, Florian | 6 | 0 | 0",
+   "Spielplan",
    "Hinrunde",
    "· bis 19.03.2026",
    "Schütze 1 | Schütze 2 | Status",
@@ -951,13 +961,7 @@
    "94 R · 223,0 T · RT 229,0",
    "Buche, Rita",
    "92 R · 68,8 T · RT 76,8",
-   "✓",
-   "Tabelle",
-   "Pl. | Name | Sp. | S | Pkt.",
-   "1 | Buche, Rita | 6 | 5 | 10",
-   "2 | Traun, Mara | 6 | 4 | 8",
-   "3 | Würm, Bernd | 6 | 3 | 6",
-   "4 | Eiche, Florian | 6 | 0 | 0"
+   "✓"
   ]
  },
  "pdfs": {

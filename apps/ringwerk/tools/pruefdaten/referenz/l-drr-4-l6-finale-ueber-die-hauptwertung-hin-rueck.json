@@ -19,8 +19,8 @@
   "series@USER": "→ /",
   "standings@ADMIN": "nicht gefunden",
   "standings@USER": "nicht gefunden",
-  "start@ADMIN": "→ /competitions/:id/schedule",
-  "start@USER": "→ /competitions/:id/schedule"
+  "start@ADMIN": "→ /competitions/:id/playoffs",
+  "start@USER": "→ /competitions/:id/playoffs"
  },
  "pages": {
   "audit-log@ADMIN@1280": [
@@ -692,6 +692,13 @@
    "Playoffs",
    "Teilnehmer",
    "Spielplan kann nicht neu generiert werden — die Playoffs wurden bereits gestartet.",
+   "Tabelle",
+   "Pl. | Name | Sp. | S | U | N | Pkt. | Best. RT",
+   "1 | Traun, Olga | 6 | 6 | 0 | 0 | 12 | 11,4",
+   "2 | Fichte, Anja | 6 | 3 | 0 | 3 | 6 | 14,2",
+   "3 | Lech, Sven | 6 | 2 | 0 | 4 | 4 | 35,2",
+   "4 | Eibe, Greta | 6 | 1 | 0 | 5 | 2 | 24,5",
+   "Spielplan",
    "Hinrunde",
    "· bis 21.03.2026",
    "Schütze 1 | Schütze 2 | Status",
@@ -757,13 +764,7 @@
    "100 R · 14,2 T · RT 14,2",
    "Lech, Sven",
    "95 R · 230,3 T · RT 235,3",
-   "✓",
-   "Tabelle",
-   "Pl. | Name | Sp. | S | U | N | Pkt. | Best. RT",
-   "1 | Traun, Olga | 6 | 6 | 0 | 0 | 12 | 11,4",
-   "2 | Fichte, Anja | 6 | 3 | 0 | 3 | 6 | 14,2",
-   "3 | Lech, Sven | 6 | 2 | 0 | 4 | 4 | 35,2",
-   "4 | Eibe, Greta | 6 | 1 | 0 | 5 | 2 | 24,5"
+   "✓"
   ],
   "schedule@ADMIN@390": [
    "Wettbewerbe",
@@ -773,6 +774,13 @@
    "Playoffs",
    "Teilnehmer",
    "Spielplan kann nicht neu generiert werden — die Playoffs wurden bereits gestartet.",
+   "Tabelle",
+   "Pl. | Name | Sp. | S | Pkt.",
+   "1 | Traun, Olga | 6 | 6 | 12",
+   "2 | Fichte, Anja | 6 | 3 | 6",
+   "3 | Lech, Sven | 6 | 2 | 4",
+   "4 | Eibe, Greta | 6 | 1 | 2",
+   "Spielplan",
    "Hinrunde",
    "· bis 21.03.2026",
    "Schütze 1 | Schütze 2 | Status",
@@ -838,13 +846,7 @@
    "100 R · 14,2 T · RT 14,2",
    "Lech, Sven",
    "95 R · 230,3 T · RT 235,3",
-   "✓",
-   "Tabelle",
-   "Pl. | Name | Sp. | S | Pkt.",
-   "1 | Traun, Olga | 6 | 6 | 12",
-   "2 | Fichte, Anja | 6 | 3 | 6",
-   "3 | Lech, Sven | 6 | 2 | 4",
-   "4 | Eibe, Greta | 6 | 1 | 2"
+   "✓"
   ],
   "schedule@USER@1280": [
    "Wettbewerbe",
@@ -853,6 +855,13 @@
    "Luftgewehr · Spielplan & Tabelle",
    "Spielplan & Tabelle",
    "Playoffs",
+   "Tabelle",
+   "Pl. | Name | Sp. | S | U | N | Pkt. | Best. RT",
+   "1 | Traun, Olga | 6 | 6 | 0 | 0 | 12 | 11,4",
+   "2 | Fichte, Anja | 6 | 3 | 0 | 3 | 6 | 14,2",
+   "3 | Lech, Sven | 6 | 2 | 0 | 4 | 4 | 35,2",
+   "4 | Eibe, Greta | 6 | 1 | 0 | 5 | 2 | 24,5",
+   "Spielplan",
    "Hinrunde",
    "· bis 21.03.2026",
    "Schütze 1 | Schütze 2 | Status",
@@ -918,13 +927,7 @@
    "100 R · 14,2 T · RT 14,2",
    "Lech, Sven",
    "95 R · 230,3 T · RT 235,3",
-   "✓",
-   "Tabelle",
-   "Pl. | Name | Sp. | S | U | N | Pkt. | Best. RT",
-   "1 | Traun, Olga | 6 | 6 | 0 | 0 | 12 | 11,4",
-   "2 | Fichte, Anja | 6 | 3 | 0 | 3 | 6 | 14,2",
-   "3 | Lech, Sven | 6 | 2 | 0 | 4 | 4 | 35,2",
-   "4 | Eibe, Greta | 6 | 1 | 0 | 5 | 2 | 24,5"
+   "✓"
   ],
   "schedule@USER@390": [
    "Wettbewerbe",
@@ -932,6 +935,13 @@
    "Luftgewehr · Spielplan & Tabelle",
    "Spielplan & Tabelle",
    "Playoffs",
+   "Tabelle",
+   "Pl. | Name | Sp. | S | Pkt.",
+   "1 | Traun, Olga | 6 | 6 | 12",
+   "2 | Fichte, Anja | 6 | 3 | 6",
+   "3 | Lech, Sven | 6 | 2 | 4",
+   "4 | Eibe, Greta | 6 | 1 | 2",
+   "Spielplan",
    "Hinrunde",
    "· bis 21.03.2026",
    "Schütze 1 | Schütze 2 | Status",
@@ -997,13 +1007,7 @@
    "100 R · 14,2 T · RT 14,2",
    "Lech, Sven",
    "95 R · 230,3 T · RT 235,3",
-   "✓",
-   "Tabelle",
-   "Pl. | Name | Sp. | S | Pkt.",
-   "1 | Traun, Olga | 6 | 6 | 12",
-   "2 | Fichte, Anja | 6 | 3 | 6",
-   "3 | Lech, Sven | 6 | 2 | 4",
-   "4 | Eibe, Greta | 6 | 1 | 2"
+   "✓"
   ]
  },
  "pdfs": {

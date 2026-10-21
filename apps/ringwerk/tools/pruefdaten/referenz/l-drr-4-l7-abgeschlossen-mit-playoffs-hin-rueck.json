@@ -19,8 +19,8 @@
   "series@USER": "→ /",
   "standings@ADMIN": "nicht gefunden",
   "standings@USER": "nicht gefunden",
-  "start@ADMIN": "→ /competitions/:id/schedule",
-  "start@USER": "→ /competitions/:id/schedule"
+  "start@ADMIN": "→ /competitions/:id/playoffs",
+  "start@USER": "→ /competitions/:id/playoffs"
  },
  "pages": {
   "audit-log@ADMIN@1280": [
@@ -593,6 +593,13 @@
    "Spielplan & Tabelle",
    "Playoffs",
    "Teilnehmer",
+   "Tabelle",
+   "Pl. | Name | Sp. | S | U | N | Pkt. | Best. RT",
+   "1 | Altmühl, Hannes | 6 | 5 | 0 | 1 | 10 | 6,6",
+   "2 | Weide, Paul | 6 | 4 | 0 | 2 | 8 | 22,7",
+   "3 | Pappel, Paul | 6 | 2 | 0 | 4 | 4 | 40,0",
+   "4 | Vils, Karin | 6 | 1 | 0 | 5 | 2 | 36,1",
+   "Spielplan",
    "Hinrunde",
    "· bis 27.03.2026",
    "Schütze 1 | Schütze 2 | Status",
@@ -658,13 +665,7 @@
    "85 R · 198,4 T · RT 213,4",
    "Weide, Paul",
    "95 R · 17,7 T · RT 22,7",
-   "✓",
-   "Tabelle",
-   "Pl. | Name | Sp. | S | U | N | Pkt. | Best. RT",
-   "1 | Altmühl, Hannes | 6 | 5 | 0 | 1 | 10 | 6,6",
-   "2 | Weide, Paul | 6 | 4 | 0 | 2 | 8 | 22,7",
-   "3 | Pappel, Paul | 6 | 2 | 0 | 4 | 4 | 40,0",
-   "4 | Vils, Karin | 6 | 1 | 0 | 5 | 2 | 36,1"
+   "✓"
   ],
   "schedule@ADMIN@390": [
    "Wettbewerbe",
@@ -673,6 +674,13 @@
    "Spielplan & Tabelle",
    "Playoffs",
    "Teilnehmer",
+   "Tabelle",
+   "Pl. | Name | Sp. | S | Pkt.",
+   "1 | Altmühl, Hannes | 6 | 5 | 10",
+   "2 | Weide, Paul | 6 | 4 | 8",
+   "3 | Pappel, Paul | 6 | 2 | 4",
+   "4 | Vils, Karin | 6 | 1 | 2",
+   "Spielplan",
    "Hinrunde",
    "· bis 27.03.2026",
    "Schütze 1 | Schütze 2 | Status",
@@ -738,13 +746,7 @@
    "85 R · 198,4 T · RT 213,4",
    "Weide, Paul",
    "95 R · 17,7 T · RT 22,7",
-   "✓",
-   "Tabelle",
-   "Pl. | Name | Sp. | S | Pkt.",
-   "1 | Altmühl, Hannes | 6 | 5 | 10",
-   "2 | Weide, Paul | 6 | 4 | 8",
-   "3 | Pappel, Paul | 6 | 2 | 4",
-   "4 | Vils, Karin | 6 | 1 | 2"
+   "✓"
   ],
   "schedule@USER@1280": [
    "Wettbewerbe",
@@ -753,6 +755,13 @@
    "Luftgewehr · Spielplan & Tabelle",
    "Spielplan & Tabelle",
    "Playoffs",
+   "Tabelle",
+   "Pl. | Name | Sp. | S | U | N | Pkt. | Best. RT",
+   "1 | Altmühl, Hannes | 6 | 5 | 0 | 1 | 10 | 6,6",
+   "2 | Weide, Paul | 6 | 4 | 0 | 2 | 8 | 22,7",
+   "3 | Pappel, Paul | 6 | 2 | 0 | 4 | 4 | 40,0",
+   "4 | Vils, Karin | 6 | 1 | 0 | 5 | 2 | 36,1",
+   "Spielplan",
    "Hinrunde",
    "· bis 27.03.2026",
    "Schütze 1 | Schütze 2 | Status",
@@ -818,13 +827,7 @@
    "85 R · 198,4 T · RT 213,4",
    "Weide, Paul",
    "95 R · 17,7 T · RT 22,7",
-   "✓",
-   "Tabelle",
-   "Pl. | Name | Sp. | S | U | N | Pkt. | Best. RT",
-   "1 | Altmühl, Hannes | 6 | 5 | 0 | 1 | 10 | 6,6",
-   "2 | Weide, Paul | 6 | 4 | 0 | 2 | 8 | 22,7",
-   "3 | Pappel, Paul | 6 | 2 | 0 | 4 | 4 | 40,0",
-   "4 | Vils, Karin | 6 | 1 | 0 | 5 | 2 | 36,1"
+   "✓"
   ],
   "schedule@USER@390": [
    "Wettbewerbe",
@@ -832,6 +835,13 @@
    "Luftgewehr · Spielplan & Tabelle",
    "Spielplan & Tabelle",
    "Playoffs",
+   "Tabelle",
+   "Pl. | Name | Sp. | S | Pkt.",
+   "1 | Altmühl, Hannes | 6 | 5 | 10",
+   "2 | Weide, Paul | 6 | 4 | 8",
+   "3 | Pappel, Paul | 6 | 2 | 4",
+   "4 | Vils, Karin | 6 | 1 | 2",
+   "Spielplan",
    "Hinrunde",
    "· bis 27.03.2026",
    "Schütze 1 | Schütze 2 | Status",
@@ -897,13 +907,7 @@
    "85 R · 198,4 T · RT 213,4",
    "Weide, Paul",
    "95 R · 17,7 T · RT 22,7",
-   "✓",
-   "Tabelle",
-   "Pl. | Name | Sp. | S | Pkt.",
-   "1 | Altmühl, Hannes | 6 | 5 | 10",
-   "2 | Weide, Paul | 6 | 4 | 8",
-   "3 | Pappel, Paul | 6 | 2 | 4",
-   "4 | Vils, Karin | 6 | 1 | 2"
+   "✓"
   ]
  },
  "pdfs": {

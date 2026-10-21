@@ -237,7 +237,6 @@
    "Spielplan & Tabelle",
    "Playoffs",
    "Teilnehmer",
-   "Noch kein Spielplan generiert.",
    "Tabelle",
    "Pl. | Name | Sp. | S | U | N | Pkt. | Best. RT",
    "1 | Isar, Anja | 0 | 0 | 0 | 0 | 0",
@@ -257,7 +256,9 @@
    "noch kein Duell",
    "1 | Weide, Jonas | 0 | 0 | 0 | 0 | 0",
    "–",
-   "noch kein Duell"
+   "noch kein Duell",
+   "Spielplan",
+   "Noch kein Spielplan generiert."
   ],
   "schedule@ADMIN@390": [
    "Wettbewerbe",
@@ -266,7 +267,6 @@
    "Spielplan & Tabelle",
    "Playoffs",
    "Teilnehmer",
-   "Noch kein Spielplan generiert.",
    "Tabelle",
    "Pl. | Name | Sp. | S | Pkt.",
    "1 | Isar, Anja | 0 | 0 | 0",
@@ -274,7 +274,9 @@
    "1 | Traun, Olga | 0 | 0 | 0",
    "1 | Traun, Vera | 0 | 0 | 0",
    "1 | Weide, Elif | 0 | 0 | 0",
-   "1 | Weide, Jonas | 0 | 0 | 0"
+   "1 | Weide, Jonas | 0 | 0 | 0",
+   "Spielplan",
+   "Noch kein Spielplan generiert."
   ],
   "schedule@USER@1280": [
    "Wettbewerbe",
@@ -282,7 +284,6 @@
    "Luftgewehr · Spielplan & Tabelle",
    "Spielplan & Tabelle",
    "Playoffs",
-   "Noch kein Spielplan generiert.",
    "Tabelle",
    "Pl. | Name | Sp. | S | U | N | Pkt. | Best. RT",
    "1 | Isar, Anja | 0 | 0 | 0 | 0 | 0",
@@ -302,7 +303,9 @@
    "noch kein Duell",
    "1 | Weide, Jonas | 0 | 0 | 0 | 0 | 0",
    "–",
-   "noch kein Duell"
+   "noch kein Duell",
+   "Spielplan",
+   "Noch kein Spielplan generiert."
   ],
   "schedule@USER@390": [
    "Wettbewerbe",
@@ -310,7 +313,6 @@
    "Luftgewehr · Spielplan & Tabelle",
    "Spielplan & Tabelle",
    "Playoffs",
-   "Noch kein Spielplan generiert.",
    "Tabelle",
    "Pl. | Name | Sp. | S | Pkt.",
    "1 | Isar, Anja | 0 | 0 | 0",
@@ -318,7 +320,9 @@
    "1 | Traun, Olga | 0 | 0 | 0",
    "1 | Traun, Vera | 0 | 0 | 0",
    "1 | Weide, Elif | 0 | 0 | 0",
-   "1 | Weide, Jonas | 0 | 0 | 0"
+   "1 | Weide, Jonas | 0 | 0 | 0",
+   "Spielplan",
+   "Noch kein Spielplan generiert."
   ]
  },
  "pdfs": {

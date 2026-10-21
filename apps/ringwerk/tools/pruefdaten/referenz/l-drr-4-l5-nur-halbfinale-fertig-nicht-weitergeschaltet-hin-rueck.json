@@ -19,8 +19,8 @@
   "series@USER": "→ /",
   "standings@ADMIN": "nicht gefunden",
   "standings@USER": "nicht gefunden",
-  "start@ADMIN": "→ /competitions/:id/schedule",
-  "start@USER": "→ /competitions/:id/schedule"
+  "start@ADMIN": "→ /competitions/:id/playoffs",
+  "start@USER": "→ /competitions/:id/playoffs"
  },
  "pages": {
   "audit-log@ADMIN@1280": [
@@ -658,6 +658,13 @@
    "Playoffs",
    "Teilnehmer",
    "Spielplan kann nicht neu generiert werden — die Playoffs wurden bereits gestartet.",
+   "Tabelle",
+   "Pl. | Name | Sp. | S | U | N | Pkt. | Best. RT",
+   "1 | Würm, Yasmin | 6 | 4 | 0 | 2 | 8 | 10,4",
+   "2 | Tanne, Yasmin | 6 | 4 | 0 | 2 | 8 | 10,7",
+   "3 | Würm, Bernd | 6 | 2 | 0 | 4 | 4 | 8,6",
+   "4 | Mangfall, Anja | 6 | 2 | 0 | 4 | 4 | 41,8",
+   "Spielplan",
    "Hinrunde",
    "· bis 17.03.2026",
    "Schütze 1 | Schütze 2 | Status",
@@ -723,13 +730,7 @@
    "95 R · 56,1 T · RT 61,1",
    "Mangfall, Anja",
    "81 R · 22,8 T · RT 41,8",
-   "✓",
-   "Tabelle",
-   "Pl. | Name | Sp. | S | U | N | Pkt. | Best. RT",
-   "1 | Würm, Yasmin | 6 | 4 | 0 | 2 | 8 | 10,4",
-   "2 | Tanne, Yasmin | 6 | 4 | 0 | 2 | 8 | 10,7",
-   "3 | Würm, Bernd | 6 | 2 | 0 | 4 | 4 | 8,6",
-   "4 | Mangfall, Anja | 6 | 2 | 0 | 4 | 4 | 41,8"
+   "✓"
   ],
   "schedule@ADMIN@390": [
    "Wettbewerbe",
@@ -739,6 +740,13 @@
    "Playoffs",
    "Teilnehmer",
    "Spielplan kann nicht neu generiert werden — die Playoffs wurden bereits gestartet.",
+   "Tabelle",
+   "Pl. | Name | Sp. | S | Pkt.",
+   "1 | Würm, Yasmin | 6 | 4 | 8",
+   "2 | Tanne, Yasmin | 6 | 4 | 8",
+   "3 | Würm, Bernd | 6 | 2 | 4",
+   "4 | Mangfall, Anja | 6 | 2 | 4",
+   "Spielplan",
    "Hinrunde",
    "· bis 17.03.2026",
    "Schütze 1 | Schütze 2 | Status",
@@ -804,13 +812,7 @@
    "95 R · 56,1 T · RT 61,1",
    "Mangfall, Anja",
    "81 R · 22,8 T · RT 41,8",
-   "✓",
-   "Tabelle",
-   "Pl. | Name | Sp. | S | Pkt.",
-   "1 | Würm, Yasmin | 6 | 4 | 8",
-   "2 | Tanne, Yasmin | 6 | 4 | 8",
-   "3 | Würm, Bernd | 6 | 2 | 4",
-   "4 | Mangfall, Anja | 6 | 2 | 4"
+   "✓"
   ],
   "schedule@USER@1280": [
    "Wettbewerbe",
@@ -819,6 +821,13 @@
    "Luftgewehr · Spielplan & Tabelle",
    "Spielplan & Tabelle",
    "Playoffs",
+   "Tabelle",
+   "Pl. | Name | Sp. | S | U | N | Pkt. | Best. RT",
+   "1 | Würm, Yasmin | 6 | 4 | 0 | 2 | 8 | 10,4",
+   "2 | Tanne, Yasmin | 6 | 4 | 0 | 2 | 8 | 10,7",
+   "3 | Würm, Bernd | 6 | 2 | 0 | 4 | 4 | 8,6",
+   "4 | Mangfall, Anja | 6 | 2 | 0 | 4 | 4 | 41,8",
+   "Spielplan",
    "Hinrunde",
    "· bis 17.03.2026",
    "Schütze 1 | Schütze 2 | Status",
@@ -884,13 +893,7 @@
    "95 R · 56,1 T · RT 61,1",
    "Mangfall, Anja",
    "81 R · 22,8 T · RT 41,8",
-   "✓",
-   "Tabelle",
-   "Pl. | Name | Sp. | S | U | N | Pkt. | Best. RT",
-   "1 | Würm, Yasmin | 6 | 4 | 0 | 2 | 8 | 10,4",
-   "2 | Tanne, Yasmin | 6 | 4 | 0 | 2 | 8 | 10,7",
-   "3 | Würm, Bernd | 6 | 2 | 0 | 4 | 4 | 8,6",
-   "4 | Mangfall, Anja | 6 | 2 | 0 | 4 | 4 | 41,8"
+   "✓"
   ],
   "schedule@USER@390": [
    "Wettbewerbe",
@@ -898,6 +901,13 @@
    "Luftgewehr · Spielplan & Tabelle",
    "Spielplan & Tabelle",
    "Playoffs",
+   "Tabelle",
+   "Pl. | Name | Sp. | S | Pkt.",
+   "1 | Würm, Yasmin | 6 | 4 | 8",
+   "2 | Tanne, Yasmin | 6 | 4 | 8",
+   "3 | Würm, Bernd | 6 | 2 | 4",
+   "4 | Mangfall, Anja | 6 | 2 | 4",
+   "Spielplan",
    "Hinrunde",
    "· bis 17.03.2026",
    "Schütze 1 | Schütze 2 | Status",
@@ -963,13 +973,7 @@
    "95 R · 56,1 T · RT 61,1",
    "Mangfall, Anja",
    "81 R · 22,8 T · RT 41,8",
-   "✓",
-   "Tabelle",
-   "Pl. | Name | Sp. | S | Pkt.",
-   "1 | Würm, Yasmin | 6 | 4 | 8",
-   "2 | Tanne, Yasmin | 6 | 4 | 8",
-   "3 | Würm, Bernd | 6 | 2 | 4",
-   "4 | Mangfall, Anja | 6 | 2 | 4"
+   "✓"
   ]
  },
  "pdfs": {

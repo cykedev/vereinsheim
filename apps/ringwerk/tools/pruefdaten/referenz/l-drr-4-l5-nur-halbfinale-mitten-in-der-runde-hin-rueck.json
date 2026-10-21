@@ -20,8 +20,8 @@
   "series@USER": "→ /",
   "standings@ADMIN": "nicht gefunden",
   "standings@USER": "nicht gefunden",
-  "start@ADMIN": "→ /competitions/:id/schedule",
-  "start@USER": "→ /competitions/:id/schedule"
+  "start@ADMIN": "→ /competitions/:id/playoffs",
+  "start@USER": "→ /competitions/:id/playoffs"
  },
  "pages": {
   "audit-log@ADMIN@1280": [
@@ -559,6 +559,13 @@
    "Playoffs",
    "Teilnehmer",
    "Spielplan kann nicht neu generiert werden — die Playoffs wurden bereits gestartet.",
+   "Tabelle",
+   "Pl. | Name | Sp. | S | U | N | Pkt. | Best. RT",
+   "1 | Inn, Karin | 6 | 6 | 0 | 0 | 12 | 10,9",
+   "2 | Vils, Karin | 6 | 4 | 0 | 2 | 8 | 12,4",
+   "3 | Tanne, Yasmin | 6 | 1 | 0 | 5 | 2 | 12,7",
+   "4 | Isar, Mara | 6 | 1 | 0 | 5 | 2 | 79,0",
+   "Spielplan",
    "Hinrunde",
    "· bis 15.03.2026",
    "Schütze 1 | Schütze 2 | Status",
@@ -624,13 +631,7 @@
    "96 R · 23,9 T · RT 27,9",
    "Inn, Karin",
    "99 R · 10,2 T · RT 11,2",
-   "✓",
-   "Tabelle",
-   "Pl. | Name | Sp. | S | U | N | Pkt. | Best. RT",
-   "1 | Inn, Karin | 6 | 6 | 0 | 0 | 12 | 10,9",
-   "2 | Vils, Karin | 6 | 4 | 0 | 2 | 8 | 12,4",
-   "3 | Tanne, Yasmin | 6 | 1 | 0 | 5 | 2 | 12,7",
-   "4 | Isar, Mara | 6 | 1 | 0 | 5 | 2 | 79,0"
+   "✓"
   ],
   "schedule@ADMIN@390": [
    "Wettbewerbe",
@@ -640,6 +641,13 @@
    "Playoffs",
    "Teilnehmer",
    "Spielplan kann nicht neu generiert werden — die Playoffs wurden bereits gestartet.",
+   "Tabelle",
+   "Pl. | Name | Sp. | S | Pkt.",
+   "1 | Inn, Karin | 6 | 6 | 12",
+   "2 | Vils, Karin | 6 | 4 | 8",
+   "3 | Tanne, Yasmin | 6 | 1 | 2",
+   "4 | Isar, Mara | 6 | 1 | 2",
+   "Spielplan",
    "Hinrunde",
    "· bis 15.03.2026",
    "Schütze 1 | Schütze 2 | Status",
@@ -705,13 +713,7 @@
    "96 R · 23,9 T · RT 27,9",
    "Inn, Karin",
    "99 R · 10,2 T · RT 11,2",
-   "✓",
-   "Tabelle",
-   "Pl. | Name | Sp. | S | Pkt.",
-   "1 | Inn, Karin | 6 | 6 | 12",
-   "2 | Vils, Karin | 6 | 4 | 8",
-   "3 | Tanne, Yasmin | 6 | 1 | 2",
-   "4 | Isar, Mara | 6 | 1 | 2"
+   "✓"
   ],
   "schedule@USER@1280": [
    "Wettbewerbe",
@@ -720,6 +722,13 @@
    "Luftgewehr · Spielplan & Tabelle",
    "Spielplan & Tabelle",
    "Playoffs",
+   "Tabelle",
+   "Pl. | Name | Sp. | S | U | N | Pkt. | Best. RT",
+   "1 | Inn, Karin | 6 | 6 | 0 | 0 | 12 | 10,9",
+   "2 | Vils, Karin | 6 | 4 | 0 | 2 | 8 | 12,4",
+   "3 | Tanne, Yasmin | 6 | 1 | 0 | 5 | 2 | 12,7",
+   "4 | Isar, Mara | 6 | 1 | 0 | 5 | 2 | 79,0",
+   "Spielplan",
    "Hinrunde",
    "· bis 15.03.2026",
    "Schütze 1 | Schütze 2 | Status",
@@ -785,13 +794,7 @@
    "96 R · 23,9 T · RT 27,9",
    "Inn, Karin",
    "99 R · 10,2 T · RT 11,2",
-   "✓",
-   "Tabelle",
-   "Pl. | Name | Sp. | S | U | N | Pkt. | Best. RT",
-   "1 | Inn, Karin | 6 | 6 | 0 | 0 | 12 | 10,9",
-   "2 | Vils, Karin | 6 | 4 | 0 | 2 | 8 | 12,4",
-   "3 | Tanne, Yasmin | 6 | 1 | 0 | 5 | 2 | 12,7",
-   "4 | Isar, Mara | 6 | 1 | 0 | 5 | 2 | 79,0"
+   "✓"
   ],
   "schedule@USER@390": [
    "Wettbewerbe",
@@ -799,6 +802,13 @@
    "Luftgewehr · Spielplan & Tabelle",
    "Spielplan & Tabelle",
    "Playoffs",
+   "Tabelle",
+   "Pl. | Name | Sp. | S | Pkt.",
+   "1 | Inn, Karin | 6 | 6 | 12",
+   "2 | Vils, Karin | 6 | 4 | 8",
+   "3 | Tanne, Yasmin | 6 | 1 | 2",
+   "4 | Isar, Mara | 6 | 1 | 2",
+   "Spielplan",
    "Hinrunde",
    "· bis 15.03.2026",
    "Schütze 1 | Schütze 2 | Status",
@@ -864,13 +874,7 @@
    "96 R · 23,9 T · RT 27,9",
    "Inn, Karin",
    "99 R · 10,2 T · RT 11,2",
-   "✓",
-   "Tabelle",
-   "Pl. | Name | Sp. | S | Pkt.",
-   "1 | Inn, Karin | 6 | 6 | 12",
-   "2 | Vils, Karin | 6 | 4 | 8",
-   "3 | Tanne, Yasmin | 6 | 1 | 2",
-   "4 | Isar, Mara | 6 | 1 | 2"
+   "✓"
   ]
  },
  "pdfs": {

@@ -19,8 +19,8 @@
   "series@USER": "→ /",
   "standings@ADMIN": "nicht gefunden",
   "standings@USER": "nicht gefunden",
-  "start@ADMIN": "→ /competitions/:id/schedule",
-  "start@USER": "→ /competitions/:id/schedule"
+  "start@ADMIN": "→ /competitions/:id/playoffs",
+  "start@USER": "→ /competitions/:id/playoffs"
  },
  "pages": {
   "audit-log@ADMIN@1280": [
@@ -742,6 +742,13 @@
    "Playoffs",
    "Teilnehmer",
    "Spielplan kann nicht neu generiert werden — die Playoffs wurden bereits gestartet.",
+   "Tabelle",
+   "Pl. | Name | Sp. | S | U | N | Pkt. | Best. RT",
+   "1 | Kiefer, Anja | 6 | 5 | 0 | 1 | 10 | 7,7",
+   "2 | Weide, Paul | 6 | 5 | 0 | 1 | 10 | 13,3",
+   "3 | Regen, Yasmin | 6 | 2 | 0 | 4 | 4 | 17,2",
+   "4 | Tanne, Yasmin | 6 | 0 | 0 | 6 | 0 | 33,3",
+   "Spielplan",
    "Hinrunde",
    "· bis 25.03.2026",
    "Schütze 1 | Schütze 2 | Status",
@@ -807,13 +814,7 @@
    "91 R · 61,3 T · RT 70,3",
    "Regen, Yasmin",
    "90 R · 71,0 T · RT 81,0",
-   "✓",
-   "Tabelle",
-   "Pl. | Name | Sp. | S | U | N | Pkt. | Best. RT",
-   "1 | Kiefer, Anja | 6 | 5 | 0 | 1 | 10 | 7,7",
-   "2 | Weide, Paul | 6 | 5 | 0 | 1 | 10 | 13,3",
-   "3 | Regen, Yasmin | 6 | 2 | 0 | 4 | 4 | 17,2",
-   "4 | Tanne, Yasmin | 6 | 0 | 0 | 6 | 0 | 33,3"
+   "✓"
   ],
   "schedule@ADMIN@390": [
    "Wettbewerbe",
@@ -823,6 +824,13 @@
    "Playoffs",
    "Teilnehmer",
    "Spielplan kann nicht neu generiert werden — die Playoffs wurden bereits gestartet.",
+   "Tabelle",
+   "Pl. | Name | Sp. | S | Pkt.",
+   "1 | Kiefer, Anja | 6 | 5 | 10",
+   "2 | Weide, Paul | 6 | 5 | 10",
+   "3 | Regen, Yasmin | 6 | 2 | 4",
+   "4 | Tanne, Yasmin | 6 | 0 | 0",
+   "Spielplan",
    "Hinrunde",
    "· bis 25.03.2026",
    "Schütze 1 | Schütze 2 | Status",
@@ -888,13 +896,7 @@
    "91 R · 61,3 T · RT 70,3",
    "Regen, Yasmin",
    "90 R · 71,0 T · RT 81,0",
-   "✓",
-   "Tabelle",
-   "Pl. | Name | Sp. | S | Pkt.",
-   "1 | Kiefer, Anja | 6 | 5 | 10",
-   "2 | Weide, Paul | 6 | 5 | 10",
-   "3 | Regen, Yasmin | 6 | 2 | 4",
-   "4 | Tanne, Yasmin | 6 | 0 | 0"
+   "✓"
   ],
   "schedule@USER@1280": [
    "Wettbewerbe",
@@ -903,6 +905,13 @@
    "Luftgewehr · Spielplan & Tabelle",
    "Spielplan & Tabelle",
    "Playoffs",
+   "Tabelle",
+   "Pl. | Name | Sp. | S | U | N | Pkt. | Best. RT",
+   "1 | Kiefer, Anja | 6 | 5 | 0 | 1 | 10 | 7,7",
+   "2 | Weide, Paul | 6 | 5 | 0 | 1 | 10 | 13,3",
+   "3 | Regen, Yasmin | 6 | 2 | 0 | 4 | 4 | 17,2",
+   "4 | Tanne, Yasmin | 6 | 0 | 0 | 6 | 0 | 33,3",
+   "Spielplan",
    "Hinrunde",
    "· bis 25.03.2026",
    "Schütze 1 | Schütze 2 | Status",
@@ -968,13 +977,7 @@
    "91 R · 61,3 T · RT 70,3",
    "Regen, Yasmin",
    "90 R · 71,0 T · RT 81,0",
-   "✓",
-   "Tabelle",
-   "Pl. | Name | Sp. | S | U | N | Pkt. | Best. RT",
-   "1 | Kiefer, Anja | 6 | 5 | 0 | 1 | 10 | 7,7",
-   "2 | Weide, Paul | 6 | 5 | 0 | 1 | 10 | 13,3",
-   "3 | Regen, Yasmin | 6 | 2 | 0 | 4 | 4 | 17,2",
-   "4 | Tanne, Yasmin | 6 | 0 | 0 | 6 | 0 | 33,3"
+   "✓"
   ],
   "schedule@USER@390": [
    "Wettbewerbe",
@@ -982,6 +985,13 @@
    "Luftgewehr · Spielplan & Tabelle",
    "Spielplan & Tabelle",
    "Playoffs",
+   "Tabelle",
+   "Pl. | Name | Sp. | S | Pkt.",
+   "1 | Kiefer, Anja | 6 | 5 | 10",
+   "2 | Weide, Paul | 6 | 5 | 10",
+   "3 | Regen, Yasmin | 6 | 2 | 4",
+   "4 | Tanne, Yasmin | 6 | 0 | 0",
+   "Spielplan",
    "Hinrunde",
    "· bis 25.03.2026",
    "Schütze 1 | Schütze 2 | Status",
@@ -1047,13 +1057,7 @@
    "91 R · 61,3 T · RT 70,3",
    "Regen, Yasmin",
    "90 R · 71,0 T · RT 81,0",
-   "✓",
-   "Tabelle",
-   "Pl. | Name | Sp. | S | Pkt.",
-   "1 | Kiefer, Anja | 6 | 5 | 10",
-   "2 | Weide, Paul | 6 | 5 | 10",
-   "3 | Regen, Yasmin | 6 | 2 | 4",
-   "4 | Tanne, Yasmin | 6 | 0 | 0"
+   "✓"
   ]
  },
  "pdfs": {
