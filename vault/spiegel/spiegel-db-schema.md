@@ -118,8 +118,8 @@ demselben Volumen:
 
 | Trefferbild | Lagen lesen und Muster rechnen | an den Browser |
 | --- | --- | --- |
-| „Alles“ (1.564 Scheiben) | 60 ms | 159 KB (ein Raster 64 × 64 in sechs Bändern, höchstens 300 seltene Schüsse einzeln, Schwerpunkt je Scheibe mit Kennung) |
-| letzte 90 Tage (76 Scheiben) | 8 ms | 19 KB |
+| „Alles“ (1.564 Scheiben, über 3.000 Schuss) | 56 ms | 156 KB (Raster 64 × 64 in sechs Bändern, Schwerpunkt je Scheibe mit Kennung) |
+| letzte 90 Tage (76 Scheiben, bis 3.000 Schuss) | 9 ms | 42 KB (jeder Treffer mit seinem Band der Dichte) |
 
 Zwei Befunde der Messung:
 - **Datum je Zeile:** `@vereinsheim/lib/format` baute für jeden Aufruf einen neuen `Intl.DateTimeFormat`, etwa 70 µs.

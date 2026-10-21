@@ -211,8 +211,9 @@ Ergebnis (I7–I9, Z6, Z7, K2, K4, T4, V3–V5, W2–W4 als Zeilen im Vergleich)
   - bis 3.000 Schuss jeder Treffer in Kalibergröße, gefärbt nach der Dichte an seiner Stelle (`shots`): sechs Stufen
     von ganz selten (hellviolett, `heat-0`) bis oft (gelb, `heat-5`), deren Grenzen 99 von 100, neun Zehntel, drei
     Viertel, die Hälfte, ein Viertel und ein Zehntel der Schüsse umschließen (`HEAT_SHARES`), die dichten zuletzt
-    gezeichnet, Deckkraft 0,85; der Ausschnitt reicht bis zum weitesten Schuss, höchstens doppelt so weit wie 99 % der
-    Schüsse;
+    gezeichnet, Deckkraft 0,85, Ringe und Ringzahlen darüber, damit man sieht, was wo ist; der Ausschnitt reicht bis
+    zum weitesten Schuss, höchstens 1,6-mal so weit wie 99 % der Schüsse, wer dann draußen liegt, wird unter dem Bild
+    gezählt („1 Schuss liegt außerhalb des Bilds.“);
   - über 3.000 Schuss (`PATTERN_SHOTS_MAX`, Menge an den Browser) die Dichte als sechs Bänder in denselben Farben
     zwischen den Flächen und den Ringen (`bands`, Deckkraft 0,6 bis 0,97), Ausschnitt 99 % der Schüsse × 1,35.
 - **Warum Treffer in Dichtefarbe:** Der User verglich am 21. Oktober 2026 Heatmap, Treffer in Ringfarbe und Treffer in
@@ -226,8 +227,8 @@ Ergebnis (I7–I9, Z6, Z7, K2, K4, T4, V3–V5, W2–W4 als Zeilen im Vergleich)
   Schwerpunkte der Scheiben), dann die Form („länglich, eher waagrecht“ oder „keine klare Richtung“, Test über die
   gepoolte Form); ohne Urteil über die Form kein zweiter Satz.
 - **Rechnen auf dem Server:** aus den gespeicherten Lagen der Projektion (`marks`, 10 µm), erst wenn das Bild oder die
-  Reiter Präzision und Lage es brauchen (`periodPatternAction`); an den Browser geht ein Raster von 64 × 64 und der
-  Schwerpunkt je Scheibe, keine Schüsse. Gemessen: „Alles“ mit 1.564 Scheiben 60 ms und 159 KB, 90 Tage 8 ms und 19 KB
+  Reiter Präzision und Lage es brauchen (`periodPatternAction`); an den Browser gehen bis 3.000 Schuss die Treffer mit
+  ihrem Band, darüber ein Raster von 64 × 64, dazu der Schwerpunkt je Scheibe. Gemessen: „Alles“ mit 1.564 Scheiben (Bänder) 56 ms und 156 KB, 90 Tage (76 Scheiben, Treffer in Dichtefarbe) 9 ms und 42 KB
   ([[spiegel-db-schema]]). Die Dichte glättet 1,3-mal so stark wie nach Silverman, die Ränder sind weiche Kurven.
 - **Reiter Präzision:** die Form über mehrere Scheiben als Ellipse (doppelte Halbachsen der gepoolten Streuung) mit
   ihrer langen Seite und gestrichelt dem Kreis einer runden Gruppe gleicher Streuung, ohne Maßstab; daneben Form, Länge

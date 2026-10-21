@@ -64,10 +64,10 @@ describe("PatternPanel", () => {
     expect(html).toContain('fill="var(--heat-5)"')
     expect(html).toContain('fill="var(--heat-0)"')
     expect(html).not.toContain("var(--score-")
-    // die Scheibe wie auf der Seite einer Scheibe, die Treffer darüber
+    // die Scheibe wie auf der Seite einer Scheibe, Ringe und Ringzahlen über den Treffern
     expect(html).toContain('fill="var(--paper)"')
     expect(html).toContain('fill="var(--spiegel)"')
-    expect(html.lastIndexOf("data-ring=")).toBeLessThan(html.indexOf("data-pattern-shot"))
+    expect(html.lastIndexOf("data-pattern-shot")).toBeLessThan(html.indexOf("data-ring="))
     expect(html).toContain("Jeder Punkt ist ein Schuss.")
     expect(html).toContain("data-heat-legend")
     expect(text(html)).not.toMatch(JARGON)

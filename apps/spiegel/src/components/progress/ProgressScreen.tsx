@@ -43,7 +43,7 @@ import { PeriodChartBar } from "@vereinsheim/shot-ui/period/PeriodChartBar"
 import { PeriodControls, PeriodHeader } from "@vereinsheim/shot-ui/period/PeriodHeader"
 import { PeriodResult } from "@vereinsheim/shot-ui/period/PeriodResult"
 import { PeriodTiles } from "@vereinsheim/shot-ui/period/PeriodTiles"
-import { periodSentence } from "@vereinsheim/shot-ui/period/sentence"
+import { emptyPeriodText, periodSentence } from "@vereinsheim/shot-ui/period/sentence"
 import {
   periodReducer,
   type PeriodAction,
@@ -297,8 +297,7 @@ export function ProgressScreen({
         empty={
           empty ? (
             <p className="rounded-2xl border border-border bg-card p-4 text-[14px] text-foreground-2">
-              Keine Scheibe in diesem Zeitraum. Wähle oben einen längeren Zeitraum oder eine andere
-              Art.
+              {emptyPeriodText(model.calendar.all.at(-1)?.key ?? null, timeZone)}
             </p>
           ) : undefined
         }

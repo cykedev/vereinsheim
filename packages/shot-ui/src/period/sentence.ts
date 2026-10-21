@@ -3,6 +3,8 @@
 
 import type { PeriodComparison } from "@vereinsheim/shot-core/analysis"
 
+import { formatDateOnly, zonedDayStartMs } from "@vereinsheim/lib/format"
+
 import { formatValue } from "../format"
 import { PREVIOUS_LABEL } from "./calendar"
 import type { PeriodModel } from "./model"
@@ -69,4 +71,19 @@ export function periodSentence(
       : "Das ist ein klarer Unterschied"
   const direction = c.delta > 0 ? "höher" : "tiefer"
   return `${subject} ${formatValue(Math.abs(c.delta), 2)} ${direction} als ${other.als}. ${proven}.`
+}
+
+/**
+ * Hinweis ohne Scheibe im Zeitraum: Nennt den letzten Abend der Familie in der gewählten Art (`calendar.all`), damit
+ * ein leerer kurzer Zeitraum nicht wie ein Fehler aussieht; ohne jeden Abend der allgemeine Hinweis
+ */
+export function emptyPeriodText(
+  lastDay: string | null,
+  timeZone: string,
+  words: PeriodWords = CARD_WORDS
+): string {
+  if (!lastDay)
+    return `Keine ${words.one} in diesem Zeitraum. Wähle oben einen längeren Zeitraum oder eine andere Art.`
+  const date = formatDateOnly(new Date(zonedDayStartMs(lastDay, timeZone)), timeZone)
+  return `Keine ${words.one} in diesem Zeitraum. Deine letzte ${words.one} ist vom ${date}. Wähle oben einen anderen Zeitraum oder eine andere Art.`
 }

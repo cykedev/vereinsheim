@@ -70,24 +70,25 @@ export function PatternTarget({ layer, target, label, className }: PatternTarget
         className
       )}
     >
-      {layer.style === "bands" && layer.grid ? (
-        <>
-          <TargetBoard target={target} view={view} ringLabel={sizes.ringLabel} part="fills" />
-          {layer.grid.levels.map((level, i) => (
-            <path
-              key={i}
-              data-pattern-band={i + 1}
-              d={contourPath(layer.grid!, level, layer.halfUm)}
-              fill={HEAT_COLORS[i]}
-              fillOpacity={HEAT_OPACITY[i]}
-              fillRule="evenodd"
-            />
-          ))}
-          <TargetBoard target={target} view={view} ringLabel={sizes.ringLabel} part="lines" />
-        </>
-      ) : (
-        <TargetBoard target={target} view={view} ringLabel={sizes.ringLabel} />
-      )}
+      {/* bei wenigen Treffern wie auf der Seite einer Scheibe; mit Dichte liegen Ringe und Ringzahlen über den Bändern
+          oder Treffern, damit man sieht, was wo ist */}
+      <TargetBoard
+        target={target}
+        view={view}
+        ringLabel={sizes.ringLabel}
+        part={layer.style === "rings" ? "all" : "fills"}
+      />
+      {layer.style === "bands" &&
+        layer.grid?.levels.map((level, i) => (
+          <path
+            key={i}
+            data-pattern-band={i + 1}
+            d={contourPath(layer.grid!, level, layer.halfUm)}
+            fill={HEAT_COLORS[i]}
+            fillOpacity={HEAT_OPACITY[i]}
+            fillRule="evenodd"
+          />
+        ))}
       {/* jeder Treffer: in der Farbe der Dichte an seiner Stelle, bei wenigen Schüssen in der seines Rings */}
       {(layer.points ?? []).map(([x, y, ring, band], i) => (
         <circle
@@ -105,6 +106,9 @@ export function PatternTarget({ layer, target, label, className }: PatternTarget
           {...HAIR}
         />
       ))}
+      {layer.style !== "rings" && (
+        <TargetBoard target={target} view={view} ringLabel={sizes.ringLabel} part="lines" />
+      )}
       {layer.center && (
         <MpiMark
           x={layer.center.xUm / 1000}

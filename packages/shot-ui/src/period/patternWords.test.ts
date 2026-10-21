@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest"
 
 import type { PeriodShape, PositionOverTime } from "@vereinsheim/shot-core/analysis"
 
+import { emptyPeriodText } from "./sentence"
+
 import {
   axisWords,
   basisText,
@@ -108,5 +110,14 @@ describe("Worte zum Trefferbild", () => {
   it("Treffer außerhalb des Bilds", () => {
     expect(outsideText(1)).toBe("1 Schuss liegt außerhalb des Bilds.")
     expect(outsideText(3)).toBe("3 Schüsse liegen außerhalb des Bilds.")
+  })
+
+  it("ohne Scheibe im Zeitraum nennt der Hinweis den letzten Abend", () => {
+    expect(emptyPeriodText("2026-10-09", "Europe/Berlin")).toBe(
+      "Keine Scheibe in diesem Zeitraum. Deine letzte Scheibe ist vom 09.10.2026. Wähle oben einen anderen Zeitraum oder eine andere Art."
+    )
+    expect(emptyPeriodText(null, "Europe/Berlin")).toBe(
+      "Keine Scheibe in diesem Zeitraum. Wähle oben einen längeren Zeitraum oder eine andere Art."
+    )
   })
 })
