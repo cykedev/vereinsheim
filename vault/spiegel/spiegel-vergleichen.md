@@ -11,8 +11,9 @@ relates_to: ["[[spiegel-langzeit]]", "[[spiegel-durchsicht]]", "[[spiegel-statis
 
 **TL;DR** Alle Vergleiche laufen über die eigene Seite „Vergleichen“ (`/compare`): zwei Scheiben, zwei Zeiträume oder
 Wettkampf und Training, später ein Ort oder ein Merkmal, immer eine Familie und eine Wertung. Die Seite antwortet mit
-einem Satz, belegt mit einem Bild beider Seiten und drei Zeilen (Ø je Schuss, Streuung, Lage) und führt alle Kennzahlen
-eingeklappt als Werkzeug. Der Vergleich aus dem Fortschritt ist dorthin umgezogen. Entschieden mit dem User am
+einem Satz, belegt mit einem Bild beider Seiten (auf die Gruppe gezoomt, Lupe für die ganze Scheibe) und einer ruhigen
+Tabelle aller Zahlen, in der ein klarer Unterschied golden steht. Erreichbar über „Zeitraum · Vergleichen“ oben im
+Fortschritt und am Desktop über einen Untereintrag. Der Vergleich aus dem Fortschritt ist dorthin umgezogen. Entschieden mit dem User am
 21. Oktober 2026, gebaut am selben Tag (Plan 2 der Reihe in [[spiegel-roadmap]], SP-2.2).
 
 # Spiegel — Vergleichen
@@ -64,10 +65,13 @@ eingeklappt als Werkzeug. Der Vergleich aus dem Fortschritt ist dorthin umgezoge
 
 1. **Antwort:** ein Satz über das Ergebnis je Schuss („In den letzten 90 Tagen 0,12 Ringe je Schuss mehr als im
    Zeitraum davor. Das ist ein klarer Unterschied.“), ein zweiter über Streuung und Lage. Ein Urteil nur mit Test.
-2. **Belege:** das Bild beider Seiten, darunter die Zeilen Ø je Schuss, Streuung und Lage mit A, B und dem Urteil in
-   Worten („Klar besser: Letzte 90 Tage.“), darunter die Grundlage („A: 10 Scheiben, 398 Schuss. B: …“).
-3. **Werkzeug:** „Alle Kennzahlen“ eingeklappt, die Kacheln des Fortschritts für A und B; bei zwei Scheiben ohne Urteil,
-   denn für diese Zahlen gibt es keinen Test über Schüsse. Fachbegriffe nur im Blatt „?“.
+2. **Belege:** das Bild beider Seiten mit der Legende der Namen, darunter eine Tabelle mit allen Zahlen (die Kacheln des
+   Fortschritts und die Lage). Die Spalten heißen nach den Seiten („6 Monate“, „davor“, „02.10.“, „Wettkampf“). Ein klar
+   besserer Wert steht golden, liegen die Mitten klar auseinander, der Abstand; die Regel steht einmal unter der Tabelle,
+   darunter die Grundlage („A: 10 Scheiben, 398 Schuss. B: …“). Bei zwei Scheiben haben nur Ø je Schuss, Streuung und
+   Lage einen Test; die übrigen Zahlen stehen ohne Gold. Fachbegriffe nur im Blatt „?“.
+3. **Verworfen nach dem ersten Bau:** drei Zeilen mit einem Urteilssatz je Zeile und „Alle Kennzahlen“ eingeklappt. Der
+   User fand das doppelt und unruhig (21. Oktober 2026).
 
 ## Das Bild
 
@@ -78,6 +82,10 @@ An den echten Scheiben des Users verglichen (Prototyp am 21. Oktober 2026, wiede
   je Seite, darunter Punkte wie bei zwei Scheiben.
 - **Zwei Scheiben:** beide übereinander, jeder Schuss in der Farbe seiner Seite, dazu beide Mitten. Die Ringwerte stehen
   in den Zahlen.
+- **Zoom:** Das Bild öffnet auf der Gruppe beider Seiten (bei Umrissen bis 95 von 100 Schüssen um ihre gemeinsame Mitte,
+  bei Punkten bis zum weitesten, Ausschnitt wie `groupView` der Scheibe). Die Lupe oben links zeigt die ganze Scheibe
+  und zurück, wie auf der Seite einer Scheibe.
+- **Mitten** tragen einen Ring in der Farbe ihrer Seite, keine Buchstaben; die Namen stehen in der Legende darunter.
 - **Farben:** die Tokens `compare-a` (Blau) und `compare-b` (Orange), in beiden Darstellungen gleich wie die Scheibe;
   Linien und Buchstaben mit dunklem Saum. Text bleibt in der Schriftfarbe.
 - **Verworfen:** zwei Bilder nebeneinander (man schaut hin und her, am Telefon je etwa 165 px), A als Treffer in
@@ -85,9 +93,11 @@ An den echten Scheiben des Users verglichen (Prototyp am 21. Oktober 2026, wiede
 
 ## Einstiege und Navigation
 
-- **Kein Platz in der Navigation:** Die untere Leiste hat höchstens fünf Einträge, und das Tagebuch aus [[adr-033]]
-  braucht einen. „Vergleichen“ gehört zum Bereich Fortschritt. Die Adresse ist `/compare` (schon im Routen-Modell), nicht
-  `/progress/compare`.
+- **Unterseite von Fortschritt:** Die untere Leiste hat höchstens fünf Einträge (mit Scannen voll), und das Tagebuch aus
+  [[adr-033]] braucht einen. Deshalb steht oben im Fortschritt und auf der Seite selbst der Umschalter
+  „Zeitraum · Vergleichen“ (Links, `ProgressSwitch`), am Desktop zusätzlich „Vergleichen“ eingerückt unter Fortschritt in
+  der Seitenleiste (`FrameItem.sub`). Auf dem Telefon ist dann Fortschritt markiert. Die Adresse ist `/compare` (schon im
+  Routen-Modell), nicht `/progress/compare`.
 - **Von der Scheibe:** „Mit der Scheibe davor vergleichen“ über „Teilen“, A = diese Scheibe, B = die davor in der Familie.
 - **Aus dem Fortschritt:** „Genauer vergleichen“ hinter dem Satz „Werde ich besser?“ mit seinem Paar, bei „Alles“ die
   letzten 90 Tage gegen die 90 davor.
@@ -116,4 +126,3 @@ ihn weiter. Der Satz im Kopf vergleicht still mit dem Zeitraum davor und verweis
 - Die Auswahl zweier Scheiben in der Liste (SP-1.8).
 - Ort und Merkmal als Arten (nach [[adr-033]] bzw. SP-2.3).
 - W2–W4 (Schluss- und Startphase, Tempo unter Druck) als Zeilen der Seite brauchen Serien und Zeit; mit Plan 3.
-- Der Ausschnitt der Umrisse folgt `patternHalf` über beide Seiten; ob er enger gehört, klärt die Prüfung mit dem User.

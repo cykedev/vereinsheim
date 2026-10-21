@@ -15,25 +15,25 @@ für alle drei Apps (ADR-015/016). Jede Komponente gibt es nur einmal — Drift 
 
 ### Bausteine von Design 2
 
-| Export                    | Inhalt                                                                                                                          |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| `design2/segmented`       | Segment-Umschalter, `scroll` oder `wrap`                                                                                        |
-| `design2/toggle-chip`     | Schalter-Chip                                                                                                                   |
-| `design2/sheet`           | Blatt: am Telefon von unten, am Desktop daneben                                                                                 |
-| `design2/round-toggle`    | weicher Kreis für eine Einstellung                                                                                              |
-| `design2/theme`           | `ThemeScript storageKey` (im `<head>`), `ThemeProvider storageKey`, `useTheme` (`theme`, `resolved`, `setTheme`), `themeScript` |
-| `design2/theme-switch`    | `ThemeSwitch`: Darstellung System, Hell, Dunkel                                                                                 |
-| `design2/toaster`         | `Toaster` (sonner) in Design 2, hell oder dunkel wie `useTheme().resolved`                                                      |
-| `design2/app-frame`       | `AppFrame`: Seitenleiste ab 1024 px, untere Leiste mit Aktion in der Mitte, schmale Leiste quer; `FrameItem`, `renderLink`      |
-| `design2/page`            | `Page`: Breite, Rand und Platz über der unteren Leiste einer Seite                                                              |
-| `design2/page-header`     | `PageHeader`: Seitenkopf mit Titel in der Schrift der Marke, Satz und Aktion                                                    |
-| `design2/card`            | `Card` und ihre Teile wie `ui/card`, in den Maßen von Spiegel (16 px Rand, 12 px Abstand, große Radien)                         |
-| `design2/decision-dialog` | `DecisionDialog` (mit `children`, `confirmDisabled`), `DecisionBody`, `NoticeDialog`, Typ `Decision`: Folgen vor dem Bestätigen |
-| `design2/undo`            | `UndoHost`, `useUndo`, `UndoBar`, Typ `UndoResult`: „Gelöscht · Rückgängig“                                                     |
-| `design2/help`            | `HelpText`, `HELP_FIELDS`, `HelpIcon`, `HelpButton`, `HelpBody` (ohne Client-Grenze)                                            |
-| `design2/help-sheet`      | `HelpSheet` (Erklärung als Blatt), `HelpProvider`, `useHelp`                                                                    |
-| `design2/bar`             | `BAR_PX`, `EDGE_PX`, `JUMP_BAR`: Klassen der 56 px hohen klebenden Leisten                                                      |
-| `design2/score-colors`    | `SCORE_HEX`, `scoreKey`: Ringwert-Farben als Hex für Orte ohne CSS-Variablen (PDF)                                              |
+| Export                    | Inhalt                                                                                                                                                        |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `design2/segmented`       | Segment-Umschalter, `scroll` oder `wrap`                                                                                                                      |
+| `design2/toggle-chip`     | Schalter-Chip                                                                                                                                                 |
+| `design2/sheet`           | Blatt: am Telefon von unten, am Desktop daneben                                                                                                               |
+| `design2/round-toggle`    | weicher Kreis für eine Einstellung                                                                                                                            |
+| `design2/theme`           | `ThemeScript storageKey` (im `<head>`), `ThemeProvider storageKey`, `useTheme` (`theme`, `resolved`, `setTheme`), `themeScript`                               |
+| `design2/theme-switch`    | `ThemeSwitch`: Darstellung System, Hell, Dunkel                                                                                                               |
+| `design2/toaster`         | `Toaster` (sonner) in Design 2, hell oder dunkel wie `useTheme().resolved`                                                                                    |
+| `design2/app-frame`       | `AppFrame`: Seitenleiste ab 1024 px (Unterseiten über `FrameItem.sub`), untere Leiste mit Aktion in der Mitte, schmale Leiste quer; `FrameItem`, `renderLink` |
+| `design2/page`            | `Page`: Breite, Rand und Platz über der unteren Leiste einer Seite                                                                                            |
+| `design2/page-header`     | `PageHeader`: Seitenkopf mit Titel in der Schrift der Marke, Satz und Aktion                                                                                  |
+| `design2/card`            | `Card` und ihre Teile wie `ui/card`, in den Maßen von Spiegel (16 px Rand, 12 px Abstand, große Radien)                                                       |
+| `design2/decision-dialog` | `DecisionDialog` (mit `children`, `confirmDisabled`), `DecisionBody`, `NoticeDialog`, Typ `Decision`: Folgen vor dem Bestätigen                               |
+| `design2/undo`            | `UndoHost`, `useUndo`, `UndoBar`, Typ `UndoResult`: „Gelöscht · Rückgängig“                                                                                   |
+| `design2/help`            | `HelpText`, `HELP_FIELDS`, `HelpIcon`, `HelpButton`, `HelpBody` (ohne Client-Grenze)                                                                          |
+| `design2/help-sheet`      | `HelpSheet` (Erklärung als Blatt), `HelpProvider`, `useHelp`                                                                                                  |
+| `design2/bar`             | `BAR_PX`, `EDGE_PX`, `JUMP_BAR`: Klassen der 56 px hohen klebenden Leisten                                                                                    |
+| `design2/score-colors`    | `SCORE_HEX`, `scoreKey`: Ringwert-Farben als Hex für Orte ohne CSS-Variablen (PDF)                                                                            |
 
 ## Regeln
 

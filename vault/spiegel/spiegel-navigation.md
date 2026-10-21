@@ -61,7 +61,7 @@ Seiten ohne eigenen Bereich:
 | Offen | `/open` |
 | Papierkorb | `/profile/trash` |
 | Geteilte Scheibe | `/share/<uuid>`: ohne Anmeldung und ohne Rahmen der App (siehe „Teilen per Link“) |
-| Vergleichen | `/compare?type=cards&a=<id>&b=<id>` · `/compare?family=lp-freihand&a=6m` (zwei Zeiträume, B der davor) · `/compare?type=kind&family=lp-freihand&range=all`; Bereich Fortschritt, nicht in der Leiste ([[spiegel-vergleichen]]) |
+| Vergleichen | `/compare?type=cards&a=<id>&b=<id>` · `/compare?family=lp-freihand&a=6m` (zwei Zeiträume, B der davor) · `/compare?type=kind&family=lp-freihand&range=all`; Unterseite von Fortschritt: Umschalter „Zeitraum · Vergleichen“ oben auf beiden Seiten, am Desktop eingerückt unter Fortschritt, in der unteren Leiste markiert Fortschritt ([[spiegel-vergleichen]]) |
 
 ## Routen-Modell
 
