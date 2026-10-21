@@ -102,17 +102,20 @@ describe("Liste und Fortschritt als Query", () => {
       scoring: "rings",
       metric: "group.sigma",
       view: "months",
+      show: "target",
       chosen: "c42",
     }
     const text =
-      "range=2026-05-01..2026-06-30&compare=previous&family=lp-10m&kind=training&sighters=0&scoring=rings&metric=sigma&view=months&pick=c42"
+      "range=2026-05-01..2026-06-30&compare=previous&family=lp-10m&kind=training&sighters=0&scoring=rings&metric=sigma&view=months&show=target&pick=c42"
     expect(query(progressQueryToParams(full))).toBe(text)
     expect(progressQueryFromParams(new URLSearchParams(text))).toEqual(full)
   })
 
   it("Vorgaben im Link werden gelesen und fallen beim Schreiben weg; Unbekanntes gilt als Vorgabe", () => {
     const read = progressQueryFromParams(
-      new URLSearchParams("sighters=1&metric=mean&range=90d&kind=wettkampf&view=jahr&pick=a b")
+      new URLSearchParams(
+        "sighters=1&metric=mean&range=90d&kind=wettkampf&view=jahr&show=history&pick=a b"
+      )
     )
     expect(read).toEqual(DEFAULT_PROGRESS)
     expect(progressQueryToParams(read)).toEqual([])
@@ -196,6 +199,7 @@ describe("die Scheibe: Herkunft, Auswahl, Schuss, Anker", () => {
           includeProbeOnly: true,
           metric: "result.decimalMean",
           view: null,
+          show: "history",
         },
       },
       selection: 2,
@@ -440,6 +444,7 @@ describe("die ganze Adresse", () => {
                         scoring,
                         metric,
                         view,
+                        show: chosen ? "target" : "history",
                         chosen,
                       })
     const origins: CardOrigin[] = [

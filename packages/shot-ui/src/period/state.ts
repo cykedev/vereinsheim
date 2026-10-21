@@ -18,6 +18,9 @@ export type PeriodMetricKey =
 
 export type CardKind = "all" | "training" | "competition"
 
+/** was an der Stelle des Verlaufs steht: der Verlauf oder das Trefferbild */
+export type PeriodShow = "history" | "target"
+
 export interface PeriodState {
   choice: PeriodChoice
   compare: CompareChoice
@@ -32,6 +35,8 @@ export interface PeriodState {
   metric: PeriodMetricKey
   /** Darstellung des Verlaufs; null: nach der Zahl der Scheiben */
   view: "cards" | "months" | null
+  /** Hauptbild: der Verlauf oder das Trefferbild über den Zeitraum (L9) */
+  show: PeriodShow
   /** gewählte Scheibe (Id); null: keine, die Ablesung zeigt die neueste */
   chosen: string | null
 }
@@ -45,6 +50,7 @@ export type PeriodAction =
   | { type: "setScoring"; scoring: Scoring }
   | { type: "setMetric"; metric: PeriodMetricKey }
   | { type: "setView"; view: "cards" | "months" }
+  | { type: "setShow"; show: PeriodShow }
   | { type: "choose"; id: string | null }
   /** wählen ohne Umschalten (das Lineal): dieselbe Scheibe noch einmal bleibt gewählt */
   | { type: "pick"; id: string | null }
@@ -70,6 +76,7 @@ export function initialPeriodState(
     scoring: "decimal",
     metric: "result.decimalMean",
     view: null,
+    show: "history",
     chosen: null,
     ...partial,
   }
@@ -98,6 +105,8 @@ export function periodReducer(state: PeriodState, action: PeriodAction): PeriodS
       return { ...state, metric: action.metric }
     case "setView":
       return { ...state, view: action.view }
+    case "setShow":
+      return { ...state, show: action.show }
     case "choose":
       return { ...state, chosen: action.id === state.chosen ? null : action.id }
     case "pick":

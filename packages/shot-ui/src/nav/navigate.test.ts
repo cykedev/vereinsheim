@@ -9,6 +9,7 @@ import {
   progressFromList,
   progressRoute,
   progressWithMetric,
+  progressWithPattern,
   siblingRoute,
 } from "./navigate"
 import { initialPeriodState, periodReducer, type PeriodState } from "../period/state"
@@ -57,6 +58,7 @@ describe("Wege zwischen den Seiten", () => {
           includeProbeOnly: true,
           metric: "group.sigma",
           view: null,
+          show: "history",
         },
       },
       selection: null,
@@ -166,6 +168,12 @@ describe("Wege zwischen den Seiten", () => {
     })
     expect(urlFromRoute(route)).toBe("/progress?family=lp-freihand&metric=sigma")
   })
+
+  it("das Trefferbild einer Familie: nur Familie und Hauptbild in der Adresse", () => {
+    const route = progressWithPattern("lp-freihand")
+    expect(route.query).toEqual({ ...DEFAULT_PROGRESS, family: "lp-freihand", show: "target" })
+    expect(urlFromRoute(route)).toBe("/progress?family=lp-freihand&show=target")
+  })
 })
 
 describe("Beschriftung des Rückwegs", () => {
@@ -207,6 +215,7 @@ describe("Fortschritt ↔ Zustand der Seite", () => {
         scoring: "rings",
         metric: "time.intervalMedian",
         view: "cards",
+        show: "target",
         chosen: "c9",
       },
     ]

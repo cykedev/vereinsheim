@@ -121,6 +121,11 @@ export function progressWithMetric(family: string, metric: PeriodMetricKey): Pro
   return { page: "progress", query: { ...DEFAULT_PROGRESS, family, metric }, section: null }
 }
 
+/** Fortschritt einer Familie mit dem Trefferbild als Hauptbild; ohne Anker, das Bild steht oben */
+export function progressWithPattern(family: string): ProgressRoute {
+  return { page: "progress", query: { ...DEFAULT_PROGRESS, family, show: "target" }, section: null }
+}
+
 /**
  * Name des Rückwegs: „Start“, „Scheiben“ oder der Zeitraum wie in der Seite eines Zeitraums („Letzte 90 Tage“,
  * „Neue Munition“, „01.05.2026 – 30.06.2026“). Der Name hängt nicht von „jetzt“ ab; benannte Zeiträume und die

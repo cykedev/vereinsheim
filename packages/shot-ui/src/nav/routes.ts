@@ -12,7 +12,7 @@ import {
   type PeriodSection,
 } from "../layout/sections"
 import { DEFAULT_CHOICE, type CompareChoice, type PeriodChoice } from "../period/calendar"
-import type { CardKind, PeriodMetricKey } from "../period/state"
+import type { CardKind, PeriodMetricKey, PeriodShow } from "../period/state"
 import type { SeriesKey } from "../types"
 
 /** Id eines benannten Zeitraums, einer Familie oder eines Merkmals: klein, Ziffern, Bindestriche */
@@ -116,6 +116,7 @@ export interface ProgressQuery {
   scoring: Scoring
   metric: PeriodMetricKey
   view: "cards" | "months" | null
+  show: PeriodShow
   chosen: string | null
 }
 
@@ -137,6 +138,7 @@ export const DEFAULT_PROGRESS: ProgressQuery = {
   scoring: "decimal",
   metric: "result.decimalMean",
   view: null,
+  show: "history",
   chosen: null,
 }
 
@@ -209,6 +211,7 @@ function progressPairs(
         : (METRIC_CODES.find(([key]) => key === query.metric)?.[1] ?? null),
     ],
     ["view", query.view],
+    ["show", query.show === "target" ? "target" : null],
     ["pick", query.chosen ?? null],
   ]
 }
@@ -241,6 +244,7 @@ export function progressQueryFromParams(
     scoring: scoringOf(params.get("scoring")),
     metric: metric && metrics.includes(metric) ? metric : DEFAULT_PROGRESS.metric,
     view: view === "cards" || view === "months" ? view : null,
+    show: params.get("show") === "target" ? "target" : "history",
     chosen: idOrNull(params.get("pick")),
   }
 }

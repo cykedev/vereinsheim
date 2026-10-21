@@ -16,6 +16,7 @@ describe("Zustand der Seite eines Zeitraums", () => {
       scoring: "decimal",
       metric: "result.decimalMean",
       view: null,
+      show: "history",
       chosen: null,
     })
     expect(initialPeriodState({ family: "lp-10m", scoring: "rings" }).scoring).toBe("rings")
@@ -31,6 +32,7 @@ describe("Zustand der Seite eines Zeitraums", () => {
       [{ type: "setScoring", scoring: "rings" }, { scoring: "rings" }],
       [{ type: "setMetric", metric: "group.sigma" }, { metric: "group.sigma" }],
       [{ type: "setView", view: "months" }, { view: "months" }],
+      [{ type: "setShow", show: "target" }, { show: "target" }],
       [{ type: "choose", id: "k3" }, { chosen: "k3" }],
     ]
     for (const [action, expected] of steps) {
@@ -83,6 +85,7 @@ describe("Zustand der Seite eines Zeitraums", () => {
       { type: "setScoring", scoring: "rings" },
       { type: "setMetric", metric: "result.tensRate" },
       { type: "setView", view: "cards" },
+      { type: "setShow", show: "target" },
     ]
     for (const action of keeps)
       expect(periodReducer(chosen, action).chosen, action.type).toBe("k12")

@@ -1,7 +1,15 @@
 import { describe, expect, it } from "vitest"
 
 import { ANALYSIS_TABS } from "../analysis/AnalysisPanel"
-import { hashFor, PAGE_SECTIONS, parseHash, TAB_ANCHORS } from "./sections"
+import {
+  hashFor,
+  PAGE_SECTIONS,
+  parseHash,
+  parsePeriodAnchor,
+  PERIOD_SECTIONS,
+  periodSections,
+  TAB_ANCHORS,
+} from "./sections"
 
 describe("Abschnitte und Anker", () => {
   it("drei Abschnitte in der Reihenfolge der Seite, ohne „Zahlen“", () => {
@@ -36,5 +44,28 @@ describe("Abschnitte und Anker", () => {
     expect(parseHash("#Lage")).toBeNull()
     // „Zahlen“ gibt es nur im Fortschritt: auf der Scheibe ein Anker ohne Bedeutung, also oben
     expect(parseHash("#numbers")).toBeNull()
+  })
+})
+
+describe("Seite eines Zeitraums", () => {
+  it("mit dem Trefferbild heißt der erste Abschnitt so, der Anker bleibt", () => {
+    expect(periodSections("history")).toEqual(PERIOD_SECTIONS)
+    expect(periodSections("target").map((s) => s.label)).toEqual([
+      "Trefferbild",
+      "Scheiben",
+      "Zahlen",
+      "Analyse",
+    ])
+    expect(periodSections("target")[0].id).toBe("history")
+  })
+
+  it("Abschnitte und die drei Reiter der Analyse aus dem Anker", () => {
+    expect(parsePeriodAnchor("#cards")).toEqual({ section: "cards" })
+    expect(parsePeriodAnchor("#position")).toEqual({ section: "analysis", tab: "position" })
+    expect(parsePeriodAnchor("#precision")).toEqual({ section: "analysis", tab: "precision" })
+    expect(parsePeriodAnchor("#result")).toEqual({ section: "analysis", tab: "result" })
+    // den Reiter „Zeit und Verlauf“ hat der Zeitraum (noch) nicht
+    expect(parsePeriodAnchor("#time")).toBeNull()
+    expect(parsePeriodAnchor("#gibts-nicht")).toBeNull()
   })
 })

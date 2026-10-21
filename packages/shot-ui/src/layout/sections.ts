@@ -25,6 +25,27 @@ export const PERIOD_SECTIONS = [
 
 export type PeriodSection = (typeof PERIOD_SECTIONS)[number]["id"]
 
+/** die Sprungleiste des Zeitraums: Zeigt das Hauptbild das Trefferbild, heißt sein Abschnitt so (Anker bleibt) */
+export function periodSections(show: "history" | "target") {
+  return PERIOD_SECTIONS.map((s) =>
+    s.id === "history" && show === "target" ? { ...s, label: "Trefferbild" } : s
+  )
+}
+
+/** Reiter der Analyse über den Zeitraum, in der Ordnung der Scheibe */
+export type PeriodTab = Extract<AnalysisTab, "result" | "precision" | "position">
+
+/** Abschnitt und Reiter der Seite eines Zeitraums aus `location.hash`; ein Reiter-Anker führt zur Analyse */
+export function parsePeriodAnchor(
+  hash: string
+): { section: PeriodSection; tab?: PeriodTab } | null {
+  const section = parsePeriodHash(hash)
+  if (section) return { section }
+  const word = hash.replace(/^#/, "")
+  const tab = (["result", "precision", "position"] as const).find((t) => TAB_ANCHORS[t] === word)
+  return tab ? { section: "analysis", tab } : null
+}
+
 /** Abschnitt der Seite eines Zeitraums aus `location.hash`; Unbekanntes null */
 export function parsePeriodHash(hash: string): PeriodSection | null {
   const word = hash.replace(/^#/, "")
