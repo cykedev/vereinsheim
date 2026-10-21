@@ -32,6 +32,8 @@ export const COMPARE_KINDS: readonly { value: CardKind; label: string }[] = [
 const LEVEL = 0.005
 
 const capital = (text: string) => text.charAt(0).toUpperCase() + text.slice(1)
+/** das Ende eines Satzes: Endet er mit einem Datum („am 29.09.“), trägt der Punkt des Datums ihn */
+const ended = (text: string) => (text.endsWith(".") ? text : `${text}.`)
 
 /** Seiten bei Wettkampf und Training: A ist Wettkampf, B Training */
 export const KIND_NAMES: { a: SideName; b: SideName } = {
@@ -114,10 +116,10 @@ export function compareSentence(model: CompareModel): { lead: string; more: stri
   const b = model.b.at
   const lead =
     Math.abs(c.delta) < LEVEL
-      ? `${capital(a)} gleich viele Ringe je Schuss wie ${b}.`
+      ? ended(`${capital(a)} gleich viele Ringe je Schuss wie ${b}`)
       : `${capital(a)} ${formatValue(Math.abs(c.delta), 2)} Ringe je Schuss ${
           c.delta > 0 ? "mehr" : "weniger"
-        } als ${b}. ${
+        } als ${ended(b)} ${
           c.verdict === "unclear"
             ? "Ein klarer Unterschied ist das nicht."
             : "Das ist ein klarer Unterschied."
@@ -145,9 +147,9 @@ export function rowVerdict(row: CompareRow, model: CompareModel): string {
   if (!c || c.test === null) return `Zu wenige ${unitWord(model)}.`
   if (c.verdict === "unclear") return "Kein klarer Unterschied."
   const aHigher = c.verdict === "higher"
-  if (row.better === "none") return `Klar höher: ${(aHigher ? model.a : model.b).name}.`
+  if (row.better === "none") return ended(`Klar höher: ${(aHigher ? model.a : model.b).name}`)
   const aBetter = aHigher === (row.better === "higher")
-  return `Klar besser: ${(aBetter ? model.a : model.b).name}.`
+  return ended(`Klar besser: ${(aBetter ? model.a : model.b).name}`)
 }
 
 /** der Abstand der Mitten als Wert der Zeile Lage („1,1 mm auseinander“); ohne Lage null */

@@ -180,6 +180,24 @@ describe("der Satz", () => {
     )
   })
 
+  it("endet eine Seite mit einem Datum, steht nur ein Punkt", () => {
+    const names = {
+      a: { ...model().a, name: "Fr 02.10.", at: "am 02.10." },
+      b: { ...model().b, name: "Di 29.09.", at: "am 29.09." },
+    }
+    expect(compareSentence(model(names)).lead).toBe(
+      "Am 02.10. 0,12 Ringe je Schuss mehr als am 29.09. Das ist ein klarer Unterschied."
+    )
+    const level = row("result.decimalMean", "higher", comparison(0, "unclear"))
+    expect(compareSentence(model({ ...names, result: level })).lead).toBe(
+      "Am 02.10. gleich viele Ringe je Schuss wie am 29.09."
+    )
+    const spread = row("group.sigma", "lower", comparison(-0.3, "lower"))
+    expect(compareSentence(model({ ...names, spread })).more).toBe(
+      "Die Streuung ist am 02.10. klar kleiner."
+    )
+  })
+
   it("eine leere Seite", () => {
     const empty = { ...model().b, cards: 0 }
     expect(compareSentence(model({ b: empty })).lead).toBe(
@@ -205,6 +223,10 @@ describe("Zeilen, Grundlage, Bild", () => {
     )
     expect(rowVerdict(row("time.intervalMedian", "none", comparison(5, "higher")), m)).toBe(
       "Klar höher: Letzte 90 Tage."
+    )
+    const dated = { ...m, a: { ...m.a, name: "Fr 02.10." } }
+    expect(rowVerdict(row("result.decimalMean", "higher", comparison(0.2, "higher")), dated)).toBe(
+      "Klar besser: Fr 02.10."
     )
     expect(rowVerdict(row("group.sigma", "lower", comparison(0, "unclear")), m)).toBe(
       "Kein klarer Unterschied."
