@@ -12,6 +12,12 @@ const CHROME =
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
+/**
+ * Höchste Höhe eines Fotos in CSS-Pixeln. Chrome 155 headless stürzt bei sehr hohen Fotos ab (48.442 px), 16.000 px
+ * gehen. Längere Seiten enden im Foto dort; streng prüfen die Apps den Text, die Fotos sieht ein Mensch durch.
+ */
+const MAX_SHOT_HEIGHT = 16_000
+
 type Message = {
   id?: number
   method?: string
@@ -417,13 +423,47 @@ export class Page {
     await wait(60)
   }
 
-  /** Bildschirmfoto des Fensters als PNG */
+  /** Bildschirmfoto des Fensters als PNG; `fullPage`: die ganze Seite, höchstens `MAX_SHOT_HEIGHT` hoch */
   async screenshot(fullPage = false): Promise<Buffer> {
-    const { data } = await this.send<{ data: string }>("Page.captureScreenshot", {
-      format: "png",
-      captureBeyondViewport: fullPage,
+    if (!fullPage) {
+      const { data } = await this.send<{ data: string }>("Page.captureScreenshot", {
+        format: "png",
+      })
+      return Buffer.from(data, "base64")
+    }
+    // die Höhe aus dem Dokument: `Page.getLayoutMetrics` beendet Chrome 155 headless
+    const height = await this.ev<number>(
+      "Math.max(document.documentElement.scrollHeight, document.body?.scrollHeight ?? 0)"
+    )
+    return this.tallShot(Math.ceil(height))
+  }
+
+  /**
+   * Foto über das Fenster hinaus: Das emulierte Fenster wächst auf `height` (höchstens `MAX_SHOT_HEIGHT`), danach zurück
+   * auf die Größe aus `viewport()`. `captureBeyondViewport` beendet Chrome 155 headless auf sehr hohen Seiten.
+   */
+  private async tallShot(height: number, clip?: Record<string, number>): Promise<Buffer> {
+    const mobile = this.width < 768
+    await this.send("Emulation.setDeviceMetricsOverride", {
+      width: this.width,
+      height: Math.min(MAX_SHOT_HEIGHT, Math.max(this.height, height)),
+      deviceScaleFactor: 1,
+      mobile,
     })
-    return Buffer.from(data, "base64")
+    try {
+      const { data } = await this.send<{ data: string }>("Page.captureScreenshot", {
+        format: "png",
+        ...(clip ? { clip: { ...clip, scale: 1 } } : {}),
+      })
+      return Buffer.from(data, "base64")
+    } finally {
+      await this.send("Emulation.setDeviceMetricsOverride", {
+        width: this.width,
+        height: this.height,
+        deviceScaleFactor: 1,
+        mobile,
+      })
+    }
   }
 
   /** Bildschirmfoto eines Elements als PNG, auch wenn es über das Fenster hinausragt; null, wenn es fehlt */
@@ -433,12 +473,7 @@ export class Page {
         return { x: r.left + scrollX, y: r.top + scrollY, width: Math.max(r.width, el.scrollWidth), height: r.height } })()`
     )
     if (!box || box.width === 0 || box.height === 0) return null
-    const { data } = await this.send<{ data: string }>("Page.captureScreenshot", {
-      format: "png",
-      captureBeyondViewport: true,
-      clip: { ...box, scale: 1 },
-    })
-    return Buffer.from(data, "base64")
+    return this.tallShot(Math.ceil(box.y + box.height), box)
   }
 
   /** Cookies der Seite, etwa um mit derselben Anmeldung aus Node abzurufen (`name=wert; …`) */

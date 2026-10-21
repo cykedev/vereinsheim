@@ -25,3 +25,6 @@ Bilder von PDFs. Nicht im Gate (braucht Chrome, einen laufenden Server und Daten
 - Gegen einen fremden Server nur mit ausdrücklichem Schalter der App; `startServer` verweigert einen belegten Port.
 - **Browser-Dialoge** (`beforeunload`, `alert`, `confirm`) nimmt `Page` an, sonst hielte der Dialog jede Navigation an;
   sie stehen in `page.dialogs`. Eine App-Prüfung meldet jeden, den sie nicht erwartet.
+- **Fotos über das Fenster hinaus** (`screenshot(true)`, `screenshotOf`) vergrößern das emulierte Fenster, höchstens auf
+  16.000 px (`MAX_SHOT_HEIGHT`), und fotografieren dann normal. Nie `captureBeyondViewport` und nie
+  `Page.getLayoutMetrics`: Beides beendet Chrome 155 headless („Chrome ist weg“). Längere Seiten enden im Foto dort.
