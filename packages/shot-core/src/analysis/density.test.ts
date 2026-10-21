@@ -47,7 +47,7 @@ describe("densityGrid", () => {
   it("ohne Punkte ein leeres Raster", () => {
     const grid = densityGrid([], 1000, 4)
     expect(grid.cells).toEqual(new Array(16).fill(0))
-    expect(grid.levels).toEqual([0, 0, 0, 0, 0])
+    expect(grid.levels).toEqual([0, 0, 0, 0, 0, 0])
   })
 })
 

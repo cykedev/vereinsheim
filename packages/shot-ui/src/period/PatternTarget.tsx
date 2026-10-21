@@ -21,6 +21,7 @@ const HAIR = { vectorEffect: "non-scaling-stroke" } as const
 const POINT_MM = 0.01
 /** Farben der Bänder von außen (selten) nach innen (oft) */
 export const HEAT_COLORS = [
+  "var(--heat-0)",
   "var(--heat-1)",
   "var(--heat-2)",
   "var(--heat-3)",
@@ -31,7 +32,7 @@ export const HEAT_COLORS = [
  * Deckkraft der Bänder von außen nach innen: Die seltenen lassen Papier und Spiegel durchscheinen (die Scheibe bleibt
  * echt erkennbar), die dichten decken fast
  */
-const HEAT_OPACITY = [0.5, 0.62, 0.74, 0.86, 0.94] as const
+const HEAT_OPACITY = [0.35, 0.5, 0.62, 0.74, 0.86, 0.94] as const
 
 export interface PatternTargetProps {
   /** das Bild aus `periodPattern`: unter 50 Schuss die Punkte, sonst die Dichte in Bändern */
@@ -45,8 +46,9 @@ export interface PatternTargetProps {
 /**
  * Trefferbild über einen Zeitraum (L9) auf der Scheibe, wie die Seite einer Scheibe sie zeichnet (`TargetBoard`: Papier,
  * Spiegel, Ringe, Ringzahlen). Ab 50 Schuss liegt zwischen den Flächen und den Ringen eine Heatmap in fünf Bändern von
- * selten (violett) bis oft (gelb), deren Grenzen Anteile der Schüsse umschließen. Darunter jeder Schuss in Kalibergröße
- * und Ringfarbe. Der geviertelte Kreis ist die Mitte aller Schüsse. Ringzahlen und Schwerpunkt richten sich wie auf der
+ * selten (violett) bis oft (gelb), deren Grenzen Anteile der Schüsse umschließen, das äußerste 99 von 100; die seltenen
+ * Schüsse außerhalb des Bands für neun Zehntel stehen einzeln als Treffer darüber. Darunter jeder Schuss in
+ * Kalibergröße und Ringfarbe. Der geviertelte Kreis ist die Mitte aller Schüsse. Ringzahlen und Schwerpunkt richten sich wie auf der
  * Scheibe nach der gemessenen Breite.
  */
 export function PatternTarget({ layer, target, label, className }: PatternTargetProps) {
@@ -83,25 +85,24 @@ export function PatternTarget({ layer, target, label, className }: PatternTarget
           <TargetBoard target={target} view={view} ringLabel={sizes.ringLabel} part="lines" />
         </>
       ) : (
-        <>
-          <TargetBoard target={target} view={view} ringLabel={sizes.ringLabel} />
-          {(layer.points ?? []).map(([x, y, ring], i) => (
-            <circle
-              key={i}
-              data-pattern-shot
-              cx={x * POINT_MM}
-              cy={-y * POINT_MM}
-              r={calR}
-              fill={ring === null ? "none" : scoreColor(ring)}
-              fillOpacity={SHOT_FILL_OPACITY}
-              stroke="var(--shot-edge)"
-              strokeWidth={1}
-              strokeDasharray={ring === null ? "2 2" : undefined}
-              {...HAIR}
-            />
-          ))}
-        </>
+        <TargetBoard target={target} view={view} ringLabel={sizes.ringLabel} />
       )}
+      {/* die Schüsse, die das Bild einzeln zeigt: ohne Dichte alle, mit Dichte die seltenen außen */}
+      {(layer.points ?? []).map(([x, y, ring], i) => (
+        <circle
+          key={i}
+          data-pattern-shot
+          cx={x * POINT_MM}
+          cy={-y * POINT_MM}
+          r={calR}
+          fill={ring === null ? "none" : scoreColor(ring)}
+          fillOpacity={SHOT_FILL_OPACITY}
+          stroke="var(--shot-edge)"
+          strokeWidth={1}
+          strokeDasharray={ring === null ? "2 2" : undefined}
+          {...HAIR}
+        />
+      ))}
       {layer.center && (
         <MpiMark
           x={layer.center.xUm / 1000}

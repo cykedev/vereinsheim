@@ -120,6 +120,7 @@ describe("Design-2-Tokens", () => {
       "mpi-dark",
       "mpi-halo",
       "scrim",
+      "heat-0",
       "heat-1",
       "heat-2",
       "heat-3",

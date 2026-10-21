@@ -147,6 +147,7 @@
   --score-7: #7c5cd6;
   /* Heatmap der Treffer über einen Zeitraum: von selten (violett) bis oft (gelb), wie die Scheibe in beiden Themes gleich;
      das seltenste Band hell genug, dass es sich auch vom Spiegel abhebt */
+  --heat-0: #a99be6;
   --heat-1: #5b3fa8;
   --heat-2: #7a2f8e;
   --heat-3: #c63f6e;

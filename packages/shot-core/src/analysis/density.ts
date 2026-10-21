@@ -17,8 +17,11 @@ export interface DensityGrid {
   levels: number[]
 }
 
-/** Anteile der Masse, die die Bänder der Heatmap von außen nach innen umschließen */
-export const HEAT_SHARES = [0.9, 0.75, 0.5, 0.25, 0.1] as const
+/**
+ * Anteile der Masse, die die Bänder der Heatmap von außen nach innen umschließen; das äußerste reicht bis zu den
+ * seltenen Schüssen (99 von 100), was darüber hinaus liegt, zeigt das Bild einzeln
+ */
+export const HEAT_SHARES = [0.99, 0.9, 0.75, 0.5, 0.25, 0.1] as const
 
 /** kleinste Bandbreite in Zellen: sonst bleibt bei wenigen, eng liegenden Punkten jede Zelle allein */
 const MIN_BANDWIDTH_CELLS = 0.75
@@ -106,6 +109,15 @@ export function densityGrid(points: readonly Point[], halfUm: number, size = 64)
     cells: smooth.map(scale),
     levels: HEAT_SHARES.map((share) => Math.max(1, scale(massLevel(smooth, share)))),
   }
+}
+
+/** der Wert des Rasters an einer Stelle; außerhalb 0 */
+export function cellValue(grid: DensityGrid, halfUm: number, p: Point): number {
+  const cell = (2 * halfUm) / grid.size
+  const col = Math.floor((p.xUm + halfUm) / cell)
+  const row = Math.floor((halfUm - p.yUm) / cell)
+  if (col < 0 || col >= grid.size || row < 0 || row >= grid.size) return 0
+  return grid.cells[row * grid.size + col]
 }
 
 /** halbe Kantenlänge des Ausschnitts: 99 % der Punkte und etwas Rand, mindestens 1 mm */
