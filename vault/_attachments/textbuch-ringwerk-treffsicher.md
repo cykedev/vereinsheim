@@ -1731,3 +1731,61 @@ es braucht, steht oben bei „Mindest“.“:
 
 - Ohne Mindestzahl werten: **Ohne Mindestzahl gewertet.**
 - Mindestzahl verlangen: **Mindestzahl wieder verlangt.**
+
+## Spiegel: Was die Pause bewirkt hat
+
+Stand 21. Oktober 2026, vom Agenten entworfen, **vom User noch nicht gelesen**, nicht umgesetzt. Plan:
+`plans/2026-10-21-spiegel-pause-verdict.md`.
+
+Grund: Die Karte „Pausen und Wiedereinstieg“ zeigt je Pause, wie die bis zu drei Schüsse danach gegen deine übrigen
+lagen, und sagt dann nur „Drei Schuss sind zu wenig für ein Urteil.“ Die Frage ist aber, was die Pause bewirkt hat,
+zum Guten wie zum Schlechten. Ein Test beantwortet sie jetzt je Pause, wie bei der Ermüdung. Mit drei Schuss erkennt er
+nur deutliche Wirkungen: Streuen die drei Schuss danach um 60 % weiter, sagt er in gut vier von zehn Fällen „klar“,
+ohne jede Wirkung in etwa einem von zwanzig (Abschätzung, der Beleg kommt aus der Simulation).
+
+Zeichen: `{…}` ist ein Wert, den die App einsetzt. „(nur wenn …)“ heißt, die Zeile erscheint nur in diesem Fall.
+
+### 1. Karte „Pausen und Wiedereinstieg“
+
+Ort: Seite einer Scheibe, Analyse, Reiter „Zeit und Verlauf“.
+
+**alt:** je Pause eine Zeile „Vor Schuss {21} · {1:06 min} Pause · danach Ø {+0,19} Ringe je Schuss“. Darunter:
+„„Danach“: Ø der bis zu drei Schüsse nach der Pause gegen den Ø deiner übrigen Schüsse. Drei Schuss sind zu wenig für
+ein Urteil.“
+
+**neu:** dieselben Zeilen, am Ende jeder Zeile das Urteil als Etikett wie bei der Ermüdung:
+
+- „klar stärker“ (grün) · „klar schwächer“ (gelb) · „kann Zufall sein“ (grau)
+- (nur wenn der Unterschied genau 0 ist oder Werte fehlen) kein Etikett
+
+Darunter: „„Danach“: Ø der bis zu drei Schüsse nach der Pause gegen den Ø deiner übrigen Schüsse. „Klar“ heißt: Reiner
+Zufall brächte einen so großen Unterschied nur in 5 von 100 Fällen.“
+
+(nur wenn mehr als eine Pause) dazu: „Bei {2} Pausen ist die Grenze strenger. Sonst wäre leicht eine davon zufällig
+„klar“.“
+
+### 2. Beobachtung zu Pausen
+
+Ort: Seite einer Scheibe, Analyse, Reiter „Überblick“, „Beobachtungen in Worten“. Ist eine Pause klar, steht ihr Satz
+auch im Kopf der Scheibe.
+
+**alt:** „Nach der Pause vor Schuss {21} lagen die Schüsse danach (bis zu drei) im Schnitt {0,19} Ringe je Schuss über
+deinen übrigen Schüssen. Drei Schuss sind zu wenig, um zu zeigen, ob die Pause etwas ausmacht.“
+
+**neu:** je Pause der erste Satz wie bisher, danach das Urteil:
+
+- (nur wenn klar stärker) „Danach warst du klar stärker.“
+- (nur wenn klar schwächer) „Danach warst du klar schwächer.“
+- (nur wenn nicht klar) „Das kann Zufall sein.“
+- (nur wenn genau im Schnitt oder ohne Werte) kein Zusatz.
+
+Beispiel mit zwei Pausen: „Nach der Pause vor Schuss 21 lagen die Schüsse danach (bis zu drei) im Schnitt 0,19 Ringe je
+Schuss über deinen übrigen Schüssen. Das kann Zufall sein. Nach der Pause vor Schuss 28 lagen … Das kann Zufall sein.“
+
+### 3. Hilfe „Pausen und Wiedereinstieg“ (Blatt „?“)
+
+| Feld | alt | neu |
+|---|---|---|
+| So liest du es | (gibt es nicht) | „Ein Plus heißt: Nach der Pause warst du besser als sonst, ein Minus: schwächer. „Klar stärker“ oder „klar schwächer“ steht nur, wenn ein Test es zeigt.“ |
+| Vorsicht | „… Eine Pause auf einer Scheibe zeigt deshalb nicht, ob dir Pausen schaden.“ | „… Deshalb steht „klar“ erst bei einem großen Unterschied. Eine kleine Wirkung der Pause zeigt eine Scheibe nicht. Auch ein klares Urteil gilt nur für diese Pause.“ |
+| Kurz („Erklärungen“) | „Deine Pausen und ob die Schüsse danach besser oder schwächer waren als deine übrigen.“ | bleibt |
