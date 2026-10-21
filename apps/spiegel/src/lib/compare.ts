@@ -42,6 +42,9 @@ import { familiesOf, type FamilyOption } from "@/lib/pages"
 
 type Context = Pick<PageContext, "timeZone" | "nowMs" | "named">
 
+/** ohne Blatt der Scheiben nur die neuesten zwei: Mit ihnen beginnt ein Wechsel auf zwei Scheiben */
+const NEWEST_CHOICES = 2
+
 /** so viele Scheiben liest das Bild höchstens, wie das Trefferbild im Fortschritt (`periodPatternAction`) */
 const MAX_POSITION_CARDS = 5_000
 
@@ -54,7 +57,7 @@ export interface ComparePageData {
   /** die Familie der Seite: gewählt oder die der Scheibe A */
   family: string
   families: FamilyOption[]
-  /** Scheiben der Familie für das Blatt, die neueste zuerst */
+  /** Scheiben der Familie für das Blatt, die neueste zuerst; ohne zwei Scheiben nur die neuesten zwei */
   choices: CardChoice[]
   /** Namen in den Chips; bei Wettkampf und Training ist `a` der Zeitraum */
   names: { a: string; b: string }
@@ -188,7 +191,7 @@ export async function comparePageData(
       query: { ...query, family },
       family,
       families,
-      choices: choicesOf(cards, scoring),
+      choices: choicesOf(cards, scoring).slice(0, NEWEST_CHOICES),
       names: { a: range.label, b: "" },
       ranges: { a: range, b: range },
       targetId: option.targetId,
@@ -221,7 +224,7 @@ export async function comparePageData(
     query: { ...query, family },
     family,
     families,
-    choices: choicesOf(cards, scoring),
+    choices: choicesOf(cards, scoring).slice(0, NEWEST_CHOICES),
     names: { a: names.a.name, b: names.b.name },
     ranges: { a: rangeA, b: rangeB },
     targetId: option.targetId,

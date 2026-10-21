@@ -114,12 +114,13 @@ describe("comparePageData: Gruppen", () => {
     expect(page?.ranges?.a.label).toBe("07.06.2026 – 10.07.2026")
   })
 
+  it("ohne zwei Scheiben nur die neuesten zwei fürs Blatt", async () => {
+    const page = await data({ ...DEFAULT_COMPARE, family: lpFamily } as CompareQuery)
+    expect(page?.choices.map((c) => c.id)).toEqual([ids.lp[11], ids.lp[10]])
+  })
+
   it("gelöschte und fremde Scheiben nie, auch nicht im Blatt", async () => {
-    const page = await data({
-      ...DEFAULT_COMPARE,
-      family: lpFamily,
-      a: { type: "all" },
-    } as CompareQuery)
+    const page = await data({ type: "cards", a: ids.lp[0], b: ids.lp[1] })
     const choices = page!.choices.map((c) => c.id)
     expect(choices).not.toContain(ids.trash)
     expect(choices).not.toContain(ids.foreign)
