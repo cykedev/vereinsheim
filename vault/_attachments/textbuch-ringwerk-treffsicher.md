@@ -1792,7 +1792,7 @@ Schuss über deinen übrigen Schüssen. Das kann Zufall sein. Nach der Pause vor
 
 ### 4. Leitfaden: wie oft der Zufall einen Befund zeigt
 
-**Status: Entwurf vom 21. Oktober 2026, vom User noch nicht gelesen** (Nachtrag nach der Simulation: Mit dem Test je
+**Status: freigegeben am 21. Oktober 2026** (Nachtrag nach der Simulation: Mit dem Test je
 Pause zeigt eine ganz normale Scheibe mit einer Pause in 22,3 % irgendwo einen Befund, ohne Pause in 18,9 %.)
 
 Ort: Seite einer Scheibe, Analyse, Reiter „Überblick“, „So liest du die Analyse“, und das „?“ an „Beobachtungen in
