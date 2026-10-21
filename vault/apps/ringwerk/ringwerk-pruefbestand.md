@@ -107,9 +107,7 @@ vergleicht alt gegen neu auf demselben Aufbau.
   Szenario 0 Fehler und 16 Hinweise (das Kästchen beim Einschreiben in den aktiven Saisons). Mit Szenario nur die
   erwarteten Fehler in `S-OHNE-MINDEST` und in der Vorschau dieser Saison auf Start und in der Liste. Der committete
   Ausgangsstand ist noch der alte.
-- Chrome 155.0.8059.85 headless stürzt bei sehr hohen Fotos ab (Liste der Wettbewerbe 48.442 px; 8.000 px gehen) und
-  bei `Page.getLayoutMetrics`. Meldung „Chrome ist weg“ gleich nach „Build von vor …“. Für den Abgleich lief ein
-  lokaler Umweg in `@vereinsheim/pruefen` (Höhe aus dem Dokument, Fotos höchstens 16.000 px), nicht committet.
+- Die Läufe nutzen schon das Verfahren für Chrome 155 (siehe „Werkzeug“).
 
 ## Stand 20. Oktober 2026
 
