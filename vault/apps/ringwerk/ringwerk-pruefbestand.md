@@ -105,8 +105,12 @@ vergleicht alt gegen neu auf demselben Aufbau.
   späteren. Fakten `saison:ohne-mindestzahl-gewertet` und `…-ohne-serie`.
 - Abgleich `main` gegen Branch auf demselben Aufbau (`--referenz`, `main` in einem eigenen Worktree): ohne das neue
   Szenario 0 Fehler und 16 Hinweise (das Kästchen beim Einschreiben in den aktiven Saisons). Mit Szenario nur die
-  erwarteten Fehler in `S-OHNE-MINDEST` und in der Vorschau dieser Saison auf Start und in der Liste. Der committete
-  Ausgangsstand ist noch der alte.
+  erwarteten Fehler in `S-OHNE-MINDEST` und in der Vorschau dieser Saison auf Start und in der Liste.
+- Ausgangsstand neu aufgenommen auf `48dd7404` (vom User freigegeben), mit der Saison ohne Mindestzahl und den
+  Liga-Änderungen von `main`. Danach Vergleich 0 Fehler, 0 Hinweise. Abläufe 66 von 68 grün, 2 bekannt, mit dem neuen
+  Schritt „ohne Mindestzahl werten und wieder verlangen“.
+- `choose` wartet jetzt, bis die Möglichkeit ruhig steht: Mit dem Kästchen über der Auswahl traf der Klick am Telefon
+  die Möglichkeit daneben, weil sich die Radix-Liste nach dem Öffnen noch ausrichtet.
 - Die Läufe nutzen schon das Verfahren für Chrome 155 (siehe „Werkzeug“).
 
 ## Stand 20. Oktober 2026
