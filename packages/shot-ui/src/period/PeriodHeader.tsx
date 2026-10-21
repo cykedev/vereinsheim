@@ -25,6 +25,8 @@ export interface PeriodControlsProps {
   actions?: ReactNode
   /** der Schalter „Trainings nur aus Probe mitzählen“ im Blatt „Filter“ (Vorgabe ja) */
   probeOnlySwitch?: boolean
+  /** „Vergleichen mit“ im Blatt „Filter“ (Vorgabe ja); Spiegel vergleicht auf eigener Seite */
+  withCompare?: boolean
 }
 
 /**
@@ -41,6 +43,7 @@ export function PeriodControls({
   families,
   actions,
   probeOnlySwitch,
+  withCompare,
 }: PeriodControlsProps) {
   return (
     <div data-period-controls className="flex flex-wrap items-center gap-2">
@@ -61,6 +64,7 @@ export function PeriodControls({
         // eine Aktion für das ganze Blatt
         onApply={(filters) => dispatch({ type: "setFilters", filters })}
         probeOnlySwitch={probeOnlySwitch}
+        withCompare={withCompare}
       />
       {actions && (
         <div data-period-actions className="flex items-center gap-1.5">

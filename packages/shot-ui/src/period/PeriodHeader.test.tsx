@@ -5,7 +5,8 @@ import { describe, expect, it } from "vitest"
 import type { NamedPeriod } from "./calendar"
 import { periodModel } from "./model"
 import { PeriodControls, PeriodHeader } from "./PeriodHeader"
-import { choiceValid, filterSummary, namedSpan, PeriodPicker } from "./PeriodPicker"
+import { choiceValid, namedSpan } from "./PeriodChoiceFields"
+import { filterSummary, PeriodPicker } from "./PeriodPicker"
 import { PeriodResult } from "./PeriodResult"
 import { initialPeriodState, type PeriodState } from "./state"
 import { item, NOW, periodCard, TZ } from "./testSeason"
@@ -82,6 +83,27 @@ describe("Blatt „Filter“", () => {
     expect(own).toContain("Vorbereitung Landesmeisterschaft")
     expect(named).toContain("Scheiben, die in beiden Zeiträumen liegen, zählen nur im gewählten.")
     expect(named).toMatch(/aria-expanded="false"/)
+  })
+
+  it("ohne Vergleich (Spiegel vergleicht auf eigener Seite): kein „Vergleichen mit“, der Zeitraum bleibt", () => {
+    const plain = renderToStaticMarkup(
+      h(PeriodPicker, {
+        choice: { type: "rolling", days: 90 },
+        compare: { type: "none" },
+        range: RANGE,
+        named: NAMED,
+        timeZone: TZ,
+        kind: "all",
+        includeProbeOnly: true,
+        onApply: () => {},
+        withCompare: false,
+      })
+    )
+    expect(plain).not.toContain("Vergleichen mit")
+    expect(plain).not.toContain('name="vergleich"')
+    expect([...plain.matchAll(/Vorbereitung Landesmeisterschaft/g)]).toHaveLength(1)
+    expect(plain).toContain("Letzte 12 Monate")
+    expect(plain).toMatch(/<legend[^>]*>Art<\/legend>/)
   })
 
   it("der Chip fasst zusammen, was von der Vorgabe abweicht", () => {

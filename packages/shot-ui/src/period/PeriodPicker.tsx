@@ -1,16 +1,22 @@
 "use client"
 
-import { formatDateOnly, formatIsoDate, zonedDayStartMs } from "@vereinsheim/lib/format"
+import { formatIsoDate } from "@vereinsheim/lib/format"
 import { cn } from "@vereinsheim/lib/utils"
 import { Sheet } from "@vereinsheim/ui/design2/sheet"
 import { useState } from "react"
 
 import { KIND_OPTIONS } from "../controls/CardFilters"
+import {
+  choiceRadio,
+  choiceValid,
+  namedSpan,
+  OPTION_CLASS,
+  PeriodChoiceFields,
+} from "./PeriodChoiceFields"
 import { usePeriodWords } from "./PeriodWords"
 import type { CardKind } from "./state"
 import {
   PREVIOUS_LABEL,
-  ROLLING_CHOICES,
   type CompareChoice,
   type DateRange,
   type NamedPeriod,
@@ -41,6 +47,8 @@ export interface PeriodPickerProps {
   onApply: (filters: PeriodFilters) => void
   /** der Schalter „Trainings nur aus Probe mitzählen“ (Vorgabe ja); ohne bleibt `includeProbeOnly` wie gegeben */
   probeOnlySwitch?: boolean
+  /** „Vergleichen mit“ im Blatt (Vorgabe ja); ohne gibt das Blatt immer „ohne Vergleich“ zurück (Spiegel vergleicht auf eigener Seite) */
+  withCompare?: boolean
   className?: string
 }
 
@@ -68,23 +76,6 @@ export function filterSummary(
 
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b)
 
-/** ist die Wahl gültig? Frei nur mit zwei Tagen, von nicht nach bis */
-export function choiceValid(choice: PeriodChoice): boolean {
-  if (choice.type !== "free") return true
-  return /^\d{4}-\d{2}-\d{2}$/.test(choice.from) && /^\d{4}-\d{2}-\d{2}$/.test(choice.to)
-    ? choice.from <= choice.to
-    : false
-}
-
-/** „01.05.2026 – 30.06.2026“, „seit 01.08.2026“ */
-export function namedSpan(period: NamedPeriod, timeZone: string): string {
-  const day = (iso: string) => formatDateOnly(new Date(zonedDayStartMs(iso, timeZone)), timeZone)
-  return period.to === null ? `seit ${day(period.from)}` : `${day(period.from)} – ${day(period.to)}`
-}
-
-const optionClass =
-  "flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 text-[14px] hover:bg-surface-2 has-[:checked]:bg-accent-wash has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-ring"
-
 /**
  * Blatt „Filter“: ein Chip mit dem Zeitraum und dem, was abweicht, öffnet ein Blatt (auf dem Telefon von unten) mit
  * den rollenden Vorgaben, den benannten Zeiträumen, „Frei“ mit zwei Tagen, „Vergleichen mit“, der Art und „Trainings
@@ -101,6 +92,7 @@ export function PeriodPicker({
   timeZone,
   onApply,
   probeOnlySwitch = true,
+  withCompare = true,
   className,
 }: PeriodPickerProps) {
   const words = usePeriodWords()
@@ -132,30 +124,6 @@ export function PeriodPicker({
   const current = draft.type === "free" ? freeChoice : draft
   const valid = choiceValid(current)
 
-  const radio = (
-    group: string,
-    checked: boolean,
-    onSelect: () => void,
-    label: string,
-    sub?: string,
-    disabled = false
-  ) => (
-    <label key={`${group}:${label}`} className={cn(optionClass, disabled && "opacity-60")}>
-      <input
-        type="radio"
-        name={group}
-        checked={checked}
-        disabled={disabled}
-        onChange={onSelect}
-        className="size-4 accent-[var(--primary)]"
-      />
-      <span className="grid">
-        <span>{label}</span>
-        {sub && <span className="text-[12.5px] text-muted-foreground">{sub}</span>}
-      </span>
-    </label>
-  )
-
   return (
     <>
       <button
@@ -185,85 +153,54 @@ export function PeriodPicker({
       </button>
       <Sheet open={open} onClose={() => setOpen(false)} title="Filter">
         <div data-period-picker className="grid gap-4">
-          <fieldset className="grid gap-1">
-            <legend className="mb-1 text-[13px] font-semibold text-muted-foreground">
-              Zeitraum
-            </legend>
-            {ROLLING_CHOICES.map((option) =>
-              radio(
-                "zeitraum",
-                same(draft, option.choice),
-                () => setDraft(option.choice),
-                option.label
-              )
-            )}
-            {named.map((period) =>
-              radio(
-                "zeitraum",
-                same(draft, { type: "named", id: period.id }),
-                () => setDraft({ type: "named", id: period.id }),
-                period.name,
-                namedSpan(period, timeZone)
-              )
-            )}
-            {radio("zeitraum", draft.type === "free", () => setDraft(freeChoice), "Frei")}
-            <div className="grid grid-cols-2 gap-2 pl-8">
-              {(["from", "to"] as const).map((end) => (
-                <label key={end} className="grid gap-1 text-[12.5px] text-muted-foreground">
-                  {end === "from" ? "von" : "bis"}
-                  <input
-                    type="date"
-                    value={free[end]}
-                    disabled={draft.type !== "free"}
-                    onChange={(event) => setFree({ ...free, [end]: event.target.value })}
-                    className="rounded-lg border border-input bg-background px-2 py-1.5 text-[14px] text-foreground focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-60"
-                  />
-                </label>
-              ))}
-            </div>
-            {draft.type === "free" && !valid && (
-              <p className="pl-8 text-[12.5px] text-destructive">
-                Beide Tage wählen, „von“ nicht nach „bis“.
-              </p>
-            )}
-          </fieldset>
-          <fieldset className="grid gap-1">
-            <legend className="mb-1 text-[13px] font-semibold text-muted-foreground">
-              Vergleichen mit
-            </legend>
-            {radio(
-              "vergleich",
-              draftCompare.type === "none",
-              () => setDraftCompare({ type: "none" }),
-              "ohne"
-            )}
-            {radio(
-              "vergleich",
-              draftCompare.type === "previous",
-              () => setDraftCompare({ type: "previous" }),
-              PREVIOUS_LABEL,
-              "gleich lang, direkt davor"
-            )}
-            {named.map((period) => {
-              // ein Zeitraum gegen sich selbst wäre kein Vergleich
-              const itself = same(current, { type: "named", id: period.id })
-              return radio(
+          <PeriodChoiceFields
+            group="zeitraum"
+            value={draft}
+            onChange={(value) => value !== "previous" && setDraft(value)}
+            free={free}
+            onFree={setFree}
+            named={named}
+            timeZone={timeZone}
+          />
+          {withCompare && (
+            <fieldset className="grid gap-1">
+              <legend className="mb-1 text-[13px] font-semibold text-muted-foreground">
+                Vergleichen mit
+              </legend>
+              {choiceRadio(
                 "vergleich",
-                same(draftCompare, { type: "named", id: period.id }),
-                () => setDraftCompare({ type: "named", id: period.id }),
-                period.name,
-                itself ? "der gewählte Zeitraum" : namedSpan(period, timeZone),
-                itself
-              )
-            })}
-            <p className="pl-2 text-[12.5px] text-muted-foreground">
-              {`${words.many}, die in beiden Zeiträumen liegen, zählen nur im gewählten.`}
-            </p>
-          </fieldset>
+                draftCompare.type === "none",
+                () => setDraftCompare({ type: "none" }),
+                "ohne"
+              )}
+              {choiceRadio(
+                "vergleich",
+                draftCompare.type === "previous",
+                () => setDraftCompare({ type: "previous" }),
+                PREVIOUS_LABEL,
+                "gleich lang, direkt davor"
+              )}
+              {named.map((period) => {
+                // ein Zeitraum gegen sich selbst wäre kein Vergleich
+                const itself = same(current, { type: "named", id: period.id })
+                return choiceRadio(
+                  "vergleich",
+                  same(draftCompare, { type: "named", id: period.id }),
+                  () => setDraftCompare({ type: "named", id: period.id }),
+                  period.name,
+                  itself ? "der gewählte Zeitraum" : namedSpan(period, timeZone),
+                  itself
+                )
+              })}
+              <p className="pl-2 text-[12.5px] text-muted-foreground">
+                {`${words.many}, die in beiden Zeiträumen liegen, zählen nur im gewählten.`}
+              </p>
+            </fieldset>
+          )}
           <fieldset className="grid gap-1">
             <legend className="mb-1 text-[13px] font-semibold text-muted-foreground">Art</legend>
             {KIND_OPTIONS.map((option) =>
-              radio(
+              choiceRadio(
                 "art",
                 draftKind === option.value,
                 () => setDraftKind(option.value),
@@ -272,7 +209,7 @@ export function PeriodPicker({
             )}
           </fieldset>
           {probeOnlySwitch && (
-            <label className={optionClass}>
+            <label className={OPTION_CLASS}>
               <input
                 type="checkbox"
                 checked={draftProbe}
@@ -289,7 +226,7 @@ export function PeriodPicker({
               const itself = draftCompare.type === "named" && same(current, draftCompare)
               onApply({
                 choice: current,
-                compare: itself ? { type: "none" } : draftCompare,
+                compare: !withCompare || itself ? { type: "none" } : draftCompare,
                 kind: draftKind,
                 includeProbeOnly: draftProbe,
               })
