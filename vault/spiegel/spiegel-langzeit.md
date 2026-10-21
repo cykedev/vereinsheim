@@ -223,7 +223,7 @@ Ergebnis (I7–I9, Z6, Z7, K2, K4, T4, V3–V5, W2–W4 als Zeilen im Vergleich)
   gepoolte Form); ohne Urteil über die Form kein zweiter Satz.
 - **Rechnen auf dem Server:** aus den gespeicherten Lagen der Projektion (`marks`, 10 µm), erst wenn das Bild oder die
   Reiter Präzision und Lage es brauchen (`periodPatternAction`); an den Browser geht ein Raster von 64 × 64 und der
-  Schwerpunkt je Scheibe, keine Schüsse. Gemessen: „Alles“ mit 1.564 Scheiben 57 ms und 156 KB, 90 Tage 7 ms und 17 KB
+  Schwerpunkt je Scheibe, keine Schüsse. Gemessen: „Alles“ mit 1.564 Scheiben 60 ms und 159 KB, 90 Tage 8 ms und 19 KB
   ([[spiegel-db-schema]]). Die Dichte glättet 1,3-mal so stark wie nach Silverman, die Ränder sind weiche Kurven.
 - **Reiter Präzision:** die Form über mehrere Scheiben als Ellipse (doppelte Halbachsen der gepoolten Streuung) mit
   ihrer langen Seite und gestrichelt dem Kreis einer runden Gruppe gleicher Streuung, ohne Maßstab; daneben Form, Länge
