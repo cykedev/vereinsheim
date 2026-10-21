@@ -6,6 +6,8 @@ import { AdminTabs } from "@/components/admin/AdminTabs"
 import { BridgeItem, PairBridgeForm, RankingItem, SiteForm } from "@/components/admin/SiteForms"
 import { AdminHelp } from "@/components/admin/AdminHelp"
 import { Page } from "@vereinsheim/ui/design2/page"
+import { PAGE_SINGLE } from "@vereinsheim/shot-ui/layout/columns"
+import { cn } from "@vereinsheim/lib/utils"
 import { requireAdmin } from "@/lib/auth-helpers"
 import { siteOverview } from "@/lib/admin/site"
 
@@ -19,7 +21,7 @@ export default async function AdminSiteRoute() {
   const overview = await siteOverview(timeZone)
   return (
     <Page>
-      <section className="grid max-w-3xl gap-4">
+      <section className={cn("grid gap-4", PAGE_SINGLE)}>
         <div className="grid gap-3">
           <AdminTabs current="site" />
           <h1 className="font-display text-[1.7rem] leading-tight font-bold tracking-tight">

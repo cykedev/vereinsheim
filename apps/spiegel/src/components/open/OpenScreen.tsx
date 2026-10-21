@@ -12,6 +12,8 @@ import { Button } from "@vereinsheim/ui/button"
 
 import { DecisionDialog } from "@vereinsheim/ui/design2/decision-dialog"
 import { Page } from "@vereinsheim/ui/design2/page"
+import { PAGE_SINGLE } from "@vereinsheim/shot-ui/layout/columns"
+import { cn } from "@vereinsheim/lib/utils"
 import { notMine } from "@/lib/admin/consequences"
 import { confirmFirstCard, rejectFirstCard } from "@/lib/first-card-actions"
 import { marksById } from "@/lib/marks"
@@ -34,7 +36,7 @@ export function OpenScreen({
   const marks = useMemo(() => marksById(compact), [compact])
   return (
     <Page>
-      <section data-open-page className="grid max-w-2xl gap-4">
+      <section data-open-page className={cn("grid gap-4", PAGE_SINGLE)}>
         <div className="grid gap-1">
           <h1 className="font-display text-[1.7rem] leading-tight font-bold tracking-tight">
             Offen

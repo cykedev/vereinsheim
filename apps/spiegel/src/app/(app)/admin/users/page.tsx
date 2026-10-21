@@ -12,6 +12,8 @@ import { getAdminLoginRateLimitInsights } from "@/lib/admin/actions"
 import { openConsents } from "@/lib/consent/queries"
 import { getUsers, type UserListItem } from "@/lib/users/queries"
 import { Page } from "@vereinsheim/ui/design2/page"
+import { PAGE_SINGLE } from "@vereinsheim/shot-ui/layout/columns"
+import { cn } from "@vereinsheim/lib/utils"
 
 export const metadata: Metadata = { title: "Konten" }
 
@@ -56,7 +58,7 @@ export default async function AdminUsersRoute() {
   ])
   return (
     <Page>
-      <section className="grid max-w-3xl gap-4">
+      <section className={cn("grid gap-4", PAGE_SINGLE)}>
         <AdminTabs current="users" />
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div className="grid gap-1">
@@ -92,7 +94,12 @@ export default async function AdminUsersRoute() {
         </ul>
       </section>
 
-      <section className="grid min-w-0 max-w-3xl grid-cols-1 gap-3 rounded-2xl border border-border bg-card p-4">
+      <section
+        className={cn(
+          "grid min-w-0 grid-cols-1 gap-3 rounded-2xl border border-border bg-card p-4",
+          PAGE_SINGLE
+        )}
+      >
         <h2 className="text-[15px] font-semibold">
           Gesperrte Anmeldungen ({insights.activeBlockedBuckets.length})
         </h2>
@@ -101,7 +108,12 @@ export default async function AdminUsersRoute() {
           displayTimeZone={timeZone}
         />
       </section>
-      <section className="grid min-w-0 max-w-3xl grid-cols-1 gap-3 rounded-2xl border border-border bg-card p-4">
+      <section
+        className={cn(
+          "grid min-w-0 grid-cols-1 gap-3 rounded-2xl border border-border bg-card p-4",
+          PAGE_SINGLE
+        )}
+      >
         <h2 className="text-[15px] font-semibold">Anmeldeversuche</h2>
         <LoginRateLimitInsights insights={insights} displayTimeZone={timeZone} />
       </section>

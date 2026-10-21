@@ -7,6 +7,8 @@ import { Button } from "@vereinsheim/ui/button"
 
 import { DecisionDialog } from "@vereinsheim/ui/design2/decision-dialog"
 import { Page } from "@vereinsheim/ui/design2/page"
+import { PAGE_SINGLE } from "@vereinsheim/shot-ui/layout/columns"
+import { cn } from "@vereinsheim/lib/utils"
 import { cardPurgeNow } from "@/lib/admin/consequences"
 import { purgeCardNow, restoreCard } from "@/lib/trash-actions"
 import type { BlockedItem, TrashItem } from "@/lib/trash-view"
@@ -18,7 +20,7 @@ import type { BlockedItem, TrashItem } from "@/lib/trash-view"
 export function TrashScreen({ items, blocked }: { items: TrashItem[]; blocked: BlockedItem[] }) {
   return (
     <Page>
-      <section data-trash-page className="grid max-w-2xl gap-6">
+      <section data-trash-page className={cn("grid gap-6", PAGE_SINGLE)}>
         <div className="grid gap-1">
           <h1 className="font-display text-[1.7rem] leading-tight font-bold tracking-tight">
             Papierkorb

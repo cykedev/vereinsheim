@@ -21,6 +21,8 @@ import {
 
 import { NoCards } from "@/components/shell/NoCards"
 import { Page } from "@vereinsheim/ui/design2/page"
+import { PAGE_SINGLE } from "@vereinsheim/shot-ui/layout/columns"
+import { cn } from "@vereinsheim/lib/utils"
 import { useSavedChoice } from "@/components/shell/useSavedChoice"
 import { marksById } from "@/lib/marks"
 import type { PageContext } from "@/lib/page-context"
@@ -134,7 +136,7 @@ export function ListScreen({
 
   return (
     <Page>
-      <section data-card-list-page className="grid max-w-4xl gap-4">
+      <section data-card-list-page className={cn("grid gap-4", PAGE_SINGLE)}>
         <ListHeader
           familyLabel={option.label}
           cards={model.cards}

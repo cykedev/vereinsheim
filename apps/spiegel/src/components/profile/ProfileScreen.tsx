@@ -10,6 +10,8 @@ import { Button } from "@vereinsheim/ui/button"
 
 import { Page } from "@vereinsheim/ui/design2/page"
 import { ThemeSwitch } from "@vereinsheim/ui/design2/theme-switch"
+import { PAGE_SINGLE } from "@vereinsheim/shot-ui/layout/columns"
+import { cn } from "@vereinsheim/lib/utils"
 import type { ConsentRow } from "@/lib/consent/queries"
 import { CURRENT_CONSENT_VERSION } from "@/lib/consent/texts"
 
@@ -39,7 +41,7 @@ export function ProfileScreen({
 
   return (
     <Page>
-      <section data-profile className="grid max-w-2xl gap-6">
+      <section data-profile className={cn("grid gap-6", PAGE_SINGLE)}>
         <div className="grid gap-1">
           <h1 className="font-display text-[1.7rem] leading-tight font-bold tracking-tight">
             Profil

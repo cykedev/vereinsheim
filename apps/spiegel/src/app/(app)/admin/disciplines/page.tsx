@@ -7,6 +7,8 @@ import { AdminTabs } from "@/components/admin/AdminTabs"
 import { DisciplineList } from "@/components/admin/DisciplineList"
 import { FamilyForms } from "@/components/admin/FamilyForms"
 import { Page } from "@vereinsheim/ui/design2/page"
+import { PAGE_SINGLE } from "@vereinsheim/shot-ui/layout/columns"
+import { cn } from "@vereinsheim/lib/utils"
 import { disciplineOverview } from "@/lib/admin/disciplines"
 import { requireAdmin } from "@/lib/auth-helpers"
 
@@ -19,7 +21,7 @@ export default async function AdminDisciplinesRoute() {
   const { rows, families } = await disciplineOverview(getDisplayTimeZone())
   return (
     <Page>
-      <section className="grid max-w-3xl gap-4">
+      <section className={cn("grid gap-4", PAGE_SINGLE)}>
         <div className="grid gap-3">
           <AdminTabs current="disciplines" />
           <h1 className="flex items-center gap-1 font-display text-[1.7rem] leading-tight font-bold tracking-tight">

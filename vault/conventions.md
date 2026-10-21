@@ -89,7 +89,16 @@ app-übergreifende Komponenten gehören in diese Liste (in `MUST_MATCH` des Gate
 - Pending-/Lade-Texte: Unicode-Ellipsis `…` (U+2026), nie ASCII `...`.
 - App-Shell: `Page` aus `design2/page` mit einer Spalte (`grid-cols-1`) — **im Layout, nicht in der Seite**. Eine Seite setzt
   **keinen** eigenen `px-`/`py-`-Container (sonst doppeltes Padding); ein eigenes `max-w` für
-  Formularseiten (`mx-auto max-w-lg space-y-6`) ist erlaubt und bewusst zu setzen.
+  Formularseiten (`mx-auto max-w-lg space-y-6`) ist in Treffsicher und Ringwerk erlaubt und bewusst zu setzen.
+- **Raster der Seiten in Spiegel:** Jede Seite steht linksbündig im Rahmen (`Page`, höchstens 80 rem). Keine Seite
+  zentriert sich selbst. Es gibt zwei Formen:
+  - **Zwei Spalten** für Seiten mit Bild und Zahlen (Start, Scheibe, Fortschritt, Vergleichen): `PAGE_COLUMNS` aus
+    `@vereinsheim/shot-ui/layout/columns`, ab 768 px links das Bild, rechts die Zahlen.
+  - **Eine Spalte** für alle übrigen (Scheiben, Offen, Profil, Papierkorb, Admin): eine Breite, `PAGE_SINGLE`
+    (48 rem), damit der Inhalt beim Wechsel der Bereiche nicht springt. Formulare darin dürfen schmaler sein
+    (`max-w-lg`).
+  - Ausnahme sind die Fehlerseiten ohne Rahmen (`error.tsx`, `not-found.tsx`, byte-gleich in allen Apps): Sie stehen
+    zentriert.
 - **Kontrast-Untergrenze:** kein Opazitäts-Modifier auf `text-muted-foreground` (kein `/60`, `/70`,
   `/80`) und keine Schriftgröße unter `text-xs`. Zurückgenommener Text nutzt die volle
   `muted-foreground`-Farbe.

@@ -2,6 +2,8 @@ import type { Metadata } from "next"
 
 import { PasswordForm } from "@/components/profile/PasswordForm"
 import { Page } from "@vereinsheim/ui/design2/page"
+import { PAGE_SINGLE } from "@vereinsheim/shot-ui/layout/columns"
+import { cn } from "@vereinsheim/lib/utils"
 import { requireSession } from "@/lib/auth-helpers"
 
 export const metadata: Metadata = { title: "Passwort ändern" }
@@ -12,7 +14,7 @@ export default async function PasswordRoute() {
   const forced = session.user.mustChangePassword === true
   return (
     <Page>
-      <section className="grid max-w-2xl gap-4">
+      <section className={cn("grid gap-4", PAGE_SINGLE)}>
         <div className="grid gap-1">
           <h1 className="font-display text-[1.7rem] leading-tight font-bold tracking-tight">
             Passwort ändern
