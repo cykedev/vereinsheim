@@ -253,17 +253,39 @@ export function timeCards({
                   ],
                   ...recovery.effects.map((effect) => {
                     const interval = profile.find((p) => p.number === effect.afterShot)?.intervalMs
+                    const d = effect.deltaRings
+                    // kein Urteil, wo kein Wert ist oder die Zahl „±0,00“ zeigt, wie in den Beobachtungen
+                    const verdict =
+                      effect.direction === "up" ? (
+                        <Verdict tone="ok">klar stärker</Verdict>
+                      ) : effect.direction === "down" ? (
+                        <Verdict tone="warn">klar schwächer</Verdict>
+                      ) : d === null || Math.abs(d) < 0.005 ? null : (
+                        <Verdict tone="none">kann Zufall sein</Verdict>
+                      )
                     return [
                       `Vor Schuss ${effect.afterShot}`,
-                      `${interval ? `${durationText(interval)} ` : ""}Pause · danach ${effect.deltaRings === null ? "–" : `Ø ${formatSigned(effect.deltaRings, 2)} Ringe je Schuss`}`,
+                      <span
+                        key={effect.afterShot}
+                        className="inline-flex flex-wrap items-center gap-x-2 gap-y-1"
+                      >
+                        {`${interval ? `${durationText(interval)} ` : ""}Pause · danach ${d === null ? "–" : `Ø ${formatSigned(d, 2)} Ringe je Schuss`}`}
+                        {verdict}
+                      </span>,
                     ] as const
                   }),
                 ]}
               />
               <Note>
                 „Danach“: Ø der bis zu drei Schüsse nach der Pause gegen den Ø deiner übrigen
-                Schüsse. Drei Schuss sind zu wenig für ein Urteil.
+                Schüsse. „Klar“ heißt: Reiner Zufall brächte einen so großen Unterschied nur in 5
+                von 100 Fällen.
               </Note>
+              {recovery.pauses > 1 && (
+                <Note>
+                  {`Bei ${recovery.pauses} Pausen ist die Grenze strenger. Sonst wäre leicht eine davon zufällig „klar“.`}
+                </Note>
+              )}
               <Note>{pauseRuleText(recovery.rule)}</Note>
             </>
           ) : (

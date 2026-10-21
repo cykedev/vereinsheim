@@ -263,10 +263,45 @@ describe("Reiter Zeit und Verlauf, Karten", () => {
   })
 
   it("Pausen und Ermüdung ohne Verweis auf andere Scheiben oder Abende", () => {
-    expect(cardText(html, "pausen")).toContain("Drei Schuss sind zu wenig für ein Urteil.")
+    expect(cardText(html, "pausen")).toContain(
+      "„Danach“: Ø der bis zu drei Schüsse nach der Pause gegen den Ø deiner übrigen Schüsse. „Klar“ heißt: Reiner Zufall brächte einen so großen Unterschied nur in 5 von 100 Fällen."
+    )
     for (const key of ["pausen", "ermuedung"]) {
       const text = cardText(html, key)
-      expect(text).not.toMatch(/mehrere(n)? Scheiben|über Abende|;/)
+      expect(text).not.toMatch(/mehrere(n)? Scheiben|über Abende|Drei Schuss sind zu wenig|;/)
     }
+  })
+
+  it("Pausen mit Urteil je Zeile, bei zwei Pausen die strengere Grenze", () => {
+    // die übrigen Werte ein Kreis um 10,0, Schuss 21 bis 23 nach der Pause (240 s vor Schuss 21) mit `after`
+    const CYCLE = [100, 97, 103, 99, 101, 96, 104, 98, 102]
+    const paused = (after: readonly number[], second = false) =>
+      BASE.map((s, i) => {
+        const tenths =
+          i >= 20 && i <= 22 ? after[i - 20] : CYCLE[(i < 20 ? i : i - 3) % CYCLE.length]
+        const firedAtMs = second && i >= 30 ? (s.firedAtMs as number) + 300_000 : s.firedAtMs
+        return { ...s, decimalTenths: tenths, ring: Math.floor(tenths / 10), firedAtMs }
+      })
+    const row = (html: string) => cardHtml(html, "pausen")
+    expect(row(renderTab("time", { shots: paused([70, 70, 70]) }))).toMatch(
+      /data-verdict="warn"[^>]*>klar schwächer</
+    )
+    expect(row(renderTab("time", { shots: paused([109, 109, 109]) }))).toMatch(
+      /data-verdict="ok"[^>]*>klar stärker</
+    )
+    const plain = row(renderTab("time", { shots: paused([99, 101, 102]) }))
+    expect(plain).toMatch(/data-verdict="none"[^>]*>kann Zufall sein</)
+    expect(plain).not.toContain("Grenze strenger")
+    // genau im Schnitt: kein Etikett
+    expect(row(renderTab("time", { shots: paused([99, 100, 101]) }))).not.toContain("data-verdict")
+    const two = cardText(renderTab("time", { shots: paused([99, 101, 102], true) }), "pausen")
+    expect(two).toContain(
+      "Bei 2 Pausen ist die Grenze strenger. Sonst wäre leicht eine davon zufällig „klar“."
+    )
+    expect(
+      cardHtml(renderTab("time", { shots: paused([99, 101, 102], true) }), "pausen").match(
+        /data-verdict=/g
+      )
+    ).toHaveLength(2)
   })
 })
