@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest"
 
 import type { NamedPeriod } from "./calendar"
-import { deltasBefore, isProbeOnly, periodModel, periodReading, PERIOD_TILE_KEYS } from "./model"
+import {
+  deltasBefore,
+  isProbeOnly,
+  patternIds,
+  periodModel,
+  periodReading,
+  PERIOD_TILE_KEYS,
+} from "./model"
 import { periodSentence, verdictText } from "./sentence"
 import { initialPeriodState, type PeriodState } from "./state"
 import { item, NOW, periodCard, projected, TZ } from "./testSeason"
@@ -478,5 +485,25 @@ describe("Abstand zum Schnitt der Scheiben davor", () => {
     const deltas = deltasBefore(values, new Set(["c3"]))
     expect([...deltas.keys()]).toEqual(["c3"])
     expect(deltas.get("c3")?.delta).toBeCloseTo(9.8 - 10.1, 9)
+  })
+})
+
+describe("Grundlage des Trefferbilds", () => {
+  it("die Scheiben, die das Ergebnis zählt: ein Training nur aus Probe nur mit dem Schalter", () => {
+    const items = [
+      item(periodCard("a", 3, [100, 101, 102])),
+      item(periodCard("p", 2, [100, 100, 100], { probe: true })),
+      item(periodCard("b", 1, [99, 98, 97])),
+    ]
+    const model = (includeProbeOnly: boolean) =>
+      periodModel({
+        items,
+        state: { ...initialPeriodState({ family: "lg-10m" }), includeProbeOnly },
+        nowMs: NOW,
+        timeZone: TZ,
+        named: [],
+      })
+    expect(patternIds(model(true), true).sort()).toEqual(["a", "b", "p"])
+    expect(patternIds(model(false), false).sort()).toEqual(["a", "b"])
   })
 })

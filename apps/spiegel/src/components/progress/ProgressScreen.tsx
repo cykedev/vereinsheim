@@ -1,7 +1,14 @@
 "use client"
 
 import { useRouter, useSearchParams } from "next/navigation"
-import { useCallback, useEffect, useMemo, useState, useTransition } from "react"
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+  useTransition,
+} from "react"
 
 import { markShots, type CardMark, type MarkShot } from "@vereinsheim/shot-core/projection"
 import { TARGETS } from "@vereinsheim/shot-core/targets"
@@ -12,7 +19,13 @@ import { HelpButton, HelpIcon } from "@vereinsheim/shot-ui/help/HelpButton"
 import { PeriodPage } from "@vereinsheim/shot-ui/layout/PeriodPage"
 import { ReturnPill } from "@vereinsheim/shot-ui/layout/ReturnPill"
 import { SectionNav } from "@vereinsheim/shot-ui/layout/SectionNav"
-import { PERIOD_SECTIONS, type PeriodSection } from "@vereinsheim/shot-ui/layout/sections"
+import {
+  PERIOD_SECTIONS,
+  parsePeriodAnchor,
+  periodSections,
+  type PeriodSection,
+  type PeriodTab,
+} from "@vereinsheim/shot-ui/layout/sections"
 import { useActiveSection } from "@vereinsheim/shot-ui/layout/useActiveSection"
 import { useReturnJump } from "@vereinsheim/shot-ui/layout/useReturnJump"
 import { listFromProgress, openCard, progressRoute } from "@vereinsheim/shot-ui/nav/navigate"
@@ -22,11 +35,12 @@ import { rangeDays } from "@vereinsheim/shot-ui/period/calendar"
 import { CardList } from "@vereinsheim/shot-ui/period/CardList"
 import { CardLine, CardReadout } from "@vereinsheim/shot-ui/period/CardReadout"
 import type { RenderItemLink } from "@vereinsheim/shot-ui/period/links"
-import { periodReading, type PeriodModel } from "@vereinsheim/shot-ui/period/model"
+import { patternIds, periodReading, type PeriodModel } from "@vereinsheim/shot-ui/period/model"
+import { PatternPanel } from "@vereinsheim/shot-ui/period/PatternPanel"
+import { PeriodAnalysis } from "@vereinsheim/shot-ui/period/PeriodAnalysis"
 import { PeriodChart } from "@vereinsheim/shot-ui/period/PeriodChart"
 import { PeriodChartBar } from "@vereinsheim/shot-ui/period/PeriodChartBar"
 import { PeriodControls, PeriodHeader } from "@vereinsheim/shot-ui/period/PeriodHeader"
-import { PeriodInsights } from "@vereinsheim/shot-ui/period/PeriodInsights"
 import { PeriodResult } from "@vereinsheim/shot-ui/period/PeriodResult"
 import { PeriodTiles } from "@vereinsheim/shot-ui/period/PeriodTiles"
 import { periodSentence } from "@vereinsheim/shot-ui/period/sentence"
@@ -50,7 +64,21 @@ import type { FamilyOption } from "@/lib/pages"
 import { rememberPeriod } from "@/lib/period-memory-client"
 import { setFamilyScoring } from "@/lib/scoring-actions"
 
+import { usePeriodPattern } from "./usePeriodPattern"
+
 const PERIOD_IDS: readonly PeriodSection[] = PERIOD_SECTIONS.map((s) => s.id)
+
+/** der Anker der Adresse, mit Wechseln (`hashchange`); auf dem Server und beim Hydrieren leer */
+const subscribeHash = (listener: () => void) => {
+  window.addEventListener("hashchange", listener)
+  return () => window.removeEventListener("hashchange", listener)
+}
+const useHash = () =>
+  useSyncExternalStore(
+    subscribeHash,
+    () => window.location.hash,
+    () => ""
+  )
 /** so lange ruht die Wahl, bevor sie in die Adresse geht bzw. ihre Lagen geholt werden */
 const ADDRESS_DELAY_MS = 250
 const MARKS_DELAY_MS = 150
@@ -101,6 +129,14 @@ export function ProgressScreen({
   const [explain, setExplain] = useState(false)
   // Umfang als Säulen je Woche oder als Kalender der Trainingstage (T7); wie gezeichnet, nicht in der Adresse
   const [volumeView, setVolumeView] = useState<"weeks" | "calendar">("weeks")
+  // der Reiter der Analyse: gewählt, sonst aus dem Anker (`#precision`, `#position`), sonst Ergebnis
+  const hash = useHash()
+  const [chosenTab, setChosenTab] = useState<PeriodTab | null>(null)
+  const tab: PeriodTab = chosenTab ?? parsePeriodAnchor(hash)?.tab ?? "result"
+  const changeTab = useCallback((next: PeriodTab) => {
+    setChosenTab(next)
+    window.history.replaceState(null, "", `#${next}`)
+  }, [])
 
   const search = useSearchParams()
   const [pending, startTransition] = useTransition()
@@ -201,6 +237,15 @@ export function ProgressScreen({
     [dispatch, jumpTo, chosen]
   )
 
+  // das Trefferbild der Scheiben, die das Ergebnis zählt, erst wenn Bild oder Reiter es brauchen
+  const ids = useMemo(
+    () => patternIds(base, state.includeProbeOnly),
+    [base, state.includeProbeOnly]
+  )
+  const pattern = usePeriodPattern(ids, state.show === "target" || tab !== "result")
+  // ein Schwerpunkt im Reiter Lage wählt seine Scheibe, ohne zu springen: Das Bild bleibt im Blick
+  const pickFromPosition = useCallback((id: string) => dispatch({ type: "pick", id }), [dispatch])
+
   const option = families.find((f) => f.value === state.family)
   const target = TARGETS[option?.targetId ?? "lp-10m"]
   const result = <PeriodResult model={model} timeZone={timeZone} onHelp={onHelp} />
@@ -248,7 +293,7 @@ export function ProgressScreen({
             sentence={empty ? null : sentence}
           />
         }
-        nav={<SectionNav active={active} sections={PERIOD_SECTIONS} />}
+        nav={<SectionNav active={active} sections={periodSections(state.show)} />}
         empty={
           empty ? (
             <p className="rounded-2xl border border-border bg-card p-4 text-[14px] text-foreground-2">
@@ -265,20 +310,27 @@ export function ProgressScreen({
               onMetric={(metric) => dispatch({ type: "setMetric", metric })}
               onView={(view) => dispatch({ type: "setView", view })}
               onHelp={() => onHelp("verlauf-und-form")}
+              show={state.show}
+              onShow={(show) => dispatch({ type: "setShow", show })}
+              onPatternHelp={() => onHelp("langzeit-trefferbild")}
             />
-            <ChartSlot height={300}>
-              {(width) => (
-                <PeriodChart
-                  // je Menge der Scheiben, Darstellung und Kennzahl neu: das Lineal fängt ohne Wahl an
-                  key={`${state.family}:${state.kind}:${state.includeProbeOnly}:${model.range.fromMs}:${model.range.toMs}:${state.metric}:${model.view}:${model.compareRange?.fromMs ?? ""}`}
-                  width={width}
-                  model={model}
-                  timeZone={timeZone}
-                  chosen={chosen}
-                  onChoose={(id) => dispatch({ type: "pick", id })}
-                />
-              )}
-            </ChartSlot>
+            {state.show === "target" ? (
+              <PatternPanel state={pattern.state} target={target} onRetry={pattern.retry} />
+            ) : (
+              <ChartSlot height={300}>
+                {(width) => (
+                  <PeriodChart
+                    // je Menge der Scheiben, Darstellung und Kennzahl neu: das Lineal fängt ohne Wahl an
+                    key={`${state.family}:${state.kind}:${state.includeProbeOnly}:${model.range.fromMs}:${model.range.toMs}:${state.metric}:${model.view}:${model.compareRange?.fromMs ?? ""}`}
+                    width={width}
+                    model={model}
+                    timeZone={timeZone}
+                    chosen={chosen}
+                    onChoose={(id) => dispatch({ type: "pick", id })}
+                  />
+                )}
+              </ChartSlot>
+            )}
             {reading && (
               <CardLine
                 className="md:hidden"
@@ -406,22 +458,25 @@ export function ProgressScreen({
           {
             id: "analysis",
             node: (
-              <div className="grid gap-2">
-                <div className="flex justify-end">
+              <PeriodAnalysis
+                tab={tab}
+                onTab={changeTab}
+                model={model}
+                scoring={state.scoring}
+                timeZone={timeZone}
+                target={target}
+                pattern={pattern.state}
+                onRetry={pattern.retry}
+                explain={explain}
+                onHelp={onHelp}
+                onChoose={(id) => (tab === "result" ? chooseFromRecord(id) : pickFromPosition(id))}
+                chosen={chosen}
+                action={
                   <ToggleChip pressed={explain} icon={<HelpIcon />} onPressedChange={setExplain}>
                     Erklärungen
                   </ToggleChip>
-                </div>
-                <PeriodInsights
-                  model={model}
-                  scoring={state.scoring}
-                  timeZone={timeZone}
-                  explain={explain}
-                  onHelp={onHelp}
-                  onChoose={chooseFromRecord}
-                  chosen={chosen}
-                />
-              </div>
+                }
+              />
             ),
           },
         ]}

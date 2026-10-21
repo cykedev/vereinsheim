@@ -454,6 +454,14 @@ const lightCard = (card: PeriodItem): PeriodItem => ({
 })
 
 /**
+ * die Scheiben, die das Ergebnis des Zeitraums zählt, als Grundlage des Trefferbilds: ein Training nur aus Probe nur mit
+ * dem Schalter, wie im Ergebnis
+ */
+export function patternIds(model: Pick<PeriodModel, "cards">, includeProbeOnly: boolean): string[] {
+  return model.cards.filter((card) => includeProbeOnly || !card.probeOnly).map((card) => card.id)
+}
+
+/**
  * Das Modell für den Browser (Fortschritt in der App): Rechnet der Server `periodModel`, gehen die Scheiben ohne
  * ihre Werte und Rekorde mit. Die Bausteine (`PeriodChart`, `CardList`, `CardReadout`, `PeriodResult`,
  * `PeriodInsights`) lesen von einer Scheibe nur Id, Beginn, Art, „nur Probe“ und Schusszahl; die Werte der Kennzahl

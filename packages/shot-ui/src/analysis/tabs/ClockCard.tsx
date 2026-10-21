@@ -8,7 +8,9 @@ import { useState } from "react"
 
 import { ClockChart } from "../charts/ClockChart"
 import { ChartSlot } from "../charts/frame"
+import type { Route } from "../../nav/routes"
 import { AnalysisCard, Note } from "../parts"
+import { AcrossCardsLink } from "./AcrossCardsLink"
 
 export type ClockReference = "center" | "mpi"
 
@@ -26,11 +28,14 @@ export function ClockCard({
   explain,
   onHelp,
   initialReference = "center",
+  patternRoute,
 }: {
   shots: readonly MetricShot[]
   explain: boolean
   onHelp?: (id: string) => void
   initialReference?: ClockReference
+  /** Fortschritt mit dem Trefferbild der Familie: „Über alle Scheiben im Fortschritt ›“ */
+  patternRoute?: Route
 }) {
   const [reference, setReference] = useState<ClockReference>(initialReference)
   const points = selectShots(shots, { need: "position" }).map((s) => ({
@@ -57,6 +62,7 @@ export function ClockCard({
           <Note>
             {`Zahl der Treffer je Uhrzeit, 12 ist oben. Die Fläche wächst mit der Zahl.${clock.reliable ? "" : " Unter 30 Schuss ist die Uhr ein Bild, kein Befund."}`}
           </Note>
+          <AcrossCardsLink route={patternRoute} />
         </>
       ) : (
         <Note>ab 1 Schuss mit Lage</Note>

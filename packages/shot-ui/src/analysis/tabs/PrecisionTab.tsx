@@ -11,6 +11,7 @@ import { computeMetric, inScoring, metricByKey } from "@vereinsheim/shot-core/me
 
 import { axisText, formatValue, ringsText } from "../../format"
 import { RouteLink } from "../../nav/RouteLink"
+import { AcrossCardsLink } from "./AcrossCardsLink"
 import { ChartSlot } from "../charts/frame"
 import { ShapeChart } from "../charts/ShapeChart"
 import { NO_OUTLIERS } from "../../reasons"
@@ -20,7 +21,13 @@ import type { CardContext, CardSpec } from "./index"
 const mm = (um: number) => formatValue(um / 1000, 2)
 
 /** Präzision: σ, Maße der Gruppe, Form der Gruppe, Ausreißer, alle über die Grundlage */
-export function precisionCards({ input, explain, onHelp, sigmaRoute }: CardContext): CardSpec[] {
+export function precisionCards({
+  input,
+  explain,
+  onHelp,
+  sigmaRoute,
+  patternRoute,
+}: CardContext): CardSpec[] {
   const { base, scoring, target } = input
   const sigma = sigmaEstimate(base)
   const metric = (key: string) => computeMetric(inScoring(metricByKey(key)!, scoring), base)
@@ -165,6 +172,7 @@ export function precisionCards({ input, explain, onHelp, sigmaRoute }: CardConte
                 weit wie die Halbachsen (2a, 2b); bei einer runden Gruppe liegen etwa 86 % der
                 Treffer darin.
               </Note>
+              <AcrossCardsLink route={patternRoute} />
             </>
           ) : (
             <Note>ab 3 Schuss</Note>

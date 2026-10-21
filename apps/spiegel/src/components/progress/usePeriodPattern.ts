@@ -1,0 +1,48 @@
+"use client"
+
+import { useCallback, useEffect, useState } from "react"
+
+import type { PatternState } from "@vereinsheim/shot-ui/period/PatternPanel"
+
+import { periodPatternAction } from "@/lib/pattern-actions"
+
+/**
+ * Das Trefferbild des Zeitraums, geholt erst, wenn es gebraucht wird (`enabled`: Bild gezeigt oder Reiter Präzision
+ * oder Lage offen), und gemerkt für dieselben Scheiben. Eine Antwort zu einer alten Menge Scheiben gilt nicht mehr;
+ * „Noch einmal“ (`retry`) fragt neu.
+ */
+export function usePeriodPattern(
+  ids: readonly string[],
+  enabled: boolean
+): { state: PatternState; retry: () => void } {
+  const key = ids.join(",")
+  const [attempt, setAttempt] = useState(0)
+  const [result, setResult] = useState<{
+    key: string
+    attempt: number
+    state: PatternState
+  } | null>(null)
+  const current = result?.key === key && result.attempt === attempt ? result.state : null
+  const needed = enabled && current === null && key !== ""
+  useEffect(() => {
+    if (!needed) return
+    let live = true
+    const settle = (state: PatternState) => {
+      if (live) setResult({ key, attempt, state })
+    }
+    periodPatternAction(key.split(","))
+      .then((answer) =>
+        settle(
+          "success" in answer && answer.data
+            ? { status: "ready", pattern: answer.data }
+            : { status: "error" }
+        )
+      )
+      .catch(() => settle({ status: "error" }))
+    return () => {
+      live = false
+    }
+  }, [needed, key, attempt])
+  const retry = useCallback(() => setAttempt((n) => n + 1), [])
+  return { state: current ?? { status: "loading" }, retry }
+}

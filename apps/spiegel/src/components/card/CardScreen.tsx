@@ -33,6 +33,7 @@ import {
   backLabel,
   backRoute,
   progressWithMetric,
+  progressWithPattern,
   siblingRoute,
 } from "@vereinsheim/shot-ui/nav/navigate"
 import { urlFromRoute, type CardRoute } from "@vereinsheim/shot-ui/nav/routes"
@@ -216,6 +217,10 @@ export function CardScreen({
   const familySlug = owner ? (card.family?.slug ?? null) : null
   const sigmaRoute = useMemo(
     () => (familySlug ? progressWithMetric(familySlug, "group.sigma") : undefined),
+    [familySlug]
+  )
+  const patternRoute = useMemo(
+    () => (familySlug ? progressWithPattern(familySlug) : undefined),
     [familySlug]
   )
 
@@ -479,6 +484,7 @@ export function CardScreen({
                 onHelp={onHelp}
                 onChoose={chooseFromAnalysis}
                 sigmaRoute={sigmaRoute}
+                patternRoute={patternRoute}
                 action={
                   <ToggleChip pressed={explain} icon={<HelpIcon />} onPressedChange={setExplain}>
                     Erklärungen

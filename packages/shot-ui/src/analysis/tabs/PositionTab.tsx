@@ -26,6 +26,7 @@ export function positionCards({
   layers,
   onToggleLayer,
   onHelp,
+  patternRoute,
 }: CardContext): CardSpec[] {
   const { base, card, scoring, target } = input
   const confidence = mpiConfidence(base)
@@ -98,7 +99,9 @@ export function positionCards({
     },
     {
       key: "richtungsuhr",
-      element: <ClockCard shots={base} explain={explain} onHelp={onHelp} />,
+      element: (
+        <ClockCard shots={base} explain={explain} onHelp={onHelp} patternRoute={patternRoute} />
+      ),
     },
     {
       key: "drift-und-wanderung",

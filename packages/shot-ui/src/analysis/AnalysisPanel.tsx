@@ -106,6 +106,8 @@ export interface AnalysisPanelProps {
   onChoose?: (index: number, series: SeriesKey | null) => void
   /** Fortschritt mit der Streuung σ der Familie dieser Scheibe; ohne sie kein Link an σ */
   sigmaRoute?: Route
+  /** Fortschritt mit dem Trefferbild der Familie; ohne ihn kein Link an Form und Richtungsuhr */
+  patternRoute?: Route
   className?: string
 }
 
@@ -126,6 +128,7 @@ export function AnalysisPanel({
   onHelp,
   onChoose,
   sigmaRoute,
+  patternRoute,
   action,
   className,
 }: AnalysisPanelProps) {
@@ -163,6 +166,7 @@ export function AnalysisPanel({
             chosenShot,
             onShowShot,
             sigmaRoute,
+            patternRoute,
           })
         : [
             {
@@ -186,6 +190,7 @@ export function AnalysisPanel({
       chosenShot,
       onShowShot,
       sigmaRoute,
+      patternRoute,
     ]
   )
   const tabLabel = ANALYSIS_TABS.find((t) => t.value === tab)?.label ?? ""

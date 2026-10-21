@@ -30,6 +30,8 @@ export interface CardContext {
   onShowShot?: (shot: MetricShot) => void
   /** Fortschritt mit der Streuung σ der Familie dieser Scheibe; ohne sie kein Link an σ */
   sigmaRoute?: Route
+  /** Fortschritt mit dem Trefferbild der Familie; ohne ihn kein Link an Form und Richtungsuhr */
+  patternRoute?: Route
 }
 
 export interface CardSpec {
