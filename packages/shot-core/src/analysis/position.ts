@@ -2,7 +2,7 @@
 // gegen die Streuung, in welche Richtungen gehen die Treffer und wandert die Gruppe (Katalog L3, L4, L6,
 // L8, dazu der Ringverlust E9). Lagen in µm, Mitte (0 | 0), x rechts, y oben.
 
-import { centroid, covarianceEllipse, distancesTo, type Point } from "../geometry"
+import { centroid, distancesTo, type Point } from "../geometry"
 import {
   contextOf,
   inShotOrder,
@@ -12,7 +12,7 @@ import {
   type ShotKind,
 } from "../metrics"
 import { scoreFromCoordinates } from "../scoring"
-import { fQuantile2 } from "../stats"
+import { confidenceOf } from "./hotelling"
 import type { TargetImage } from "../targets"
 
 const positioned = (shots: readonly MetricShot[]): Point[] =>
@@ -40,43 +40,7 @@ export interface MpiConfidence {
  * Treffern einen winzigen Rest lässt, der sonst ein riesiges T² ergäbe.
  */
 export function mpiConfidence(shots: readonly MetricShot[]): MpiConfidence | null {
-  const points = positioned(shots)
-  const n = points.length
-  if (n < 3) return null
-  const center = centroid(points) as Point
-  let sxx = 0
-  let syy = 0
-  let sxy = 0
-  for (const p of points) {
-    const dx = p.xUm - center.xUm
-    const dy = p.yUm - center.yUm
-    sxx += dx * dx
-    syy += dy * dy
-    sxy += dx * dy
-  }
-  sxx /= n - 1
-  syy /= n - 1
-  sxy /= n - 1
-  const det = sxx * syy - sxy * sxy
-  if (!(det > 1e-12 * sxx * syy)) return null
-  const mx = center.xUm
-  const my = center.yUm
-  const t2 = (n * (syy * mx * mx - 2 * sxy * mx * my + sxx * my * my)) / det
-  const critical = ((2 * (n - 1)) / (n - 2)) * fQuantile2(0.95, n - 2)
-  const shape = covarianceEllipse(points) as { majorUm: number; minorUm: number; angleRad: number }
-  const scale = Math.sqrt(critical / n)
-  return {
-    n,
-    center,
-    t2,
-    critical,
-    real: t2 > critical,
-    ellipse: {
-      majorUm: shape.majorUm * scale,
-      minorUm: shape.minorUm * scale,
-      angleRad: shape.angleRad,
-    },
-  }
+  return confidenceOf(positioned(shots))
 }
 
 interface Totals {
