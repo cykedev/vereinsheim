@@ -322,3 +322,46 @@ export function mannWhitney(
   const z = Math.max(0, Math.abs(u - mean) - 0.5) / Math.sqrt(variance)
   return { u, p: normalTwoSided(z), exact: false }
 }
+
+/** bis zu so vielen Werten in der kleinen Gruppe zählt `permutationMeanTest` alle Auswahlen aus */
+const PERMUTATION_MAX = 3
+
+/**
+ * Exakter Permutationstest auf den Unterschied der Mittel, zweiseitig: Anteil aller Auswahlen von |a| Werten aus a und
+ * b zusammen, deren Mittel mindestens so weit vom Mittel der übrigen liegt wie das von a. Bei festem n und k ist das
+ * |n · Σauswahl − k · Σalle|, ganzzahlig gerechnet: Die Werte sind ganze Zahlen (etwa Zehntel), damit Gleichstände genau
+ * zählen. Nur für eine kleine Gruppe (|a| bis 3), sonst Fehler; unter einem Wert je Seite null.
+ */
+export function permutationMeanTest(
+  a: readonly number[],
+  b: readonly number[]
+): { p: number } | null {
+  if (a.length > PERMUTATION_MAX) {
+    throw new RangeError(
+      `Permutationstest nur für bis zu ${PERMUTATION_MAX} Werte, nicht ${a.length}`
+    )
+  }
+  if (![...a, ...b].every((v) => Number.isInteger(v))) {
+    throw new RangeError("Permutationstest nur über ganze Zahlen")
+  }
+  if (a.length < 1 || b.length < 1) return null
+  const all = [...a, ...b]
+  const n = all.length
+  const k = a.length
+  const total = all.reduce((sum, v) => sum + v, 0)
+  const distance = (sum: number) => Math.abs(n * sum - k * total)
+  const observed = distance(a.reduce((sum, v) => sum + v, 0))
+  let far = 0
+  let count = 0
+  // alle Auswahlen von k Werten über ihre Positionen (gleiche Werte zählen einzeln)
+  const choose = (start: number, left: number, sum: number) => {
+    if (left === 0) {
+      count++
+      if (distance(sum) >= observed) far++
+      return
+    }
+    for (let i = start; i <= n - left; i++) choose(i + 1, left - 1, sum + all[i])
+  }
+  choose(0, k, 0)
+  return { p: far / count }
+}

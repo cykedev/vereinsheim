@@ -17,6 +17,7 @@ import {
   wilson,
   mannWhitney,
   normalTwoSided,
+  permutationMeanTest,
 } from "./stats"
 
 describe("Lage- und Streumaße", () => {
@@ -277,5 +278,43 @@ describe("modalLength", () => {
     expect(modalLength([10, 10, 10, 4])).toBe(10)
     expect(modalLength([5, 5, 10, 10])).toBe(10)
     expect(modalLength([10, 5, 5])).toBe(5)
+  })
+})
+
+describe("Permutationstest auf den Unterschied der Mittel", () => {
+  it("zählt alle Auswahlen genau aus (Handwerte)", () => {
+    // eine von vier Auswahlen (die 10) liegt so weit vom Rest
+    expect(permutationMeanTest([10], [0, 0, 0])).toEqual({ p: 1 / 4 })
+    // nur die Auswahl der drei Neunen aus 40 Werten: C(40, 3) = 9 880
+    expect(
+      permutationMeanTest(
+        [9, 9, 9],
+        Array.from({ length: 37 }, () => 5)
+      )
+    ).toEqual({
+      p: 1 / 9880,
+    })
+    // alles gleich: jede Auswahl ist so weit weg wie die beobachtete
+    expect(permutationMeanTest([5, 5, 5], [5, 5, 5, 5])).toEqual({ p: 1 })
+    // zwei aus [1, 2, 3, 4]: {1, 2} und {3, 4} sind die äußersten, 2 von 6
+    expect(permutationMeanTest([1, 2], [3, 4])).toEqual({ p: 2 / 6 })
+  })
+
+  it("zweiseitig: gespiegelte Werte geben dasselbe p", () => {
+    const rest = [95, 98, 100, 101, 103, 97, 99, 102, 100, 96]
+    const high = permutationMeanTest([104, 106, 103], rest)!
+    const low = permutationMeanTest(
+      [104, 106, 103].map((v) => -v),
+      rest.map((v) => -v)
+    )!
+    expect(high.p).toBe(low.p)
+    expect(high.p).toBeLessThan(0.05)
+  })
+
+  it("nur für bis zu drei Werte, nur ganze Zahlen, sonst ohne Seite null", () => {
+    expect(() => permutationMeanTest([1, 2, 3, 4], [5, 6])).toThrow(RangeError)
+    expect(() => permutationMeanTest([1.5], [2, 3])).toThrow(RangeError)
+    expect(permutationMeanTest([], [1, 2])).toBeNull()
+    expect(permutationMeanTest([1], [])).toBeNull()
   })
 })
