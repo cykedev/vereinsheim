@@ -210,10 +210,9 @@ Ergebnis (I7–I9, Z6, Z7, K2, K4, T4, V3–V5, W2–W4 als Zeilen im Vergleich)
   `heat-0`) bis oft (gelb, `heat-5`), deren Grenzen 99 von 100, neun Zehntel, drei Viertel, die Hälfte, ein Viertel und
   ein Zehntel der Schüsse umschließen (`HEAT_SHARES`); das äußerste, ganz leichte Band zeigt die seltenen Schüsse
   (Rückmeldung des Users: ohne es gingen sie unter). Einzelne seltene Treffer über der Heatmap gab es kurz, sie waren
-  nicht nötig. Der Ausschnitt umfasst 99 % der Schüsse mit so viel Rand (× 1,35), dass das äußerste Band ins Bild passt. Die seltenen Bänder scheinen durch (Deckkraft 0,35 außen bis
-  0,94 innen), so
-  bleiben Weiß und Schwarz erkennbar, und Ringe und Ringzahlen liegen darüber, wie gedruckt: Der Wert einer Stelle lässt
-  sich ablesen wie auf der echten Scheibe. Die Legende ist ein Verlauf „selten … oft“. Verworfen nach Rückmeldung des
+  nicht nötig. Der Ausschnitt umfasst 99 % der Schüsse mit so viel Rand (× 1,35), dass das äußerste Band ins Bild passt. Die Bänder decken (Deckkraft 0,6 für das leichte äußere, 0,85 bis 0,97 für die übrigen), damit sich
+  Violett klar vom Spiegel abhebt (Rückmeldung des Users); Ringe und Ringzahlen liegen darüber, wie gedruckt: Der Wert
+  einer Stelle lässt sich ablesen wie auf der echten Scheibe. Die Legende ist ein Verlauf „selten … oft“. Verworfen nach Rückmeldung des
   Users: hellblaue Flächen (auf Papier und Spiegel schlecht zu sehen), eine zurückgenommene dunkle Scheibe (der Spiegel
   war „irgendwas“) und eigene Ringe mit Saum (nicht wie auf der Seite einer Scheibe).
 - **Unter 50 Schuss jeder Schuss** in Kalibergröße und Ringfarbe wie auf der Seite einer Scheibe, alle im Bild.

@@ -29,10 +29,10 @@ export const HEAT_COLORS = [
   "var(--heat-5)",
 ] as const
 /**
- * Deckkraft der Bänder von außen nach innen: Die seltenen lassen Papier und Spiegel durchscheinen (die Scheibe bleibt
- * echt erkennbar), die dichten decken fast
+ * Deckkraft der Bänder von außen nach innen: deckend genug, dass sich Violett auch vom Spiegel klar abhebt; nur das ganz
+ * leichte äußere Band lässt Papier und Spiegel noch durchscheinen
  */
-const HEAT_OPACITY = [0.35, 0.5, 0.62, 0.74, 0.86, 0.94] as const
+const HEAT_OPACITY = [0.6, 0.85, 0.9, 0.93, 0.95, 0.97] as const
 
 export interface PatternTargetProps {
   /** das Bild aus `periodPattern`: unter 50 Schuss die Punkte, sonst die Dichte in Bändern */
