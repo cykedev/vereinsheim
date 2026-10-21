@@ -6,18 +6,18 @@ import type { TargetImage } from "@vereinsheim/shot-core/targets"
 import { FALLACIES } from "@vereinsheim/shot-help/guide"
 import { GLOSSARY } from "@vereinsheim/shot-help/glossary"
 import { cn } from "@vereinsheim/lib/utils"
-import { Segmented } from "@vereinsheim/ui/design2/segmented"
 import { useId, useMemo, type ReactNode } from "react"
 
 import { HelpButton } from "../help/HelpButton"
-import { JUMP_BAR } from "@vereinsheim/ui/design2/bar"
 import type { Route } from "../nav/routes"
 import { isProbeShot, seriesKeyOf } from "../shots"
 import type { SeriesKey } from "../types"
 import type { Layer, ViewState } from "../view-state"
 import { analysisInput, type AnalysisBasis } from "./input"
+import { AnalysisStrip } from "./AnalysisStrip"
+import { layoutCards } from "./layout"
 import { AnalysisCard, Disclosure, Note } from "./parts"
-import { TAB_CARDS, type AnalysisTab, type CardSpec } from "./tabs"
+import { TAB_CARDS, type AnalysisTab } from "./tabs"
 
 export type { AnalysisTab } from "./tabs"
 
@@ -80,41 +80,6 @@ function coverageText(
     missing.length ? missing.join(" · ") : "alle mit Lage, Zeit und Wert",
     `Wertung ${scoring === "rings" ? "in ganzen Ringen" : "in Zehnteln"}`,
   ].join(" · ")
-}
-
-/**
- * Breite Karten allein, Folgen schmaler Karten im Raster: zwei Spalten in Zeilen, sobald der Bereich der
- * Karten 820 px breit ist (Container, nicht Fenster: am Desktop steht die Analyse rechts neben der Scheibe),
- * beide Karten einer Zeile gleich hoch, eine einzelne Karte in der letzten Zeile über die volle Breite. Jeder
- * Abstand ist 16 px; getrennte Spalten ließen unter der kürzeren bis zu 360 px frei.
- */
-function layout(cards: readonly CardSpec[]): ReactNode[] {
-  const blocks: ReactNode[] = []
-  let run: CardSpec[] = []
-  const flush = () => {
-    if (!run.length) return
-    blocks.push(
-      <div
-        key={`run:${run[0].key}`}
-        className="grid grid-cols-[minmax(0,1fr)] gap-4 @min-[820px]:grid-cols-2 @min-[820px]:[&>:last-child:nth-child(odd)]:col-span-2"
-      >
-        {run.map((card) => (
-          <div key={card.key} className="grid min-w-0">
-            {card.element}
-          </div>
-        ))}
-      </div>
-    )
-    run = []
-  }
-  for (const card of cards) {
-    if (card.wide) {
-      flush()
-      blocks.push(<div key={card.key}>{card.element}</div>)
-    } else run.push(card)
-  }
-  flush()
-  return blocks
 }
 
 export interface AnalysisPanelProps {
@@ -234,34 +199,14 @@ export function AnalysisPanel({
         </div>
         {action && <div data-analysis-action>{action}</div>}
       </div>
-      {/* Streifen, der klebt: auf dem Telefon über der Sprungleiste (nie zwei Leisten), ab 768 px unter ihr;
-          die Leiste ist eine Zeile, die in sich seitlich scrollt, statt die Seite zu verbreitern */}
-      <div
-        data-analysis-strip
-        className={cn(
-          "sticky top-0 z-30 flex",
-          JUMP_BAR.height,
-          "items-center bg-background max-md:-mx-4 max-md:px-4",
-          JUMP_BAR.mdTop,
-          "md:z-10"
-        )}
-      >
-        <Segmented
-          label="Thema"
-          value={tab}
-          options={ANALYSIS_TABS}
-          onChange={onTab}
-          controls={regionId}
-          scroll
-        />
-      </div>
+      <AnalysisStrip value={tab} options={ANALYSIS_TABS} onChange={onTab} controls={regionId} />
       <div
         id={regionId}
         role="region"
         aria-label={`Thema ${tabLabel}`}
         className="@container grid gap-4"
       >
-        {layout(cards)}
+        {layoutCards(cards)}
       </div>
       {/* ohne Schüsse keine Datenlage: sie behauptete sonst „alle mit Lage, Zeit und Wert“ */}
       {shots.length > 0 && (

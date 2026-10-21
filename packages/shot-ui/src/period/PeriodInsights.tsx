@@ -36,7 +36,21 @@ export interface PeriodInsightsProps {
  * Rand ließ nicht erkennen, zu welchem Rekord es gehört. Die Rekorde der gewählten Scheibe sind
  * markiert.
  */
-export function PeriodInsights({
+export function PeriodInsights({ className, ...props }: PeriodInsightsProps) {
+  const words = usePeriodWords()
+  return (
+    <section aria-label="Analyse" className={cn("@container grid gap-4", className)}>
+      <div className="grid min-w-0 gap-1">
+        <h2 className="font-display text-xl font-bold tracking-tight">Was der Zeitraum zeigt</h2>
+        <p className="text-[13px] text-muted-foreground">{`Analyse über die ${words.many}`}</p>
+      </div>
+      <RecordsCard {...props} />
+    </section>
+  )
+}
+
+/** die Karte „Rekorde“ allein: in `PeriodInsights` und im Reiter „Ergebnis“ der Analyse über den Zeitraum */
+export function RecordsCard({
   model,
   scoring,
   timeZone,
@@ -44,8 +58,7 @@ export function PeriodInsights({
   onHelp,
   onChoose,
   chosen = null,
-  className,
-}: PeriodInsightsProps) {
+}: Omit<PeriodInsightsProps, "className">) {
   const inPeriod = new Set(model.cards.map((c) => c.id))
   const date = (ms: number) => formatDateOnly(new Date(ms), timeZone)
   const words = usePeriodWords()
@@ -108,35 +121,29 @@ export function PeriodInsights({
   // Linien zwischen den Rekorden; die Zeilen reichen um ihren Innenabstand über den Rand, der Text bleibt bündig
   const list = "-mx-2 grid divide-y divide-border text-[13px]"
   return (
-    <section aria-label="Analyse" className={cn("@container grid gap-4", className)}>
-      <div className="grid min-w-0 gap-1">
-        <h2 className="font-display text-xl font-bold tracking-tight">Was der Zeitraum zeigt</h2>
-        <p className="text-[13px] text-muted-foreground">{`Analyse über die ${words.many}`}</p>
-      </div>
-      <AnalysisCard help="rekorde" texts={texts} explain={explain} onHelp={onHelp}>
-        {rows.length ? (
-          <>
-            {recent.length ? (
-              <ul data-records-new className={list}>
-                {recent.map(row)}
-              </ul>
-            ) : (
-              <Note>Im Zeitraum kein neuer Rekord.</Note>
-            )}
-            {/* aufgeklappt, wenn oben nicht alle neuen stehen: Der Link „Noch N weitere …“ auf Start führt hierher */}
-            <details data-all-records open={inRange.length > NEW_RECORDS}>
-              <summary className="cursor-pointer text-[13px] font-semibold text-primary">
-                {`Alle Rekorde (${rows.length})`}
-              </summary>
-              <ul data-records className={cn(list, "mt-2")}>
-                {rows.map(row)}
-              </ul>
-            </details>
-          </>
-        ) : (
-          <Note>{words.noRecords}</Note>
-        )}
-      </AnalysisCard>
-    </section>
+    <AnalysisCard help="rekorde" texts={texts} explain={explain} onHelp={onHelp}>
+      {rows.length ? (
+        <>
+          {recent.length ? (
+            <ul data-records-new className={list}>
+              {recent.map(row)}
+            </ul>
+          ) : (
+            <Note>Im Zeitraum kein neuer Rekord.</Note>
+          )}
+          {/* aufgeklappt, wenn oben nicht alle neuen stehen: Der Link „Noch N weitere …“ auf Start führt hierher */}
+          <details data-all-records open={inRange.length > NEW_RECORDS}>
+            <summary className="cursor-pointer text-[13px] font-semibold text-primary">
+              {`Alle Rekorde (${rows.length})`}
+            </summary>
+            <ul data-records className={cn(list, "mt-2")}>
+              {rows.map(row)}
+            </ul>
+          </details>
+        </>
+      ) : (
+        <Note>{words.noRecords}</Note>
+      )}
+    </AnalysisCard>
   )
 }
