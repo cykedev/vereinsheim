@@ -98,7 +98,7 @@ function rowOf(key: string, scoring: Scoring): Omit<CompareRow, "a" | "b" | "com
  * Zwei Gruppen von Scheiben (Zeiträume oder Arten): Werte je Scheibe aus den Einträgen, Ergebnis und Streuung über
  * `compareSides`, die Lage über die Mitten der Scheiben (`positionPoints`, ab 3 Schuss mit Lage), das Bild aus allen
  * Lagen. Ein Training nur aus Probe zählt nur mit `includeProbeOnly`, wie im Fortschritt; `positions` sind die Lagen
- * je Scheibe (fehlt eine, hat sie keine).
+ * je Scheibe (fehlt eine, zählt sie weder im Bild noch als Scheibe ohne Lage).
  */
 export function groupCompareModel(input: {
   type: "periods" | "kind"
@@ -124,7 +124,9 @@ export function groupCompareModel(input: {
     ...name,
     cards: items.length,
     shots: items.reduce((sum, item) => sum + item.shots, 0),
-    withoutPosition: items.length - positionsOf(items).length,
+    // ohne Lage ist eine Scheibe, deren Lagen gelesen und leer sind; eine, deren Lagen die Obergrenze nicht mehr gelesen
+    // hat, zählt nicht dazu
+    withoutPosition: items.filter((item) => byId.get(item.id)?.points.length === 0).length,
   })
   const a = counted(input.a)
   const b = counted(input.b)

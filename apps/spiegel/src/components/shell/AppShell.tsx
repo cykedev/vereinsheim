@@ -52,10 +52,12 @@ export function AppShell({
   if (route.page === "progress" && memoryKey(route) !== memoryKey(memory.progress))
     setMemory({ ...memory, progress: { ...route, section: null } })
 
-  // die zuletzt gewählte Familie: Scheiben und Fortschritt teilen sie (`areaLinks`)
+  // die zuletzt gewählte Familie: Scheiben, Fortschritt und Vergleichen teilen sie (`areaLinks`)
   const [family, setFamily] = useState<string | null>(null)
   const routeFamily =
-    route.page === "cards" || route.page === "progress" ? route.query.family : null
+    route.page === "cards" || route.page === "progress" || route.page === "compare"
+      ? route.query.family
+      : null
   if (routeFamily && routeFamily !== family) setFamily(routeFamily)
 
   const [helpId, setHelpId] = useState<string | null>(null)

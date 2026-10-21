@@ -88,8 +88,8 @@ const model = (over: Partial<CompareModel> = {}): CompareModel => ({
     style: "dots",
     halfUm: 1000,
     focus: null,
-    a: { points: [[0, 0]], center: null },
-    b: { points: [], center: null },
+    a: { kind: "dots" as const, points: [[0, 0]], center: null },
+    b: { kind: "dots" as const, points: [], center: null },
   },
   ...over,
 })
@@ -245,6 +245,8 @@ describe("Zeilen, Grundlage, Bild", () => {
     expect(goldSide(row("result.decimalMean", "higher", comparison(-0.2, "lower")))).toBe("b")
     // σ: kleiner ist besser, A höher heißt B besser
     expect(goldSide(row("group.sigma", "lower", comparison(0.2, "higher")))).toBe("b")
+    // σ: A tiefer heißt A besser
+    expect(goldSide(row("group.sigma", "lower", comparison(-0.2, "lower")))).toBe("a")
     expect(goldSide(row("time.intervalMedian", "none", comparison(5, "higher")))).toBeNull()
     expect(goldSide(row("group.sigma", "lower", comparison(0, "unclear")))).toBeNull()
     expect(goldSide(row("group.sigma", "lower", comparison(0.3, "unclear", false)))).toBeNull()
@@ -301,10 +303,19 @@ describe("Zeilen, Grundlage, Bild", () => {
         style: "outlines",
         halfUm: 1,
         focus: { xUm: 0, yUm: 0, radiusUm: 1 },
-        a: { grid, center },
-        b: { grid, center },
+        a: { kind: "outline" as const, grid, center },
+        b: { kind: "outline" as const, grid, center },
       })
     ).toBe("Durchgezogen: die Hälfte der Schüsse. Gestrichelt: 9 von 10.")
+    expect(
+      pictureLegend({
+        ...model().picture,
+        style: "mixed",
+        b: { kind: "outline" as const, grid, center },
+      })
+    ).toBe(
+      "Durchgezogen: die Hälfte der Schüsse. Gestrichelt: 9 von 10. Die kleinere Seite steht mit jedem Schuss als Punkt."
+    )
     expect(pictureLegend(model().picture)).toBe(
       "Jeder Punkt ist ein Schuss. Der Ringwert steht in den Zahlen."
     )
@@ -313,8 +324,8 @@ describe("Zeilen, Grundlage, Bild", () => {
         style: "dots",
         halfUm: 1,
         focus: null,
-        a: { points: [], center: null },
-        b: { points: [], center: null },
+        a: { kind: "dots" as const, points: [], center: null },
+        b: { kind: "dots" as const, points: [], center: null },
       })
     ).toBe("Für das Bild fehlen die Lagen der Schüsse.")
     expect(problemText("missing")).toBe("Wähle zwei Scheiben.")

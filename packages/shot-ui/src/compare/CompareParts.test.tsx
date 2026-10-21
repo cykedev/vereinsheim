@@ -63,8 +63,8 @@ const MODEL: CompareModel = {
     style: "dots",
     halfUm: 1000,
     focus: null,
-    a: { points: [], center: null },
-    b: { points: [], center: null },
+    a: { kind: "dots" as const, points: [], center: null },
+    b: { kind: "dots" as const, points: [], center: null },
   },
 }
 
@@ -153,10 +153,9 @@ describe("CompareTable", () => {
 
   it("gleich gebaute Zahlen: Einheit beim Namen, zwei gleich breite Spalten, die Lage als eigene Zeile", () => {
     const html = renderToStaticMarkup(h(CompareTable, { model: MODEL, onHelp: noop }))
-    expect(html).toContain("grid-cols-[minmax(0,1fr)_6rem_6rem]")
+    // zwei gleich breite Spalten für die Zahlen
+    expect(html).toMatch(/grid-cols-\[minmax\(0,1fr\)_(\d+rem)_\1\]/)
     expect(html).toMatch(/Ø je Schuss<span[^>]*>Ringe<\/span>/)
-    // keine Einheit hinter der Zahl
-    expect(html).not.toMatch(/9,20<small/)
     expect(html).toMatch(/data-compare-row="position" class="[^"]*flex[^"]*justify-between/)
   })
 

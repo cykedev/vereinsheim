@@ -14,7 +14,7 @@ import {
 } from "../metrics"
 import { quantile } from "../stats"
 import { densityGrid, patternHalf, type DensityGrid } from "./density"
-import { PATTERN_DENSITY_FROM } from "./pattern"
+import { PATTERN_DENSITY_FROM, PATTERN_SHOTS_MAX } from "./pattern"
 import { compareSamples, MIN_CARDS_PER_SIDE, type PeriodComparison } from "./period"
 
 const ALPHA = 0.05
@@ -148,10 +148,6 @@ export function compareShots(
 /** Raster der Punkte im Bild: 10 µm wie `cardMarks` */
 const PICTURE_UM = 10
 
-/**
- * das Bild zweier Seiten: ab 50 Schuss je Seite zwei Umrisse aus der Dichte (Raster wie `periodPattern`), sonst jeder
- * Schuss als Punkt in der Farbe seiner Seite; dazu die beiden Mitten auf ganze µm
- */
 /** die Gruppe beider Seiten als Kreis: ihre gemeinsame Mitte und der Radius, den das Bild beim Zoomen zeigt */
 export interface PictureFocus {
   xUm: number
@@ -159,23 +155,24 @@ export interface PictureFocus {
   radiusUm: number
 }
 
-export type ComparePicture =
-  | {
-      style: "outlines"
-      halfUm: number
-      focus: PictureFocus
-      a: { grid: DensityGrid; center: Point }
-      b: { grid: DensityGrid; center: Point }
-    }
-  | {
-      style: "dots"
-      halfUm: number
-      /** null ohne Punkte */
-      focus: PictureFocus | null
-      /** jeder Punkt als [x, y] in 10 µm */
-      a: { points: [number, number][]; center: Point | null }
-      b: { points: [number, number][]; center: Point | null }
-    }
+/** eine Seite im Bild: als Umriss aus der Dichte (Raster wie `periodPattern`) oder jeder Schuss als Punkt */
+export type SidePicture =
+  | { kind: "outline"; grid: DensityGrid; center: Point }
+  /** jeder Punkt als [x, y] in 10 µm; die Mitte null ohne Punkte */
+  | { kind: "dots"; points: [number, number][]; center: Point | null }
+
+/**
+ * das Bild zweier Seiten: beide als Umriss, beide als Punkte oder gemischt (eine große Seite als Umriss, die kleine als
+ * Punkte); dazu der Ausschnitt um die Mitte der Scheibe, der die Raster trägt, und die Gruppe beider Seiten zum Zoomen
+ */
+export interface ComparePicture {
+  style: "outlines" | "dots" | "mixed"
+  halfUm: number
+  /** null ohne Punkte */
+  focus: PictureFocus | null
+  a: SidePicture
+  b: SidePicture
+}
 
 const roundCenter = (points: readonly Point[]): Point | null => {
   const center = centroid(points)
@@ -204,30 +201,34 @@ function focusOf(points: readonly Point[], share: number): PictureFocus | null {
 }
 
 /**
- * Das Bild zweier Seiten für den Browser (C2, C3): Haben beide Seiten mindestens 50 Punkte (`PATTERN_DENSITY_FROM`),
- * zwei Dichteraster auf einem gemeinsamen Ausschnitt (`patternHalf` über beide), aus denen die Umrisse der Hälfte und
- * von 9 von 10 Schüssen entstehen; sonst die Punkte selbst, mit einem Ausschnitt um den weitesten Punkt beider Seiten
- * wie das Trefferbild bei wenigen Schüssen. Nie die Schüsse selbst.
+ * Das Bild zweier Seiten für den Browser (C2, C3). Eine Seite wird Umriss (Hälfte und 9 von 10 Schüssen aus einem
+ * Dichteraster), wenn sie mindestens 50 Punkte hat (`PATTERN_DENSITY_FROM`) und die andere auch, oder wenn sie mehr als
+ * 3.000 hat (`PATTERN_SHOTS_MAX`): So gehen nie mehr als 3.000 Punkte einer Seite an den Browser, auch wenn wenige
+ * Wettkämpfe gegen viel Training stehen. Sonst zeigt die Seite jeden Schuss als Punkt. Mit einem Umriss trägt
+ * `patternHalf` über beide Seiten die Raster, sonst reicht der Ausschnitt bis zum weitesten Punkt. Zum Zoomen die Gruppe
+ * beider Seiten: bei Umrissen bis 95 von 100 Punkten, bei Punkten bis zum weitesten.
  */
 export function comparePicture(a: readonly Point[], b: readonly Point[]): ComparePicture {
-  if (a.length >= PATTERN_DENSITY_FROM && b.length >= PATTERN_DENSITY_FROM) {
-    const halfUm = patternHalf([...a, ...b])
-    return {
-      style: "outlines",
-      halfUm,
-      focus: focusOf([...a, ...b], 0.95) as PictureFocus,
-      a: { grid: densityGrid(a, halfUm), center: roundCenter(a) as Point },
-      b: { grid: densityGrid(b, halfUm), center: roundCenter(b) as Point },
-    }
-  }
+  const outline = (own: readonly Point[], other: readonly Point[]) =>
+    own.length > PATTERN_SHOTS_MAX ||
+    (own.length >= PATTERN_DENSITY_FROM && other.length >= PATTERN_DENSITY_FROM)
+  const withOutline = outline(a, b) || outline(b, a)
+  const all = [...a, ...b]
   // als Schleife: viele Punkte als Argumente für `Math.max(...)` sprengen den Stapel
   let farthest = 0
-  for (const p of [...a, ...b]) farthest = Math.max(farthest, Math.hypot(p.xUm, p.yUm))
+  for (const p of all) farthest = Math.max(farthest, Math.hypot(p.xUm, p.yUm))
+  const halfUm = withOutline ? patternHalf(all) : Math.max(1000, farthest * 1.15 + 500)
+  const side = (own: readonly Point[], other: readonly Point[]): SidePicture =>
+    outline(own, other)
+      ? { kind: "outline", grid: densityGrid(own, halfUm), center: roundCenter(own) as Point }
+      : { kind: "dots", points: own.map(dot), center: roundCenter(own) }
+  const sa = side(a, b)
+  const sb = side(b, a)
   return {
-    style: "dots",
-    halfUm: Math.max(1000, farthest * 1.15 + 500),
-    focus: focusOf([...a, ...b], 1),
-    a: { points: a.map(dot), center: roundCenter(a) },
-    b: { points: b.map(dot), center: roundCenter(b) },
+    style: sa.kind !== sb.kind ? "mixed" : sa.kind === "outline" ? "outlines" : "dots",
+    halfUm,
+    focus: focusOf(all, withOutline ? 0.95 : 1),
+    a: sa,
+    b: sb,
   }
 }

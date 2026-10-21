@@ -102,9 +102,9 @@ export function SideLegend({ a, b }: { a: string; b: string }) {
 
 /**
  * Das Bild zweier Seiten auf der Scheibe, wie die Seite einer Scheibe sie zeichnet (`TargetBoard`: Flächen unten, Ringe
- * und Ringzahlen über den Seiten). Ab 50 Schuss je Seite zwei Umrisse: B zuerst, A darüber, je die Fläche mit 9 von 10
- * Schüssen gestrichelt und die mit der Hälfte durchgezogen, bei A getönt. Sonst jeder Schuss in Kalibergröße in der
- * Farbe seiner Seite, B zuerst. Darüber die beiden Mitten mit einem Ring in der Farbe ihrer Seite. Das Bild öffnet auf
+ * und Ringzahlen über den Seiten). Je Seite ein Umriss oder Punkte (`comparePicture`), B zuerst, A darüber: Ein Umriss
+ * ist die Fläche mit 9 von 10 Schüssen gestrichelt und die mit der Hälfte durchgezogen, bei A getönt; Punkte sind jeder
+ * Schuss in Kalibergröße in der Farbe seiner Seite. Darüber die beiden Mitten mit einem Ring in der Farbe ihrer Seite. Das Bild öffnet auf
  * der Gruppe beider Seiten; die Lupe oben links zeigt die ganze Scheibe und zurück, wie auf der Seite einer Scheibe.
  */
 export function ComparePicture({
@@ -136,40 +136,38 @@ export function ComparePicture({
         className="block aspect-square h-auto w-full rounded-xl border border-border select-none"
       >
         <TargetBoard target={target} view={view} ringLabel={sizes.ringLabel} part="fills" />
-        {picture.style === "outlines"
-          ? sides.map((side) => {
-              const grid = picture[side].grid
-              const inner = contourPath(grid, grid.levels[INNER], picture.halfUm)
-              return (
-                <g key={side}>
-                  {side === "a" && (
-                    <path d={inner} fill={SIDE_COLORS.a} fillOpacity={0.4} fillRule="evenodd" />
-                  )}
-                  <Outline
-                    d={contourPath(grid, grid.levels[OUTER], picture.halfUm)}
-                    side={side}
-                    dashed
-                  />
-                  <Outline d={inner} side={side} dashed={false} />
-                </g>
-              )
-            })
-          : sides.map((side) =>
-              picture[side].points.map(([x, y], i) => (
-                <circle
-                  key={`${side}${i}`}
-                  data-compare-shot={side}
-                  cx={x * POINT_MM}
-                  cy={-y * POINT_MM}
-                  r={calR}
-                  fill={SIDE_COLORS[side]}
-                  fillOpacity={0.85}
-                  stroke={EDGE}
-                  strokeWidth={1}
-                  {...HAIR}
-                />
-              ))
-            )}
+        {sides.map((side) => {
+          const own = picture[side]
+          if (own.kind === "dots")
+            return own.points.map(([x, y], i) => (
+              <circle
+                key={`${side}${i}`}
+                data-compare-shot={side}
+                cx={x * POINT_MM}
+                cy={-y * POINT_MM}
+                r={calR}
+                fill={SIDE_COLORS[side]}
+                fillOpacity={0.85}
+                stroke={EDGE}
+                strokeWidth={1}
+                {...HAIR}
+              />
+            ))
+          const inner = contourPath(own.grid, own.grid.levels[INNER], picture.halfUm)
+          return (
+            <g key={side}>
+              {side === "a" && (
+                <path d={inner} fill={SIDE_COLORS.a} fillOpacity={0.4} fillRule="evenodd" />
+              )}
+              <Outline
+                d={contourPath(own.grid, own.grid.levels[OUTER], picture.halfUm)}
+                side={side}
+                dashed
+              />
+              <Outline d={inner} side={side} dashed={false} />
+            </g>
+          )
+        })}
         <TargetBoard target={target} view={view} ringLabel={sizes.ringLabel} part="lines" />
         {sides.map((side) => {
           const center = picture[side].center
@@ -178,11 +176,14 @@ export function ComparePicture({
           ) : null
         })}
       </svg>
-      <div className="pointer-events-none absolute top-2 left-2">
-        <CornerButton label="Auf Gruppe zoomen" pressed={group} onPress={() => setGroup(!group)}>
-          {ZOOM_ICON}
-        </CornerButton>
-      </div>
+      {/* ohne Schuss gibt es keine Gruppe, auf die das Bild zoomen könnte */}
+      {picture.focus && (
+        <div className="pointer-events-none absolute top-2 left-2">
+          <CornerButton label="Auf Gruppe zoomen" pressed={group} onPress={() => setGroup(!group)}>
+            {ZOOM_ICON}
+          </CornerButton>
+        </div>
+      )}
     </div>
   )
 }

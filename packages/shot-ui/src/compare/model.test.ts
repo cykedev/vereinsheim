@@ -71,7 +71,11 @@ describe("groupCompareModel", () => {
       type: "periods",
       a: strong.map(item),
       b: weak.map(item),
-      positions: positionsOf([...strong.slice(1), ...weak]),
+      // die erste mit gelesenen, leeren Lagen; die zweite fehlt (über der Obergrenze nicht gelesen)
+      positions: [
+        { id: strong[0].id, atMs: strong[0].startedAtMs, points: [] },
+        ...positionsOf([...strong.slice(2), ...weak]),
+      ],
       scoring: "decimal",
       includeProbeOnly: true,
       names: KIND_NAMES,
@@ -79,9 +83,9 @@ describe("groupCompareModel", () => {
     })
     expect(model.a.withoutPosition).toBe(1)
     expect(model.result.comparison?.a.n).toBe(6)
-    // 5 Scheiben zu 5 Schuss mit Lage: unter 50 Schuss die Punkte
+    // 4 Scheiben zu 5 Schuss mit Lage: unter 50 Schuss die Punkte
     expect(model.picture.style).toBe("dots")
-    if (model.picture.style === "dots") expect(model.picture.a.points).toHaveLength(25)
+    if (model.picture.a.kind === "dots") expect(model.picture.a.points).toHaveLength(20)
     expect(model.shared).toBe(2)
   })
 

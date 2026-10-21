@@ -34,6 +34,16 @@ describe("compareCenters (C2, C3)", () => {
     expect(result?.verdict).toBe("shifted")
   })
 
+  it("von Hand: ungleiche Streuung, schräge Kovarianz, Versatz schräg: T² 5, F 2,1875, p = 1,625^−3,5", () => {
+    // A: Mittel (0 | 0), sxx 2,5, syy 10, sxy 3 (in mm²); B dieselbe Wolke um (1 | −2) mm verschoben, d = A − B = (−1 | 2)
+    const mm = (x: number, y: number) => ({ xUm: x * 1000, yUm: y * 1000 })
+    const a = [mm(0, 0), mm(2, 4), mm(-2, -4), mm(1, -2), mm(-1, 2)]
+    const result = compareCenters(a, shifted(a, 1000, -2000))
+    // det 16; dᵀS⁻¹d = (10·1 + 2·3·1·2 + 2,5·4)/16 = 2; T² = 25/10 · 2 = 5; F = 7/16 · 5
+    expect(result?.p).toBeCloseTo(1.625 ** -3.5, 12)
+    expect(result?.shiftUm).toEqual({ xUm: -1000, yUm: 2000 })
+  })
+
   it("20 Punkte gegen dieselben 3 σ weiter rechts: versetzt, A liegt rechts", () => {
     const b = normalPoints(20, 1500, 11)
     const result = compareCenters(shifted(b, 4500), b)
@@ -134,7 +144,7 @@ describe("comparePicture (C2, C3)", () => {
   it("60 gegen 60 Punkte: zwei Umrisse aus Rastern von 64 × 64 auf einem Ausschnitt", () => {
     const picture = comparePicture(normalPoints(60, 1500, 1), normalPoints(60, 1500, 2))
     expect(picture.style).toBe("outlines")
-    if (picture.style !== "outlines") return
+    if (picture.a.kind !== "outline" || picture.b.kind !== "outline") throw new Error("Umrisse")
     expect(picture.a.grid.cells).toHaveLength(64 * 64)
     expect(picture.b.grid.cells).toHaveLength(64 * 64)
     expect(picture.a.grid.levels).toHaveLength(6)
@@ -144,7 +154,7 @@ describe("comparePicture (C2, C3)", () => {
   it("60 gegen 40 Punkte: Punkte, jeder auf 10 µm, die Mitten auf ganze µm", () => {
     const picture = comparePicture(normalPoints(60, 1500, 1), normalPoints(40, 1500, 2))
     expect(picture.style).toBe("dots")
-    if (picture.style !== "dots") return
+    if (picture.a.kind !== "dots" || picture.b.kind !== "dots") throw new Error("Punkte")
     expect(picture.a.points).toHaveLength(60)
     expect(picture.b.points).toHaveLength(40)
     expect(Number.isInteger(picture.a.center?.xUm)).toBe(true)
@@ -165,9 +175,21 @@ describe("comparePicture (C2, C3)", () => {
   it("eine leere Seite: Punkte, ihre Mitte null", () => {
     const picture = comparePicture([], CROSS)
     expect(picture.style).toBe("dots")
-    if (picture.style !== "dots") return
     expect(picture.a.center).toBeNull()
     expect(picture.b.center).toEqual({ xUm: 0, yUm: 0 })
+  })
+
+  it("wenige gegen sehr viele: die große Seite als Umriss, die kleine als Punkte, nie über 3.000 Punkte", () => {
+    const many = normalPoints(3001, 1500, 3)
+    const picture = comparePicture(normalPoints(40, 1500, 4), many)
+    expect(picture.style).toBe("mixed")
+    expect(picture.a.kind).toBe("dots")
+    expect(picture.b.kind).toBe("outline")
+    if (picture.a.kind === "dots") expect(picture.a.points).toHaveLength(40)
+    // bis 3.000 bleibt es bei Punkten, wenn die andere Seite unter 50 hat
+    expect(comparePicture(normalPoints(40, 1500, 4), many.slice(0, 3000)).style).toBe("dots")
+    // ohne Schüsse auf einer Seite: die große Seite als Umriss
+    expect(comparePicture([], many).b.kind).toBe("outline")
   })
 
   it("kein −0 nach JSON (Punkte knapp links der Mitte)", () => {

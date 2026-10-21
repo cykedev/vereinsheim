@@ -3,12 +3,17 @@ import { notFound, redirect } from "next/navigation"
 
 import { contextCardIds, neighbours } from "@vereinsheim/shot-ui/nav/context"
 import { routeFromUrl } from "@vereinsheim/shot-ui/nav/routes"
-import { byStart } from "@vereinsheim/shot-ui/period/model"
 
 import { CardScreen } from "@/components/card/CardScreen"
 import { requireSession } from "@/lib/auth-helpers"
 import { db } from "@/lib/db"
-import { cardWithShots, ownCardShare, ownCardState, ownerCards } from "@/lib/db/reads"
+import {
+  cardWithShots,
+  ownCardShare,
+  ownCardState,
+  ownerCards,
+  previousInFamily,
+} from "@/lib/db/reads"
 import { pageContext } from "@/lib/page-context"
 import { listable, withFamily } from "@/lib/pages"
 import { searchOf } from "@/lib/search"
@@ -39,23 +44,21 @@ export default async function CardRoutePage({
   const route = routeFromUrl(`/cards/${encodeURIComponent(id)}`, searchOf(await searchParams), "")
   if (route.page !== "card") notFound()
   const context = await pageContext(ownerId)
-  const own = listable(await ownerCards(db, { ownerId }))
   // die Scheibe davor in derselben Familie, für den Weg auf die Seite Vergleichen
-  const previous =
-    own
-      .filter(
-        (other) =>
-          card.family !== null &&
-          other.family?.slug === card.family.slug &&
-          byStart(other, card) < 0
-      )
-      .sort((a, b) => byStart(b, a))[0]?.id ?? null
+  const previous = card.family
+    ? await previousInFamily(db, {
+        ownerId,
+        family: card.family.slug,
+        startedAtMs: card.startedAtMs,
+        id: card.id,
+      })
+    : null
   // der Kontext zum Blättern aus den Projektionen der eigenen Scheiben (ohne Schüsse), nur mit Herkunft
   const ids =
     route.origin === null
       ? null
       : contextCardIds(route, {
-          cards: withFamily(own),
+          cards: withFamily(listable(await ownerCards(db, { ownerId }))),
           nowMs: context.nowMs,
           timeZone: context.timeZone,
           named: context.named,

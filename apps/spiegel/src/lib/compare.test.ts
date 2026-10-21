@@ -7,13 +7,14 @@ import { generateSeason } from "../../test/generate"
 import { createTestSite, type TestSite } from "../../test/fixtures"
 import { comparePageData } from "./compare"
 import { writeRevision } from "./db/cards"
+import { previousInFamily } from "./db/reads"
 
 const db = createPrismaClient()
 let site: TestSite
 let lgFamily: { id: number; slug: string }
 let lpFamily: string
 let otherOwner: string
-const ids = { lp: [] as string[], lg: "", trash: "", foreign: "" }
+const ids = { lp: [] as string[], lg: "", trash: "", foreign: "", loose: [] as string[] }
 // Abende am 1., 4., 7. und 10. Juni 2026 zu je drei Scheiben
 const FIRST_MS = Date.UTC(2026, 5, 1, 17)
 const DAY_MS = 86_400_000
@@ -69,6 +70,17 @@ beforeAll(async () => {
   await db.card.update({ where: { id: ids.trash }, data: { deletedAt: new Date() } })
   const [foreign] = season(4, 1, FIRST_MS + 2 * DAY_MS, site.disciplineId, otherOwner, 9300)
   ids.foreign = (await writeRevision(db, foreign)).cardId
+  // zwei eigene Scheiben einer Disziplin ohne Familie: in keiner Übersicht
+  const loose = await db.discipline.create({
+    data: {
+      siteId: site.siteId,
+      meytonId: 10_100_041,
+      name: "LG 40 ohne Familie",
+      targetId: "lg-10m",
+    },
+  })
+  for (const input of season(5, 2, FIRST_MS - 20 * DAY_MS, loose.id, site.ownerId, 9400))
+    ids.loose.push((await writeRevision(db, input)).cardId)
   lpFamily = (
     await db.card.findUniqueOrThrow({
       where: { id: ids.lp[0] },
@@ -161,11 +173,33 @@ describe("comparePageData: zwei Scheiben", () => {
       ],
       [ids.lp[0], ids.foreign, "Wähle zwei Scheiben."],
       [ids.trash, ids.lp[0], "Wähle zwei Scheiben."],
+      [ids.loose[0], ids.loose[1], "Wähle zwei Scheiben."],
     ]
     for (const [a, b, problem] of cases) {
       const page = await data({ type: "cards", family: null, a, b })
       expect(page?.model, `${a} ${b}`).toBeNull()
       expect(page?.problem).toBe(problem)
+      // „Zur Scheibe“ nur zu einer eigenen, sichtbaren Scheibe A
+      if (a === ids.trash) expect(page?.backCard).toBeNull()
     }
+  })
+})
+
+describe("previousInFamily", () => {
+  const card = async (id: string) =>
+    db.card.findUniqueOrThrow({ where: { id }, select: { startedAt: true } })
+  const previous = async (id: string) =>
+    previousInFamily(db, {
+      ownerId: site.ownerId,
+      family: lpFamily,
+      startedAtMs: (await card(id)).startedAt.getTime(),
+      id,
+    })
+
+  it("die eigene Scheibe davor in der Familie; gelöschte und fremde dazwischen zählen nicht", async () => {
+    // am 3. Juni liegen eine gelöschte und eine fremde Scheibe zwischen dem 1. und dem 4. Juni
+    expect(await previous(ids.lp[3])).toBe(ids.lp[2])
+    expect(await previous(ids.lp[1])).toBe(ids.lp[0])
+    expect(await previous(ids.lp[0])).toBeNull()
   })
 })

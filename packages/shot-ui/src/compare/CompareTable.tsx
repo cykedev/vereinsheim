@@ -15,7 +15,7 @@ const CELL = "py-2"
 const NUMBER = "text-right font-display text-[15px] font-semibold tabular-nums"
 
 /** die Erklärung der Tabelle: bei zwei Scheiben die des Schussvergleichs, sonst die der Zeiträume */
-export const rowHelp = (model: Pick<CompareModel, "unit">) =>
+const rowHelp = (model: Pick<CompareModel, "unit">) =>
   model.unit === "shot" ? "scheibe-vergleich" : "zeitraum-vergleich"
 
 /**

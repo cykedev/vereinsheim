@@ -21,62 +21,69 @@ export const CARD_CHOICE_PAGE = 30
 const BUTTON =
   "cursor-pointer justify-self-end rounded-full bg-primary px-4 py-2 text-[14px] font-semibold text-primary-foreground focus-visible:outline-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-60"
 
-/**
- * Blatt „Scheibe A“ oder „Scheibe B“: die Scheiben der Familie, die neueste zuerst, 30 auf einmal. Die Scheibe der
- * anderen Seite geht nicht. Ein Tippen wählt und schließt.
- */
-export function CardChoiceSheet({
-  open,
-  onClose,
-  title,
-  choices,
-  current,
-  other,
-  timeZone,
-  onChoose,
-}: {
-  open: boolean
-  onClose: () => void
+interface CardChoiceProps {
   title: string
   choices: readonly CardChoice[]
   current: string | null
   other: string | null
   timeZone: string
   onChoose: (id: string) => void
-}) {
+  onClose: () => void
+}
+
+/** die Liste im Blatt, je Öffnen neu: „Mehr zeigen“ beginnt wieder bei 30 */
+function CardChoiceList({
+  title,
+  choices,
+  current,
+  other,
+  timeZone,
+  onChoose,
+  onClose,
+}: CardChoiceProps) {
   const [shown, setShown] = useState(CARD_CHOICE_PAGE)
   return (
-    <Sheet open={open} onClose={onClose} title={title}>
-      <div data-card-choices className="grid gap-1">
-        {choices.slice(0, shown).map((choice) => {
-          const at = new Date(choice.startedAtMs)
-          const label = `${formatWeekdayDay(at, timeZone)} ${formatTimeOfDay(at, timeZone)}`
-          const sub =
-            choice.id === other
-              ? "auf der anderen Seite"
-              : [choice.total, `${choice.shots} Schuss`].filter(Boolean).join(" · ")
-          return choiceRadio(
-            `scheibe-${title}`,
-            choice.id === current,
-            () => {
-              onChoose(choice.id)
-              onClose()
-            },
-            label,
-            sub,
-            choice.id === other
-          )
-        })}
-        {choices.length > shown && (
-          <button
-            type="button"
-            onClick={() => setShown(shown + CARD_CHOICE_PAGE)}
-            className="mt-2 cursor-pointer justify-self-start rounded-full border border-line-strong px-4 py-2 text-[14px] font-semibold focus-visible:outline-2 focus-visible:outline-ring"
-          >
-            Mehr zeigen
-          </button>
-        )}
-      </div>
+    <div data-card-choices className="grid gap-1">
+      {choices.slice(0, shown).map((choice) => {
+        const at = new Date(choice.startedAtMs)
+        const label = `${formatWeekdayDay(at, timeZone)} ${formatTimeOfDay(at, timeZone)}`
+        const sub =
+          choice.id === other
+            ? "auf der anderen Seite"
+            : [choice.total, `${choice.shots} Schuss`].filter(Boolean).join(" · ")
+        return choiceRadio(
+          `scheibe-${title}`,
+          choice.id === current,
+          () => {
+            onChoose(choice.id)
+            onClose()
+          },
+          label,
+          sub,
+          choice.id === other
+        )
+      })}
+      {choices.length > shown && (
+        <button
+          type="button"
+          onClick={() => setShown(shown + CARD_CHOICE_PAGE)}
+          className="mt-2 cursor-pointer justify-self-start rounded-full border border-line-strong px-4 py-2 text-[14px] font-semibold focus-visible:outline-2 focus-visible:outline-ring"
+        >
+          Mehr zeigen
+        </button>
+      )}
+    </div>
+  )
+}
+
+/**
+ * Blatt „Scheibe A“ oder „Scheibe B“: die Scheiben der Familie, die neueste zuerst, 30 auf einmal. Die Scheibe der
+ * anderen Seite geht nicht. Ein Tippen wählt und schließt.
+ */
+export function CardChoiceSheet({ open, ...props }: CardChoiceProps & { open: boolean }) {
+  return (
+    <Sheet open={open} onClose={props.onClose} title={props.title}>
+      {open && <CardChoiceList {...props} />}
     </Sheet>
   )
 }

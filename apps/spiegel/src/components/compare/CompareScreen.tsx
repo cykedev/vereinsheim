@@ -29,13 +29,12 @@ import type { ComparePageData } from "@/lib/compare"
 import type { PageContext } from "@/lib/page-context"
 import { setFamilyScoring } from "@/lib/scoring-actions"
 
-/** der Rückweg zur Scheibe A, wenn zwei Scheiben verglichen werden; sonst führt der Umschalter oben zurück */
+/** der Rückweg zur Scheibe A, wenn sie geladen ist (eigene, sichtbare); sonst führt der Umschalter oben zurück */
 function backToCard(data: ComparePageData): Route | null {
-  const query = data.query
-  return query.type === "cards" && query.a
+  return data.backCard
     ? {
         page: "card",
-        id: query.a,
+        id: data.backCard,
         origin: null,
         selection: null,
         shot: null,
@@ -46,9 +45,9 @@ function backToCard(data: ComparePageData): Route | null {
 }
 
 /**
- * Seite Vergleichen: Kopf mit Art, Familie und den Seiten A und B, dann die Antwort als Satz, das Bild beider Seiten,
- * die drei Zeilen mit Urteil, die Grundlage und eingeklappt alle Kennzahlen. Jede Wahl ist eine neue Adresse, der
- * Server rechnet neu; bis dahin wird die Seite leiser.
+ * Seite Vergleichen: oben der Umschalter „Zeitraum · Vergleichen“, der Kopf mit Art, Familie, den Seiten A und B und der
+ * Wertung, dann die Antwort als Satz und im Raster der Seite das Bild beider Seiten neben der Tabelle aller Zahlen und
+ * der Grundlage. Jede Wahl ist eine neue Adresse, der Server rechnet neu; bis dahin wird die Seite leiser.
  */
 export function CompareScreen({
   data,
@@ -177,8 +176,6 @@ export function CompareScreen({
 
       {query.type === "cards" ? (
         <CardChoiceSheet
-          // je Öffnen neu: „Mehr zeigen“ beginnt wieder bei 30
-          key={picking ?? "zu"}
           open={picking !== null}
           onClose={close}
           title={picking === "b" ? "Scheibe B" : "Scheibe A"}

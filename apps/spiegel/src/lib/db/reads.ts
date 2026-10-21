@@ -176,6 +176,30 @@ export async function ownerCards(
   return toOverview(rows)
 }
 
+/**
+ * Die eigene Scheibe direkt vor einer anderen in derselben Familie (Beginn, bei Gleichstand die Id wie `byStart`), für
+ * „Mit der Scheibe davor vergleichen“; nur sichtbare mit Scheibenbild wie die Übersichten. Eine Abfrage über den Index
+ * (Besitzer, Familie, Beginn) statt aller Scheiben; null ohne
+ */
+export async function previousInFamily(
+  db: Db,
+  query: { ownerId: string; family: string; startedAtMs: number; id: string }
+): Promise<string | null> {
+  const at = new Date(query.startedAtMs)
+  const row = await db.card.findFirst({
+    where: {
+      ownerId: query.ownerId,
+      ...VISIBLE_CARD,
+      discipline: { ignoredAt: null, targetId: { not: null } },
+      family: { slug: query.family },
+      OR: [{ startedAt: { lt: at } }, { startedAt: at, id: { lt: query.id } }],
+    },
+    orderBy: [{ startedAt: "desc" }, { id: "desc" }],
+    select: { id: true },
+  })
+  return row?.id ?? null
+}
+
 /** Beginn der neuesten Scheibe eines Schützen; null ohne Scheiben */
 export async function latestCardStart(db: Db, ownerId: string): Promise<number | null> {
   const latest = await db.card.findFirst({

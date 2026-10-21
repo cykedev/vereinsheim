@@ -66,6 +66,8 @@ export interface ComparePageData {
   targetId: TargetId
   /** die Wertung der Familie, in der die Seite rechnet (Chip „In Zehnteln“ / „In ganzen Ringen“) */
   scoring: Scoring
+  /** Scheibe A, wenn sie geladen ist (Rückweg „Zur Scheibe“); sonst null, auch bei Zeiträumen */
+  backCard: string | null
 }
 
 const metric = (key: string) => metricByKey(key) as Readonly<MetricDefinition>
@@ -89,16 +91,21 @@ function choicesOf(cards: readonly OverviewCard[], scoring: Scoring): CardChoice
     }))
 }
 
-/** die Lagen der Scheiben beider Seiten, die neuesten zuerst und höchstens 5.000 Scheiben */
+/**
+ * die Lagen der Scheiben beider Seiten, je Seite die neuesten und höchstens die Hälfte der Obergrenze: So verliert über
+ * der Grenze nicht die ältere Seite allein ihre Lagen. Ungelesene zählen im Modell nicht als Scheiben ohne Lage.
+ */
 async function positionsOf(
   db: Db,
   ownerId: string,
-  items: readonly PeriodItem[]
+  sides: readonly (readonly PeriodItem[])[]
 ): Promise<PatternCard[]> {
-  const ids = [...items]
-    .sort((a, b) => byStart(b, a))
-    .slice(0, MAX_POSITION_CARDS)
-    .map((item) => item.id)
+  const ids = sides.flatMap((items) =>
+    [...items]
+      .sort((a, b) => byStart(b, a))
+      .slice(0, MAX_POSITION_CARDS / sides.length)
+      .map((item) => item.id)
+  )
   return patternCardsOf(db, { ownerId, ids })
 }
 
@@ -116,9 +123,8 @@ export async function comparePageData(
   const { shown, scoringOf } = await overviewCards(db, ownerId)
   const families = familiesOf(shown)
   if (!families.length) return null
-  // nur Scheiben mit Familie und Scheibenbild, wie die Übersichten (`familiesOf`)
-  const familyCards = shown.filter((card) => card.family && card.targetId)
-  const ofFamily = (family: string) => familyCards.filter((card) => card.family?.slug === family)
+  // `shown` hat nur Scheiben mit Familie und Scheibenbild (`listable`)
+  const ofFamily = (family: string) => shown.filter((card) => card.family?.slug === family)
 
   if (query.type === "cards") {
     // ohne Ids die beiden neuesten der gewählten Familie, ohne Wahl der Familie der neuesten Scheibe
@@ -140,11 +146,12 @@ export async function comparePageData(
     const scoring = scoringOf(family)
     const option = families.find((f) => f.value === family) ?? families[0]
     const problem: CardProblem | null =
-      !a || !b
+      // ohne Familie oder Scheibenbild ist eine Scheibe in keiner Übersicht: wie nicht gefunden
+      !a || !b || !a.family || !b.family || !a.targetId || !b.targetId
         ? "missing"
         : a.id === b.id
           ? "same"
-          : a.family?.slug !== b.family?.slug
+          : a.family.slug !== b.family.slug
             ? "families"
             : null
     const card = (page: PageCard | null) => (page ? shown.find((c) => c.id === page.id) : undefined)
@@ -164,6 +171,7 @@ export async function comparePageData(
       ranges: null,
       targetId: a?.targetId ?? option.targetId,
       scoring,
+      backCard: a?.id ?? null,
     }
   }
 
@@ -186,7 +194,7 @@ export async function comparePageData(
         type: "kind",
         a,
         b,
-        positions: await positionsOf(db, ownerId, [...a, ...b]),
+        positions: await positionsOf(db, ownerId, [a, b]),
         scoring,
         includeProbeOnly: query.includeProbeOnly,
         names: KIND_NAMES,
@@ -201,6 +209,7 @@ export async function comparePageData(
       ranges: { a: range, b: range },
       targetId: option.targetId,
       scoring,
+      backCard: null,
     }
   }
 
@@ -210,6 +219,7 @@ export async function comparePageData(
       ? (compareRange({ type: "previous" }, rangeA, ctx) as DateRange)
       : resolveRange(query.b, ctx)
   const ofKind = (item: PeriodItem) => query.kind === "all" || item.kind === query.kind
+  const counts = (item: PeriodItem) => query.includeProbeOnly || !item.probeOnly
   const a = within(rangeA, ofKind)
   const inA = new Set(a.map((item) => item.id))
   const bAll = within(rangeB, ofKind)
@@ -220,11 +230,12 @@ export async function comparePageData(
       type: "periods",
       a,
       b,
-      positions: await positionsOf(db, ownerId, [...a, ...b]),
+      positions: await positionsOf(db, ownerId, [a, b]),
       scoring,
       includeProbeOnly: query.includeProbeOnly,
       names,
-      shared: bAll.length - b.length,
+      // geteilt zählt, was B ohne die Scheiben von A verliert, nach demselben Filter wie die Seiten (nur Probe)
+      shared: bAll.filter(counts).length - b.filter(counts).length,
     }),
     problem: null,
     query: { ...query, family },
@@ -235,5 +246,6 @@ export async function comparePageData(
     ranges: { a: rangeA, b: rangeB },
     targetId: option.targetId,
     scoring,
+    backCard: null,
   }
 }
