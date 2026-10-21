@@ -20,6 +20,7 @@ import {
   familyScorings,
   latestCardStart,
   marksOfCards,
+  patternCardsOf,
   ownerCards,
   pendingCount,
   pendingFirstCards,
@@ -220,6 +221,21 @@ describe("Übersichten", () => {
     expect(marks[a.id].length).toBe(a.projection.printedShots)
     expect(await marksOfCards(db, { ownerId: "jemand-anderes", ids: [a.id] })).toEqual({})
     expect(await marksOfCards(db, { ownerId: site.ownerId, ids: [] })).toEqual({})
+  })
+
+  it("die Scheiben des Trefferbilds: Lagen und Beginn, nur eigene und nicht gelöschte", async () => {
+    const [a, b] = await familyCards(db, { ownerId: site.ownerId, familyId: site.familyId })
+    const trash = await db.card.findFirstOrThrow({
+      where: { sourceId: site.sourceId, deletedAt: { not: null } },
+    })
+    const cards = await patternCardsOf(db, { ownerId: site.ownerId, ids: [a.id, b.id, trash.id] })
+    expect(cards.map((c) => c.id).sort()).toEqual([a.id, b.id].sort())
+    const marks = await marksOfCards(db, { ownerId: site.ownerId, ids: [a.id] })
+    const first = cards.find((c) => c.id === a.id)!
+    expect(first.atMs).toBe(a.startedAtMs)
+    expect(first.points).toEqual(marks[a.id].map(([x, y]) => ({ xUm: x * 10, yUm: y * 10 })))
+    expect(await patternCardsOf(db, { ownerId: "jemand-anderes", ids: [a.id] })).toEqual([])
+    expect(await patternCardsOf(db, { ownerId: site.ownerId, ids: [] })).toEqual([])
   })
 })
 

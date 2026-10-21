@@ -2,10 +2,15 @@
 // (Index `Card(ownerId, familyId, startedAt)` bzw. `Card(ownerId, startedAt)`), die kleinen Scheiben nur die Lagen der
 // gezeigten (`marksOfCards`); nur die Seite einer Scheibe lädt Schüsse, die der aktuellen Revision.
 
-import type { PeriodCard } from "@vereinsheim/shot-core/analysis"
+import type { PatternCard, PeriodCard } from "@vereinsheim/shot-core/analysis"
 import type { Scoring } from "@vereinsheim/shot-core/metrics"
 import { TARGETS, type TargetId } from "@vereinsheim/shot-core/targets"
-import type { CardMark, CardProjection, ProjectedCard } from "@vereinsheim/shot-core/projection"
+import {
+  markShots,
+  type CardMark,
+  type CardProjection,
+  type ProjectedCard,
+} from "@vereinsheim/shot-core/projection"
 import type { NamedPeriod } from "@vereinsheim/shot-ui/period/calendar"
 
 import type { CardState, Prisma } from "@/generated/prisma/client"
@@ -306,6 +311,30 @@ export async function marksOfCards(
     select: { cardId: true, marks: true },
   })
   return Object.fromEntries(rows.map((row) => [row.cardId, row.marks as unknown as CardMark[]]))
+}
+
+/**
+ * Die Scheiben des Trefferbilds im Fortschritt (`periodPattern`): je verlangter, eigener, sichtbarer Scheibe die Lagen
+ * aus der Projektion und der Beginn, mit denselben Bedingungen wie `marksOfCards`. Ohne Schüsse aus der Datenbank:
+ * Die Lagen der Projektion sind die gezeichneten (wie am Ausdruck, ohne verdächtige).
+ */
+export async function patternCardsOf(
+  db: Db,
+  query: { ownerId: string; ids: readonly string[] }
+): Promise<PatternCard[]> {
+  if (!query.ids.length) return []
+  const rows = await db.cardProjection.findMany({
+    where: {
+      cardId: { in: [...query.ids] },
+      card: { ownerId: query.ownerId, deletedAt: null, ownerPending: false },
+    },
+    select: { cardId: true, marks: true, card: { select: { startedAt: true } } },
+  })
+  return rows.map((row) => ({
+    id: row.cardId,
+    atMs: row.card.startedAt.getTime(),
+    points: markShots(row.marks as unknown as CardMark[]).map(({ xUm, yUm }) => ({ xUm, yUm })),
+  }))
 }
 
 /** die gespeicherten Wertungen der Familien eines Schützen (`FamilyScoring`) nach Kennung; ohne Zeile fehlt die Familie */
