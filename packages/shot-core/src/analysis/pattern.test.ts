@@ -46,6 +46,13 @@ describe("periodShape (L9)", () => {
     expect(Math.min(angle, Math.PI - angle)).toBeLessThan(0.2)
   })
 
+  it("eine kleine Streckung unter 1,15 ist kein Befund, auch wenn der Test sie zeigt", () => {
+    const shape = periodShape(cardsOf(40, 40, 1500, 1500 / 1.08))
+    expect(shape?.p).toBeLessThan(0.05)
+    expect(shape?.ratio).toBeLessThan(1.15)
+    expect(shape?.verdict).toBe("none")
+  })
+
   it("unter 100 Schuss oder 5 Scheiben kein Urteil", () => {
     expect(periodShape(cardsOf(8, 10, 1500, 500))?.verdict).toBe("few")
     expect(periodShape(cardsOf(4, 40, 1500, 500))?.verdict).toBe("few")
@@ -163,7 +170,7 @@ describe("outlierDirection (L7)", () => {
     expect((result?.counts[7] ?? 0) + (result?.counts[8] ?? 0)).toBe(30)
   })
 
-  it("gemessen von der Mitte der Scheibe, nicht von der Mitte der Scheibe des Schützen", () => {
+  it("gemessen von der Mitte der Gruppe, nicht von der Mitte der Zielscheibe", () => {
     const result = outlierDirection(
       Array.from({ length: 30 }, (_, i) =>
         withFlier(`c${i}`, 0.5 * Math.PI, { xUm: -4000, yUm: 0 })
