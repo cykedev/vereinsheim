@@ -211,8 +211,9 @@ export function CardScreen({
     () => keyObservations(observations(analysisInput(shots, state.scoring, target, context))),
     [shots, state.scoring, target, context]
   )
-  // Weg von σ in den Fortschritt: die Familie der Scheibe, der gemerkte Zeitraum (die Kennzahl wählt keinen)
-  const familySlug = card.family?.slug ?? null
+  // Weg von σ in den Fortschritt: die Familie der Scheibe, der gemerkte Zeitraum (die Kennzahl wählt keinen); nicht auf
+  // der geteilten Seite, dort führt kein Weg aus der Scheibe
+  const familySlug = owner ? (card.family?.slug ?? null) : null
   const sigmaRoute = useMemo(
     () => (familySlug ? progressWithMetric(familySlug, "group.sigma") : undefined),
     [familySlug]

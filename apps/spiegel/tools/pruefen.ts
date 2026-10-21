@@ -887,6 +887,21 @@ async function sharing(browser: Browser, page: Page, href: string) {
       tabbed.tab === "Zeit und Verlauf" && tabbed.hash === "#time" && tabbed.path === path,
       tabbed
     )
+    // in jedem Reiter kein Weg aus der Seite (der Link von σ in den Fortschritt steht nur auf der eigenen Seite)
+    const tabLinks: Record<string, string[]> = {}
+    for (const label of await guest.ev<string[]>(
+      `$$('[role="radiogroup"][aria-label="Thema"] [role="radio"]', analysis()).map(txt)`
+    )) {
+      await guest.click(`tab(${JSON.stringify(label)})`, { settle: 200 })
+      tabLinks[label] = await guest.ev<string[]>(
+        `$$("a[href]").map((a) => a.getAttribute("href")).filter((h) => !h.startsWith("#"))`
+      )
+    }
+    check(
+      "Geteilte Scheibe: in keinem Reiter ein Link aus der Seite",
+      Object.keys(tabLinks).length >= 5 && Object.values(tabLinks).every((l) => l.length === 0),
+      tabLinks
+    )
     await guest.click(`button("Erklärung: Trefferbild")`, { settle: 300 })
     const help = await guest.ev<string>(`txt(sheet() && $("h2", sheet()))`)
     check("Geteilte Scheibe: das „?“ öffnet die Erklärung", help.startsWith("Trefferbild"), help)
