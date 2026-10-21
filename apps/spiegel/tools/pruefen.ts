@@ -1141,6 +1141,22 @@ async function singleCardHints(page: Page, href: string) {
     ["klar schwächer", "klar stärker", "kann Zufall sein"].includes(verdict),
     verdict
   )
+  // jede Pause mit einem Ø danach (nicht ±0,00) trägt ihr Urteil
+  const pauses = await page.ev<{ rows: number; labelled: number; labels: string[] }>(`(() => {
+    const rows = $$("dd", card("pausen") ?? document.createElement("div"))
+      .filter((dd) => /Pause · danach Ø [+−]/.test(txt(dd)) && !/[+−]0,00 /.test(txt(dd)))
+    const labels = rows.map((dd) => txt(dd.querySelector("[data-verdict]")))
+    return { rows: rows.length, labelled: labels.filter(Boolean).length, labels }
+  })()`)
+  check(
+    "Pausen: jede Pause mit ihrem Urteil",
+    pauses.rows > 0 &&
+      pauses.labelled === pauses.rows &&
+      pauses.labels.every((l) =>
+        ["klar schwächer", "klar stärker", "kann Zufall sein"].includes(l)
+      ),
+    pauses.rows > 0 ? pauses : "keine Pause mit Ø auf dieser Scheibe (nicht belegt)"
+  )
   await page.click(`tab("Präzision")`, { settle: 300 })
   const target = await page.ev<string | null>(
     `link("Streuung im Fortschritt ›", card("praezision-sigma"))?.getAttribute("href") ?? null`

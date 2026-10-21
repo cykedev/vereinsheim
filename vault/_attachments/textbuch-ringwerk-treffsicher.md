@@ -1734,14 +1734,14 @@ es braucht, steht oben bei „Mindest“.“:
 
 ## Spiegel: Was die Pause bewirkt hat
 
-**Status: freigegeben am 21. Oktober 2026**, noch nicht umgesetzt. Plan:
-`plans/2026-10-21-spiegel-pause-verdict.md`.
+**Status: freigegeben am 21. Oktober 2026**, umgesetzt auf `feat/spiegel-pause-verdict`, nicht released.
 
 Grund: Die Karte „Pausen und Wiedereinstieg“ zeigt je Pause, wie die bis zu drei Schüsse danach gegen deine übrigen
 lagen, und sagt dann nur „Drei Schuss sind zu wenig für ein Urteil.“ Die Frage ist aber, was die Pause bewirkt hat,
 zum Guten wie zum Schlechten. Ein Test beantwortet sie jetzt je Pause, wie bei der Ermüdung. Mit drei Schuss erkennt er
-nur deutliche Wirkungen: Streuen die drei Schuss danach um 60 % weiter, sagt er in gut vier von zehn Fällen „klar“,
-ohne jede Wirkung in etwa einem von zwanzig (Abschätzung, der Beleg kommt aus der Simulation).
+nur deutliche Wirkungen: Streuen die drei Schuss danach um 60 % weiter, sagt er in Zehnteln in gut vier von zehn
+Fällen „klar“ (in ganzen Ringen beim Luftgewehr in gut einem Viertel), ohne jede Wirkung in höchstens einem von zwanzig
+(Beleg B22).
 
 Zeichen: `{…}` ist ein Wert, den die App einsetzt. „(nur wenn …)“ heißt, die Zeile erscheint nur in diesem Fall.
 
@@ -1756,7 +1756,9 @@ ein Urteil.“
 **neu:** dieselben Zeilen, am Ende jeder Zeile das Urteil als Etikett wie bei der Ermüdung:
 
 - „klar stärker“ (grün) · „klar schwächer“ (gelb) · „kann Zufall sein“ (grau)
-- (nur wenn der Unterschied genau 0 ist oder Werte fehlen) kein Etikett
+- (nur wenn der Unterschied genau 0 ist oder Werte fehlen) kein Etikett. Umgesetzt: auch, wenn die Zahl „0,00“ zeigt,
+  denn drei gegen die übrigen Schüsse können sich um weniger als 0,005 unterscheiden. Die Beobachtung (Nr. 2) hält
+  es genauso.
 
 Darunter: „„Danach“: Ø der bis zu drei Schüsse nach der Pause gegen den Ø deiner übrigen Schüsse. „Klar“ heißt: Reiner
 Zufall brächte einen so großen Unterschied nur in 5 von 100 Fällen.“
