@@ -82,7 +82,8 @@ und über `nav/navigate`.
   - Filter: `family`, `kind` (`training`, `competition`), `flag`; in der Liste dazu `list` (Kennung der Liste aus
     Meyton, nie ihr Name).
   - Darstellung im Fortschritt: `sighters=0` (Training nur aus Probe nicht mitzählen), `metric` (`sigma`, `tens`,
-    `tempo`), `view` (`cards`, `months`). `scoring=rings` kennt das Modell; die App rechnet den Fortschritt in der
+    `tempo`), `view` (`cards`, `months`), `show=target` (das Trefferbild statt des Verlaufs als Hauptbild; die Sicht
+    Form oder Lage steht nicht in der Adresse). `scoring=rings` kennt das Modell; die App rechnet den Fortschritt in der
     Wertung der Familie und übergeht es.
   - Wahl: `pick` mit der Id einer Scheibe (im Fortschritt die gewählte, in der Liste die markierte).
   - Scheibe: `from` (`list`, `start`, `progress`) mit den Schlüsseln der Herkunft, ohne `pick` und ohne deren Wertung;
@@ -90,7 +91,7 @@ und über `nav/navigate`.
     `23`), `scoring`.
   - Anker englisch, die Beschriftungen auf der Seite deutsch: Scheibe `#target`, `#shots`, `#analysis`, Reiter
     `#overview`, `#result`, `#precision`, `#position`, `#time`; Fortschritt `#history`, `#cards`, `#numbers`,
-    `#analysis`; die Liste trägt den Abend (`#2026-09-25`).
+    `#analysis`, dazu die Reiter seiner Analyse `#result`, `#precision`, `#position`; die Liste trägt den Abend (`#2026-09-25`).
 - **Nicht in der Adresse:** wie gezeichnet wird (Ebenen, Ausschnitt, Thema, Erklärungen). Das bleibt Einstellung im
   Gerät.
 

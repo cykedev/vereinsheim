@@ -14,10 +14,10 @@ Scheibe, nur über viele: Statt der Scheibe steht der Verlauf fest im Bild, stat
 abgelesen, statt der Schusstabelle gibt es die Liste der Scheiben, darunter Zahlen und Analyse. Die Scheiben ergeben
 sich aus Zeitraum und Filter; Zeiträume sind rollend, frei oder vom Schützen benannt. Vergleiche ziehen auf eine eigene
 Seite ([[spiegel-vergleichen]]); bis dahin ist der Vergleich mit einem zweiten Zeitraum eingebaut und urteilt nur mit
-Test. Die Analyse über den Zeitraum zeigt im Überblick nur Belegtes, das Trefferbild wird ein zweites Hauptbild neben
-dem Verlauf (Konzept vom 21. Oktober 2026). Gebaut sind Fachkern (`shot-core/analysis/period.ts`, `records.ts`)
-und Seite (`shot-ui/period/*`, `PeriodPage`, in der App `/progress`); offen sind Langzeit-Trefferbild, Erkenntnisse
-je Reiter und das Anlegen benannter Zeiträume. Treffsicher zeigt seine Statistik mit denselben Bausteinen
+Test. Die Analyse über den Zeitraum zeigt im Überblick nur Belegtes, das Trefferbild ist ein zweites Hauptbild neben
+dem Verlauf (Konzept vom 21. Oktober 2026). Gebaut sind Fachkern (`shot-core/analysis/period.ts`, `records.ts`,
+`pattern.ts`) und Seite (`shot-ui/period/*`, `PeriodPage`, in der App `/progress`) samt Trefferbild und den Reitern
+Ergebnis, Präzision und Lage; offen sind Überblick und Zeit mit Erkenntnissen und das Anlegen benannter Zeiträume. Treffsicher zeigt seine Statistik mit denselben Bausteinen
 ([[statistics-visualization]]).
 
 ## Grundentscheidungen
@@ -75,7 +75,7 @@ bleibt der eingebaute Vergleich.
 | Ablesung des Schusses | Ablesung der Scheibe: Datum, Wert, kleine Scheibe, „Scheibe öffnen“ |
 | Schusstabelle | Liste der Scheiben, neueste oben, mit Abstand zum Schnitt |
 | Kacheln im Überblick der Analyse | Zahlen über den Zeitraum, mit Vergleichswert |
-| Analyse in fünf Reitern | Analyse: Rekorde; Reiter über den Zeitraum offen |
+| Analyse in fünf Reitern | Analyse in drei Reitern: Ergebnis (Rekorde), Präzision, Lage; Überblick und Zeit offen |
 
 ### Einstieg
 
@@ -197,8 +197,11 @@ Dichtebild (L9) und nie in der Ausreißerrichtung (L7).
 „Vergleichen“ samt Umzug des Vergleichs aus dem Fortschritt (C2, C3, W1); 3. Überblick und die Reiter Zeit und
 Ergebnis (I7–I9, Z6, Z7, K2, K4, T4, V3–V5, W2–W4 als Zeilen im Vergleich).
 
-### Langzeit-Trefferbild
+### Langzeit-Trefferbild (gebaut)
 
+- **Umschalter** „Verlauf | Trefferbild“ als erste Zeile der Karte des Hauptbilds (`PeriodChartBar`, `show=target` in
+  der Adresse, die Sprungleiste heißt dann „Trefferbild“); beim Trefferbild steht dort nur noch sein „?“. Darunter wählt
+  das Bild die Sicht (`PatternPanel`).
 - **Zwei Sichten:** Bei **Form** ist jede Scheibe auf ihren eigenen Schwerpunkt geschoben; übrig bleibt die
   reine Streuung über die Abende. **Lage** zeigt die Schüsse, wo sie lagen; so wird ein Versatz sichtbar, der
   immer wiederkehrt. Vorgabe ist Form.
@@ -208,7 +211,14 @@ Ergebnis (I7–I9, Z6, Z7, K2, K4, T4, V3–V5, W2–W4 als Zeilen im Vergleich)
   Form, sonst „zu wenige Schüsse für ein Urteil“), in Lage „passt“ oder „versetzt: rechts tief“ (Test über die
   Schwerpunkte der Scheiben, Einheit die Scheibe).
 - **Rechnen auf dem Server:** aus den gespeicherten Lagen der Projektion (`marks`, 10 µm), erst wenn das Bild oder die
-  Reiter Präzision und Lage es brauchen; an den Browser geht ein Raster, keine Schüsse.
+  Reiter Präzision und Lage es brauchen (`periodPatternAction`); an den Browser geht ein Raster von 64 × 64 je Sicht und
+  der Schwerpunkt je Scheibe, keine Schüsse. Gemessen: „Alles“ mit 1.564 Scheiben 88 ms und 166 KB, 90 Tage 9 ms und 27 KB
+  ([[spiegel-db-schema]]). Die Dichte glättet 1,3-mal so stark wie nach Silverman, die Ränder sind weiche Kurven.
+- **Reiter Lage:** Schwerpunkt je Scheibe auf dem Scheibenbild, größer mit mehr Schüssen, Linie in zeitlicher Folge;
+  der Ausschnitt nimmt neun von zehn Schwerpunkten, und die Karte sagt, wie viele außerhalb liegen. Antippen wählt die
+  Scheibe für die Ablesung, ohne zu springen.
+- **Urteile** mit Simulation ([[spiegel-statistics]], B23–B25): Form länglich ab p < 0,05 und 1,15 : 1, ab 100 Schuss
+  aus 5 Scheiben; Lage über die Schwerpunkte ab 5 Scheiben; Ausreißerrichtung ab 30 Ausreißern.
 
 ### Vergleich (eingebaut, zieht um)
 
@@ -282,7 +292,6 @@ Eingabe ist `PeriodItem`; was Spiegel anders braucht als Treffsicher, sind Param
 
 | Inhalt | Roadmap |
 |---|---|
-| Langzeit-Trefferbild mit Form, Lage und Dichte; Reiter Präzision und Lage (L9, L10, L7) | SP-2.7, Plan 1 |
 | Seite „Vergleichen“ mit Scheibe gegen Scheibe (C2), Wettkampf gegen Training (W1), Umzug des Vergleichs | SP-2.2, Plan 2 |
 | Überblick mit belegten Erkenntnissen, Reiter Zeit und Ergebnis; Trendsteigung (T4) | SP-2.7, Plan 3 |
 | Benannte Zeiträume anlegen, ändern und löschen; Vergleich nach Merkmal nach SP-2.3 | SP-2.2, SP-2.3 |
