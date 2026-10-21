@@ -6,6 +6,7 @@ import {
   againstOwnAverage,
   cardValues,
   comparePeriods,
+  compareSamples,
   periodBuckets,
   periodTrend,
   trainingVolume,
@@ -184,6 +185,31 @@ describe("Boden und Decke je Abschnitt, Trainingsumfang (T5, T6)", () => {
       { key: "0", shots: 5, cards: 3, days: 2 },
       { key: "1", shots: 2, cards: 1, days: 1 },
     ])
+  })
+})
+
+describe("Vergleich zweier Stichproben (C3, T3)", () => {
+  it("Werte statt Scheiben: dieselbe Rechnung wie der Vergleich zweier Zeiträume", () => {
+    const result = compareSamples([1, 2, 3, 4, 5], [6, 7, 8, 9, 10])
+    expect(result).toEqual(comparePeriods(values([1, 2, 3, 4, 5]), values([6, 7, 8, 9, 10])))
+    expect(result?.verdict).toBe("higher")
+    expect(result?.delta).toBe(5)
+  })
+
+  it("vier gegen neun Werte: kein Test, kein Urteil", () => {
+    const result = compareSamples([1, 2, 3, 4], [5, 6, 7, 8, 9, 10, 11, 12, 13])
+    expect(result?.test).toBeNull()
+    expect(result?.verdict).toBe("unclear")
+  })
+
+  it("gleiche Werte: kein Unterschied, nicht bedeutsam", () => {
+    const result = compareSamples([9.4, 9.4, 9.4, 9.4, 9.4], [9.4, 9.4, 9.4, 9.4, 9.4])
+    expect(result?.verdict).toBe("unclear")
+    expect(result?.meaningful).toBe(false)
+  })
+
+  it("eine leere Seite: null", () => {
+    expect(compareSamples([1, 2, 3, 4, 5], [])).toBeNull()
   })
 })
 

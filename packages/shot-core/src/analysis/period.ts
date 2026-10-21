@@ -241,9 +241,22 @@ export function comparePeriods(
   a: readonly CardValue[],
   b: readonly CardValue[]
 ): PeriodComparison | null {
-  if (!a.length || !b.length) return null
-  const xa = a.map((v) => v.value)
-  const xb = b.map((v) => v.value)
+  return compareSamples(
+    a.map((v) => v.value),
+    b.map((v) => v.value)
+  )
+}
+
+/**
+ * Vergleich zweier Stichproben, wie `comparePeriods` über bloße Werte: die Scheiben zweier Zeiträume (C3) oder die
+ * Schüsse zweier Scheiben (C2). Mann-Whitney zweiseitig, α 0,05, Δ = Mittel b − Mittel a; ein Urteil ab fünf Werten je
+ * Seite, nur wenn Rangtest und Mittel in dieselbe Richtung zeigen. Ohne Werte auf einer Seite null.
+ */
+export function compareSamples(
+  xa: readonly number[],
+  xb: readonly number[]
+): PeriodComparison | null {
+  if (!xa.length || !xb.length) return null
   const ma = meanOf(xa)
   const mb = meanOf(xb)
   const delta = mb - ma
