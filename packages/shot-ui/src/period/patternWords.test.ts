@@ -6,6 +6,7 @@ import {
   axisWords,
   basisText,
   outlierWords,
+  pictureWords,
   positionWords,
   shapeNote,
   shapeWords,
@@ -75,6 +76,20 @@ describe("Worte zum Trefferbild", () => {
       "Deine Ausreißer gehen in alle Richtungen."
     )
     expect(outlierWords(null).lead).toBe("Unter 30 Ausreißern ist die Uhr ein Bild, kein Befund.")
+  })
+
+  it("unter dem Trefferbild erst die Lage, dann die Form", () => {
+    expect(pictureWords({ overTime: overTime("offset"), shape: shape("elongated", 0.8) })).toEqual({
+      lead: "Deine Lage ist versetzt: rechts tief, im Mittel 0,4 mm.",
+      more: "Die Gruppe ist länglich, schräg nach rechts oben.",
+    })
+    expect(pictureWords({ overTime: overTime("fits"), shape: shape("none") })).toEqual({
+      lead: "Deine Lage passt.",
+      more: "Ein Versatz zeigt sich nicht. Die Gruppe zieht in keine klare Richtung.",
+    })
+    expect(pictureWords({ overTime: overTime("fits"), shape: shape("few") }).more).toBe(
+      "Ein Versatz zeigt sich nicht."
+    )
   })
 
   it("Grundlage mit und ohne Scheiben ohne Lage", () => {

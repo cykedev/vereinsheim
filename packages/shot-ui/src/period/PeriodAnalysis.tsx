@@ -2,7 +2,6 @@
 
 import type { PeriodPattern } from "@vereinsheim/shot-core/analysis"
 import type { Scoring } from "@vereinsheim/shot-core/metrics"
-import type { TargetImage } from "@vereinsheim/shot-core/targets"
 import { Button } from "@vereinsheim/ui/button"
 import { useId, type ReactNode } from "react"
 
@@ -24,13 +23,15 @@ import {
   PATTERN_LOADING,
   POSITION_NOTE,
   positionWords,
+  ROUND_NOTE,
   shapeNote,
   shapeWords,
   type PatternSentence,
 } from "./patternWords"
 import { RecordsCard } from "./PeriodInsights"
 import { usePeriodWords } from "./PeriodWords"
-import { PositionChart } from "./PositionChart"
+import { PositionTimeline, TIMELINE_HEIGHT } from "./PositionTimeline"
+import { ShapeEllipse } from "./ShapeEllipse"
 
 /** die Reiter in der Ordnung der Scheibe; Überblick und Zeit kommen mit den Erkenntnissen über den Zeitraum */
 export const PERIOD_TABS: readonly { value: PeriodTab; label: string }[] = [
@@ -45,7 +46,6 @@ export interface PeriodAnalysisProps {
   model: Pick<PeriodModel, "records" | "cards">
   scoring: Scoring
   timeZone: string
-  target: TargetImage
   /** das Trefferbild des Zeitraums, geholt, sobald Präzision oder Lage offen ist */
   pattern: PatternState
   onRetry: () => void
@@ -83,8 +83,8 @@ function Pending({ state, onRetry }: { state: PatternState; onRetry: () => void 
 }
 
 /**
- * Analyse über den Zeitraum in Reitern wie auf der Scheibe: Ergebnis (Rekorde), Präzision (Form über mehrere Scheiben,
- * L9), Lage (Lage über Zeit, L10; Ausreißerrichtung, L7). Die Antwort steht unter dem Trefferbild, hier stehen die
+ * Analyse über den Zeitraum in Reitern wie auf der Scheibe: Ergebnis (Rekorde), Präzision (Form über mehrere Scheiben
+ * als Ellipse, L9), Lage (Lage über Zeit als zwei Zeitreihen, L10; Ausreißerrichtung, L7). Die Antwort steht unter dem Trefferbild, hier stehen die
  * Belege mit ihren Zahlen.
  */
 export function PeriodAnalysis(props: PeriodAnalysisProps) {
@@ -121,13 +121,17 @@ export function PeriodAnalysis(props: PeriodAnalysisProps) {
                 element: card(
                   "lage-ueber-zeit",
                   <>
-                    <PositionChart
-                      overTime={pattern.overTime}
-                      target={props.target}
-                      timeZone={props.timeZone}
-                      chosen={props.chosen ?? null}
-                      onChoose={props.onChoose}
-                    />
+                    <ChartSlot height={TIMELINE_HEIGHT}>
+                      {(width) => (
+                        <PositionTimeline
+                          overTime={pattern.overTime}
+                          width={width}
+                          timeZone={props.timeZone}
+                          chosen={props.chosen ?? null}
+                          onChoose={props.onChoose}
+                        />
+                      )}
+                    </ChartSlot>
                     <Sentence words={positionWords(pattern.overTime)} />
                     <Note>{POSITION_NOTE}</Note>
                   </>
@@ -179,6 +183,7 @@ function ShapeBody({ pattern }: { pattern: PeriodPattern }) {
   if (!shape || shape.verdict === "few") return <Sentence words={shapeWords(shape)} />
   return (
     <>
+      <ShapeEllipse shape={shape} />
       <KeyValues
         rows={[
           [
@@ -193,7 +198,7 @@ function ShapeBody({ pattern }: { pattern: PeriodPattern }) {
           ["Streuung σ", `${formatValue(shape.sigmaUm / 1000, 2)} mm`],
         ]}
       />
-      <Note>{shapeNote(shape)}</Note>
+      <Note>{`${ROUND_NOTE} ${shapeNote(shape)}`}</Note>
     </>
   )
 }

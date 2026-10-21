@@ -3,13 +3,13 @@ import { createElement as h } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 
 import { periodPattern, type PatternCard } from "@vereinsheim/shot-core/analysis"
-import { LG_10M } from "@vereinsheim/shot-core/targets"
 
 import { periodModel } from "./model"
 import type { PatternState } from "./PatternPanel"
 import { PeriodAnalysis, type PeriodAnalysisProps } from "./PeriodAnalysis"
 import { RecordsCard } from "./PeriodInsights"
-import { outsideText, positionHalfMm } from "./PositionChart"
+import { timelineLimit, trailingMean } from "./PositionTimeline"
+import { shapeAxes } from "./ShapeEllipse"
 import { initialPeriodState } from "./state"
 import { item, NOW, periodCard, TZ } from "./testSeason"
 
@@ -46,7 +46,6 @@ const render = (props: Partial<PeriodAnalysisProps>) =>
       model,
       scoring: "decimal",
       timeZone: TZ,
-      target: LG_10M,
       pattern: ready,
       onRetry: () => {},
       explain: false,
@@ -72,18 +71,22 @@ describe("PeriodAnalysis", () => {
     expect(html).toContain(records)
   })
 
-  it("Präzision: Form mit Länge zu Breite, Streuung und Grundlage", () => {
+  it("Präzision: die Form als Ellipse mit dem runden Kreis, Länge zu Breite, Streuung und Grundlage", () => {
     const html = render({ tab: "precision" })
     expect(html).toContain('data-card="form-ueber-scheiben"')
+    expect(html).toContain("data-shape-ellipse")
+    expect(html).toContain("data-shape-round")
     expect(html).toContain("Länge zu Breite")
+    expect(html).toContain("Gestrichelt: So sähe eine runde Gruppe mit derselben Streuung aus.")
     expect(html).toContain("Gerechnet über 480 Schuss aus 12 Scheiben, jede um ihre eigene Mitte.")
   })
 
-  it("Lage: Schwerpunkte mit Urteil, die gewählte hervorgehoben, Ausreißerrichtung", () => {
+  it("Lage: zwei Zeitreihen mit Urteil, Ausreißerrichtung", () => {
     const html = render({ tab: "position", chosen: "k3" })
-    expect(html.match(/data-position-card=/g)).toHaveLength(12)
-    expect(html).toContain('data-position-card="k3" aria-current="true"')
+    expect(html).toContain('data-timeline-row="x"')
+    expect(html).toContain('data-timeline-row="y"')
     expect(html).toContain("Deine Lage ist versetzt: rechts tief, im Mittel 0,5 mm.")
+    expect(html).toContain("Jeder Punkt ist eine Scheibe, die Linie der Schnitt der letzten fünf.")
     expect(html).toContain('data-card="ausreisserrichtung"')
     expect(html).toContain("Gezählt ist je Scheibe das weiteste Zehntel der Schüsse")
   })
@@ -98,18 +101,21 @@ describe("PeriodAnalysis", () => {
   })
 })
 
-describe("positionHalfMm", () => {
-  it("alle Schwerpunkte mit Rand, mindestens 1,5 mm", () => {
-    const at = (xUm: number, yUm: number) => ({ id: "a", atMs: 0, center: { xUm, yUm }, n: 40 })
-    expect(positionHalfMm({ points: [at(100, 0)] })).toBe(1.5)
-    expect(positionHalfMm({ points: [at(3000, 4000)] })).toBeCloseTo(8, 6)
+describe("Hilfen der Bilder", () => {
+  it("Halbachsen aus Streuung und Länge zu Breite", () => {
+    const { majorUm, minorUm } = shapeAxes({ sigmaUm: 1000, ratio: 2 })
+    expect(majorUm / minorUm).toBeCloseTo(2, 9)
+    expect((majorUm ** 2 + minorUm ** 2) / 2).toBeCloseTo(1000 ** 2, 6)
   })
 
-  it("eine Scheibe weit draußen bestimmt den Ausschnitt nicht, die Karte sagt es", () => {
-    const at = (id: string, xUm: number) => ({ id, atMs: 0, center: { xUm, yUm: 0 }, n: 40 })
-    const points = [...Array.from({ length: 10 }, (_, i) => at(`c${i}`, 1000)), at("weit", 9000)]
-    expect(positionHalfMm({ points })).toBeCloseTo(1.6, 6)
-    expect(outsideText(1)).toBe("1 Scheibe liegt außerhalb des Bilds.")
-    expect(outsideText(2)).toBe("2 Scheiben liegen außerhalb des Bilds.")
+  it("Schnitt der letzten fünf, am Anfang über so viele, wie es gibt", () => {
+    expect(trailingMean([1, 2, 3, 4, 5, 6])).toEqual([1, 1.5, 2, 2.5, 3, 4])
+  })
+
+  it("die Höhe der Zeitreihen folgt neun von zehn Scheiben, eine weit draußen staucht sie nicht", () => {
+    const at = (xUm: number) => ({ id: "a", atMs: 0, center: { xUm, yUm: 0 }, n: 40 })
+    const points = [...Array.from({ length: 10 }, () => at(800)), at(9000)]
+    expect(timelineLimit(points)).toBe(2000)
+    expect(timelineLimit([at(100)])).toBe(500)
   })
 })

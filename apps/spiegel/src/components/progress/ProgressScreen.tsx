@@ -464,7 +464,6 @@ export function ProgressScreen({
                 model={model}
                 scoring={state.scoring}
                 timeZone={timeZone}
-                target={target}
                 pattern={pattern.state}
                 onRetry={pattern.retry}
                 explain={explain}

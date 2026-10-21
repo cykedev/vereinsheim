@@ -18,16 +18,8 @@ export interface PatternSentence {
   more: string | null
 }
 
-/** die zwei Sichten des Trefferbilds */
-export type PatternSight = "form" | "position"
-
-export const SIGHT_TEXT: Readonly<Record<PatternSight, string>> = {
-  form: "Jede Scheibe ist auf ihre eigene Mitte geschoben. So siehst du nur die Streuung.",
-  position: "Die Schüsse liegen, wo sie lagen.",
-}
-
-export const LEGEND_DENSITY = "Innen liegt die Hälfte deiner Schüsse, außen neun von zehn."
 export const LEGEND_POINTS = "Jeder Punkt ist ein Schuss."
+export const CENTER_NOTE = "Der geviertelte Kreis ist die Mitte aller Schüsse."
 export const PATTERN_LOADING = "Trefferbild wird gerechnet …"
 export const PATTERN_FAILED = "Das Trefferbild ließ sich nicht laden."
 
@@ -54,6 +46,21 @@ export function shapeWords(shape: PeriodShape | null): PatternSentence {
 /** Richtung einer Lage wie auf der Seite einer Scheibe: „rechts tief“, „links hoch“ */
 const positionDirection = (point: { xUm: number; yUm: number }) =>
   directionName(point).replace("oben", "hoch").replace("unten", "tief")
+
+/** die Form als zweiter Satz unter dem Trefferbild; ohne Urteil über die Form keiner */
+function shapeSentence(shape: PeriodShape | null): string | null {
+  if (!shape || shape.verdict === "few") return null
+  return shape.verdict === "elongated"
+    ? `Die Gruppe ist länglich, ${axisWords(shape.angleRad)}.`
+    : "Die Gruppe zieht in keine klare Richtung."
+}
+
+/** die Antwort unter dem Trefferbild: die Lage (L10), dann die Form (L9) */
+export function pictureWords(pattern: Pick<PeriodPattern, "overTime" | "shape">): PatternSentence {
+  const position = positionWords(pattern.overTime)
+  const more = [position.more, shapeSentence(pattern.shape)].filter(Boolean).join(" ")
+  return { lead: position.lead, more: more || null }
+}
 
 /** Lage über Zeit (L10) */
 export function positionWords(overTime: PositionOverTime): PatternSentence {
@@ -86,8 +93,8 @@ export function outlierWords(outliers: OutlierDirection | null): PatternSentence
 
 export const OUTLIER_NOTE =
   "Gezählt ist je Scheibe das weiteste Zehntel der Schüsse, gemessen von der Mitte der Scheibe."
-export const POSITION_NOTE =
-  "Jeder Punkt ist die Mitte einer Scheibe. Größere Punkte haben mehr Schüsse. Die Linie folgt der Zeit."
+export const ROUND_NOTE = "Gestrichelt: So sähe eine runde Gruppe mit derselben Streuung aus."
+export const POSITION_NOTE = "Jeder Punkt ist eine Scheibe, die Linie der Schnitt der letzten fünf."
 
 const cardsText = (n: number) => `${formatInteger(n)} ${n === 1 ? "Scheibe" : "Scheiben"}`
 

@@ -55,7 +55,7 @@ const path = (points: readonly (readonly [number, number])[]) =>
   points.map(([x, y], i) => `${i ? "L" : "M"}${x.toFixed(1)} ${y.toFixed(1)}`).join("")
 
 /** Monatsanfänge von `fromMs` bis `toMs` in der Zeitzone */
-function monthStarts(fromMs: number, toMs: number, timeZone: string): number[] {
+export function monthStarts(fromMs: number, toMs: number, timeZone: string): number[] {
   const [y, m] = formatIsoDate(new Date(fromMs), timeZone).split("-").map(Number)
   const starts: number[] = []
   for (let k = 1; k < 400; k++) {
