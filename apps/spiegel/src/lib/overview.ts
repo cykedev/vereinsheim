@@ -22,8 +22,8 @@ import { familyScoringOf } from "@/lib/scoring"
 
 type Context = Pick<PageContext, "timeZone" | "nowMs" | "named">
 
-/** die eigenen Scheiben, die die Übersichten zeigen können, und die Wertung je Familie */
-async function overviewCards(
+/** die eigenen Scheiben, die die Übersichten zeigen können, und die Wertung je Familie (auch für Vergleichen) */
+export async function overviewCards(
   db: Db,
   ownerId: string
 ): Promise<{ shown: OverviewCard[]; scoringOf: (family: string) => Scoring }> {
