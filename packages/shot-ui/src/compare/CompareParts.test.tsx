@@ -1,0 +1,195 @@
+import { describe, expect, it } from "vitest"
+import { createElement as h } from "react"
+import { renderToStaticMarkup } from "react-dom/server"
+
+import type { PeriodComparison } from "@vereinsheim/shot-core/analysis"
+
+import { DEFAULT_COMPARE } from "../nav/routes"
+import { CardChoiceSheet, PeriodChoiceSheet, type CardChoice } from "./ChoiceSheets"
+import { CompareControls } from "./CompareControls"
+import { CompareMetrics, CompareRows } from "./CompareRows"
+import type { CompareModel, CompareRow } from "./model"
+
+const TZ = "Europe/Berlin"
+const noop = () => {}
+const FAMILIES = [
+  { value: "lp-freihand", label: "LP Freihand" },
+  { value: "lg-freihand", label: "LG Freihand" },
+]
+
+const comparison: PeriodComparison = {
+  a: { n: 10, mean: 9.2 },
+  b: { n: 8, mean: 9 },
+  delta: 0.2,
+  test: { p: 0.01, exact: true },
+  verdict: "higher",
+  meaningful: true,
+}
+const row = (key: string, a: number | null, unit: CompareRow["unit"] = "Ringe"): CompareRow => ({
+  key,
+  label: key === "group.sigma" ? "Streuung" : "Ø je Schuss",
+  unit,
+  decimals: 2,
+  better: key === "group.sigma" ? "lower" : "higher",
+  a,
+  b: 9,
+  comparison,
+})
+const MODEL: CompareModel = {
+  type: "periods",
+  unit: "card",
+  a: {
+    name: "Letzte 90 Tage",
+    at: "in den letzten 90 Tagen",
+    cards: 10,
+    shots: 400,
+    withoutPosition: 0,
+  },
+  b: { name: "Zeitraum davor", at: "im Zeitraum davor", cards: 8, shots: 320, withoutPosition: 0 },
+  shared: 0,
+  result: row("result.decimalMean", 9.2),
+  spread: row("group.sigma", null, "mm"),
+  position: null,
+  metrics: [row("result.decimalMean", 9.2), row("group.sigma", 1.5, "mm")],
+  picture: {
+    style: "dots",
+    halfUm: 1000,
+    a: { points: [], center: null },
+    b: { points: [], center: null },
+  },
+}
+
+describe("CompareControls", () => {
+  const render = (query = DEFAULT_COMPARE) =>
+    renderToStaticMarkup(
+      h(CompareControls, {
+        query,
+        family: "lp-freihand",
+        families: FAMILIES,
+        names: { a: "Letzte 90 Tage", b: "Zeitraum davor" },
+        newest: ["c2", "c1"],
+        onQuery: noop,
+        onPick: noop,
+      })
+    )
+
+  it("zwei Zeiträume: Art des Vergleichs, Familie, zwei Chips mit Namen und die Art", () => {
+    const html = render()
+    for (const label of [
+      "Zwei Scheiben",
+      "Zwei Zeiträume",
+      "Wettkampf und Training",
+      "LP Freihand",
+    ])
+      expect(html, label).toContain(label)
+    expect(html).toMatch(/data-compare-chip="a"[^>]*>.*Letzte 90 Tage/)
+    expect(html).toMatch(/data-compare-chip="b"[^>]*>.*Zeitraum davor/)
+    expect(html).toContain("Alle Arten")
+    expect(html).toContain("var(--compare-a)")
+  })
+
+  it("zwei Scheiben: ohne Familie und ohne Art", () => {
+    const html = render({ type: "cards", a: "c2", b: "c1" })
+    expect(html).not.toContain("LP Freihand")
+    expect(html).not.toContain("Alle Arten")
+    expect(html).toContain('data-compare-chip="b"')
+  })
+
+  it("Wettkampf und Training: ein Chip für den Zeitraum", () => {
+    const html = render({
+      type: "kind",
+      family: null,
+      range: { type: "rolling", days: 365 },
+      includeProbeOnly: true,
+    })
+    expect(html).toContain('data-compare-chip="range"')
+    expect(html).not.toContain('data-compare-chip="b"')
+  })
+})
+
+describe("CompareRows und CompareMetrics", () => {
+  it("drei Zeilen, das Urteil darunter, „–“ mit Grund, die Hilfe des Vergleichs", () => {
+    const html = renderToStaticMarkup(h(CompareRows, { model: MODEL, onHelp: noop }))
+    expect(html).toContain('data-compare-row="result.decimalMean"')
+    expect(html).toContain('data-compare-row="group.sigma"')
+    expect(html).toContain('data-compare-row="position"')
+    expect(html).toContain("Klar besser: Letzte 90 Tage.")
+    expect(html).toContain('title="Ohne Lage der Schüsse."')
+    expect(html).toContain('data-help="zeitraum-vergleich"')
+    expect(html).toContain('data-help="lage-vergleich"')
+    expect(html).toContain("Zu wenige Scheiben.")
+    expect(html).toContain("9,20")
+  })
+
+  it("zwei Scheiben: die Hilfe des Schussvergleichs", () => {
+    const html = renderToStaticMarkup(
+      h(CompareRows, { model: { ...MODEL, unit: "shot" }, onHelp: noop })
+    )
+    expect(html).toContain('data-help="scheibe-vergleich"')
+  })
+
+  it("alle Kennzahlen eingeklappt; bei zwei Scheiben ohne Urteil", () => {
+    const html = renderToStaticMarkup(h(CompareMetrics, { model: MODEL, onHelp: noop }))
+    expect(html).toMatch(/<details[^>]*data-compare-metrics/)
+    expect(html).not.toMatch(/<details[^>]*open/)
+    expect(html).toContain("Alle Kennzahlen")
+    expect(html).toContain("Klar besser")
+    const cards = renderToStaticMarkup(
+      h(CompareMetrics, { model: { ...MODEL, unit: "shot" }, onHelp: noop })
+    )
+    expect(cards).not.toContain("Klar besser")
+  })
+})
+
+describe("Blätter", () => {
+  const choices: CardChoice[] = Array.from({ length: 35 }, (_, i) => ({
+    id: `c${i}`,
+    startedAtMs: Date.UTC(2026, 9, 20 - (i % 20), 17),
+    total: `36${i % 10},4`,
+    shots: 40,
+  }))
+
+  it("Scheiben: 30 auf einmal, „Mehr zeigen“, die andere Seite geht nicht", () => {
+    const html = renderToStaticMarkup(
+      h(CardChoiceSheet, {
+        open: true,
+        onClose: noop,
+        title: "Scheibe A",
+        choices,
+        current: "c0",
+        other: "c1",
+        timeZone: TZ,
+        onChoose: noop,
+      })
+    )
+    expect([...html.matchAll(/type="radio"/g)]).toHaveLength(30)
+    expect(html).toContain("Mehr zeigen")
+    expect(html).toContain("auf der anderen Seite")
+    expect(html).toContain("360,4 · 40 Schuss")
+    expect(html).toMatch(/<input type="radio" disabled=""/)
+  })
+
+  it("Zeitraum B: „Zeitraum davor“ zuerst, die Felder wie im Filter, „Übernehmen“", () => {
+    const html = renderToStaticMarkup(
+      h(PeriodChoiceSheet, {
+        open: true,
+        onClose: noop,
+        title: "Zeitraum B",
+        value: "previous",
+        range: {
+          fromMs: Date.UTC(2026, 6, 1),
+          toMs: Date.UTC(2026, 9, 1),
+          label: "Letzte 90 Tage",
+        },
+        named: [],
+        timeZone: TZ,
+        withPrevious: true,
+        onApply: noop,
+      })
+    )
+    expect(html.indexOf("Zeitraum davor")).toBeLessThan(html.indexOf("Letzte 30 Tage"))
+    expect(html).toContain("gleich lang, direkt vor A")
+    expect(html).toContain("Übernehmen")
+    expect(html).toMatch(/<input type="radio"[^>]*checked=""/)
+  })
+})
