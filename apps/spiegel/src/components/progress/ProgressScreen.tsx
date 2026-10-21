@@ -29,7 +29,12 @@ import {
 } from "@vereinsheim/shot-ui/layout/sections"
 import { useActiveSection } from "@vereinsheim/shot-ui/layout/useActiveSection"
 import { useReturnJump } from "@vereinsheim/shot-ui/layout/useReturnJump"
-import { listFromProgress, openCard, progressRoute } from "@vereinsheim/shot-ui/nav/navigate"
+import {
+  compareFromProgress,
+  listFromProgress,
+  openCard,
+  progressRoute,
+} from "@vereinsheim/shot-ui/nav/navigate"
 import { RouteLink } from "@vereinsheim/shot-ui/nav/RouteLink"
 import { isCardId, urlFromRoute } from "@vereinsheim/shot-ui/nav/routes"
 import { rangeDays } from "@vereinsheim/shot-ui/period/calendar"
@@ -278,6 +283,8 @@ export function ProgressScreen({
                   named={named}
                   timeZone={timeZone}
                   families={families}
+                  // Vergleiche laufen über die Seite Vergleichen, der Satz führt dorthin
+                  withCompare={false}
                   actions={
                     <ScoringChip
                       scoring={familyScoring.shown}
@@ -296,6 +303,15 @@ export function ProgressScreen({
             }
             result={empty ? null : result}
             sentence={empty ? null : sentence}
+            sentenceAction={
+              <RouteLink
+                route={compareFromProgress(state, state.family)}
+                data-compare-link
+                className="font-semibold whitespace-nowrap text-primary underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-ring"
+              >
+                Genauer vergleichen
+              </RouteLink>
+            }
           />
         }
         nav={<SectionNav active={active} sections={periodSections(state.show)} />}

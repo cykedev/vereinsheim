@@ -22,7 +22,8 @@ function formSentence(form: StartForm, familyLabel: string): string {
 
 /**
  * „Form der letzten 90 Tage“ auf Start: ein Titel und ein Satz für die zuletzt gewählte Familie,
- * Ø je Schuss und das Urteil gegen die 90 Tage davor wie im Fortschritt; das Ganze führt dorthin. Ohne Wert nichts.
+ * Ø je Schuss und das Urteil gegen die 90 Tage davor wie im Fortschritt; das Ganze führt auf die Seite Vergleichen mit
+ * diesem Paar. Ohne Wert nichts.
  */
 export function FormLine({
   form,

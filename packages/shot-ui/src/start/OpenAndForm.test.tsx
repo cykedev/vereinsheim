@@ -2,7 +2,7 @@ import { createElement as h } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 
-import { DEFAULT_PROGRESS } from "../nav/routes"
+import { DEFAULT_COMPARE, type CompareQuery } from "../nav/routes"
 import { FormLine } from "./FormLine"
 import type { StartForm } from "./model"
 import { OpenBox } from "./OpenBox"
@@ -60,20 +60,17 @@ describe("Form der letzten 90 Tage", () => {
       meaningful: null,
     },
     route: {
-      page: "progress",
-      query: { ...DEFAULT_PROGRESS, family: "lg-freihand", compare: { type: "previous" } },
-      section: null,
+      page: "compare",
+      query: { ...DEFAULT_COMPARE, family: "lg-freihand" } as CompareQuery,
     },
   }
 
   const line = (f: StartForm) =>
     text(renderToStaticMarkup(h(FormLine, { form: f, familyLabel: "Luftgewehr" })))
 
-  it("zwei Zeilen, Titel und ein Satz mit Urteil, als Link in den Fortschritt mit dem Vergleich", () => {
+  it("zwei Zeilen, Titel und ein Satz mit Urteil, als Link auf die Seite Vergleichen mit diesem Paar", () => {
     const html = renderToStaticMarkup(h(FormLine, { form, familyLabel: "Luftgewehr" }))
-    expect(html).toMatch(
-      /^<a href="\/progress\?compare=previous&amp;family=lg-freihand" data-form-line="true"/
-    )
+    expect(html).toMatch(/^<a href="\/compare\?family=lg-freihand" data-form-line="true"/)
     expect(html).toMatch(/<span[^>]*data-form-title[^>]*>Form der letzten 90 Tage<\/span>/)
     expect(line(form)).toBe(
       "Form der letzten 90 Tage Luftgewehr: Ø 10,27 je Schuss, kein klarer Unterschied zu den 90 Tagen davor (+0,03). ›"

@@ -86,6 +86,8 @@ export interface PeriodHeaderProps {
   result: ReactNode
   /** ein Satz zum Zeitraum (`periodSentence`); null: keiner */
   sentence: string | null
+  /** ein Weg hinter dem Satz, in Spiegel „Genauer vergleichen“ auf die Seite Vergleichen */
+  sentenceAction?: ReactNode
   className?: string
 }
 
@@ -99,6 +101,7 @@ export function PeriodHeader({
   controls,
   result,
   sentence,
+  sentenceAction,
   className,
 }: PeriodHeaderProps) {
   return (
@@ -117,6 +120,7 @@ export function PeriodHeader({
           className="max-w-[46rem] text-[14px] leading-relaxed text-foreground-2 md:col-start-1"
         >
           {sentence}
+          {sentenceAction && <> {sentenceAction}</>}
         </p>
       )}
     </div>

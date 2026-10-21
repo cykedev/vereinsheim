@@ -251,7 +251,7 @@ describe("Start: der letzte Abend", () => {
     const form = model(cards, "lp-freihand").form
     expect(form?.family).toBe("lp-freihand")
     expect(form?.mean).toBeCloseTo(9.5, 9)
-    expect(urlFromRoute(form!.route)).toBe("/progress?compare=previous&family=lp-freihand")
+    expect(urlFromRoute(form!.route)).toBe("/compare?family=lp-freihand")
     expect(model(cards, null).form?.family).toBe("lg-freihand")
   })
 

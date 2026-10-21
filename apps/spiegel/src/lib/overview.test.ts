@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 
-import { DEFAULT_LIST, DEFAULT_PROGRESS } from "@vereinsheim/shot-ui/nav/routes"
+import { DEFAULT_LIST, DEFAULT_PROGRESS, urlFromRoute } from "@vereinsheim/shot-ui/nav/routes"
 
 import { createPrismaClient } from "@/lib/db"
 import { generateSeason } from "../../test/generate"
@@ -186,7 +186,8 @@ describe("Wertung je Familie", () => {
       progressPageData(db, site.ownerId, { ...all, family }, context)
     return {
       start: start.model.blocks.map((block) => [block.family, block.scoring]),
-      form: start.model.form?.route.query.scoring,
+      // die Form führt auf die Seite Vergleichen, die in der Wertung der Familie rechnet (die Adresse trägt keine)
+      form: start.model.form && urlFromRoute(start.model.form.route),
       list: {
         lg: (await list(lgFamily.slug)).list?.model.scoring,
         lp: (await list(lp)).list?.model.scoring,
@@ -203,7 +204,7 @@ describe("Wertung je Familie", () => {
       // die Testscheiben zeigen am Stand Zehntel; das Luftgewehr hat keine amtliche Wertung
       expect(await scorings()).toEqual({
         start: [[lgFamily.slug, "decimal"]],
-        form: "decimal",
+        form: `/compare?family=${lgFamily.slug}`,
         list: { lg: "decimal", lp: expect.any(String) },
         progress: { lg: "decimal", lp: expect.any(String) },
       })
@@ -223,7 +224,7 @@ describe("Wertung je Familie", () => {
       })
       expect(await scorings()).toEqual({
         start: [[lgFamily.slug, "decimal"]],
-        form: "decimal",
+        form: `/compare?family=${lgFamily.slug}`,
         list: { lg: "decimal", lp: "rings" },
         progress: { lg: "decimal", lp: "rings" },
       })

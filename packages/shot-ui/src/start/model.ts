@@ -9,8 +9,8 @@ import { metricByKey, type Scoring } from "@vereinsheim/shot-core/metrics"
 import { pooledMean, projectedRecords, projectedValues } from "@vereinsheim/shot-core/projection"
 
 import { cardListModel, lastEvening, type ListInputCard, type ListRow } from "../list/evenings"
-import { progressRoute } from "../nav/navigate"
-import { DEFAULT_LIST, type ProgressRoute } from "../nav/routes"
+import { compareFromProgress, progressRoute } from "../nav/navigate"
+import { DEFAULT_LIST, type ProgressRoute, type Route } from "../nav/routes"
 import type { NamedPeriod } from "../period/calendar"
 import { fromProjection } from "../period/fromProjection"
 import { byStart, periodModel } from "../period/model"
@@ -75,8 +75,8 @@ export interface StartForm {
   mean: number | null
   cards: number
   comparison: PeriodComparison | null
-  /** der Fortschritt mit dieser Familie und dem Vergleich */
-  route: ProgressRoute
+  /** die Seite Vergleichen mit diesem Paar: die letzten 90 Tage gegen die 90 davor in dieser Familie */
+  route: Route
 }
 
 export interface StartModel {
@@ -204,6 +204,6 @@ function formOf(all: readonly ListInputCard[], family: string, input: StartInput
     mean: model.summary.mean,
     cards: model.summary.cards,
     comparison: model.comparison,
-    route: progressRoute(state, null),
+    route: compareFromProgress(state, family),
   }
 }

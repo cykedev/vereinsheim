@@ -208,6 +208,21 @@ describe("Filter und Kopf", () => {
     expect(html).toContain("FILTER")
     expect(html).toMatch(/<div class="md:hidden"><p>ERGEBNIS/)
     expect(html).toMatch(/data-sentence="true"[^>]*>Ein Satz\./)
+    expect(html).not.toContain("WEG")
+  })
+
+  it("hinter dem Satz ein Weg (in Spiegel „Genauer vergleichen“)", () => {
+    const html = renderToStaticMarkup(
+      h(PeriodHeader, {
+        title: "Letzte 90 Tage",
+        meta: [],
+        controls: null,
+        result: null,
+        sentence: "Ein Satz.",
+        sentenceAction: h("a", { href: "/compare" }, "WEG"),
+      })
+    )
+    expect(html).toMatch(/data-sentence="true"[^>]*>Ein Satz\. <a href="\/compare">WEG<\/a><\/p>/)
   })
 })
 
