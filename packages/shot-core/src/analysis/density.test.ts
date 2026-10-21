@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import { normalPoints } from "../__fixtures__/random"
 import type { Point } from "../geometry"
-import { densityGrid, patternHalf } from "./density"
+import { densityGrid, HEAT_SHARES, patternHalf } from "./density"
 
 describe("densityGrid", () => {
   it("ein Punkt in der Mitte: die mittlere Zelle ist die dichteste, das Raster ist symmetrisch", () => {
@@ -35,17 +35,19 @@ describe("densityGrid", () => {
     }
     const share = (level: number) =>
       points.filter((p) => valueAt(p) >= level).length / points.length
-    expect(share(grid.inner)).toBeGreaterThan(0.45)
-    expect(share(grid.inner)).toBeLessThan(0.55)
-    expect(share(grid.outer)).toBeGreaterThan(0.86)
-    expect(share(grid.outer)).toBeLessThan(0.94)
-    expect(grid.inner).toBeGreaterThan(grid.outer)
+    // jedes Band hält etwa seinen Anteil der Punkte, von außen nach innen steigen die Grenzen
+    HEAT_SHARES.forEach((expected, i) => {
+      expect(share(grid.levels[i]), `Band ${expected}`).toBeGreaterThan(expected - 0.06)
+      expect(share(grid.levels[i]), `Band ${expected}`).toBeLessThan(expected + 0.06)
+    })
+    for (let i = 1; i < grid.levels.length; i++)
+      expect(grid.levels[i]).toBeGreaterThan(grid.levels[i - 1])
   })
 
   it("ohne Punkte ein leeres Raster", () => {
     const grid = densityGrid([], 1000, 4)
     expect(grid.cells).toEqual(new Array(16).fill(0))
-    expect([grid.inner, grid.outer]).toEqual([0, 0])
+    expect(grid.levels).toEqual([0, 0, 0, 0, 0])
   })
 })
 

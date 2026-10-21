@@ -1,18 +1,22 @@
 import { describe, expect, it } from "vitest"
 
 import { normalPoints } from "../__fixtures__/random"
-import type { Point } from "../geometry"
 import {
   outlierDirection,
-  PATTERN_POINTS_MAX,
+  PATTERN_DENSITY_FROM,
   periodPattern,
   periodShape,
   positionOverTime,
   positionPoints,
   type PatternCard,
+  type PatternPoint,
 } from "./pattern"
 
-const card = (id: string, points: readonly Point[], atMs = 0): PatternCard => ({ id, atMs, points })
+const card = (id: string, points: readonly PatternPoint[], atMs = 0): PatternCard => ({
+  id,
+  atMs,
+  points,
+})
 
 /** `count` Scheiben zu je `shots` Schuss mit eigenem Seed */
 const cardsOf = (count: number, shots: number, sigmaUm: number, sigmaYUm = sigmaUm, seed = 7) =>
@@ -197,33 +201,32 @@ describe("outlierDirection (L7)", () => {
 })
 
 describe("periodPattern", () => {
-  it("unter 300 Schuss Punkte in 10 µm, darüber die Dichte", () => {
-    const few = periodPattern(cardsOf(7, 40, 1500))
-    expect(few.shots).toBe(280)
-    expect(few.position.points).toHaveLength(280)
-    expect(few.position.grid).toBeNull()
-    const many = periodPattern(cardsOf(8, 40, 1500))
-    expect(many.shots).toBe(320)
-    expect(many.position.points).toBeNull()
-    expect(many.position.grid?.size).toBe(64)
-    expect(PATTERN_POINTS_MAX).toBe(300)
-  })
-
-  it("Form schiebt jede Scheibe auf ihre Mitte, Lage lässt sie", () => {
-    const moved = [
+  it("unter 50 Schuss jeder Schuss mit Ring, ab 50 die Dichte in fünf Bändern", () => {
+    const few = periodPattern([
       card("a", [
-        { xUm: 4000, yUm: 0 },
-        { xUm: 4200, yUm: 0 },
-        { xUm: 4100, yUm: 100 },
+        { xUm: 1000, yUm: 0, ring: 9 },
+        { xUm: -1000, yUm: 0, ring: null },
+        { xUm: 0, yUm: 500 },
       ]),
-    ]
-    const pattern = periodPattern(moved)
-    expect(pattern.position.points?.[0]).toEqual([400, 0])
-    expect(pattern.form.points?.[0]).toEqual([-10, -3])
-    expect(pattern.form.halfUm).toBeLessThan(pattern.position.halfUm)
+    ])
+    expect(few.picture.points).toEqual([
+      [100, 0, 9],
+      [-100, 0, null],
+      [0, 50, null],
+    ])
+    expect(few.picture.grid).toBeNull()
+    expect(few.picture.center).toEqual({ xUm: 0, yUm: 167 })
+    // jeder Punkt liegt im Bild, mit Rand für das Kaliber
+    expect(few.picture.halfUm).toBe(1000 * 1.15 + 500)
+    const many = periodPattern(cardsOf(2, 25, 1500))
+    expect(many.shots).toBe(50)
+    expect(many.picture.points).toBeNull()
+    expect(many.picture.grid?.size).toBe(64)
+    expect(many.picture.grid?.levels).toHaveLength(5)
+    expect(PATTERN_DENSITY_FROM).toBe(50)
   })
 
-  it("zählt Scheiben ohne Lage und nimmt Scheiben unter drei Punkten nur in die Lage-Sicht", () => {
+  it("zählt Scheiben ohne Lage, Schwerpunkte nur ab drei Punkten", () => {
     const pattern = periodPattern([
       ...cardsOf(5, 20, 1500),
       card("leer", []),
@@ -234,8 +237,7 @@ describe("periodPattern", () => {
     ])
     expect(pattern.cards).toBe(7)
     expect(pattern.cardsWithoutPosition).toBe(1)
-    expect(pattern.position.points).toHaveLength(102)
-    expect(pattern.form.points).toHaveLength(100)
+    expect(pattern.shots).toBe(102)
     expect(pattern.overTime.points).toHaveLength(5)
   })
 

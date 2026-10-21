@@ -1,6 +1,6 @@
 // Dichte der Treffer über viele Scheiben als Raster (L9): Punkte in Zellen zählen, dann mit einem Gauß-Kern glätten.
-// Das Raster geht an den Browser; daraus zeichnet `shot-ui` die zwei Flächen („die Hälfte“, „neun von zehn“). Nicht
-// über `./analysis` exportiert: Hilfen der Auswertung `periodPattern`, keine eigene Auswertung.
+// Das Raster geht an den Browser; daraus zeichnet `shot-ui` die Heatmap in fünf Bändern. Nicht über `./analysis`
+// exportiert: Hilfen der Auswertung `periodPattern`, keine eigene Auswertung.
 
 import type { Point } from "../geometry"
 import { quantile } from "../stats"
@@ -10,11 +10,15 @@ export interface DensityGrid {
   size: number
   /** Zeile für Zeile, Zeile 0 oben (größtes y), Werte 0–255 relativ zur dichtesten Zelle */
   cells: number[]
-  /** ab diesem Wert liegt die Hälfte der geglätteten Masse */
-  inner: number
-  /** ab diesem Wert liegen neun Zehntel der geglätteten Masse */
-  outer: number
+  /**
+   * die Grenzen der Bänder der Heatmap, von außen nach innen (`HEAT_SHARES`): ab `levels[i]` liegt der Anteil
+   * `HEAT_SHARES[i]` der geglätteten Masse, im selben Maßstab 0–255
+   */
+  levels: number[]
 }
+
+/** Anteile der Masse, die die Bänder der Heatmap von außen nach innen umschließen */
+export const HEAT_SHARES = [0.9, 0.75, 0.5, 0.25, 0.1] as const
 
 /** kleinste Bandbreite in Zellen: sonst bleibt bei wenigen, eng liegenden Punkten jede Zelle allein */
 const MIN_BANDWIDTH_CELLS = 0.75
@@ -95,13 +99,12 @@ export function densityGrid(points: readonly Point[], halfUm: number, size = 64)
   const weights = kernel(bandwidth)
   const smooth = blur(blur(counts, size, weights, 1), size, weights, size)
   const max = Math.max(...smooth)
-  if (!(max > 0)) return { size, cells: counts.map(() => 0), inner: 0, outer: 0 }
+  if (!(max > 0)) return { size, cells: counts.map(() => 0), levels: HEAT_SHARES.map(() => 0) }
   const scale = (value: number) => Math.round((value / max) * 255)
   return {
     size,
     cells: smooth.map(scale),
-    inner: Math.max(1, scale(massLevel(smooth, 0.5))),
-    outer: Math.max(1, scale(massLevel(smooth, 0.9))),
+    levels: HEAT_SHARES.map((share) => Math.max(1, scale(massLevel(smooth, share)))),
   }
 }
 

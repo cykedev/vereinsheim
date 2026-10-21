@@ -333,7 +333,7 @@ export async function patternCardsOf(
   return rows.map((row) => ({
     id: row.cardId,
     atMs: row.card.startedAt.getTime(),
-    points: markShots(row.marks as unknown as CardMark[]).map(({ xUm, yUm }) => ({ xUm, yUm })),
+    points: markShots(row.marks as unknown as CardMark[]),
   }))
 }
 

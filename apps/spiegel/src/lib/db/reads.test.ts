@@ -233,7 +233,9 @@ describe("Übersichten", () => {
     const marks = await marksOfCards(db, { ownerId: site.ownerId, ids: [a.id] })
     const first = cards.find((c) => c.id === a.id)!
     expect(first.atMs).toBe(a.startedAtMs)
-    expect(first.points).toEqual(marks[a.id].map(([x, y]) => ({ xUm: x * 10, yUm: y * 10 })))
+    expect(first.points).toEqual(
+      marks[a.id].map(([x, y, ring]) => ({ xUm: x * 10, yUm: y * 10, ring }))
+    )
     expect(await patternCardsOf(db, { ownerId: "jemand-anderes", ids: [a.id] })).toEqual([])
     expect(await patternCardsOf(db, { ownerId: site.ownerId, ids: [] })).toEqual([])
   })

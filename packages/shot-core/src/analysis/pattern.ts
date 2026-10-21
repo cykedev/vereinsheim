@@ -7,11 +7,16 @@ import type { Point } from "../geometry"
 import { densityGrid, patternHalf, type DensityGrid } from "./density"
 import { confidenceOf } from "./hotelling"
 
+/** ein Schuss im Trefferbild: Lage und, wenn bekannt, der Ring (für die Farbe der Punkte) */
+export interface PatternPoint extends Point {
+  ring?: number | null
+}
+
 /** eine Scheibe des Zeitraums mit den Lagen ihrer Schüsse wie gezeichnet */
 export interface PatternCard {
   id: string
   atMs: number
-  points: readonly Point[]
+  points: readonly PatternPoint[]
 }
 
 /** so viele Punkte braucht eine Scheibe für eine Mitte */
@@ -216,19 +221,21 @@ export function outlierDirection(cards: readonly PatternCard[]): OutlierDirectio
   }
 }
 
-/** bis zu so vielen Schüssen zeigt das Trefferbild jeden als Punkt, darüber die Dichte */
-export const PATTERN_POINTS_MAX = 300
+/** ab so vielen Schüssen zeigt das Trefferbild die Dichte als Heatmap, darunter jeden Schuss in seiner Ringfarbe */
+export const PATTERN_DENSITY_FROM = 50
 
 /** Raster der Lagen im Muster: 10 µm wie `cardMarks` */
 const PATTERN_UM = 10
 
-/** eine Sicht des Trefferbilds: Ausschnitt um die Mitte, dazu entweder die Punkte oder die Dichte */
+/** das Bild der Schüsse: Ausschnitt um die Mitte der Scheibe, die Mitte aller Schüsse, Punkte oder Dichte */
 export interface PatternLayer {
   /** halbe Kantenlänge des Ausschnitts um die Mitte der Scheibe */
   halfUm: number
-  /** jeder Schuss in 10 µm, unter `PATTERN_POINTS_MAX` Schuss; sonst null */
-  points: [number, number][] | null
-  /** die Dichte ab `PATTERN_POINTS_MAX` Schuss; sonst null */
+  /** Mitte aller Schüsse, auf ganze µm; null ohne Schuss */
+  center: Point | null
+  /** jeder Schuss als [x, y] in 10 µm und sein Ring (null ohne Wert), unter `PATTERN_DENSITY_FROM` Schuss; sonst null */
+  points: [number, number, number | null][] | null
+  /** die Dichte in Bändern ab `PATTERN_DENSITY_FROM` Schuss; sonst null */
   grid: DensityGrid | null
 }
 
@@ -239,52 +246,53 @@ export interface PeriodPattern {
   /** alle Scheiben, auch ohne Lage */
   cards: number
   cardsWithoutPosition: number
-  /** jede Scheibe ab drei Schuss um ihre eigene Mitte geschoben */
-  form: PatternLayer
   /** die Schüsse, wo sie lagen */
-  position: PatternLayer
+  picture: PatternLayer
   shape: PeriodShape | null
   overTime: PositionOverTime
   outliers: OutlierDirection | null
 }
 
-function layer(points: readonly Point[]): PatternLayer {
-  const halfUm = patternHalf(points)
-  return points.length < PATTERN_POINTS_MAX
+const roundPoint = (p: Point): Point => ({ xUm: Math.round(p.xUm), yUm: Math.round(p.yUm) })
+
+function layer(points: readonly PatternPoint[]): PatternLayer {
+  const center = points.length ? roundPoint(mean(points)) : null
+  // einzelne Punkte zeigt das Bild alle (mit Rand für das Kaliber), die Dichte über 99 % der Schüsse
+  const farthest = Math.max(0, ...points.map((p) => Math.hypot(p.xUm, p.yUm)))
+  return points.length < PATTERN_DENSITY_FROM
     ? {
-        halfUm,
-        points: points.map((p) => [Math.round(p.xUm / PATTERN_UM), Math.round(p.yUm / PATTERN_UM)]),
+        halfUm: Math.max(1000, farthest * 1.15 + 500),
+        center,
+        points: points.map((p) => [
+          Math.round(p.xUm / PATTERN_UM),
+          Math.round(p.yUm / PATTERN_UM),
+          p.ring ?? null,
+        ]),
         grid: null,
       }
-    : { halfUm, points: null, grid: densityGrid(points, halfUm) }
+    : (() => {
+        const halfUm = patternHalf(points)
+        return { halfUm, center, points: null, grid: densityGrid(points, halfUm) }
+      })()
 }
-
-const roundPoint = (p: Point): Point => ({ xUm: Math.round(p.xUm), yUm: Math.round(p.yUm) })
 
 /**
  * Das Trefferbild eines Zeitraums (L9) mit den Urteilen über Form (L9), Lage (L10) und Ausreißerrichtung (L7), für
- * den Browser gerechnet: Er bekommt je Sicht die Punkte oder ein Raster von 64 × 64, die Schwerpunkte je Scheibe auf
- * ganze µm, keine Schüsse. In der Form-Sicht zählen Scheiben ab drei Schuss mit Lage, in der Lage-Sicht alle Schüsse.
+ * den Browser gerechnet: Er bekommt die Schüsse, wo sie lagen, als Raster von 64 × 64 (unter 50 Schuss die Punkte mit
+ * Ring), die Schwerpunkte je Scheibe auf ganze µm, keine Schüsse. Die Form zeigt die Seite nicht als zweites Bild,
+ * sondern über ihr Urteil (`shape`).
  */
 export function periodPattern(cards: readonly PatternCard[]): PeriodPattern {
   const all = cards.flatMap((card) => card.points)
-  const centered = cards
-    .filter((card) => card.points.length >= MIN_CARD_POINTS)
-    .flatMap((card) => {
-      const center = mean(card.points)
-      return card.points.map((p) => ({ xUm: p.xUm - center.xUm, yUm: p.yUm - center.yUm }))
-    })
-  const overTime = positionOverTime(
-    positionPoints(cards).map((p) => ({ ...p, center: roundPoint(p.center) }))
-  )
   return {
     shots: all.length,
     cards: cards.length,
     cardsWithoutPosition: cards.filter((card) => card.points.length === 0).length,
-    form: layer(centered),
-    position: layer(all),
+    picture: layer(all),
     shape: periodShape(cards),
-    overTime,
+    overTime: positionOverTime(
+      positionPoints(cards).map((p) => ({ ...p, center: roundPoint(p.center) }))
+    ),
     outliers: outlierDirection(cards),
   }
 }
