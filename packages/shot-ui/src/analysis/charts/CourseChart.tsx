@@ -2,6 +2,7 @@
 
 import { movingAverage, pauseRecovery } from "@vereinsheim/shot-core/analysis"
 import { shotNumbers, type MetricShot, type Scoring } from "@vereinsheim/shot-core/metrics"
+import { useMemo } from "react"
 
 import { formatValue } from "../../format"
 import { scoreColor } from "../../geometry"
@@ -50,6 +51,9 @@ export function CourseChart({
     width,
     preset < 0 ? null : preset
   )
+  // die Pausen nur neu, wenn sich die Schüsse ändern: das Lineal zeichnet bei jedem Ziehen neu, und das Urteil je
+  // Pause zählt alle Auswahlen von drei Schüssen aus (bei 120 Schuss gut 2 ms je Pause)
+  const recovery = useMemo(() => pauseRecovery(shots, scoring, card), [shots, scoring, card])
   if (avg.length < 2) return null
   const chosen = ruler.index === null ? null : avg[ruler.index]
   const y = (v: number) =>
@@ -68,9 +72,7 @@ export function CourseChart({
   }
   const series = [...ranges].sort((a, b) => a[1][0] - b[1][0])
   // eine Pause kurz vor Schluss mit nur wertlosen Schüssen danach läge hinter dem letzten Punkt
-  const pauses = (pauseRecovery(shots, scoring, card)?.effects ?? []).filter(
-    (effect) => effect.afterShot <= maxN
-  )
+  const pauses = (recovery?.effects ?? []).filter((effect) => effect.afterShot <= maxN)
   const step = maxN > 30 ? 10 : 5
   const ticks: number[] = []
   for (let n = 1; n <= maxN; n++) if (n === 1 || n % step === 0) ticks.push(n)
