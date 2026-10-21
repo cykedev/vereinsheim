@@ -118,8 +118,8 @@ demselben Volumen:
 
 | Trefferbild | Lagen lesen und Muster rechnen | an den Browser |
 | --- | --- | --- |
-| „Alles“ (1.564 Scheiben) | 88 ms | 166 KB (zwei Raster 64 × 64, Schwerpunkt je Scheibe mit Kennung) |
-| letzte 90 Tage (76 Scheiben) | 9 ms | 27 KB |
+| „Alles“ (1.564 Scheiben) | 57 ms | 156 KB (ein Raster 64 × 64 in fünf Bändern, Schwerpunkt je Scheibe mit Kennung) |
+| letzte 90 Tage (76 Scheiben) | 7 ms | 17 KB |
 
 Zwei Befunde der Messung:
 - **Datum je Zeile:** `@vereinsheim/lib/format` baute für jeden Aufruf einen neuen `Intl.DateTimeFormat`, etwa 70 µs.
