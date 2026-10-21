@@ -997,6 +997,15 @@ async function language(page: Page) {
   })
   await page.waitFor(`!!$("[data-result-box] [data-comparison]")`, 10_000)
   await collect()
+  // die Reiter Präzision und Lage der Analyse, mit dem Trefferbild geladen
+  for (const label of ["Präzision", "Lage"]) {
+    await page.click(`tab(${JSON.stringify(label)})`, { settle: 300 })
+    await page.waitFor(
+      `$$("[data-card]", analysis()).every((c) => !c.textContent.includes("gerechnet"))`,
+      15_000
+    )
+    await collect()
+  }
   const missing = PERIOD_TOPICS.filter((id) => !shown.has(id))
   check(
     "Fortschritt: jedes Thema der Hilfe über viele Scheiben hat ein „?“",
@@ -1456,6 +1465,132 @@ async function progress(page: Page) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 
+/**
+ * Das Trefferbild über den Zeitraum (L9) und die Reiter Präzision und Lage: Umschalten schreibt `show=target`, Zurück
+ * stellt den Verlauf her; Satz, Legende und Grundlage ohne Fachbegriffe; Form und Lage wechseln ohne Neuladen; ein
+ * Schwerpunkt wählt die Scheibe der Ablesung; am Telefon kein seitliches Scrollen und über dem Bild höchstens zwei
+ * Zeilen Bedienung. Ob die Daten Punkte oder die Dichte ergeben, steht im Detail.
+ */
+async function periodPattern(page: Page) {
+  const show = (label: string) =>
+    `$$('[role="radiogroup"][aria-label="Hauptbild"] [role="radio"]').find((b) => txt(b) === ${JSON.stringify(label)})`
+  const sight = (label: string) =>
+    `$$('[role="radiogroup"][aria-label="Sicht"] [role="radio"]').find((b) => txt(b) === ${JSON.stringify(label)})`
+  await page.viewport(1440, 1400)
+  await page.goto(`${BASE}/progress`)
+  await page.click(show("Trefferbild"), { settle: 300 })
+  const drawn = await page.waitFor(`$("[data-pattern-target]")`, 15_000)
+  const state = await page.ev<{ search: string; kind: string | null; nav: string }>(`({
+    search: location.search,
+    kind: $("[data-pattern-target]")?.dataset.patternTarget ?? null,
+    nav: txt($('nav[aria-label="Abschnitte"] a, nav[aria-label="Abschnitte"] button')),
+  })`)
+  check(
+    "Trefferbild: Umschalten schreibt show=target und zeigt das Bild",
+    drawn && state.search.includes("show=target") && state.nav === "Trefferbild",
+    state
+  )
+  const words = await page.ev<{ sentence: string; basis: string; jargon: string | null }>(`({
+    sentence: txt($("[data-pattern-sentence]")),
+    basis: txt($("[data-pattern-basis]")),
+    jargon: ${jargonIn("[data-pattern-panel]")},
+  })`)
+  check(
+    `Trefferbild: Satz, Legende und Grundlage stehen da, keine Fachbegriffe (${state.kind === "density" ? "Dichte" : "Punkte"})`,
+    words.sentence.length > 0 && words.basis.startsWith("Über ") && words.jargon === null,
+    words
+  )
+  await page.ev(`(window.__ohneNeuladen = true)`)
+  await page.click(sight("Lage"), { settle: 300 })
+  const switched = await page.ev<{ sight: string | null; kept: boolean; search: string }>(`({
+    sight: $("[data-pattern-panel]")?.dataset.patternPanel ?? null,
+    kept: window.__ohneNeuladen === true,
+    search: location.search,
+  })`)
+  check(
+    "Trefferbild: Form und Lage schalten ohne Neuladen und ohne Adresse",
+    switched.sight === "position" && switched.kept && switched.search === state.search,
+    switched
+  )
+  await page.ev(`history.back()`)
+  const back = await page.waitFor(
+    `!location.search.includes("show=target") && !$("[data-pattern-panel]") && $$("[data-card-point]").length > 0`,
+    10_000
+  )
+  check("Trefferbild: Zurück stellt den Verlauf her", back, await page.ev(`location.search`))
+
+  // Reiter Lage: ein Schwerpunkt wählt die Scheibe der Ablesung, ohne zu springen
+  await page.goto(`${BASE}/progress#position`)
+  const chart = await page.waitFor(
+    `$("[data-position-chart]") && $$("[data-position-card]").length > 1`,
+    15_000
+  )
+  if (!chart) {
+    check(
+      "Reiter Lage: ein Schwerpunkt wählt die Scheibe",
+      false,
+      "kein Bild oder unter zwei Scheiben (nicht belegt)"
+    )
+  } else {
+    const target = await page.ev<{ id: string; x: number; y: number } | null>(`(() => {
+      const readout = $("[data-card-readout]")?.dataset.cardReadout
+      const svg = $("[data-position-chart]")
+      svg.scrollIntoView({ block: "center", behavior: "instant" })
+      const box = svg.getBoundingClientRect()
+      const dot = $$("[data-position-card]").find((c) => {
+        const r = c.getBoundingClientRect()
+        return c.dataset.positionCard !== readout && r.left > box.left && r.right < box.right && r.top > box.top && r.bottom < box.bottom
+      })
+      if (!dot) return null
+      const r = dot.getBoundingClientRect()
+      return { id: dot.dataset.positionCard, x: r.left + r.width / 2, y: r.top + r.height / 2 }
+    })()`)
+    if (!target) {
+      check(
+        "Reiter Lage: ein Schwerpunkt wählt die Scheibe",
+        false,
+        "kein freier Punkt im Bild (nicht belegt)"
+      )
+    } else {
+      const scrolled = await page.ev<number>(`scrollY`)
+      await page.clickAt(target.x, target.y)
+      const chosen = await page.waitFor(
+        `$("[data-card-readout]")?.dataset.cardReadout === ${JSON.stringify(target.id)}`,
+        5_000
+      )
+      const after = await page.ev<{ readout: string | null; current: boolean; scrollY: number }>(`({
+        readout: $("[data-card-readout]")?.dataset.cardReadout ?? null,
+        current: $('[data-position-card=${JSON.stringify(target.id)}]')?.getAttribute("aria-current") === "true",
+        scrollY,
+      })`)
+      check(
+        "Reiter Lage: ein Schwerpunkt wählt die Scheibe für die Ablesung, die Seite bleibt stehen",
+        chosen && after.current && Math.abs(after.scrollY - scrolled) < 4,
+        { target: target.id, ...after, before: scrolled }
+      )
+    }
+  }
+
+  // Telefon: kein seitliches Scrollen, höchstens zwei Zeilen Bedienung über dem Bild
+  await page.viewport(390, 844)
+  await page.goto(`${BASE}/progress?show=target`)
+  await page.waitFor(`$("[data-pattern-target]")`, 15_000)
+  const phone = await page.ev<{ overflow: number; rows: number }>(`(() => {
+    const image = $("[data-pattern-target]") ?? $("[data-pattern-placeholder]")
+    const top = image.getBoundingClientRect().top
+    const groups = $$('[role="radiogroup"]').filter((g) => visible(g) && g.getBoundingClientRect().bottom <= top)
+      .filter((g) => g.closest("[data-section='history']"))
+    const rows = new Set(groups.map((g) => Math.round(g.getBoundingClientRect().top / 8)))
+    return { overflow: document.documentElement.scrollWidth - innerWidth, rows: rows.size }
+  })()`)
+  check(
+    "Trefferbild am Telefon (390 px): kein seitliches Scrollen, über dem Bild höchstens zwei Zeilen Bedienung",
+    phone.overflow <= 0 && phone.rows <= 2,
+    phone
+  )
+  await page.viewport(1440, 1400)
+}
+
 async function main() {
   let server: ChildProcess | null = null
   let browser: Browser | null = null
@@ -1485,6 +1620,7 @@ async function main() {
     await section("Blättern", () => paging(page, href))
     await section("Rückwege", () => backPaths(page))
     await section("Fortschritt", () => progress(page))
+    await section("Trefferbild über den Zeitraum", () => periodPattern(page))
     await section("Eine Scheibe sagt, was sie zeigt", () => singleCardHints(page, href))
     await section("Sprache und Hilfe", () => language(page))
     await section("Offen und Leiste", () => openAndBar(page))
