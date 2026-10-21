@@ -15,9 +15,10 @@ import {
   periodSideName,
   pictureLegend,
   positionValue,
-  positionVerdict,
+  positionClear,
   problemText,
-  rowVerdict,
+  tableNote,
+  goldSide,
 } from "./words"
 
 const TZ = "Europe/Berlin"
@@ -58,11 +59,19 @@ const model = (over: Partial<CompareModel> = {}): CompareModel => ({
   a: {
     name: "Letzte 90 Tage",
     at: "in den letzten 90 Tagen",
+    short: "90 Tage",
     cards: 10,
     shots: 398,
     withoutPosition: 0,
   },
-  b: { name: "Zeitraum davor", at: "im Zeitraum davor", cards: 8, shots: 300, withoutPosition: 0 },
+  b: {
+    name: "Zeitraum davor",
+    at: "im Zeitraum davor",
+    short: "davor",
+    cards: 8,
+    shots: 300,
+    withoutPosition: 0,
+  },
   shared: 0,
   result: row("result.decimalMean", "higher", comparison(0.12, "higher")),
   spread: row("group.sigma", "lower", comparison(0, "unclear")),
@@ -78,6 +87,7 @@ const model = (over: Partial<CompareModel> = {}): CompareModel => ({
   picture: {
     style: "dots",
     halfUm: 1000,
+    focus: null,
     a: { points: [[0, 0]], center: null },
     b: { points: [], center: null },
   },
@@ -91,6 +101,7 @@ describe("Namen der Seiten", () => {
     expect(periodSideName({ type: "rolling", days: 90 }, range("Letzte 90 Tage"))).toEqual({
       name: "Letzte 90 Tage",
       at: "in den letzten 90 Tagen",
+      short: "90 Tage",
     })
     expect(periodSideName({ type: "rolling", days: 182 }, range("Letzte 6 Monate")).at).toBe(
       "in den letzten 6 Monaten"
@@ -101,6 +112,7 @@ describe("Namen der Seiten", () => {
     expect(periodSideName("previous", range("egal"))).toEqual({
       name: "Zeitraum davor",
       at: "im Zeitraum davor",
+      short: "davor",
     })
     expect(periodSideName({ type: "named", id: "lm" }, range("Vorbereitung LM")).at).toBe(
       "in „Vorbereitung LM“"
@@ -113,6 +125,20 @@ describe("Namen der Seiten", () => {
     ).toBe("vom 01.07.2026 bis 30.09.2026")
     expect(periodSideName({ type: "all" }, range("Alles")).at).toBe("in allem")
     expect(KIND_NAMES.a.at).toBe("im Wettkampf")
+    // kurz über den Spalten
+    expect(
+      periodSideName(
+        { type: "free", from: "2026-07-01", to: "2026-09-30" },
+        range("01.07.2026 – 30.09.2026")
+      ).short
+    ).toBe("01.07.–30.09.")
+    expect(periodSideName({ type: "rolling", days: 182 }, range("Letzte 6 Monate")).short).toBe(
+      "6 Monate"
+    )
+    expect(periodSideName({ type: "rolling", days: 365 }, range("Letzte 12 Monate")).at).toBe(
+      "in den letzten 12 Monaten"
+    )
+    expect(KIND_NAMES.b.short).toBe("Training")
   })
 
   it("Scheiben: Wochentag, Tag und Ergebnis im Chip, der Tag im Satz, am selben Tag mit Uhrzeit", () => {
@@ -122,13 +148,14 @@ describe("Namen der Seiten", () => {
       { startedAtMs: Date.UTC(2026, 9, 2, 17), total: "365,1" },
       TZ
     )
-    expect(names.a).toEqual({ name: "Fr 09.10., 362,4", at: "am 09.10." })
+    expect(names.a).toEqual({ name: "Fr 09.10., 362,4", at: "am 09.10.", short: "09.10." })
     const same = cardSideNames(
       { startedAtMs: friday, total: null },
       { startedAtMs: friday + 3_600_000, total: null },
       TZ
     )
     expect(same.a.at).toBe("am 09.10. um 19:42")
+    expect(same.a.short).toBe("19:42")
     expect(same.b.name).toBe("Fr 09.10.")
   })
 })
@@ -213,37 +240,34 @@ describe("der Satz", () => {
 })
 
 describe("Zeilen, Grundlage, Bild", () => {
-  it("Urteil je Zeile nach der Richtung der Kennzahl", () => {
-    const m = model()
-    expect(rowVerdict(row("result.decimalMean", "higher", comparison(0.2, "higher")), m)).toBe(
-      "Klar besser: Letzte 90 Tage."
-    )
-    expect(rowVerdict(row("group.sigma", "lower", comparison(0.2, "higher")), m)).toBe(
-      "Klar besser: Zeitraum davor."
-    )
-    expect(rowVerdict(row("time.intervalMedian", "none", comparison(5, "higher")), m)).toBe(
-      "Klar höher: Letzte 90 Tage."
-    )
-    const dated = { ...m, a: { ...m.a, name: "Fr 02.10." } }
-    expect(rowVerdict(row("result.decimalMean", "higher", comparison(0.2, "higher")), dated)).toBe(
-      "Klar besser: Fr 02.10."
-    )
-    expect(rowVerdict(row("group.sigma", "lower", comparison(0, "unclear")), m)).toBe(
-      "Kein klarer Unterschied."
-    )
-    expect(rowVerdict(row("group.sigma", "lower", null), { ...m, unit: "shot" })).toBe(
-      "Zu wenige Schüsse."
-    )
+  it("Gold für den klar besseren Wert nach der Richtung der Kennzahl", () => {
+    expect(goldSide(row("result.decimalMean", "higher", comparison(0.2, "higher")))).toBe("a")
+    expect(goldSide(row("result.decimalMean", "higher", comparison(-0.2, "lower")))).toBe("b")
+    // σ: kleiner ist besser, A höher heißt B besser
+    expect(goldSide(row("group.sigma", "lower", comparison(0.2, "higher")))).toBe("b")
+    expect(goldSide(row("time.intervalMedian", "none", comparison(5, "higher")))).toBeNull()
+    expect(goldSide(row("group.sigma", "lower", comparison(0, "unclear")))).toBeNull()
+    expect(goldSide(row("group.sigma", "lower", comparison(0.3, "unclear", false)))).toBeNull()
+    expect(goldSide(row("group.sigma", "lower", null))).toBeNull()
   })
 
-  it("Lage: Abstand und Urteil", () => {
+  it("Lage: Abstand, Gold nur bei klarem Versatz", () => {
     expect(positionValue(model())).toBe("0,4 mm auseinander")
-    expect(positionVerdict(model())).toBe("Kein klarer Unterschied.")
-    const shifted = model({
-      position: { ...model().position!, shiftUm: { xUm: 1000, yUm: 0 }, verdict: "shifted" },
-    })
-    expect(positionVerdict(shifted)).toBe("Klar versetzt: in den letzten 90 Tagen weiter rechts.")
-    expect(positionVerdict(model({ position: null }))).toBe("Zu wenige Scheiben.")
+    expect(positionClear(model())).toBe(false)
+    expect(positionClear(model({ position: { ...model().position!, verdict: "shifted" } }))).toBe(
+      true
+    )
+    expect(positionClear(model({ position: null }))).toBe(false)
+  })
+
+  it("die Zeile unter der Tabelle", () => {
+    expect(tableNote(model())).toBe(
+      "Gold heißt: ein klarer Unterschied, dieser Wert ist besser. Sonst ist kein Unterschied belegt."
+    )
+    const few = row("result.decimalMean", "higher", comparison(0.3, "unclear", false))
+    expect(tableNote(model({ result: few, unit: "shot" }))).toBe(
+      "Für ein Urteil sind es zu wenige Schüsse."
+    )
   })
 
   it("„–“ mit Grund", () => {
@@ -273,7 +297,13 @@ describe("Zeilen, Grundlage, Bild", () => {
     const grid = { size: 1, cells: [0], levels: [0, 0, 0, 0, 0, 0] }
     const center = { xUm: 0, yUm: 0 }
     expect(
-      pictureLegend({ style: "outlines", halfUm: 1, a: { grid, center }, b: { grid, center } })
+      pictureLegend({
+        style: "outlines",
+        halfUm: 1,
+        focus: { xUm: 0, yUm: 0, radiusUm: 1 },
+        a: { grid, center },
+        b: { grid, center },
+      })
     ).toBe("Durchgezogen: die Hälfte der Schüsse. Gestrichelt: 9 von 10.")
     expect(pictureLegend(model().picture)).toBe(
       "Jeder Punkt ist ein Schuss. Der Ringwert steht in den Zahlen."
@@ -282,6 +312,7 @@ describe("Zeilen, Grundlage, Bild", () => {
       pictureLegend({
         style: "dots",
         halfUm: 1,
+        focus: null,
         a: { points: [], center: null },
         b: { points: [], center: null },
       })
@@ -300,8 +331,7 @@ describe("Zeilen, Grundlage, Bild", () => {
     })
     const texts = [
       ...Object.values(compareSentence(m)).filter((t): t is string => t !== null),
-      rowVerdict(m.spread, m),
-      positionVerdict(m),
+      tableNote(m),
       basisText(m),
       pictureLegend(m.picture),
       problemText("families"),

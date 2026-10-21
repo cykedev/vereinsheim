@@ -37,30 +37,32 @@ const ended = (text: string) => (text.endsWith(".") ? text : `${text}.`)
 
 /** Seiten bei Wettkampf und Training: A ist Wettkampf, B Training */
 export const KIND_NAMES: { a: SideName; b: SideName } = {
-  a: { name: "Wettkampf", at: "im Wettkampf" },
-  b: { name: "Training", at: "im Training" },
+  a: { name: "Wettkampf", at: "im Wettkampf", short: "Wettkampf" },
+  b: { name: "Training", at: "im Training", short: "Training" },
 }
 
 /** ein Zeitraum als Seite: der Name wie im Fortschritt, im Satz mit Präposition */
 export function periodSideName(choice: PeriodChoice | "previous", range: DateRange): SideName {
-  if (choice === "previous") return { name: PREVIOUS_LABEL, at: "im Zeitraum davor" }
+  if (choice === "previous")
+    return { name: PREVIOUS_LABEL, at: "im Zeitraum davor", short: "davor" }
   switch (choice.type) {
-    case "rolling":
+    case "rolling": {
+      const short =
+        choice.days === 182 ? "6 Monate" : choice.days === 365 ? "12 Monate" : `${choice.days} Tage`
+      // im Dativ: „Tage“ zu „Tagen“, „Monate“ zu „Monaten“
+      return { name: range.label, at: `in den letzten ${short.replace(/e$/, "en")}`, short }
+    }
+    case "all":
+      return { name: range.label, at: "in allem", short: range.label }
+    case "named":
+      return { name: range.label, at: `in „${range.label}“`, short: range.label }
+    case "free":
       return {
         name: range.label,
-        at:
-          choice.days === 182
-            ? "in den letzten 6 Monaten"
-            : choice.days === 365
-              ? "in den letzten 12 Monaten"
-              : `in den letzten ${choice.days} Tagen`,
+        at: `vom ${range.label.replace(" – ", " bis ")}`,
+        // „01.07.2026 – 30.09.2026“ kurz „01.07.–30.09.“
+        short: range.label.replace(/(\d{2}\.\d{2}\.)\d{4}/g, "$1").replace(" – ", "–"),
       }
-    case "all":
-      return { name: range.label, at: "in allem" }
-    case "named":
-      return { name: range.label, at: `in „${range.label}“` }
-    case "free":
-      return { name: range.label, at: `vom ${range.label.replace(" – ", " bis ")}` }
   }
 }
 
@@ -78,11 +80,11 @@ export function cardSideNames(
   const name = (card: typeof a): SideName => {
     const at = new Date(card.startedAtMs)
     const when = formatWeekdayDay(at, timeZone)
+    const time = formatTimeOfDay(at, timeZone)
     return {
       name: card.total === null ? when : `${when}, ${card.total}`,
-      at: sameDay
-        ? `am ${day(card.startedAtMs)} um ${formatTimeOfDay(at, timeZone)}`
-        : `am ${day(card.startedAtMs)}`,
+      at: sameDay ? `am ${day(card.startedAtMs)} um ${time}` : `am ${day(card.startedAtMs)}`,
+      short: sameDay ? time : day(card.startedAtMs),
     }
   }
   return { a: name(a), b: name(b) }
@@ -141,29 +143,32 @@ export function compareSentence(model: CompareModel): { lead: string; more: stri
   }
 }
 
-/** das Urteil unter einer Zeile in Worten: wer klar besser ist, sonst kein klarer Unterschied oder zu wenige */
-export function rowVerdict(row: CompareRow, model: CompareModel): string {
+/**
+ * welche Seite eine Zeile in Gold zeigt: die mit dem klar besseren Wert (Test und Mittel zeigen dieselbe Richtung); ohne
+ * klaren Unterschied oder bei einer Zahl ohne Richtung (Tempo) keine
+ */
+export function goldSide(row: CompareRow): "a" | "b" | null {
   const c = row.comparison
-  if (!c || c.test === null) return `Zu wenige ${unitWord(model)}.`
-  if (c.verdict === "unclear") return "Kein klarer Unterschied."
+  if (!c || c.test === null || c.verdict === "unclear" || row.better === "none") return null
   const aHigher = c.verdict === "higher"
-  if (row.better === "none") return ended(`Klar höher: ${(aHigher ? model.a : model.b).name}`)
-  const aBetter = aHigher === (row.better === "higher")
-  return ended(`Klar besser: ${(aBetter ? model.a : model.b).name}`)
+  return aHigher === (row.better === "higher") ? "a" : "b"
+}
+
+/** liegen die Mitten klar auseinander? Dann steht der Abstand in Gold */
+export const positionClear = (model: Pick<CompareModel, "position">) =>
+  model.position?.verdict === "shifted"
+
+/** die Zeile unter der Tabelle: was Gold heißt, ohne Urteil warum keins */
+export function tableNote(model: CompareModel): string {
+  const c = model.result.comparison
+  if (!c || c.test === null) return `Für ein Urteil sind es zu wenige ${unitWord(model)}.`
+  return "Gold heißt: ein klarer Unterschied, dieser Wert ist besser. Sonst ist kein Unterschied belegt."
 }
 
 /** der Abstand der Mitten als Wert der Zeile Lage („1,1 mm auseinander“); ohne Lage null */
 export function positionValue(model: CompareModel): string | null {
   const p = model.position
   return p ? `${formatValue(p.distanceUm / 1000, 1)} mm auseinander` : null
-}
-
-/** das Urteil unter der Zeile Lage */
-export function positionVerdict(model: CompareModel): string {
-  const p = model.position
-  if (!p || p.verdict === "few") return `Zu wenige ${unitWord(model)}.`
-  if (p.verdict === "none") return "Kein klarer Unterschied."
-  return `Klar versetzt: ${model.a.at} weiter ${directionName(p.shiftUm)}.`
 }
 
 /** warum eine Zeile ohne Wert ist („–“ mit Grund) */

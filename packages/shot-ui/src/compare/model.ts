@@ -30,10 +30,11 @@ import type { CompareType } from "../nav/routes"
 import { itemValues, type PeriodItem } from "../period/item"
 import { PERIOD_TILE_KEYS } from "../period/model"
 
-/** Name einer Seite: im Chip und im Satz („Letzte 90 Tage“, „in den letzten 90 Tagen“) */
+/** Name einer Seite: im Chip, im Satz und kurz über der Spalte („Letzte 90 Tage“, „in den letzten 90 Tagen“, „90 Tage“) */
 export interface SideName {
   name: string
   at: string
+  short: string
 }
 
 export interface CompareSide extends SideName {

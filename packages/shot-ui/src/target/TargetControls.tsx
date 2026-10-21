@@ -94,7 +94,11 @@ const LAYER_LABELS: Readonly<Record<Layer, string>> = {
   numbers: "Nummern",
 }
 
-function CornerButton({
+/** das Zeichen der Lupe: auf die Gruppe zoomen und zurück (auch beim Vergleichen) */
+export const ZOOM_ICON = ICONS.zoom
+
+/** ein runder Knopf in einer Ecke eines Bilds der Scheibe (auch das Bild beim Vergleichen) */
+export function CornerButton({
   label,
   pressed,
   onPress,

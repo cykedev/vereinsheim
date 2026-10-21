@@ -1617,8 +1617,8 @@ const sheetChoice = (label: string) =>
   `$$("dialog[open] label").find((l) => txt(l).startsWith(${JSON.stringify(label)}))`
 
 /**
- * Seite Vergleichen: der Weg aus dem Fortschritt, zwei Zeiträume mit Bild und Zeilen, „Alle Kennzahlen“, das Blatt für
- * B, eine alte Adresse mit `compare=`, Wettkampf und Training, zwei Scheiben von der Seite einer Scheibe mit dem Blatt
+ * Seite Vergleichen: der Umschalter und der Weg aus dem Fortschritt, zwei Zeiträume mit Bild, Lupe und Tabelle, das
+ * Blatt für B, eine alte Adresse mit `compare=`, Wettkampf und Training, zwei Scheiben von der Seite einer Scheibe mit dem Blatt
  * der Scheiben, und jedes Thema der Hilfe der Seite hat ein „?“.
  */
 async function compare(page: Page, href: string) {
@@ -1629,6 +1629,14 @@ async function compare(page: Page, href: string) {
   }
   await page.viewport(1280, 900)
   await page.goto(`${BASE}/progress`)
+  const toCompare = await page.ev<string | null>(
+    `$$("[data-progress-switch] a").find((a) => txt(a) === "Vergleichen")?.getAttribute("href") ?? null`
+  )
+  check(
+    "Fortschritt: Umschalter „Zeitraum · Vergleichen“ führt auf die Seite",
+    !!toCompare?.startsWith("/compare"),
+    toCompare ?? "kein Umschalter"
+  )
   const link = await page.ev<string | null>(
     `$("[data-compare-link]")?.getAttribute("href") ?? null`
   )
@@ -1643,21 +1651,40 @@ async function compare(page: Page, href: string) {
   } else await page.goto(`${BASE}/compare`)
   const periods = await page.ev<CompareState>(compareState())
   check(
-    "Zwei Zeiträume: Satz, Bild, drei Zeilen, keine Fachbegriffe",
+    "Zwei Zeiträume: Satz, Bild, alle Zahlen in einer Tabelle, keine Fachbegriffe",
     periods.url.startsWith("/compare") &&
       periods.sentence.length > 0 &&
       (periods.picture === "outlines" || periods.picture === "dots") &&
-      periods.rows === 3 &&
+      periods.rows >= 7 &&
       periods.jargon === null,
     periods
   )
   await collect()
-  await page.click(`$("[data-compare-metrics] summary")`, { settle: 200 })
-  const metrics = await page.ev<number>(
-    `$("[data-compare-metrics]").open ? $$("[data-compare-metric]").length : 0`
+  const before = await page.ev<string | null>(
+    `$("[data-compare-picture]")?.getAttribute("viewBox") ?? null`
   )
-  check("Alle Kennzahlen klappen auf", metrics >= 6, metrics)
-  await collect()
+  const pressed = await page.ev<string | null>(
+    `$('[aria-label="Auf Gruppe zoomen"]')?.getAttribute("aria-pressed") ?? null`
+  )
+  await page.click(`$('[aria-label="Auf Gruppe zoomen"]')`, { settle: 200 })
+  const zoomed = await page.waitFor(
+    `$("[data-compare-picture]")?.getAttribute("viewBox") !== ${JSON.stringify(before)}`,
+    5_000
+  )
+  check(
+    "Bild: öffnet auf der Gruppe, die Lupe zeigt die ganze Scheibe",
+    pressed === "true" && zoomed,
+    {
+      before,
+      pressed,
+    }
+  )
+  const switcher = await page.ev<string>(`txt($("[data-progress-switch] [aria-current=page]"))`)
+  check(
+    "Umschalter oben: „Vergleichen“ ist die gezeigte Seite",
+    switcher === "Vergleichen",
+    switcher
+  )
 
   await page.click(`$('[data-compare-chip="b"]')`, { settle: 300 })
   const sheet = await page.ev<string>(`txt($("dialog[open] h2, dialog[open] [id]"))`)
@@ -1676,7 +1703,7 @@ async function compare(page: Page, href: string) {
 
   await page.goto(`${BASE}/compare?type=kind`)
   const kind = await page.ev<CompareState>(compareState())
-  const withData = kind.rows === 3 && kind.sentence.length > 0
+  const withData = kind.rows >= 7 && kind.sentence.length > 0
   check(
     `Wettkampf und Training: Satz und Zeilen oder der Hinweis ohne Wettkampf${withData ? "" : " (ohne Wettkampf in den Daten: nicht belegt)"}`,
     (withData || /keinen Wettkampf|kein Training/.test(kind.sentence)) && kind.jargon === null,
@@ -1698,8 +1725,8 @@ async function compare(page: Page, href: string) {
     await page.waitFor(`!!$("[data-compare-sentence]") || !!$("[data-compare-problem]")`, 15_000)
     const cards = await page.ev<CompareState>(compareState())
     check(
-      "Zwei Scheiben: Punkte, drei Zeilen, keine Fachbegriffe",
-      cards.picture === "dots" && cards.rows === 3 && cards.jargon === null,
+      "Zwei Scheiben: Punkte, alle Zahlen in einer Tabelle, keine Fachbegriffe",
+      cards.picture === "dots" && cards.rows >= 7 && cards.jargon === null,
       cards
     )
     await collect()

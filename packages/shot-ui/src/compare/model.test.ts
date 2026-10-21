@@ -105,7 +105,10 @@ describe("cardCompareModel", () => {
     a,
     b,
     scoring: "decimal",
-    names: { a: { name: "A", at: "am 29.09." }, b: { name: "B", at: "am 28.09." } },
+    names: {
+      a: { name: "A", at: "am 29.09.", short: "29.09." },
+      b: { name: "B", at: "am 28.09.", short: "28.09." },
+    },
   })
 
   it("Schuss für Schuss: Einheit der Schuss, die Werte der Scheiben", () => {

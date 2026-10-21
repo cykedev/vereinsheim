@@ -6,7 +6,8 @@ import { comparePicture } from "@vereinsheim/shot-core/analysis"
 import type { Point } from "@vereinsheim/shot-core/geometry"
 import { LG_10M } from "@vereinsheim/shot-core/targets"
 
-import { ComparePicture } from "./ComparePicture"
+import { targetView } from "../geometry"
+import { ComparePicture, focusView, SideLegend } from "./ComparePicture"
 
 /** gleichmäßig auf Ringen verteilte Punkte um (x | y), ohne Zufall */
 const ring = (n: number, base: Point = { xUm: 0, yUm: 0 }): Point[] =>
@@ -47,14 +48,31 @@ describe("ComparePicture", () => {
     )
   })
 
-  it("Ringe und Ringzahlen über den Seiten, die Mitten darüber mit A und B", () => {
+  it("Ringe und Ringzahlen über den Seiten, die Mitten darüber in der Farbe ihrer Seite, ohne Buchstaben", () => {
     const html = render(ring(12), ring(8))
     const lastShot = html.lastIndexOf("data-compare-shot")
     expect(html.indexOf("data-ring=")).toBeGreaterThan(lastShot)
     expect(html.indexOf('data-compare-center="b"')).toBeGreaterThan(html.lastIndexOf("data-ring="))
-    expect(html).toMatch(/>A<\/text>/)
-    expect(html).toMatch(/>B<\/text>/)
+    expect(html).not.toMatch(/>[AB]<\/text>/)
     expect(html).toContain('aria-label="Bild beider Seiten: Satz"')
+  })
+
+  it("öffnet auf der Gruppe, die Lupe ist gedrückt; ohne Gruppe die ganze Scheibe", () => {
+    const picture = comparePicture(ring(12), ring(8))
+    const html = render(ring(12), ring(8))
+    const view = focusView(LG_10M, picture.focus)
+    expect(html).toContain(`viewBox="${view.x} ${view.y} ${view.w} ${view.w}"`)
+    expect(view.w).toBeLessThan(targetView(LG_10M).w)
+    expect(html).toMatch(/aria-label="Auf Gruppe zoomen" aria-pressed="true"/)
+    expect(focusView(LG_10M, null)).toEqual(targetView(LG_10M))
+  })
+
+  it("die Legende nennt die Seiten mit Namen", () => {
+    const html = renderToStaticMarkup(
+      createElement(SideLegend, { a: "Letzte 6 Monate", b: "Zeitraum davor" })
+    )
+    expect(html).toContain("Letzte 6 Monate")
+    expect(html).toContain("var(--compare-b)")
   })
 
   it("ohne Punkte auf einer Seite keine Mitte für sie", () => {

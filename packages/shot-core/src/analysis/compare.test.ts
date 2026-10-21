@@ -150,6 +150,18 @@ describe("comparePicture (C2, C3)", () => {
     expect(Number.isInteger(picture.a.center?.xUm)).toBe(true)
   })
 
+  it("die Gruppe: bei Punkten bis zum weitesten, bei Umrissen bis 95 von 100 um die Mitte aller", () => {
+    const dots = comparePicture(CROSS, shifted(CROSS, 2000))
+    // Mitte (1 | 0) mm, der weiteste Punkt (−1 | 0) bzw. (3 | 0) mm liegt 2 mm davon
+    expect(dots.focus).toEqual({ xUm: 1000, yUm: 0, radiusUm: 2000 })
+    const far = [...normalPoints(59, 1500, 1), { xUm: 40_000, yUm: 0 }]
+    const outlines = comparePicture(far, normalPoints(60, 1500, 2))
+    expect(outlines.style).toBe("outlines")
+    // ein einzelner Abreißer bei 40 mm zieht den Ausschnitt nicht auf
+    expect(outlines.focus!.radiusUm).toBeLessThan(5000)
+    expect(comparePicture([], []).focus).toBeNull()
+  })
+
   it("eine leere Seite: Punkte, ihre Mitte null", () => {
     const picture = comparePicture([], CROSS)
     expect(picture.style).toBe("dots")

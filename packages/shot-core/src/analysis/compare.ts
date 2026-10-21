@@ -12,6 +12,7 @@ import {
   type MetricShot,
   type Scoring,
 } from "../metrics"
+import { quantile } from "../stats"
 import { densityGrid, patternHalf, type DensityGrid } from "./density"
 import { PATTERN_DENSITY_FROM } from "./pattern"
 import { compareSamples, MIN_CARDS_PER_SIDE, type PeriodComparison } from "./period"
@@ -151,16 +152,26 @@ const PICTURE_UM = 10
  * das Bild zweier Seiten: ab 50 Schuss je Seite zwei Umrisse aus der Dichte (Raster wie `periodPattern`), sonst jeder
  * Schuss als Punkt in der Farbe seiner Seite; dazu die beiden Mitten auf ganze µm
  */
+/** die Gruppe beider Seiten als Kreis: ihre gemeinsame Mitte und der Radius, den das Bild beim Zoomen zeigt */
+export interface PictureFocus {
+  xUm: number
+  yUm: number
+  radiusUm: number
+}
+
 export type ComparePicture =
   | {
       style: "outlines"
       halfUm: number
+      focus: PictureFocus
       a: { grid: DensityGrid; center: Point }
       b: { grid: DensityGrid; center: Point }
     }
   | {
       style: "dots"
       halfUm: number
+      /** null ohne Punkte */
+      focus: PictureFocus | null
       /** jeder Punkt als [x, y] in 10 µm */
       a: { points: [number, number][]; center: Point | null }
       b: { points: [number, number][]; center: Point | null }
@@ -178,6 +189,21 @@ const dot = (p: Point): [number, number] => [
 ]
 
 /**
+ * die Gruppe beider Seiten: um die Mitte aller Punkte bis zum Anteil `share` der Abstände (bei Umrissen 95 von 100, ein
+ * Abreißer macht die Gruppe nicht klein; bei Punkten alle, jeder Schuss steht im Bild); ohne Punkte null
+ */
+function focusOf(points: readonly Point[], share: number): PictureFocus | null {
+  const center = centroid(points)
+  if (!center) return null
+  const radius = quantile(distancesTo(points, center), share) as number
+  return {
+    xUm: Math.round(center.xUm) || 0,
+    yUm: Math.round(center.yUm) || 0,
+    radiusUm: Math.round(radius),
+  }
+}
+
+/**
  * Das Bild zweier Seiten für den Browser (C2, C3): Haben beide Seiten mindestens 50 Punkte (`PATTERN_DENSITY_FROM`),
  * zwei Dichteraster auf einem gemeinsamen Ausschnitt (`patternHalf` über beide), aus denen die Umrisse der Hälfte und
  * von 9 von 10 Schüssen entstehen; sonst die Punkte selbst, mit einem Ausschnitt um den weitesten Punkt beider Seiten
@@ -189,6 +215,7 @@ export function comparePicture(a: readonly Point[], b: readonly Point[]): Compar
     return {
       style: "outlines",
       halfUm,
+      focus: focusOf([...a, ...b], 0.95) as PictureFocus,
       a: { grid: densityGrid(a, halfUm), center: roundCenter(a) as Point },
       b: { grid: densityGrid(b, halfUm), center: roundCenter(b) as Point },
     }
@@ -199,6 +226,7 @@ export function comparePicture(a: readonly Point[], b: readonly Point[]): Compar
   return {
     style: "dots",
     halfUm: Math.max(1000, farthest * 1.15 + 500),
+    focus: focusOf([...a, ...b], 1),
     a: { points: a.map(dot), center: roundCenter(a) },
     b: { points: b.map(dot), center: roundCenter(b) },
   }

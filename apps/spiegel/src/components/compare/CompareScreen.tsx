@@ -4,14 +4,14 @@ import { useRouter } from "next/navigation"
 import { useCallback, useState, useTransition } from "react"
 
 import { TARGETS } from "@vereinsheim/shot-core/targets"
-import { helpForMetric } from "@vereinsheim/shot-help/lookup"
 import { CardChoiceSheet, PeriodChoiceSheet } from "@vereinsheim/shot-ui/compare/ChoiceSheets"
 import { CompareControls, type CompareSideKey } from "@vereinsheim/shot-ui/compare/CompareControls"
-import { ComparePicture } from "@vereinsheim/shot-ui/compare/ComparePicture"
-import { CompareMetrics, CompareRows } from "@vereinsheim/shot-ui/compare/CompareRows"
+import { ComparePicture, SideLegend } from "@vereinsheim/shot-ui/compare/ComparePicture"
+import { CompareTable } from "@vereinsheim/shot-ui/compare/CompareTable"
 import { basisText, compareSentence, pictureLegend } from "@vereinsheim/shot-ui/compare/words"
 import { HelpButton } from "@vereinsheim/shot-ui/help/HelpButton"
 import { CardContextBar } from "@vereinsheim/shot-ui/nav/CardContextBar"
+import { ProgressSwitch } from "@vereinsheim/shot-ui/nav/ProgressSwitch"
 import {
   DEFAULT_PROGRESS,
   urlFromRoute,
@@ -25,12 +25,11 @@ import { cn } from "@vereinsheim/lib/utils"
 import type { ComparePageData } from "@/lib/compare"
 import type { PageContext } from "@/lib/page-context"
 
-/** der Rückweg: bei zwei Scheiben zur Scheibe A, sonst zum Fortschritt der Familie */
-function backOf(data: ComparePageData): { route: Route; text: string } {
+/** der Rückweg zur Scheibe A, wenn zwei Scheiben verglichen werden; sonst führt der Umschalter oben zurück */
+function backToCard(data: ComparePageData): Route | null {
   const query = data.query
-  if (query.type === "cards" && query.a)
-    return {
-      route: {
+  return query.type === "cards" && query.a
+    ? {
         page: "card",
         id: query.a,
         origin: null,
@@ -38,13 +37,8 @@ function backOf(data: ComparePageData): { route: Route; text: string } {
         shot: null,
         scoring: null,
         anchor: null,
-      },
-      text: "Zur Scheibe",
-    }
-  return {
-    route: { page: "progress", query: { ...DEFAULT_PROGRESS, family: data.family }, section: null },
-    text: "Zum Fortschritt",
-  }
+      }
+    : null
 }
 
 /**
@@ -69,21 +63,26 @@ export function CompareScreen({
     startTransition(() =>
       router.push(urlFromRoute({ page: "compare", query: next }), { scroll: false })
     )
-  const back = backOf(data)
+  const back = backToCard(data)
   const target = TARGETS[data.targetId]
   const sentence = model ? compareSentence(model) : null
   const close = () => setPicking(null)
 
   return (
     <Page>
-      <CardContextBar
-        back={back.route}
-        backText={back.text}
-        prev={null}
-        next={null}
-        paging={false}
-      />
+      {back && (
+        <CardContextBar back={back} backText="Zur Scheibe" prev={null} next={null} paging={false} />
+      )}
       <div className="mx-auto grid w-full max-w-[40rem] gap-5">
+        <ProgressSwitch
+          current="compare"
+          progress={{
+            page: "progress",
+            query: { ...DEFAULT_PROGRESS, family: data.family },
+            section: null,
+          }}
+          compare={{ page: "compare", query }}
+        />
         <div className="flex items-center gap-2">
           <h1 className="font-display text-[1.7rem] leading-tight font-bold tracking-tight">
             Vergleichen
@@ -133,21 +132,15 @@ export function CompareScreen({
                       target={target}
                       label={sentence?.lead ?? ""}
                     />
+                    <SideLegend a={model.a.name} b={model.b.name} />
                     <p className="text-[13px] text-muted-foreground">
                       {pictureLegend(model.picture)}
                     </p>
                   </div>
-                  <CompareRows model={model} onHelp={onHelp} />
+                  <CompareTable model={model} onHelp={onHelp} />
                   <p data-compare-basis className="text-[13px] text-muted-foreground">
                     {basisText(model)}
                   </p>
-                  <CompareMetrics
-                    model={model}
-                    onHelp={(key) => {
-                      const id = helpForMetric(key)?.id
-                      if (id) onHelp(id)
-                    }}
-                  />
                 </>
               )}
             </>

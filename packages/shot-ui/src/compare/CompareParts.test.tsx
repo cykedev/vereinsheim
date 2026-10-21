@@ -7,7 +7,7 @@ import type { PeriodComparison } from "@vereinsheim/shot-core/analysis"
 import { DEFAULT_COMPARE } from "../nav/routes"
 import { CardChoiceSheet, PeriodChoiceSheet, type CardChoice } from "./ChoiceSheets"
 import { CompareControls } from "./CompareControls"
-import { CompareMetrics, CompareRows } from "./CompareRows"
+import { CompareTable } from "./CompareTable"
 import type { CompareModel, CompareRow } from "./model"
 
 const TZ = "Europe/Berlin"
@@ -41,11 +41,19 @@ const MODEL: CompareModel = {
   a: {
     name: "Letzte 90 Tage",
     at: "in den letzten 90 Tagen",
+    short: "90 Tage",
     cards: 10,
     shots: 400,
     withoutPosition: 0,
   },
-  b: { name: "Zeitraum davor", at: "im Zeitraum davor", cards: 8, shots: 320, withoutPosition: 0 },
+  b: {
+    name: "Zeitraum davor",
+    at: "im Zeitraum davor",
+    short: "davor",
+    cards: 8,
+    shots: 320,
+    withoutPosition: 0,
+  },
   shared: 0,
   result: row("result.decimalMean", 9.2),
   spread: row("group.sigma", null, "mm"),
@@ -54,6 +62,7 @@ const MODEL: CompareModel = {
   picture: {
     style: "dots",
     halfUm: 1000,
+    focus: null,
     a: { points: [], center: null },
     b: { points: [], center: null },
   },
@@ -107,37 +116,29 @@ describe("CompareControls", () => {
   })
 })
 
-describe("CompareRows und CompareMetrics", () => {
-  it("drei Zeilen, das Urteil darunter, „–“ mit Grund, die Hilfe des Vergleichs", () => {
-    const html = renderToStaticMarkup(h(CompareRows, { model: MODEL, onHelp: noop }))
+describe("CompareTable", () => {
+  it("alle Zahlen in einer Tabelle, Spalten mit den kurzen Namen, Gold für den klar besseren Wert", () => {
+    const html = renderToStaticMarkup(h(CompareTable, { model: MODEL, onHelp: noop }))
     expect(html).toContain('data-compare-row="result.decimalMean"')
     expect(html).toContain('data-compare-row="group.sigma"')
     expect(html).toContain('data-compare-row="position"')
-    expect(html).toContain("Klar besser: Letzte 90 Tage.")
+    expect(html).toContain(">90 Tage<")
+    expect(html).toContain(">davor<")
+    // Ø je Schuss: A klar höher, also A in Gold
+    expect(html).toMatch(/data-compare-row="result.decimalMean".*?data-gold="true"[^>]*>9,20/)
+    expect(html).toContain("(klar besser)")
     expect(html).toContain('title="Ohne Lage der Schüsse."')
     expect(html).toContain('data-help="zeitraum-vergleich"')
     expect(html).toContain('data-help="lage-vergleich"')
-    expect(html).toContain("Zu wenige Scheiben.")
-    expect(html).toContain("9,20")
+    expect(html).toContain("Gold heißt: ein klarer Unterschied")
+    expect(html).not.toContain("Alle Kennzahlen")
   })
 
   it("zwei Scheiben: die Hilfe des Schussvergleichs", () => {
     const html = renderToStaticMarkup(
-      h(CompareRows, { model: { ...MODEL, unit: "shot" }, onHelp: noop })
+      h(CompareTable, { model: { ...MODEL, unit: "shot" }, onHelp: noop })
     )
     expect(html).toContain('data-help="scheibe-vergleich"')
-  })
-
-  it("alle Kennzahlen eingeklappt; bei zwei Scheiben ohne Urteil", () => {
-    const html = renderToStaticMarkup(h(CompareMetrics, { model: MODEL, onHelp: noop }))
-    expect(html).toMatch(/<details[^>]*data-compare-metrics/)
-    expect(html).not.toMatch(/<details[^>]*open/)
-    expect(html).toContain("Alle Kennzahlen")
-    expect(html).toContain("Klar besser")
-    const cards = renderToStaticMarkup(
-      h(CompareMetrics, { model: { ...MODEL, unit: "shot" }, onHelp: noop })
-    )
-    expect(cards).not.toContain("Klar besser")
   })
 })
 
