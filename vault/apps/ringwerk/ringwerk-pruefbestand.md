@@ -148,3 +148,9 @@ vergleicht alt gegen neu auf demselben Aufbau.
 `targets.ts` (Wettbewerbe aus der Datenbank, nur lesend), `capture.ts` (Browser, PDFs), `normalize.ts` (Text,
 Datenfolge, Starterliste), `compare.ts` (Vergleich, Gegenprobe), `report.ts`, `store.ts`, `bestand.ts`, `ablaeufe.ts` und
 `ui.ts` (Bedienung), `echt.ts` (Sitzungen, Fingerabdruck), `phases.ts` (Phasen einer Datenbank).
+
+**Chrome 155 (21. Oktober 2026):** Headless beendet sich bei `captureBeyondViewport` auf sehr hohen Seiten (Liste der
+Wettbewerbe, 48.442 px) und bei `Page.getLayoutMetrics`. Zu sehen als „Chrome ist weg“ gleich nach „Build von vor …“.
+Seitdem fotografiert `@vereinsheim/pruefen` ganze Seiten über ein vergrößertes Fenster, höchstens 16.000 px hoch
+(`MAX_SHOT_HEIGHT`). Längere Seiten enden im Foto dort. Belegt: `main` gegen eine Aufnahme mit demselben Verfahren,
+0 Fehler, 0 Hinweise. Befehle, die Chrome starten, brauchen in der Agent-Shell die Sandbox aus.
