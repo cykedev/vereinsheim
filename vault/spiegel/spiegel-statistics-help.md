@@ -79,6 +79,17 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   versetzt ist, dann, ob deine Gruppe in eine Richtung zieht. Die Belege stehen in der Analyse: die
   Form als Ellipse unter „Präzision“, die Lage über die Zeit unter „Lage“.
 
+**Vergleichen**
+- *Was:* Zwei Seiten nebeneinander: zwei Scheiben, zwei Zeiträume oder deine Wettkämpfe gegen dein
+  Training im selben Zeitraum. A ist blau, B orange. Bei zwei Scheiben zählt jeder Schuss einzeln.
+  Bei Zeiträumen zählt jede Scheibe einmal, damit ein Abend mit vielen Schüssen nicht alles
+  bestimmt.
+- *So liest du es:* Der Satz oben ist die Antwort. Darunter steht das Bild. Ab 50 Schuss je Seite
+  zeigt es zwei Umrisse: durchgezogen die Fläche mit der Hälfte der Schüsse, gestrichelt die mit 9
+  von 10. Bei weniger Schüssen steht jeder Schuss als Punkt in der Farbe seiner Seite. Die
+  geviertelten Kreise mit A und B sind die beiden Mitten. Die Zahlen darunter sagen, ob sich
+  Ergebnis, Streuung und Lage klar unterscheiden.
+
 **Beobachtungen in Worten**
 - *Was:* Die wichtigsten Befunde dieser Scheibe als Sätze, gebildet aus denselben Zahlen wie die
   Karten.
@@ -496,32 +507,6 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   Schwerpunkt, Richtung von dort; Rayleigh-Test mit p = exp(√(1 + 4n + 4(n² − R²)) − (1 + 2n))
   (Zar), Vorzugsrichtung bei p < 0,05`
 
-**Zwei Zeiträume im Vergleich (C3, T3)**
-- *Was:* Spiegel vergleicht die Werte deiner Scheiben aus zwei Zeiträumen, etwa vor und nach einem
-  neuen Abzug. Jede Scheibe zählt einmal, egal wie viele Schüsse sie hat. Der Unterschied ist die
-  Differenz der Mittel.
-- *So liest du es:* Steht „besser“ oder „schwächer“, entstünde ein so deutlicher Unterschied durch
-  Zufall allein in höchstens 5 von 100 Vergleichen; der Satz oben nennt das „ein klarer
-  Unterschied“. Ob kleiner besser ist, weiß Spiegel je Zahl (bei Streukreis und Streuung σ ist
-  kleiner besser); beim Tempo heißt es nur „höher“ oder „tiefer“. Steht „kein klarer Unterschied“,
-  heißt das nicht „gleich geblieben“: Diese Scheiben reichen nicht, es zu zeigen oder
-  auszuschließen. Unter 5 Scheiben je Seite steht „zu wenige Scheiben“. „Deutlich“ davor heißt: Der
-  Unterschied ist mindestens knapp ein Drittel der Streuung deiner Scheiben innerhalb der beiden
-  Zeiträume, also groß genug, um im Training etwas auszumachen.
-- *Vorsicht:* „Deutlich“ steht nur zusammen mit einem Urteil: Auch ohne jede Veränderung ist der
-  Unterschied bei 5 gegen 5 Scheiben in etwa sechs von zehn Fällen so groß. Bei gleicher Form gibt
-  Spiegel in höchstens etwa 5 % der Vergleiche trotzdem ein Urteil. Wird dein σ beim Luftgewehr von
-  1,5 auf 1,3 mm kleiner (40 Schuss je Scheibe, im Mittel 0,1 Ring mehr je Schuss), erkennt Spiegel
-  das bei 5 gegen 5 Scheiben in gut der Hälfte der Fälle, bei 10 gegen 10 in gut neun von zehn. Eine
-  kleine Veränderung braucht viel mehr Scheiben: Bei σ 1,5 auf 1,45 mm (etwa ein Ring mehr auf 40
-  Schuss) erkennt es Spiegel bei 20 gegen 20 Scheiben nur in etwa jedem fünften Fall, bei 30 gegen
-  30 in knapp jedem dritten. Zeigen Test und Mittel in verschiedene Richtungen, gibt es kein Urteil.
-- *Mindestzahl:* Ein Urteil ab 5 Scheiben je Seite.
-- *Formel:* `Mann-Whitney über die Scheibenwerte, zweiseitig, α 0,05; bis 20 Scheiben je Seite genau
-  ausgezählt, darüber Normalnäherung mit Korrektur für gleiche Werte; Δ = Mittel im Zeitraum −
-  Mittel im Vergleichszeitraum; „deutlich“ (Effektstärke), wenn |Δ| ≥ 0,3 · gepoolte
-  Standardabweichung der Scheibenwerte`
-
 **Abstand zum Schnitt davor (C4)**
 - *Was:* Der Unterschied zwischen dem Ø je Schuss einer Scheibe und dem Schnitt deiner bis zu fünf
   Scheiben davor in derselben Disziplin; im Fortschritt zählen dazu nur Scheiben der gewählten Art,
@@ -557,6 +542,29 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 
 ## Vergleichen
 
+**Zwei Zeiträume im Vergleich (C3, T3)**
+- *Was:* Spiegel vergleicht die Werte deiner Scheiben aus zwei Zeiträumen, etwa vor und nach einem
+  neuen Abzug. Genauso vergleicht es deine Wettkämpfe mit deinem Training im selben Zeitraum. Jede
+  Scheibe zählt einmal, egal wie viele Schüsse sie hat. Der Unterschied ist die Differenz der
+  Mittel. Liegt eine Scheibe in beiden Zeiträumen, zählt sie nur in A.
+- *So liest du es:* Steht „Klar besser“ mit dem Namen einer Seite, entstünde ein so großer
+  Unterschied durch Zufall allein in höchstens 5 von 100 Vergleichen. Der Satz oben nennt das „ein
+  klarer Unterschied“. Ob kleiner besser ist, weiß Spiegel je Zahl. Bei der Streuung ist kleiner
+  besser. Steht „kein klarer Unterschied“, heißt das nicht „gleich geblieben“. Diese Scheiben
+  reichen nicht, es zu zeigen oder auszuschließen. Unter 5 Scheiben je Seite steht „zu wenige
+  Scheiben“.
+- *Vorsicht:* Bei gleicher Form gibt Spiegel in höchstens etwa 5 % der Vergleiche trotzdem ein
+  Urteil. Wird dein σ beim Luftgewehr von 1,5 auf 1,3 mm kleiner (40 Schuss je Scheibe, im Mittel
+  0,1 Ring mehr je Schuss), erkennt Spiegel das bei 5 gegen 5 Scheiben in gut der Hälfte der Fälle,
+  bei 10 gegen 10 in gut neun von zehn. Eine kleine Veränderung braucht viel mehr Scheiben: Bei σ
+  1,5 auf 1,45 mm (etwa ein Ring mehr auf 40 Schuss) erkennt es Spiegel bei 20 gegen 20 Scheiben nur
+  in etwa jedem fünften Fall, bei 30 gegen 30 in knapp jedem dritten. Zeigen Test und Mittel in
+  verschiedene Richtungen, gibt es kein Urteil. Ein Unterschied zwischen Wettkampf und Training
+  sagt, dass es so ist, nicht warum.
+- *Mindestzahl:* Ein Urteil ab 5 Scheiben je Seite.
+- *Formel:* `Mann-Whitney über die Scheibenwerte, zweiseitig, α 0,05; bis 20 Scheiben je Seite genau
+  ausgezählt, darüber Normalnäherung mit Korrektur für gleiche Werte; Δ = Mittel in A − Mittel in B`
+
 **Zwei Scheiben im Vergleich (C2)**
 - *Was:* Spiegel legt die Wertungsschüsse zweier Scheiben nebeneinander, wie sie auf dem Ausdruck
   stehen. Es vergleicht drei Dinge: die Werte der Schüsse, wie weit jeder Schuss von der Mitte
@@ -567,11 +575,33 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   reichen dann nicht, um es zu zeigen.
 - *Vorsicht:* Zwei Scheiben sind zwei Abende. Ein Unterschied zwischen ihnen sagt, dass dieser Abend
   anders war, nicht warum. Ob sich etwas dauerhaft verändert hat, zeigt erst der Vergleich zweier
-  Zeiträume.
+  Zeiträume. Ohne Unterschied meldet Spiegel in etwa 5 von 100 Vergleichen trotzdem einen. Streut
+  eine Scheibe 1,25-mal so weit wie die andere, erkennt Spiegel das bei 40 Schuss je Scheibe nur in
+  etwa 4 von 10 Fällen, bei 1,5-mal so weit in gut 8 von 10. Ein kleiner Unterschied zwischen zwei
+  Scheiben bleibt also oft unentdeckt.
 - *Mindestzahl:* Ein Urteil ab 5 Schuss je Scheibe.
 - *Formel:* `Ergebnis und Streuung: Mann-Whitney zweiseitig, α 0,05, über die Werte der Schüsse bzw.
-  ihre Abstände zur Mitte ihrer Scheibe; Lage: Hotelling-T² für zwei Stichproben mit gepoolter
-  Kovarianz, F(2, n₁ + n₂ − 3)`
+  ihre Abstände zur Mitte ihrer Scheibe, Δ = Mittel A − Mittel B; Lage: Hotelling-T² für zwei
+  Stichproben mit gepoolter Kovarianz, F(2, n₁ + n₂ − 3)`
+
+**Lage im Vergleich (C2, C3)**
+- *Was:* Spiegel vergleicht, wo die Mitte der Schüsse von A und wo die von B liegt. Bei zwei
+  Scheiben zählt jeder Schuss. Bei zwei Zeiträumen zählt die Mitte jeder Scheibe einmal, egal wie
+  viele Schüsse sie hat. Die Zahl ist der Abstand der beiden Mitten.
+- *So liest du es:* „Klar versetzt“ heißt: Die Mitten liegen so weit auseinander, dass Zufall allein
+  das in höchstens 5 von 100 Vergleichen schafft. Die Richtung sagt, wo A von B aus liegt. „Kein
+  klarer Unterschied“ heißt nicht, dass beide Mitten genau gleich liegen.
+- *Vorsicht:* Ohne Versatz meldet Spiegel in etwa 5 von 100 Vergleichen trotzdem einen. Bei zwei
+  Scheiben zu 40 Schuss erkennt es einen Versatz von einem halben σ (beim Luftgewehr etwa 0,75 mm)
+  in etwa der Hälfte der Fälle. Bei zwei Zeiträumen erkennt es einen Versatz von 0,3 σ bei 5
+  Scheiben je Seite in gut der Hälfte der Fälle, bei 10 Scheiben je Seite in gut neun von zehn.
+  Wandert deine Mitte von Abend zu Abend, braucht es mehr Scheiben.
+- *Mindestzahl:* Ab 5 Schuss je Scheibe, bei Zeiträumen ab 5 Scheiben je Seite mit je mindestens 3
+  Schuss mit Lage.
+- *Formel:* `Hotelling-T² für zwei Stichproben: S = ((n₁ − 1)S₁ + (n₂ − 1)S₂)/(n₁ + n₂ − 2), T² =
+  n₁n₂/(n₁ + n₂) · dᵀS⁻¹d, F = (n₁ + n₂ − 3)/(2(n₁ + n₂ − 2)) · T², p = (1 + 2F/ν)^(−ν/2) mit ν =
+  Zahl aller Punkte − 3, versetzt bei p < 0,05; bei Zeiträumen sind die Punkte die Schwerpunkte der
+  Scheiben`
 
 ## Glossar
 

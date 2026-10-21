@@ -53,6 +53,12 @@ export const VIEW_HELP: readonly ViewHelp[] = [
     read: "Der Satz unter dem Bild ist die Antwort: zuerst, ob deine Lage über den Zeitraum versetzt ist, dann, ob deine Gruppe in eine Richtung zieht. Die Belege stehen in der Analyse: die Form als Ellipse unter „Präzision“, die Lage über die Zeit unter „Lage“.",
   },
   {
+    id: "vergleichen",
+    title: "Vergleichen",
+    what: "Zwei Seiten nebeneinander: zwei Scheiben, zwei Zeiträume oder deine Wettkämpfe gegen dein Training im selben Zeitraum. A ist blau, B orange. Bei zwei Scheiben zählt jeder Schuss einzeln. Bei Zeiträumen zählt jede Scheibe einmal, damit ein Abend mit vielen Schüssen nicht alles bestimmt.",
+    read: "Der Satz oben ist die Antwort. Darunter steht das Bild. Ab 50 Schuss je Seite zeigt es zwei Umrisse: durchgezogen die Fläche mit der Hälfte der Schüsse, gestrichelt die mit 9 von 10. Bei weniger Schüssen steht jeder Schuss als Punkt in der Farbe seiner Seite. Die geviertelten Kreise mit A und B sind die beiden Mitten. Die Zahlen darunter sagen, ob sich Ergebnis, Streuung und Lage klar unterscheiden.",
+  },
+  {
     id: "beobachtungen",
     title: "Beobachtungen in Worten",
     what: "Die wichtigsten Befunde dieser Scheibe als Sätze, gebildet aus denselben Zahlen wie die Karten.",
