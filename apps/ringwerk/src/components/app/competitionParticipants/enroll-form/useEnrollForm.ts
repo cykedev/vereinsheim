@@ -16,19 +16,24 @@ export function useEnrollForm({ action }: Args) {
 
   function handleSubmit() {
     if (!formRef.current) return
+    // FormData vor dem State-Reset erfassen — hidden inputs haben noch ihre aktuellen Werte
     const formData = new FormData(formRef.current)
+    const exempt = exemptFromMinSeries
+
+    // Sofort zurücksetzen, nicht erst nach der Antwort: Die neu geladene Liste kann vor ihr ankommen, und ein Reset
+    // danach löschte eine Auswahl, die schon für den nächsten Teilnehmer getroffen ist.
+    setIsGuest(false)
+    setNewTeam(false)
+    setExemptFromMinSeries(false)
+    setFormKey((k) => k + 1)
 
     startTransition(async () => {
       const result = await action(null, formData)
       if ("error" in result) {
-        // Eingaben bleiben stehen: nach dem Korrigieren geht nichts verloren, auch nicht die Ausnahme
+        // Die Ausnahme gilt für den nächsten Versuch weiter: Sie ändert später die Rangliste
+        setExemptFromMinSeries(exempt)
         toast.error(typeof result.error === "string" ? result.error : "Fehler beim Einschreiben.")
-        return
       }
-      setIsGuest(false)
-      setNewTeam(false)
-      setExemptFromMinSeries(false)
-      setFormKey((k) => k + 1)
     })
   }
 
