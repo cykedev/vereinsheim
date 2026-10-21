@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest"
 import { normalPoints } from "../__fixtures__/random"
 import type { Point } from "../geometry"
 import { FLAG_SUSPICIOUS, type MetricShot } from "../metrics"
-import { compareCenters, compareShots } from "./compare"
+import { compareCenters, comparePicture, compareShots } from "./compare"
 
 const shifted = (points: readonly Point[], dxUm: number, dyUm = 0) =>
   points.map((p) => ({ xUm: p.xUm + dxUm, yUm: p.yUm + dyUm }))
@@ -127,5 +127,41 @@ describe("compareShots (C2)", () => {
     expect(result.result?.a.n).toBe(42)
     expect(result.spread?.a.n).toBe(40)
     expect(result.position?.a.n).toBe(40)
+  })
+})
+
+describe("comparePicture (C2, C3)", () => {
+  it("60 gegen 60 Punkte: zwei Umrisse aus Rastern von 64 × 64 auf einem Ausschnitt", () => {
+    const picture = comparePicture(normalPoints(60, 1500, 1), normalPoints(60, 1500, 2))
+    expect(picture.style).toBe("outlines")
+    if (picture.style !== "outlines") return
+    expect(picture.a.grid.cells).toHaveLength(64 * 64)
+    expect(picture.b.grid.cells).toHaveLength(64 * 64)
+    expect(picture.a.grid.levels).toHaveLength(6)
+    expect(picture.halfUm).toBeGreaterThan(1500)
+  })
+
+  it("60 gegen 40 Punkte: Punkte, jeder auf 10 µm, die Mitten auf ganze µm", () => {
+    const picture = comparePicture(normalPoints(60, 1500, 1), normalPoints(40, 1500, 2))
+    expect(picture.style).toBe("dots")
+    if (picture.style !== "dots") return
+    expect(picture.a.points).toHaveLength(60)
+    expect(picture.b.points).toHaveLength(40)
+    expect(Number.isInteger(picture.a.center?.xUm)).toBe(true)
+  })
+
+  it("eine leere Seite: Punkte, ihre Mitte null", () => {
+    const picture = comparePicture([], CROSS)
+    expect(picture.style).toBe("dots")
+    if (picture.style !== "dots") return
+    expect(picture.a.center).toBeNull()
+    expect(picture.b.center).toEqual({ xUm: 0, yUm: 0 })
+  })
+
+  it("kein −0 nach JSON (Punkte knapp links der Mitte)", () => {
+    const near = [{ xUm: -3, yUm: -4 }]
+    const json = JSON.stringify(comparePicture(near, near))
+    expect(json).not.toContain("-0")
+    expect(JSON.parse(json).a.points).toEqual([[0, 0]])
   })
 })

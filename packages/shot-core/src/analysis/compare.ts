@@ -12,6 +12,8 @@ import {
   type MetricShot,
   type Scoring,
 } from "../metrics"
+import { densityGrid, patternHalf, type DensityGrid } from "./density"
+import { PATTERN_DENSITY_FROM } from "./pattern"
 import { compareSamples, MIN_CARDS_PER_SIDE, type PeriodComparison } from "./period"
 
 const ALPHA = 0.05
@@ -139,5 +141,65 @@ export function compareShots(
     spread: compareSides(sa.distances, sb.distances),
     position: compareCenters(sa.points, sb.points),
     shots: { a: sa.shots, b: sb.shots },
+  }
+}
+
+/** Raster der Punkte im Bild: 10 µm wie `cardMarks` */
+const PICTURE_UM = 10
+
+/**
+ * das Bild zweier Seiten: ab 50 Schuss je Seite zwei Umrisse aus der Dichte (Raster wie `periodPattern`), sonst jeder
+ * Schuss als Punkt in der Farbe seiner Seite; dazu die beiden Mitten auf ganze µm
+ */
+export type ComparePicture =
+  | {
+      style: "outlines"
+      halfUm: number
+      a: { grid: DensityGrid; center: Point }
+      b: { grid: DensityGrid; center: Point }
+    }
+  | {
+      style: "dots"
+      halfUm: number
+      /** jeder Punkt als [x, y] in 10 µm */
+      a: { points: [number, number][]; center: Point | null }
+      b: { points: [number, number][]; center: Point | null }
+    }
+
+const roundCenter = (points: readonly Point[]): Point | null => {
+  const center = centroid(points)
+  // `|| 0`: kein −0 (wie `cardMarks`)
+  return center && { xUm: Math.round(center.xUm) || 0, yUm: Math.round(center.yUm) || 0 }
+}
+
+const dot = (p: Point): [number, number] => [
+  Math.round(p.xUm / PICTURE_UM) || 0,
+  Math.round(p.yUm / PICTURE_UM) || 0,
+]
+
+/**
+ * Das Bild zweier Seiten für den Browser (C2, C3): Haben beide Seiten mindestens 50 Punkte (`PATTERN_DENSITY_FROM`),
+ * zwei Dichteraster auf einem gemeinsamen Ausschnitt (`patternHalf` über beide), aus denen die Umrisse der Hälfte und
+ * von 9 von 10 Schüssen entstehen; sonst die Punkte selbst, mit einem Ausschnitt um den weitesten Punkt beider Seiten
+ * wie das Trefferbild bei wenigen Schüssen. Nie die Schüsse selbst.
+ */
+export function comparePicture(a: readonly Point[], b: readonly Point[]): ComparePicture {
+  if (a.length >= PATTERN_DENSITY_FROM && b.length >= PATTERN_DENSITY_FROM) {
+    const halfUm = patternHalf([...a, ...b])
+    return {
+      style: "outlines",
+      halfUm,
+      a: { grid: densityGrid(a, halfUm), center: roundCenter(a) as Point },
+      b: { grid: densityGrid(b, halfUm), center: roundCenter(b) as Point },
+    }
+  }
+  // als Schleife: viele Punkte als Argumente für `Math.max(...)` sprengen den Stapel
+  let farthest = 0
+  for (const p of [...a, ...b]) farthest = Math.max(farthest, Math.hypot(p.xUm, p.yUm))
+  return {
+    style: "dots",
+    halfUm: Math.max(1000, farthest * 1.15 + 500),
+    a: { points: a.map(dot), center: roundCenter(a) },
+    b: { points: b.map(dot), center: roundCenter(b) },
   }
 }
