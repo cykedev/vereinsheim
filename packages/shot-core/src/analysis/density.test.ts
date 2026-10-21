@@ -1,27 +1,8 @@
 import { describe, expect, it } from "vitest"
 
+import { normalPoints } from "../__fixtures__/random"
 import type { Point } from "../geometry"
 import { densityGrid, patternHalf } from "./density"
-
-/** mulberry32 mit Box-Muller, fester Seed: dieselben Punkte bei jedem Lauf */
-function normalPoints(n: number, sigmaUm: number, seed: number): Point[] {
-  let state = seed >>> 0
-  const uniform = () => {
-    state = (state + 0x6d2b79f5) >>> 0
-    let t = state
-    t = Math.imul(t ^ (t >>> 15), t | 1)
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61)
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
-  }
-  return Array.from({ length: n }, () => {
-    const r = Math.sqrt(-2 * Math.log(1 - uniform()))
-    const a = 2 * Math.PI * uniform()
-    return {
-      xUm: Math.round(r * Math.cos(a) * sigmaUm),
-      yUm: Math.round(r * Math.sin(a) * sigmaUm),
-    }
-  })
-}
 
 describe("densityGrid", () => {
   it("ein Punkt in der Mitte: die mittlere Zelle ist die dichteste, das Raster ist symmetrisch", () => {
