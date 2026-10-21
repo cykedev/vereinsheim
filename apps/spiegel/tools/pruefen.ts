@@ -1467,15 +1467,13 @@ async function progress(page: Page) {
 
 /**
  * Das Trefferbild über den Zeitraum (L9) und die Reiter Präzision und Lage: Umschalten schreibt `show=target`, Zurück
- * stellt den Verlauf her; Satz, Legende und Grundlage ohne Fachbegriffe; Form und Lage wechseln ohne Neuladen; ein
- * Schwerpunkt wählt die Scheibe der Ablesung; am Telefon kein seitliches Scrollen und über dem Bild höchstens zwei
- * Zeilen Bedienung. Ob die Daten Punkte oder die Dichte ergeben, steht im Detail.
+ * stellt den Verlauf her; Satz, Legende und Grundlage ohne Fachbegriffe; die Form als Ellipse; ein Punkt der Lage über
+ * Zeit wählt die Scheibe der Ablesung; am Telefon kein seitliches Scrollen und über dem Bild höchstens zwei Zeilen
+ * Bedienung. Ob die Daten Punkte oder die Heatmap ergeben, steht im Detail.
  */
 async function periodPattern(page: Page) {
   const show = (label: string) =>
     `$$('[role="radiogroup"][aria-label="Hauptbild"] [role="radio"]').find((b) => txt(b) === ${JSON.stringify(label)})`
-  const sight = (label: string) =>
-    `$$('[role="radiogroup"][aria-label="Sicht"] [role="radio"]').find((b) => txt(b) === ${JSON.stringify(label)})`
   await page.viewport(1440, 1400)
   await page.goto(`${BASE}/progress`)
   await page.click(show("Trefferbild"), { settle: 300 })
@@ -1496,21 +1494,9 @@ async function periodPattern(page: Page) {
     jargon: ${jargonIn("[data-pattern-panel]")},
   })`)
   check(
-    `Trefferbild: Satz, Legende und Grundlage stehen da, keine Fachbegriffe (${state.kind === "density" ? "Dichte" : "Punkte"})`,
+    `Trefferbild: Satz, Legende und Grundlage stehen da, keine Fachbegriffe (${state.kind === "density" ? "Heatmap" : "Punkte"})`,
     words.sentence.length > 0 && words.basis.startsWith("Über ") && words.jargon === null,
     words
-  )
-  await page.ev(`(window.__ohneNeuladen = true)`)
-  await page.click(sight("Lage"), { settle: 300 })
-  const switched = await page.ev<{ sight: string | null; kept: boolean; search: string }>(`({
-    sight: $("[data-pattern-panel]")?.dataset.patternPanel ?? null,
-    kept: window.__ohneNeuladen === true,
-    search: location.search,
-  })`)
-  check(
-    "Trefferbild: Form und Lage schalten ohne Neuladen und ohne Adresse",
-    switched.sight === "position" && switched.kept && switched.search === state.search,
-    switched
   )
   await page.ev(`history.back()`)
   const back = await page.waitFor(
@@ -1519,37 +1505,48 @@ async function periodPattern(page: Page) {
   )
   check("Trefferbild: Zurück stellt den Verlauf her", back, await page.ev(`location.search`))
 
-  // Reiter Lage: ein Schwerpunkt wählt die Scheibe der Ablesung, ohne zu springen
-  await page.goto(`${BASE}/progress#position`)
-  const chart = await page.waitFor(
-    `$("[data-position-chart]") && $$("[data-position-card]").length > 1`,
+  // Reiter Präzision: die Form als Ellipse, sobald es ein Urteil gibt
+  await page.goto(`${BASE}/progress#precision`)
+  await page.waitFor(
+    `$("[data-shape-ellipse]") || txt(analysis()).includes("fehlen noch Schüsse")`,
     15_000
   )
-  if (!chart) {
+  const ellipse = await page.ev<boolean>(`!!$("[data-shape-ellipse]") && !!$("[data-shape-round]")`)
+  check(
+    "Reiter Präzision: die Form als Ellipse mit dem Kreis einer runden Gruppe",
+    ellipse,
+    ellipse ? "" : "unter 100 Schuss aus 5 Scheiben (nicht belegt)"
+  )
+
+  // Reiter Lage: ein Punkt der Zeitreihe wählt die Scheibe der Ablesung, ohne zu springen
+  await page.goto(`${BASE}/progress#position`)
+  const timeline = await page.waitFor(
+    `$$("[data-timeline-row='x'] [data-timeline-card]").length > 1`,
+    15_000
+  )
+  if (!timeline) {
     check(
-      "Reiter Lage: ein Schwerpunkt wählt die Scheibe",
+      "Reiter Lage: ein Punkt wählt die Scheibe",
       false,
-      "kein Bild oder unter zwei Scheiben (nicht belegt)"
+      "unter zwei Scheiben mit Lage (nicht belegt)"
     )
   } else {
     const target = await page.ev<{ id: string; x: number; y: number } | null>(`(() => {
       const readout = $("[data-card-readout]")?.dataset.cardReadout
-      const svg = $("[data-position-chart]")
-      svg.scrollIntoView({ block: "center", behavior: "instant" })
-      const box = svg.getBoundingClientRect()
-      const dot = $$("[data-position-card]").find((c) => {
-        const r = c.getBoundingClientRect()
-        return c.dataset.positionCard !== readout && r.left > box.left && r.right < box.right && r.top > box.top && r.bottom < box.bottom
-      })
+      const row = $("[data-timeline-row='x']")
+      row.scrollIntoView({ block: "center", behavior: "instant" })
+      const dots = $$("[data-timeline-card]", row)
+      const dot = dots.find((c) => c.dataset.timelineCard !== readout && dots.filter((d) =>
+        Math.abs(d.getBoundingClientRect().left - c.getBoundingClientRect().left) < 6).length === 1)
       if (!dot) return null
       const r = dot.getBoundingClientRect()
-      return { id: dot.dataset.positionCard, x: r.left + r.width / 2, y: r.top + r.height / 2 }
+      return { id: dot.dataset.timelineCard, x: r.left + r.width / 2, y: r.top + r.height / 2 }
     })()`)
     if (!target) {
       check(
-        "Reiter Lage: ein Schwerpunkt wählt die Scheibe",
+        "Reiter Lage: ein Punkt wählt die Scheibe",
         false,
-        "kein freier Punkt im Bild (nicht belegt)"
+        "kein freistehender Punkt (nicht belegt)"
       )
     } else {
       const scrolled = await page.ev<number>(`scrollY`)
@@ -1558,14 +1555,13 @@ async function periodPattern(page: Page) {
         `$("[data-card-readout]")?.dataset.cardReadout === ${JSON.stringify(target.id)}`,
         5_000
       )
-      const after = await page.ev<{ readout: string | null; current: boolean; scrollY: number }>(`({
+      const after = await page.ev<{ readout: string | null; scrollY: number }>(`({
         readout: $("[data-card-readout]")?.dataset.cardReadout ?? null,
-        current: $('[data-position-card=${JSON.stringify(target.id)}]')?.getAttribute("aria-current") === "true",
         scrollY,
       })`)
       check(
-        "Reiter Lage: ein Schwerpunkt wählt die Scheibe für die Ablesung, die Seite bleibt stehen",
-        chosen && after.current && Math.abs(after.scrollY - scrolled) < 4,
+        "Reiter Lage: ein Punkt der Zeitreihe wählt die Scheibe für die Ablesung, die Seite bleibt stehen",
+        chosen && Math.abs(after.scrollY - scrolled) < 4,
         { target: target.id, ...after, before: scrolled }
       )
     }

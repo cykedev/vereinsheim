@@ -70,13 +70,14 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   aus.
 
 **Trefferbild über den Zeitraum**
-- *Was:* Alle Schüsse der Scheiben im Zeitraum auf einer Scheibe. Bei „Form“ ist jede Scheibe auf
-  ihre eigene Mitte geschoben, so siehst du nur die Streuung. Bei „Lage“ liegen die Schüsse, wo sie
-  lagen. Unter 300 Schuss ist jeder Schuss ein Punkt. Darüber zeigt das Bild zwei Flächen: Innen
-  liegt die Hälfte deiner Schüsse, außen neun von zehn.
-- *So liest du es:* Der Satz unter dem Bild ist die Antwort: bei „Form“, ob deine Gruppe in eine
-  Richtung zieht, bei „Lage“, ob sie versetzt ist. Die Belege stehen in der Analyse unter
-  „Präzision“ und „Lage“.
+- *Was:* Alle Schüsse der Scheiben im Zeitraum auf einer Scheibe, wo sie lagen. Ab 50 Schuss zeigt
+  das Bild eine Heatmap: Gelb heißt, dort liegen deine Schüsse oft, Violett, dort selten. Die Farben
+  umschließen Anteile deiner Schüsse, das gelbe Feld etwa ein Zehntel, alles Farbige zusammen neun
+  von zehn. Darunter ist jeder Schuss ein Punkt in der Farbe seines Rings. Der geviertelte Kreis ist
+  die Mitte aller Schüsse.
+- *So liest du es:* Der Satz unter dem Bild ist die Antwort: zuerst, ob deine Lage über den Zeitraum
+  versetzt ist, dann, ob deine Gruppe in eine Richtung zieht. Die Belege stehen in der Analyse: die
+  Form als Ellipse unter „Präzision“, die Lage über die Zeit unter „Lage“.
 
 **Beobachtungen in Worten**
 - *Was:* Die wichtigsten Befunde dieser Scheibe als Sätze, gebildet aus denselben Zahlen wie die
@@ -446,8 +447,9 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 
 **Form über mehrere Scheiben (L9)**
 - *Was:* Spiegel schiebt jede Scheibe auf ihre eigene Mitte und legt alle Schüsse übereinander. So
-  bleibt nur die Streuung, ohne die Lage der einzelnen Abende. Daraus folgen die Länge zu Breite der
-  Gruppe und die Richtung der langen Seite.
+  bleibt nur die Streuung, ohne die Lage der einzelnen Abende. Die Ellipse zeigt diese Gruppe: ihre
+  lange Seite und wie viel länger sie ist als breit. Gestrichelt steht der Kreis, den eine runde
+  Gruppe mit derselben Streuung hätte.
 - *So liest du es:* „Länglich, eher waagrecht“ heißt: Deine Schüsse streuen zur Seite mehr als nach
   oben und unten, und das ist kein Zufall. Länge zu Breite 1,3 : 1 heißt, die lange Seite ist ein
   knappes Drittel länger. „Zieht in keine klare Richtung“ heißt nicht „genau rund“. Diese Schüsse
@@ -463,8 +465,9 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   < 0,05 und √(λ₁/λ₂) ≥ 1,15`
 
 **Lage über Zeit (L10)**
-- *Was:* Jeder Punkt ist die Mitte einer Scheibe, also der Schwerpunkt ihrer Schüsse. Größere Punkte
-  haben mehr Schüsse. Die Linie verbindet sie in der Reihenfolge, in der du geschossen hast.
+- *Was:* Zwei Verläufe über die Zeit: oben, wie weit die Mitte jeder Scheibe links oder rechts
+  liegt, unten, wie weit tief oder hoch. Jeder Punkt ist eine Scheibe, die Linie der Schnitt der
+  letzten fünf, gestrichelt die Mitte der Scheibe. So siehst du, ob deine Lage wandert.
 - *So liest du es:* „Versetzt: rechts tief“ heißt: Über den Zeitraum liegen deine Scheiben im Mittel
   rechts unter der Mitte, und das ist kein Zufall. Jede Scheibe zählt dabei einmal, egal wie viele
   Schüsse sie hat. „Passt“ heißt: Ein Versatz ist nicht belegt.

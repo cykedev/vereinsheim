@@ -49,8 +49,8 @@ export const VIEW_HELP: readonly ViewHelp[] = [
   {
     id: "langzeit-trefferbild",
     title: "Trefferbild über den Zeitraum",
-    what: "Alle Schüsse der Scheiben im Zeitraum auf einer Scheibe. Bei „Form“ ist jede Scheibe auf ihre eigene Mitte geschoben, so siehst du nur die Streuung. Bei „Lage“ liegen die Schüsse, wo sie lagen. Unter 300 Schuss ist jeder Schuss ein Punkt. Darüber zeigt das Bild zwei Flächen: Innen liegt die Hälfte deiner Schüsse, außen neun von zehn.",
-    read: "Der Satz unter dem Bild ist die Antwort: bei „Form“, ob deine Gruppe in eine Richtung zieht, bei „Lage“, ob sie versetzt ist. Die Belege stehen in der Analyse unter „Präzision“ und „Lage“.",
+    what: "Alle Schüsse der Scheiben im Zeitraum auf einer Scheibe, wo sie lagen. Ab 50 Schuss zeigt das Bild eine Heatmap: Gelb heißt, dort liegen deine Schüsse oft, Violett, dort selten. Die Farben umschließen Anteile deiner Schüsse, das gelbe Feld etwa ein Zehntel, alles Farbige zusammen neun von zehn. Darunter ist jeder Schuss ein Punkt in der Farbe seines Rings. Der geviertelte Kreis ist die Mitte aller Schüsse.",
+    read: "Der Satz unter dem Bild ist die Antwort: zuerst, ob deine Lage über den Zeitraum versetzt ist, dann, ob deine Gruppe in eine Richtung zieht. Die Belege stehen in der Analyse: die Form als Ellipse unter „Präzision“, die Lage über die Zeit unter „Lage“.",
   },
   {
     id: "beobachtungen",
