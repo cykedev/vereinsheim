@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import { MATCH } from "../__fixtures__/cards"
 import { FLAG_SUSPICIOUS, type MetricShot } from "../metrics"
+import { permutationMeanTest } from "../stats"
 import { pauseRecovery, rhythmProfile, tempoSpread } from "./timing"
 
 // Zehn Wertungsschüsse; Abstände 40, 45, 40, 45, 40 s, dann 300 s Pause, dann 50, 55, 50 s.
@@ -85,6 +86,8 @@ describe("Pausen und Rhythmus (Z4, Z5)", () => {
     expect(recovery?.effects[0].afterShot).toBe(7)
     expect(recovery?.effects[0].deltaRings).toBeCloseTo(-4 / 7, 9)
     expect(recovery?.meanDelta).toBeCloseTo(-4 / 7, 9)
+    // die drei danach sind die drei kleinsten von zehn: nur eine von C(10, 3) = 120 Auswahlen ist so extrem
+    expect(recovery?.effects[0]).toMatchObject({ clear: true, direction: "down" })
   })
 
   it("die Pause behält ihre Schussnummer, auch wenn davor ein Platzhalter liegt", () => {
@@ -101,7 +104,9 @@ describe("Pausen und Rhythmus (Z4, Z5)", () => {
     // die Pause steht über die Zeiten fest, nur ihre Wirkung braucht Werte
     const blind = pauseRecovery(ringsOnly, "decimal")
     expect(blind?.pauses).toBe(1)
-    expect(blind?.effects).toEqual([{ afterShot: 7, deltaRings: null }])
+    expect(blind?.effects).toEqual([
+      { afterShot: 7, deltaRings: null, clear: false, direction: null },
+    ])
     expect(blind?.meanDelta).toBeNull()
   })
 
@@ -112,7 +117,9 @@ describe("Pausen und Rhythmus (Z4, Z5)", () => {
     )
     const recovery = pauseRecovery(blind, "decimal")
     expect(recovery?.pauses).toBe(1)
-    expect(recovery?.effects).toEqual([{ afterShot: 7, deltaRings: null }])
+    expect(recovery?.effects).toEqual([
+      { afterShot: 7, deltaRings: null, clear: false, direction: null },
+    ])
     expect(recovery?.meanDelta).toBeNull()
   })
 
@@ -203,5 +210,60 @@ describe("Pausen und Rhythmus (Z4, Z5)", () => {
     expect(profile.map((p) => p.number)).toEqual([1, 2, 4, 5, 6, 7, 8, 9, 10])
     expect(profile[2]).toMatchObject({ number: 4, kind: "match", intervalMs: null })
     expect(() => rhythmProfile(EVENING, 0)).toThrow(RangeError)
+  })
+})
+
+describe("Was die Pause bewirkt hat (Z4, Urteil)", () => {
+  // die übrigen 37 Werte: ein fester Kreis um 10,0, im Schnitt genau 10,0
+  const CYCLE = [100, 97, 103, 99, 101, 96, 104, 98, 102]
+  // 40 Wertungsschüsse im Takt von 30 s, vor jedem Schuss aus `pausesBefore` 300 s; Schuss 21 bis 23 mit `after`
+  const card = (after: readonly number[], pausesBefore: readonly number[]): MetricShot[] => {
+    let k = 0
+    let seconds = 0
+    return Array.from({ length: 40 }, (_, i) => {
+      const number = i + 1
+      if (i > 0) seconds += pausesBefore.includes(number) ? 300 : 30
+      const tenths = number >= 21 && number <= 23 ? after[number - 21] : CYCLE[k++ % CYCLE.length]
+      return {
+        ...MATCH[0],
+        seq: number,
+        firedAtMs: seconds * 1000,
+        decimalTenths: tenths,
+        ring: Math.floor(tenths / 10),
+      }
+    })
+  }
+  const rest = Array.from({ length: 37 }, (_, i) => CYCLE[i % CYCLE.length])
+  const first = (shots: MetricShot[], pauses = [21]) =>
+    pauseRecovery(shots, "decimal")?.effects.find((e) => e.afterShot === pauses[0])
+
+  it("klar schwächer und klar stärker, in die Richtung des Unterschieds", () => {
+    expect(first(card([70, 70, 70], [21]))).toMatchObject({ clear: true, direction: "down" })
+    expect(first(card([109, 109, 109], [21]))).toMatchObject({ clear: true, direction: "up" })
+  })
+
+  it("mitten in der Streuung: kein Urteil", () => {
+    expect(first(card([99, 101, 102], [21]))).toMatchObject({ clear: false, direction: null })
+  })
+
+  it("mehrere Pausen: strengere Grenze (0,05 geteilt durch die Zahl der Pausen)", () => {
+    const after = [95, 97, 98]
+    const p = permutationMeanTest(after, rest)!.p
+    // zwischen 0,025 und 0,05: allein klar, mit einer zweiten Pause nicht
+    expect(p).toBeGreaterThanOrEqual(0.025)
+    expect(p).toBeLessThan(0.05)
+    expect(first(card(after, [21]))).toMatchObject({ clear: true, direction: "down" })
+    const two = pauseRecovery(card(after, [21, 31]), "decimal")
+    expect(two?.pauses).toBe(2)
+    expect(two?.effects.find((e) => e.afterShot === 21)).toMatchObject({
+      clear: false,
+      direction: null,
+    })
+  })
+
+  it("gleiche Mittel: Unterschied genau 0 und kein Urteil", () => {
+    const even = first(card([99, 100, 101], [21]))
+    expect(even?.deltaRings).toBe(0)
+    expect(even).toMatchObject({ clear: false, direction: null })
   })
 })

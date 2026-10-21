@@ -20,7 +20,7 @@ import {
   type ShotInterval,
   type ShotKind,
 } from "../metrics"
-import { iqr, median } from "../stats"
+import { iqr, median, permutationMeanTest } from "../stats"
 import { tempo, type PauseRule } from "../time"
 import { valueNeed, valueTenths } from "./values"
 
@@ -75,6 +75,13 @@ export interface PauseEffect {
    * Wertung, beides nur über Schüsse mit Wert; null, wenn eine Seite keinen hat
    */
   deltaRings: number | null
+  /**
+   * „klar“ nach dem exakten Permutationstest auf den Unterschied der Mittel (zweiseitig), Grenze 0,05 geteilt durch
+   * die Zahl der Pausen der Karte (Bonferroni), damit viele Pausen nicht öfter zufällig „klar“ zeigen
+   */
+  clear: boolean
+  /** Richtung nach der Pause, nur wenn klar: besser („up“) oder schwächer („down“) als die übrigen */
+  direction: "up" | "down" | null
 }
 
 /**
@@ -83,7 +90,8 @@ export interface PauseEffect {
  * Die Schnitte davor und danach zählen nur Schüsse mit Wert; ohne solche ist die Wirkung null. Verglichen
  * wird mit den übrigen Schüssen, nicht mit der ganzen Scheibe, die die Schüsse nach der Pause selbst
  * enthielte. `card`: die ganze Karte, aus der `shots` stammen; eine Probe zwischen zwei Wertungsschüssen
- * ist keine Lücke, die Pause gilt von Wertungsschuss zu Wertungsschuss (SF-04).
+ * ist keine Lücke, die Pause gilt von Wertungsschuss zu Wertungsschuss (SF-04). Das Urteil je Pause rechnet in
+ * Zehnteln als ganzen Zahlen: Vorzeichen und „genau 0“ ohne Rundungsfehler, das Urteil in Richtung der Zahl.
  */
 export function pauseRecovery(
   shots: readonly MetricShot[],
@@ -109,7 +117,9 @@ export function pauseRecovery(
   )
   const valued = (list: readonly (number | null)[]) => list.filter((v): v is number => v !== null)
   const meanOf = (list: readonly number[]) => list.reduce((sum, v) => sum + v, 0) / list.length
-  const effects: PauseEffect[] = []
+  const sumOf = (list: readonly number[]) => list.reduce((sum, v) => sum + v, 0)
+  const found: { afterShot: number; deltaRings: number | null; cross: number; p: number | null }[] =
+    []
   let totalPauseMs = 0
   // ohne einen messbaren Abstand (Lücken, Rücksprung der Uhr) weder Pause noch „keine Pause“
   if (steps.every((step) => step.intervalMs === null)) return null
@@ -118,10 +128,23 @@ export function pauseRecovery(
     totalPauseMs += step.intervalMs
     const next = valued(values.slice(i, i + 3))
     const rest = valued([...values.slice(0, i), ...values.slice(i + 3)])
-    effects.push({
+    if (!next.length || !rest.length) {
+      found.push({ afterShot: step.number, deltaRings: null, cross: 0, p: null })
+      return
+    }
+    // Vorzeichen des Unterschieds der Mittel, ganzzahlig: Ø danach gegen Ø der übrigen
+    const cross = rest.length * sumOf(next) - next.length * sumOf(rest)
+    found.push({
       afterShot: step.number,
-      deltaRings: next.length && rest.length ? (meanOf(next) - meanOf(rest)) / 10 : null,
+      deltaRings: cross === 0 ? 0 : (meanOf(next) - meanOf(rest)) / 10,
+      cross,
+      p: permutationMeanTest(next, rest)?.p ?? null,
     })
+  })
+  const alpha = 0.05 / Math.max(1, found.length)
+  const effects: PauseEffect[] = found.map(({ afterShot, deltaRings, cross, p }) => {
+    const clear = p !== null && p < alpha && cross !== 0
+    return { afterShot, deltaRings, clear, direction: clear ? (cross > 0 ? "up" : "down") : null }
   })
   const deltas = effects.flatMap((e) => (e.deltaRings === null ? [] : [e.deltaRings]))
   return {
