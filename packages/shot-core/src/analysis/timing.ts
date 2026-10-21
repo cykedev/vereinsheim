@@ -77,7 +77,7 @@ export interface PauseEffect {
   deltaRings: number | null
   /**
    * „klar“ nach dem exakten Permutationstest auf den Unterschied der Mittel (zweiseitig), Grenze 0,05 geteilt durch
-   * die Zahl der Pausen der Karte (Bonferroni), damit viele Pausen nicht öfter zufällig „klar“ zeigen
+   * die Zahl der Pausen mit Test (`tests`, Bonferroni), damit viele Pausen nicht öfter zufällig „klar“ zeigen
    */
   clear: boolean
   /** Richtung nach der Pause, nur wenn klar: besser („up“) oder schwächer („down“) als die übrigen */
@@ -103,6 +103,8 @@ export function pauseRecovery(
   /** was als Pause gilt: Schwelle, üblicher Abstand und Grundlage, aus dem Takt der Karte */
   rule: PauseRule
   effects: PauseEffect[]
+  /** Pausen mit einem Test (Werte danach und daneben); durch diese Zahl teilt sich die Grenze 0,05 */
+  tests: number
   meanDelta: number | null
 } | null {
   const withValue = new Set(selectShots(shots, { kinds: MATCH, need: valueNeed(scoring) }))
@@ -141,7 +143,9 @@ export function pauseRecovery(
       p: permutationMeanTest(next, rest)?.p ?? null,
     })
   })
-  const alpha = 0.05 / Math.max(1, found.length)
+  // eine Pause ohne Werte danach hat keinen Test und macht die Grenze der übrigen nicht strenger
+  const tests = found.filter((f) => f.p !== null).length
+  const alpha = 0.05 / Math.max(1, tests)
   const effects: PauseEffect[] = found.map(({ afterShot, deltaRings, cross, p }) => {
     const clear = p !== null && p < alpha && cross !== 0
     return { afterShot, deltaRings, clear, direction: clear ? (cross > 0 ? "up" : "down") : null }
@@ -152,6 +156,7 @@ export function pauseRecovery(
     totalPauseMs,
     rule,
     effects,
+    tests,
     meanDelta: deltas.length ? meanOf(deltas) : null,
   }
 }

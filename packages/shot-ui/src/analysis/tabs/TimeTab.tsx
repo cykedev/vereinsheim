@@ -281,9 +281,10 @@ export function timeCards({
                 Schüsse. „Klar“ heißt: Reiner Zufall brächte einen so großen Unterschied nur in 5
                 von 100 Fällen.
               </Note>
-              {recovery.pauses > 1 && (
+              {/* die Zahl der Pausen mit Test, durch die sich die Grenze teilt */}
+              {recovery.tests > 1 && (
                 <Note>
-                  {`Bei ${recovery.pauses} Pausen ist die Grenze strenger. Sonst wäre leicht eine davon zufällig „klar“.`}
+                  {`Bei ${recovery.tests} Pausen ist die Grenze strenger. Sonst wäre leicht eine davon zufällig „klar“.`}
                 </Note>
               )}
               <Note>{pauseRuleText(recovery.rule)}</Note>

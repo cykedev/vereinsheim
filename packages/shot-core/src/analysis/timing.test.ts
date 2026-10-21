@@ -261,6 +261,27 @@ describe("Was die Pause bewirkt hat (Z4, Urteil)", () => {
     })
   })
 
+  it("eine Pause ohne Werte danach zählt nicht für die strengere Grenze", () => {
+    const after = [95, 97, 98]
+    // zweite Pause vor Schuss 31, Schuss 31 bis 33 ohne Zehntel: kein Test, die Grenze bleibt 0,05
+    const blind = card(after, [21, 31]).map((s, i) =>
+      i >= 30 && i <= 32 ? { ...s, decimalTenths: null } : s
+    )
+    const restValues = blind
+      .filter((s, i) => (i < 20 || i > 22) && s.decimalTenths !== null)
+      .map((s) => s.decimalTenths as number)
+    const p = permutationMeanTest(after, restValues)!.p
+    expect(p).toBeGreaterThanOrEqual(0.025)
+    expect(p).toBeLessThan(0.05)
+    const recovery = pauseRecovery(blind, "decimal")
+    expect(recovery?.pauses).toBe(2)
+    expect(recovery?.tests).toBe(1)
+    expect(recovery?.effects.find((e) => e.afterShot === 21)).toMatchObject({
+      clear: true,
+      direction: "down",
+    })
+  })
+
   it("gleiche Mittel: Unterschied genau 0 und kein Urteil", () => {
     const even = first(card([99, 100, 101], [21]))
     expect(even?.deltaRings).toBe(0)
