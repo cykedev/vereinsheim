@@ -1141,10 +1141,10 @@ async function singleCardHints(page: Page, href: string) {
     ["klar schwächer", "klar stärker", "kann Zufall sein"].includes(verdict),
     verdict
   )
-  // jede Pause mit einem Ø danach (nicht ±0,00) trägt ihr Urteil
+  // jede Pause mit einem Ø danach (nicht 0,00, das steht ohne Vorzeichen) trägt ihr Urteil
   const pauses = await page.ev<{ rows: number; labelled: number; labels: string[] }>(`(() => {
     const rows = $$("dd", card("pausen") ?? document.createElement("div"))
-      .filter((dd) => /Pause · danach Ø [+−]/.test(txt(dd)) && !/[+−]0,00 /.test(txt(dd)))
+      .filter((dd) => /Pause · danach Ø [+−]/.test(txt(dd)))
     const labels = rows.map((dd) => txt(dd.querySelector("[data-verdict]")))
     return { rows: rows.length, labelled: labels.filter(Boolean).length, labels }
   })()`)

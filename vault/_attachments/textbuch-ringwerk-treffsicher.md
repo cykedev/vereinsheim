@@ -1769,7 +1769,8 @@ Zufall brächte einen so großen Unterschied nur in 5 von 100 Fällen.“
 ### 2. Beobachtung zu Pausen
 
 Ort: Seite einer Scheibe, Analyse, Reiter „Überblick“, „Beobachtungen in Worten“. Ist eine Pause klar, steht ihr Satz
-auch im Kopf der Scheibe.
+auch im Kopf der Scheibe (Nachtrag aus dem Review: wenn dort Platz ist; der Kopf zeigt höchstens drei Beobachtungen,
+Lage, Ausreißer und Trend gehen vor).
 
 **alt:** „Nach der Pause vor Schuss {21} lagen die Schüsse danach (bis zu drei) im Schnitt {0,19} Ringe je Schuss über
 deinen übrigen Schüssen. Drei Schuss sind zu wenig, um zu zeigen, ob die Pause etwas ausmacht.“
