@@ -1789,3 +1789,16 @@ Schuss über deinen übrigen Schüssen. Das kann Zufall sein. Nach der Pause vor
 | So liest du es | (gibt es nicht) | „Ein Plus heißt: Nach der Pause warst du besser als sonst, ein Minus: schwächer. „Klar stärker“ oder „klar schwächer“ steht nur, wenn ein Test es zeigt.“ |
 | Vorsicht | „… Eine Pause auf einer Scheibe zeigt deshalb nicht, ob dir Pausen schaden.“ | „… Deshalb steht „klar“ erst bei einem großen Unterschied. Eine kleine Wirkung der Pause zeigt eine Scheibe nicht. Auch ein klares Urteil gilt nur für diese Pause.“ |
 | Kurz („Erklärungen“) | „Deine Pausen und ob die Schüsse danach besser oder schwächer waren als deine übrigen.“ | bleibt |
+
+### 4. Leitfaden: wie oft der Zufall einen Befund zeigt
+
+**Status: Entwurf vom 21. Oktober 2026, vom User noch nicht gelesen** (Nachtrag nach der Simulation: Mit dem Test je
+Pause zeigt eine ganz normale Scheibe mit einer Pause in 22,3 % irgendwo einen Befund, ohne Pause in 18,9 %.)
+
+Ort: Seite einer Scheibe, Analyse, Reiter „Überblick“, „So liest du die Analyse“, und das „?“ an „Beobachtungen in
+Worten“.
+
+| Wo | alt | neu |
+|---|---|---|
+| So liest du die Analyse, „Sicher“ und „kann Zufall sein“ | „Weil auf einer Scheibe mehrere Tests laufen, zeigt trotzdem etwa jede fünfte ganz normale Scheibe irgendwo ein „sicher versetzt“, „gestreckt“, „klar“ oder einen Ausreißer.“ | „Weil auf einer Scheibe mehrere Tests laufen, zeigt trotzdem etwa jede fünfte ganz normale Scheibe irgendwo ein „sicher versetzt“, „gestreckt“, „klar“ oder einen Ausreißer. Mit einer Pause ist es etwa jede vierte, denn auch jede Pause bekommt einen Test.“ |
+| Beobachtungen in Worten, So liest du es | „Weil mehrere Tests laufen, trifft es bei etwa jeder fünften ganz normalen Scheibe einmal zufällig zu.“ | „Weil mehrere Tests laufen, trifft es bei etwa jeder fünften ganz normalen Scheibe einmal zufällig zu. Mit einer Pause ist es etwa jede vierte.“ |
