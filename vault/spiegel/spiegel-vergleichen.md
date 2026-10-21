@@ -84,8 +84,10 @@ Fortschritt und am Desktop über einen Untereintrag. Der Vergleich aus dem Forts
 An den echten Scheiben des Users verglichen (Prototyp am 21. Oktober 2026, wieder entfernt):
 
 - **Zwei Zeiträume und Wettkampf/Training:** zwei Umrisse auf einer Scheibe, je Seite die Fläche mit der Hälfte der
-  Schüsse durchgezogen (A getönt) und die mit 9 von 10 gestrichelt, dazu beide Mitten mit A und B. Ab 50 Schuss mit Lage
-  je Seite, darunter Punkte wie bei zwei Scheiben.
+  Schüsse durchgezogen (A getönt) und die mit 9 von 10 gestrichelt, dazu beide Mitten mit einem Ring in der Farbe ihrer
+  Seite. Ab 50 Schuss mit Lage je Seite, darunter Punkte wie bei zwei Scheiben. Hat eine Seite über 3.000 Schuss, ist
+  sie immer ein Umriss, auch neben einer kleinen Seite mit Punkten („mixed“): So gehen nie mehr als 3.000 Punkte einer
+  Seite an den Browser (etwa wenige Wettkämpfe gegen viel Training).
 - **Zwei Scheiben:** beide übereinander, jeder Schuss in der Farbe seiner Seite, dazu beide Mitten. Die Ringwerte stehen
   in den Zahlen.
 - **Zoom:** Das Bild öffnet auf der Gruppe beider Seiten (bei Umrissen bis 95 von 100 Schüssen um ihre gemeinsame Mitte,

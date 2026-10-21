@@ -84,11 +84,12 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   Training im selben Zeitraum. A ist blau, B orange. Bei zwei Scheiben zählt jeder Schuss einzeln.
   Bei Zeiträumen zählt jede Scheibe einmal, damit ein Abend mit vielen Schüssen nicht alles
   bestimmt.
-- *So liest du es:* Der Satz oben ist die Antwort. Darunter steht das Bild. Ab 50 Schuss je Seite
-  zeigt es zwei Umrisse: durchgezogen die Fläche mit der Hälfte der Schüsse, gestrichelt die mit 9
-  von 10. Bei weniger Schüssen steht jeder Schuss als Punkt in der Farbe seiner Seite. Die
-  geviertelten Kreise mit A und B sind die beiden Mitten. Die Zahlen darunter sagen, ob sich
-  Ergebnis, Streuung und Lage klar unterscheiden.
+- *So liest du es:* Der Satz oben ist die Antwort. Das Bild zeigt beide Seiten auf der Scheibe. Mit
+  vielen Schüssen zeigt es Umrisse: durchgezogen die Fläche mit der Hälfte der Schüsse, gestrichelt
+  die mit 9 von 10. Bei wenigen Schüssen steht jeder Schuss als Punkt in der Farbe seiner Seite. Die
+  geviertelten Kreise mit dem farbigen Ring sind die beiden Mitten. Die Lupe zeigt die ganze
+  Scheibe. Die Tabelle nennt alle Zahlen beider Seiten. Ein Wert in Gold unterscheidet sich klar und
+  ist der bessere.
 
 **Beobachtungen in Worten**
 - *Was:* Die wichtigsten Befunde dieser Scheibe als Sätze, gebildet aus denselben Zahlen wie die
@@ -547,12 +548,11 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   neuen Abzug. Genauso vergleicht es deine Wettkämpfe mit deinem Training im selben Zeitraum. Jede
   Scheibe zählt einmal, egal wie viele Schüsse sie hat. Der Unterschied ist die Differenz der
   Mittel. Liegt eine Scheibe in beiden Zeiträumen, zählt sie nur in A.
-- *So liest du es:* Steht „Klar besser“ mit dem Namen einer Seite, entstünde ein so großer
-  Unterschied durch Zufall allein in höchstens 5 von 100 Vergleichen. Der Satz oben nennt das „ein
-  klarer Unterschied“. Ob kleiner besser ist, weiß Spiegel je Zahl. Bei der Streuung ist kleiner
-  besser. Steht „kein klarer Unterschied“, heißt das nicht „gleich geblieben“. Diese Scheiben
-  reichen nicht, es zu zeigen oder auszuschließen. Unter 5 Scheiben je Seite steht „zu wenige
-  Scheiben“.
+- *So liest du es:* Ein Wert in Gold ist klar besser: So ein Unterschied entstünde durch Zufall
+  allein in höchstens 5 von 100 Vergleichen. Der Satz oben nennt das „ein klarer Unterschied“. Ob
+  kleiner besser ist, weiß Spiegel je Zahl. Bei der Streuung ist kleiner besser. Steht nichts in
+  Gold, ist kein Unterschied belegt. Das heißt nicht „gleich geblieben“. Diese Scheiben reichen
+  nicht, es zu zeigen oder auszuschließen. Unter 5 Scheiben je Seite steht „zu wenige Scheiben“.
 - *Vorsicht:* Bei gleicher Form gibt Spiegel in höchstens etwa 5 % der Vergleiche trotzdem ein
   Urteil. Wird dein σ beim Luftgewehr von 1,5 auf 1,3 mm kleiner (40 Schuss je Scheibe, im Mittel
   0,1 Ring mehr je Schuss), erkennt Spiegel das bei 5 gegen 5 Scheiben in gut der Hälfte der Fälle,
@@ -570,9 +570,9 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   stehen. Es vergleicht drei Dinge: die Werte der Schüsse, wie weit jeder Schuss von der Mitte
   seiner Scheibe liegt und wo die beiden Mitten liegen. Bei zwei Scheiben zählt jeder Schuss
   einzeln.
-- *So liest du es:* „Klar besser“ heißt: Ein so großer Unterschied entstünde durch Zufall allein in
-  höchstens 5 von 100 Vergleichen. „Kein klarer Unterschied“ heißt nicht „gleich“. Die Schüsse
-  reichen dann nicht, um es zu zeigen.
+- *So liest du es:* Ein Wert in Gold ist klar besser: So ein Unterschied entstünde durch Zufall
+  allein in höchstens 5 von 100 Vergleichen. Steht nichts in Gold, ist kein Unterschied belegt. Das
+  heißt nicht „gleich“. Die Schüsse reichen dann nicht, um es zu zeigen.
 - *Vorsicht:* Zwei Scheiben sind zwei Abende. Ein Unterschied zwischen ihnen sagt, dass dieser Abend
   anders war, nicht warum. Ob sich etwas dauerhaft verändert hat, zeigt erst der Vergleich zweier
   Zeiträume. Ohne Unterschied meldet Spiegel in etwa 5 von 100 Vergleichen trotzdem einen. Streut
@@ -588,9 +588,9 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 - *Was:* Spiegel vergleicht, wo die Mitte der Schüsse von A und wo die von B liegt. Bei zwei
   Scheiben zählt jeder Schuss. Bei zwei Zeiträumen zählt die Mitte jeder Scheibe einmal, egal wie
   viele Schüsse sie hat. Die Zahl ist der Abstand der beiden Mitten.
-- *So liest du es:* „Klar versetzt“ heißt: Die Mitten liegen so weit auseinander, dass Zufall allein
-  das in höchstens 5 von 100 Vergleichen schafft. Die Richtung sagt, wo A von B aus liegt. „Kein
-  klarer Unterschied“ heißt nicht, dass beide Mitten genau gleich liegen.
+- *So liest du es:* Steht der Abstand in Gold, liegen die Mitten klar auseinander: Zufall allein
+  schafft das in höchstens 5 von 100 Vergleichen. In welche Richtung, sagt der Satz oben. Ohne Gold
+  ist kein Versatz belegt. Das heißt nicht, dass beide Mitten genau gleich liegen.
 - *Vorsicht:* Ohne Versatz meldet Spiegel in etwa 5 von 100 Vergleichen trotzdem einen. Bei zwei
   Scheiben zu 40 Schuss erkennt es einen Versatz von einem halben σ (beim Luftgewehr etwa 0,75 mm)
   in etwa der Hälfte der Fälle. Bei zwei Zeiträumen erkennt es einen Versatz von 0,3 σ bei 5

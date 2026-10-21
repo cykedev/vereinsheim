@@ -428,7 +428,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     metrics: [],
     short: "Ob sich eine Zahl zwischen zwei Zeiträumen wirklich verändert hat.",
     what: "Spiegel vergleicht die Werte deiner Scheiben aus zwei Zeiträumen, etwa vor und nach einem neuen Abzug. Genauso vergleicht es deine Wettkämpfe mit deinem Training im selben Zeitraum. Jede Scheibe zählt einmal, egal wie viele Schüsse sie hat. Der Unterschied ist die Differenz der Mittel. Liegt eine Scheibe in beiden Zeiträumen, zählt sie nur in A.",
-    read: "Steht „Klar besser“ mit dem Namen einer Seite, entstünde ein so großer Unterschied durch Zufall allein in höchstens 5 von 100 Vergleichen. Der Satz oben nennt das „ein klarer Unterschied“. Ob kleiner besser ist, weiß Spiegel je Zahl. Bei der Streuung ist kleiner besser. Steht „kein klarer Unterschied“, heißt das nicht „gleich geblieben“. Diese Scheiben reichen nicht, es zu zeigen oder auszuschließen. Unter 5 Scheiben je Seite steht „zu wenige Scheiben“.",
+    read: "Ein Wert in Gold ist klar besser: So ein Unterschied entstünde durch Zufall allein in höchstens 5 von 100 Vergleichen. Der Satz oben nennt das „ein klarer Unterschied“. Ob kleiner besser ist, weiß Spiegel je Zahl. Bei der Streuung ist kleiner besser. Steht nichts in Gold, ist kein Unterschied belegt. Das heißt nicht „gleich geblieben“. Diese Scheiben reichen nicht, es zu zeigen oder auszuschließen. Unter 5 Scheiben je Seite steht „zu wenige Scheiben“.",
     caution:
       "Bei gleicher Form gibt Spiegel in höchstens etwa 5 % der Vergleiche trotzdem ein Urteil. Wird dein σ beim Luftgewehr von 1,5 auf 1,3 mm kleiner (40 Schuss je Scheibe, im Mittel 0,1 Ring mehr je Schuss), erkennt Spiegel das bei 5 gegen 5 Scheiben in gut der Hälfte der Fälle, bei 10 gegen 10 in gut neun von zehn. Eine kleine Veränderung braucht viel mehr Scheiben: Bei σ 1,5 auf 1,45 mm (etwa ein Ring mehr auf 40 Schuss) erkennt es Spiegel bei 20 gegen 20 Scheiben nur in etwa jedem fünften Fall, bei 30 gegen 30 in knapp jedem dritten. Zeigen Test und Mittel in verschiedene Richtungen, gibt es kein Urteil. Ein Unterschied zwischen Wettkampf und Training sagt, dass es so ist, nicht warum.",
     minimum: "Ein Urteil ab 5 Scheiben je Seite.",
@@ -443,7 +443,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     metrics: [],
     short: "Ob zwei Scheiben sich in Ergebnis, Streuung oder Lage wirklich unterscheiden.",
     what: "Spiegel legt die Wertungsschüsse zweier Scheiben nebeneinander, wie sie auf dem Ausdruck stehen. Es vergleicht drei Dinge: die Werte der Schüsse, wie weit jeder Schuss von der Mitte seiner Scheibe liegt und wo die beiden Mitten liegen. Bei zwei Scheiben zählt jeder Schuss einzeln.",
-    read: "„Klar besser“ heißt: Ein so großer Unterschied entstünde durch Zufall allein in höchstens 5 von 100 Vergleichen. „Kein klarer Unterschied“ heißt nicht „gleich“. Die Schüsse reichen dann nicht, um es zu zeigen.",
+    read: "Ein Wert in Gold ist klar besser: So ein Unterschied entstünde durch Zufall allein in höchstens 5 von 100 Vergleichen. Steht nichts in Gold, ist kein Unterschied belegt. Das heißt nicht „gleich“. Die Schüsse reichen dann nicht, um es zu zeigen.",
     caution:
       "Zwei Scheiben sind zwei Abende. Ein Unterschied zwischen ihnen sagt, dass dieser Abend anders war, nicht warum. Ob sich etwas dauerhaft verändert hat, zeigt erst der Vergleich zweier Zeiträume. Ohne Unterschied meldet Spiegel in etwa 5 von 100 Vergleichen trotzdem einen. Streut eine Scheibe 1,25-mal so weit wie die andere, erkennt Spiegel das bei 40 Schuss je Scheibe nur in etwa 4 von 10 Fällen, bei 1,5-mal so weit in gut 8 von 10. Ein kleiner Unterschied zwischen zwei Scheiben bleibt also oft unentdeckt.",
     minimum: "Ein Urteil ab 5 Schuss je Scheibe.",
@@ -458,7 +458,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     metrics: [],
     short: "Ob die Mitte deiner Schüsse auf beiden Seiten an derselben Stelle liegt.",
     what: "Spiegel vergleicht, wo die Mitte der Schüsse von A und wo die von B liegt. Bei zwei Scheiben zählt jeder Schuss. Bei zwei Zeiträumen zählt die Mitte jeder Scheibe einmal, egal wie viele Schüsse sie hat. Die Zahl ist der Abstand der beiden Mitten.",
-    read: "„Klar versetzt“ heißt: Die Mitten liegen so weit auseinander, dass Zufall allein das in höchstens 5 von 100 Vergleichen schafft. Die Richtung sagt, wo A von B aus liegt. „Kein klarer Unterschied“ heißt nicht, dass beide Mitten genau gleich liegen.",
+    read: "Steht der Abstand in Gold, liegen die Mitten klar auseinander: Zufall allein schafft das in höchstens 5 von 100 Vergleichen. In welche Richtung, sagt der Satz oben. Ohne Gold ist kein Versatz belegt. Das heißt nicht, dass beide Mitten genau gleich liegen.",
     caution:
       "Ohne Versatz meldet Spiegel in etwa 5 von 100 Vergleichen trotzdem einen. Bei zwei Scheiben zu 40 Schuss erkennt es einen Versatz von einem halben σ (beim Luftgewehr etwa 0,75 mm) in etwa der Hälfte der Fälle. Bei zwei Zeiträumen erkennt es einen Versatz von 0,3 σ bei 5 Scheiben je Seite in gut der Hälfte der Fälle, bei 10 Scheiben je Seite in gut neun von zehn. Wandert deine Mitte von Abend zu Abend, braucht es mehr Scheiben.",
     minimum:

@@ -22,8 +22,8 @@ describe("Wortwahl wie auf der Seite", () => {
   it("der Vergleich zweier Zeiträume zitiert die Urteile der Seite", () => {
     const topic = helpTopic("zeitraum-vergleich")!
     const text = [topic.read, topic.caution, topic.formula].join(" ")
-    expect(text).toContain("„Klar besser“")
-    expect(text).toContain("„kein klarer Unterschied“")
+    expect(text).toContain("Ein Wert in Gold ist klar besser")
+    expect(text).toContain("„ein klarer Unterschied“")
     expect(text).toContain("„zu wenige Scheiben“")
   })
 
