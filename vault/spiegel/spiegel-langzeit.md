@@ -204,15 +204,15 @@ Ergebnis (I7–I9, Z6, Z7, K2, K4, T4, V3–V5, W2–W4 als Zeilen im Vergleich)
 - **Eine Sicht, wo die Schüsse lagen.** Eine zweite Sicht „Form“ (jede Scheibe auf ihre Mitte geschoben) gab es bis
   zum 21. Oktober 2026; sie sah der Lage zu ähnlich, um verstanden zu werden. Die Form steht jetzt als Ellipse im
   Reiter Präzision.
-- **Ab 50 Schuss eine Heatmap auf der echten Scheibe:** Papier und Spiegel wie auf der Seite einer Scheibe, darüber
-  fünf Bänder von selten (violett, `heat-1`) bis oft (gelb, `heat-5`), deren Grenzen neun Zehntel, drei Viertel, die
-  Hälfte, ein Viertel und ein Zehntel der Schüsse umschließen (`HEAT_SHARES`). Die seltenen Bänder scheinen durch
-  (Deckkraft 0,5 außen bis 0,94 innen), so bleiben Weiß und Schwarz erkennbar. Die Ringe liegen wie gedruckt darüber,
-  mit Saum (`heat-halo-light` auf dem Papier, `heat-halo-dark` im Spiegel), der Rand des Spiegels kräftiger, und die
-  Ringzahlen 1 bis 9 stehen bei 3 und 9 Uhr in ihren Ringen, wo sie hineinpassen: So lässt sich der Wert einer Stelle
-  ablesen wie auf der echten Scheibe. Die Legende ist ein Verlauf „selten … oft“. Verworfen nach Rückmeldung des Users:
-  hellblaue Flächen (auf Papier und Spiegel schlecht zu sehen) und eine zurückgenommene dunkle Scheibe (der Spiegel war
-  dort „irgendwas“, Ringe ließen sich nicht einschätzen).
+- **Ab 50 Schuss eine Heatmap auf derselben Scheibe wie auf der Seite einer Scheibe:** Beide zeichnen das Scheibenbild
+  über einen Baustein (`TargetBoard`: Papier, Spiegel, Ringe, Ringzahlen auf vier Achsen, gestrichelte Innenzehn bei
+  der Luftpistole). Die Heatmap liegt zwischen den Flächen und den Ringen: fünf Bänder von selten (violett, `heat-1`)
+  bis oft (gelb, `heat-5`), deren Grenzen neun Zehntel, drei Viertel, die Hälfte, ein Viertel und ein Zehntel der
+  Schüsse umschließen (`HEAT_SHARES`). Die seltenen Bänder scheinen durch (Deckkraft 0,5 außen bis 0,94 innen), so
+  bleiben Weiß und Schwarz erkennbar, und Ringe und Ringzahlen liegen darüber, wie gedruckt: Der Wert einer Stelle lässt
+  sich ablesen wie auf der echten Scheibe. Die Legende ist ein Verlauf „selten … oft“. Verworfen nach Rückmeldung des
+  Users: hellblaue Flächen (auf Papier und Spiegel schlecht zu sehen), eine zurückgenommene dunkle Scheibe (der Spiegel
+  war „irgendwas“) und eigene Ringe mit Saum (nicht wie auf der Seite einer Scheibe).
 - **Unter 50 Schuss jeder Schuss** in Kalibergröße und Ringfarbe wie auf der Seite einer Scheibe, alle im Bild.
 - **Der geviertelte Kreis** ist die Mitte aller Schüsse.
 - **Ein Satz unter dem Bild** gibt die Antwort: zuerst die Lage („passt“ oder „versetzt: rechts tief“, Test über die

@@ -10,7 +10,6 @@ import {
   caliberRadius,
   groupView,
   nearestShot,
-  probeCorner,
   scoreColor,
   screenSizes,
   SHOT_FILL_OPACITY,
@@ -23,6 +22,7 @@ import { formatShotValue, groupShots, isProbeShot, seriesKeyOf, shotLabels } fro
 import type { SeriesKey } from "../types"
 import { isSelected, type ViewState } from "../view-state"
 import { MpiMark } from "./MpiMark"
+import { TargetBoard } from "./TargetBoard"
 import { useAnimatedViewBox, useElementWidth } from "./useAnimatedViewBox"
 
 export interface TargetViewProps {
@@ -109,9 +109,6 @@ export function TargetView({
   const shown = shots.filter((_, i) => selectedAt(i))
   const showsProbe = shown.length > 0 && shown.every(isProbeShot)
 
-  const ringW = mm(target.ringWidthUm)
-  const blackR = mm(target.ringRadiiUm[target.blackFromRing - 1])
-
   // Ein Tipp gilt dem nächsten Treffer der Auswahl: bis 20 px neben seiner Mitte, gezoomt bis an seinen
   // Rand. Auf dem Handy misst ein Treffer auf der ganzen Scheibe nur wenige Pixel.
   const tap = onChoose
@@ -150,67 +147,7 @@ export function TargetView({
         @media (prefers-reduced-motion: reduce) { .shot-ui-pop { animation: none; } }
       `}</style>
       <g data-layer="target">
-        <rect x={-500} y={-500} width={1000} height={1000} fill="var(--paper)" />
-        {showsProbe && (
-          <polygon data-probe-corner="true" points={probeCorner(view)} fill="var(--spiegel)" />
-        )}
-        <circle cx={0} cy={0} r={blackR} fill="var(--spiegel)" />
-        {target.ringRadiiUm.map((radiusUm, i) => {
-          const ring = i + 1
-          if (ring === 10 && target.weapon === "lg") {
-            return <circle key={ring} cx={0} cy={0} r={mm(radiusUm)} fill="var(--paper)" />
-          }
-          const onBlack = ring >= target.blackFromRing
-          return (
-            <circle
-              key={ring}
-              cx={0}
-              cy={0}
-              r={mm(radiusUm)}
-              fill="none"
-              stroke={onBlack ? "var(--spiegel-line)" : "var(--paper-line)"}
-              strokeWidth={1}
-              {...HAIR}
-            />
-          )
-        })}
-        {target.innerTen.kind === "touch" && (
-          <circle
-            cx={0}
-            cy={0}
-            r={target.innerTen.diameterMm / 2}
-            fill="none"
-            stroke="var(--spiegel-line)"
-            strokeWidth={1}
-            strokeDasharray="3 3"
-            {...HAIR}
-          />
-        )}
-        {target.labelRings.flatMap((ring) => {
-          const rMid = mm(target.ringRadiiUm[ring - 1]) - ringW / 2
-          const onBlack = ring >= target.blackFromRing
-          return [
-            [-1, 0],
-            [1, 0],
-            [0, -1],
-            [0, 1],
-          ].map(([dx, dy]) => (
-            <text
-              key={`${ring}:${dx}:${dy}`}
-              data-ring={ring}
-              x={dx * rMid}
-              y={dy * rMid}
-              textAnchor="middle"
-              dominantBaseline="central"
-              fontSize={sizes.ringLabel}
-              fontWeight={600}
-              fill={onBlack ? "var(--spiegel-line)" : "var(--paper-line)"}
-              style={{ fontFamily: "var(--font-display)" }}
-            >
-              {ring}
-            </text>
-          ))
-        })}
+        <TargetBoard target={target} view={view} ringLabel={sizes.ringLabel} probe={showsProbe} />
       </g>
 
       <g data-layer="shots">

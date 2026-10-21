@@ -3,10 +3,9 @@ import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 
 import { periodPattern, type PatternCard } from "@vereinsheim/shot-core/analysis"
-import { LG_10M, LP_10M } from "@vereinsheim/shot-core/targets"
+import { LG_10M } from "@vereinsheim/shot-core/targets"
 
 import { PatternPanel, type PatternState } from "./PatternPanel"
-import { ringLabels } from "./PatternTarget"
 import { PeriodChartBar } from "./PeriodChartBar"
 
 /**
@@ -63,7 +62,9 @@ describe("PatternPanel", () => {
     for (const band of [1, 2, 3, 4, 5]) expect(html).toContain(`data-pattern-band="${band}"`)
     expect(html).toContain('fill="var(--paper)"')
     expect(html).toContain('fill="var(--spiegel)"')
-    expect(html).toContain("data-heat-rings")
+    // die Scheibe wie auf der Seite einer Scheibe, die Ringe und Ringzahlen über den Bändern
+    expect(html).toContain("data-ring=")
+    expect(html.lastIndexOf("data-pattern-band")).toBeLessThan(html.indexOf("data-ring="))
     expect(html).toContain("data-heat-legend")
     expect(html).toContain("selten")
     expect(text(html)).not.toMatch(JARGON)
@@ -126,33 +127,5 @@ describe("PeriodChartBar mit Hauptbild", () => {
     expect(html.indexOf('aria-label="Hauptbild"')).toBeLessThan(
       html.indexOf('aria-label="Kennzahl"')
     )
-  })
-})
-
-describe("Ringe über der Heatmap", () => {
-  it("Luftpistole: der Rand des Spiegels kräftiger, Ringzahlen in den Bändern", () => {
-    const wide = cards(10, 40).map((c) => ({
-      ...c,
-      points: c.points.map((p) => ({ xUm: p.xUm * 15, yUm: p.yUm * 15 })),
-    }))
-    const html = renderToStaticMarkup(
-      createElement(PatternPanel, {
-        state: { status: "ready", pattern: periodPattern(wide) },
-        target: LP_10M,
-        onRetry: () => {},
-      })
-    )
-    expect(html).toContain("data-mirror-edge")
-    expect(html).toMatch(/data-ring-label="\d"/)
-  })
-})
-
-describe("ringLabels", () => {
-  it("die Mitte jedes Bands bei 3 und 9 Uhr, nur wo es in den Ausschnitt passt und breit genug ist", () => {
-    // Luftpistole: Ringbreite 8 mm, Zehn 11,5 mm; Ausschnitt ±40 mm, Schrift 2,56 mm
-    const labels = ringLabels(LP_10M, { x: -40, y: -40, w: 80 }, 2.56)
-    expect(labels.map((l) => l.ring)).toEqual([6, 6, 7, 7, 8, 8, 9, 9])
-    expect(labels[0].xMm).toBeCloseTo(33.75, 6)
-    expect(labels[1].xMm).toBeCloseTo(-33.75, 6)
   })
 })

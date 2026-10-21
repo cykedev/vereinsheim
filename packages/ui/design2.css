@@ -152,10 +152,6 @@
   --heat-3: #c63f6e;
   --heat-4: #f07a3c;
   --heat-5: #f9d65c;
-  /* Säume der Ringe und Ringzahlen über der Heatmap: auf dem Papier ein heller um die dunkle Linie, im Spiegel ein
-     dunkler um die helle, lesbar auf jedem Band */
-  --heat-halo-light: rgba(255, 255, 255, 0.6);
-  --heat-halo-dark: rgba(0, 0, 0, 0.55);
   /* Platz 1, 2, 3 (Gold, Silber, Bronze): auch als Schrift, auf der Kartenfläche ≥ 4,5 : 1 */
   --rank-1: #8a6100;
   --rank-2: #5f6b7a;
