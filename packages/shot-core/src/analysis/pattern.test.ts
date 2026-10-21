@@ -2,7 +2,13 @@ import { describe, expect, it } from "vitest"
 
 import { normalPoints } from "../__fixtures__/random"
 import type { Point } from "../geometry"
-import { periodShape, positionOverTime, positionPoints, type PatternCard } from "./pattern"
+import {
+  outlierDirection,
+  periodShape,
+  positionOverTime,
+  positionPoints,
+  type PatternCard,
+} from "./pattern"
 
 const card = (id: string, points: readonly Point[], atMs = 0): PatternCard => ({ id, atMs, points })
 
@@ -128,5 +134,55 @@ describe("positionPoints und positionOverTime (L10)", () => {
       positionPoints([0, 1, 2, 3].map((i) => around(`c${i}`, 400 + i * 10, -300 - i * 7, i)))
     )
     expect(result.verdict).toBe("few")
+  })
+})
+
+describe("outlierDirection (L7)", () => {
+  /** neun Punkte eng auf einem Kreis und ein weiter in Richtung `clockRad` (von oben im Uhrzeigersinn) */
+  const withFlier = (id: string, clockRad: number, at = { xUm: 0, yUm: 0 }) =>
+    card(id, [
+      ...Array.from({ length: 9 }, (_, i) => ({
+        xUm: at.xUm + Math.round(100 * Math.sin((i * 2 * Math.PI) / 9)),
+        yUm: at.yUm + Math.round(100 * Math.cos((i * 2 * Math.PI) / 9)),
+      })),
+      {
+        xUm: at.xUm + Math.round(1500 * Math.sin(clockRad)),
+        yUm: at.yUm + Math.round(1500 * Math.cos(clockRad)),
+      },
+    ])
+
+  it("Ausreißer immer links unten: Vorzugsrichtung um halb acht", () => {
+    const result = outlierDirection(
+      Array.from({ length: 30 }, (_, i) => withFlier(`c${i}`, 1.25 * Math.PI))
+    )
+    expect(result?.n).toBe(30)
+    expect(result?.verdict).toBe("directed")
+    expect(result?.meanRad).toBeCloseTo(1.25 * Math.PI, 1)
+    expect((result?.counts[7] ?? 0) + (result?.counts[8] ?? 0)).toBe(30)
+  })
+
+  it("gemessen von der Mitte der Scheibe, nicht von der Mitte der Scheibe des Schützen", () => {
+    const result = outlierDirection(
+      Array.from({ length: 30 }, (_, i) =>
+        withFlier(`c${i}`, 0.5 * Math.PI, { xUm: -4000, yUm: 0 })
+      )
+    )
+    expect(result?.meanRad).toBeCloseTo(0.5 * Math.PI, 1)
+  })
+
+  it("Ausreißer gleichmäßig in alle Richtungen: keine Vorzugsrichtung", () => {
+    const result = outlierDirection(
+      Array.from({ length: 36 }, (_, i) => withFlier(`c${i}`, (i * Math.PI) / 6))
+    )
+    expect(result?.verdict).toBe("none")
+    expect(result?.counts).toEqual(new Array(12).fill(3))
+  })
+
+  it("unter 30 Ausreißern kein Urteil, Scheiben unter zehn Punkten zählen nicht", () => {
+    expect(
+      outlierDirection(Array.from({ length: 29 }, (_, i) => withFlier(`c${i}`, Math.PI)))?.verdict
+    ).toBe("few")
+    const nine = card("n", withFlier("n", 0).points.slice(0, 9))
+    expect(outlierDirection([nine])).toBeNull()
   })
 })

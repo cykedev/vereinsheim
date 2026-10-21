@@ -154,3 +154,63 @@ export function positionOverTime(points: readonly PositionPoint[]): PositionOver
           : "fits",
   }
 }
+
+/** Ausreißerrichtung (L7): Scheiben ab so vielen Punkten, ein Urteil ab so vielen Ausreißern */
+const OUTLIER_MIN_CARD_POINTS = 10
+const OUTLIER_MIN_SHOTS = 30
+
+export interface OutlierDirection {
+  /** gezählte Ausreißer mit Richtung */
+  n: number
+  /** je Uhrzeit, Index 0 ist 12 Uhr (oben), 3 rechts, wie `directionClock` */
+  counts: number[]
+  /** mittlere Richtung im Uhrzeigersinn von oben, in [0, 2π) */
+  meanRad: number
+  /** Rayleigh: Wahrscheinlichkeit, dass Richtungen ohne Vorzug so gebündelt aussehen */
+  p: number
+  verdict: "directed" | "none" | "few"
+}
+
+/**
+ * Ausreißerrichtung (L7): je Scheibe ab zehn Punkten das weiteste Zehntel der Schüsse (mindestens einer), gemessen von
+ * ihrer eigenen Mitte, und ihre Richtung von dort. So misst sie das Ausreißen aus der Gruppe, nicht deren Versatz
+ * (das ist L10). Eine Vorzugsrichtung zeigt der Rayleigh-Test (Näherung nach Zar), ab 30 Ausreißern bei p < 0,05.
+ * Eine längliche Gruppe hat Ausreißer an beiden Enden; das ist keine Richtung, der Test bleibt dabei ruhig. Ohne
+ * Scheibe ab zehn Punkten null.
+ */
+export function outlierDirection(cards: readonly PatternCard[]): OutlierDirection | null {
+  const counts = new Array<number>(12).fill(0)
+  let sin = 0
+  let cos = 0
+  let n = 0
+  for (const card of cards) {
+    if (card.points.length < OUTLIER_MIN_CARD_POINTS) continue
+    const center = mean(card.points)
+    const k = Math.max(1, Math.round(card.points.length / 10))
+    const farthest = card.points
+      .map((p, i) => ({ dx: p.xUm - center.xUm, dy: p.yUm - center.yUm, i }))
+      .sort((a, b) => Math.hypot(b.dx, b.dy) - Math.hypot(a.dx, a.dy) || a.i - b.i)
+      .slice(0, k)
+    for (const { dx, dy } of farthest) {
+      if (dx === 0 && dy === 0) continue
+      const angle = Math.atan2(dx, dy)
+      const hours = Math.round(angle / (Math.PI / 6))
+      counts[((hours % 12) + 12) % 12]++
+      sin += Math.sin(angle)
+      cos += Math.cos(angle)
+      n++
+    }
+  }
+  if (!n) return null
+  const r = Math.hypot(sin, cos)
+  const p = Math.min(1, Math.exp(Math.sqrt(1 + 4 * n + 4 * (n * n - r * r)) - (1 + 2 * n)))
+  let meanRad = Math.atan2(sin, cos)
+  if (meanRad < 0) meanRad += 2 * Math.PI
+  return {
+    n,
+    counts,
+    meanRad,
+    p,
+    verdict: n < OUTLIER_MIN_SHOTS ? "few" : p < ALPHA ? "directed" : "none",
+  }
+}
