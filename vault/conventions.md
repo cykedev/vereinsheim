@@ -291,6 +291,14 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
   Ein `pnpm install --frozen-lockfile` verlinkt neu. Den Lockfile-Diff auf Änderungen in fremden
   Importern prüfen: Sie invalidieren deren Image-Build-Cache.
 
+- **Ein neuer FAIL der Skriptprüfung ohne Codeänderung: erst an den Daten nachstellen**: Die Prüfung läuft gegen echte
+  Daten in rollenden Zeiträumen („Letzte 90 Tage“), sie trifft also jeden Tag etwas andere Scheiben. Am 21. Oktober 2026
+  fiel „ein Tipp in den Verlauf wählt die Scheibe“ auf einem Branch, der den Fortschritt nicht berührte: Der mittlere
+  Punkt war an diesem Tag einer von drei Scheiben eines Abends, die im Verlauf fast übereinander stehen. Im Browser
+  nachgestellt (Lage der Punkte, gewählte Kennung), war es ein echter Fehler des Lineals, kein Wackeln. Nicht als
+  „flaky“ abtun und nicht im fremden Branch reparieren, sondern eigenen Branch aufmachen. Daten, in denen sich Werte
+  überdecken, prüft die Prüfung seither eigens (Stapel eines Abends im Fortschritt).
+
 ## 10. Design 2 (alle Apps, ADR-030, ADR-032)
 
 - **Tokens aus `@vereinsheim/ui/design2.css`**: dieselben Namen, die die
