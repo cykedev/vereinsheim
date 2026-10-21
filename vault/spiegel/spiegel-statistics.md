@@ -167,8 +167,8 @@ Nur endgültige, vollständige Scheiben, ohne einen verdächtigen Schuss unter d
 | ID | Kennzahl | Definition | Prio | Wo |
 |---|---|---|---|---|
 | C1 | Serie gegen Serie | alle Serien mit jeder Kennzahl, beste und engste markiert | A | SP-1.8 |
-| C2 | Scheibe gegen Scheibe | zwei Gruppen auf einer Scheibe, Tabelle mit Δ | A | SP-2.2 |
-| C3 | Zeitraum gegen Zeitraum | Werte je Scheibe zweier Zeiträume, Einheit ist die Scheibe: Mann-Whitney zweiseitig, α 0,05, bis 20 Scheiben je Seite genau ausgezählt; Δ der Mittel; Urteil höher, tiefer oder unklar ab fünf Scheiben je Seite, unklar auch, wenn Test und Mittel verschieden zeigen; Fehlalarm höchstens etwa 5 % (B19); Abstandskurven übereinander im Fortschritt | A | SP-2.2, Fachkern (`comparePeriods`) |
+| C2 | Scheibe gegen Scheibe | zwei Scheiben einer Familie Schuss für Schuss, die Wertungsschüsse wie am Ausdruck: Ergebnis über die Werte der Schüsse in der Wertung, Streuung über die Abstände zur Mitte der eigenen Scheibe (wie σ: mit Lage, ohne verdächtige), beide Mann-Whitney zweiseitig, α 0,05; Lage über Hotelling-T² für zwei Stichproben, F(2, n₁ + n₂ − 3); ein Urteil ab 5 Schuss je Scheibe; Fehlalarm höchstens etwa 5,5 % (B26–B28); Bild beider Scheiben übereinander in zwei Farben auf der Seite Vergleichen ([[spiegel-vergleichen]]) | A | SP-2.2, Fachkern (`compareShots`, `compareSides`, `compareCenters`, `comparePicture`) |
+| C3 | Zeitraum gegen Zeitraum | Werte je Scheibe zweier Zeiträume, Einheit ist die Scheibe: Mann-Whitney zweiseitig, α 0,05, bis 20 Scheiben je Seite genau ausgezählt; Δ der Mittel; Urteil höher, tiefer oder unklar ab fünf Scheiben je Seite, unklar auch, wenn Test und Mittel verschieden zeigen; Fehlalarm höchstens etwa 5 % (B19); die Lage über die Mitten der Scheiben (Hotelling für zwei Stichproben, ab 5 Scheiben je Seite, B28); auf der Seite Vergleichen mit zwei Umrissen (Hälfte und 9 von 10 der Schüsse) ab 50 Schuss je Seite ([[spiegel-vergleichen]]); Scheiben in beiden Zeiträumen zählen nur in A | A | SP-2.2, Fachkern (`comparePeriods`, `compareSamples`, `compareCenters`, `comparePicture`) |
 | C4 | Gegen den eigenen Schnitt | Δ der neuesten Scheibe im Zeitraum zum Schnitt der 30 Tage davor (ab drei Scheiben), Perzentil unter den letzten 50 mit ihr (ab zehn, gleiche zur Hälfte), beides über alle Scheiben der Familie, nicht nur im Zeitraum | A | SP-2.2, Fachkern (`againstOwnAverage`); die Oberfläche zeigt seit U2 nur den Abstand zum Schnitt der fünf Scheiben davor, ein Bezug für eine Scheibe ([[spiegel-durchsicht]]) |
 | C5 | Merkmal A gegen B | Welch-t, Mann-Whitney, F-Test; Urteil besser, schlechter oder unklar | B | SP-2.2 nach SP-2.3 |
 | C6 | Vorher/Nachher | Scheiben vor und nach einem Ereignis, gegen den Trend geprüft | B | SP-2.2 nach SP-2.3 |
@@ -189,7 +189,7 @@ Nur endgültige, vollständige Scheiben, ohne einen verdächtigen Schuss unter d
 
 | ID | Kennzahl | Definition | Prio | Wo |
 |---|---|---|---|---|
-| W1 | Wettkampf-Abschlag | Ø und R50 im Wettkampf minus Training (Meyton-Status) | A | SP-2.7 |
+| W1 | Wettkampf-Abschlag | Ø und R50 im Wettkampf minus Training (Meyton-Status); auf der Seite Vergleichen als „Wettkampf und Training“ in einem Zeitraum, gerechnet wie C3 | A | SP-2.7, Seite Vergleichen |
 | W2 | Schlussphase | letzte Serie minus Ø der übrigen, Wettkampf gegen Training | B | SP-2.7 |
 | W3 | Startphase | erste Serie minus Ø der übrigen | B | SP-2.7 |
 | W4 | Tempo unter Druck | Tempo und Tempo-Konstanz im Wettkampf gegen Training | B | SP-2.7 |
@@ -236,7 +236,7 @@ Nur endgültige, vollständige Scheiben, ohne einen verdächtigen Schuss unter d
 
 ## Belege aus Simulationen
 
-Jede Zahl aus einer Simulation, die ein Hilfetext nennt ([[spiegel-statistics-help]]), steht hier und lässt sich nachrechnen: `pnpm --filter @vereinsheim/shot-help simulate` (`packages/shot-help/scripts/simulate.ts`). Methode: mulberry32 mit Box-Muller, fester Seed je Fall, Lagen auf ganze µm, Wertung über `scoreFromCoordinates`, nur die echten Funktionen aus `shot-core`; 5 000 Wiederholungen je Fall, beim Mehrfachtest (B1) 20 000. Normalgruppen: Luftgewehr σ 1,5 mm, Luftpistole σ 15 mm je Richtung. B19 und B20 mit 2 000 Wiederholungen je Fall, je Scheibe 40 Schuss Luftgewehr. Stand nach SP-1.12 (7. Oktober 2026), Ausreißer schrittweise, Form ohne Ausreißer, Zeiträume (8. Oktober 2026), B19 mit einer kleinen Veränderung und dem Unterschied je Schuss, B9 auch in ganzen Ringen, B21 neu (Prüfung, 9. Oktober 2026), Wertung mit Meytons Toleranz von 10 µm (SF-75, 9. Oktober 2026; dadurch neu B6, B10, B19, B20, alle übrigen Zeilen unverändert), B1 mit dem Urteil der Ermüdung und B21 neu (20. Oktober 2026), B1 mit Pause und B22 neu (21. Oktober 2026):
+Jede Zahl aus einer Simulation, die ein Hilfetext nennt ([[spiegel-statistics-help]]), steht hier und lässt sich nachrechnen: `pnpm --filter @vereinsheim/shot-help simulate` (`packages/shot-help/scripts/simulate.ts`). Methode: mulberry32 mit Box-Muller, fester Seed je Fall, Lagen auf ganze µm, Wertung über `scoreFromCoordinates`, nur die echten Funktionen aus `shot-core`; 5 000 Wiederholungen je Fall, beim Mehrfachtest (B1) 20 000. Normalgruppen: Luftgewehr σ 1,5 mm, Luftpistole σ 15 mm je Richtung. B19 und B20 mit 2 000 Wiederholungen je Fall, je Scheibe 40 Schuss Luftgewehr. Stand nach SP-1.12 (7. Oktober 2026), Ausreißer schrittweise, Form ohne Ausreißer, Zeiträume (8. Oktober 2026), B19 mit einer kleinen Veränderung und dem Unterschied je Schuss, B9 auch in ganzen Ringen, B21 neu (Prüfung, 9. Oktober 2026), Wertung mit Meytons Toleranz von 10 µm (SF-75, 9. Oktober 2026; dadurch neu B6, B10, B19, B20, alle übrigen Zeilen unverändert), B1 mit dem Urteil der Ermüdung und B21 neu (20. Oktober 2026), B1 mit Pause und B22 neu (21. Oktober 2026), B26–B28 neu für die Seite Vergleichen (zwei Scheiben zu 20, 40 und 60 Schuss, zwei Seiten zu 5, 10 und 20 Scheiben, 21. Oktober 2026):
 
 ```
 B0   innerhalb σ 39,3 %, innerhalb 2σ 86,5 %
@@ -299,6 +299,22 @@ B24  Ausreißerrichtung jeder zehnte 3σ links unten, erkannt: 5: 0,0 %, 10: 97,
 B25  Lage ohne Versatz, versetzt gemeldet: 5: 4,5 %, 10: 4,9 %, 20: 5,2 %, 40: 5,0 %
 B25  Lage Versatz 0,3σ erkannt: 5: 59,7 %, 10: 99,3 %, 20: 100,0 %, 40: 100,0 %
 B25  Lage Versatz 0,5σ erkannt: 5: 92,9 %, 10: 100,0 %, 20: 100,0 %, 40: 100,0 %
+B26  Ergebnis zweier Scheiben LG σ 1,5 mm, Zehntel: Fehlalarm 20: 4,5 %, 40: 4,4 %, 60: 5,5 %
+B26  Ergebnis zweier Scheiben LG σ 1,5 mm, Zehntel: B σ ×1,25 erkannt 20: 22,3 %, 40: 40,5 %, 60: 55,2 %
+B26  Ergebnis zweier Scheiben LG σ 1,5 mm, ganze Ringe: Fehlalarm 20: 2,4 %, 40: 4,6 %, 60: 4,5 %
+B26  Ergebnis zweier Scheiben LG σ 1,5 mm, ganze Ringe: B σ ×1,25 erkannt 20: 12,7 %, 40: 35,0 %, 60: 49,4 %
+B26  Ergebnis zweier Scheiben LP σ 15 mm, Zehntel: Fehlalarm 20: 5,2 %, 40: 4,6 %, 60: 4,9 %
+B26  Ergebnis zweier Scheiben LP σ 15 mm, Zehntel: B σ ×1,25 erkannt 20: 20,9 %, 40: 39,7 %, 60: 54,8 %
+B26  Ergebnis zweier Scheiben LP σ 15 mm, ganze Ringe: Fehlalarm 20: 5,0 %, 40: 4,8 %, 60: 5,3 %
+B26  Ergebnis zweier Scheiben LP σ 15 mm, ganze Ringe: B σ ×1,25 erkannt 20: 20,3 %, 40: 38,9 %, 60: 54,1 %
+B27  Streuung zweier Scheiben rund, Urteil trotz gleicher Streuung: 20: 5,5 %, 40: 5,2 %, 60: 5,0 %
+B27  Streuung zweier Scheiben a/b 2, Urteil trotz gleicher Streuung: 20: 5,6 %, 40: 4,9 %, 60: 5,2 %
+B27  Streuung zweier Scheiben B σ ×1,25 erkannt: 20: 22,3 %, 40: 39,3 %, 60: 55,2 %
+B27  Streuung zweier Scheiben B σ ×1,5 erkannt: 20: 55,7 %, 40: 85,6 %, 60: 96,3 %
+B28  Lage Schuss für Schuss, ohne Versatz, versetzt gemeldet: 20: 5,4 %, 40: 5,0 %, 60: 4,9 %
+B28  Lage Schuss für Schuss, Versatz 0,5σ erkannt: 20: 25,3 %, 40: 49,1 %, 60: 68,6 %
+B28  Lage Scheibe für Scheibe, ohne Versatz, versetzt gemeldet: 5: 5,1 %, 10: 4,9 %, 20: 5,4 %
+B28  Lage Scheibe für Scheibe, Versatz 0,3σ erkannt: 5: 56,3 %, 10: 94,4 %, 20: 100,0 %
 ```
 
 Zusätzlich aus den drei Prüfungen vom 6./7. Oktober (nur lesend, eigene Skripte): Ausreißer-Fehlalarm bei a/b 1,5 und 3 (Einzeltest mit α 0,05), Trennschärfe der Form (a/b 1,3: 28 % bei 40 Schuss), Effizienz der Streumaße gegenüber σ̂ (Streukreis 0,77 bei 10 und 0,39 bei 60 Schuss, mittlerer Radius 0,92, Höhe/Breite 0,23–0,43), Teiler-Ø gegen Ø je Schuss r = −0,998.

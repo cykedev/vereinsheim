@@ -9,7 +9,9 @@
 import {
   cardTrend,
   cardValues,
+  compareCenters,
   comparePeriods,
+  compareShots,
   directionClock,
   drift,
   fatigue,
@@ -691,6 +693,94 @@ for (const [label, shift, seed] of [
     "B25",
     `Lage ${label}: ${perCount(seed, (rand, count) => positionOverTime(positionPoints(patternCards(rand, count, { mx: 1500 * shift }))).verdict === "offset")}`
   )
+}
+
+// ---------- Vergleichen (C2, C3): zwei Scheiben Schuss für Schuss, zwei Seiten Scheibe für Scheibe
+
+const COMPARE_SHOTS = [20, 40, 60] as const
+const COMPARE_CARDS = [5, 10, 20] as const
+const COMPARE_RUNS = 5_000
+
+/** Anteile je Zahl, etwa „20: 4,9 %, 40: 5,1 %“ */
+function perSize(
+  sizes: readonly number[],
+  seed: number,
+  hit: (rand: Random, size: number) => boolean
+): string {
+  return sizes
+    .map((size) => {
+      let hits = 0
+      repeat(COMPARE_RUNS, seed + size, (rand) => {
+        if (hit(rand, size)) hits++
+      })
+      return `${size}: ${share(hits, COMPARE_RUNS)}`
+    })
+    .join(", ")
+}
+
+// B26: Ergebnis zweier Scheiben (Mann-Whitney über die Werte der Schüsse): Fehlalarm beim selben Schützen, erkannt,
+// wenn B mit 1,25-fachem σ schießt (A „höher“), in Zehnteln und ganzen Ringen, je Schusszahl der Scheiben
+for (const [label, base, seed] of [
+  ["LG σ 1,5 mm", LG, 26100],
+  ["LP σ 15 mm", LP, 26200],
+] as const) {
+  for (const scoring of ["decimal", "rings"] as const) {
+    const words = scoring === "decimal" ? "Zehntel" : "ganze Ringe"
+    const alarm = perSize(COMPARE_SHOTS, seed, (rand, n) => {
+      const result = compareShots(card(rand, { ...base, n }), card(rand, { ...base, n }), scoring)
+      return result.result?.verdict !== "unclear"
+    })
+    const found = perSize(COMPARE_SHOTS, seed + 50, (rand, n) => {
+      const wide = { ...base, n, sx: base.sx * 1.25 }
+      const result = compareShots(card(rand, { ...base, n }), card(rand, wide), scoring)
+      return result.result?.verdict === "higher"
+    })
+    out("B26", `Ergebnis zweier Scheiben ${label}, ${words}: Fehlalarm ${alarm}`)
+    out("B26", `Ergebnis zweier Scheiben ${label}, ${words}: B σ ×1,25 erkannt ${found}`)
+  }
+}
+
+// B27: Streuung zweier Scheiben (Mann-Whitney über die Abstände zur eigenen Mitte): Fehlalarm bei gleichem σ, rund und
+// länglich (a/b 2, beide gleich), erkannt bei B σ ×1,25 und ×1,5 (A „tiefer“, streut weniger)
+for (const [label, group, factor, seed] of [
+  ["rund, Urteil trotz gleicher Streuung", {}, 1, 27100],
+  ["a/b 2, Urteil trotz gleicher Streuung", { sy: 750 }, 1, 27200],
+  ["B σ ×1,25 erkannt", {}, 1.25, 27300],
+  ["B σ ×1,5 erkannt", {}, 1.5, 27400],
+] as const) {
+  const shares = perSize(COMPARE_SHOTS, seed, (rand, n) => {
+    const a = card(rand, { ...LG, ...group, n })
+    const b = card(rand, { ...LG, ...group, n, sx: LG.sx * factor })
+    const verdict = compareShots(a, b, "decimal").spread?.verdict
+    return factor === 1 ? verdict !== "unclear" : verdict === "lower"
+  })
+  out("B27", `Streuung zweier Scheiben ${label}: ${shares}`)
+}
+
+// B28: Lage zweier Seiten (Hotelling für zwei Stichproben): Schuss für Schuss über zwei Scheiben ohne Versatz und mit
+// B 0,5σ nach rechts; Scheibe für Scheibe über die Mitten von Scheiben zu 40 Schuss ohne Versatz und mit 0,3σ
+for (const [label, shift, seed] of [
+  ["Schuss für Schuss, ohne Versatz, versetzt gemeldet", 0, 28100],
+  ["Schuss für Schuss, Versatz 0,5σ erkannt", 0.5, 28200],
+] as const) {
+  const shares = perSize(COMPARE_SHOTS, seed, (rand, n) => {
+    const a = card(rand, { ...LG, n })
+    const b = card(rand, { ...LG, n, mx: LG.sx * shift })
+    return compareShots(a, b, "decimal").position?.verdict === "shifted"
+  })
+  out("B28", `Lage ${label}: ${shares}`)
+}
+for (const [label, shift, seed] of [
+  ["Scheibe für Scheibe, ohne Versatz, versetzt gemeldet", 0, 28300],
+  ["Scheibe für Scheibe, Versatz 0,3σ erkannt", 0.3, 28400],
+] as const) {
+  const centers = (cards: readonly PatternCard[]) => positionPoints(cards).map((p) => p.center)
+  const shares = perSize(COMPARE_CARDS, seed, (rand, count) => {
+    const a = centers(patternCards(rand, count, {}))
+    const b = centers(patternCards(rand, count, { mx: LG.sx * shift }))
+    return compareCenters(a, b)?.verdict === "shifted"
+  })
+  out("B28", `Lage ${label}: ${shares}`)
 }
 
 process.stdout.write(`${lines.join("\n")}\n`)
