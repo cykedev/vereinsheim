@@ -58,17 +58,36 @@ const render = (own: Parameters<typeof CardScreen>[0]["own"]) =>
 
 describe("Seite einer Scheibe: eigene und geteilte", () => {
   it("die eigene trägt Rückweg, Art und Wertung, Teilen und Löschen", () => {
-    const html = render({ near: { prev: "a", next: "b" }, paging: true, share: null })
+    const html = render({
+      near: { prev: "a", next: "b" },
+      paging: true,
+      share: null,
+      previous: null,
+    })
     expect(html).toContain("data-result-actions")
     expect(html).toContain("data-share-card")
     expect(html).toContain("data-delete-card")
     expect(html).toMatch(/<a [^>]*href="\/cards/)
   })
 
+  it("mit einer Scheibe davor der Weg auf die Seite Vergleichen, ohne keiner", () => {
+    const own = { near: null, paging: false, share: null }
+    const html = render({ ...own, previous: "c0" })
+    expect(html).toContain("data-compare-previous")
+    expect(html).toContain(`href="/compare?type=cards&amp;a=${card.id}&amp;b=c0"`)
+    expect(html).toContain("Mit der Scheibe davor vergleichen")
+    expect(render({ ...own, previous: null })).not.toContain("data-compare-previous")
+  })
+
   it("die geteilte zeigt dieselbe Scheibe ohne alles davon und ohne Link aus der Seite", () => {
     const html = render(null)
     expect(html).toContain(`id="shot-table"`)
-    for (const part of ["data-result-actions", "data-share-card", "data-delete-card"])
+    for (const part of [
+      "data-result-actions",
+      "data-share-card",
+      "data-delete-card",
+      "data-compare-previous",
+    ])
       expect(html).not.toContain(part)
     const leaving = [...html.matchAll(/<a [^>]*href="([^"]*)"/g)]
       .map((m) => m[1])

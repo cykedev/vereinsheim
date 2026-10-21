@@ -64,6 +64,7 @@ import {
 } from "@vereinsheim/shot-ui/view-state"
 import { ToggleChip } from "@vereinsheim/ui/design2/toggle-chip"
 
+import { CompareWithPrevious } from "@/components/card/CompareWithPrevious"
 import { DeleteCard } from "@/components/card/DeleteCard"
 import { ShareCard } from "@/components/card/ShareCard"
 import { Page } from "@vereinsheim/ui/design2/page"
@@ -146,6 +147,8 @@ export function CardScreen({
     near: { prev: string | null; next: string | null } | null
     paging: boolean
     share: Share | null
+    /** die Scheibe davor in derselben Familie, für „Mit der Scheibe davor vergleichen“; null ohne */
+    previous: string | null
   } | null
   /** die Adresse dieser Seite, für Anker und Fortschreiben (`/cards/<id>` bzw. `/share/<uuid>`) */
   path: string
@@ -497,6 +500,7 @@ export function CardScreen({
       />
       {own && (
         <>
+          {own.previous && <CompareWithPrevious cardId={card.id} previous={own.previous} />}
           <ShareCard
             cardId={card.id}
             when={cardWhen(card.startedAtMs, pageContext.timeZone)}
