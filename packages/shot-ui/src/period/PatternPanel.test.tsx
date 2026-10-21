@@ -57,11 +57,12 @@ describe("PatternPanel", () => {
     expect(html).not.toContain("data-heat-legend")
   })
 
-  it("ab 50 Schuss die Heatmap in fünf Bändern auf der ruhigen Scheibe, mit Legende", () => {
+  it("ab 50 Schuss die Heatmap in fünf Bändern auf der echten Scheibe, mit Legende", () => {
     const html = render({ status: "ready", pattern: periodPattern(cards(10, 40)) })
     expect(html).toContain('data-pattern-target="density"')
     for (const band of [1, 2, 3, 4, 5]) expect(html).toContain(`data-pattern-band="${band}"`)
-    expect(html).toContain('fill="var(--heat-paper)"')
+    expect(html).toContain('fill="var(--paper)"')
+    expect(html).toContain('fill="var(--spiegel)"')
     expect(html).toContain("data-heat-rings")
     expect(html).toContain("data-heat-legend")
     expect(html).toContain("selten")

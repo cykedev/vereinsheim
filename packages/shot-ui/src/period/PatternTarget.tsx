@@ -20,6 +20,12 @@ export const HEAT_COLORS = [
   "var(--heat-5)",
 ] as const
 
+/**
+ * Deckkraft der Bänder von außen nach innen: Die seltenen lassen Papier und Spiegel durchscheinen (die Scheibe bleibt
+ * echt erkennbar), die dichten decken fast
+ */
+const HEAT_OPACITY = [0.5, 0.62, 0.74, 0.86, 0.94] as const
+
 export interface PatternTargetProps {
   /** das Bild aus `periodPattern`: unter 50 Schuss die Punkte, sonst die Dichte in Bändern */
   layer: PatternLayer
@@ -30,28 +36,28 @@ export interface PatternTargetProps {
 }
 
 /**
- * Trefferbild über einen Zeitraum (L9). Ab 50 Schuss eine Heatmap: auf der ruhigen Scheibe fünf Bänder von selten
- * (violett) bis oft (gelb), deren Grenzen Anteile der Schüsse umschließen, die Ringe als feine Linien darüber. Darunter
+ * Trefferbild über einen Zeitraum (L9) auf der echten Scheibe (Papier und Spiegel wie auf der Seite einer Scheibe). Ab
+ * 50 Schuss eine Heatmap: fünf Bänder von selten (violett) bis oft (gelb), deren Grenzen Anteile der Schüsse
+ * umschließen, darüber Ringe und Ringzahlen wie gedruckt, mit Saum lesbar auf jedem Band. Darunter
  * jeder Schuss in Kalibergröße und Ringfarbe wie auf der Seite einer Scheibe. Der geviertelte Kreis ist die Mitte aller
  * Schüsse. Das Bild trägt den Satz als Namen, die Worte stehen daneben.
  */
 export function PatternTarget({ layer, target, label, className }: PatternTargetProps) {
   const half = layer.halfUm / 1000
   const view = { x: -half, y: -half, w: 2 * half }
-  const quiet = layer.grid !== null
   const calR = caliberRadius(target)
   return (
     <svg
       viewBox={`${view.x} ${view.y} ${view.w} ${view.w}`}
       role="img"
       aria-label={label}
-      data-pattern-target={quiet ? "density" : "points"}
+      data-pattern-target={layer.grid ? "density" : "points"}
       className={cn(
         "block aspect-square h-auto w-full rounded-xl border border-border select-none",
         className
       )}
     >
-      <TargetFace target={target} view={view} quiet={quiet} />
+      <TargetFace target={target} view={view} />
       {layer.grid ? (
         <>
           {layer.grid.levels.map((level, i) => (
@@ -60,7 +66,7 @@ export function PatternTarget({ layer, target, label, className }: PatternTarget
               data-pattern-band={i + 1}
               d={contourPath(layer.grid!, level, layer.halfUm)}
               fill={HEAT_COLORS[i]}
-              fillOpacity={0.92}
+              fillOpacity={HEAT_OPACITY[i]}
               fillRule="evenodd"
             />
           ))}
@@ -113,55 +119,54 @@ export function ringLabels(
   return labels
 }
 
+/** Farben wie gedruckt: auf dem Papier dunkel mit hellem Saum, im Spiegel hell mit dunklem Saum */
+const PRINT = {
+  paper: { line: "var(--paper-line)", halo: "var(--heat-halo-light)" },
+  spiegel: { line: "var(--spiegel-line)", halo: "var(--heat-halo-dark)" },
+} as const
+
 /**
- * Ringe über der Heatmap: hell mit dunklem Saum, der Rand des Spiegels kräftiger, dazu die Ringzahlen, damit sich der
- * Wert einer Stelle ablesen lässt wie auf der echten Scheibe
+ * Ringe über der Heatmap wie auf der echten Scheibe gedruckt, mit Saum, damit sie auf jedem Band lesbar bleiben; der
+ * Rand des Spiegels kräftiger. Dazu die Ringzahlen in ihren Ringen, damit sich der Wert einer Stelle ablesen lässt.
  */
 function HeatRings({ target, view }: { target: TargetImage; view: ViewBox }) {
   const half = view.w / 2
   const fontMm = view.w * 0.032
+  const blackR = mm(target.ringRadiiUm[target.blackFromRing - 1])
   return (
     <g data-heat-rings>
       {target.ringRadiiUm.map((radiusUm, i) => {
         const r = mm(radiusUm)
         if (r > half * 1.5 || (i === 9 && target.weapon === "lg")) return null
         const edge = i + 1 === target.blackFromRing
+        const print = i + 1 > target.blackFromRing ? PRINT.spiegel : PRINT.paper
         return (
           <g key={i} data-mirror-edge={edge || undefined}>
-            <circle
-              r={r}
-              fill="none"
-              stroke="var(--heat-ring-halo)"
-              strokeWidth={edge ? 4 : 2.5}
-              {...HAIR}
-            />
-            <circle
-              r={r}
-              fill="none"
-              stroke="var(--heat-ring)"
-              strokeWidth={edge ? 2 : 1}
-              {...HAIR}
-            />
+            <circle r={r} fill="none" stroke={print.halo} strokeWidth={edge ? 4 : 2.5} {...HAIR} />
+            <circle r={r} fill="none" stroke={print.line} strokeWidth={edge ? 2 : 1} {...HAIR} />
           </g>
         )
       })}
-      {ringLabels(target, view, fontMm).map(({ ring, xMm }) => (
-        <text
-          key={`${ring}:${xMm}`}
-          data-ring-label={ring}
-          x={xMm}
-          y={fontMm * 0.36}
-          textAnchor="middle"
-          fontSize={fontMm}
-          fontWeight={600}
-          fill="var(--heat-ring)"
-          stroke="var(--heat-ring-halo)"
-          strokeWidth={fontMm * 0.18}
-          paintOrder="stroke"
-        >
-          {ring}
-        </text>
-      ))}
+      {ringLabels(target, view, fontMm).map(({ ring, xMm }) => {
+        const print = Math.abs(xMm) < blackR ? PRINT.spiegel : PRINT.paper
+        return (
+          <text
+            key={`${ring}:${xMm}`}
+            data-ring-label={ring}
+            x={xMm}
+            y={fontMm * 0.36}
+            textAnchor="middle"
+            fontSize={fontMm}
+            fontWeight={600}
+            fill={print.line}
+            stroke={print.halo}
+            strokeWidth={fontMm * 0.18}
+            paintOrder="stroke"
+          >
+            {ring}
+          </text>
+        )
+      })}
     </g>
   )
 }

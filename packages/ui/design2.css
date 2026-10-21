@@ -145,20 +145,17 @@
   --score-9: #e9b10c;
   --score-8: #1fa3c8;
   --score-7: #7c5cd6;
-  /* Heatmap der Treffer über einen Zeitraum: von selten (violett) bis oft (gelb), wie die Scheibe in beiden Themes gleich */
-  --heat-1: #3b2a6b;
+  /* Heatmap der Treffer über einen Zeitraum: von selten (violett) bis oft (gelb), wie die Scheibe in beiden Themes gleich;
+     das seltenste Band hell genug, dass es sich auch vom Spiegel abhebt */
+  --heat-1: #5b3fa8;
   --heat-2: #7a2f8e;
   --heat-3: #c63f6e;
   --heat-4: #f07a3c;
   --heat-5: #f9d65c;
-  /* die ruhige Scheibe unter der Heatmap: Papier und Spiegel zurückgenommen, aber deutlich getrennt, Ringe als feine
-     Linien */
-  --heat-paper: #2c3644;
-  --heat-spiegel: #0f141c;
-  --heat-line: rgba(230, 237, 246, 0.3);
-  /* Ringe und Ringzahlen über der Heatmap: hell mit dunklem Saum, lesbar auf jedem Band */
-  --heat-ring: rgba(255, 255, 255, 0.82);
-  --heat-ring-halo: rgba(0, 0, 0, 0.5);
+  /* Säume der Ringe und Ringzahlen über der Heatmap: auf dem Papier ein heller um die dunkle Linie, im Spiegel ein
+     dunkler um die helle, lesbar auf jedem Band */
+  --heat-halo-light: rgba(255, 255, 255, 0.6);
+  --heat-halo-dark: rgba(0, 0, 0, 0.55);
   /* Platz 1, 2, 3 (Gold, Silber, Bronze): auch als Schrift, auf der Kartenfläche ≥ 4,5 : 1 */
   --rank-1: #8a6100;
   --rank-2: #5f6b7a;
