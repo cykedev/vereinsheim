@@ -6,6 +6,7 @@ import {
   axisWords,
   basisText,
   outlierWords,
+  outsideText,
   pictureWords,
   positionWords,
   shapeNote,
@@ -102,5 +103,10 @@ describe("Worte zum Trefferbild", () => {
     expect(shapeNote({ shots: 1240, cards: 31 })).toBe(
       "Gerechnet über 1.240 Schuss aus 31 Scheiben, jede um ihre eigene Mitte."
     )
+  })
+
+  it("Treffer außerhalb des Bilds", () => {
+    expect(outsideText(1)).toBe("1 Schuss liegt außerhalb des Bilds.")
+    expect(outsideText(3)).toBe("3 Schüsse liegen außerhalb des Bilds.")
   })
 })

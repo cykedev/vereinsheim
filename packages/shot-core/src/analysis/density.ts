@@ -111,6 +111,15 @@ export function densityGrid(points: readonly Point[], halfUm: number, size = 64)
   }
 }
 
+/** der Wert des Rasters an einer Stelle; außerhalb 0 */
+export function cellValue(grid: DensityGrid, halfUm: number, p: Point): number {
+  const cell = (2 * halfUm) / grid.size
+  const col = Math.floor((p.xUm + halfUm) / cell)
+  const row = Math.floor((halfUm - p.yUm) / cell)
+  if (col < 0 || col >= grid.size || row < 0 || row >= grid.size) return 0
+  return grid.cells[row * grid.size + col]
+}
+
 /**
  * halbe Kantenlänge des Ausschnitts: 99 % der Punkte und Rand, mindestens 1 mm; der Rand ist so breit, dass auch das
  * geglättete äußerste Band ins Bild passt

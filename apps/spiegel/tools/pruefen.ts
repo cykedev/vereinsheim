@@ -1469,7 +1469,7 @@ async function progress(page: Page) {
  * Das Trefferbild über den Zeitraum (L9) und die Reiter Präzision und Lage: Umschalten schreibt `show=target`, Zurück
  * stellt den Verlauf her; Satz, Legende und Grundlage ohne Fachbegriffe; die Form als Ellipse; ein Punkt der Lage über
  * Zeit wählt die Scheibe der Ablesung; am Telefon kein seitliches Scrollen und über dem Bild höchstens zwei Zeilen
- * Bedienung. Ob die Daten Punkte oder die Heatmap ergeben, steht im Detail.
+ * Bedienung. Ob die Daten Treffer in Ringfarbe, Treffer in Dichtefarbe oder Bänder ergeben, steht im Detail.
  */
 async function periodPattern(page: Page) {
   const show = (label: string) =>
@@ -1494,7 +1494,7 @@ async function periodPattern(page: Page) {
     jargon: ${jargonIn("[data-pattern-panel]")},
   })`)
   check(
-    `Trefferbild: Satz, Legende und Grundlage stehen da, keine Fachbegriffe (${state.kind === "density" ? "Heatmap" : "Punkte"})`,
+    `Trefferbild: Satz, Legende und Grundlage stehen da, keine Fachbegriffe (${state.kind === "bands" ? "Bänder" : state.kind === "shots" ? "Treffer in Dichtefarbe" : "Treffer in Ringfarbe"})`,
     words.sentence.length > 0 && words.basis.startsWith("Über ") && words.jargon === null,
     words
   )

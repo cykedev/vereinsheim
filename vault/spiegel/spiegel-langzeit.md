@@ -204,18 +204,23 @@ Ergebnis (I7–I9, Z6, Z7, K2, K4, T4, V3–V5, W2–W4 als Zeilen im Vergleich)
 - **Eine Sicht, wo die Schüsse lagen.** Eine zweite Sicht „Form“ (jede Scheibe auf ihre Mitte geschoben) gab es bis
   zum 21. Oktober 2026; sie sah der Lage zu ähnlich, um verstanden zu werden. Die Form steht jetzt als Ellipse im
   Reiter Präzision.
-- **Ab 50 Schuss eine Heatmap auf derselben Scheibe wie auf der Seite einer Scheibe:** Beide zeichnen das Scheibenbild
-  über einen Baustein (`TargetBoard`: Papier, Spiegel, Ringe, Ringzahlen auf vier Achsen, gestrichelte Innenzehn bei
-  der Luftpistole). Die Heatmap liegt zwischen den Flächen und den Ringen: sechs Bänder von selten (hellviolett,
-  `heat-0`) bis oft (gelb, `heat-5`), deren Grenzen 99 von 100, neun Zehntel, drei Viertel, die Hälfte, ein Viertel und
-  ein Zehntel der Schüsse umschließen (`HEAT_SHARES`); das äußerste, ganz leichte Band zeigt die seltenen Schüsse
-  (Rückmeldung des Users: ohne es gingen sie unter). Einzelne seltene Treffer über der Heatmap gab es kurz, sie waren
-  nicht nötig. Der Ausschnitt umfasst 99 % der Schüsse mit so viel Rand (× 1,35), dass das äußerste Band ins Bild passt. Die Bänder decken (Deckkraft 0,6 für das leichte äußere, 0,85 bis 0,97 für die übrigen), damit sich
-  Violett klar vom Spiegel abhebt (Rückmeldung des Users); Ringe und Ringzahlen liegen darüber, wie gedruckt: Der Wert
-  einer Stelle lässt sich ablesen wie auf der echten Scheibe. Die Legende ist ein Verlauf „selten … oft“. Verworfen nach Rückmeldung des
-  Users: hellblaue Flächen (auf Papier und Spiegel schlecht zu sehen), eine zurückgenommene dunkle Scheibe (der Spiegel
-  war „irgendwas“) und eigene Ringe mit Saum (nicht wie auf der Seite einer Scheibe).
-- **Unter 50 Schuss jeder Schuss** in Kalibergröße und Ringfarbe wie auf der Seite einer Scheibe, alle im Bild.
+- **Auf derselben Scheibe wie die Seite einer Scheibe:** Beide zeichnen das Scheibenbild über einen Baustein
+  (`TargetBoard`: Papier, Spiegel, Ringe, Ringzahlen auf vier Achsen, gestrichelte Innenzehn bei der Luftpistole).
+- **Drei Stile nach der Zahl der Schüsse** (`PatternStyle`):
+  - unter 50 Schuss jeder Treffer in Kalibergröße und Ringfarbe (`rings`), eine Dichte sagt dann nichts;
+  - bis 3.000 Schuss jeder Treffer in Kalibergröße, gefärbt nach der Dichte an seiner Stelle (`shots`): sechs Stufen
+    von ganz selten (hellviolett, `heat-0`) bis oft (gelb, `heat-5`), deren Grenzen 99 von 100, neun Zehntel, drei
+    Viertel, die Hälfte, ein Viertel und ein Zehntel der Schüsse umschließen (`HEAT_SHARES`), die dichten zuletzt
+    gezeichnet, Deckkraft 0,85; der Ausschnitt reicht bis zum weitesten Schuss, höchstens doppelt so weit wie 99 % der
+    Schüsse;
+  - über 3.000 Schuss (`PATTERN_SHOTS_MAX`, Menge an den Browser) die Dichte als sechs Bänder in denselben Farben
+    zwischen den Flächen und den Ringen (`bands`, Deckkraft 0,6 bis 0,97), Ausschnitt 99 % der Schüsse × 1,35.
+- **Warum Treffer in Dichtefarbe:** Der User verglich am 21. Oktober 2026 Heatmap, Treffer in Ringfarbe und Treffer in
+  Dichtefarbe an den eigenen Daten. Treffer in Ringfarbe wiederholen nur die Ringe (die Farbe hängt am Abstand zur
+  Mitte), bei vielen Schüssen versinkt die Dichte; die reine Heatmap zeigt keine Treffer. Treffer in Dichtefarbe zeigen
+  jeden Schuss, die seltenen und den Kern. Verworfen davor: hellblaue Flächen, eine zurückgenommene dunkle Scheibe,
+  eigene Ringe mit Saum, einzelne seltene Treffer über einer Heatmap.
+- Die Legende ist ein Verlauf „selten … oft“, bei Treffern dazu „Jeder Punkt ist ein Schuss.“
 - **Der geviertelte Kreis** ist die Mitte aller Schüsse.
 - **Ein Satz unter dem Bild** gibt die Antwort: zuerst die Lage („passt“ oder „versetzt: rechts tief“, Test über die
   Schwerpunkte der Scheiben), dann die Form („länglich, eher waagrecht“ oder „keine klare Richtung“, Test über die

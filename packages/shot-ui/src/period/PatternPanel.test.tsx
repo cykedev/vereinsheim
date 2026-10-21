@@ -47,7 +47,7 @@ describe("PatternPanel", () => {
       },
     ])
     const html = render({ status: "ready", pattern })
-    expect(html).toContain('data-pattern-target="points"')
+    expect(html).toContain('data-pattern-target="rings"')
     expect(html.match(/data-pattern-shot/g)).toHaveLength(3)
     expect(html).toContain('fill="var(--score-10)"')
     expect(html).toContain('fill="var(--score-9)"')
@@ -56,22 +56,30 @@ describe("PatternPanel", () => {
     expect(html).not.toContain("data-heat-legend")
   })
 
-  it("ab 50 Schuss die Heatmap in sechs Bändern auf der echten Scheibe, mit Legende", () => {
-    // auch ein Schuss weit draußen steht nicht einzeln da
+  it("ab 50 Schuss jeder Treffer in der Farbe der Dichte auf der echten Scheibe, mit Legende", () => {
     const flier = { id: "weit", atMs: 99, points: [{ xUm: 4000, yUm: 0, ring: 8 }] }
     const html = render({ status: "ready", pattern: periodPattern([...cards(10, 40), flier]) })
-    expect(html).toContain('data-pattern-target="density"')
-    for (const band of [1, 2, 3, 4, 5, 6]) expect(html).toContain(`data-pattern-band="${band}"`)
-    // nur die Heatmap, keine einzelnen Treffer
-    expect(html).not.toContain("data-pattern-shot")
+    expect(html).toContain('data-pattern-target="shots"')
+    expect(html.match(/data-pattern-shot/g)).toHaveLength(401)
+    expect(html).toContain('fill="var(--heat-5)"')
+    expect(html).toContain('fill="var(--heat-0)"')
+    expect(html).not.toContain("var(--score-")
+    // die Scheibe wie auf der Seite einer Scheibe, die Treffer darüber
     expect(html).toContain('fill="var(--paper)"')
     expect(html).toContain('fill="var(--spiegel)"')
-    // die Scheibe wie auf der Seite einer Scheibe, die Ringe und Ringzahlen über den Bändern
-    expect(html).toContain("data-ring=")
-    expect(html.lastIndexOf("data-pattern-band")).toBeLessThan(html.indexOf("data-ring="))
+    expect(html.lastIndexOf("data-ring=")).toBeLessThan(html.indexOf("data-pattern-shot"))
+    expect(html).toContain("Jeder Punkt ist ein Schuss.")
     expect(html).toContain("data-heat-legend")
-    expect(html).toContain("selten")
     expect(text(html)).not.toMatch(JARGON)
+  })
+
+  it("über 3.000 Schuss die Dichte in sechs Bändern zwischen Flächen und Ringen", () => {
+    const html = render({ status: "ready", pattern: periodPattern(cards(80, 40)) })
+    expect(html).toContain('data-pattern-target="bands"')
+    for (const band of [1, 2, 3, 4, 5, 6]) expect(html).toContain(`data-pattern-band="${band}"`)
+    expect(html).not.toContain("data-pattern-shot")
+    expect(html.lastIndexOf("data-pattern-band")).toBeLessThan(html.indexOf("data-ring="))
+    expect(html).not.toContain("Jeder Punkt ist ein Schuss.")
   })
 
   it("Satz aus Lage und Form, Grundlage und die Mitte aller Schüsse", () => {

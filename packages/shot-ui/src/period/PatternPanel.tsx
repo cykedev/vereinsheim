@@ -10,6 +10,7 @@ import {
   basisText,
   CENTER_NOTE,
   LEGEND_POINTS,
+  outsideText,
   PATTERN_FAILED,
   PATTERN_LOADING,
   pictureWords,
@@ -41,7 +42,8 @@ function Placeholder({ text, action }: { text: string; action?: ReactNode }) {
 }
 
 /**
- * Das Trefferbild als Hauptbild der Seite eines Zeitraums: wo die Schüsse lagen, ab 50 Schuss als Heatmap mit Legende,
+ * Das Trefferbild als Hauptbild der Seite eines Zeitraums: wo die Schüsse lagen, ab 50 Schuss in den Farben der Dichte
+ * mit Legende,
  * darunter die Antwort (Lage, dann Form) und die Grundlage. Lädt das Muster noch oder ging es schief, steht an seiner
  * Stelle ein Platz gleicher Größe.
  */
@@ -77,22 +79,25 @@ export function PatternPanel({
 function Ready({ pattern, target }: { pattern: PeriodPattern; target: TargetImage }) {
   const words = pictureWords(pattern)
   const sentence = [words.lead, words.more].filter(Boolean).join(" ")
-  const dense = pattern.picture.grid !== null
+  const style = pattern.picture.style
   return (
     <>
       <PatternTarget layer={pattern.picture} target={target} label={sentence} />
-      {dense ? (
-        <HeatLegend />
-      ) : (
-        <p className="text-[13px] text-muted-foreground">{LEGEND_POINTS}</p>
-      )}
+      {style !== "bands" && <p className="text-[13px] text-muted-foreground">{LEGEND_POINTS}</p>}
+      {style !== "rings" && <HeatLegend />}
       <div className="grid gap-1">
         <p data-pattern-sentence className="text-[14px]">
           <b className="font-semibold">{words.lead}</b>
           {words.more && <span className="text-foreground-2">{` ${words.more}`}</span>}
         </p>
         <p data-pattern-basis className="text-[13px] text-muted-foreground">
-          {`${basisText(pattern)} ${CENTER_NOTE}`}
+          {[
+            basisText(pattern),
+            pattern.picture.outside ? outsideText(pattern.picture.outside) : "",
+            CENTER_NOTE,
+          ]
+            .filter(Boolean)
+            .join(" ")}
         </p>
       </div>
     </>

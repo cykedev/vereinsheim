@@ -19,6 +19,10 @@ export interface PatternSentence {
 }
 
 export const LEGEND_POINTS = "Jeder Punkt ist ein Schuss."
+
+/** „1 Schuss liegt außerhalb des Bilds.“ */
+export const outsideText = (n: number) =>
+  `${n} ${n === 1 ? "Schuss liegt" : "Schüsse liegen"} außerhalb des Bilds.`
 export const CENTER_NOTE = "Der geviertelte Kreis ist die Mitte aller Schüsse."
 export const PATTERN_LOADING = "Trefferbild wird gerechnet …"
 export const PATTERN_FAILED = "Das Trefferbild ließ sich nicht laden."

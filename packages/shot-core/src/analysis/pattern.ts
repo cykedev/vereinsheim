@@ -4,7 +4,7 @@
 // µm, Mitte (0 | 0), x rechts, y oben, wie gezeichnet (ohne verdächtige Schüsse, `cardMarks`).
 
 import type { Point } from "../geometry"
-import { densityGrid, patternHalf, type DensityGrid } from "./density"
+import { cellValue, densityGrid, patternHalf, type DensityGrid } from "./density"
 import { confidenceOf } from "./hotelling"
 
 /** ein Schuss im Trefferbild: Lage und, wenn bekannt, der Ring (für die Farbe der Punkte) */
@@ -221,24 +221,36 @@ export function outlierDirection(cards: readonly PatternCard[]): OutlierDirectio
   }
 }
 
-/** ab so vielen Schüssen zeigt das Trefferbild die Dichte als Heatmap, darunter jeden Schuss in seiner Ringfarbe */
+/** ab so vielen Schüssen färbt das Trefferbild die Treffer nach der Dichte, darunter nach ihrem Ring */
 export const PATTERN_DENSITY_FROM = 50
+/** ab so vielen Schüssen zeigt das Trefferbild die Dichte als Bänder statt jedes Treffers (Menge an den Browser) */
+export const PATTERN_SHOTS_MAX = 3000
 
 /** Raster der Lagen im Muster: 10 µm wie `cardMarks` */
 const PATTERN_UM = 10
 
-/** das Bild der Schüsse: Ausschnitt um die Mitte der Scheibe, die Mitte aller Schüsse, Punkte oder Dichte */
+/**
+ * wie das Trefferbild zeichnet: jeden Treffer in seiner Ringfarbe (wenige Schüsse), jeden Treffer in der Farbe der
+ * Dichte an seiner Stelle, oder die Dichte als Bänder (sehr viele Schüsse)
+ */
+export type PatternStyle = "rings" | "shots" | "bands"
+
+/** das Bild der Schüsse: Ausschnitt um die Mitte der Scheibe, die Mitte aller Schüsse, Treffer oder Bänder */
 export interface PatternLayer {
+  style: PatternStyle
   /** halbe Kantenlänge des Ausschnitts um die Mitte der Scheibe */
   halfUm: number
   /** Mitte aller Schüsse, auf ganze µm; null ohne Schuss */
   center: Point | null
   /**
-   * jeder Schuss als [x, y] in 10 µm und sein Ring (null ohne Wert), unter `PATTERN_DENSITY_FROM` Schuss; sonst null
+   * jeder Schuss als [x, y] in 10 µm, sein Ring (null ohne Wert) und sein Band der Dichte (0 selten bis 5 oft, wie
+   * `HEAT_SHARES`; null bei `rings`), die dichten zuletzt; null bei `bands`
    */
-  points: [number, number, number | null][] | null
-  /** die Dichte in Bändern ab `PATTERN_DENSITY_FROM` Schuss; sonst null */
+  points: [number, number, number | null, number | null][] | null
+  /** die Dichte in Bändern; nur bei `bands` */
   grid: DensityGrid | null
+  /** Treffer außerhalb des Ausschnitts, die das Bild nicht zeigt (nur bei `shots`) */
+  outside: number
 }
 
 /** das Trefferbild eines Zeitraums, wie es an den Browser geht: ohne Schüsse, nur Raster, Mitten und Urteile */
@@ -257,30 +269,63 @@ export interface PeriodPattern {
 
 const roundPoint = (p: Point): Point => ({ xUm: Math.round(p.xUm), yUm: Math.round(p.yUm) })
 
+const toShot = (
+  p: PatternPoint,
+  band: number | null
+): [number, number, number | null, number | null] => [
+  // `|| 0`: kein −0, das JSON zu 0 machte (wie `cardMarks`)
+  Math.round(p.xUm / PATTERN_UM) || 0,
+  Math.round(p.yUm / PATTERN_UM) || 0,
+  p.ring ?? null,
+  band,
+]
+
+/** das Band der Dichte an einer Stelle: das innerste, dessen Grenze sie erreicht; außerhalb aller das äußerste */
+const bandAt = (grid: DensityGrid, value: number) =>
+  Math.max(
+    0,
+    grid.levels.findLastIndex((level) => value >= level)
+  )
+
 function layer(points: readonly PatternPoint[]): PatternLayer {
   const center = points.length ? roundPoint(mean(points)) : null
-  if (points.length >= PATTERN_DENSITY_FROM) {
-    const halfUm = patternHalf(points)
-    return { halfUm, center, points: null, grid: densityGrid(points, halfUm) }
-  }
-  // einzelne Punkte zeigt das Bild alle, mit Rand für das Kaliber
   const farthest = Math.max(0, ...points.map((p) => Math.hypot(p.xUm, p.yUm)))
-  return {
-    halfUm: Math.max(1000, farthest * 1.15 + 500),
-    center,
-    points: points.map((p) => [
-      Math.round(p.xUm / PATTERN_UM),
-      Math.round(p.yUm / PATTERN_UM),
-      p.ring ?? null,
-    ]),
-    grid: null,
-  }
+  if (points.length < PATTERN_DENSITY_FROM)
+    // jeder Treffer im Bild, mit Rand für das Kaliber
+    return {
+      style: "rings",
+      halfUm: Math.max(1000, farthest * 1.15 + 500),
+      center,
+      points: points.map((p) => toShot(p, null)),
+      grid: null,
+      outside: 0,
+    }
+  const core = patternHalf(points)
+  if (points.length > PATTERN_SHOTS_MAX)
+    return {
+      style: "bands",
+      halfUm: core,
+      center,
+      points: null,
+      grid: densityGrid(points, core),
+      outside: 0,
+    }
+  // jeder Treffer, auch seltene weit draußen, aber höchstens 1,6-mal so weit wie 99 % der Schüsse: ein einzelner
+  // Abreißer soll die Gruppe nicht klein machen; wer dann draußen liegt, wird gezählt
+  const halfUm = Math.min(1.6 * core, Math.max(core, farthest * 1.08 + 500))
+  const grid = densityGrid(points, halfUm)
+  const shots = points
+    .map((p) => ({ p, band: bandAt(grid, cellValue(grid, halfUm, p)) }))
+    .sort((a, b) => a.band - b.band)
+    .map(({ p, band }) => toShot(p, band))
+  const outside = points.filter((p) => Math.max(Math.abs(p.xUm), Math.abs(p.yUm)) > halfUm).length
+  return { style: "shots", halfUm, center, points: shots, grid: null, outside }
 }
 
 /**
  * Das Trefferbild eines Zeitraums (L9) mit den Urteilen über Form (L9), Lage (L10) und Ausreißerrichtung (L7), für
- * den Browser gerechnet: Er bekommt die Schüsse, wo sie lagen, als Raster von 64 × 64 (unter 50 Schuss die Punkte mit
- * Ring), die Schwerpunkte je Scheibe auf ganze µm, keine Schüsse. Die Form zeigt die Seite nicht als zweites Bild,
+ * den Browser gerechnet: Er bekommt bis 3.000 Schuss jeden Treffer mit seinem Band der Dichte (unter 50 mit seinem
+ * Ring), darüber nur die Dichte als Raster von 64 × 64, dazu die Schwerpunkte je Scheibe auf ganze µm. Die Form zeigt die Seite nicht als zweites Bild,
  * sondern über ihr Urteil (`shape`).
  */
 export function periodPattern(cards: readonly PatternCard[]): PeriodPattern {

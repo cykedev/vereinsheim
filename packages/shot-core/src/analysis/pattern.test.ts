@@ -4,6 +4,7 @@ import { normalPoints } from "../__fixtures__/random"
 import {
   outlierDirection,
   PATTERN_DENSITY_FROM,
+  PATTERN_SHOTS_MAX,
   periodPattern,
   periodShape,
   positionOverTime,
@@ -201,7 +202,7 @@ describe("outlierDirection (L7)", () => {
 })
 
 describe("periodPattern", () => {
-  it("unter 50 Schuss jeder Schuss mit Ring, ab 50 die Dichte in fünf Bändern", () => {
+  it("unter 50 Schuss jeder Treffer mit Ring", () => {
     const few = periodPattern([
       card("a", [
         { xUm: 1000, yUm: 0, ring: 9 },
@@ -209,21 +210,45 @@ describe("periodPattern", () => {
         { xUm: 0, yUm: 500 },
       ]),
     ])
+    expect(few.picture.style).toBe("rings")
     expect(few.picture.points).toEqual([
-      [100, 0, 9],
-      [-100, 0, null],
-      [0, 50, null],
+      [100, 0, 9, null],
+      [-100, 0, null, null],
+      [0, 50, null, null],
     ])
     expect(few.picture.grid).toBeNull()
     expect(few.picture.center).toEqual({ xUm: 0, yUm: 167 })
     // jeder Punkt liegt im Bild, mit Rand für das Kaliber
     expect(few.picture.halfUm).toBe(1000 * 1.15 + 500)
-    const many = periodPattern(cardsOf(2, 25, 1500))
-    expect(many.shots).toBe(50)
-    expect(many.picture.points).toBeNull()
-    expect(many.picture.grid?.size).toBe(64)
-    expect(many.picture.grid?.levels).toHaveLength(6)
     expect(PATTERN_DENSITY_FROM).toBe(50)
+  })
+
+  it("ab 50 Schuss jeder Treffer mit seinem Band der Dichte, die dichten zuletzt", () => {
+    const flier = { xUm: 9000, yUm: 0, ring: 7 }
+    const pattern = periodPattern([...cardsOf(10, 40, 1500), card("weit", [flier])])
+    expect(pattern.picture.style).toBe("shots")
+    expect(pattern.picture.grid).toBeNull()
+    const points = pattern.picture.points!
+    expect(points).toHaveLength(401)
+    const bands = points.map((p) => p[3] as number)
+    expect(bands).toEqual([...bands].sort((a, b) => a - b))
+    expect(Math.min(...bands)).toBe(0)
+    expect(Math.max(...bands)).toBe(5)
+    // der Abreißer ist selten; liegt er weiter draußen als das 1,6-Fache von 99 % der Schüsse, wird er gezählt
+    expect(points.find((p) => p[0] === 900)?.[3]).toBe(0)
+    expect(pattern.picture.outside).toBe(pattern.picture.halfUm < 9000 ? 1 : 0)
+    // die meisten liegen im Kern: das innerste Band hat etwa ein Zehntel
+    const inner = bands.filter((b) => b === 5).length / bands.length
+    expect(inner).toBeGreaterThan(0.04)
+    expect(inner).toBeLessThan(0.2)
+  })
+
+  it("über 3.000 Schuss nur die Dichte in sechs Bändern", () => {
+    const pattern = periodPattern(cardsOf(80, 40, 1500))
+    expect(pattern.picture.style).toBe("bands")
+    expect(pattern.picture.points).toBeNull()
+    expect(pattern.picture.grid?.levels).toHaveLength(6)
+    expect(PATTERN_SHOTS_MAX).toBe(3000)
   })
 
   it("zählt Scheiben ohne Lage, Schwerpunkte nur ab drei Punkten", () => {

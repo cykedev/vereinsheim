@@ -33,6 +33,8 @@ export const HEAT_COLORS = [
  * leichte äußere Band lässt Papier und Spiegel noch durchscheinen
  */
 const HEAT_OPACITY = [0.6, 0.85, 0.9, 0.93, 0.95, 0.97] as const
+/** Deckkraft der Treffer in der Farbe der Dichte: Überlagerungen bleiben zu sehen, der Spiegel scheint durch */
+const SHOT_HEAT_OPACITY = 0.85
 
 export interface PatternTargetProps {
   /** das Bild aus `periodPattern`: unter 50 Schuss die Punkte, sonst die Dichte in Bändern */
@@ -45,10 +47,10 @@ export interface PatternTargetProps {
 
 /**
  * Trefferbild über einen Zeitraum (L9) auf der Scheibe, wie die Seite einer Scheibe sie zeichnet (`TargetBoard`: Papier,
- * Spiegel, Ringe, Ringzahlen). Ab 50 Schuss liegt zwischen den Flächen und den Ringen eine Heatmap in fünf Bändern von
- * selten (hellviolett) bis oft (gelb), deren Grenzen Anteile der Schüsse umschließen, das äußerste, ganz leichte 99
- * von 100. Darunter jeder Schuss in Kalibergröße und Ringfarbe. Der geviertelte Kreis ist die Mitte aller Schüsse. Ringzahlen und Schwerpunkt richten sich wie auf der
- * Scheibe nach der gemessenen Breite.
+ * Spiegel, Ringe, Ringzahlen). Bis 3.000 Schuss jeder Treffer in Kalibergröße, gefärbt nach der Dichte an seiner Stelle
+ * von selten (hellviolett) bis oft (gelb), die dichten zuletzt; unter 50 Schuss in seiner Ringfarbe, weil eine Dichte
+ * dann nichts sagt. Darüber die Dichte als sechs Bänder zwischen den Flächen und den Ringen. Der geviertelte Kreis ist
+ * die Mitte aller Schüsse. Ringzahlen und Schwerpunkt richten sich wie auf der Scheibe nach der gemessenen Breite.
  */
 export function PatternTarget({ layer, target, label, className }: PatternTargetProps) {
   const [width, measure] = useElementWidth()
@@ -62,13 +64,13 @@ export function PatternTarget({ layer, target, label, className }: PatternTarget
       viewBox={`${view.x} ${view.y} ${view.w} ${view.w}`}
       role="img"
       aria-label={label}
-      data-pattern-target={layer.grid ? "density" : "points"}
+      data-pattern-target={layer.style}
       className={cn(
         "block aspect-square h-auto w-full rounded-xl border border-border select-none",
         className
       )}
     >
-      {layer.grid ? (
+      {layer.style === "bands" && layer.grid ? (
         <>
           <TargetBoard target={target} view={view} ringLabel={sizes.ringLabel} part="fills" />
           {layer.grid.levels.map((level, i) => (
@@ -86,19 +88,20 @@ export function PatternTarget({ layer, target, label, className }: PatternTarget
       ) : (
         <TargetBoard target={target} view={view} ringLabel={sizes.ringLabel} />
       )}
-      {/* unter 50 Schuss jeder Schuss einzeln */}
-      {(layer.points ?? []).map(([x, y, ring], i) => (
+      {/* jeder Treffer: in der Farbe der Dichte an seiner Stelle, bei wenigen Schüssen in der seines Rings */}
+      {(layer.points ?? []).map(([x, y, ring, band], i) => (
         <circle
           key={i}
           data-pattern-shot
+          data-band={band ?? undefined}
           cx={x * POINT_MM}
           cy={-y * POINT_MM}
           r={calR}
-          fill={ring === null ? "none" : scoreColor(ring)}
-          fillOpacity={SHOT_FILL_OPACITY}
+          fill={band !== null ? HEAT_COLORS[band] : ring === null ? "none" : scoreColor(ring)}
+          fillOpacity={band !== null ? SHOT_HEAT_OPACITY : SHOT_FILL_OPACITY}
           stroke="var(--shot-edge)"
           strokeWidth={1}
-          strokeDasharray={ring === null ? "2 2" : undefined}
+          strokeDasharray={band === null && ring === null ? "2 2" : undefined}
           {...HAIR}
         />
       ))}
