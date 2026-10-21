@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest"
 
 import { normalPoints } from "../__fixtures__/random"
 import type { Point } from "../geometry"
-import { compareCenters } from "./compare"
+import { FLAG_SUSPICIOUS, type MetricShot } from "../metrics"
+import { compareCenters, compareShots } from "./compare"
 
 const shifted = (points: readonly Point[], dxUm: number, dyUm = 0) =>
   points.map((p) => ({ xUm: p.xUm + dxUm, yUm: p.yUm + dyUm }))
@@ -57,5 +58,74 @@ describe("compareCenters (C2, C3)", () => {
 
   it("ohne Punkte auf einer Seite: null", () => {
     expect(compareCenters([], CROSS)).toBeNull()
+  })
+})
+
+/** ein Wertungsschuss mit Wert und Lage */
+const shot = (
+  decimalTenths: number,
+  xUm: number | null = 0,
+  yUm: number | null = 0
+): MetricShot => ({
+  xUm,
+  yUm,
+  decimalTenths,
+  ring: Math.floor(decimalTenths / 10),
+  innerTen: false,
+  firedAtMs: null,
+  kind: "match",
+  series: 1,
+})
+
+/** Schüsse an den Punkten mit gleichem Wert */
+const shotsAt = (points: readonly Point[], decimalTenths = 100) =>
+  points.map((p) => shot(decimalTenths, p.xUm, p.yUm))
+
+describe("compareShots (C2)", () => {
+  const points = normalPoints(40, 1500, 5)
+
+  it("dieselbe Scheibe zweimal: kein Unterschied in Ergebnis, Streuung und Lage", () => {
+    const card = points.map((p, i) => shot(90 + (i % 10), p.xUm, p.yUm))
+    const result = compareShots(card, card, "decimal")
+    expect(result.result?.verdict).toBe("unclear")
+    expect(result.spread?.verdict).toBe("unclear")
+    expect(result.position?.verdict).toBe("none")
+    expect(result.shots).toEqual({ a: 40, b: 40 })
+  })
+
+  it("lauter 10,4 gegen lauter 9,0: A höher, Δ = A − B = 1,4", () => {
+    const result = compareShots(shotsAt(points, 104), shotsAt(points, 90), "decimal")
+    expect(result.result?.verdict).toBe("higher")
+    expect(result.result?.delta).toBeCloseTo(1.4, 12)
+  })
+
+  it("in ganzen Ringen zählt der Ring: 10,4 gegen 10,0 ist gleich", () => {
+    const result = compareShots(shotsAt(points, 104), shotsAt(points, 100), "rings")
+    expect(result.result?.delta).toBe(0)
+    expect(result.result?.verdict).toBe("unclear")
+  })
+
+  it("A doppelt so weit gestreut: Streuung höher (größer), Lage gleich", () => {
+    const wide = points.map((p) => ({ xUm: p.xUm * 2, yUm: p.yUm * 2 }))
+    const result = compareShots(shotsAt(wide), shotsAt(points), "decimal")
+    expect(result.spread?.verdict).toBe("higher")
+    expect(result.spread?.delta).toBeGreaterThan(0)
+  })
+
+  it("Probeschüsse zählen nicht, eine Scheibe nur aus Probe zählt wie am Ausdruck", () => {
+    const probe = (s: MetricShot): MetricShot => ({ ...s, kind: "probe", series: null })
+    const withProbe = [...shotsAt(points.slice(0, 5), 50).map(probe), ...shotsAt(points, 100)]
+    expect(compareShots(withProbe, shotsAt(points), "decimal").result?.a.n).toBe(40)
+    const onlyProbe = shotsAt(points.slice(0, 10), 100).map(probe)
+    expect(compareShots(onlyProbe, shotsAt(points), "decimal").result?.a.n).toBe(10)
+  })
+
+  it("ohne Lage und verdächtig: im Ergebnis ja, in Streuung und Lage nicht", () => {
+    const suspicious = { ...shot(100, 9000, 9000), flags: [FLAG_SUSPICIOUS] }
+    const a = [...shotsAt(points), shot(100, null, null), suspicious]
+    const result = compareShots(a, shotsAt(points), "decimal")
+    expect(result.result?.a.n).toBe(42)
+    expect(result.spread?.a.n).toBe(40)
+    expect(result.position?.a.n).toBe(40)
   })
 })

@@ -2,8 +2,17 @@
 // beider Seiten. Die Funktionen nehmen Werte und Punkte, keine Scheiben einer App: Schüsse einer Scheibe (Einheit der
 // Schuss) oder Mitten vieler Scheiben (Einheit die Scheibe). Lagen in µm, Mitte (0 | 0), x rechts, y oben.
 
-import { centroid, type Point } from "../geometry"
-import { MIN_CARDS_PER_SIDE } from "./period"
+import { centroid, distancesTo, type Point } from "../geometry"
+import {
+  asOnPrintout,
+  eligibleShots,
+  inScoring,
+  metricByKey,
+  type MetricDefinition,
+  type MetricShot,
+  type Scoring,
+} from "../metrics"
+import { compareSamples, MIN_CARDS_PER_SIDE, type PeriodComparison } from "./period"
 
 const ALPHA = 0.05
 
@@ -68,4 +77,67 @@ export function compareCenters(a: readonly Point[], b: readonly Point[]): Center
   const f = (nu / (2 * df)) * t2
   const p = (1 + (2 * f) / nu) ** (-nu / 2)
   return { ...summary, p, verdict: p < ALPHA ? "shifted" : "none" }
+}
+
+/**
+ * Seite A gegen Seite B (C2, C3): wie `compareSamples`, aber in der Lesart der Seite Vergleichen. `a` ist A, `b` ist B,
+ * Δ = Mittel A − Mittel B, „höher“ heißt: A liegt höher. Ohne Werte auf einer Seite null.
+ */
+export function compareSides(a: readonly number[], b: readonly number[]): PeriodComparison | null {
+  const result = compareSamples(b, a)
+  return result && { ...result, a: result.b, b: result.a }
+}
+
+export interface ShotComparison {
+  /** Ergebnis je Schuss in der Wertung, A gegen B */
+  result: PeriodComparison | null
+  /** Abstände der Schüsse zur Mitte ihrer Scheibe, A gegen B: „höher“ heißt, A streut mehr */
+  spread: PeriodComparison | null
+  /** Lage der Schüsse */
+  position: CenterComparison | null
+  /** Wertungsschüsse wie am Ausdruck */
+  shots: { a: number; b: number }
+}
+
+const metric = (key: string) => metricByKey(key) as Readonly<MetricDefinition>
+
+/** Werte und Lagen einer Scheibe für den Vergleich, aus den Wertungsschüssen wie am Ausdruck */
+function sideOf(shots: readonly MetricShot[], scoring: Scoring) {
+  const chosen = asOnPrintout(shots)
+  const valued = eligibleShots(inScoring(metric("result.decimalMean"), scoring), chosen)
+  const values = valued.map((shot) =>
+    scoring === "decimal" ? (shot.decimalTenths as number) / 10 : (shot.ring as number)
+  )
+  // wie σ: mit Lage, ohne verdächtige und ohne Schüsse über der Soll-Zahl
+  const points = eligibleShots(metric("group.sigma"), chosen).map((shot) => ({
+    xUm: shot.xUm as number,
+    yUm: shot.yUm as number,
+  }))
+  const center = centroid(points)
+  return {
+    shots: chosen.length,
+    values,
+    points,
+    distances: center ? distancesTo(points, center) : [],
+  }
+}
+
+/**
+ * Zwei Scheiben Schuss für Schuss (C2): die Wertungsschüsse wie am Ausdruck. Ergebnis über die Werte der Schüsse in der
+ * Wertung (wie Ø je Schuss), Streuung über die Abstände jedes Schusses zur Mitte seiner Scheibe (wie σ: mit Lage, ohne
+ * verdächtige), Lage über die Lagen selbst (`compareCenters`). Jeweils A gegen B, ein Urteil ab fünf Schuss je Seite.
+ */
+export function compareShots(
+  a: readonly MetricShot[],
+  b: readonly MetricShot[],
+  scoring: Scoring
+): ShotComparison {
+  const sa = sideOf(a, scoring)
+  const sb = sideOf(b, scoring)
+  return {
+    result: compareSides(sa.values, sb.values),
+    spread: compareSides(sa.distances, sb.distances),
+    position: compareCenters(sa.points, sb.points),
+    shots: { a: sa.shots, b: sb.shots },
+  }
 }

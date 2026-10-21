@@ -32,8 +32,10 @@ describe("Hilfe in der Analyse", () => {
   const count = (id: string) => buttons.filter((b) => b === id).length
 
   it("jedes Thema einer Scheibe genau ein „?“, die Datenlage in jedem Reiter", () => {
-    // die Themen über viele Scheiben gehören auf die Seite eines Zeitraums
-    for (const topic of HELP_TOPICS.filter((t) => t.id !== "datenlage" && t.theme !== "period")) {
+    // die Themen über viele Scheiben gehören auf die Seite eines Zeitraums, die des Vergleichs auf ihre Seite
+    for (const topic of HELP_TOPICS.filter(
+      (t) => t.id !== "datenlage" && t.theme !== "period" && t.theme !== "compare"
+    )) {
       expect(count(topic.id), topic.id).toBe(1)
     }
     expect(count("datenlage")).toBe(ANALYSIS_TABS.length)

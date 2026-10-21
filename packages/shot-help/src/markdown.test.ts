@@ -82,6 +82,7 @@ describe("renderGuideMarkdown", () => {
       "## Zeit und Verlauf",
       "## Datenlage",
       "## Über viele Scheiben",
+      "## Vergleichen",
       "## Glossar",
       "## Typische Fehlschlüsse",
     ])

@@ -435,4 +435,19 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
       "Es zählen nur abgeschlossene, vollständige Scheiben. Nicht zählen Scheiben nur aus dem Ausdruck, neu gewertete, von dir ausgenommene und jede mit einem verdächtigen Schuss in der Wertung. Eine Trainingsscheibe nur mit Probe zählt mit, solange „Trainings nur aus Probe mitzählen“ im Blatt „Filter“ an ist (die Vorgabe); dann gilt ihre Probe wie Wertung, in Serien zu zehn. Ebenso eine Scheibe, deren Probe du als Wertung zählst.",
     minimum: "Ab 1 Scheibe, die beste Form ab 5 Scheiben.",
   },
+  {
+    id: "scheibe-vergleich",
+    title: "Zwei Scheiben im Vergleich",
+    theme: "compare",
+    catalog: ["C2"],
+    metrics: [],
+    short: "Ob zwei Scheiben sich in Ergebnis, Streuung oder Lage wirklich unterscheiden.",
+    what: "Spiegel legt die Wertungsschüsse zweier Scheiben nebeneinander, wie sie auf dem Ausdruck stehen. Es vergleicht drei Dinge: die Werte der Schüsse, wie weit jeder Schuss von der Mitte seiner Scheibe liegt und wo die beiden Mitten liegen. Bei zwei Scheiben zählt jeder Schuss einzeln.",
+    read: "„Klar besser“ heißt: Ein so großer Unterschied entstünde durch Zufall allein in höchstens 5 von 100 Vergleichen. „Kein klarer Unterschied“ heißt nicht „gleich“. Die Schüsse reichen dann nicht, um es zu zeigen.",
+    caution:
+      "Zwei Scheiben sind zwei Abende. Ein Unterschied zwischen ihnen sagt, dass dieser Abend anders war, nicht warum. Ob sich etwas dauerhaft verändert hat, zeigt erst der Vergleich zweier Zeiträume.",
+    minimum: "Ein Urteil ab 5 Schuss je Scheibe.",
+    formula:
+      "Ergebnis und Streuung: Mann-Whitney zweiseitig, α 0,05, über die Werte der Schüsse bzw. ihre Abstände zur Mitte ihrer Scheibe; Lage: Hotelling-T² für zwei Stichproben mit gepoolter Kovarianz, F(2, n₁ + n₂ − 3)",
+  },
 ]
