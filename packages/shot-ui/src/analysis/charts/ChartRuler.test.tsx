@@ -179,7 +179,7 @@ describe("Lineal mit Höhen: ein Tipp in einen Stapel wählt den getroffenen Wer
     return picked.mock.calls.at(-1)?.[0]
   }
 
-  it("mit Höhen der nach y nächste, ohne Höhen wie bisher der nach x nächste", () => {
+  it("mit Höhen der nach y nächste, ohne Höhen der nach x nächste", () => {
     expect(tap([20, 50, 80], 52)).toBe(1)
     expect(tap([20, 50, 80], 12)).toBe(0)
     expect(tap(undefined, 52)).toBe(2)

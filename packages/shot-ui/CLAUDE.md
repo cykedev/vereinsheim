@@ -140,7 +140,7 @@ Bedienung prüft `pnpm --filter spiegel pruefen`.
   Lineal (`analysis/charts/ChartRuler.tsx`: `useRuler`, Zeile über dem Diagramm, „Werte als Tabelle“), reine
   Hilfen in `analysis/charts/ruler.ts`. Das Lineal wählt nach x; mit Höhen (`useRuler(…, ys)`) entscheidet unter Werten,
   die höchstens `SAME_X_PX` (4 px) neben dem nächsten stehen, die Höhe des Zeigers. Das braucht der Verlauf eines
-  Zeitraums, in dem die Scheiben eines Abends fast übereinander stehen; die Tastatur geht weiter in zeitlicher Folge. Ziehen ändert die Scheibe nicht; „Auf der Scheibe“ (`onChoose` der
+  Zeitraums („je Scheibe“), in dem die Scheiben eines Abends fast übereinander stehen; die Tastatur geht in zeitlicher Folge. Ziehen ändert die Scheibe nicht; „Auf der Scheibe“ (`onChoose` der
   Analyse) zeigt den Schuss über die Aktion `show` (ohne Umschalten, Auswahl bei Bedarf auf die ganze Scheibe) und
   springt zu ihr. Die Seite hängt `AnalysisPanel` je Karte neu ein (`key`), damit kein Lineal eine alte Wahl
   mitnimmt. Diagramme und Scheibe sind nicht markierbar (`select-none` an `ChartSlot`, `ChartSvg`, `TargetView`; das

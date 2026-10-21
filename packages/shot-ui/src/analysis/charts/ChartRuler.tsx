@@ -27,7 +27,7 @@ const KEY_STEPS: Readonly<Record<string, number>> = {
  * Wahl durch Tippen, Ziehen oder Tastatur (auch das Aufheben), nicht die Vorgabe über `preset`: So kann eine Seite
  * die Wahl teilen (Verlauf eines Zeitraums), ohne dass ihre eigene Vorgabe zurückkommt. `ys`: die Höhen der Werte in
  * Pixeln des SVG; liegen Werte waagrecht übereinander (Scheiben eines Abends), wählt die Höhe des Zeigers
- * (`nearestIndex`). Die Tastatur geht weiter in der Folge von `xs`.
+ * (`nearestIndex`). Die Tastatur geht in der Folge von `xs`.
  */
 export function useRuler(
   xs: readonly number[],

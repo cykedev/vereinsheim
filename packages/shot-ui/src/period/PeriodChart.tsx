@@ -124,8 +124,9 @@ export function PeriodChart({ width, model, timeZone, chosen, onChoose }: Period
   const y = (v: number) =>
     PAD.top + ((yMax - v) / Math.max(1e-9, yMax - yMin)) * (HEIGHT - PAD.top - padBottom)
 
-  // das Lineal wählt die Scheibe der Seite (nur „je Scheibe“ und Vergleich), „je Monat“ liest es nur ab; die Höhen
-  // entscheiden, wenn Scheiben eines Abends übereinander stehen
+  // das Lineal wählt die Scheibe der Seite (nur „je Scheibe“ und Vergleich), „je Monat“ liest es nur ab; in „je
+  // Scheibe“ entscheiden die Höhen, wenn Scheiben eines Abends übereinander stehen (im Vergleich stehen sie in
+  // gleichen Abständen)
   const ruler = useRuler(
     xs,
     width,
@@ -133,7 +134,7 @@ export function PeriodChart({ width, model, timeZone, chosen, onChoose }: Period
     (i) => {
       if (mode !== "months") onChoose(i === null ? null : (values[i]?.id ?? null))
     },
-    mode === "months" || !enough ? undefined : values.map((v) => y(v.value))
+    mode === "cards" && enough ? values.map((v) => y(v.value)) : undefined
   )
 
   if (!enough) {
