@@ -70,7 +70,11 @@ Fortschritt und am Desktop über einen Untereintrag. Der Vergleich aus dem Forts
    besserer Wert steht golden, liegen die Mitten klar auseinander, der Abstand; die Regel steht einmal unter der Tabelle,
    darunter die Grundlage („A: 10 Scheiben, 398 Schuss. B: …“). Bei zwei Scheiben haben nur Ø je Schuss, Streuung und
    Lage einen Test; die übrigen Zahlen stehen ohne Gold. Fachbegriffe nur im Blatt „?“.
-3. **Verworfen nach dem ersten Bau:** drei Zeilen mit einem Urteilssatz je Zeile und „Alle Kennzahlen“ eingeklappt. Der
+   Die beiden Spalten sind gleich breit und tragen nur Zahlen, die Einheit steht leise beim Namen der Zeile; die Lage
+   ist eine Zahl für beide Seiten und steht als eigene Zeile darunter.
+3. **Raster wie Scheibe und Fortschritt:** linksbündig, nicht zentriert; ab 768 px links das Bild, rechts Tabelle und
+   Grundlage (`PAGE_COLUMNS`).
+4. **Verworfen nach dem ersten Bau:** drei Zeilen mit einem Urteilssatz je Zeile und „Alle Kennzahlen“ eingeklappt. Der
    User fand das doppelt und unruhig (21. Oktober 2026).
 
 ## Das Bild

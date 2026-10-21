@@ -134,6 +134,15 @@ describe("CompareTable", () => {
     expect(html).not.toContain("Alle Kennzahlen")
   })
 
+  it("gleich gebaute Zahlen: Einheit beim Namen, zwei gleich breite Spalten, die Lage als eigene Zeile", () => {
+    const html = renderToStaticMarkup(h(CompareTable, { model: MODEL, onHelp: noop }))
+    expect(html).toContain("grid-cols-[minmax(0,1fr)_6rem_6rem]")
+    expect(html).toMatch(/Ø je Schuss<span[^>]*>Ringe<\/span>/)
+    // keine Einheit hinter der Zahl
+    expect(html).not.toMatch(/9,20<small/)
+    expect(html).toMatch(/data-compare-row="position" class="[^"]*flex[^"]*justify-between/)
+  })
+
   it("zwei Scheiben: die Hilfe des Schussvergleichs", () => {
     const html = renderToStaticMarkup(
       h(CompareTable, { model: { ...MODEL, unit: "shot" }, onHelp: noop })

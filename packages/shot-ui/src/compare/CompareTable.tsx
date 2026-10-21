@@ -18,7 +18,10 @@ const NUMBER = "text-right font-display text-[15px] font-semibold tabular-nums"
 export const rowHelp = (model: Pick<CompareModel, "unit">) =>
   model.unit === "shot" ? "scheibe-vergleich" : "zeitraum-vergleich"
 
-/** ein Wert mit Einheit, in Gold, wenn er klar besser ist; ohne Wert „–“ mit Grund, für Screenreader und als Tooltip */
+/**
+ * eine Zahl ohne Einheit (die steht beim Namen der Zeile, so sind alle Zahlen gleich gebaut), in Gold, wenn sie klar
+ * besser ist; ohne Wert „–“ mit Grund, für Screenreader und als Tooltip
+ */
 function Value({ row, value, gold }: { row: CompareRow; value: number | null; gold: boolean }) {
   if (value === null) {
     const reason = missingReason(row)
@@ -28,11 +31,9 @@ function Value({ row, value, gold }: { row: CompareRow; value: number | null; go
       </span>
     )
   }
-  const unit = unitText(row.unit)
   return (
     <span data-gold={gold || undefined} className={cn(gold && GOLD)}>
       {formatValue(value, row.decimals)}
-      {unit && <small className="ml-1 font-sans text-[12px] text-muted-foreground">{unit}</small>}
       {gold && <span className="sr-only"> (klar besser)</span>}
     </span>
   )
@@ -41,7 +42,7 @@ function Value({ row, value, gold }: { row: CompareRow; value: number | null; go
 /** Kopf einer Spalte: der kurze Name der Seite mit dem Punkt ihrer Farbe */
 function Head({ side, name }: { side: "a" | "b"; name: string }) {
   return (
-    <span className="flex items-center justify-end gap-1.5 pb-1.5 text-[12px] font-semibold text-foreground-2">
+    <span className="flex items-center justify-end gap-1.5 pb-1.5 text-right text-[12px] leading-tight font-semibold [overflow-wrap:anywhere] text-foreground-2">
       <span
         aria-hidden="true"
         className="size-2.5 shrink-0 rounded-full"
@@ -56,7 +57,8 @@ function Head({ side, name }: { side: "a" | "b"; name: string }) {
  * Die Zahlen beider Seiten in einer Tabelle: alle Kacheln des Fortschritts und die Lage. Ø je Schuss und Streuung tragen
  * den Vergleich der Seite (bei zwei Scheiben Schuss für Schuss), die übrigen Zahlen bei Gruppen ihren je Scheibe. Ein
  * klar besserer Wert steht in Gold, die Regel dafür einmal unter der Tabelle; liegen die Mitten klar auseinander, der
- * Abstand. Die Spalten heißen nach den Seiten („6 Monate“, „davor“).
+ * Abstand. Die Spalten heißen nach den Seiten („6 Monate“, „davor“) und sind gleich breit; die Einheit steht beim Namen
+ * der Zeile. Die Lage ist eine Zahl für beide Seiten und steht deshalb als eigene Zeile unter den Spalten.
  */
 export function CompareTable({
   model,
@@ -75,8 +77,9 @@ export function CompareTable({
   const shifted = positionClear(model)
   return (
     <div data-compare-table className={cn("grid gap-2", className)}>
-      <div className="grid grid-cols-[1fr_auto_auto] items-baseline gap-x-5 rounded-2xl border border-border bg-card px-4 pt-3 pb-1">
-        <span className="pb-1.5">
+      <div className="grid grid-cols-[minmax(0,1fr)_6rem_6rem] items-baseline gap-x-4 rounded-2xl border border-border bg-card px-4 pt-3 pb-1">
+        <span className="flex items-center gap-1 pb-1.5 text-[12px] font-semibold text-foreground-2">
+          Zahlen
           <HelpButton
             label="Erklärung: Zahlen im Vergleich"
             helpId={help}
@@ -93,7 +96,14 @@ export function CompareTable({
               data-compare-row={row.key}
               className="col-span-3 grid grid-cols-subgrid border-t border-border"
             >
-              <span className={cn(CELL, "text-[14px]")}>{row.label}</span>
+              <span className={cn(CELL, "text-[14px]")}>
+                {row.label}
+                {unitText(row.unit) && (
+                  <span className="ml-1.5 text-[12px] text-muted-foreground">
+                    {unitText(row.unit)}
+                  </span>
+                )}
+              </span>
               <span className={cn(CELL, NUMBER)}>
                 <Value row={row} value={row.a} gold={gold === "a"} />
               </span>
@@ -105,7 +115,7 @@ export function CompareTable({
         })}
         <div
           data-compare-row="position"
-          className="col-span-3 grid grid-cols-subgrid border-t border-border"
+          className="col-span-3 flex items-baseline justify-between gap-3 border-t border-border"
         >
           <span className={cn(CELL, "flex items-center gap-1 text-[14px]")}>
             Lage
@@ -115,7 +125,7 @@ export function CompareTable({
               onClick={() => onHelp("lage-vergleich")}
             />
           </span>
-          <span className={cn(CELL, NUMBER, "col-span-2")}>
+          <span className={cn(CELL, "text-right text-[14px] font-semibold tabular-nums")}>
             {position ? (
               <span data-gold={shifted || undefined} className={cn(shifted && GOLD)}>
                 {position}

@@ -11,6 +11,7 @@ import { CompareTable } from "@vereinsheim/shot-ui/compare/CompareTable"
 import { basisText, compareSentence, pictureLegend } from "@vereinsheim/shot-ui/compare/words"
 import { HelpButton } from "@vereinsheim/shot-ui/help/HelpButton"
 import { CardContextBar } from "@vereinsheim/shot-ui/nav/CardContextBar"
+import { PAGE_COLUMNS } from "@vereinsheim/shot-ui/layout/columns"
 import { ProgressSwitch } from "@vereinsheim/shot-ui/nav/ProgressSwitch"
 import {
   DEFAULT_PROGRESS,
@@ -73,7 +74,7 @@ export function CompareScreen({
       {back && (
         <CardContextBar back={back} backText="Zur Scheibe" prev={null} next={null} paging={false} />
       )}
-      <div className="mx-auto grid w-full max-w-[40rem] gap-5">
+      <div className="grid gap-5">
         <ProgressSwitch
           current="compare"
           progress={{
@@ -117,7 +118,7 @@ export function CompareScreen({
           ) : (
             <>
               {sentence && (
-                <p data-compare-sentence className="text-[15px] leading-relaxed">
+                <p data-compare-sentence className="max-w-[46rem] text-[15px] leading-relaxed">
                   <b className="font-semibold">{sentence.lead}</b>
                   {sentence.more && (
                     <span className="text-foreground-2">{` ${sentence.more}`}</span>
@@ -125,8 +126,9 @@ export function CompareScreen({
                 </p>
               )}
               {model.a.cards > 0 && model.b.cards > 0 && (
-                <>
-                  <div className="grid gap-2">
+                // wie Scheibe und Fortschritt: ab 768 px links das Bild, rechts die Zahlen
+                <div className={cn("grid gap-5", PAGE_COLUMNS)}>
+                  <div className="grid min-w-0 content-start gap-2">
                     <ComparePicture
                       picture={model.picture}
                       target={target}
@@ -137,11 +139,13 @@ export function CompareScreen({
                       {pictureLegend(model.picture)}
                     </p>
                   </div>
-                  <CompareTable model={model} onHelp={onHelp} />
-                  <p data-compare-basis className="text-[13px] text-muted-foreground">
-                    {basisText(model)}
-                  </p>
-                </>
+                  <div className="grid min-w-0 content-start gap-2">
+                    <CompareTable model={model} onHelp={onHelp} />
+                    <p data-compare-basis className="text-[13px] text-muted-foreground">
+                      {basisText(model)}
+                    </p>
+                  </div>
+                </div>
               )}
             </>
           )}
