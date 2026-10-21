@@ -34,4 +34,7 @@ Format: Datum | Fehler | Regel die ihn verhindert
 <!-- 2026-10-03 (A/B-Ausgleich): 2 Einträge direkt nach vault/conventions.md §9 (Mutation gegen Eigenschaftstests; UI-Pfade an der UI prüfen). -->
 <!-- 2026-10-03: 4 Einträge konsolidiert (1 ENFORCE-Fix publicSlug.test.ts, 2 → ringwerk-code-conventions, 1 → vault/conventions.md §9). -->
 
+| 2026-10-21 | Die Review-Korrektur „Formular erst nach Erfolg zurücksetzen“ war grün in allen Tests, die Abläufe fanden den Fehler: Die neu geladene Liste kam vor der Antwort der Action, der späte Reset löschte die schon getroffene nächste Auswahl | Zustand eines Formulars, das nach einer Server Action zurückgesetzt wird, nie nach dem `await` zurücksetzen, sondern sofort; Werte, die einen Fehler überleben sollen, danach gezielt zurückholen. Nach jeder Änderung an einem Formular `pruefen:ablaeufe` laufen lassen |
+| 2026-10-21 | Chrome 155 headless beendet sich bei `captureBeyondViewport` auf sehr hohen Seiten und bei `Page.getLayoutMetrics` („Chrome ist weg“); der Abgleich fiel deshalb tagelang aus, ohne dass der Code schuld war | Bei „Chrome ist weg“ zuerst `Google Chrome --version` gegen die Version des letzten grünen Laufs halten und mit einer kleinen Probe eingrenzen, bevor am eigenen Code gesucht wird |
+
 ## Abgeschlossen

@@ -1652,8 +1652,7 @@ Leitfaden sagt deshalb an beiden Stellen „jede fünfte“.
 
 ## Ringwerk: Saison ohne Mindestzahl
 
-Stand 20. Oktober 2026, als Entwurf vom User gelesen, umgesetzt auf `feat/ringwerk-season-no-min-series`, **Freigabe
-des Wortlauts vor dem Merge**. Technik: [[season-mode]]. Anlass: Im Verein braucht die Jugend
+**Status: freigegeben am 21. Oktober 2026.** Technik: [[season-mode]]. Anlass: Im Verein braucht die Jugend
 keine Mindestzahl an Serien. Ringwerk führt dafür eine Ausnahme an der Einschreibung, keine Altersklasse. Für eine
 Zeile mit Ausnahme ist die Mindestzahl 1.
 
