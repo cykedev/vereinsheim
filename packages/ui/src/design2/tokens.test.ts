@@ -128,6 +128,8 @@ describe("Design-2-Tokens", () => {
       "heat-paper",
       "heat-spiegel",
       "heat-line",
+      "heat-ring",
+      "heat-ring-halo",
     ]) {
       expect(root.has(name), `--${name}`).toBe(true)
       expect(dark.has(name), `--${name}`).toBe(false)

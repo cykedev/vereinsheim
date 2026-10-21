@@ -206,8 +206,10 @@ Ergebnis (I7–I9, Z6, Z7, K2, K4, T4, V3–V5, W2–W4 als Zeilen im Vergleich)
   Reiter Präzision.
 - **Ab 50 Schuss eine Heatmap:** fünf Bänder von selten (violett, `heat-1`) bis oft (gelb, `heat-5`), deren Grenzen
   neun Zehntel, drei Viertel, die Hälfte, ein Viertel und ein Zehntel der Schüsse umschließen (`HEAT_SHARES`), auf einer
-  ruhigen Scheibe (`heat-paper`, `heat-spiegel`, Ringe als feine Linien darüber), damit die Farben tragen; die Legende
-  ist ein Verlauf „selten … oft“. Hellblaue Flächen auf Papier und Spiegel waren an beiden Stellen schlecht zu sehen.
+  ruhigen Scheibe (`heat-paper`, `heat-spiegel`), damit die Farben tragen; die Legende ist ein Verlauf „selten … oft“.
+  Über den Bändern liegen die Ringe hell mit dunklem Saum (`heat-ring`, `heat-ring-halo`), der Rand des Spiegels
+  kräftiger, und die Ringzahlen 1 bis 9 stehen bei 3 und 9 Uhr in ihren Ringen, wo sie hineinpassen: So lässt sich der
+  Wert einer Stelle ablesen wie auf der echten Scheibe (Rückmeldung des Users: ohne sie war der Spiegel „irgendwas“). Hellblaue Flächen auf Papier und Spiegel waren an beiden Stellen schlecht zu sehen.
 - **Unter 50 Schuss jeder Schuss** in Kalibergröße und Ringfarbe wie auf der Seite einer Scheibe, alle im Bild.
 - **Der geviertelte Kreis** ist die Mitte aller Schüsse.
 - **Ein Satz unter dem Bild** gibt die Antwort: zuerst die Lage („passt“ oder „versetzt: rechts tief“, Test über die

@@ -151,10 +151,14 @@
   --heat-3: #c63f6e;
   --heat-4: #f07a3c;
   --heat-5: #f9d65c;
-  /* die ruhige Scheibe unter der Heatmap: Papier und Spiegel zurückgenommen, Ringe als feine Linien */
-  --heat-paper: #1f2733;
-  --heat-spiegel: #171d27;
-  --heat-line: rgba(230, 237, 246, 0.22);
+  /* die ruhige Scheibe unter der Heatmap: Papier und Spiegel zurückgenommen, aber deutlich getrennt, Ringe als feine
+     Linien */
+  --heat-paper: #2c3644;
+  --heat-spiegel: #0f141c;
+  --heat-line: rgba(230, 237, 246, 0.3);
+  /* Ringe und Ringzahlen über der Heatmap: hell mit dunklem Saum, lesbar auf jedem Band */
+  --heat-ring: rgba(255, 255, 255, 0.82);
+  --heat-ring-halo: rgba(0, 0, 0, 0.5);
   /* Platz 1, 2, 3 (Gold, Silber, Bronze): auch als Schrift, auf der Kartenfläche ≥ 4,5 : 1 */
   --rank-1: #8a6100;
   --rank-2: #5f6b7a;

@@ -4,7 +4,8 @@ import { cn } from "@vereinsheim/lib/utils"
 
 import { caliberRadius, scoreColor, SHOT_FILL_OPACITY } from "../geometry"
 import { MpiMark } from "../target/MpiMark"
-import { TargetFace, TargetRings } from "../target/TargetFace"
+import { TargetFace } from "../target/TargetFace"
+import type { ViewBox } from "../types"
 import { contourPath } from "./contours"
 
 const HAIR = { vectorEffect: "non-scaling-stroke" } as const
@@ -63,7 +64,7 @@ export function PatternTarget({ layer, target, label, className }: PatternTarget
               fillRule="evenodd"
             />
           ))}
-          <TargetRings target={target} view={view} quiet stroke="var(--heat-line)" />
+          <HeatRings target={target} view={view} />
         </>
       ) : (
         (layer.points ?? []).map(([x, y, ring], i) => (
@@ -86,6 +87,82 @@ export function PatternTarget({ layer, target, label, className }: PatternTarget
         <MpiMark x={layer.center.xUm / 1000} y={-layer.center.yUm / 1000} radius={view.w * 0.022} />
       )}
     </svg>
+  )
+}
+
+const mm = (um: number) => um / 1000
+
+/**
+ * die Ringzahlen eines Scheibenbilds im Ausschnitt: je Ring 1 bis 9 die Mitte seines Bands bei 3 und 9 Uhr, nur wo das
+ * Band breit genug für die Zahl ist (10 trägt die Mitte selbst)
+ */
+export function ringLabels(
+  target: TargetImage,
+  view: ViewBox,
+  fontMm: number
+): { ring: number; xMm: number }[] {
+  const half = view.w / 2
+  const labels: { ring: number; xMm: number }[] = []
+  for (let ring = 1; ring <= 9; ring++) {
+    const outer = mm(target.ringRadiiUm[ring - 1])
+    const inner = mm(target.ringRadiiUm[ring])
+    const mid = (outer + inner) / 2
+    if (mid > half - fontMm || outer - inner < fontMm * 1.2) continue
+    labels.push({ ring, xMm: mid }, { ring, xMm: -mid })
+  }
+  return labels
+}
+
+/**
+ * Ringe über der Heatmap: hell mit dunklem Saum, der Rand des Spiegels kräftiger, dazu die Ringzahlen, damit sich der
+ * Wert einer Stelle ablesen lässt wie auf der echten Scheibe
+ */
+function HeatRings({ target, view }: { target: TargetImage; view: ViewBox }) {
+  const half = view.w / 2
+  const fontMm = view.w * 0.032
+  return (
+    <g data-heat-rings>
+      {target.ringRadiiUm.map((radiusUm, i) => {
+        const r = mm(radiusUm)
+        if (r > half * 1.5 || (i === 9 && target.weapon === "lg")) return null
+        const edge = i + 1 === target.blackFromRing
+        return (
+          <g key={i} data-mirror-edge={edge || undefined}>
+            <circle
+              r={r}
+              fill="none"
+              stroke="var(--heat-ring-halo)"
+              strokeWidth={edge ? 4 : 2.5}
+              {...HAIR}
+            />
+            <circle
+              r={r}
+              fill="none"
+              stroke="var(--heat-ring)"
+              strokeWidth={edge ? 2 : 1}
+              {...HAIR}
+            />
+          </g>
+        )
+      })}
+      {ringLabels(target, view, fontMm).map(({ ring, xMm }) => (
+        <text
+          key={`${ring}:${xMm}`}
+          data-ring-label={ring}
+          x={xMm}
+          y={fontMm * 0.36}
+          textAnchor="middle"
+          fontSize={fontMm}
+          fontWeight={600}
+          fill="var(--heat-ring)"
+          stroke="var(--heat-ring-halo)"
+          strokeWidth={fontMm * 0.18}
+          paintOrder="stroke"
+        >
+          {ring}
+        </text>
+      ))}
+    </g>
   )
 }
 
