@@ -1734,7 +1734,7 @@ es braucht, steht oben bei „Mindest“.“:
 
 ## Spiegel: Was die Pause bewirkt hat
 
-Stand 21. Oktober 2026, vom Agenten entworfen, **vom User noch nicht gelesen**, nicht umgesetzt. Plan:
+**Status: freigegeben am 21. Oktober 2026**, noch nicht umgesetzt. Plan:
 `plans/2026-10-21-spiegel-pause-verdict.md`.
 
 Grund: Die Karte „Pausen und Wiedereinstieg“ zeigt je Pause, wie die bis zu drei Schüsse danach gegen deine übrigen
