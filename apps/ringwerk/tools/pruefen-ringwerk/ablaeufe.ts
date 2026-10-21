@@ -1106,6 +1106,46 @@ async function seasonFlow(run: Run, ui: Ui, db: Db, pass: Pass) {
     s = await db.series.findMany({ where: { competitionId: id, participantId: p.id } })
     expect(s.length === 1 && num(s[0].rings) === 98, "bearbeitet, weiter eine Serie", s)
   })
+
+  await run.step("ohne Mindestzahl werten und wieder verlangen", async () => {
+    const p = players[1]
+    const exemption = async () => {
+      const cp = await db.competitionParticipant.findFirst({
+        where: { competitionId: id, participantId: p.id },
+        select: { exemptFromMinSeries: true },
+      })
+      const logged = await db.auditLog.count({
+        where: { competitionId: id, eventType: "MIN_SERIES_EXEMPTION_CHANGED" },
+      })
+      return { exempt: cp?.exemptFromMinSeries, logged }
+    }
+    await ui.open(`/competitions/${id}/participants`)
+    await ui.pressIn([p.label], "Ohne Mindestzahl werten")
+    await ui.pressInDialog("Ohne Mindestzahl werten")
+    await ui.dialogClosed("Dialog schließt nicht")
+    await ui.until(`shown("ohne Mindestzahl")`, "Zeichen „ohne Mindestzahl“ fehlt")
+    let state = await exemption()
+    expect(
+      state.exempt === true && state.logged === 1,
+      "Ausnahme gesetzt, ein Eintrag im Protokoll",
+      state
+    )
+    // ohne Serie: Mindestzahl 1, noch nicht erreicht
+    await ui.open(`/competitions/${id}/standings`)
+    // am Telefon als Zusatz am Namen, sonst in der Spalte „Serien“
+    await ui.until(`shown("0/1") || shown("(0/1)")`, "Rangliste zeigt nicht 0/1")
+
+    await ui.open(`/competitions/${id}/participants`)
+    await ui.pressIn([p.label], "Mindestzahl verlangen")
+    await ui.pressInDialog("Mindestzahl verlangen")
+    await ui.dialogClosed("Dialog schließt nicht")
+    state = await exemption()
+    expect(
+      state.exempt === false && state.logged === 2,
+      "Mindestzahl wieder verlangt, zweiter Eintrag",
+      state
+    )
+  })
 }
 
 async function deleteFlow(run: Run, ui: Ui, db: Db, pass: Pass) {

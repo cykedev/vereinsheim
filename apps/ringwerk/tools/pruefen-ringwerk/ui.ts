@@ -14,6 +14,9 @@ const INSTALL = `(window.__rwui || (window.__rwui = true, Object.assign(window, 
   btn: (label, root) => $$("button, a[href]", root ?? document).find((b) => visible(b) && named(b, label)) ?? null,
   btnRe: (src, root) => $$("button, a[href]", root ?? document).find((b) => visible(b) && namedRe(b, src)) ?? null,
   opt: (src) => $$('[role="option"]').find((o) => visible(o) && new RegExp(src).test(txt(o))) ?? null,
+  // gleiche Lage wie beim letzten Aufruf: Das Element bewegt sich nicht mehr
+  settled: (el) => { if (!el) return false; const r = el.getBoundingClientRect(); const at = r.top + "," + r.left
+    const same = el.__rwAt === at; el.__rwAt = at; return same },
   rowOf: (text, root) => $$("tr", root ?? document).find((tr) => visible(tr) && txt(tr).includes(text)) ?? null,
   // kleinster Eintrag (Zeile, Listenpunkt, Karte), der alle Texte und den Knopf enthält
   itemOf: (texts, label) => $$("main tr, main li, main div").filter((el) => visible(el) &&
@@ -121,7 +124,13 @@ export class Ui {
   /** Radix-Auswahl: Auslöser per `id`, Möglichkeit nach Text (genau oder Muster) */
   async choose(id: string, option: string | RegExp): Promise<void> {
     await this.click(`$(${JSON.stringify(`#${id}`)})`, `Auswahl #${id}`)
-    await this.click(`opt(${esc(option)})`, `Möglichkeit „${option}“ in #${id}`)
+    // Die Liste richtet sich nach dem Öffnen und nach dem Scrollen noch am Auslöser aus. Ein Klick davor trifft am
+    // Telefon die Möglichkeit daneben, also erst in die Mitte scrollen und auf die Ruhelage warten.
+    const choice = `opt(${esc(option)})`
+    await this.until(`!!${choice}`, `Möglichkeit „${option}“ fehlt in #${id}`)
+    await this.ev(`${choice}.scrollIntoView({ block: "center", behavior: "instant" })`)
+    await this.until(`settled(${choice})`, `Möglichkeit „${option}“ in #${id} kommt nicht zur Ruhe`)
+    await this.click(choice, `Möglichkeit „${option}“ in #${id}`)
     await this.until(`!$$('[role="listbox"]').some(visible)`, `Auswahl #${id} schließt nicht`)
     await this.until(
       `new RegExp(${esc(option)}).test(txt($(${JSON.stringify(`#${id}`)})))`,
