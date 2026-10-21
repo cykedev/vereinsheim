@@ -453,8 +453,10 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   knappes Drittel länger. „Zieht in keine klare Richtung“ heißt nicht „genau rund“. Diese Schüsse
   zeigen nur keine Streckung.
 - *Vorsicht:* Eine einzelne Scheibe sieht oft zufällig länglich aus. Eine leichte Streckung von 1,2
-  bis 1,3 sieht man erst über viele Scheiben. Liegen die Abende an verschiedenen Stellen, ändert das
-  die Form hier nicht. Das zeigt die Lage.
+  bis 1,3 sieht man erst über viele Scheiben. Ist deine Gruppe rund, meldet Spiegel bei 5 Scheiben
+  in etwa 5 von 100 Fällen trotzdem „länglich“, ab 10 Scheiben seltener. Eine Streckung von 1,25
+  erkennt es bei 5 Scheiben zu 40 Schuss in knapp acht von zehn Fällen, ab 10 Scheiben fast immer.
+  Liegen die Abende an verschiedenen Stellen, ändert das die Form hier nicht. Das zeigt die Lage.
 - *Mindestzahl:* Ab 100 Schuss aus 5 Scheiben.
 - *Formel:* `S = Σ (pᵢ − mⱼ)(pᵢ − mⱼ)ᵀ / ν über alle Scheiben j mit mindestens 3 Schuss, ν = Σ (nⱼ −
   1); Länge zu Breite = √(λ₁/λ₂); Mauchly W = 4λ₁λ₂/(λ₁ + λ₂)², p = W^((ν − 1)/2); länglich, wenn p
@@ -467,8 +469,10 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   rechts unter der Mitte, und das ist kein Zufall. Jede Scheibe zählt dabei einmal, egal wie viele
   Schüsse sie hat. „Passt“ heißt: Ein Versatz ist nicht belegt.
 - *Vorsicht:* Viele Schüsse an wenigen Abenden sind keine breite Grundlage. Darum urteilt Spiegel
-  hier über Scheiben, nicht über Schüsse. Wandert die Mitte von Abend zu Abend, kann das Mittel
-  trotzdem passen.
+  hier über Scheiben, nicht über Schüsse. Ohne Versatz meldet es in etwa 5 von 100 Fällen trotzdem
+  „versetzt“. Ein Versatz von 0,3 σ (beim Luftgewehr etwa 0,45 mm) zeigt sich bei 5 Scheiben zu 40
+  Schuss in sechs von zehn Fällen, ab 10 Scheiben fast immer. Wandert die Mitte von Abend zu Abend,
+  kann das Mittel trotzdem passen.
 - *Mindestzahl:* Ab 5 Scheiben mit Lage, je mindestens 3 Schuss.
 - *Formel:* `Schwerpunkt mⱼ je Scheibe; Hotelling-T² des Mittels der mⱼ gegen die Mitte, Grenze 2(k
   − 1)/(k − 2) · F₀,₉₅(2, k − 2) bei k Scheiben`
@@ -480,7 +484,10 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   Richtung, und das ist kein Zufall. Das ist etwas anderes als die Lage. Die Lage sagt, wo deine
   Gruppe liegt. Die Ausreißerrichtung sagt, wohin einzelne Schüsse aus ihr wegreißen.
 - *Vorsicht:* Eine längliche Gruppe hat Ausreißer an beiden Enden. Das ist keine Richtung, und
-  Spiegel sagt dann auch keine.
+  Spiegel sagt dann auch keine. Ohne Vorzugsrichtung meldet es in höchstens etwa 3 von 100 Fällen
+  eine. Reißt jeder zehnte Schuss um 2 σ in dieselbe Richtung, erkennt Spiegel das bei 20 Scheiben
+  zu 40 Schuss in gut der Hälfte der Fälle, bei 40 Scheiben in neun von zehn. Bei 3 σ erkennt es das
+  ab 10 Scheiben fast immer.
 - *Mindestzahl:* Ab 30 Ausreißern, gezählt aus Scheiben ab 10 Schuss.
 - *Formel:* `je Scheibe die k = max(1, round(n/10)) Schüsse mit dem größten Abstand zu ihrem
   Schwerpunkt, Richtung von dort; Rayleigh-Test mit p = exp(√(1 + 4n + 4(n² − R²)) − (1 + 2n))

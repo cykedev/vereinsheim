@@ -16,10 +16,15 @@ import {
   groupShape,
   mpiConfidence,
   mpiPath,
+  outlierDirection,
   outliers,
   pauseRecovery,
+  periodShape,
   periodTrend,
+  positionOverTime,
+  positionPoints,
   ringLossSplit,
+  type PatternCard,
   type PeriodCard,
 } from "@vereinsheim/shot-core/analysis"
 import { centroid, covarianceEllipse } from "@vereinsheim/shot-core/geometry"
@@ -600,6 +605,91 @@ for (const [label, base, seed] of [
     `Pause ${label}: Fehlalarm Zehntel ${share(counts.decimal[0], 5_000)}, ganze Ringe ${share(counts.rings[0], 5_000)}; ` +
       `danach σ ×1,6 erkannt Zehntel ${share(counts.decimal[1], 5_000)}, ganze Ringe ${share(counts.rings[1], 5_000)}; ` +
       `σ ×2 erkannt Zehntel ${share(counts.decimal[2], 5_000)}, ganze Ringe ${share(counts.rings[2], 5_000)}`
+  )
+}
+
+// ---------- Trefferbild über viele Scheiben (L9, L7, L10): Fehlalarm und Trennschärfe je Zahl der Scheiben zu 40
+// Schuss, LG σ 1,5 mm. Alle drei Tests hängen nicht vom Maßstab ab, die Luftpistole gäbe dieselben Anteile.
+
+const PATTERN_CARDS = [5, 10, 20, 40] as const
+const PATTERN_RUNS = 5_000
+
+const patternCards = (rand: Random, count: number, group: Partial<Group>): PatternCard[] =>
+  Array.from({ length: count }, (_, i) => ({
+    id: `c${i}`,
+    atMs: i,
+    points: card(rand, { ...LG, n: 40, ...group }).map((s) => ({
+      xUm: s.xUm as number,
+      yUm: s.yUm as number,
+    })),
+  }))
+
+/** Anteile je Zahl der Scheiben, etwa „5: 4,1 %, 10: 4,8 %“ */
+function perCount(seed: number, hit: (rand: Random, count: number) => boolean): string {
+  return PATTERN_CARDS.map((count) => {
+    let hits = 0
+    repeat(PATTERN_RUNS, seed + count, (rand) => {
+      if (hit(rand, count)) hits++
+    })
+    return `${count}: ${share(hits, PATTERN_RUNS)}`
+  }).join(", ")
+}
+
+// B23: Form über mehrere Scheiben (Mauchly über die gepoolte Kovarianz, länglich ab a/b 1,15): Fehlalarm bei runder
+// Gruppe, erkannt bei a/b 1,25 und 1,5 (σ quer kleiner)
+for (const [label, ratio, seed] of [
+  ["rund, länglich gemeldet", 1, 23100],
+  ["a/b 1,25 erkannt", 1.25, 23200],
+  ["a/b 1,5 erkannt", 1.5, 23300],
+] as const) {
+  out(
+    "B23",
+    `Form ${label}: ${perCount(seed, (rand, count) => periodShape(patternCards(rand, count, { sy: 1500 / ratio }))?.verdict === "elongated")}`
+  )
+}
+
+// B24: Ausreißerrichtung (Rayleigh über das weiteste Zehntel je Scheibe): Fehlalarm bei runder und bei länglicher
+// Gruppe (a/b 2), erkannt, wenn jeder zehnte Schuss zusätzlich 2σ oder 3σ nach links unten verreißt (1σ ist kein
+// Ausreißer: so ein Schuss bleibt meist in der Gruppe)
+const pulled =
+  (sigmas: number) =>
+  (rand: Random, count: number): PatternCard[] =>
+    patternCards(rand, count, {}).map((c) => ({
+      ...c,
+      points: c.points.map((p, i) =>
+        i % 10 === 9 ? { xUm: p.xUm - 1061 * sigmas, yUm: p.yUm - 1061 * sigmas } : p
+      ),
+    }))
+for (const [label, make, seed] of [
+  [
+    "rund, Richtung gemeldet",
+    (rand: Random, count: number) => patternCards(rand, count, {}),
+    24100,
+  ],
+  [
+    "a/b 2, Richtung gemeldet",
+    (rand: Random, count: number) => patternCards(rand, count, { sy: 750 }),
+    24200,
+  ],
+  ["jeder zehnte 2σ links unten, erkannt", pulled(2), 24300],
+  ["jeder zehnte 3σ links unten, erkannt", pulled(3), 24400],
+] as const) {
+  out(
+    "B24",
+    `Ausreißerrichtung ${label}: ${perCount(seed, (rand, count) => outlierDirection(make(rand, count))?.verdict === "directed")}`
+  )
+}
+
+// B25: Lage über Zeit (Hotelling über die Schwerpunkte der Scheiben): Fehlalarm ohne Versatz, erkannt bei Versatz 0,3σ
+// und 0,5σ nach rechts
+for (const [label, shift, seed] of [
+  ["ohne Versatz, versetzt gemeldet", 0, 25100],
+  ["Versatz 0,3σ erkannt", 0.3, 25200],
+  ["Versatz 0,5σ erkannt", 0.5, 25300],
+] as const) {
+  out(
+    "B25",
+    `Lage ${label}: ${perCount(seed, (rand, count) => positionOverTime(positionPoints(patternCards(rand, count, { mx: 1500 * shift }))).verdict === "offset")}`
   )
 }
 

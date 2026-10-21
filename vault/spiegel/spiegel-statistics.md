@@ -289,6 +289,16 @@ B21  Ermüdung LP σ 15 mm, 20 Schuss: Fehlalarm Zehntel 4,9 %, ganze Ringe 4,4 
 B21  Ermüdung LP σ 15 mm, 40 Schuss: Fehlalarm Zehntel 5,4 %, ganze Ringe 4,4 %; Nachlassen erkannt Zehntel 38,7 %, ganze Ringe 37,7 %
 B22  Pause LG σ 1,5 mm: Fehlalarm Zehntel 5,0 %, ganze Ringe 1,8 %; danach σ ×1,6 erkannt Zehntel 42,2 %, ganze Ringe 26,9 %; σ ×2 erkannt Zehntel 66,9 %, ganze Ringe 51,1 %
 B22  Pause LP σ 15 mm: Fehlalarm Zehntel 4,6 %, ganze Ringe 3,4 %; danach σ ×1,6 erkannt Zehntel 44,0 %, ganze Ringe 38,8 %; σ ×2 erkannt Zehntel 68,1 %, ganze Ringe 63,8 %
+B23  Form rund, länglich gemeldet: 5: 4,9 %, 10: 2,2 %, 20: 0,0 %, 40: 0,0 %
+B23  Form a/b 1,25 erkannt: 5: 78,9 %, 10: 96,8 %, 20: 99,4 %, 40: 100,0 %
+B23  Form a/b 1,5 erkannt: 5: 100,0 %, 10: 100,0 %, 20: 100,0 %, 40: 100,0 %
+B24  Ausreißerrichtung rund, Richtung gemeldet: 5: 0,0 %, 10: 1,6 %, 20: 1,7 %, 40: 1,8 %
+B24  Ausreißerrichtung a/b 2, Richtung gemeldet: 5: 0,0 %, 10: 2,8 %, 20: 2,6 %, 40: 2,8 %
+B24  Ausreißerrichtung jeder zehnte 2σ links unten, erkannt: 5: 0,0 %, 10: 26,9 %, 20: 57,2 %, 40: 90,9 %
+B24  Ausreißerrichtung jeder zehnte 3σ links unten, erkannt: 5: 0,0 %, 10: 97,6 %, 20: 100,0 %, 40: 100,0 %
+B25  Lage ohne Versatz, versetzt gemeldet: 5: 4,5 %, 10: 4,9 %, 20: 5,2 %, 40: 5,0 %
+B25  Lage Versatz 0,3σ erkannt: 5: 59,7 %, 10: 99,3 %, 20: 100,0 %, 40: 100,0 %
+B25  Lage Versatz 0,5σ erkannt: 5: 92,9 %, 10: 100,0 %, 20: 100,0 %, 40: 100,0 %
 ```
 
 Zusätzlich aus den drei Prüfungen vom 6./7. Oktober (nur lesend, eigene Skripte): Ausreißer-Fehlalarm bei a/b 1,5 und 3 (Einzeltest mit α 0,05), Trennschärfe der Form (a/b 1,3: 28 % bei 40 Schuss), Effizienz der Streumaße gegenüber σ̂ (Streukreis 0,77 bei 10 und 0,39 bei 60 Schuss, mittlerer Radius 0,92, Höhe/Breite 0,23–0,43), Teiler-Ø gegen Ø je Schuss r = −0,998.

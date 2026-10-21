@@ -357,7 +357,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     what: "Spiegel schiebt jede Scheibe auf ihre eigene Mitte und legt alle Schüsse übereinander. So bleibt nur die Streuung, ohne die Lage der einzelnen Abende. Daraus folgen die Länge zu Breite der Gruppe und die Richtung der langen Seite.",
     read: "„Länglich, eher waagrecht“ heißt: Deine Schüsse streuen zur Seite mehr als nach oben und unten, und das ist kein Zufall. Länge zu Breite 1,3 : 1 heißt, die lange Seite ist ein knappes Drittel länger. „Zieht in keine klare Richtung“ heißt nicht „genau rund“. Diese Schüsse zeigen nur keine Streckung.",
     caution:
-      "Eine einzelne Scheibe sieht oft zufällig länglich aus. Eine leichte Streckung von 1,2 bis 1,3 sieht man erst über viele Scheiben. Liegen die Abende an verschiedenen Stellen, ändert das die Form hier nicht. Das zeigt die Lage.",
+      "Eine einzelne Scheibe sieht oft zufällig länglich aus. Eine leichte Streckung von 1,2 bis 1,3 sieht man erst über viele Scheiben. Ist deine Gruppe rund, meldet Spiegel bei 5 Scheiben in etwa 5 von 100 Fällen trotzdem „länglich“, ab 10 Scheiben seltener. Eine Streckung von 1,25 erkennt es bei 5 Scheiben zu 40 Schuss in knapp acht von zehn Fällen, ab 10 Scheiben fast immer. Liegen die Abende an verschiedenen Stellen, ändert das die Form hier nicht. Das zeigt die Lage.",
     minimum: "Ab 100 Schuss aus 5 Scheiben.",
     formula:
       "S = Σ (pᵢ − mⱼ)(pᵢ − mⱼ)ᵀ / ν über alle Scheiben j mit mindestens 3 Schuss, ν = Σ (nⱼ − 1); Länge zu Breite = √(λ₁/λ₂); Mauchly W = 4λ₁λ₂/(λ₁ + λ₂)², p = W^((ν − 1)/2); länglich, wenn p < 0,05 und √(λ₁/λ₂) ≥ 1,15",
@@ -372,7 +372,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     what: "Jeder Punkt ist die Mitte einer Scheibe, also der Schwerpunkt ihrer Schüsse. Größere Punkte haben mehr Schüsse. Die Linie verbindet sie in der Reihenfolge, in der du geschossen hast.",
     read: "„Versetzt: rechts tief“ heißt: Über den Zeitraum liegen deine Scheiben im Mittel rechts unter der Mitte, und das ist kein Zufall. Jede Scheibe zählt dabei einmal, egal wie viele Schüsse sie hat. „Passt“ heißt: Ein Versatz ist nicht belegt.",
     caution:
-      "Viele Schüsse an wenigen Abenden sind keine breite Grundlage. Darum urteilt Spiegel hier über Scheiben, nicht über Schüsse. Wandert die Mitte von Abend zu Abend, kann das Mittel trotzdem passen.",
+      "Viele Schüsse an wenigen Abenden sind keine breite Grundlage. Darum urteilt Spiegel hier über Scheiben, nicht über Schüsse. Ohne Versatz meldet es in etwa 5 von 100 Fällen trotzdem „versetzt“. Ein Versatz von 0,3 σ (beim Luftgewehr etwa 0,45 mm) zeigt sich bei 5 Scheiben zu 40 Schuss in sechs von zehn Fällen, ab 10 Scheiben fast immer. Wandert die Mitte von Abend zu Abend, kann das Mittel trotzdem passen.",
     minimum: "Ab 5 Scheiben mit Lage, je mindestens 3 Schuss.",
     formula:
       "Schwerpunkt mⱼ je Scheibe; Hotelling-T² des Mittels der mⱼ gegen die Mitte, Grenze 2(k − 1)/(k − 2) · F₀,₉₅(2, k − 2) bei k Scheiben",
@@ -387,7 +387,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     what: "Spiegel nimmt von jeder Scheibe das weiteste Zehntel der Schüsse, gemessen von der Mitte dieser Scheibe. Die Uhr zählt, in welche Richtung sie von dort liegen.",
     read: "„Meist nach links unten“ heißt: Deine Ausreißer gehen bevorzugt in diese Richtung, und das ist kein Zufall. Das ist etwas anderes als die Lage. Die Lage sagt, wo deine Gruppe liegt. Die Ausreißerrichtung sagt, wohin einzelne Schüsse aus ihr wegreißen.",
     caution:
-      "Eine längliche Gruppe hat Ausreißer an beiden Enden. Das ist keine Richtung, und Spiegel sagt dann auch keine.",
+      "Eine längliche Gruppe hat Ausreißer an beiden Enden. Das ist keine Richtung, und Spiegel sagt dann auch keine. Ohne Vorzugsrichtung meldet es in höchstens etwa 3 von 100 Fällen eine. Reißt jeder zehnte Schuss um 2 σ in dieselbe Richtung, erkennt Spiegel das bei 20 Scheiben zu 40 Schuss in gut der Hälfte der Fälle, bei 40 Scheiben in neun von zehn. Bei 3 σ erkennt es das ab 10 Scheiben fast immer.",
     minimum: "Ab 30 Ausreißern, gezählt aus Scheiben ab 10 Schuss.",
     formula:
       "je Scheibe die k = max(1, round(n/10)) Schüsse mit dem größten Abstand zu ihrem Schwerpunkt, Richtung von dort; Rayleigh-Test mit p = exp(√(1 + 4n + 4(n² − R²)) − (1 + 2n)) (Zar), Vorzugsrichtung bei p < 0,05",
