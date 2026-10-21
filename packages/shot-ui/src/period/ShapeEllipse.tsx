@@ -36,12 +36,13 @@ export function ShapeEllipse({
       data-shape-ellipse
       className="mx-auto block h-auto w-full max-w-[18rem] select-none"
     >
-      <g fill="none" stroke="var(--line-strong)" strokeWidth={1} {...HAIR}>
-        <circle r={15} />
-        <circle r={30} />
-        <circle r={45} />
-        <line x1={-48} x2={48} y1={0} y2={0} />
-        <line x1={0} x2={0} y1={-45} y2={45} />
+      {/* `vector-effect` erbt nicht: jede Linie trägt es selbst, sonst wächst sie mit dem Bild */}
+      <g fill="none" stroke="var(--line-strong)" strokeWidth={1}>
+        <circle r={15} {...HAIR} />
+        <circle r={30} {...HAIR} />
+        <circle r={45} {...HAIR} />
+        <line x1={-48} x2={48} y1={0} y2={0} {...HAIR} />
+        <line x1={0} x2={0} y1={-45} y2={45} {...HAIR} />
       </g>
       <circle
         data-shape-round
