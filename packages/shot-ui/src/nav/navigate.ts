@@ -11,9 +11,11 @@ import {
   DEFAULT_LIST,
   DEFAULT_PROGRESS,
   type CardOrigin,
+  type CompareQuery,
   type CardRoute,
   type ListQuery,
   type ListRoute,
+  type ProgressQuery,
   type ProgressRoute,
   type Route,
 } from "./routes"
@@ -149,4 +151,32 @@ export function progressRoute(state: PeriodState, section: PeriodSection | null)
 /** der Zustand der Seite eines Zeitraums aus ihrer Route; ohne Familie die zuletzt benutzte */
 export function periodStateFromRoute(route: ProgressRoute, fallbackFamily: string): PeriodState {
   return { ...route.query, family: route.query.family ?? fallbackFamily }
+}
+
+/** Seite Vergleichen mit zwei Scheiben: A und B, etwa diese Scheibe und die davor */
+export function compareCards(a: string, b: string): Route {
+  return { page: "compare", query: { type: "cards", a, b } }
+}
+
+/** wie der Satz „Werde ich besser?“ bei „Alles“ rechnet: die letzten 90 Tage gegen die 90 davor */
+const FORM_CHOICE = { type: "rolling", days: 90 } as const
+
+/**
+ * Vom Fortschritt auf die Seite Vergleichen mit dem Paar seines Satzes: der Zeitraum gegen den davor, bei „Alles“ die
+ * letzten 90 Tage gegen die 90 davor; Familie, Art und Probe gehen mit. Eine alte Adresse mit gewähltem Vergleich
+ * (`compare=`) bringt ihren: ein benannter Zeitraum wird B.
+ */
+export function compareFromProgress(
+  query: Pick<ProgressQuery, "choice" | "compare" | "kind" | "includeProbeOnly">,
+  family: string | null
+): Route {
+  const compare: CompareQuery = {
+    type: "periods",
+    family,
+    a: query.choice.type === "all" ? FORM_CHOICE : query.choice,
+    b: query.compare.type === "named" ? { type: "named", id: query.compare.id } : "previous",
+    kind: query.kind,
+    includeProbeOnly: query.includeProbeOnly,
+  }
+  return { page: "compare", query: compare }
 }

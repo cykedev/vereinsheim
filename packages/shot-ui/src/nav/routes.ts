@@ -249,6 +249,95 @@ export function progressQueryFromParams(
   }
 }
 
+/**
+ * Zustand der Seite Vergleichen: zwei Scheiben (`a`, `b` als Ids, noch nicht gewählt null), zwei Zeiträume einer Familie
+ * (B auch „Zeitraum davor“, die Art gilt für beide Seiten) oder Wettkampf (A) gegen Training (B) in einem Zeitraum
+ */
+export type CompareQuery =
+  | { type: "cards"; a: string | null; b: string | null }
+  | {
+      type: "periods"
+      family: string | null
+      a: PeriodChoice
+      b: PeriodChoice | "previous"
+      kind: CardKind
+      includeProbeOnly: boolean
+    }
+  | { type: "kind"; family: string | null; range: PeriodChoice; includeProbeOnly: boolean }
+
+export type CompareType = CompareQuery["type"]
+
+/** ohne Angaben: die letzten 90 Tage gegen den Zeitraum davor, wie der Satz im Fortschritt */
+export const DEFAULT_COMPARE: CompareQuery = {
+  type: "periods",
+  family: null,
+  a: DEFAULT_CHOICE,
+  b: "previous",
+  kind: "all",
+  includeProbeOnly: true,
+}
+
+/** Zeitraum von Wettkampf und Training ohne Angabe: die letzten zwölf Monate (Wettkämpfe sind selten) */
+export const DEFAULT_KIND_RANGE: PeriodChoice = { type: "rolling", days: 365 }
+
+/**
+ * Schlüssel der Seite Vergleichen: `type` (ohne: zwei Zeiträume, mit B immer genannt), `family`, `a`, `b`, `range`,
+ * `kind`, `sighters=0`. Vorgaben fallen weg.
+ */
+export function compareQueryToParams(query: CompareQuery): Param[] {
+  if (query.type === "cards")
+    return present([
+      ["type", "cards"],
+      ["a", query.a],
+      ["b", query.b],
+    ])
+  if (query.type === "kind") {
+    const range = encodeChoice(query.range)
+    return present([
+      ["type", "kind"],
+      ["family", query.family],
+      ["range", range === encodeChoice(DEFAULT_KIND_RANGE) ? null : range],
+      ["sighters", query.includeProbeOnly ? null : "0"],
+    ])
+  }
+  const a = encodeChoice(query.a)
+  return present([
+    // mit B ausdrücklich: Eine alte Adresse mit `a` und `b` ohne `type` ist der Vergleich zweier Scheiben
+    ["type", query.b === "previous" ? null : "periods"],
+    ["family", query.family],
+    ["a", a === encodeChoice(DEFAULT_CHOICE) ? null : a],
+    ["b", query.b === "previous" ? null : encodeChoice(query.b)],
+    ["kind", kindParams(query.kind)],
+    ["sighters", query.includeProbeOnly ? null : "0"],
+  ])
+}
+
+/** Zustand der Seite Vergleichen; eine alte Adresse mit `a` und `b` ohne `type` ist der Vergleich zweier Scheiben */
+export function compareQueryFromParams(params: URLSearchParams): CompareQuery {
+  const type = params.get("type")
+  const family = slugOrNull(params.get("family"))
+  const includeProbeOnly = params.get("sighters") !== "0"
+  if (type === "cards" || (type === null && params.has("a") && params.has("b")))
+    return { type: "cards", a: idOrNull(params.get("a")), b: idOrNull(params.get("b")) }
+  if (type === "kind")
+    return {
+      type: "kind",
+      family,
+      range: decodeChoice(params.get("range"), DEFAULT_KIND_RANGE),
+      includeProbeOnly,
+    }
+  if (type !== null && type !== "periods") return DEFAULT_COMPARE
+  const b = params.get("b")
+  return {
+    type: "periods",
+    family,
+    a: decodeChoice(params.get("a"), DEFAULT_CHOICE),
+    b: b === "previous" ? "previous" : (decodeChoice(b, null) ?? "previous"),
+    kind: kindOf(params.get("kind")),
+    includeProbeOnly,
+  }
+}
+
 /** woher eine Scheibe geöffnet wurde, mit dem Zustand dort; null: ein direkter Link */
 export type CardOrigin =
   | null
@@ -350,7 +439,7 @@ export type Route =
   | { page: "cards"; query: ListQuery; evening: string | null; pick?: string }
   | CardRoute
   | { page: "progress"; query: ProgressQuery; section: PeriodSection | null }
-  | { page: "compare"; origin: CardOrigin; a: string; b: string }
+  | { page: "compare"; query: CompareQuery }
   | { page: "scan" }
   | { page: "open" }
   | { page: "profile" }
@@ -404,13 +493,10 @@ export function routeFromUrl(pathname: string, search: string, hash: string): Ro
             section: parsePeriodHash(hash),
           }
         : unknown
-    case "compare": {
-      const a = idOrNull(params.get("a"))
-      const b = idOrNull(params.get("b"))
-      return second === undefined && a && b
-        ? { page: "compare", origin: originFrom(params), a, b }
+    case "compare":
+      return second === undefined
+        ? { page: "compare", query: compareQueryFromParams(params) }
         : unknown
-    }
     case "scan":
     case "open":
       return second === undefined ? { page: first } : unknown
@@ -456,7 +542,7 @@ export function urlFromRoute(route: Route): string {
         route.section ? `#${route.section}` : ""
       )
     case "compare":
-      return withQuery("/compare", [...originPairs(route.origin), ["a", route.a], ["b", route.b]])
+      return withQuery("/compare", compareQueryToParams(route.query))
     case "scan":
       return "/scan"
     case "open":

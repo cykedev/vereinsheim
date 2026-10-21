@@ -29,7 +29,7 @@ describe("Bereiche der Navigation", () => {
       [card({ from: "list", query: DEFAULT_LIST }), "cards"],
       [card({ from: "start" }), "start"],
       [card({ from: "progress", query: { ...DEFAULT_PROGRESS } }), "progress"],
-      [{ page: "compare", origin: { from: "start" }, a: "a", b: "b" }, "start"],
+      [{ page: "compare", query: { type: "cards", a: "a", b: "b" } }, "progress"],
     ]
     for (const [route, area] of pages) expect(areaOf(route), JSON.stringify(route)).toBe(area)
   })

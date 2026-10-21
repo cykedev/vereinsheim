@@ -7,6 +7,7 @@ import {
   cardToParams,
   decodeChoice,
   decodeCompare,
+  DEFAULT_COMPARE,
   DEFAULT_LIST,
   DEFAULT_PROGRESS,
   encodeChoice,
@@ -21,6 +22,7 @@ import {
   routeFromUrl,
   urlFromRoute,
   type CardOrigin,
+  type CompareQuery,
   type ListQuery,
   type ProgressQuery,
   type Route,
@@ -349,21 +351,17 @@ describe("die ganze Adresse", () => {
           section: "history",
         },
       ],
+      ["/compare", { page: "compare", query: DEFAULT_COMPARE }],
       [
-        "/compare?from=list&family=lg-10m&a=c1&b=c2",
-        {
-          page: "compare",
-          origin: { from: "list", query: { ...DEFAULT_LIST, family: "lg-10m" } },
-          a: "c1",
-          b: "c2",
-        },
+        "/compare?type=cards&a=c1&b=c2",
+        { page: "compare", query: { type: "cards", a: "c1", b: "c2" } },
       ],
       ["/scan", { page: "scan" }],
       ["/open", { page: "open" }],
       ["/profile/trash", { page: "trash" }],
       ["/admin/bridges", { page: "admin", section: "bridges" }],
     ]
-    expect(table).toHaveLength(12)
+    expect(table).toHaveLength(13)
     for (const [url, expected] of table) {
       expect(route(url), url).toEqual(expected)
       expect(urlFromRoute(expected), url).toBe(url)
@@ -385,7 +383,7 @@ describe("die ganze Adresse", () => {
     expect(route("/cards/a%20b").page).toBe("unknown")
     expect(route("/cards/%E0%A4%A").page).toBe("unknown")
     expect(route("/cards/c1/extra").page).toBe("unknown")
-    expect(route("/compare?a=c1").page).toBe("unknown")
+    expect(route("/compare/x").page).toBe("unknown")
     expect(route("/admin/Bridges").page).toBe("unknown")
     expect(route("/cards#2026-02-30")).toEqual({
       page: "cards",
@@ -526,5 +524,99 @@ describe("Grammatik der Ids und Grenzfälle", () => {
     expect(routeFromHref("/cards?kind=training")).toEqual(
       routeFromUrl("/cards", "?kind=training", "")
     )
+  })
+})
+
+describe("Seite Vergleichen", () => {
+  const compare = (search: string) => {
+    const r = route(`/compare${search}`)
+    if (r.page !== "compare") throw new Error(`keine Seite Vergleichen: ${search}`)
+    return r.query
+  }
+
+  it("ohne Angaben: die letzten 90 Tage gegen den Zeitraum davor, alle Arten, mit Probe", () => {
+    expect(compare("")).toEqual({
+      type: "periods",
+      family: null,
+      a: { type: "rolling", days: 90 },
+      b: "previous",
+      kind: "all",
+      includeProbeOnly: true,
+    })
+  })
+
+  it("Rundreise: jede Art übersteht Schreiben und Lesen, Vorgaben fallen weg", () => {
+    const queries: CompareQuery[] = [
+      { type: "cards", a: "c1", b: "c2" },
+      { type: "cards", a: "c1", b: null },
+      { type: "cards", a: null, b: null },
+      { ...DEFAULT_COMPARE, family: "lp-freihand" } as CompareQuery,
+      {
+        type: "periods",
+        family: "lg-freihand",
+        a: { type: "free", from: "2026-05-01", to: "2026-06-30" },
+        b: { type: "named", id: "saison-2025" },
+        kind: "competition",
+        includeProbeOnly: false,
+      },
+      {
+        type: "periods",
+        family: null,
+        a: { type: "all" },
+        b: { type: "rolling", days: 30 },
+        kind: "training",
+        includeProbeOnly: true,
+      },
+      {
+        type: "kind",
+        family: "lp-freihand",
+        range: { type: "rolling", days: 365 },
+        includeProbeOnly: true,
+      },
+      { type: "kind", family: null, range: { type: "rolling", days: 30 }, includeProbeOnly: false },
+    ]
+    for (const query of queries) {
+      const url = urlFromRoute({ page: "compare", query })
+      expect(route(url), url).toEqual({ page: "compare", query })
+    }
+    expect(urlFromRoute({ page: "compare", query: DEFAULT_COMPARE })).toBe("/compare")
+    expect(
+      urlFromRoute({
+        page: "compare",
+        query: {
+          type: "kind",
+          family: "lp-freihand",
+          range: { type: "rolling", days: 365 },
+          includeProbeOnly: true,
+        },
+      })
+    ).toBe("/compare?type=kind&family=lp-freihand")
+    expect(
+      urlFromRoute({
+        page: "compare",
+        query: {
+          ...(DEFAULT_COMPARE as CompareQuery & { type: "periods" }),
+          b: { type: "rolling", days: 30 },
+        },
+      })
+    ).toBe("/compare?type=periods&b=30d")
+  })
+
+  it("eine alte Adresse mit a und b ohne Art: zwei Scheiben", () => {
+    expect(compare("?from=list&family=lg-10m&a=c1&b=c2")).toEqual({
+      type: "cards",
+      a: "c1",
+      b: "c2",
+    })
+  })
+
+  it("Ungültiges gilt als Vorgabe", () => {
+    expect(compare("?type=kaputt")).toEqual(DEFAULT_COMPARE)
+    expect(compare("?type=cards&a=a%20b")).toEqual({ type: "cards", a: null, b: null })
+    expect(compare("?type=periods&a=2026-02-30..2026-03-01&b=Neu%20Mun")).toEqual(DEFAULT_COMPARE)
+    expect(compare("?type=kind&range=kaputt%21")).toMatchObject({
+      type: "kind",
+      range: { type: "rolling", days: 365 },
+    })
   })
 })

@@ -17,7 +17,7 @@ export type Area = "start" | "cards" | "scan" | "progress" | "profile" | "admin"
 const originArea = (origin: CardOrigin): Area =>
   origin?.from === "start" ? "start" : origin?.from === "progress" ? "progress" : "cards"
 
-/** der Bereich einer Seite; eine Scheibe und ein Vergleich gehören zu dem, aus dem sie kamen */
+/** der Bereich einer Seite; eine Scheibe gehört zu dem, aus dem sie kam, der Vergleich zum Fortschritt */
 export function areaOf(route: Route): Area | null {
   switch (route.page) {
     case "start":
@@ -35,8 +35,9 @@ export function areaOf(route: Route): Area | null {
     case "admin":
       return "admin"
     case "card":
-    case "compare":
       return originArea(route.origin)
+    case "compare":
+      return "progress"
     case "unknown":
       return null
   }

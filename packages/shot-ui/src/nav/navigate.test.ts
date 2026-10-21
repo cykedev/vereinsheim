@@ -3,6 +3,8 @@ import { describe, expect, it } from "vitest"
 import {
   backLabel,
   backRoute,
+  compareCards,
+  compareFromProgress,
   listFromProgress,
   openCard,
   periodStateFromRoute,
@@ -243,5 +245,39 @@ describe("Fortschritt ↔ Zustand der Seite", () => {
     )
     expect(periodReducer(before, { type: "restore", state: after })).toEqual(after)
     expect(periodReducer(before, { type: "restore", state: after }).chosen).toBe("c42")
+  })
+})
+
+describe("Wege zur Seite Vergleichen", () => {
+  it("von einer Scheibe: diese gegen die davor", () => {
+    expect(urlFromRoute(compareCards("c9", "c8"))).toBe("/compare?type=cards&a=c9&b=c8")
+  })
+
+  it("aus dem Fortschritt: der Zeitraum gegen den davor, mit Familie, Art und Probe", () => {
+    const route = compareFromProgress(
+      {
+        ...DEFAULT_PROGRESS,
+        choice: { type: "rolling", days: 182 },
+        kind: "training",
+        includeProbeOnly: false,
+      },
+      "lg-10m"
+    )
+    expect(urlFromRoute(route)).toBe("/compare?family=lg-10m&a=6m&kind=training&sighters=0")
+  })
+
+  it("bei „Alles“ die letzten 90 Tage gegen die 90 davor, wie der Satz", () => {
+    const route = compareFromProgress({ ...DEFAULT_PROGRESS, choice: { type: "all" } }, "lp-10m")
+    expect(urlFromRoute(route)).toBe("/compare?family=lp-10m")
+  })
+
+  it("eine alte Adresse mit gewähltem Vergleich: ein benannter Zeitraum wird B", () => {
+    expect(urlFromRoute(compareFromProgress(PROGRESS.query, "lg-10m"))).toBe(
+      "/compare?family=lg-10m&a=neue-munition&kind=training"
+    )
+    const named = { ...PROGRESS.query, compare: { type: "named", id: "saison-2025" } as const }
+    expect(urlFromRoute(compareFromProgress(named, "lg-10m"))).toBe(
+      "/compare?type=periods&family=lg-10m&a=neue-munition&b=saison-2025&kind=training"
+    )
   })
 })
