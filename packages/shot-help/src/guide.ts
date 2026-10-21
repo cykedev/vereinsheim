@@ -47,6 +47,12 @@ export const VIEW_HELP: readonly ViewHelp[] = [
     read: "Die Knöpfe in den Ecken blenden ein: unten links den Schwerpunkt (kleiner schwarz-weiß geviertelter Kreis, der Mittelpunkt deiner Treffer) und den Streukreis (blauer Ring um alle Treffer; seine Zahl misst Mitte zu Mitte), unten rechts die Vertrauensellipse (gestrichelt: wo dein wahrer Schwerpunkt mit großer Sicherheit liegt; liegt die Mitte darin, ist ein Versatz nicht belegt) und die Schussnummern. Oben links zoomt die Lupe auf deine Treffer und wieder zurück; daneben zeigt der Knopf mit den Punkten die übrigen Schüsse blass oder blendet sie aus.",
   },
   {
+    id: "langzeit-trefferbild",
+    title: "Trefferbild über den Zeitraum",
+    what: "Alle Schüsse der Scheiben im Zeitraum auf einer Scheibe. Bei „Form“ ist jede Scheibe auf ihre eigene Mitte geschoben, so siehst du nur die Streuung. Bei „Lage“ liegen die Schüsse, wo sie lagen. Unter 300 Schuss ist jeder Schuss ein Punkt. Darüber zeigt das Bild zwei Flächen: Innen liegt die Hälfte deiner Schüsse, außen neun von zehn.",
+    read: "Der Satz unter dem Bild ist die Antwort: bei „Form“, ob deine Gruppe in eine Richtung zieht, bei „Lage“, ob sie versetzt ist. Die Belege stehen in der Analyse unter „Präzision“ und „Lage“.",
+  },
+  {
     id: "beobachtungen",
     title: "Beobachtungen in Worten",
     what: "Die wichtigsten Befunde dieser Scheibe als Sätze, gebildet aus denselben Zahlen wie die Karten.",

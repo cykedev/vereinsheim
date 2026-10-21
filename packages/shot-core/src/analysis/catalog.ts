@@ -46,4 +46,10 @@ export const ANALYSIS_CATALOG: Readonly<Record<string, readonly string[]>> = Obj
   periodRecords: ["R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R10", "R11"],
   cardRecordCandidates: ["R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R10", "R11"],
   combineRecords: ["R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R10", "R11"],
+  // Trefferbild über viele Scheiben
+  periodShape: ["L9"],
+  periodPattern: ["L9"],
+  positionPoints: ["L10"],
+  positionOverTime: ["L10"],
+  outlierDirection: ["L7"],
 })

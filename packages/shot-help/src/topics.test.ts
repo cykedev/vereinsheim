@@ -58,14 +58,14 @@ describe("HELP_TOPICS: Bezüge und Ordnung", () => {
     }
   })
 
-  it("26 Themen: 21 einer Scheibe (ohne Lageanteil und ohne Probe) und 5 über viele Scheiben", () => {
-    expect(HELP_TOPICS).toHaveLength(26)
+  it("29 Themen: 21 einer Scheibe (ohne Lageanteil und ohne Probe) und 8 über viele Scheiben", () => {
+    expect(HELP_TOPICS).toHaveLength(29)
     for (const id of ["probe-umfang", "probe-gegen-wertung", "eingeschossen"])
       expect(
         HELP_TOPICS.some((topic) => topic.id === id),
         id
       ).toBe(false)
-    expect(HELP_TOPICS.filter((topic) => topic.theme === "period")).toHaveLength(5)
+    expect(HELP_TOPICS.filter((topic) => topic.theme === "period")).toHaveLength(8)
     expect(HELP_TOPICS.some((topic) => topic.id === "lageanteil")).toBe(false)
   })
 

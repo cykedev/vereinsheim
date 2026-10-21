@@ -69,6 +69,15 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   wieder zurück; daneben zeigt der Knopf mit den Punkten die übrigen Schüsse blass oder blendet sie
   aus.
 
+**Trefferbild über den Zeitraum**
+- *Was:* Alle Schüsse der Scheiben im Zeitraum auf einer Scheibe. Bei „Form“ ist jede Scheibe auf
+  ihre eigene Mitte geschoben, so siehst du nur die Streuung. Bei „Lage“ liegen die Schüsse, wo sie
+  lagen. Unter 300 Schuss ist jeder Schuss ein Punkt. Darüber zeigt das Bild zwei Flächen: Innen
+  liegt die Hälfte deiner Schüsse, außen neun von zehn.
+- *So liest du es:* Der Satz unter dem Bild ist die Antwort: bei „Form“, ob deine Gruppe in eine
+  Richtung zieht, bei „Lage“, ob sie versetzt ist. Die Belege stehen in der Analyse unter
+  „Präzision“ und „Lage“.
+
 **Beobachtungen in Worten**
 - *Was:* Die wichtigsten Befunde dieser Scheibe als Sätze, gebildet aus denselben Zahlen wie die
   Karten.
@@ -434,6 +443,48 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   zeigt Spiegel nicht: Sie folgt aus den Abständen zwischen den Schüssen, die du auf jeder Scheibe
   siehst.
 - *Mindestzahl:* Ab 1 Scheibe.
+
+**Form über mehrere Scheiben (L9)**
+- *Was:* Spiegel schiebt jede Scheibe auf ihre eigene Mitte und legt alle Schüsse übereinander. So
+  bleibt nur die Streuung, ohne die Lage der einzelnen Abende. Daraus folgen die Länge zu Breite der
+  Gruppe und die Richtung der langen Seite.
+- *So liest du es:* „Länglich, eher waagrecht“ heißt: Deine Schüsse streuen zur Seite mehr als nach
+  oben und unten, und das ist kein Zufall. Länge zu Breite 1,3 : 1 heißt, die lange Seite ist ein
+  knappes Drittel länger. „Zieht in keine klare Richtung“ heißt nicht „genau rund“. Diese Schüsse
+  zeigen nur keine Streckung.
+- *Vorsicht:* Eine einzelne Scheibe sieht oft zufällig länglich aus. Eine leichte Streckung von 1,2
+  bis 1,3 sieht man erst über viele Scheiben. Liegen die Abende an verschiedenen Stellen, ändert das
+  die Form hier nicht. Das zeigt die Lage.
+- *Mindestzahl:* Ab 100 Schuss aus 5 Scheiben.
+- *Formel:* `S = Σ (pᵢ − mⱼ)(pᵢ − mⱼ)ᵀ / ν über alle Scheiben j mit mindestens 3 Schuss, ν = Σ (nⱼ −
+  1); Länge zu Breite = √(λ₁/λ₂); Mauchly W = 4λ₁λ₂/(λ₁ + λ₂)², p = W^((ν − 1)/2); länglich, wenn p
+  < 0,05 und √(λ₁/λ₂) ≥ 1,15`
+
+**Lage über Zeit (L10)**
+- *Was:* Jeder Punkt ist die Mitte einer Scheibe, also der Schwerpunkt ihrer Schüsse. Größere Punkte
+  haben mehr Schüsse. Die Linie verbindet sie in der Reihenfolge, in der du geschossen hast.
+- *So liest du es:* „Versetzt: rechts tief“ heißt: Über den Zeitraum liegen deine Scheiben im Mittel
+  rechts unter der Mitte, und das ist kein Zufall. Jede Scheibe zählt dabei einmal, egal wie viele
+  Schüsse sie hat. „Passt“ heißt: Ein Versatz ist nicht belegt.
+- *Vorsicht:* Viele Schüsse an wenigen Abenden sind keine breite Grundlage. Darum urteilt Spiegel
+  hier über Scheiben, nicht über Schüsse. Wandert die Mitte von Abend zu Abend, kann das Mittel
+  trotzdem passen.
+- *Mindestzahl:* Ab 5 Scheiben mit Lage, je mindestens 3 Schuss.
+- *Formel:* `Schwerpunkt mⱼ je Scheibe; Hotelling-T² des Mittels der mⱼ gegen die Mitte, Grenze 2(k
+  − 1)/(k − 2) · F₀,₉₅(2, k − 2) bei k Scheiben`
+
+**Ausreißerrichtung (L7)**
+- *Was:* Spiegel nimmt von jeder Scheibe das weiteste Zehntel der Schüsse, gemessen von der Mitte
+  dieser Scheibe. Die Uhr zählt, in welche Richtung sie von dort liegen.
+- *So liest du es:* „Meist nach links unten“ heißt: Deine Ausreißer gehen bevorzugt in diese
+  Richtung, und das ist kein Zufall. Das ist etwas anderes als die Lage. Die Lage sagt, wo deine
+  Gruppe liegt. Die Ausreißerrichtung sagt, wohin einzelne Schüsse aus ihr wegreißen.
+- *Vorsicht:* Eine längliche Gruppe hat Ausreißer an beiden Enden. Das ist keine Richtung, und
+  Spiegel sagt dann auch keine.
+- *Mindestzahl:* Ab 30 Ausreißern, gezählt aus Scheiben ab 10 Schuss.
+- *Formel:* `je Scheibe die k = max(1, round(n/10)) Schüsse mit dem größten Abstand zu ihrem
+  Schwerpunkt, Richtung von dort; Rayleigh-Test mit p = exp(√(1 + 4n + 4(n² − R²)) − (1 + 2n))
+  (Zar), Vorzugsrichtung bei p < 0,05`
 
 **Zwei Zeiträume im Vergleich (C3, T3)**
 - *Was:* Spiegel vergleicht die Werte deiner Scheiben aus zwei Zeiträumen, etwa vor und nach einem
