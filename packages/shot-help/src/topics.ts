@@ -268,12 +268,13 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     metrics: [],
     short: "Deine Pausen und ob die Schüsse danach besser oder schwächer waren als deine übrigen.",
     what: "Jede Pause und ob die bis zu drei Wertungsschüsse danach im Schnitt mehr oder weniger Ringe brachten als deine übrigen Schüsse. Pause ist ein Abstand, der deutlich länger ist als dein üblicher Abstand auf dieser Scheibe: über dem Doppelten deines üblichen Abstands, mindestens eine Minute; über drei Minuten immer. Bei einem üblichen Abstand von 40 s ist das über 1:20 min; genau 1:20 min ist noch keine Pause. Die Karte nennt die Schwelle deiner Scheibe. Probeschüsse in der Pause gehören zur Pause.",
+    read: "Ein Plus heißt: Nach der Pause warst du besser als sonst, ein Minus: schwächer. „Klar stärker“ oder „klar schwächer“ steht nur, wenn ein Test es zeigt.",
     caution:
-      "Drei Schüsse sind wenig: Auch wenn die Pause nichts ausmacht, liegen sie zufällig bis zu etwa einen halben Ring (Luftgewehr, σ 1,5 mm) bzw. anderthalb Ringe (Luftpistole, σ 15 mm) je Schuss neben deinem Schnitt. Eine Pause auf einer Scheibe zeigt deshalb nicht, ob dir Pausen schaden.",
+      "Drei Schüsse sind wenig: Auch wenn die Pause nichts ausmacht, liegen sie zufällig bis zu etwa einen halben Ring (Luftgewehr, σ 1,5 mm) bzw. anderthalb Ringe (Luftpistole, σ 15 mm) je Schuss neben deinem Schnitt. Deshalb steht „klar“ erst bei einem großen Unterschied. Eine kleine Wirkung der Pause zeigt eine Scheibe nicht. Auch ein klares Urteil gilt nur für diese Pause.",
     minimum:
       "Pausen ab 2 Wertungsschüssen mit Zeit; deinen üblichen Abstand erst ab 5 Abständen, davor gilt nur „über drei Minuten“. Was danach kam, nur über Schüsse mit Wert.",
     formula:
-      "Pause = Abstand über max(60 s, min(180 s, 2 × Median aller Abstände bis 180 s, auch späterer Pausen)), auf ganze Sekunden, unter 5 solchen Abständen über 180 s; Wiedereinstieg = Ø der bis zu 3 Schüsse danach − Ø der übrigen",
+      "Pause = Abstand über max(60 s, min(180 s, 2 × Median aller Abstände bis 180 s, auch späterer Pausen)), auf ganze Sekunden, unter 5 solchen Abständen über 180 s; Wiedereinstieg = Ø der bis zu 3 Schüsse danach − Ø der übrigen; klar nach exaktem Permutationstest auf den Unterschied der Mittel (zweiseitig, 95 %, bei m Pausen 0,05/m)",
   },
   {
     id: "ermuedung",

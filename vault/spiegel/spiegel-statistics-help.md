@@ -349,15 +349,18 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   Minute; über drei Minuten immer. Bei einem üblichen Abstand von 40 s ist das über 1:20 min; genau
   1:20 min ist noch keine Pause. Die Karte nennt die Schwelle deiner Scheibe. Probeschüsse in der
   Pause gehören zur Pause.
+- *So liest du es:* Ein Plus heißt: Nach der Pause warst du besser als sonst, ein Minus: schwächer.
+  „Klar stärker“ oder „klar schwächer“ steht nur, wenn ein Test es zeigt.
 - *Vorsicht:* Drei Schüsse sind wenig: Auch wenn die Pause nichts ausmacht, liegen sie zufällig bis
   zu etwa einen halben Ring (Luftgewehr, σ 1,5 mm) bzw. anderthalb Ringe (Luftpistole, σ 15 mm) je
-  Schuss neben deinem Schnitt. Eine Pause auf einer Scheibe zeigt deshalb nicht, ob dir Pausen
-  schaden.
+  Schuss neben deinem Schnitt. Deshalb steht „klar“ erst bei einem großen Unterschied. Eine kleine
+  Wirkung der Pause zeigt eine Scheibe nicht. Auch ein klares Urteil gilt nur für diese Pause.
 - *Mindestzahl:* Pausen ab 2 Wertungsschüssen mit Zeit; deinen üblichen Abstand erst ab 5 Abständen,
   davor gilt nur „über drei Minuten“. Was danach kam, nur über Schüsse mit Wert.
 - *Formel:* `Pause = Abstand über max(60 s, min(180 s, 2 × Median aller Abstände bis 180 s, auch
   späterer Pausen)), auf ganze Sekunden, unter 5 solchen Abständen über 180 s; Wiedereinstieg = Ø
-  der bis zu 3 Schüsse danach − Ø der übrigen`
+  der bis zu 3 Schüsse danach − Ø der übrigen; klar nach exaktem Permutationstest auf den
+  Unterschied der Mittel (zweiseitig, 95 %, bei m Pausen 0,05/m)`
 
 **Ermüdung (I2)**
 - *Was:* Die letzten zehn Schuss gegen die ersten zehn, im Wert und in der Streuung (R50).

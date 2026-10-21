@@ -112,6 +112,17 @@ describe("eine Scheibe sagt, was sie zeigt", () => {
         )
   })
 
+  it("Pausen: das Urteil steht in der Erklärung", () => {
+    const pauses = HELP_TOPICS.find((topic) => topic.id === "pausen")!
+    expect(pauses.read).toBe(
+      "Ein Plus heißt: Nach der Pause warst du besser als sonst, ein Minus: schwächer. „Klar stärker“ oder „klar schwächer“ steht nur, wenn ein Test es zeigt."
+    )
+    expect(pauses.caution).toMatch(
+      / Deshalb steht „klar“ erst bei einem großen Unterschied\. Eine kleine Wirkung der Pause zeigt eine Scheibe nicht\. Auch ein klares Urteil gilt nur für diese Pause\.$/
+    )
+    expect(pauses.formula).toContain("Permutationstest")
+  })
+
   it("Ermüdung: das Urteil steht in der Erklärung", () => {
     const tired = HELP_TOPICS.find((topic) => topic.id === "ermuedung")!
     expect(tired.read).toContain(
