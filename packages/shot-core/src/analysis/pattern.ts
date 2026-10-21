@@ -4,6 +4,7 @@
 // µm, Mitte (0 | 0), x rechts, y oben, wie gezeichnet (ohne verdächtige Schüsse, `cardMarks`).
 
 import type { Point } from "../geometry"
+import { confidenceOf } from "./hotelling"
 
 /** eine Scheibe des Zeitraums mit den Lagen ihrer Schüsse wie gezeichnet */
 export interface PatternCard {
@@ -89,4 +90,67 @@ export function periodShape(cards: readonly PatternCard[]): PeriodShape | null {
         ? "elongated"
         : "none"
   return { shots, cards: counted, sigmaUm: Math.sqrt(half), ratio, angleRad, p, verdict }
+}
+
+/** Lage über Zeit (L10): ein Urteil ab so vielen Scheiben */
+const POSITION_MIN_CARDS = 5
+
+/** Schwerpunkt einer Scheibe und wie viele Schüsse ihn tragen */
+export interface PositionPoint {
+  id: string
+  atMs: number
+  center: Point
+  n: number
+}
+
+/**
+ * Schwerpunkte der Scheiben ab drei Schuss mit Lage, in zeitlicher Folge (L10). Eine Scheibe, deren Lage nur als
+ * Ganzes bekannt ist (Trefferlage vom Ausdruck, [[adr-033]]), kann später als eigener Punkt dazukommen.
+ */
+export function positionPoints(cards: readonly PatternCard[]): PositionPoint[] {
+  return cards
+    .filter((card) => card.points.length >= MIN_CARD_POINTS)
+    .map((card) => ({
+      id: card.id,
+      atMs: card.atMs,
+      center: mean(card.points),
+      n: card.points.length,
+    }))
+    .sort((a, b) => a.atMs - b.atMs)
+}
+
+export interface PositionOverTime {
+  points: PositionPoint[]
+  /** Mittel der Schwerpunkte, jede Scheibe gleich; null ohne Scheibe */
+  mean: Point | null
+  /** Abstand dieses Mittels zur Mitte */
+  offsetUm: number | null
+  /** Hotelling-T² über die Schwerpunkte und seine 95-%-Grenze; null unter drei Scheiben oder auf einer Linie */
+  t2: number | null
+  critical: number | null
+  verdict: "offset" | "fits" | "few"
+}
+
+/**
+ * Lage über Zeit (L10): Ist der Versatz über den Zeitraum echt? Einheit ist die Scheibe wie beim Vergleich zweier
+ * Zeiträume: Hotelling-T² über die Schwerpunkte gegen die Mitte, ab fünf Scheiben. Viele Schüsse aus wenigen Abenden
+ * sind keine breite Grundlage, deshalb nicht über alle Schüsse.
+ */
+export function positionOverTime(points: readonly PositionPoint[]): PositionOverTime {
+  const centers = points.map((p) => p.center)
+  const center = centers.length ? mean(centers) : null
+  const confidence = confidenceOf(centers)
+  return {
+    points: [...points],
+    mean: center,
+    offsetUm: center ? Math.hypot(center.xUm, center.yUm) : null,
+    t2: confidence?.t2 ?? null,
+    critical: confidence?.critical ?? null,
+    verdict:
+      points.length < POSITION_MIN_CARDS || !confidence
+        ? "few"
+        : confidence.real
+          ? "offset"
+          : "fits",
+  }
 }

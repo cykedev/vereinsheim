@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import { normalPoints } from "../__fixtures__/random"
 import type { Point } from "../geometry"
-import { periodShape, type PatternCard } from "./pattern"
+import { periodShape, positionOverTime, positionPoints, type PatternCard } from "./pattern"
 
 const card = (id: string, points: readonly Point[], atMs = 0): PatternCard => ({ id, atMs, points })
 
@@ -64,5 +64,69 @@ describe("periodShape (L9)", () => {
     expect(periodShape([two])).toBeNull()
     const cards = cardsOf(5, 20, 1500)
     expect(periodShape([...cards, two])?.shots).toBe(100)
+  })
+})
+
+describe("positionPoints und positionOverTime (L10)", () => {
+  /** Scheiben mit vier Punkten symmetrisch um ihre Mitte, damit die Mitte genau stimmt */
+  const around = (id: string, x: number, y: number, atMs: number) =>
+    card(
+      id,
+      [
+        { xUm: x - 100, yUm: y },
+        { xUm: x + 100, yUm: y },
+        { xUm: x, yUm: y - 100 },
+        { xUm: x, yUm: y + 100 },
+      ],
+      atMs
+    )
+
+  it("Schwerpunkte in zeitlicher Folge, Scheiben unter drei Punkten fehlen", () => {
+    const points = positionPoints([
+      around("b", 10, 20, 2),
+      around("a", 30, 40, 1),
+      card("c", [{ xUm: 0, yUm: 0 }], 3),
+    ])
+    expect(points.map((p) => p.id)).toEqual(["a", "b"])
+    expect(points[0]).toEqual({ id: "a", atMs: 1, center: { xUm: 30, yUm: 40 }, n: 4 })
+  })
+
+  it("fünf Scheiben um (400 | −300): versetzt", () => {
+    const offsets = [
+      [380, -310],
+      [420, -290],
+      [400, -320],
+      [410, -280],
+      [390, -300],
+    ]
+    const result = positionOverTime(
+      positionPoints(offsets.map(([x, y], i) => around(`c${i}`, x, y, i)))
+    )
+    expect(result.verdict).toBe("offset")
+    expect(result.mean?.xUm).toBeCloseTo(400, 6)
+    expect(result.mean?.yUm).toBeCloseTo(-300, 6)
+    expect(result.offsetUm).toBeCloseTo(500, 6)
+  })
+
+  it("fünf Scheiben symmetrisch um die Mitte: passt", () => {
+    const offsets = [
+      [300, 0],
+      [-300, 0],
+      [0, 300],
+      [0, -300],
+      [0, 0],
+    ]
+    const result = positionOverTime(
+      positionPoints(offsets.map(([x, y], i) => around(`c${i}`, x, y, i)))
+    )
+    expect(result.verdict).toBe("fits")
+    expect(result.offsetUm).toBeCloseTo(0, 6)
+  })
+
+  it("vier Scheiben: kein Urteil", () => {
+    const result = positionOverTime(
+      positionPoints([0, 1, 2, 3].map((i) => around(`c${i}`, 400 + i * 10, -300 - i * 7, i)))
+    )
+    expect(result.verdict).toBe("few")
   })
 })
