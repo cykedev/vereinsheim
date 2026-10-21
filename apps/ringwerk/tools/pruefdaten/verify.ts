@@ -34,6 +34,7 @@ export async function factsOf(rw: Ringwerk, competitionId: string): Promise<Set<
           status: true,
           startNumber: true,
           isGuest: true,
+          exemptFromMinSeries: true,
           eventTeamId: true,
           discipline: { select: { teilerFaktor: true } },
           participant: { select: { lastName: true, isActive: true } },
@@ -342,6 +343,14 @@ export async function factsOf(rw: Ringwerk, competitionId: string): Promise<Set<
     add(
       "saison:ohne-serie",
       counts.some((n) => n === 0)
+    )
+    add(
+      "saison:ohne-mindestzahl-gewertet",
+      active.some((cp, i) => cp.exemptFromMinSeries && counts[i] > 0 && counts[i] < c.minSeries!)
+    )
+    add(
+      "saison:ohne-mindestzahl-ohne-serie",
+      active.some((cp, i) => cp.exemptFromMinSeries && counts[i] === 0)
     )
   }
 

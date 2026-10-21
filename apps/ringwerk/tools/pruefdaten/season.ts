@@ -18,6 +18,8 @@ const SERIES_PER_PARTICIPANT: Record<SeasonPhase, number[]> = {
   wenige: [2, 1, 2, 1, 0, 1, 2, 1],
   gemischt: [7, 6, 5, 5, 4, 2, 1, 0],
   fertig: [6, 5, 7, 5, 6, 5, 8, 5],
+  // die ersten beiden ohne Mindestzahl (Szenario `exempt`): eine mit 1 Serie, eine ohne
+  ausnahme: [1, 0, 5, 2],
 }
 
 export async function buildSeason(ctx: Context, s: SeasonScenario): Promise<void> {
@@ -60,6 +62,7 @@ export async function buildSeason(ctx: Context, s: SeasonScenario): Promise<void
         formData({
           participantId: player.id,
           disciplineId: s.mixed ? mixedDisciplines[i % 2] : undefined,
+          exemptFromMinSeries: s.exempt?.includes(i) ? "on" : undefined,
         })
       )
     )

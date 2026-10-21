@@ -75,6 +75,8 @@ export type Fact =
   | "saison:mindestserien-erreicht"
   | "saison:mindestserien-verfehlt"
   | "saison:ohne-serie"
+  | "saison:ohne-mindestzahl-gewertet"
+  | "saison:ohne-mindestzahl-ohne-serie"
 
 export type LeagueFormatKey = "DRR" | "BO3" | "BO5"
 
@@ -155,7 +157,7 @@ export interface EventScenario extends ScenarioBase {
   formerMembers?: boolean
 }
 
-export type SeasonPhase = "leer" | "wenige" | "gemischt" | "fertig"
+export type SeasonPhase = "leer" | "wenige" | "gemischt" | "fertig" | "ausnahme"
 
 export interface SeasonScenario extends ScenarioBase {
   kind: "SEASON"
@@ -163,6 +165,8 @@ export interface SeasonScenario extends ScenarioBase {
   sortMode?: SeasonSortMode
   phase: SeasonPhase
   mixed?: boolean
+  /** Einschreibungen (Index wie die Serien je Teilnehmer) ohne Mindestzahl an Serien, etwa Jugend */
+  exempt?: number[]
 }
 
 export type Scenario = LeagueScenario | EventScenario | SeasonScenario
@@ -477,6 +481,29 @@ function seasonScenarios(): SeasonScenario[] {
   ]
 }
 
+/**
+ * Saison mit Einschreibungen ohne Mindestzahl (etwa Jugend). Steht am Ende von `SCENARIOS`: Die Uhr jedes Szenarios
+ * folgt aus seiner Stelle, ein Szenario weiter vorn verschöbe die Daten aller späteren.
+ */
+function seasonExemptionScenarios(): SeasonScenario[] {
+  return [
+    {
+      kind: "SEASON",
+      code: "S-OHNE-MINDEST",
+      name: "S · ohne Mindestzahl, etwa Jugend",
+      scoringMode: "RINGTEILER",
+      phase: "ausnahme",
+      exempt: [0, 1],
+      expect: [
+        "saison:ohne-mindestzahl-gewertet",
+        "saison:ohne-mindestzahl-ohne-serie",
+        "saison:mindestserien-erreicht",
+        "saison:mindestserien-verfehlt",
+      ],
+    },
+  ]
+}
+
 // ─── Ränder ──────────────────────────────────────────────────────────────────────────────────────
 
 function edgeScenarios(): Scenario[] {
@@ -592,4 +619,5 @@ export const SCENARIOS: Scenario[] = [
   ...seasonScenarios(),
   ...edgeScenarios(),
   ...scoringScenarios(),
+  ...seasonExemptionScenarios(),
 ]
