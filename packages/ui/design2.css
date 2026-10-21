@@ -153,6 +153,10 @@
   --heat-3: #c63f6e;
   --heat-4: #f07a3c;
   --heat-5: #f9d65c;
+  /* Seiten A und B beim Vergleichen, auf der Scheibe gezeichnet: in beiden Themes gleich wie sie; Blau und Orange heben
+     sich von Papier, Spiegel und Ringwert-Farben ab, Linien tragen einen dunklen Saum */
+  --compare-a: #3fb6ff;
+  --compare-b: #ff8a3d;
   /* Platz 1, 2, 3 (Gold, Silber, Bronze): auch als Schrift, auf der Kartenfläche ≥ 4,5 : 1 */
   --rank-1: #8a6100;
   --rank-2: #5f6b7a;
