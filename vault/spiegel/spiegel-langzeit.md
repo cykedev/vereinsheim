@@ -176,8 +176,8 @@ Drei Grundsätze:
 |---|---|---|
 | Überblick | höchstens drei belegte Erkenntnisse, darunter, was ohne klaren Unterschied blieb | – |
 | Ergebnis | Rekorde, Verteilung der Serien und Ringanteile über die Zeit, Abstandskurve | R1–R8, R10, R11, V3–V5 |
-| Präzision | Form über mehrere Scheiben (gepoolt, rund oder länglich) | L9 |
-| Lage | Lage über Zeit (Schwerpunkt je Scheibe), Ausreißerrichtung | L10, L7 |
+| Präzision | Form über mehrere Scheiben als Ellipse (gepoolt, rund oder länglich) | L9 |
+| Lage | Lage über Zeit (Schwerpunkt je Scheibe als zwei Zeitreihen), Ausreißerrichtung | L10, L7 |
 | Zeit | Platz in der Serie, Reaktion nach schwachem Schuss, erster Wertungsschuss, Tempo gegen Wert, Tageszeit, Pause, Trendsteigung | I7–I9, Z6, Z7, K2, K4, T4 |
 
 3. **Das Trefferbild ist Hauptbild, keine Karte:** Wo auf der Scheibe die Scheibe steht, steht hier der Verlauf; ein
@@ -200,23 +200,30 @@ Ergebnis (I7–I9, Z6, Z7, K2, K4, T4, V3–V5, W2–W4 als Zeilen im Vergleich)
 ### Langzeit-Trefferbild (gebaut)
 
 - **Umschalter** „Verlauf | Trefferbild“ als erste Zeile der Karte des Hauptbilds (`PeriodChartBar`, `show=target` in
-  der Adresse, die Sprungleiste heißt dann „Trefferbild“); beim Trefferbild steht dort nur noch sein „?“. Darunter wählt
-  das Bild die Sicht (`PatternPanel`).
-- **Zwei Sichten:** Bei **Form** ist jede Scheibe auf ihren eigenen Schwerpunkt geschoben; übrig bleibt die
-  reine Streuung über die Abende. **Lage** zeigt die Schüsse, wo sie lagen; so wird ein Versatz sichtbar, der
-  immer wiederkehrt. Vorgabe ist Form.
-- **Dichte statt Punkte:** Unter 300 Schuss zeigt das Bild jeden Schuss als kleinen Punkt, ab 300 die Dichte als zwei
-  Flächen: innen die Hälfte der Schüsse, außen neun von zehn. Die Legende sagt es in diesen Worten.
-- **Ein Satz unter dem Bild** gibt die Antwort: in Form „rund“ oder „länglich, eher waagrecht“ (Test über die gepoolte
-  Form, sonst „zu wenige Schüsse für ein Urteil“), in Lage „passt“ oder „versetzt: rechts tief“ (Test über die
-  Schwerpunkte der Scheiben, Einheit die Scheibe).
+  der Adresse, die Sprungleiste heißt dann „Trefferbild“); beim Trefferbild steht dort nur noch sein „?“.
+- **Eine Sicht, wo die Schüsse lagen.** Eine zweite Sicht „Form“ (jede Scheibe auf ihre Mitte geschoben) gab es bis
+  zum 21. Oktober 2026; sie sah der Lage zu ähnlich, um verstanden zu werden. Die Form steht jetzt als Ellipse im
+  Reiter Präzision.
+- **Ab 50 Schuss eine Heatmap:** fünf Bänder von selten (violett, `heat-1`) bis oft (gelb, `heat-5`), deren Grenzen
+  neun Zehntel, drei Viertel, die Hälfte, ein Viertel und ein Zehntel der Schüsse umschließen (`HEAT_SHARES`), auf einer
+  ruhigen Scheibe (`heat-paper`, `heat-spiegel`, Ringe als feine Linien darüber), damit die Farben tragen; die Legende
+  ist ein Verlauf „selten … oft“. Hellblaue Flächen auf Papier und Spiegel waren an beiden Stellen schlecht zu sehen.
+- **Unter 50 Schuss jeder Schuss** in Kalibergröße und Ringfarbe wie auf der Seite einer Scheibe, alle im Bild.
+- **Der geviertelte Kreis** ist die Mitte aller Schüsse.
+- **Ein Satz unter dem Bild** gibt die Antwort: zuerst die Lage („passt“ oder „versetzt: rechts tief“, Test über die
+  Schwerpunkte der Scheiben), dann die Form („länglich, eher waagrecht“ oder „keine klare Richtung“, Test über die
+  gepoolte Form); ohne Urteil über die Form kein zweiter Satz.
 - **Rechnen auf dem Server:** aus den gespeicherten Lagen der Projektion (`marks`, 10 µm), erst wenn das Bild oder die
-  Reiter Präzision und Lage es brauchen (`periodPatternAction`); an den Browser geht ein Raster von 64 × 64 je Sicht und
-  der Schwerpunkt je Scheibe, keine Schüsse. Gemessen: „Alles“ mit 1.564 Scheiben 88 ms und 166 KB, 90 Tage 9 ms und 27 KB
+  Reiter Präzision und Lage es brauchen (`periodPatternAction`); an den Browser geht ein Raster von 64 × 64 und der
+  Schwerpunkt je Scheibe, keine Schüsse. Gemessen: „Alles“ mit 1.564 Scheiben 88 ms und 166 KB, 90 Tage 9 ms und 27 KB
   ([[spiegel-db-schema]]). Die Dichte glättet 1,3-mal so stark wie nach Silverman, die Ränder sind weiche Kurven.
-- **Reiter Lage:** Schwerpunkt je Scheibe auf dem Scheibenbild, größer mit mehr Schüssen, Linie in zeitlicher Folge;
-  der Ausschnitt nimmt neun von zehn Schwerpunkten, und die Karte sagt, wie viele außerhalb liegen. Antippen wählt die
-  Scheibe für die Ablesung, ohne zu springen.
+- **Reiter Präzision:** die Form über mehrere Scheiben als Ellipse (doppelte Halbachsen der gepoolten Streuung) mit
+  ihrer langen Seite und gestrichelt dem Kreis einer runden Gruppe gleicher Streuung, ohne Maßstab; daneben Form, Länge
+  zu Breite und σ.
+- **Reiter Lage:** Lage über Zeit als zwei Zeitreihen wie der Verlauf (links/rechts, tief/hoch), jede Scheibe ein Punkt,
+  die Linie der Schnitt der letzten fünf, gestrichelt die Mitte; der Maßstab folgt neun von zehn Abständen, weiter
+  draußen steht ein Ring am Rand. Das Lineal wählt die Scheibe für die Ablesung, ohne zu springen. Ein Pfad der
+  Schwerpunkte auf dem Scheibenbild wurde bei vielen Scheiben zum Knäuel.
 - **Urteile** mit Simulation ([[spiegel-statistics]], B23–B25): Form länglich ab p < 0,05 und 1,15 : 1, ab 100 Schuss
   aus 5 Scheiben; Lage über die Schwerpunkte ab 5 Scheiben; Ausreißerrichtung ab 30 Ausreißern.
 
