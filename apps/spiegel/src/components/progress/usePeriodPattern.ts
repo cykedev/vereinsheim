@@ -2,9 +2,13 @@
 
 import { useCallback, useEffect, useState } from "react"
 
+import { periodPattern } from "@vereinsheim/shot-core/analysis"
 import type { PatternState } from "@vereinsheim/shot-ui/period/PatternPanel"
 
 import { periodPatternAction } from "@/lib/pattern-actions"
+
+/** das Muster ohne Scheiben: keine Schüsse, jedes Urteil „zu wenig“ */
+const EMPTY: PatternState = { status: "ready", pattern: periodPattern([]) }
 
 /**
  * Das Trefferbild des Zeitraums, geholt erst, wenn es gebraucht wird (`enabled`: Bild gezeigt oder Reiter Präzision
@@ -44,5 +48,7 @@ export function usePeriodPattern(
     }
   }, [needed, key, attempt])
   const retry = useCallback(() => setAttempt((n) => n + 1), [])
+  // ohne Scheibe, die das Ergebnis zählt (etwa nur Trainings aus Probe, die nicht mitzählen), gibt es nichts zu holen
+  if (key === "") return { state: EMPTY, retry }
   return { state: current ?? { status: "loading" }, retry }
 }

@@ -310,8 +310,12 @@ async function main() {
       families,
     }
     out(`| Fortschritt „Alles“: leichtes Modell und Lagen der Ablesung | ${kb(progressJson)} |`)
-    out(`| Trefferbild „Alles“: Muster ohne Schüsse | ${kb(await patternOf(allIds))} |`)
-    out(`| Trefferbild 90 Tage: Muster ohne Schüsse | ${kb(await patternOf(recentIds))} |`)
+    out(
+      `| Trefferbild „Alles“: Muster (über 3.000 Schuss Raster) | ${kb(await patternOf(allIds))} |`
+    )
+    out(
+      `| Trefferbild 90 Tage: Muster (bis 3.000 Schuss jeder Treffer) | ${kb(await patternOf(recentIds))} |`
+    )
 
     await explain("Fortschritt „Alles“", (client) => familyCards(client, owner))
     await explain("Fortschritt 90 Tage", (client) =>

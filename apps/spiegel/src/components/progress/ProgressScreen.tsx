@@ -25,6 +25,7 @@ import {
   periodSections,
   type PeriodSection,
   type PeriodTab,
+  TAB_ANCHORS,
 } from "@vereinsheim/shot-ui/layout/sections"
 import { useActiveSection } from "@vereinsheim/shot-ui/layout/useActiveSection"
 import { useReturnJump } from "@vereinsheim/shot-ui/layout/useReturnJump"
@@ -129,13 +130,17 @@ export function ProgressScreen({
   const [explain, setExplain] = useState(false)
   // Umfang als Säulen je Woche oder als Kalender der Trainingstage (T7); wie gezeichnet, nicht in der Adresse
   const [volumeView, setVolumeView] = useState<"weeks" | "calendar">("weeks")
-  // der Reiter der Analyse: gewählt, sonst aus dem Anker (`#precision`, `#position`), sonst Ergebnis
+  // der Reiter der Analyse: gewählt, sonst aus dem Anker (`#precision`, `#position`), sonst Ergebnis. Der zuletzt im
+  // Anker gesehene bleibt, wenn ein Filter die Adresse ohne Anker neu schreibt (wie auf der Seite einer Scheibe)
   const hash = useHash()
   const [chosenTab, setChosenTab] = useState<PeriodTab | null>(null)
-  const tab: PeriodTab = chosenTab ?? parsePeriodAnchor(hash)?.tab ?? "result"
+  const hashTab = parsePeriodAnchor(hash)?.tab ?? null
+  const [seenTab, setSeenTab] = useState<PeriodTab | null>(null)
+  if (hashTab && hashTab !== seenTab) setSeenTab(hashTab)
+  const tab: PeriodTab = chosenTab ?? hashTab ?? seenTab ?? "result"
   const changeTab = useCallback((next: PeriodTab) => {
     setChosenTab(next)
-    window.history.replaceState(null, "", `#${next}`)
+    window.history.replaceState(null, "", `#${TAB_ANCHORS[next]}`)
   }, [])
 
   const search = useSearchParams()

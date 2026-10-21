@@ -3,6 +3,7 @@
 // einer an. Reiter-Anker öffnen den Reiter und führen zur Analyse.
 
 import type { AnalysisTab } from "../analysis/tabs"
+import type { PeriodShow } from "../period/state"
 
 // in Seitenreihenfolge: die Schüsse stehen neben der Scheibe (und auf dem Telefon gleich nach ihr), die Analyse
 // darunter in voller Breite. Einen Abschnitt „Zahlen“ gibt es nicht: Der Überblick der Analyse ist die
@@ -26,7 +27,7 @@ export const PERIOD_SECTIONS = [
 export type PeriodSection = (typeof PERIOD_SECTIONS)[number]["id"]
 
 /** die Sprungleiste des Zeitraums: Zeigt das Hauptbild das Trefferbild, heißt sein Abschnitt so (Anker bleibt) */
-export function periodSections(show: "history" | "target") {
+export function periodSections(show: PeriodShow) {
   return PERIOD_SECTIONS.map((s) =>
     s.id === "history" && show === "target" ? { ...s, label: "Trefferbild" } : s
   )

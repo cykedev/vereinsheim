@@ -43,9 +43,8 @@ function Placeholder({ text, action }: { text: string; action?: ReactNode }) {
 
 /**
  * Das Trefferbild als Hauptbild der Seite eines Zeitraums: wo die Schüsse lagen, ab 50 Schuss in den Farben der Dichte
- * mit Legende,
- * darunter die Antwort (Lage, dann Form) und die Grundlage. Lädt das Muster noch oder ging es schief, steht an seiner
- * Stelle ein Platz gleicher Größe.
+ * mit Legende, darunter die Antwort (Lage, dann Form) und die Grundlage. Lädt das Muster noch oder ging es schief,
+ * steht an seiner Stelle ein Platz gleicher Größe.
  */
 export function PatternPanel({
   state,

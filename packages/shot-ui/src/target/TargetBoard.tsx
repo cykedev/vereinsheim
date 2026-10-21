@@ -24,8 +24,9 @@ export interface TargetBoardProps {
 
 /**
  * Die Scheibe, wie sie gedruckt ist (spiegel-ui-design „Zeichnen der Scheibe“): Papier, Spiegel, Ringe als Haarlinien,
- * beim Luftgewehr die weiße Zehn, bei Innenzehnern zum Berühren ihr Kreis gestrichelt, die Ringzahlen auf vier Achsen in
- * der Schrift der Marke. Eine Zeichnung für die Seite einer Scheibe (`TargetView`) und das Trefferbild eines Zeitraums.
+ * beim Luftgewehr die weiße Zehn, bei Innenzehnern zum Berühren ihr Kreis gestrichelt, die Ringzahlen auf vier Achsen
+ * in der Schrift der Marke. Eine Zeichnung für die Seite einer Scheibe (`TargetView`) und das Trefferbild eines
+ * Zeitraums.
  */
 export function TargetBoard({
   target,

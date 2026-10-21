@@ -111,8 +111,8 @@ export interface PeriodModel {
   /** gewählter Vergleich im Ø je Schuss (Ergebnis-Box, Zahlen): a der Vergleich, b der Zeitraum; Δ = Zeitraum − Vergleich */
   comparison: PeriodComparison | null
   /**
-   * der Vergleich für den Satz („Werde ich besser?“): der gewählte, sonst still der Zeitraum davor, bei „Alles“
-   * die letzten 90 Tage gegen die 90 davor (`lastDays`); im Ø je Schuss. Er zeigt sich nicht im Verlauf und nicht in der
+   * der Vergleich für den Satz („Werde ich besser?“): der gewählte, sonst still der Zeitraum davor, bei „Alles“ die
+   * letzten 90 Tage gegen die 90 davor (`lastDays`); im Ø je Schuss. Er zeigt sich nicht im Verlauf und nicht in der
    * Ergebnis-Box. null ohne Scheiben im Zeitraum; mit gewähltem Vergleich nie null; bei „Alles“ ohne Scheibe in den
    * letzten 90 Tagen ein Vergleich ohne Wert (der Satz sagt „zu wenige“)
    */
@@ -137,8 +137,8 @@ export interface PeriodModel {
   weeks: (VolumeBucket & { label: string })[]
   /** Trainingstage für den Kalender (T7): erster und letzter Tag des Zeitraums (höchstens heute), Tage mit Scheiben */
   /**
-   * Kalender: Tage des Zeitraums (`from` bis `to`, `days` in ihm), dazu alle Trainingstage der Familie in der Art (`all`)
-   * und heute, zum Blättern
+   * Kalender: Tage des Zeitraums (`from` bis `to`, `days` in ihm), dazu alle Trainingstage der Familie in der Art
+   * (`all`) und heute, zum Blättern
    */
   calendar: { from: string; to: string; days: CalendarDay[]; all: CalendarDay[]; today: string }
   /**
@@ -454,8 +454,8 @@ const lightCard = (card: PeriodItem): PeriodItem => ({
 })
 
 /**
- * die Scheiben, die das Ergebnis des Zeitraums zählt, als Grundlage des Trefferbilds: ein Training nur aus Probe nur mit
- * dem Schalter, wie im Ergebnis
+ * die Scheiben, die das Ergebnis des Zeitraums zählt, als Grundlage des Trefferbilds: ein Training nur aus Probe nur
+ * mit dem Schalter, wie im Ergebnis
  */
 export function patternIds(model: Pick<PeriodModel, "cards">, includeProbeOnly: boolean): string[] {
   return model.cards.filter((card) => includeProbeOnly || !card.probeOnly).map((card) => card.id)

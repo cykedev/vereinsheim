@@ -1,6 +1,6 @@
 // Die Worte zum Trefferbild über einen Zeitraum: Antwort unter dem Bild, Grundlage und die Urteile der Reiter
 // Präzision und Lage, aus den Urteilen des Fachkerns (`periodPattern`). Rein, ohne React; der Wortlaut steht nur hier
-// (freigegeben im Plan „Trefferbild und Lage“, Textbuch).
+// (Textbuch).
 
 import type {
   OutlierDirection,

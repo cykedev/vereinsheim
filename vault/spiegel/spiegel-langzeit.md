@@ -300,8 +300,6 @@ Eingabe ist `PeriodItem`; was Spiegel anders braucht als Treffsicher, sind Param
 
 - **Beim ersten Öffnen** die letzten 90 Tage: Sie zeigen Form und Trend, ohne alte Abende zu mischen.
 - **Kennzahl des Verlaufs** ist Ø je Schuss: verständlich und von der Schusszahl unabhängig.
-- **Langzeit-Trefferbild** startet in der Sicht **Form**: Sie beantwortet „Wie eng schieße ich?“ ohne die
-  Wanderung der Lage.
 - **Ein Vergleich urteilt** ab fünf Scheiben je Seite; eine Simulation bestätigt die Zahl (B19 in
   [[spiegel-statistics]]: Fehlalarm höchstens etwa 5 %, eine Verengung von 1,5 auf 1,3 mm erkennt der Vergleich bei 5
   gegen 5 Scheiben in gut der Hälfte, bei 10 gegen 10 in gut neun von zehn Fällen). „Deutlich“ zeigt die Oberfläche

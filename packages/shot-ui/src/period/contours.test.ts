@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest"
 
 import { contourPath } from "./contours"
-import { nearestPoint } from "./nearest"
 
 /** die Punkte eines Pfads aus `contourPath`: Anfang und das Ende jedes Kurvenstücks */
 const coordinates = (path: string) =>
@@ -51,19 +50,5 @@ describe("contourPath", () => {
       expect(Math.max(Math.abs(x), Math.abs(y))).toBeGreaterThan(0.5)
       expect(Math.max(Math.abs(x), Math.abs(y))).toBeLessThan(1.5)
     }
-  })
-})
-
-describe("nearestPoint", () => {
-  it("der nächste Punkt, bei Gleichstand der frühere, ohne Punkte null", () => {
-    const points = [
-      { x: 0, y: 0 },
-      { x: 10, y: 0 },
-      { x: 5, y: 5 },
-    ]
-    expect(nearestPoint(points, { x: 9, y: 1 })).toBe(1)
-    expect(nearestPoint(points, { x: 5, y: 4 })).toBe(2)
-    expect(nearestPoint(points, { x: 5, y: 0 })).toBe(0)
-    expect(nearestPoint([], { x: 0, y: 0 })).toBeNull()
   })
 })

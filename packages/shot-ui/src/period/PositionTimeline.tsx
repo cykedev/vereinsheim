@@ -52,8 +52,8 @@ const offsetText = (um: number, up: string, down: string) =>
   Math.abs(um) < 50 ? "mittig" : `${formatValue(Math.abs(um) / 1000, 1)} mm ${um > 0 ? up : down}`
 
 /**
- * Lage über Zeit (L10) als zwei Zeitreihen wie der Verlauf: oben links und rechts, unten tief und hoch, jede Scheibe ein
- * Punkt mit ihrem Schwerpunkt, die Linie der Schnitt der letzten fünf, gestrichelt die Mitte. Das Lineal wählt die
+ * Lage über Zeit (L10) als zwei Zeitreihen wie der Verlauf: oben links und rechts, unten tief und hoch, jede Scheibe
+ * ein Punkt mit ihrem Schwerpunkt, die Linie der Schnitt der letzten fünf, gestrichelt die Mitte. Das Lineal wählt die
  * Scheibe für die Ablesung der Seite (Tippen, Ziehen, Pfeiltasten); die Werte stehen auch als Tabelle.
  */
 export function PositionTimeline({

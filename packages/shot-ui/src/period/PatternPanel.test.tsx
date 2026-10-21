@@ -94,6 +94,13 @@ describe("PatternPanel", () => {
     expect(html).not.toContain('aria-label="Sicht"')
   })
 
+  it("ohne Schuss mit Lage: kein Laden ohne Ende, sondern ein leeres Bild und was fehlt", () => {
+    const html = render({ status: "ready", pattern: periodPattern([]) })
+    expect(html).not.toContain("data-pattern-placeholder")
+    expect(html).toContain("Für ein Urteil über die Lage fehlen noch Scheiben.")
+    expect(html).toContain("Über 0 Schuss aus 0 Scheiben.")
+  })
+
   it("lädt es noch oder ging es schief, steht ein Platz gleicher Größe da", () => {
     const loading = render({ status: "loading" })
     expect(loading).toContain('data-pattern-placeholder="true"')

@@ -1,5 +1,6 @@
 // Dichte der Treffer über viele Scheiben als Raster (L9): Punkte in Zellen zählen, dann mit einem Gauß-Kern glätten.
-// Das Raster geht an den Browser; daraus zeichnet `shot-ui` die Heatmap in fünf Bändern. Nicht über `./analysis`
+// Daraus färbt `periodPattern` die Treffer nach ihrem Band oder schickt es ab 3.000 Schuss an den Browser, der die
+// sechs Bänder zeichnet. Nicht über `./analysis`
 // exportiert: Hilfen der Auswertung `periodPattern`, keine eigene Auswertung.
 
 import type { Point } from "../geometry"
@@ -101,7 +102,7 @@ export function densityGrid(points: readonly Point[], halfUm: number, size = 64)
   }
   const weights = kernel(bandwidth)
   const smooth = blur(blur(counts, size, weights, 1), size, weights, size)
-  const max = Math.max(...smooth)
+  const max = smooth.reduce((m, v) => Math.max(m, v), 0)
   if (!(max > 0)) return { size, cells: counts.map(() => 0), levels: HEAT_SHARES.map(() => 0) }
   const scale = (value: number) => Math.round((value / max) * 255)
   return {

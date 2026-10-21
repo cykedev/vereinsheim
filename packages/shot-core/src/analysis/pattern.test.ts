@@ -271,6 +271,12 @@ describe("periodPattern", () => {
     expect(JSON.parse(JSON.stringify(pattern))).toEqual(pattern)
   })
 
+  it("150.000 Schuss: ohne Stapelüberlauf, als Bänder", () => {
+    const pattern = periodPattern(cardsOf(3750, 40, 1500))
+    expect(pattern.picture.style).toBe("bands")
+    expect(pattern.shots).toBe(150_000)
+  })
+
   it("1.500 Scheiben zu 40 Schuss: unter 200 KB und schnell", () => {
     const cards = cardsOf(1500, 40, 1500).map((c, i) => ({
       ...c,

@@ -29,15 +29,15 @@ export const HEAT_COLORS = [
   "var(--heat-5)",
 ] as const
 /**
- * Deckkraft der Bänder von außen nach innen: deckend genug, dass sich Violett auch vom Spiegel klar abhebt; nur das ganz
- * leichte äußere Band lässt Papier und Spiegel noch durchscheinen
+ * Deckkraft der Bänder von außen nach innen: deckend genug, dass sich Violett auch vom Spiegel klar abhebt; nur das
+ * ganz leichte äußere Band lässt Papier und Spiegel noch durchscheinen
  */
 const HEAT_OPACITY = [0.6, 0.85, 0.9, 0.93, 0.95, 0.97] as const
 /** Deckkraft der Treffer in der Farbe der Dichte: Überlagerungen bleiben zu sehen, der Spiegel scheint durch */
 const SHOT_HEAT_OPACITY = 0.85
 
 export interface PatternTargetProps {
-  /** das Bild aus `periodPattern`: unter 50 Schuss die Punkte, sonst die Dichte in Bändern */
+  /** das Bild aus `periodPattern`: Treffer in Ringfarbe, Treffer in Dichtefarbe oder die Dichte in Bändern */
   layer: PatternLayer
   target: TargetImage
   /** der Satz unter dem Bild als Name des Bilds */
@@ -46,11 +46,12 @@ export interface PatternTargetProps {
 }
 
 /**
- * Trefferbild über einen Zeitraum (L9) auf der Scheibe, wie die Seite einer Scheibe sie zeichnet (`TargetBoard`: Papier,
- * Spiegel, Ringe, Ringzahlen). Bis 3.000 Schuss jeder Treffer in Kalibergröße, gefärbt nach der Dichte an seiner Stelle
- * von selten (hellviolett) bis oft (gelb), die dichten zuletzt; unter 50 Schuss in seiner Ringfarbe, weil eine Dichte
- * dann nichts sagt. Darüber die Dichte als sechs Bänder zwischen den Flächen und den Ringen. Der geviertelte Kreis ist
- * die Mitte aller Schüsse. Ringzahlen und Schwerpunkt richten sich wie auf der Scheibe nach der gemessenen Breite.
+ * Trefferbild über einen Zeitraum (L9) auf der Scheibe, wie die Seite einer Scheibe sie zeichnet (`TargetBoard`:
+ * Papier, Spiegel, Ringe, Ringzahlen). Bis 3.000 Schuss jeder Treffer in Kalibergröße, gefärbt nach der Dichte an
+ * seiner Stelle von selten (hellviolett) bis oft (gelb), die dichten zuletzt; unter 50 Schuss in seiner Ringfarbe, weil
+ * eine Dichte dann nichts sagt. Darüber die Dichte als sechs Bänder zwischen den Flächen und den Ringen. Der
+ * geviertelte Kreis ist die Mitte aller Schüsse. Ringzahlen und Schwerpunkt richten sich wie auf der Scheibe nach der
+ * gemessenen Breite.
  */
 export function PatternTarget({ layer, target, label, className }: PatternTargetProps) {
   const [width, measure] = useElementWidth()
@@ -63,7 +64,7 @@ export function PatternTarget({ layer, target, label, className }: PatternTarget
       ref={measure}
       viewBox={`${view.x} ${view.y} ${view.w} ${view.w}`}
       role="img"
-      aria-label={label}
+      aria-label={`Trefferbild über den Zeitraum: ${label}`}
       data-pattern-target={layer.style}
       className={cn(
         "block aspect-square h-auto w-full rounded-xl border border-border select-none",

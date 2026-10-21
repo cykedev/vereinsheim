@@ -7,9 +7,9 @@ const HAIR = { vectorEffect: "non-scaling-stroke" } as const
 const mm = (um: number) => um / 1000
 
 /**
- * Das Scheibenbild ohne Treffer, als Teil eines SVG in mm (y nach unten): Papier über den Ausschnitt, Spiegel, Ringe als
- * Haarlinien; Ringe weit außerhalb des Ausschnitts fallen weg. `children` liegt auf dem Papier unter Spiegel und Ringen
- * (das Probe-Eck der kleinen Scheiben). Für `MiniTarget` und die Bilder eines Zeitraums.
+ * Das Scheibenbild ohne Treffer, als Teil eines SVG in mm (y nach unten): Papier über den Ausschnitt, Spiegel, Ringe
+ * als Haarlinien; Ringe weit außerhalb des Ausschnitts fallen weg. `children` liegt auf dem Papier unter Spiegel und
+ * Ringen (das Probe-Eck der kleinen Scheiben). Für `MiniTarget`; die großen Bilder zeichnen über `TargetBoard`.
  */
 export function TargetFace({
   target,

@@ -60,7 +60,9 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
   bleibt im Browser und schreibt `pick` mit `replaceState`, die Lagen der Ablesung holt `cardMarksAction`
   (`src/lib/marks-actions.ts`) nach. Das Trefferbild (`show=target`) und die Reiter Präzision und Lage holt
   `periodPatternAction` (`src/lib/pattern-actions.ts`, über `usePeriodPattern`) erst bei Bedarf: Lagen der Projektion
-  (`patternCardsOf`), gerechnet auf dem Server, an den Browser Raster und Schwerpunkte. Gerechnet in der Wertung der Familie; ein `scoring` in der Adresse gilt nicht.
+  (`patternCardsOf`), gerechnet auf dem Server; an den Browser gehen bis 3.000 Schuss die Treffer mit Band (nur eigene
+  Scheiben), darüber ein Raster, dazu Schwerpunkte und Urteile. Gerechnet in der Wertung der Familie; ein `scoring` in
+  der Adresse gilt nicht.
 - **Privat ist Standard** ([[spiegel-privacy]]): Jeder Lesezugriff filtert nach dem angemeldeten Schützen, auch für
   Admins. Admin verwaltet Konten und sieht keine fremden Schüsse. Einzige Ausnahme: eine Scheibe, die ihr Schütze per
   Link geteilt hat (`sharedCard`, siehe „Teilen per Link“).

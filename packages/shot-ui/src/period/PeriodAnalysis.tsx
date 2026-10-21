@@ -33,7 +33,7 @@ import { usePeriodWords } from "./PeriodWords"
 import { PositionTimeline, TIMELINE_HEIGHT } from "./PositionTimeline"
 import { ShapeEllipse } from "./ShapeEllipse"
 
-/** die Reiter in der Ordnung der Scheibe; Überblick und Zeit kommen mit den Erkenntnissen über den Zeitraum */
+/** die Reiter in der Ordnung der Scheibe, ohne Überblick und Zeit */
 export const PERIOD_TABS: readonly { value: PeriodTab; label: string }[] = [
   { value: "result", label: "Ergebnis" },
   { value: "precision", label: "Präzision" },
@@ -84,8 +84,8 @@ function Pending({ state, onRetry }: { state: PatternState; onRetry: () => void 
 
 /**
  * Analyse über den Zeitraum in Reitern wie auf der Scheibe: Ergebnis (Rekorde), Präzision (Form über mehrere Scheiben
- * als Ellipse, L9), Lage (Lage über Zeit als zwei Zeitreihen, L10; Ausreißerrichtung, L7). Die Antwort steht unter dem Trefferbild, hier stehen die
- * Belege mit ihren Zahlen.
+ * als Ellipse, L9), Lage (Lage über Zeit als zwei Zeitreihen, L10; Ausreißerrichtung, L7). Die Antwort steht unter dem
+ * Trefferbild, hier stehen die Belege mit ihren Zahlen.
  */
 export function PeriodAnalysis(props: PeriodAnalysisProps) {
   const { tab, onTab, explain, onHelp, action } = props

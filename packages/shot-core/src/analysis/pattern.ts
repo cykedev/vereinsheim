@@ -253,7 +253,10 @@ export interface PatternLayer {
   outside: number
 }
 
-/** das Trefferbild eines Zeitraums, wie es an den Browser geht: ohne Schüsse, nur Raster, Mitten und Urteile */
+/**
+ * das Trefferbild eines Zeitraums, wie es an den Browser geht: bis 3.000 Schuss die Treffer mit Band, darüber ein
+ * Raster, dazu Mitten und Urteile
+ */
 export interface PeriodPattern {
   /** Schüsse mit Lage */
   shots: number
@@ -267,13 +270,16 @@ export interface PeriodPattern {
   outliers: OutlierDirection | null
 }
 
-const roundPoint = (p: Point): Point => ({ xUm: Math.round(p.xUm), yUm: Math.round(p.yUm) })
+const roundPoint = (p: Point): Point => ({
+  xUm: Math.round(p.xUm) || 0,
+  yUm: Math.round(p.yUm) || 0,
+})
 
 const toShot = (
   p: PatternPoint,
   band: number | null
 ): [number, number, number | null, number | null] => [
-  // `|| 0`: kein −0, das JSON zu 0 machte (wie `cardMarks`)
+  // `|| 0`: kein −0 (wie `cardMarks`)
   Math.round(p.xUm / PATTERN_UM) || 0,
   Math.round(p.yUm / PATTERN_UM) || 0,
   p.ring ?? null,
@@ -289,7 +295,9 @@ const bandAt = (grid: DensityGrid, value: number) =>
 
 function layer(points: readonly PatternPoint[]): PatternLayer {
   const center = points.length ? roundPoint(mean(points)) : null
-  const farthest = Math.max(0, ...points.map((p) => Math.hypot(p.xUm, p.yUm)))
+  // als Schleife: Zehntausende Argumente für `Math.max(...)` sprengten den Stapel
+  let farthest = 0
+  for (const p of points) farthest = Math.max(farthest, Math.hypot(p.xUm, p.yUm))
   if (points.length < PATTERN_DENSITY_FROM)
     // jeder Treffer im Bild, mit Rand für das Kaliber
     return {
@@ -325,8 +333,7 @@ function layer(points: readonly PatternPoint[]): PatternLayer {
 /**
  * Das Trefferbild eines Zeitraums (L9) mit den Urteilen über Form (L9), Lage (L10) und Ausreißerrichtung (L7), für
  * den Browser gerechnet: Er bekommt bis 3.000 Schuss jeden Treffer mit seinem Band der Dichte (unter 50 mit seinem
- * Ring), darüber nur die Dichte als Raster von 64 × 64, dazu die Schwerpunkte je Scheibe auf ganze µm. Die Form zeigt die Seite nicht als zweites Bild,
- * sondern über ihr Urteil (`shape`).
+ * Ring), darüber nur die Dichte als Raster von 64 × 64, dazu die Schwerpunkte je Scheibe auf ganze µm.
  */
 export function periodPattern(cards: readonly PatternCard[]): PeriodPattern {
   const all = cards.flatMap((card) => card.points)
