@@ -101,22 +101,11 @@ export function PeriodChart({ width, model, timeZone, chosen, onChoose }: Period
         : values.map((v) => xTime(v.atMs))
   const preset =
     mode === "months" || chosen === null ? -1 : values.findIndex((v) => v.id === chosen)
-  // das Lineal wählt die Scheibe der Seite (nur „je Scheibe“ und Vergleich), „je Monat“ liest es nur ab
-  const ruler = useRuler(xs, width, preset < 0 ? null : preset, (i) => {
-    if (mode !== "months") onChoose(i === null ? null : (values[i]?.id ?? null))
-  })
-
   const enough = mode === "months" ? months.length >= 1 : values.length >= 2
-  if (!enough) {
-    return (
-      <p data-chart-empty className="text-[13px] text-muted-foreground">
-        {`Für einen Verlauf braucht es zwei ${words.many} mit Wert.`}
-      </p>
-    )
-  }
 
-  // y über alles, was gezeichnet wird: Werte, Band, Vergleich, Monatsspannen
-  const ys: number[] =
+  // y über alles, was gezeichnet wird: Werte, Band, Vergleich, Monatsspannen; vor dem Lineal, das die Höhen der
+  // Punkte braucht
+  const domain: number[] =
     mode === "months"
       ? months.flatMap((m) => [m.median, m.p10, m.p90].filter((v): v is number => v !== null))
       : [
@@ -127,13 +116,33 @@ export function PeriodChart({ width, model, timeZone, chosen, onChoose }: Period
             : []),
           ...(compare ?? []).map((v) => v.value),
         ]
-  const lo = Math.min(...ys)
-  const hi = Math.max(...ys)
+  const lo = Math.min(...domain)
+  const hi = Math.max(...domain)
   const step = niceStep(Math.max(hi - lo, 10 ** -digits), 4)
   const yMin = Math.floor((lo - (hi - lo) * 0.08) / step) * step
   const yMax = Math.ceil((hi + (hi - lo) * 0.08) / step) * step || yMin + step
   const y = (v: number) =>
     PAD.top + ((yMax - v) / Math.max(1e-9, yMax - yMin)) * (HEIGHT - PAD.top - padBottom)
+
+  // das Lineal wählt die Scheibe der Seite (nur „je Scheibe“ und Vergleich), „je Monat“ liest es nur ab; die Höhen
+  // entscheiden, wenn Scheiben eines Abends übereinander stehen
+  const ruler = useRuler(
+    xs,
+    width,
+    preset < 0 ? null : preset,
+    (i) => {
+      if (mode !== "months") onChoose(i === null ? null : (values[i]?.id ?? null))
+    },
+    mode === "months" || !enough ? undefined : values.map((v) => y(v.value))
+  )
+
+  if (!enough) {
+    return (
+      <p data-chart-empty className="text-[13px] text-muted-foreground">
+        {`Für einen Verlauf braucht es zwei ${words.many} mit Wert.`}
+      </p>
+    )
+  }
   const grid: number[] = []
   for (let v = yMin; v <= yMax + step / 2; v += step) grid.push(Number(v.toFixed(6)))
   const base = HEIGHT - padBottom
