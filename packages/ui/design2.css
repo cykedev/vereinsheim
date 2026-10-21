@@ -145,6 +145,16 @@
   --score-9: #e9b10c;
   --score-8: #1fa3c8;
   --score-7: #7c5cd6;
+  /* Heatmap der Treffer über einen Zeitraum: von selten (violett) bis oft (gelb), wie die Scheibe in beiden Themes gleich */
+  --heat-1: #3b2a6b;
+  --heat-2: #7a2f8e;
+  --heat-3: #c63f6e;
+  --heat-4: #f07a3c;
+  --heat-5: #f9d65c;
+  /* die ruhige Scheibe unter der Heatmap: Papier und Spiegel zurückgenommen, Ringe als feine Linien */
+  --heat-paper: #1f2733;
+  --heat-spiegel: #171d27;
+  --heat-line: rgba(230, 237, 246, 0.22);
   /* Platz 1, 2, 3 (Gold, Silber, Bronze): auch als Schrift, auf der Kartenfläche ≥ 4,5 : 1 */
   --rank-1: #8a6100;
   --rank-2: #5f6b7a;
