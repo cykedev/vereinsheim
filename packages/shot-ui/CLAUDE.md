@@ -138,7 +138,9 @@ Bedienung prüft `pnpm --filter spiegel pruefen`.
   `CardPage` steht die Analyse ab 768 px in voller Breite unter der Scheibe (`below`). Diagramme in Bildschirm-Pixeln über `ChartSlot`/`ChartSvg`
   (`analysis/charts/frame.tsx`), Schrift ab 12 px, Punkte mit dunklem Rand; kein Wert nur im SVG-`<title>`: Einzelwerte liest das
   Lineal (`analysis/charts/ChartRuler.tsx`: `useRuler`, Zeile über dem Diagramm, „Werte als Tabelle“), reine
-  Hilfen in `analysis/charts/ruler.ts`. Ziehen ändert die Scheibe nicht; „Auf der Scheibe“ (`onChoose` der
+  Hilfen in `analysis/charts/ruler.ts`. Das Lineal wählt nach x; mit Höhen (`useRuler(…, ys)`) entscheidet unter Werten,
+  die höchstens `SAME_X_PX` (4 px) neben dem nächsten stehen, die Höhe des Zeigers. Das braucht der Verlauf eines
+  Zeitraums, in dem die Scheiben eines Abends fast übereinander stehen; die Tastatur geht weiter in zeitlicher Folge. Ziehen ändert die Scheibe nicht; „Auf der Scheibe“ (`onChoose` der
   Analyse) zeigt den Schuss über die Aktion `show` (ohne Umschalten, Auswahl bei Bedarf auf die ganze Scheibe) und
   springt zu ihr. Die Seite hängt `AnalysisPanel` je Karte neu ein (`key`), damit kein Lineal eine alte Wahl
   mitnimmt. Diagramme und Scheibe sind nicht markierbar (`select-none` an `ChartSlot`, `ChartSvg`, `TargetView`; das
