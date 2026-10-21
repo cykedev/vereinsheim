@@ -208,10 +208,10 @@ Ergebnis (I7–I9, Z6, Z7, K2, K4, T4, V3–V5, W2–W4 als Zeilen im Vergleich)
   über einen Baustein (`TargetBoard`: Papier, Spiegel, Ringe, Ringzahlen auf vier Achsen, gestrichelte Innenzehn bei
   der Luftpistole). Die Heatmap liegt zwischen den Flächen und den Ringen: sechs Bänder von selten (hellviolett,
   `heat-0`) bis oft (gelb, `heat-5`), deren Grenzen 99 von 100, neun Zehntel, drei Viertel, die Hälfte, ein Viertel und
-  ein Zehntel der Schüsse umschließen (`HEAT_SHARES`). Die seltenen Schüsse außerhalb der neun Zehntel stehen einzeln
-  als Treffer in Ringfarbe darüber, höchstens 300, die seltensten zuerst (`PATTERN_RARE_MAX`); der Ausschnitt reicht bis
-  zum weitesten Schuss, höchstens doppelt so weit wie 99 % der Schüsse (Rückmeldung des Users: seltene Treffer gingen
-  in der Heatmap unter). Die seltenen Bänder scheinen durch (Deckkraft 0,35 außen bis 0,94 innen), so
+  ein Zehntel der Schüsse umschließen (`HEAT_SHARES`); das äußerste, ganz leichte Band zeigt die seltenen Schüsse
+  (Rückmeldung des Users: ohne es gingen sie unter). Einzelne seltene Treffer über der Heatmap gab es kurz, sie waren
+  nicht nötig. Der Ausschnitt umfasst 99 % der Schüsse mit so viel Rand (× 1,35), dass das äußerste Band ins Bild passt. Die seltenen Bänder scheinen durch (Deckkraft 0,35 außen bis
+  0,94 innen), so
   bleiben Weiß und Schwarz erkennbar, und Ringe und Ringzahlen liegen darüber, wie gedruckt: Der Wert einer Stelle lässt
   sich ablesen wie auf der echten Scheibe. Die Legende ist ein Verlauf „selten … oft“. Verworfen nach Rückmeldung des
   Users: hellblaue Flächen (auf Papier und Spiegel schlecht zu sehen), eine zurückgenommene dunkle Scheibe (der Spiegel

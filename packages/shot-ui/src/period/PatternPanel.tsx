@@ -10,7 +10,6 @@ import {
   basisText,
   CENTER_NOTE,
   LEGEND_POINTS,
-  LEGEND_RARE,
   PATTERN_FAILED,
   PATTERN_LOADING,
   pictureWords,
@@ -83,12 +82,7 @@ function Ready({ pattern, target }: { pattern: PeriodPattern; target: TargetImag
     <>
       <PatternTarget layer={pattern.picture} target={target} label={sentence} />
       {dense ? (
-        <div className="grid gap-1">
-          <HeatLegend />
-          {(pattern.picture.points?.length ?? 0) > 0 && (
-            <p className="text-[13px] text-muted-foreground">{LEGEND_RARE}</p>
-          )}
-        </div>
+        <HeatLegend />
       ) : (
         <p className="text-[13px] text-muted-foreground">{LEGEND_POINTS}</p>
       )}

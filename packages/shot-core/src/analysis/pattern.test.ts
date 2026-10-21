@@ -4,7 +4,6 @@ import { normalPoints } from "../__fixtures__/random"
 import {
   outlierDirection,
   PATTERN_DENSITY_FROM,
-  PATTERN_RARE_MAX,
   periodPattern,
   periodShape,
   positionOverTime,
@@ -221,22 +220,10 @@ describe("periodPattern", () => {
     expect(few.picture.halfUm).toBe(1000 * 1.15 + 500)
     const many = periodPattern(cardsOf(2, 25, 1500))
     expect(many.shots).toBe(50)
+    expect(many.picture.points).toBeNull()
     expect(many.picture.grid?.size).toBe(64)
     expect(many.picture.grid?.levels).toHaveLength(6)
     expect(PATTERN_DENSITY_FROM).toBe(50)
-  })
-
-  it("mit Dichte zeigt das Bild die seltenen Schüsse außerhalb des Bands für neun Zehntel einzeln", () => {
-    const flier = { xUm: 9000, yUm: 0, ring: 7 }
-    const cards = cardsOf(10, 40, 1500)
-    const pattern = periodPattern([...cards, card("weit", [flier])])
-    expect(pattern.picture.grid).not.toBeNull()
-    expect(pattern.picture.points).toContainEqual([900, 0, 7])
-    // die einzeln gezeigten sind wenige, die Masse steckt in den Bändern
-    expect(pattern.picture.points!.length).toBeGreaterThan(pattern.shots * 0.03)
-    expect(pattern.picture.points!.length).toBeLessThan(pattern.shots * 0.2)
-    // der Ausschnitt reicht bis zum Abreißer, höchstens doppelt so weit wie 99 % der Schüsse
-    expect(pattern.picture.halfUm).toBeGreaterThan(9000)
   })
 
   it("zählt Scheiben ohne Lage, Schwerpunkte nur ab drei Punkten", () => {
@@ -259,7 +246,7 @@ describe("periodPattern", () => {
     expect(JSON.parse(JSON.stringify(pattern))).toEqual(pattern)
   })
 
-  it("1.500 Scheiben zu 40 Schuss: höchstens 300 einzelne Schüsse, unter 200 KB und schnell", () => {
+  it("1.500 Scheiben zu 40 Schuss: unter 200 KB und schnell", () => {
     const cards = cardsOf(1500, 40, 1500).map((c, i) => ({
       ...c,
       id: `cmh${String(i).padStart(22, "0")}`,
@@ -268,7 +255,6 @@ describe("periodPattern", () => {
     const started = performance.now()
     const pattern = periodPattern(cards)
     expect(performance.now() - started).toBeLessThan(2000)
-    expect(pattern.picture.points).toHaveLength(PATTERN_RARE_MAX)
     expect(JSON.stringify(pattern).length).toBeLessThan(200_000)
   })
 })

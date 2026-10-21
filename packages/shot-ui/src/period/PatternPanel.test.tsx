@@ -57,15 +57,13 @@ describe("PatternPanel", () => {
   })
 
   it("ab 50 Schuss die Heatmap in sechs Bändern auf der echten Scheibe, mit Legende", () => {
-    // dazu ein Schuss weit draußen: Er steht einzeln als Treffer
+    // auch ein Schuss weit draußen steht nicht einzeln da
     const flier = { id: "weit", atMs: 99, points: [{ xUm: 4000, yUm: 0, ring: 8 }] }
     const html = render({ status: "ready", pattern: periodPattern([...cards(10, 40), flier]) })
     expect(html).toContain('data-pattern-target="density"')
     for (const band of [1, 2, 3, 4, 5, 6]) expect(html).toContain(`data-pattern-band="${band}"`)
-    // seltene Schüsse außen einzeln als Treffer, über den Ringen
-    expect(html).toContain("data-pattern-shot")
-    expect(html.lastIndexOf("data-ring=")).toBeLessThan(html.indexOf("data-pattern-shot"))
-    expect(html).toContain("Seltene Schüsse siehst du einzeln als Treffer.")
+    // nur die Heatmap, keine einzelnen Treffer
+    expect(html).not.toContain("data-pattern-shot")
     expect(html).toContain('fill="var(--paper)"')
     expect(html).toContain('fill="var(--spiegel)"')
     // die Scheibe wie auf der Seite einer Scheibe, die Ringe und Ringzahlen über den Bändern

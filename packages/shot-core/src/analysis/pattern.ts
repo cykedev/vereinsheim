@@ -4,7 +4,7 @@
 // µm, Mitte (0 | 0), x rechts, y oben, wie gezeichnet (ohne verdächtige Schüsse, `cardMarks`).
 
 import type { Point } from "../geometry"
-import { cellValue, densityGrid, patternHalf, type DensityGrid } from "./density"
+import { densityGrid, patternHalf, type DensityGrid } from "./density"
 import { confidenceOf } from "./hotelling"
 
 /** ein Schuss im Trefferbild: Lage und, wenn bekannt, der Ring (für die Farbe der Punkte) */
@@ -224,9 +224,6 @@ export function outlierDirection(cards: readonly PatternCard[]): OutlierDirectio
 /** ab so vielen Schüssen zeigt das Trefferbild die Dichte als Heatmap, darunter jeden Schuss in seiner Ringfarbe */
 export const PATTERN_DENSITY_FROM = 50
 
-/** so viele seltene Schüsse zeigt das Bild mit Dichte höchstens einzeln: die mit der geringsten Dichte */
-export const PATTERN_RARE_MAX = 300
-
 /** Raster der Lagen im Muster: 10 µm wie `cardMarks` */
 const PATTERN_UM = 10
 
@@ -237,9 +234,7 @@ export interface PatternLayer {
   /** Mitte aller Schüsse, auf ganze µm; null ohne Schuss */
   center: Point | null
   /**
-   * die Schüsse, die das Bild einzeln zeichnet, als [x, y] in 10 µm und ihr Ring (null ohne Wert): unter
-   * `PATTERN_DENSITY_FROM` Schuss alle, mit Dichte die seltenen außerhalb des Bands für neun Zehntel, höchstens
-   * `PATTERN_RARE_MAX`, die seltensten zuerst
+   * jeder Schuss als [x, y] in 10 µm und sein Ring (null ohne Wert), unter `PATTERN_DENSITY_FROM` Schuss; sonst null
    */
   points: [number, number, number | null][] | null
   /** die Dichte in Bändern ab `PATTERN_DENSITY_FROM` Schuss; sonst null */
@@ -264,32 +259,22 @@ const roundPoint = (p: Point): Point => ({ xUm: Math.round(p.xUm), yUm: Math.rou
 
 function layer(points: readonly PatternPoint[]): PatternLayer {
   const center = points.length ? roundPoint(mean(points)) : null
-  // einzelne Punkte zeigt das Bild alle (mit Rand für das Kaliber); mit Dichte auch die seltenen Schüsse, aber
-  // höchstens doppelt so weit wie 99 % der Schüsse, damit ein einzelner Abreißer die Heatmap nicht klein macht
+  if (points.length >= PATTERN_DENSITY_FROM) {
+    const halfUm = patternHalf(points)
+    return { halfUm, center, points: null, grid: densityGrid(points, halfUm) }
+  }
+  // einzelne Punkte zeigt das Bild alle, mit Rand für das Kaliber
   const farthest = Math.max(0, ...points.map((p) => Math.hypot(p.xUm, p.yUm)))
-  const shot = (p: PatternPoint): [number, number, number | null] => [
-    Math.round(p.xUm / PATTERN_UM),
-    Math.round(p.yUm / PATTERN_UM),
-    p.ring ?? null,
-  ]
-  if (points.length < PATTERN_DENSITY_FROM)
-    return {
-      halfUm: Math.max(1000, farthest * 1.15 + 500),
-      center,
-      points: points.map(shot),
-      grid: null,
-    }
-  const core = patternHalf(points)
-  const halfUm = Math.min(2 * core, Math.max(core, farthest * 1.08 + 500))
-  const grid = densityGrid(points, halfUm)
-  // außerhalb des Bands für neun Zehntel: die seltenen Schüsse, als echte Treffer über der Heatmap
-  const rare = points
-    .map((p) => ({ p, value: cellValue(grid, halfUm, p) }))
-    .filter(({ value }) => value < grid.levels[1])
-    .sort((a, b) => a.value - b.value)
-    .slice(0, PATTERN_RARE_MAX)
-    .map(({ p }) => shot(p))
-  return { halfUm, center, points: rare, grid }
+  return {
+    halfUm: Math.max(1000, farthest * 1.15 + 500),
+    center,
+    points: points.map((p) => [
+      Math.round(p.xUm / PATTERN_UM),
+      Math.round(p.yUm / PATTERN_UM),
+      p.ring ?? null,
+    ]),
+    grid: null,
+  }
 }
 
 /**

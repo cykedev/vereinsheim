@@ -52,12 +52,12 @@ describe("densityGrid", () => {
 })
 
 describe("patternHalf", () => {
-  it("Punkte auf einem Kreis mit 2 mm: 2,3 mm", () => {
+  it("Punkte auf einem Kreis mit 2 mm: 2,7 mm", () => {
     const points = Array.from({ length: 12 }, (_, i) => ({
       xUm: 2000 * Math.cos((i * Math.PI) / 6),
       yUm: 2000 * Math.sin((i * Math.PI) / 6),
     }))
-    expect(patternHalf(points)).toBeCloseTo(2300, 6)
+    expect(patternHalf(points)).toBeCloseTo(2700, 6)
   })
 
   it("mindestens 1 mm, auch ohne Punkte", () => {

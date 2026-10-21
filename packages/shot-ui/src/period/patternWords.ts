@@ -19,7 +19,6 @@ export interface PatternSentence {
 }
 
 export const LEGEND_POINTS = "Jeder Punkt ist ein Schuss."
-export const LEGEND_RARE = "Seltene Schüsse siehst du einzeln als Treffer."
 export const CENTER_NOTE = "Der geviertelte Kreis ist die Mitte aller Schüsse."
 export const PATTERN_LOADING = "Trefferbild wird gerechnet …"
 export const PATTERN_FAILED = "Das Trefferbild ließ sich nicht laden."

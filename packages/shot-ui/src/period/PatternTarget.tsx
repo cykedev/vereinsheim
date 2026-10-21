@@ -46,9 +46,8 @@ export interface PatternTargetProps {
 /**
  * Trefferbild über einen Zeitraum (L9) auf der Scheibe, wie die Seite einer Scheibe sie zeichnet (`TargetBoard`: Papier,
  * Spiegel, Ringe, Ringzahlen). Ab 50 Schuss liegt zwischen den Flächen und den Ringen eine Heatmap in fünf Bändern von
- * selten (violett) bis oft (gelb), deren Grenzen Anteile der Schüsse umschließen, das äußerste 99 von 100; die seltenen
- * Schüsse außerhalb des Bands für neun Zehntel stehen einzeln als Treffer darüber. Darunter jeder Schuss in
- * Kalibergröße und Ringfarbe. Der geviertelte Kreis ist die Mitte aller Schüsse. Ringzahlen und Schwerpunkt richten sich wie auf der
+ * selten (hellviolett) bis oft (gelb), deren Grenzen Anteile der Schüsse umschließen, das äußerste, ganz leichte 99
+ * von 100. Darunter jeder Schuss in Kalibergröße und Ringfarbe. Der geviertelte Kreis ist die Mitte aller Schüsse. Ringzahlen und Schwerpunkt richten sich wie auf der
  * Scheibe nach der gemessenen Breite.
  */
 export function PatternTarget({ layer, target, label, className }: PatternTargetProps) {
@@ -87,7 +86,7 @@ export function PatternTarget({ layer, target, label, className }: PatternTarget
       ) : (
         <TargetBoard target={target} view={view} ringLabel={sizes.ringLabel} />
       )}
-      {/* die Schüsse, die das Bild einzeln zeigt: ohne Dichte alle, mit Dichte die seltenen außen */}
+      {/* unter 50 Schuss jeder Schuss einzeln */}
       {(layer.points ?? []).map(([x, y, ring], i) => (
         <circle
           key={i}

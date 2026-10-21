@@ -72,10 +72,9 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 **Trefferbild über den Zeitraum**
 - *Was:* Alle Schüsse der Scheiben im Zeitraum auf einer Scheibe, wo sie lagen. Ab 50 Schuss zeigt
   das Bild eine Heatmap: Gelb heißt, dort liegen deine Schüsse oft, Violett, dort selten. Die Farben
-  umschließen Anteile deiner Schüsse, das gelbe Feld etwa ein Zehntel, das hellste Band außen fast
-  alle. Seltene Schüsse außerhalb der neun Zehntel stehen einzeln als Treffer darüber, in der Farbe
-  ihres Rings. Unter 50 Schuss ist jeder Schuss ein Punkt in der Farbe seines Rings. Der geviertelte
-  Kreis ist die Mitte aller Schüsse.
+  umschließen Anteile deiner Schüsse, das gelbe Feld etwa ein Zehntel, das ganz leichte Band außen
+  fast alle, auch die seltenen. Unter 50 Schuss ist jeder Schuss ein Punkt in der Farbe seines
+  Rings. Der geviertelte Kreis ist die Mitte aller Schüsse.
 - *So liest du es:* Der Satz unter dem Bild ist die Antwort: zuerst, ob deine Lage über den Zeitraum
   versetzt ist, dann, ob deine Gruppe in eine Richtung zieht. Die Belege stehen in der Analyse: die
   Form als Ellipse unter „Präzision“, die Lage über die Zeit unter „Lage“.
