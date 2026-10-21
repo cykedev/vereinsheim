@@ -1235,6 +1235,44 @@ async function progress(page: Page) {
       point.id
     )
   } else check("Fortschritt: Verlauf mit Punkten", false, "keine Punkte")
+  // Scheiben eines Abends stehen fast übereinander: ein Tipp wählt die getroffene, nicht die nach x nächste. Die gerade
+  // gewählte bleibt aus, ein zweiter Tipp höbe ihre Wahl auf
+  const stack = await page.ev<string[]>(`(() => {
+    const at = $$("[data-card-point]").map((g) => {
+      const r = g.querySelector("circle:last-child").getBoundingClientRect()
+      return { id: g.dataset.cardPoint, x: r.left + r.width / 2 }
+    })
+    const group = at.filter((p) => at.some((q) => q !== p && Math.abs(q.x - p.x) < 4))
+    return group.length ? group.filter((p) => Math.abs(p.x - group[0].x) < 4).map((p) => p.id) : []
+  })()`)
+  if (stack.length) {
+    const missed: string[] = []
+    for (const id of stack) {
+      const chosenNow = await page.ev<boolean>(
+        `$('[data-card-point="${id}"]')?.dataset.chosen === "true"`
+      )
+      if (chosenNow) continue
+      const at = await page.ev<{ x: number; y: number }>(`(() => {
+        const r = $('[data-card-point="${id}"] circle:last-child').getBoundingClientRect()
+        return { x: r.left + r.width / 2, y: r.top + r.height / 2 } })()`)
+      await page.clickAt(at.x, at.y)
+      await page.wait(400)
+      const hit = await page.ev<boolean>(
+        `$("[data-card-readout]")?.dataset.cardReadout === ${JSON.stringify(id)}`
+      )
+      if (!hit) missed.push(id)
+    }
+    check(
+      "Fortschritt: ein Tipp auf eine von mehreren Scheiben eines Abends wählt genau sie",
+      missed.length === 0,
+      { stack: stack.length, missed }
+    )
+  } else
+    check(
+      "Fortschritt: ein Tipp auf eine von mehreren Scheiben eines Abends wählt genau sie",
+      true,
+      "kein Stapel in den Daten (nicht belegt)"
+    )
   const rowId = await page.ev<string | null>(`$$("[data-card-row]")[2]?.dataset.cardRow ?? null`)
   if (rowId) {
     await page.click(`$('[data-card-row="${rowId}"] button')`, { settle: 400 })
