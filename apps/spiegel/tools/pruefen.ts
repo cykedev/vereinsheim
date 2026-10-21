@@ -95,6 +95,11 @@ async function pickCard(page: Page): Promise<string> {
 const near = (a: number, b: number, tol: number) => Math.abs(a - b) <= tol
 /** Themen der Hilfe über viele Scheiben (Seite eines Zeitraums) */
 const PERIOD_TOPICS = HELP_TOPICS.filter((t) => t.theme === "period").map((t) => t.id)
+/** Themen der Hilfe der Seite Vergleichen, dazu die Erklärung der Seite selbst */
+const COMPARE_TOPICS = [
+  ...HELP_TOPICS.filter((t) => t.theme === "compare").map((t) => t.id),
+  "vergleichen",
+]
 /**
  * Fachbegriffe, die auf den ersten beiden Ebenen nicht stehen dürfen: σ, R50, T², „95 %“ als Sicherheit, Median,
  * P10/P90, „mittlere Hälfte“, bedeutsam, Hotelling, echt, unklar, Kalenderwochen. Erst im Blatt „?“ und in den Karten
@@ -609,7 +614,7 @@ async function phoneNoSideScroll(page: Page) {
   record(
     await noSideScroll(page, {
       base: BASE,
-      paths: ["/", "/cards", "/progress"],
+      paths: ["/", "/cards", "/progress", "/compare", "/compare?type=cards", "/compare?type=kind"],
       widths: [390, 375],
     })
   )
@@ -986,17 +991,11 @@ async function language(page: Page) {
     await page.click(`$('[data-card-row="${middle}"] button')`, { settle: 500 })
     await collect()
   }
-  await page.click(`$("[data-period-chip]")`, { settle: 300 })
-  await page.click(
-    `$$("[data-period-picker] fieldset").find((f) => txt($("legend", f)) === "Vergleichen mit")
-      .querySelectorAll("label")[1]`,
-    { settle: 150 }
-  )
-  await page.click(`button("Übernehmen", $("[data-period-picker]").closest("dialog"))`, {
-    settle: 300,
-  })
-  await page.waitFor(`!!$("[data-result-box] [data-comparison]")`, 10_000)
-  await collect()
+  // „Vergleichen mit“ gibt es im Fortschritt nicht mehr: Vergleiche laufen über die Seite Vergleichen (`compare`)
+  const picker = await page.ev<boolean>(`(() => { $("[data-period-chip]")?.click()
+    return $$("[data-period-picker] legend").some((l) => txt(l) === "Vergleichen mit") })()`)
+  check("Fortschritt: kein „Vergleichen mit“ im Blatt Filter", !picker)
+  await page.goto(`${BASE}/progress`)
   // die Reiter Präzision und Lage der Analyse, mit dem Trefferbild geladen
   for (const label of ["Präzision", "Lage"]) {
     await page.click(`tab(${JSON.stringify(label)})`, { settle: 300 })
@@ -1587,6 +1586,150 @@ async function periodPattern(page: Page) {
   await page.viewport(1440, 1400)
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Vergleichen
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** der Zustand der Seite Vergleichen: Adresse, Satz, Art des Bilds, Zeilen, Fachbegriffe, Hinweis */
+const compareState = () =>
+  `({
+    url: location.pathname + location.search,
+    sentence: txt($("[data-compare-sentence]")),
+    picture: $("[data-compare-picture]")?.dataset.comparePicture ?? null,
+    rows: $$("[data-compare-row]").length,
+    problem: txt($("[data-compare-problem]")),
+    jargon: ${jargonIn("[data-compare-body], [data-compare-controls]")},
+  })`
+type CompareState = {
+  url: string
+  sentence: string
+  picture: string | null
+  rows: number
+  problem: string
+  jargon: string | null
+}
+/** bis die Seite nach einer Wahl neu gerechnet ist: die Adresse passt und nichts ist mehr leise */
+const compareReady = (part: string) =>
+  `location.search.includes(${JSON.stringify(part)}) && !$("[data-compare-body][aria-busy]") &&
+    (!!$("[data-compare-sentence]") || !!$("[data-compare-problem]"))`
+/** eine Wahl im offenen Blatt, nach dem Anfang ihres Namens */
+const sheetChoice = (label: string) =>
+  `$$("dialog[open] label").find((l) => txt(l).startsWith(${JSON.stringify(label)}))`
+
+/**
+ * Seite Vergleichen: der Weg aus dem Fortschritt, zwei Zeiträume mit Bild und Zeilen, „Alle Kennzahlen“, das Blatt für
+ * B, eine alte Adresse mit `compare=`, Wettkampf und Training, zwei Scheiben von der Seite einer Scheibe mit dem Blatt
+ * der Scheiben, und jedes Thema der Hilfe der Seite hat ein „?“.
+ */
+async function compare(page: Page, href: string) {
+  const shown = new Set<string>()
+  const collect = async () => {
+    for (const id of await page.ev<string[]>(`$$("[data-help]").map((el) => el.dataset.help)`))
+      shown.add(id)
+  }
+  await page.viewport(1280, 900)
+  await page.goto(`${BASE}/progress`)
+  const link = await page.ev<string | null>(
+    `$("[data-compare-link]")?.getAttribute("href") ?? null`
+  )
+  check(
+    "Fortschritt: „Genauer vergleichen“ führt auf die Seite Vergleichen",
+    !!link?.startsWith("/compare"),
+    link ?? "kein Link"
+  )
+  if (link) {
+    await page.click(`$("[data-compare-link]")`, { settle: 800 })
+    await page.waitFor(`!!$("[data-compare-sentence]") || !!$("[data-compare-problem]")`, 15_000)
+  } else await page.goto(`${BASE}/compare`)
+  const periods = await page.ev<CompareState>(compareState())
+  check(
+    "Zwei Zeiträume: Satz, Bild, drei Zeilen, keine Fachbegriffe",
+    periods.url.startsWith("/compare") &&
+      periods.sentence.length > 0 &&
+      (periods.picture === "outlines" || periods.picture === "dots") &&
+      periods.rows === 3 &&
+      periods.jargon === null,
+    periods
+  )
+  await collect()
+  await page.click(`$("[data-compare-metrics] summary")`, { settle: 200 })
+  const metrics = await page.ev<number>(
+    `$("[data-compare-metrics]").open ? $$("[data-compare-metric]").length : 0`
+  )
+  check("Alle Kennzahlen klappen auf", metrics >= 6, metrics)
+  await collect()
+
+  await page.click(`$('[data-compare-chip="b"]')`, { settle: 300 })
+  const sheet = await page.ev<string>(`txt($("dialog[open] h2, dialog[open] [id]"))`)
+  await page.click(sheetChoice("Letzte 30 Tage"), { settle: 100 })
+  await page.click(`button("Übernehmen", $("dialog[open]"))`, { settle: 300 })
+  const thirty = await page.waitFor(compareReady("b=30d"), 15_000)
+  check("Blatt Zeitraum B: „Letzte 30 Tage“ übernehmen schreibt b=30d", thirty, sheet)
+
+  await page.goto(`${BASE}/progress?compare=previous`)
+  const legacy = await page.ev<string>(`location.pathname`)
+  check(
+    "Eine alte Adresse mit compare= führt auf die Seite Vergleichen",
+    legacy === "/compare",
+    legacy
+  )
+
+  await page.goto(`${BASE}/compare?type=kind`)
+  const kind = await page.ev<CompareState>(compareState())
+  const withData = kind.rows === 3 && kind.sentence.length > 0
+  check(
+    `Wettkampf und Training: Satz und Zeilen oder der Hinweis ohne Wettkampf${withData ? "" : " (ohne Wettkampf in den Daten: nicht belegt)"}`,
+    (withData || /keinen Wettkampf|kein Training/.test(kind.sentence)) && kind.jargon === null,
+    kind
+  )
+  await collect()
+
+  await page.goto(`${BASE}${href}`)
+  const previous = await page.ev<string | null>(
+    `$("[data-compare-previous] a")?.getAttribute("href") ?? null`
+  )
+  check(
+    "Seite einer Scheibe: „Mit der Scheibe davor vergleichen“",
+    !!previous?.startsWith("/compare?type=cards"),
+    previous ?? "kein Link"
+  )
+  if (previous) {
+    await page.click(`$("[data-compare-previous] a")`, { settle: 800 })
+    await page.waitFor(`!!$("[data-compare-sentence]") || !!$("[data-compare-problem]")`, 15_000)
+    const cards = await page.ev<CompareState>(compareState())
+    check(
+      "Zwei Scheiben: Punkte, drei Zeilen, keine Fachbegriffe",
+      cards.picture === "dots" && cards.rows === 3 && cards.jargon === null,
+      cards
+    )
+    await collect()
+    await page.click(`$('[data-compare-chip="a"]')`, { settle: 300 })
+    const first = await page.ev<{ radios: number; more: boolean }>(`({
+      radios: $$("dialog[open] input[type=radio]").length,
+      more: !!button("Mehr zeigen", $("dialog[open]")),
+    })`)
+    if (first.more) await page.click(`button("Mehr zeigen", $("dialog[open]"))`, { settle: 150 })
+    const after = await page.ev<number>(`$$("dialog[open] input[type=radio]").length`)
+    check(
+      "Blatt Scheibe A: höchstens 30 auf einmal, „Mehr zeigen“ lädt nach",
+      first.radios <= 30 && (!first.more || after > first.radios),
+      { ...first, after }
+    )
+    const before = cards.url
+    await page.click(`$$("dialog[open] input[type=radio]:not(:checked):not(:disabled)")[1]`, {
+      settle: 300,
+    })
+    const chosen = await page.waitFor(
+      `location.search !== ${JSON.stringify(before.slice(before.indexOf("?")))} && !$("[data-compare-body][aria-busy]")`,
+      15_000
+    )
+    check("Blatt Scheibe A: eine Wahl ändert die Adresse", chosen)
+  }
+
+  const missing = COMPARE_TOPICS.filter((id) => !shown.has(id))
+  check("Vergleichen: jedes Thema der Hilfe hat ein „?“", missing.length === 0, missing.join(", "))
+}
+
 async function main() {
   let server: ChildProcess | null = null
   let browser: Browser | null = null
@@ -1617,6 +1760,7 @@ async function main() {
     await section("Rückwege", () => backPaths(page))
     await section("Fortschritt", () => progress(page))
     await section("Trefferbild über den Zeitraum", () => periodPattern(page))
+    await section("Vergleichen", () => compare(page, href))
     await section("Eine Scheibe sagt, was sie zeigt", () => singleCardHints(page, href))
     await section("Sprache und Hilfe", () => language(page))
     await section("Offen und Leiste", () => openAndBar(page))

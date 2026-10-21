@@ -27,6 +27,7 @@ import {
   ownerCards,
   patternCardsOf,
 } from "../src/lib/db/reads"
+import { comparePageData } from "../src/lib/compare"
 import { listPageData, progressPageData, startPageData } from "../src/lib/overview"
 import type { Db } from "../src/lib/db"
 import { DEV_DATABASE_URL } from "../test/dev-database"
@@ -181,6 +182,23 @@ async function main() {
         { ...DEFAULT_PROGRESS, choice: { type: "all" } },
         pageContext
       )
+    // Vergleichen wie die Seite: zwölf Monate gegen die davor (Lagen beider Seiten, Umrisse) und zwei Scheiben
+    const comparePeriods = () =>
+      comparePageData(
+        db,
+        site.ownerId,
+        {
+          type: "periods",
+          family: null,
+          a: { type: "rolling", days: 365 },
+          b: "previous",
+          kind: "all",
+          includeProbeOnly: true,
+        },
+        pageContext
+      )
+    const compareCards = () =>
+      comparePageData(db, site.ownerId, { type: "cards", a: null, b: null }, pageContext)
 
     // offener Durchgang: die Brücke schickt nach jedem Schuss den ganzen Stand (SF-03)
     const live = generateSeason({
@@ -258,6 +276,11 @@ async function main() {
         await median(progressPage),
       ],
       [
+        "Vergleichen 12 Monate gegen davor auf dem Server: lesen, Lagen, Modell",
+        await median(comparePeriods),
+      ],
+      ["Vergleichen zwei Scheiben auf dem Server: Schüsse, Modell", await median(compareCards)],
+      [
         `Trefferbild „Alles“ (${allIds.length} Scheiben): Lagen lesen, Muster rechnen`,
         await median(() => patternOf(allIds)),
       ],
@@ -316,6 +339,9 @@ async function main() {
     out(
       `| Trefferbild 90 Tage: Muster (bis 3.000 Schuss jeder Treffer) | ${kb(await patternOf(recentIds))} |`
     )
+
+    out(`| Vergleichen 12 Monate gegen davor: Modell und Blatt | ${kb(await comparePeriods())} |`)
+    out(`| Vergleichen zwei Scheiben: Modell und Blatt | ${kb(await compareCards())} |`)
 
     await explain("Fortschritt „Alles“", (client) => familyCards(client, owner))
     await explain("Fortschritt 90 Tage", (client) =>
