@@ -310,6 +310,5 @@ Eingabe ist `PeriodItem`; was Spiegel anders braucht als Treffsicher, sind Param
 
 | Inhalt | Roadmap |
 |---|---|
-| Seite „Vergleichen“ mit Scheibe gegen Scheibe (C2), Wettkampf gegen Training (W1), Umzug des Vergleichs | SP-2.2, Plan 2 |
 | Überblick mit belegten Erkenntnissen, Reiter Zeit und Ergebnis; Trendsteigung (T4) | SP-2.7, Plan 3 |
 | Benannte Zeiträume anlegen, ändern und löschen; Vergleich nach Merkmal nach SP-2.3 | SP-2.2, SP-2.3 |

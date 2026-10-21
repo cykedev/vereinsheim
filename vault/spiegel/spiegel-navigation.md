@@ -61,7 +61,7 @@ Seiten ohne eigenen Bereich:
 | Offen | `/open` |
 | Papierkorb | `/profile/trash` |
 | Geteilte Scheibe | `/share/<uuid>`: ohne Anmeldung und ohne Rahmen der App (siehe „Teilen per Link“) |
-| Vergleich zweier Scheiben | `/compare?a=<id>&b=<id>`: kennt das Routen-Modell, eine Seite gibt es noch nicht (C2, SP-2.2); ein Vergleich als Zeitraum aus je einer Scheibe steht in [[spiegel-langzeit]] |
+| Vergleichen | `/compare?type=cards&a=<id>&b=<id>` · `/compare?family=lp-freihand&a=6m` (zwei Zeiträume, B der davor) · `/compare?type=kind&family=lp-freihand&range=all`; Bereich Fortschritt, nicht in der Leiste ([[spiegel-vergleichen]]) |
 
 ## Routen-Modell
 
@@ -78,7 +78,11 @@ und über `nav/navigate`.
 - **Werte:**
   - `range`: `30d`, `90d` (Vorgabe), `6m`, `12m`, `all`, `JJJJ-MM-TT..JJJJ-MM-TT` oder die Id eines benannten Zeitraums; die
     festen Werte gehen vor. In der Liste heißen `all` und ohne Angabe dasselbe: alle Abende.
-  - `compare`: `previous` oder eine Id.
+  - `compare`: `previous` oder eine Id. Spiegel leitet eine solche Adresse auf die Seite Vergleichen um
+    (`compareFromProgress`); Treffsicher nutzt den Vergleich im Blatt „Filter“ weiter.
+  - Vergleichen: `type` (`cards`, `kind`; ohne: zwei Zeiträume, mit B immer `type=periods`), `a` und `b` (Ids zweier
+    Scheiben oder Zeiträume wie `range`, B auch `previous` als Vorgabe), `range` bei Wettkampf und Training (Vorgabe
+    `12m`), dazu `family`, `kind`, `sighters=0`. Eine alte Adresse mit `a` und `b` ohne `type` sind zwei Scheiben.
   - Filter: `family`, `kind` (`training`, `competition`), `flag`; in der Liste dazu `list` (Kennung der Liste aus
     Meyton, nie ihr Name).
   - Darstellung im Fortschritt: `sighters=0` (Training nur aus Probe nicht mitzählen), `metric` (`sigma`, `tens`,
@@ -432,7 +436,6 @@ Stand am Code (15. Oktober 2026):
   Nachladens (SP-2.5). Das Nachladen selbst läuft ohne Vorschau; Profil zeigt seinen Stand.
 - **Weiche Sperre aufheben:** Kein Weg hebt eine `DeleteLock` auf; auch das Nachladen schickt der Brücke alle Sperren
   mit. Das Holen per QR (SP-1.7 b) und „Scheibe holen“ (SP-2.4) fehlen noch.
-- **Vergleich zweier Scheiben** (`/compare`, C2, SP-2.2): nur im Routen-Modell.
 - **„Läuft gerade“ auf Start** („Läuft · Stand 6 · 23 Schuss“): nicht gebaut.
 - **Abstand zum Schnitt in den Kacheln einer Scheibe:** Die Kacheln des Überblicks zeigen ihn nicht; käme er, wäre es
   der Schnitt der fünf davor.

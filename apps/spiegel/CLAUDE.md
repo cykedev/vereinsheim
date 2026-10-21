@@ -32,7 +32,8 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
 ## Aufbau
 
 - `src/app/login` ohne Rahmen; `src/app/(app)/*` mit Anmeldepflicht (`requireSession` im Layout, `proxy.ts` davor):
-  Start `/`, Scheiben `/cards`, Scheibe `/cards/[id]`, Fortschritt `/progress`, Profil, Papierkorb `/profile/trash`,
+  Start `/`, Scheiben `/cards`, Scheibe `/cards/[id]`, Fortschritt `/progress`, Vergleichen `/compare` (Bereich
+  Fortschritt, nicht in der Leiste), Profil, Papierkorb `/profile/trash`,
   Offen `/open`, Platzhalter Scannen `/scan` (nicht in der Navigation, `scan={false}` im `AppShell`),
   Admin `/admin/users`, `/admin/disciplines{/[id]}`, `/admin/site`. `src/app/share/[shareId]` ohne Anmeldung und ohne
   `AppShell` (`SharedShell`: Kopfzeile als Text, Blatt der Hilfe): eine geteilte Scheibe.
@@ -62,7 +63,13 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
   `periodPatternAction` (`src/lib/pattern-actions.ts`, über `usePeriodPattern`) erst bei Bedarf: Lagen der Projektion
   (`patternCardsOf`), gerechnet auf dem Server; an den Browser gehen bis 3.000 Schuss die Treffer mit Band (nur eigene
   Scheiben), darüber ein Raster, dazu Schwerpunkte und Urteile. Gerechnet in der Wertung der Familie; ein `scoring` in
-  der Adresse gilt nicht.
+  der Adresse gilt nicht. Einen Vergleich bietet der Fortschritt nicht mehr an (`withCompare={false}`): „Genauer
+  vergleichen“ hinter dem Satz führt auf die Seite Vergleichen, eine Adresse mit `compare=` leitet dorthin um.
+- **Vergleichen** (`/compare`, [[spiegel-vergleichen]]): Der Server rechnet `comparePageData` (`src/lib/compare.ts`):
+  Zeiträume und Wettkampf/Training aus den Projektionen der Familie und den Lagen (`patternCardsOf`, höchstens 5.000
+  Scheiben), zwei Scheiben aus ihren Schüssen (`cardWithShots`, nur eigene, gleiche Familie). An den Browser gehen das
+  Modell aus `shot-ui/compare` und die Scheiben der Familie fürs Blatt, nie Schüsse. Jede Wahl ist eine neue Adresse
+  (`router.push`). Die Seite einer Scheibe bietet „Mit der Scheibe davor vergleichen“ (`CompareWithPrevious`).
 - **Privat ist Standard** ([[spiegel-privacy]]): Jeder Lesezugriff filtert nach dem angemeldeten Schützen, auch für
   Admins. Admin verwaltet Konten und sieht keine fremden Schüsse. Einzige Ausnahme: eine Scheibe, die ihr Schütze per
   Link geteilt hat (`sharedCard`, siehe „Teilen per Link“).
