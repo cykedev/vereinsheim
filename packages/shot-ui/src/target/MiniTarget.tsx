@@ -4,6 +4,7 @@ import { cn } from "@vereinsheim/lib/utils"
 
 import { caliberRadius, probeCorner, scoreColor, SHOT_FILL_OPACITY } from "../geometry"
 import { hasPosition } from "../shots"
+import { TargetFace } from "./TargetFace"
 import type { ViewBox } from "../types"
 
 const HAIR = { vectorEffect: "non-scaling-stroke" } as const
@@ -44,9 +45,7 @@ export function MiniTarget({
   className,
 }: MiniTargetProps) {
   const view = { x: fixed(computed.x), y: fixed(computed.y), w: fixed(computed.w) }
-  const half = view.w / 2
   const calR = caliberRadius(target)
-  const blackR = mm(target.ringRadiiUm[target.blackFromRing - 1])
   return (
     <svg
       viewBox={`${view.x} ${view.y} ${view.w} ${view.w}`}
@@ -57,27 +56,11 @@ export function MiniTarget({
         className
       )}
     >
-      <rect x={view.x} y={view.y} width={view.w} height={view.w} fill="var(--paper)" />
-      {corner && (
-        <polygon data-probe-corner="true" points={probeCorner(view)} fill="var(--spiegel)" />
-      )}
-      <circle r={blackR} fill="var(--spiegel)" />
-      {target.weapon === "lg" && <circle r={mm(target.ringRadiiUm[9])} fill="var(--paper)" />}
-      {target.ringRadiiUm.map((radiusUm, i) => {
-        const r = mm(radiusUm)
-        if (r > half * 1.5 || (i === 9 && target.weapon === "lg")) return null
-        return (
-          <circle
-            key={i}
-            r={r}
-            fill="none"
-            stroke={i + 1 >= target.blackFromRing ? "var(--spiegel-line)" : "var(--paper-line)"}
-            strokeWidth={0.75}
-            opacity={0.7}
-            {...HAIR}
-          />
-        )
-      })}
+      <TargetFace target={target} view={view}>
+        {corner && (
+          <polygon data-probe-corner="true" points={probeCorner(view)} fill="var(--spiegel)" />
+        )}
+      </TargetFace>
       {shots.filter(hasPosition).map((shot, i) => {
         const x = mm(shot.xUm as number)
         const y = -mm(shot.yUm as number)
