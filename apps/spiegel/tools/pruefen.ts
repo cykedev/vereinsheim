@@ -1235,8 +1235,8 @@ async function progress(page: Page) {
       point.id
     )
   } else check("Fortschritt: Verlauf mit Punkten", false, "keine Punkte")
-  // Scheiben eines Abends stehen fast übereinander: ein Tipp wählt die getroffene, nicht die nach x nächste. Die gerade
-  // gewählte bleibt aus, ein zweiter Tipp höbe ihre Wahl auf
+  // Scheiben eines Abends stehen fast übereinander: ein Tipp wählt die getroffene, nicht die nach x nächste, in
+  // Ablesung und Liste. Die gerade gewählte kommt zuletzt dran, ein Tipp auf sie höbe ihre Wahl auf
   const stack = await page.ev<string[]>(`(() => {
     const at = $$("[data-card-point]").map((g) => {
       const r = g.querySelector("circle:last-child").getBoundingClientRect()
@@ -1247,18 +1247,22 @@ async function progress(page: Page) {
   })()`)
   if (stack.length) {
     const missed: string[] = []
-    for (const id of stack) {
-      const chosenNow = await page.ev<boolean>(
-        `$('[data-card-point="${id}"]')?.dataset.chosen === "true"`
-      )
-      if (chosenNow) continue
+    const chosenFirst = await page.ev<string | null>(
+      `$$("[data-card-point]").find((g) => g.dataset.chosen === "true")?.dataset.cardPoint ?? null`
+    )
+    const order = [
+      ...stack.filter((id) => id !== chosenFirst),
+      ...stack.filter((id) => id === chosenFirst),
+    ]
+    for (const id of order) {
       const at = await page.ev<{ x: number; y: number }>(`(() => {
         const r = $('[data-card-point="${id}"] circle:last-child').getBoundingClientRect()
         return { x: r.left + r.width / 2, y: r.top + r.height / 2 } })()`)
       await page.clickAt(at.x, at.y)
       await page.wait(400)
       const hit = await page.ev<boolean>(
-        `$("[data-card-readout]")?.dataset.cardReadout === ${JSON.stringify(id)}`
+        `$("[data-card-readout]")?.dataset.cardReadout === ${JSON.stringify(id)} &&
+          $('[data-card-row="${id}"]')?.dataset.chosen === "true"`
       )
       if (!hit) missed.push(id)
     }
