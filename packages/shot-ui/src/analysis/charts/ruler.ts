@@ -1,13 +1,34 @@
 // Reine Hilfen des Diagramm-Lineals: welcher Wert einer x-Position am nächsten liegt, Schritte mit
 // der Tastatur und die Umrechnung vom Bildschirm ins SVG. Das Lineal selbst steht in `ChartRuler.tsx`.
 
-/** Index des nächsten Werts zu einer x-Position (Pixel im SVG); bei Gleichstand der frühere; leer: null */
-export function nearestIndex(xs: readonly number[], x: number): number | null {
-  let best: number | null = null
-  xs.forEach((value, i) => {
-    if (best === null || Math.abs(value - x) < Math.abs(xs[best] - x)) best = i
-  })
-  return best
+/** so nah stehen Werte waagrecht, dass sich ihre Punkte überdecken (ein Punkt ist 9 px breit) */
+export const SAME_X_PX = 4
+
+/**
+ * Index des nächsten Werts zu einer x-Position (Pixel im SVG); bei Gleichstand der frühere; leer: null. Mit Höhen
+ * (`ys`, `y`): Unter dem nach x nächsten und allen, die höchstens `SAME_X_PX` weiter weg stehen, gewinnt der nach y
+ * nächste. So wählt ein Tipp in einem Stapel (Scheiben eines Abends) den getroffenen Punkt, und waagrecht bleibt das
+ * Lineal ein senkrechter Strich.
+ */
+export function nearestIndex(
+  xs: readonly number[],
+  x: number,
+  ys?: readonly number[],
+  y?: number
+): number | null {
+  if (!xs.length) return null
+  let best = 0
+  for (let i = 1; i < xs.length; i++) if (Math.abs(xs[i] - x) < Math.abs(xs[best] - x)) best = i
+  if (!ys || y === undefined) return best
+  const reach = Math.abs(xs[best] - x) + SAME_X_PX
+  let pick = best
+  for (let i = 0; i < xs.length; i++) {
+    if (Math.abs(xs[i] - x) > reach) continue
+    const d = Math.abs(ys[i] - y)
+    const dPick = Math.abs(ys[pick] - y)
+    if (d < dPick || (d === dPick && i < pick)) pick = i
+  }
+  return pick
 }
 
 /**
@@ -31,4 +52,14 @@ export function toSvgX(
 ): number {
   const scale = rect.width > 0 ? width / rect.width : 1
   return (clientX - rect.left) * scale
+}
+
+/** y im SVG aus clientY, mit demselben Maßstab wie x: Das SVG skaliert gleichmäßig (`h-auto w-full`) */
+export function toSvgY(
+  clientY: number,
+  rect: { top: number; width: number },
+  width: number
+): number {
+  const scale = rect.width > 0 ? width / rect.width : 1
+  return (clientY - rect.top) * scale
 }
