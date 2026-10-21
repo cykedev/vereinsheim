@@ -139,3 +139,49 @@ describe("Lineal ohne Textauswahl", () => {
     expect(touch.currentTarget.focus).not.toHaveBeenCalled()
   })
 })
+
+describe("Lineal mit Höhen: ein Tipp in einen Stapel wählt den getroffenen Wert", () => {
+  type SvgProps = ReturnType<typeof useRuler>["svgProps"]
+  // drei Werte 0,3 px nebeneinander, untereinander bei y 20, 50, 80; das SVG ist nicht skaliert
+  function Capture({
+    ys,
+    onPick,
+    onProps,
+  }: {
+    ys: readonly number[] | undefined
+    onPick: (index: number | null) => void
+    onProps: (svgProps: SvgProps) => void
+  }) {
+    const { svgProps } = useRuler([100, 100.3, 100.6], 600, null, onPick, ys)
+    onProps(svgProps)
+    return h("svg", svgProps)
+  }
+  const tap = (ys: readonly number[] | undefined, clientY: number) => {
+    let props: SvgProps | null = null
+    const picked = vi.fn()
+    renderToStaticMarkup(
+      h(Capture, {
+        ys,
+        onPick: picked,
+        onProps: (svgProps) => {
+          props = svgProps
+        },
+      })
+    )
+    const target = {
+      focus: () => {},
+      setPointerCapture: () => {},
+      getBoundingClientRect: () => ({ left: 0, top: 0, width: 600 }),
+    }
+    const event = { button: 0, pointerType: "touch", pointerId: 1, clientX: 100.5, clientY }
+    ;(props as SvgProps | null)?.onPointerDown?.({ ...event, currentTarget: target } as never)
+    ;(props as SvgProps | null)?.onPointerUp?.({ ...event, currentTarget: target } as never)
+    return picked.mock.calls.at(-1)?.[0]
+  }
+
+  it("mit Höhen der nach y nächste, ohne Höhen wie bisher der nach x nächste", () => {
+    expect(tap([20, 50, 80], 52)).toBe(1)
+    expect(tap([20, 50, 80], 12)).toBe(0)
+    expect(tap(undefined, 52)).toBe(2)
+  })
+})

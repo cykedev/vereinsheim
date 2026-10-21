@@ -4,7 +4,7 @@ import { cn } from "@vereinsheim/lib/utils"
 import { useRef, useState, type KeyboardEvent, type PointerEvent, type SVGProps } from "react"
 
 import { crisp } from "./frame"
-import { nearestIndex, stepIndex, toSvgX } from "./ruler"
+import { nearestIndex, stepIndex, toSvgX, toSvgY } from "./ruler"
 
 /** Hinweis in der Zeile über dem Diagramm, solange nichts gewählt ist */
 export const RULER_HINT = "Tippe oder ziehe im Diagramm, um Werte abzulesen."
@@ -25,13 +25,16 @@ const KEY_STEPS: Readonly<Record<string, number>> = {
  * Breite; `preset` setzt die Wahl, sobald es sich ändert (die Scheibe gibt den Schuss vor). Ein Index
  * außerhalb von `xs` gilt als keine Wahl; die Seite hängt die Analyse ohnehin je Karte neu ein. `onPick` meldet jede
  * Wahl durch Tippen, Ziehen oder Tastatur (auch das Aufheben), nicht die Vorgabe über `preset`: So kann eine Seite
- * die Wahl teilen (Verlauf eines Zeitraums), ohne dass ihre eigene Vorgabe zurückkommt.
+ * die Wahl teilen (Verlauf eines Zeitraums), ohne dass ihre eigene Vorgabe zurückkommt. `ys`: die Höhen der Werte in
+ * Pixeln des SVG; liegen Werte waagrecht übereinander (Scheiben eines Abends), wählt die Höhe des Zeigers
+ * (`nearestIndex`). Die Tastatur geht weiter in der Folge von `xs`.
  */
 export function useRuler(
   xs: readonly number[],
   width: number,
   preset: number | null = null,
-  onPick?: (index: number | null) => void
+  onPick?: (index: number | null) => void,
+  ys?: readonly number[]
 ) {
   const [chosen, setChosen] = useState<number | null>(preset)
   const [lastPreset, setLastPreset] = useState(preset)
@@ -55,8 +58,11 @@ export function useRuler(
     start: number | null
     before: number | null
   } | null>(null)
-  const at = (event: PointerEvent<SVGSVGElement>) =>
-    nearestIndex(xs, toSvgX(event.clientX, event.currentTarget.getBoundingClientRect(), width))
+  const at = (event: PointerEvent<SVGSVGElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect()
+    const x = toSvgX(event.clientX, rect, width)
+    return ys ? nearestIndex(xs, x, ys, toSvgY(event.clientY, rect, width)) : nearestIndex(xs, x)
+  }
 
   const svgProps: SVGProps<SVGSVGElement> = {
     tabIndex: 0,
