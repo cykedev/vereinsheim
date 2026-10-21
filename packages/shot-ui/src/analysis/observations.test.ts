@@ -168,12 +168,66 @@ describe("eine Scheibe sagt, was sie zeigt", () => {
     expect(trend?.text).not.toMatch(/Zufall|klar nachgelassen|klar stärker/)
   })
 
-  it("Pausen: drei Schuss sind zu wenig, kein Verweis auf andere Abende", () => {
+  it("kein Verweis auf andere Scheiben oder Abende", () => {
     const list = observations(analysisInput(fortyCard(), "decimal", LP_10M))
-    expect(list.find((x) => x.icon === "pause")?.text).toMatch(
-      / Drei Schuss sind zu wenig, um zu zeigen, ob die Pause etwas ausmacht\.$/
-    )
     for (const { text } of list)
-      expect(text).not.toMatch(/mehrere(n)? (Scheiben|Abende)|über Abende/)
+      expect(text).not.toMatch(
+        /mehrere(n)? (Scheiben|Abende)|über Abende|Drei Schuss sind zu wenig/
+      )
+  })
+})
+
+describe("was die Pause bewirkt hat", () => {
+  // die übrigen Wertungsschüsse ein fester Kreis um 10,0 (im Schnitt genau 10,0), Schuss 21 bis 23 nach der Pause
+  // der Beispielscheibe (240 s vor Schuss 21) mit `after`; `second`: eine zweite Pause vor Schuss 31
+  const CYCLE = [100, 97, 103, 99, 101, 96, 104, 98, 102]
+  const paused = (after: readonly number[], second = false) => {
+    let k = 0
+    let rest = 0
+    return fortyCard().map((s) => {
+      if (s.kind !== "match") return s
+      const number = ++k
+      const tenths =
+        number >= 21 && number <= 23 ? after[number - 21] : CYCLE[rest++ % CYCLE.length]
+      const firedAtMs = second && number >= 31 ? (s.firedAtMs as number) + 300_000 : s.firedAtMs
+      return { ...s, decimalTenths: tenths, ring: Math.floor(tenths / 10), firedAtMs }
+    })
+  }
+  const pauseOf = (shots: ReturnType<typeof paused>) =>
+    observations(analysisInput(shots, "decimal", LP_10M)).find((x) => x.icon === "pause")
+
+  it("klar schwächer: Urteil im Satz, fällt auf und steht im Kopf", () => {
+    const shots = paused([70, 70, 70])
+    const pause = pauseOf(shots)
+    expect(pause?.text).toMatch(
+      /^Nach der Pause vor Schuss 21 lagen die Schüsse danach \(bis zu drei\) im Schnitt 3,00 Ringe je Schuss unter deinen übrigen Schüssen\. Danach warst du klar schwächer\.$/
+    )
+    expect(pause?.notable).toBe(true)
+    const head = keyObservations(observations(analysisInput(shots, "decimal", LP_10M)))
+    expect(head.find((k) => k.icon === "pause")?.text).toBe(pause?.text)
+  })
+
+  it("klar stärker", () => {
+    expect(pauseOf(paused([109, 109, 109]))?.text).toMatch(/ Danach warst du klar stärker\.$/)
+  })
+
+  it("nicht klar: kann Zufall sein, und es fällt nicht auf", () => {
+    const pause = pauseOf(paused([99, 101, 102]))
+    expect(pause?.text).toMatch(/ Das kann Zufall sein\.$/)
+    expect(pause?.notable).toBe(false)
+  })
+
+  it("genau im Schnitt: kein Zusatz", () => {
+    const pause = pauseOf(paused([99, 100, 101]))
+    expect(pause?.text).toMatch(/genau im Schnitt deiner übrigen Schüsse\.$/)
+  })
+
+  it("zwei Pausen: zwei Sätze mit je ihrem Urteil", () => {
+    const text = pauseOf(paused([99, 101, 102], true))?.text ?? ""
+    expect(text.match(/Nach der Pause vor Schuss \d+/g)).toEqual([
+      "Nach der Pause vor Schuss 21",
+      "Nach der Pause vor Schuss 31",
+    ])
+    expect(text.match(/Das kann Zufall sein\./g)).toHaveLength(2)
   })
 })

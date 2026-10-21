@@ -26,10 +26,14 @@ export interface Observation {
   text: string
   /**
    * fällt auf und gehört in den Kopf der Seite: die Lage immer, Ausreißer nur wenn es welche gibt, Trend und
-   * Ermüdung nur wenn sie klar sind; Präzision, Pausen und Tempo nie. Probe gegen Wertung gibt es nicht
+   * Ermüdung nur wenn sie klar sind, Pausen nur wenn eine klar ist; Präzision und Tempo nie. Probe gegen Wertung gibt
+   * es nicht
    */
   notable: boolean
-  /** was im Kopf steht, wenn nicht der erste Satz das Auffällige sagt (eine klare Ermüdung ohne klaren Trend) */
+  /**
+   * was im Kopf steht, wenn nicht der erste Satz das Auffällige sagt (eine klare Ermüdung ohne klaren Trend, eine
+   * klare Pause)
+   */
   headline?: string
 }
 
@@ -163,22 +167,30 @@ export function observations(input: AnalysisInput): Observation[] {
   if (recovery?.effects.length) {
     // gegen die übrigen Schüsse und je Schuss, bis zu drei danach; ohne vergleichbaren Wert sagt der Satz das,
     // statt „im Schnitt“
-    const effect = (afterShot: number, d: number | null) =>
-      d === null
-        ? `nach der Pause vor Schuss ${afterShot} fehlen Werte zum Vergleich`
-        : `nach der Pause vor Schuss ${afterShot} lagen die Schüsse danach (bis zu drei) ${
-            Math.abs(d) < 0.005
-              ? "genau im Schnitt deiner übrigen Schüsse"
-              : `im Schnitt ${formatValue(Math.abs(d), 2)} Ringe je Schuss ${d < 0 ? "unter" : "über"} deinen übrigen Schüssen`
-          }`
-    const text = recovery.effects
-      .map((e) => effect(e.afterShot, e.deltaRings))
-      .map((t) => `${t[0].toUpperCase()}${t.slice(1)}`)
-      .join(". ")
+    // je Pause ein Satz, danach ihr Urteil; was als „genau im Schnitt“ erscheint, braucht keins
+    const sentences = recovery.effects.map(({ afterShot, deltaRings: d, direction }) => {
+      if (d === null) return `Nach der Pause vor Schuss ${afterShot} fehlen Werte zum Vergleich.`
+      const even = Math.abs(d) < 0.005
+      const where = even
+        ? "genau im Schnitt deiner übrigen Schüsse"
+        : `im Schnitt ${formatValue(Math.abs(d), 2)} Ringe je Schuss ${d < 0 ? "unter" : "über"} deinen übrigen Schüssen`
+      const verdict =
+        direction === "up"
+          ? " Danach warst du klar stärker."
+          : direction === "down"
+            ? " Danach warst du klar schwächer."
+            : even
+              ? ""
+              : " Das kann Zufall sein."
+      return `Nach der Pause vor Schuss ${afterShot} lagen die Schüsse danach (bis zu drei) ${where}.${verdict}`
+    })
+    // fällt eine Pause auf, steht im Kopf ihr Satz, nicht der der ersten Pause
+    const clearAt = recovery.effects.findIndex((e) => e.clear)
     out.push({
       icon: "pause",
-      notable: false,
-      text: `${text}. Drei Schuss sind zu wenig, um zu zeigen, ob die Pause etwas ausmacht.`,
+      notable: clearAt >= 0,
+      text: sentences.join(" "),
+      ...(clearAt >= 0 ? { headline: sentences[clearAt] } : {}),
     })
   }
 
