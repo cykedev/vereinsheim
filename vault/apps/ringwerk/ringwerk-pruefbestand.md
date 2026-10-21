@@ -98,6 +98,19 @@ vergleicht alt gegen neu auf demselben Aufbau.
    Freigabe durch den User neu auf, in einem eigenen Commit.
 6. Release nach [[operations#Release von Ringwerk]].
 
+## Stand 21. Oktober 2026
+
+- Saison ohne Mindestzahl ([[season-mode]]): neues Szenario `S-OHNE-MINDEST` (96 Wettbewerbe), mit Absicht **am Ende**
+  der Liste. Die Uhr jedes Szenarios folgt aus seiner Stelle, ein Szenario weiter vorn verschöbe die Daten aller
+  späteren. Fakten `saison:ohne-mindestzahl-gewertet` und `…-ohne-serie`.
+- Abgleich `main` gegen Branch auf demselben Aufbau (`--referenz`, `main` in einem eigenen Worktree): ohne das neue
+  Szenario 0 Fehler und 16 Hinweise (das Kästchen beim Einschreiben in den aktiven Saisons). Mit Szenario nur die
+  erwarteten Fehler in `S-OHNE-MINDEST` und in der Vorschau dieser Saison auf Start und in der Liste. Der committete
+  Ausgangsstand ist noch der alte.
+- Chrome 155.0.8059.85 headless stürzt bei sehr hohen Fotos ab (Liste der Wettbewerbe 48.442 px; 8.000 px gehen) und
+  bei `Page.getLayoutMetrics`. Meldung „Chrome ist weg“ gleich nach „Build von vor …“. Für den Abgleich lief ein
+  lokaler Umweg in `@vereinsheim/pruefen` (Höhe aus dem Dokument, Fotos höchstens 16.000 px), nicht committet.
+
 ## Stand 20. Oktober 2026
 
 - Wertung richtig anzeigen (B1–B8, Plan „Ringwerk — Befunde aus dem Ablesen für die Hilfe“): drei neue Szenarien mit
