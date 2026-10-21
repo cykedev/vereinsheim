@@ -4,6 +4,7 @@
 // µm, Mitte (0 | 0), x rechts, y oben, wie gezeichnet (ohne verdächtige Schüsse, `cardMarks`).
 
 import type { Point } from "../geometry"
+import { densityGrid, patternHalf, type DensityGrid } from "./density"
 import { confidenceOf } from "./hotelling"
 
 /** eine Scheibe des Zeitraums mit den Lagen ihrer Schüsse wie gezeichnet */
@@ -212,5 +213,78 @@ export function outlierDirection(cards: readonly PatternCard[]): OutlierDirectio
     meanRad,
     p,
     verdict: n < OUTLIER_MIN_SHOTS ? "few" : p < ALPHA ? "directed" : "none",
+  }
+}
+
+/** bis zu so vielen Schüssen zeigt das Trefferbild jeden als Punkt, darüber die Dichte */
+export const PATTERN_POINTS_MAX = 300
+
+/** Raster der Lagen im Muster: 10 µm wie `cardMarks` */
+const PATTERN_UM = 10
+
+/** eine Sicht des Trefferbilds: Ausschnitt um die Mitte, dazu entweder die Punkte oder die Dichte */
+export interface PatternLayer {
+  /** halbe Kantenlänge des Ausschnitts um die Mitte der Scheibe */
+  halfUm: number
+  /** jeder Schuss in 10 µm, unter `PATTERN_POINTS_MAX` Schuss; sonst null */
+  points: [number, number][] | null
+  /** die Dichte ab `PATTERN_POINTS_MAX` Schuss; sonst null */
+  grid: DensityGrid | null
+}
+
+/** das Trefferbild eines Zeitraums, wie es an den Browser geht: ohne Schüsse, nur Raster, Mitten und Urteile */
+export interface PeriodPattern {
+  /** Schüsse mit Lage */
+  shots: number
+  /** alle Scheiben, auch ohne Lage */
+  cards: number
+  cardsWithoutPosition: number
+  /** jede Scheibe ab drei Schuss um ihre eigene Mitte geschoben */
+  form: PatternLayer
+  /** die Schüsse, wo sie lagen */
+  position: PatternLayer
+  shape: PeriodShape | null
+  overTime: PositionOverTime
+  outliers: OutlierDirection | null
+}
+
+function layer(points: readonly Point[]): PatternLayer {
+  const halfUm = patternHalf(points)
+  return points.length < PATTERN_POINTS_MAX
+    ? {
+        halfUm,
+        points: points.map((p) => [Math.round(p.xUm / PATTERN_UM), Math.round(p.yUm / PATTERN_UM)]),
+        grid: null,
+      }
+    : { halfUm, points: null, grid: densityGrid(points, halfUm) }
+}
+
+const roundPoint = (p: Point): Point => ({ xUm: Math.round(p.xUm), yUm: Math.round(p.yUm) })
+
+/**
+ * Das Trefferbild eines Zeitraums (L9) mit den Urteilen über Form (L9), Lage (L10) und Ausreißerrichtung (L7), für
+ * den Browser gerechnet: Er bekommt je Sicht die Punkte oder ein Raster von 64 × 64, die Schwerpunkte je Scheibe auf
+ * ganze µm, keine Schüsse. In der Form-Sicht zählen Scheiben ab drei Schuss mit Lage, in der Lage-Sicht alle Schüsse.
+ */
+export function periodPattern(cards: readonly PatternCard[]): PeriodPattern {
+  const all = cards.flatMap((card) => card.points)
+  const centered = cards
+    .filter((card) => card.points.length >= MIN_CARD_POINTS)
+    .flatMap((card) => {
+      const center = mean(card.points)
+      return card.points.map((p) => ({ xUm: p.xUm - center.xUm, yUm: p.yUm - center.yUm }))
+    })
+  const overTime = positionOverTime(
+    positionPoints(cards).map((p) => ({ ...p, center: roundPoint(p.center) }))
+  )
+  return {
+    shots: all.length,
+    cards: cards.length,
+    cardsWithoutPosition: cards.filter((card) => card.points.length === 0).length,
+    form: layer(centered),
+    position: layer(all),
+    shape: periodShape(cards),
+    overTime,
+    outliers: outlierDirection(cards),
   }
 }

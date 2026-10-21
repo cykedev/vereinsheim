@@ -4,6 +4,8 @@ import { normalPoints } from "../__fixtures__/random"
 import type { Point } from "../geometry"
 import {
   outlierDirection,
+  PATTERN_POINTS_MAX,
+  periodPattern,
   periodShape,
   positionOverTime,
   positionPoints,
@@ -184,5 +186,66 @@ describe("outlierDirection (L7)", () => {
     ).toBe("few")
     const nine = card("n", withFlier("n", 0).points.slice(0, 9))
     expect(outlierDirection([nine])).toBeNull()
+  })
+})
+
+describe("periodPattern", () => {
+  it("unter 300 Schuss Punkte in 10 µm, darüber die Dichte", () => {
+    const few = periodPattern(cardsOf(7, 40, 1500))
+    expect(few.shots).toBe(280)
+    expect(few.position.points).toHaveLength(280)
+    expect(few.position.grid).toBeNull()
+    const many = periodPattern(cardsOf(8, 40, 1500))
+    expect(many.shots).toBe(320)
+    expect(many.position.points).toBeNull()
+    expect(many.position.grid?.size).toBe(64)
+    expect(PATTERN_POINTS_MAX).toBe(300)
+  })
+
+  it("Form schiebt jede Scheibe auf ihre Mitte, Lage lässt sie", () => {
+    const moved = [
+      card("a", [
+        { xUm: 4000, yUm: 0 },
+        { xUm: 4200, yUm: 0 },
+        { xUm: 4100, yUm: 100 },
+      ]),
+    ]
+    const pattern = periodPattern(moved)
+    expect(pattern.position.points?.[0]).toEqual([400, 0])
+    expect(pattern.form.points?.[0]).toEqual([-10, -3])
+    expect(pattern.form.halfUm).toBeLessThan(pattern.position.halfUm)
+  })
+
+  it("zählt Scheiben ohne Lage und nimmt Scheiben unter drei Punkten nur in die Lage-Sicht", () => {
+    const pattern = periodPattern([
+      ...cardsOf(5, 20, 1500),
+      card("leer", []),
+      card("zwei", [
+        { xUm: 0, yUm: 0 },
+        { xUm: 100, yUm: 0 },
+      ]),
+    ])
+    expect(pattern.cards).toBe(7)
+    expect(pattern.cardsWithoutPosition).toBe(1)
+    expect(pattern.position.points).toHaveLength(102)
+    expect(pattern.form.points).toHaveLength(100)
+    expect(pattern.overTime.points).toHaveLength(5)
+  })
+
+  it("geht unverändert durch JSON", () => {
+    const pattern = periodPattern(cardsOf(10, 40, 1500, 1200))
+    expect(JSON.parse(JSON.stringify(pattern))).toEqual(pattern)
+  })
+
+  it("1.500 Scheiben zu 40 Schuss: unter 200 KB und schnell", () => {
+    const cards = cardsOf(1500, 40, 1500).map((c, i) => ({
+      ...c,
+      id: `cmh${String(i).padStart(22, "0")}`,
+      atMs: 1_700_000_000_000 + i * 86_400_000,
+    }))
+    const started = performance.now()
+    const pattern = periodPattern(cards)
+    expect(performance.now() - started).toBeLessThan(2000)
+    expect(JSON.stringify(pattern).length).toBeLessThan(200_000)
   })
 })
