@@ -8,14 +8,25 @@ import "dotenv/config"
 import { PrismaPg } from "@prisma/adapter-pg"
 import { Pool } from "pg"
 
-import { cardValues, periodRecords, type PeriodCard } from "@vereinsheim/shot-core/analysis"
+import {
+  cardValues,
+  periodPattern,
+  periodRecords,
+  type PeriodCard,
+} from "@vereinsheim/shot-core/analysis"
 import { metricByKey, type MetricDefinition } from "@vereinsheim/shot-core/metrics"
 import { projectedRecords, projectedValues } from "@vereinsheim/shot-core/projection"
 import { DEFAULT_LIST, DEFAULT_PROGRESS } from "@vereinsheim/shot-ui/nav/routes"
 
 import { PrismaClient } from "../src/generated/prisma/client"
 import { writeRevision } from "../src/lib/db/cards"
-import { cardWithShots, familyCards, latestCardStart, ownerCards } from "../src/lib/db/reads"
+import {
+  cardWithShots,
+  familyCards,
+  latestCardStart,
+  ownerCards,
+  patternCardsOf,
+} from "../src/lib/db/reads"
 import { listPageData, progressPageData, startPageData } from "../src/lib/overview"
 import type { Db } from "../src/lib/db"
 import { DEV_DATABASE_URL } from "../test/dev-database"
@@ -156,6 +167,13 @@ async function main() {
     }
     const startPage = () => startPageData(db, site.ownerId, pageContext)
     const listPage = () => listPageData(db, site.ownerId, DEFAULT_LIST, pageContext)
+    // das Trefferbild wie `periodPatternAction`: Lagen der Scheiben aus der Projektion, dann das Muster
+    const allIds = overview.map((card) => card.id)
+    const recentIds = overview
+      .filter((card) => card.startedAtMs >= lastMs - 90 * DAY_MS)
+      .map((card) => card.id)
+    const patternOf = async (ids: readonly string[]) =>
+      periodPattern(await patternCardsOf(db, { ownerId: site.ownerId, ids }))
     const progressPage = () =>
       progressPageData(
         db,
@@ -239,6 +257,14 @@ async function main() {
         "Fortschritt „Alles“ auf dem Server: lesen, Modell rechnen, leicht machen",
         await median(progressPage),
       ],
+      [
+        `Trefferbild „Alles“ (${allIds.length} Scheiben): Lagen lesen, Muster rechnen`,
+        await median(() => patternOf(allIds)),
+      ],
+      [
+        `Trefferbild 90 Tage (${recentIds.length} Scheiben): Lagen lesen, Muster rechnen`,
+        await median(() => patternOf(recentIds)),
+      ],
       ["Seite einer Scheibe: Schüsse der Revision", await median(() => one(sample))],
       ["ohne Projektion: alle Schüsse der Familie laden", await median(allShots)],
       [
@@ -284,6 +310,8 @@ async function main() {
       families,
     }
     out(`| Fortschritt „Alles“: leichtes Modell und Lagen der Ablesung | ${kb(progressJson)} |`)
+    out(`| Trefferbild „Alles“: Muster ohne Schüsse | ${kb(await patternOf(allIds))} |`)
+    out(`| Trefferbild 90 Tage: Muster ohne Schüsse | ${kb(await patternOf(recentIds))} |`)
 
     await explain("Fortschritt „Alles“", (client) => familyCards(client, owner))
     await explain("Fortschritt 90 Tage", (client) =>

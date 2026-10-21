@@ -112,6 +112,15 @@ Liste rechnen sie auf dem Server; an den Browser gehen nur das Modell und die La
 | Fortschritt „Alles“ auf dem Server (lesen, rechnen, leicht machen) | – | 64 ms |
 | an den Browser, Fortschritt „Alles“ | dasselbe | 936 KB (leichtes Modell: eine Zeile je Scheibe für Liste und Verlauf, Werte, Abstände; Lagen nur der Ablesung) |
 
+Das Trefferbild über einen Zeitraum (L9, L10, L7) liest nur die Lagen der Projektion (`patternCardsOf`) und rechnet das
+Muster auf dem Server (`periodPatternAction`, erst wenn Bild oder Reiter es brauchen). Gemessen am 21. Oktober 2026 mit
+demselben Volumen:
+
+| Trefferbild | Lagen lesen und Muster rechnen | an den Browser |
+| --- | --- | --- |
+| „Alles“ (1.564 Scheiben) | 88 ms | 166 KB (zwei Raster 64 × 64, Schwerpunkt je Scheibe mit Kennung) |
+| letzte 90 Tage (76 Scheiben) | 9 ms | 27 KB |
+
 Zwei Befunde der Messung:
 - **Datum je Zeile:** `@vereinsheim/lib/format` baute für jeden Aufruf einen neuen `Intl.DateTimeFormat`, etwa 70 µs.
   Allein der Abend jeder Scheibe kostete so 107 ms; mit vorgehaltenen Formattern sank Start von 319 auf 70 ms.
