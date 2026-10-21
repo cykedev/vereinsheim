@@ -18,6 +18,11 @@ export interface DensityGrid {
 
 /** kleinste Bandbreite in Zellen: sonst bleibt bei wenigen, eng liegenden Punkten jede Zelle allein */
 const MIN_BANDWIDTH_CELLS = 0.75
+/**
+ * etwas stärker geglättet als nach Silverman: Die Flächen sollen die Form der Gruppe zeigen, nicht das Rauschen
+ * einzelner Abende; die Anteile innerhalb der Flächen bleiben nahe der Hälfte und neun Zehnteln (Test)
+ */
+const SMOOTHING = 1.3
 
 /** Gauß-Kern bis drei Bandbreiten, auf Summe 1 */
 function kernel(bandwidth: number): number[] {
@@ -62,8 +67,8 @@ function massLevel(values: readonly number[], share: number): number {
 
 /**
  * Dichte der Punkte in einem Quadrat um die Mitte der Scheibe mit halber Kantenlänge `halfUm`, `size` × `size` Zellen.
- * Die Bandbreite folgt Silverman für zwei Dimensionen: σ̂ · n^(−1/6) mit σ̂ = √((s²ₓ + s²ᵧ)/2), mindestens 0,75
- * Zellen. Punkte außerhalb des Quadrats zählen nicht.
+ * Die Bandbreite ist 1,3-mal die nach Silverman für zwei Dimensionen (σ̂ · n^(−1/6) mit σ̂ = √((s²ₓ + s²ᵧ)/2)),
+ * mindestens 0,75 Zellen. Punkte außerhalb des Quadrats zählen nicht.
  */
 export function densityGrid(points: readonly Point[], halfUm: number, size = 64): DensityGrid {
   const cell = (2 * halfUm) / size
@@ -82,7 +87,10 @@ export function densityGrid(points: readonly Point[], halfUm: number, size = 64)
     const my = mean((p) => p.yUm)
     const variance =
       points.reduce((s, p) => s + (p.xUm - mx) ** 2 + (p.yUm - my) ** 2, 0) / (2 * (n - 1))
-    bandwidth = Math.max(MIN_BANDWIDTH_CELLS, (Math.sqrt(variance) * n ** (-1 / 6)) / cell)
+    bandwidth = Math.max(
+      MIN_BANDWIDTH_CELLS,
+      (SMOOTHING * Math.sqrt(variance) * n ** (-1 / 6)) / cell
+    )
   }
   const weights = kernel(bandwidth)
   const smooth = blur(blur(counts, size, weights, 1), size, weights, size)

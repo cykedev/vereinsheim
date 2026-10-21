@@ -47,8 +47,33 @@ function saddle(index: 5 | 10, centerInside: boolean): readonly (readonly [Edge,
 const round = (value: number) => Math.round(value * 1000) / 1000
 
 /**
+ * ein geschlossener Ring als weiche Kurve (Catmull-Rom als kubische Bézier-Stücke): durch jeden Punkt der Höhenlinie,
+ * ohne die Knicke des Rasters. Unter drei Punkten gerade Linien.
+ */
+function smoothLoop(points: readonly (readonly [number, number])[]): string {
+  const [first] = points
+  if (points.length < 3)
+    return `M${first[0]} ${first[1]}${points
+      .slice(1)
+      .map(([x, y]) => `L${x} ${y}`)
+      .join("")}Z`
+  const at = (i: number) => points[(i + points.length) % points.length]
+  const parts = points.map((_, i) => {
+    const [x0, y0] = at(i - 1)
+    const [x1, y1] = at(i)
+    const [x2, y2] = at(i + 1)
+    const [x3, y3] = at(i + 2)
+    const c1 = [round(x1 + (x2 - x0) / 6), round(y1 + (y2 - y0) / 6)]
+    const c2 = [round(x2 - (x3 - x1) / 6), round(y2 - (y3 - y1) / 6)]
+    return `C${c1[0]} ${c1[1]} ${c2[0]} ${c2[1]} ${x2} ${y2}`
+  })
+  return `M${first[0]} ${first[1]}${parts.join("")}Z`
+}
+
+/**
  * Die Fläche, in der das Raster mindestens `level` erreicht, als geschlossener Pfad (mehrere Teile, Löcher über
- * `fill-rule="evenodd"`). Marching Squares über die Mitten der Zellen mit linearer Interpolation; außerhalb des Rasters
+ * `fill-rule="evenodd"`), jeder Ring als weiche Kurve. Marching Squares über die Mitten der Zellen mit linearer
+ * Interpolation; außerhalb des Rasters
  * gilt 0, damit jede Fläche geschlossen ist. `halfUm` ist die halbe Kantenlänge des Rasters um die Mitte der Scheibe.
  * Ohne Fläche ein leerer Pfad.
  */
@@ -130,8 +155,7 @@ export function contourPath(grid: ContourGrid, level: number, halfUm: number): s
       previous = current
       current = next
     }
-    const [first, ...rest] = loop.map((key) => points.get(key) as readonly [number, number])
-    loops.push(`M${first[0]} ${first[1]}${rest.map(([x, y]) => `L${x} ${y}`).join("")}Z`)
+    loops.push(smoothLoop(loop.map((key) => points.get(key) as readonly [number, number])))
   }
   return loops.join("")
 }

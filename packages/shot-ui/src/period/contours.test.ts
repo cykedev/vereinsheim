@@ -3,9 +3,12 @@ import { describe, expect, it } from "vitest"
 import { contourPath } from "./contours"
 import { nearestPoint } from "./nearest"
 
-/** die Punkte eines Pfads aus `contourPath` */
+/** die Punkte eines Pfads aus `contourPath`: Anfang und das Ende jedes Kurvenstücks */
 const coordinates = (path: string) =>
-  [...path.matchAll(/[ML](-?[\d.]+) (-?[\d.]+)/g)].map((m) => [Number(m[1]), Number(m[2])])
+  [...path.matchAll(/(?:M|L|C(?:-?[\d.]+ ){4})(-?[\d.]+) (-?[\d.]+)/g)].map((m) => [
+    Number(m[1]),
+    Number(m[2]),
+  ])
 
 describe("contourPath", () => {
   it("eine Spitze in der Mitte: ein geschlossener Pfad um die Mitte, halb zwischen den Zellen", () => {
@@ -13,7 +16,8 @@ describe("contourPath", () => {
     expect(path.match(/M/g)).toHaveLength(1)
     expect(path.endsWith("Z")).toBe(true)
     const points = coordinates(path)
-    expect(points).toHaveLength(4)
+    // vier Punkte, der letzte Bogen endet wieder am ersten
+    expect(points).toHaveLength(5)
     for (const [x, y] of points) {
       expect(Math.hypot(x, y)).toBeGreaterThan(0.49)
       expect(Math.hypot(x, y)).toBeLessThan(0.51)

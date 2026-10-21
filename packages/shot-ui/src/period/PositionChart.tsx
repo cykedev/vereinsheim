@@ -13,11 +13,22 @@ import { nearestPoint } from "./nearest"
 
 const HAIR = { vectorEffect: "non-scaling-stroke" } as const
 
-/** halbe Kantenlänge in mm: alle Schwerpunkte mit Rand, mindestens 1,5 mm (die Zehn bleibt zu sehen) */
+/**
+ * halbe Kantenlänge in mm: neun von zehn Schwerpunkten mit Rand, mindestens 1,5 mm (die Zehn bleibt zu sehen). Eine
+ * einzelne Scheibe weit draußen soll die übrigen nicht zu einem Fleck in der Mitte machen; sie liegt dann außerhalb
+ * des Bilds, und die Karte sagt es.
+ */
 export function positionHalfMm(overTime: Pick<PositionOverTime, "points">): number {
-  const far = Math.max(0, ...overTime.points.map((p) => Math.hypot(p.center.xUm, p.center.yUm)))
-  return Math.max(1.5, (far / 1000) * 1.25)
+  const distances = overTime.points
+    .map((p) => Math.hypot(p.center.xUm, p.center.yUm))
+    .sort((a, b) => a - b)
+  const far = distances.length ? distances[Math.ceil(0.9 * distances.length) - 1] : 0
+  return Math.max(1.5, (far / 1000) * 1.6)
 }
+
+/** „1 Scheibe liegt außerhalb des Bilds.“ */
+export const outsideText = (n: number) =>
+  `${n} ${n === 1 ? "Scheibe liegt" : "Scheiben liegen"} außerhalb des Bilds.`
 
 /**
  * Lage über Zeit (L10): der Schwerpunkt jeder Scheibe als Punkt auf dem Scheibenbild, größer mit mehr Schüssen, eine
@@ -47,6 +58,7 @@ export function PositionChart({
     y: -p.center.yUm / 1000,
     r: base * Math.sqrt(Math.max(1, p.n) / 40),
   }))
+  const outside = points.filter((p) => Math.max(Math.abs(p.x), Math.abs(p.y)) > half).length
   const pick = (event: PointerEvent<SVGSVGElement>) => {
     const svg = event.currentTarget
     const matrix = svg.getScreenCTM()
@@ -96,6 +108,11 @@ export function PositionChart({
           <MpiMark x={overTime.mean.xUm / 1000} y={-overTime.mean.yUm / 1000} radius={base * 1.6} />
         )}
       </svg>
+      {outside > 0 && (
+        <p data-position-outside className="text-[13px] text-muted-foreground">
+          {outsideText(outside)}
+        </p>
+      )}
       <ValuesTable
         caption="Schwerpunkt je Scheibe"
         columns={["Datum", "Richtung", "Abstand zur Mitte", "Schuss"]}

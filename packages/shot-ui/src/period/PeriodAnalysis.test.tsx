@@ -9,7 +9,7 @@ import { periodModel } from "./model"
 import type { PatternState } from "./PatternPanel"
 import { PeriodAnalysis, type PeriodAnalysisProps } from "./PeriodAnalysis"
 import { RecordsCard } from "./PeriodInsights"
-import { positionHalfMm } from "./PositionChart"
+import { outsideText, positionHalfMm } from "./PositionChart"
 import { initialPeriodState } from "./state"
 import { item, NOW, periodCard, TZ } from "./testSeason"
 
@@ -102,6 +102,14 @@ describe("positionHalfMm", () => {
   it("alle Schwerpunkte mit Rand, mindestens 1,5 mm", () => {
     const at = (xUm: number, yUm: number) => ({ id: "a", atMs: 0, center: { xUm, yUm }, n: 40 })
     expect(positionHalfMm({ points: [at(100, 0)] })).toBe(1.5)
-    expect(positionHalfMm({ points: [at(3000, 4000)] })).toBeCloseTo(6.25, 6)
+    expect(positionHalfMm({ points: [at(3000, 4000)] })).toBeCloseTo(8, 6)
+  })
+
+  it("eine Scheibe weit draußen bestimmt den Ausschnitt nicht, die Karte sagt es", () => {
+    const at = (id: string, xUm: number) => ({ id, atMs: 0, center: { xUm, yUm: 0 }, n: 40 })
+    const points = [...Array.from({ length: 10 }, (_, i) => at(`c${i}`, 1000)), at("weit", 9000)]
+    expect(positionHalfMm({ points })).toBeCloseTo(1.6, 6)
+    expect(outsideText(1)).toBe("1 Scheibe liegt außerhalb des Bilds.")
+    expect(outsideText(2)).toBe("2 Scheiben liegen außerhalb des Bilds.")
   })
 })
