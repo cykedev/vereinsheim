@@ -231,7 +231,7 @@ Ergebnis (I7–I9, Z6, Z7, K2, K4, T4, V3–V5, W2–W4 als Zeilen im Vergleich)
   (`compare-a`), der geviertelte Kreis bleibt. Gezeichnet von einem Baustein für beide Seiten (`DensityOutlines`), die
   Legende ist dieselbe („Durchgezogen: die Hälfte der Schüsse. Gestrichelt: 9 von 10.“). Unter 50 Schuss gibt es kein
   Raster und keinen Knopf, darüber nur die Umrisse. Die Wahl ist, wie gezeichnet wird, nicht was man sieht: Sie steht nicht in der Adresse,
-  sondern im Gerät (`localStorage` unter `spiegel-pattern-view`), Vorgabe ist die Dichte. Der User wollte am
+  sondern im Gerät (`localStorage` unter `spiegel-pattern-view`, `usePatternView` in Spiegel; der Baustein ist gesteuert), Vorgabe ist die Dichte. Der User wollte am
   22. Oktober 2026 beides haben: die Dichte zeigt jeden Treffer, die Umrisse lesen sich wie der Vergleich.
 - **Der geviertelte Kreis** ist die Mitte aller Schüsse.
 - **Ein Satz unter dem Bild** gibt die Antwort: zuerst die Lage („passt“ oder „versetzt: rechts tief“, Test über die
@@ -239,7 +239,7 @@ Ergebnis (I7–I9, Z6, Z7, K2, K4, T4, V3–V5, W2–W4 als Zeilen im Vergleich)
   gepoolte Form); ohne Urteil über die Form kein zweiter Satz.
 - **Rechnen auf dem Server:** aus den gespeicherten Lagen der Projektion (`marks`, 10 µm), erst wenn das Bild oder die
   Reiter Präzision und Lage es brauchen (`periodPatternAction`); an den Browser gehen bis 3.000 Schuss die Treffer mit
-  ihrem Band, ab 50 Schuss das Raster von 64 × 64 (für die Umrisse), dazu der Schwerpunkt je Scheibe. Gemessen: „Alles“ mit 1.564 Scheiben (nur Raster) 56 ms und 156 KB, 90 Tage (76 Scheiben, Treffer in Dichtefarbe) 9 ms und 42 KB
+  ihrem Band, ab 50 Schuss das Raster von 64 × 64 (für die Umrisse), dazu der Schwerpunkt je Scheibe. Gemessen: „Alles“ mit 1.564 Scheiben (nur Raster) 56 ms und 156 KB, 90 Tage (76 Scheiben, Treffer in Dichtefarbe und Raster) 8 ms und 51 KB
   ([[spiegel-db-schema]]). Die Dichte glättet 1,3-mal so stark wie nach Silverman, die Ränder sind weiche Kurven.
 - **Reiter Präzision:** die Form über mehrere Scheiben als Ellipse (doppelte Halbachsen der gepoolten Streuung) mit
   ihrer langen Seite und gestrichelt dem Kreis einer runden Gruppe gleicher Streuung, ohne Maßstab; daneben Form, Länge

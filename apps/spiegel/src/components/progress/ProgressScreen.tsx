@@ -71,6 +71,7 @@ import type { FamilyOption } from "@/lib/pages"
 import { rememberPeriod } from "@/lib/period-memory-client"
 import { setFamilyScoring } from "@/lib/scoring-actions"
 
+import { usePatternView } from "./usePatternView"
 import { usePeriodPattern } from "./usePeriodPattern"
 
 const PERIOD_IDS: readonly PeriodSection[] = PERIOD_SECTIONS.map((s) => s.id)
@@ -254,6 +255,7 @@ export function ProgressScreen({
     [base, state.includeProbeOnly]
   )
   const pattern = usePeriodPattern(ids, state.show === "target" || tab !== "result")
+  const [patternView, setPatternView] = usePatternView()
   // ein Schwerpunkt im Reiter Lage wählt seine Scheibe, ohne zu springen: Das Bild bleibt im Blick
   const pickFromPosition = useCallback((id: string) => dispatch({ type: "pick", id }), [dispatch])
 
@@ -341,7 +343,13 @@ export function ProgressScreen({
               onPatternHelp={() => onHelp("langzeit-trefferbild")}
             />
             {state.show === "target" ? (
-              <PatternPanel state={pattern.state} target={target} onRetry={pattern.retry} />
+              <PatternPanel
+                state={pattern.state}
+                target={target}
+                onRetry={pattern.retry}
+                view={patternView}
+                onView={setPatternView}
+              />
             ) : (
               <ChartSlot height={300}>
                 {(width) => (

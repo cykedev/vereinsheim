@@ -73,7 +73,7 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 - *Was:* Alle Schüsse der Scheiben im Zeitraum auf einer Scheibe, wo sie lagen. Ab 50 Schuss hat
   jeder Treffer die Farbe der Dichte an seiner Stelle: Gelb heißt, dort liegen deine Schüsse oft,
   Violett, dort selten, Hellviolett ganz selten. Unter 50 Schuss trägt jeder Treffer die Farbe
-  seines Rings. Der runde Knopf oben links zeigt statt der Farben Umrisse wie beim Vergleichen:
+  seines Rings. Der runde Knopf oben links zeigt statt der Treffer Umrisse wie beim Vergleichen:
   durchgezogen die Fläche mit der Hälfte der Schüsse, gestrichelt die mit 9 von 10. Über 3.000
   Schuss zeigt das Bild nur noch die Umrisse. Der geviertelte Kreis ist die Mitte aller Schüsse.
 - *So liest du es:* Der Satz unter dem Bild ist die Antwort: zuerst, ob deine Lage über den Zeitraum

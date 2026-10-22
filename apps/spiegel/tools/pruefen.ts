@@ -1497,9 +1497,19 @@ async function periodPattern(page: Page) {
     words.sentence.length > 0 && words.basis.startsWith("Über ") && words.jargon === null,
     words
   )
-  // Umrisse statt Dichte: von 50 bis 3.000 Schuss ein Knopf, die Wahl bleibt im Gerät, auch nach dem Neuladen
+  await page.ev(`history.back()`)
+  const back = await page.waitFor(
+    `!location.search.includes("show=target") && !$("[data-pattern-panel]") && $$("[data-card-point]").length > 0`,
+    10_000
+  )
+  check("Trefferbild: Zurück stellt den Verlauf her", back, await page.ev(`location.search`))
+
+  // Umrisse statt Dichte, auf einer frisch geladenen Seite (nach der Prüfung von Zurück): von 50 bis 3.000 Schuss ein
+  // Knopf, die Wahl bleibt im Gerät, auch nach dem Neuladen
   const outlinesButton = `$('button[aria-label="Umrisse statt Treffer zeigen"]')`
   if (state.kind === "outlines") {
+    await page.goto(`${BASE}/progress${state.search}`)
+    await page.waitFor(`$("[data-pattern-target]")`, 15_000)
     const only = await page.ev<boolean>(
       `$("[data-pattern-target]")?.dataset.patternView === "outlines" && !${outlinesButton}`
     )
@@ -1508,6 +1518,8 @@ async function periodPattern(page: Page) {
     check("Trefferbild: Umrisse statt Dichte", false, "unter 50 Schuss, kein Knopf (nicht belegt)")
   } else {
     await page.ev(`localStorage.removeItem("spiegel-pattern-view")`)
+    await page.goto(`${BASE}/progress${state.search}`)
+    await page.waitFor(`!!${outlinesButton}`, 15_000)
     await page.click(outlinesButton, { settle: 200 })
     const outlined = await page.ev<{
       view: string
@@ -1546,12 +1558,6 @@ async function periodPattern(page: Page) {
     check("Trefferbild: ein zweites Tippen zeigt wieder die Dichte", density, "")
     await page.ev(`localStorage.removeItem("spiegel-pattern-view")`)
   }
-  await page.ev(`history.back()`)
-  const back = await page.waitFor(
-    `!location.search.includes("show=target") && !$("[data-pattern-panel]") && $$("[data-card-point]").length > 0`,
-    10_000
-  )
-  check("Trefferbild: Zurück stellt den Verlauf her", back, await page.ev(`location.search`))
 
   // Reiter Präzision: die Form als Ellipse, sobald es ein Urteil gibt
   await page.goto(`${BASE}/progress#precision`)

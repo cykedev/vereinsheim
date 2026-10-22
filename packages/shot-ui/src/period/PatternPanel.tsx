@@ -3,7 +3,7 @@
 import type { PeriodPattern } from "@vereinsheim/shot-core/analysis"
 import type { TargetImage } from "@vereinsheim/shot-core/targets"
 import { Button } from "@vereinsheim/ui/button"
-import { useSyncExternalStore, type ReactNode } from "react"
+import type { ReactNode } from "react"
 
 import { CornerButton, OUTLINES_ICON } from "../target/TargetControls"
 import { HeatLegend, PatternTarget, type PatternView } from "./PatternTarget"
@@ -24,47 +24,6 @@ export type PatternState =
   | { status: "loading" }
   | { status: "ready"; pattern: PeriodPattern }
   | { status: "error" }
-
-/** Schlüssel der gewählten Zeichnung im Gerät: wie gezeichnet, nicht was man sieht, deshalb nicht in der Adresse */
-export const PATTERN_VIEW_KEY = "spiegel-pattern-view"
-
-// Die Wahl liegt im Gerät (`localStorage`); ohne Speicher (privates Fenster) gilt sie bis zum Neuladen.
-const listeners = new Set<() => void>()
-let memory: PatternView = "density"
-
-function readView(): PatternView {
-  try {
-    const value = window.localStorage.getItem(PATTERN_VIEW_KEY)
-    return value === "outlines" || value === "density" ? value : memory
-  } catch {
-    return memory
-  }
-}
-
-function writeView(view: PatternView) {
-  memory = view
-  try {
-    window.localStorage.setItem(PATTERN_VIEW_KEY, view)
-  } catch {
-    // nur im Speicher
-  }
-  for (const listener of listeners) listener()
-}
-
-function subscribe(listener: () => void) {
-  listeners.add(listener)
-  window.addEventListener("storage", listener)
-  return () => {
-    listeners.delete(listener)
-    window.removeEventListener("storage", listener)
-  }
-}
-
-/** die Zeichnung, die dieses Gerät zuletzt gewählt hat; der Server zeichnet die Vorgabe */
-function usePatternView(): [PatternView, (view: PatternView) => void] {
-  const view = useSyncExternalStore(subscribe, readView, () => "density" as const)
-  return [view, writeView]
-}
 
 /** Platz in der Größe des Bilds, solange es lädt oder fehlt: Die Seite springt nicht */
 function Placeholder({ text, action }: { text: string; action?: ReactNode }) {
@@ -89,16 +48,22 @@ function Placeholder({ text, action }: { text: string; action?: ReactNode }) {
  * Das Trefferbild als Hauptbild der Seite eines Zeitraums: wo die Schüsse lagen, von 50 bis 3.000 Schuss in den
  * Farben der Dichte mit Legende oder, über den Knopf oben links, als Umrisse wie beim Vergleichen, darüber nur als
  * Umrisse; darunter die Antwort (Lage, dann Form) und die Grundlage. Lädt das Muster noch oder ging es schief, steht an
- * seiner Stelle ein Platz gleicher Größe.
+ * seiner Stelle ein Platz gleicher Größe. Die Wahl hält die App (`view`, `onView`), auch wo sie sie sich merkt; ohne
+ * `onView` gibt es keinen Knopf.
  */
 export function PatternPanel({
   state,
   target,
   onRetry,
+  view = "density",
+  onView,
 }: {
   state: PatternState
   target: TargetImage
   onRetry: () => void
+  /** gewählte Zeichnung, gilt nur von 50 bis 3.000 Schuss */
+  view?: PatternView
+  onView?: (view: PatternView) => void
 }) {
   return (
     <div data-pattern-panel className="mx-auto grid w-full max-w-[34rem] gap-3">
@@ -114,14 +79,23 @@ export function PatternPanel({
           }
         />
       ) : (
-        <Ready pattern={state.pattern} target={target} />
+        <Ready pattern={state.pattern} target={target} view={view} onView={onView} />
       )}
     </div>
   )
 }
 
-function Ready({ pattern, target }: { pattern: PeriodPattern; target: TargetImage }) {
-  const [view, setView] = usePatternView()
+function Ready({
+  pattern,
+  target,
+  view,
+  onView,
+}: {
+  pattern: PeriodPattern
+  target: TargetImage
+  view: PatternView
+  onView?: (view: PatternView) => void
+}) {
   const words = pictureWords(pattern)
   const sentence = [words.lead, words.more].filter(Boolean).join(" ")
   const style = pattern.picture.style
@@ -137,12 +111,12 @@ function Ready({ pattern, target }: { pattern: PeriodPattern; target: TargetImag
           label={sentence}
           view={outlines ? "outlines" : "density"}
         />
-        {canChoose && (
+        {canChoose && onView && (
           <div className="pointer-events-none absolute top-2 left-2">
             <CornerButton
               label={OUTLINES_LABEL}
               pressed={outlines}
-              onPress={() => setView(outlines ? "density" : "outlines")}
+              onPress={() => onView(outlines ? "density" : "outlines")}
             >
               {OUTLINES_ICON}
             </CornerButton>

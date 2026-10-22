@@ -339,10 +339,10 @@ async function main() {
     }
     out(`| Fortschritt „Alles“: leichtes Modell und Lagen der Ablesung | ${kb(progressJson)} |`)
     out(
-      `| Trefferbild „Alles“: Muster (über 3.000 Schuss Raster) | ${kb(await patternOf(allIds))} |`
+      `| Trefferbild „Alles“: Muster (über 3.000 Schuss nur das Raster) | ${kb(await patternOf(allIds))} |`
     )
     out(
-      `| Trefferbild 90 Tage: Muster (bis 3.000 Schuss jeder Treffer) | ${kb(await patternOf(recentIds))} |`
+      `| Trefferbild 90 Tage: Muster (bis 3.000 Schuss jeder Treffer und das Raster) | ${kb(await patternOf(recentIds))} |`
     )
 
     out(`| Vergleichen 12 Monate gegen davor: Modell und Blatt | ${kb(await comparePeriods())} |`)

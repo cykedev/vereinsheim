@@ -29,8 +29,13 @@ function cards(count: number, shots: number, base = { xUm: 0, yUm: 0 }): Pattern
   }))
 }
 
-const render = (state: PatternState) =>
-  renderToStaticMarkup(createElement(PatternPanel, { state, target: LG_10M, onRetry: () => {} }))
+const render = (
+  state: PatternState,
+  choice: { view?: PatternView; onView?: (view: PatternView) => void } = { onView: () => {} }
+) =>
+  renderToStaticMarkup(
+    createElement(PatternPanel, { state, target: LG_10M, onRetry: () => {}, ...choice })
+  )
 const drawn = (pattern: ReturnType<typeof periodPattern>, view: PatternView) =>
   renderToStaticMarkup(
     createElement(PatternTarget, { layer: pattern.picture, target: LG_10M, label: "", view })
@@ -130,6 +135,35 @@ describe("Umrisse statt Dichte", () => {
     expect(html).toContain('data-pattern-view="density"')
     expect(html).toContain("data-heat-legend")
     expect(html).not.toContain("Durchgezogen")
+  })
+
+  it("gewählt: Umrisse, Knopf gedrückt, Legende der Umrisse statt der Dichte", () => {
+    const html = render(
+      { status: "ready", pattern: periodPattern(cards(10, 40)) },
+      { view: "outlines", onView: () => {} }
+    )
+    expect(html).toContain('aria-pressed="true"')
+    expect(html).toContain('data-pattern-view="outlines"')
+    expect(html).toContain('data-pattern-legend="outlines"')
+    expect(html).not.toContain("data-heat-legend")
+    expect(html).not.toContain("Jeder Punkt ist ein Schuss.")
+  })
+
+  it("ohne `onView` kein Knopf, die Zeichnung folgt `view`", () => {
+    const html = render(
+      { status: "ready", pattern: periodPattern(cards(10, 40)) },
+      { view: "outlines" }
+    )
+    expect(html).not.toContain(BUTTON)
+    expect(html).toContain('data-pattern-view="outlines"')
+  })
+
+  it("über 3.000 Schuss bleiben es Umrisse, auch wenn die Dichte gewählt ist", () => {
+    const pattern = periodPattern(cards(80, 40))
+    expect(drawn(pattern, "density")).toContain('data-pattern-view="outlines"')
+    expect(render({ status: "ready", pattern }, { view: "density", onView: () => {} })).toContain(
+      'data-pattern-legend="outlines"'
+    )
   })
 
   it("unter 50 Schuss kein Knopf: Jeder Treffer steht in seiner Ringfarbe", () => {
