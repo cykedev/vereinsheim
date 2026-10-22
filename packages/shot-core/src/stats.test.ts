@@ -4,7 +4,10 @@ import {
   c4,
   chiSquareCdfEven,
   chiSquareQuantileEven,
+  chiSquareSurvival,
   fQuantile2,
+  fSurvival,
+  incompleteBeta,
   iqr,
   leastSquaresSlope,
   logGamma,
@@ -108,6 +111,49 @@ describe("Quantile der χ²- und F-Verteilung", () => {
     expect(fQuantile2(0.95, 3)).toBeCloseTo(9.5521, 4)
     expect(fQuantile2(0.95, 10)).toBeCloseTo(4.1028, 4)
     expect(() => fQuantile2(1, 10)).toThrow(RangeError)
+  })
+})
+
+describe("Rand der F- und χ²-Verteilung", () => {
+  it("F an den 95-%-Quantilen der Tabelle", () => {
+    expect(fSurvival(4.1028, 2, 10)).toBeCloseTo(0.05, 4)
+    expect(fSurvival(2.7109, 5, 20)).toBeCloseTo(0.05, 4)
+    expect(fSurvival(4.1709, 1, 30)).toBeCloseTo(0.05, 4)
+    expect(fSurvival(1.9267, 10, 100)).toBeCloseTo(0.05, 4)
+  })
+
+  it("F(2, ν) wie die geschlossene Form (1 + 2f/ν)^(−ν/2)", () => {
+    expect(fSurvival(2.4, 2, 9)).toBeCloseTo(0.1461, 4)
+    expect(fSurvival(0, 3, 7)).toBe(1)
+  })
+
+  it("t mit 2 Freiheitsgraden als F(1, 2): 1 − t/√(t² + 2)", () => {
+    expect(fSurvival(36.75, 1, 2)).toBeCloseTo(1 - Math.sqrt(36.75) / Math.sqrt(38.75), 8)
+  })
+
+  it("χ² an den 95-%-Quantilen der Tabelle, auch bei ungeraden Freiheitsgraden", () => {
+    expect(chiSquareSurvival(3.8415, 1)).toBeCloseTo(0.05, 4)
+    expect(chiSquareSurvival(7.8147, 3)).toBeCloseTo(0.05, 4)
+    expect(chiSquareSurvival(18.307, 10)).toBeCloseTo(0.05, 4)
+    expect(chiSquareSurvival(0, 4)).toBe(1)
+  })
+
+  it("χ² bei geraden Freiheitsgraden wie die geschlossene Form", () => {
+    for (const [x, df] of [
+      [2.5, 2],
+      [11, 8],
+      [40, 30],
+    ] as const) {
+      expect(chiSquareSurvival(x, df)).toBeCloseTo(1 - chiSquareCdfEven(x, df), 10)
+    }
+  })
+
+  it("unvollständige Beta-Funktion an den Rändern und symmetrisch", () => {
+    expect(incompleteBeta(2, 3, 0)).toBe(0)
+    expect(incompleteBeta(2, 3, 1)).toBe(1)
+    // I_x(1, 1) = x, I_x(a, b) = 1 − I_(1−x)(b, a)
+    expect(incompleteBeta(1, 1, 0.3)).toBeCloseTo(0.3, 12)
+    expect(incompleteBeta(2.5, 4, 0.4)).toBeCloseTo(1 - incompleteBeta(4, 2.5, 0.6), 12)
   })
 })
 

@@ -136,6 +136,93 @@ export function fQuantile2(p: number, nu: number): number {
   return (nu / 2) * ((1 - p) ** (-2 / nu) - 1)
 }
 
+const TINY = 1e-300
+const SERIES_STEPS = 500
+const SERIES_EPS = 1e-15
+
+/** Kettenbruch der unvollständigen Beta-Funktion (Lentz), konvergiert für x < (a + 1)/(a + b + 2) */
+function betaFraction(a: number, b: number, x: number): number {
+  let c = 1
+  let d = 1 - ((a + b) * x) / (a + 1)
+  if (Math.abs(d) < TINY) d = TINY
+  d = 1 / d
+  let h = d
+  for (let m = 1; m <= SERIES_STEPS; m++) {
+    const m2 = 2 * m
+    for (const aa of [
+      (m * (b - m) * x) / ((a - 1 + m2) * (a + m2)),
+      (-(a + m) * (a + b + m) * x) / ((a + m2) * (a + 1 + m2)),
+    ]) {
+      d = 1 + aa * d
+      if (Math.abs(d) < TINY) d = TINY
+      c = 1 + aa / c
+      if (Math.abs(c) < TINY) c = TINY
+      d = 1 / d
+      h *= d * c
+    }
+    if (Math.abs(d * c - 1) < SERIES_EPS) break
+  }
+  return h
+}
+
+/** regularisierte unvollständige Beta-Funktion I_x(a, b) für a, b > 0 */
+export function incompleteBeta(a: number, b: number, x: number): number {
+  if (!(a > 0 && b > 0)) throw new RangeError(`Beta braucht a, b > 0, nicht ${a}, ${b}`)
+  if (x <= 0) return 0
+  if (x >= 1) return 1
+  const front = Math.exp(
+    logGamma(a + b) - logGamma(a) - logGamma(b) + a * Math.log(x) + b * Math.log(1 - x)
+  )
+  return x < (a + 1) / (a + b + 2)
+    ? (front * betaFraction(a, b, x)) / a
+    : 1 - (front * betaFraction(b, a, 1 - x)) / b
+}
+
+/** P(F > f) der F-Verteilung mit d1 und d2 Freiheitsgraden: I_{d2/(d2 + d1 f)}(d2/2, d1/2) */
+export function fSurvival(f: number, d1: number, d2: number): number {
+  if (!(d1 > 0 && d2 > 0)) throw new RangeError(`F braucht Freiheitsgrade > 0, nicht ${d1}, ${d2}`)
+  if (!(f > 0)) return 1
+  return incompleteBeta(d2 / 2, d1 / 2, d2 / (d2 + d1 * f))
+}
+
+/** regularisierte obere unvollständige Gammafunktion Q(a, x): Reihe unter a + 1, sonst Kettenbruch */
+function gammaSurvival(a: number, x: number): number {
+  if (x <= 0) return 1
+  const front = -x + a * Math.log(x) - logGamma(a)
+  if (x < a + 1) {
+    let term = 1 / a
+    let sum = term
+    for (let n = 1; n <= SERIES_STEPS; n++) {
+      term *= x / (a + n)
+      sum += term
+      if (Math.abs(term) < Math.abs(sum) * SERIES_EPS) break
+    }
+    return Math.max(0, 1 - sum * Math.exp(front))
+  }
+  let b = x + 1 - a
+  let c = 1 / TINY
+  let d = 1 / b
+  let h = d
+  for (let i = 1; i <= SERIES_STEPS; i++) {
+    const an = -i * (i - a)
+    b += 2
+    d = an * d + b
+    if (Math.abs(d) < TINY) d = TINY
+    c = b + an / c
+    if (Math.abs(c) < TINY) c = TINY
+    d = 1 / d
+    h *= d * c
+    if (Math.abs(d * c - 1) < SERIES_EPS) break
+  }
+  return Math.min(1, Math.exp(front) * h)
+}
+
+/** P(X > x) der χ²-Verteilung mit df Freiheitsgraden, auch ungeraden */
+export function chiSquareSurvival(x: number, df: number): number {
+  if (!(df > 0)) throw new RangeError(`χ² braucht df > 0, nicht ${df}`)
+  return gammaSurvival(df / 2, x / 2)
+}
+
 /**
  * Robuste Trendgerade nach Theil-Sen: Steigung = Median aller paarweisen Steigungen, Achsenabschnitt =
  * Median von y − Steigung · x. Intervall nach Sen über die Varianz von Kendalls S (ohne Bindungen):
