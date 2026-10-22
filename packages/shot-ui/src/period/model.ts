@@ -65,7 +65,7 @@ export const PERIOD_TILE_KEYS = [
 ] as const
 
 /**
- * eine Kennzahl, wie die Seite sie zeigt: ihre Angaben ohne `compute`. Funktionen gehen nicht vom Server zum Browser
+ * eine Kennzahl, wie die Seite sie zeigt: ihre Angaben ohne `compute` und `perShot`. Funktionen gehen nicht vom Server zum Browser
  * (Fortschritt in der App), die Bausteine lesen nur Schlüssel, Name, Einheit, Stellen und Richtung
  */
 export type PeriodMetric = Readonly<Omit<MetricDefinition, "compute" | "perShot">>
@@ -83,7 +83,7 @@ export interface PeriodTile {
   unit: MetricUnit
   decimals: number
   better: "higher" | "lower" | "none"
-  /** Mittel der Werte je Scheibe; null ohne Scheibe mit Wert */
+  /** der Wert über alle Schüsse (`pooledValue`, das Tempo als Mittel je Scheibe); null ohne Scheibe mit Wert */
   value: number | null
   /** Scheiben mit Wert */
   n: number
@@ -217,7 +217,7 @@ const mean = (values: readonly CardValue[]) =>
 export { byStart } from "./item"
 
 /** die bis zu fünf Scheiben davor, wie der gleitende Schnitt */
-const DELTA_WINDOW = 5
+export const DELTA_WINDOW = 5
 
 /**
  * Abstand jedes Werts zum Schnitt der bis zu `window` Werte davor, ohne den Wert selbst;
@@ -483,11 +483,21 @@ export function patternIds(model: Pick<PeriodModel, "cards">, includeProbeOnly: 
 export function lightPeriodModel(model: PeriodModel): PeriodModel {
   const cards = model.cards.map(lightCard)
   const byId = new Map(cards.map((card) => [card.id, card]))
+  // die Streuung der Schusswerte braucht nur das Urteil auf dem Server
+  const withoutSd = <T extends CardValue>({ sd: _sd, ...value }: T) => value as T
   return {
     ...model,
+    values: model.values.map(withoutSd),
+    trend: { ...model.trend, points: model.trend.points.map(withoutSd) },
+    compareValues: model.compareValues?.map(withoutSd) ?? null,
+    summary: { ...model.summary, best: model.summary.best && withoutSd(model.summary.best) },
     cards,
     reading: model.reading
-      ? { ...model.reading, card: byId.get(model.reading.card.id) ?? lightCard(model.reading.card) }
+      ? {
+          ...model.reading,
+          card: byId.get(model.reading.card.id) ?? lightCard(model.reading.card),
+          point: model.reading.point && withoutSd(model.reading.point),
+        }
       : null,
   }
 }

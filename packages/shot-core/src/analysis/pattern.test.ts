@@ -151,7 +151,7 @@ describe("positionPoints und positionOverTime (L10)", () => {
   })
 
   it("Mitte über alle Schüsse, Abende ohne Wandern: kurze tiefe Scheiben machen keinen Versatz zu Zufall", () => {
-    // fünf Scheiben zu 40 Schuss hoch, zwei zu 10 tief, Streuung je Schuss gleich (Fall vom 22. Oktober 2026)
+    // fünf Scheiben zu 40 Schuss hoch, zwei zu 10 tief, Streuung je Schuss gleich
     const ring = (x: number, y: number, r: number) => {
       const a = Math.round(r / Math.SQRT2)
       return [

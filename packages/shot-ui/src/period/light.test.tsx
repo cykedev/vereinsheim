@@ -107,9 +107,26 @@ describe("lightPeriodModel: das Modell für den Browser", () => {
       flags: original.flags,
     })
     expect(light.reading?.card).toBe(light.cards.find((c) => c.id === full.reading?.card.id))
+    // ohne die Streuung der Schusswerte, sonst gleich
+    const noSd = (value: unknown): unknown => {
+      if (value instanceof Map) return new Map([...value].map(([k, v]) => [k, noSd(v)]))
+      if (Array.isArray(value)) return value.map(noSd)
+      if (value && typeof value === "object")
+        return Object.fromEntries(
+          Object.entries(value)
+            .filter(([key]) => key !== "sd")
+            .map(([key, v]) => [key, noSd(v)])
+        )
+      return value
+    }
     const { cards: _a, reading: _b, ...rest } = light
     const { cards: _c, reading: _d, ...restFull } = full
-    expect(rest).toEqual(restFull)
+    expect(rest).toEqual(noSd(restFull))
+  })
+
+  it("ohne die Streuung der Schusswerte: die braucht nur das Urteil auf dem Server", () => {
+    expect(full.values.some((v) => v.sd !== undefined)).toBe(true)
+    expect(JSON.stringify(light)).not.toContain('"sd"')
   })
 
   it("die Bausteine zeichnen damit dasselbe, ohne und mit Wahl (auch Wettkampf und nur Probe)", () => {

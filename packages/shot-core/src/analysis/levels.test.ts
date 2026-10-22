@@ -39,7 +39,7 @@ describe("eine Scheibe als Gruppe von Schüssen", () => {
 })
 
 describe("zwei Ebenen: Schüsse in Scheiben", () => {
-  it("die Abende wandern: Vortest unter 0,25, Unsicherheit der Abende (Hand-Rechnung)", () => {
+  it("die Abende wandern: Vortest unter `WANDER_ALPHA`, Unsicherheit der Abende (Hand-Rechnung)", () => {
     const e = levelEstimate([ones([1, 2, 3, 4]), ones([2, 3, 4, 5]), ones([3, 4, 5, 6])])
     expect(e).not.toBeNull()
     if (!e) return

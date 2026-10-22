@@ -973,9 +973,40 @@ for (const [label, shift, seed] of [
         sigma
       )?.verdict === "lower"
   )
+  // ungleiche Schusszahlen der Seiten (Wettkampf zu 40 gegen Training mit kurzen Scheiben): A immer 40 Schuss, B wie
+  // die Mischung des Rasters bzw. immer 5 Schuss
+  const uneven = grid(
+    "B29",
+    "Streuung A 40 Schuss gegen B, Urteil trotz gleicher Streuung",
+    29700,
+    PRECISION,
+    (rand, count, w, shots) =>
+      compareValues(
+        spreads(rand, count, w, () => 40, 1500),
+        spreads(rand, count, w, shots, 1500),
+        sigma
+      )?.verdict !== "unclear"
+  )
+  let worstShort = 0
+  for (const [wi, w] of PRECISION.entries()) {
+    const parts = GRID_CARDS.map((count) => {
+      let hits = 0
+      repeat(GRID_RUNS, 29900 + 100 * wi + count, (rand) => {
+        const a = spreads(rand, count, w, () => 40, 1500)
+        const b = spreads(rand, count, w, () => 5, 1500)
+        if (compareValues(a, b, sigma)?.verdict !== "unclear") hits++
+      })
+      worstShort = Math.max(worstShort, hits / GRID_RUNS)
+      return `${count}: ${share(hits, GRID_RUNS)}`
+    })
+    out(
+      "B29",
+      `Streuung A 40 gegen B 5 Schuss, Urteil trotz gleicher Streuung, Wandern ${num(w, 1)}: ${parts.join(", ")}`
+    )
+  }
   out(
     "B29",
-    `Streuung höchster Fehlalarm: ${percent(alarm.worst)}, ohne Wandern ${percent(alarm.still)}`
+    `Streuung höchster Fehlalarm: ${percent(Math.max(alarm.worst, uneven.worst, worstShort))}, ohne Wandern ${percent(alarm.still)}`
   )
 }
 

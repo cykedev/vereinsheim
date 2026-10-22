@@ -371,17 +371,26 @@ B19  Ø je Schuss, σ 1,5 → 1,3 mm erkannt, Wandern 0,3, alle 40: 5: 52,8 %, 1
 B19  Ø je Schuss, σ 1,5 → 1,3 mm erkannt, Wandern 0,3, jede dritte 10: 5: 44,6 %, 10: 80,3 %, 20: 98,7 %
 B19  Ø je Schuss höchster Fehlalarm: 4,3 %, ohne Wandern 3,5 %
 B29  Streuung, Urteil trotz gleicher Streuung, Wandern 0,0, alle 40: 5: 2,6 %, 10: 3,7 %, 20: 4,5 %
-B29  Streuung, Urteil trotz gleicher Streuung, Wandern 0,0, jede dritte 10: 5: 2,4 %, 10: 3,6 %, 20: 4,1 %
+B29  Streuung, Urteil trotz gleicher Streuung, Wandern 0,0, jede dritte 10: 5: 2,4 %, 10: 3,6 %, 20: 4,2 %
 B29  Streuung, Urteil trotz gleicher Streuung, Wandern 0,1, alle 40: 5: 4,3 %, 10: 4,9 %, 20: 5,0 %
-B29  Streuung, Urteil trotz gleicher Streuung, Wandern 0,1, jede dritte 10: 5: 4,0 %, 10: 4,9 %, 20: 5,0 %
+B29  Streuung, Urteil trotz gleicher Streuung, Wandern 0,1, jede dritte 10: 5: 4,0 %, 10: 5,0 %, 20: 5,0 %
 B29  Streuung, Urteil trotz gleicher Streuung, Wandern 0,2, alle 40: 5: 4,3 %, 10: 5,1 %, 20: 5,3 %
 B29  Streuung, Urteil trotz gleicher Streuung, Wandern 0,2, jede dritte 10: 5: 4,4 %, 10: 4,8 %, 20: 5,2 %
 B29  Streuung σ 1,5 → 1,3 mm erkannt, Wandern 0,0, alle 40: 5: 64,6 %, 10: 95,8 %, 20: 100,0 %
-B29  Streuung σ 1,5 → 1,3 mm erkannt, Wandern 0,0, jede dritte 10: 5: 48,3 %, 10: 75,5 %, 20: 96,3 %
+B29  Streuung σ 1,5 → 1,3 mm erkannt, Wandern 0,0, jede dritte 10: 5: 48,5 %, 10: 76,0 %, 20: 96,3 %
 B29  Streuung σ 1,5 → 1,3 mm erkannt, Wandern 0,1, alle 40: 5: 31,6 %, 10: 64,9 %, 20: 93,0 %
-B29  Streuung σ 1,5 → 1,3 mm erkannt, Wandern 0,1, jede dritte 10: 5: 26,1 %, 10: 50,7 %, 20: 82,3 %
+B29  Streuung σ 1,5 → 1,3 mm erkannt, Wandern 0,1, jede dritte 10: 5: 26,3 %, 10: 50,9 %, 20: 82,4 %
 B29  Streuung σ 1,5 → 1,3 mm erkannt, Wandern 0,2, alle 40: 5: 14,0 %, 10: 28,9 %, 20: 53,3 %
-B29  Streuung σ 1,5 → 1,3 mm erkannt, Wandern 0,2, jede dritte 10: 5: 13,5 %, 10: 25,5 %, 20: 48,1 %
+B29  Streuung σ 1,5 → 1,3 mm erkannt, Wandern 0,2, jede dritte 10: 5: 13,6 %, 10: 25,6 %, 20: 48,1 %
+B29  Streuung A 40 Schuss gegen B, Urteil trotz gleicher Streuung, Wandern 0,0, alle 40: 5: 2,6 %, 10: 3,5 %, 20: 4,2 %
+B29  Streuung A 40 Schuss gegen B, Urteil trotz gleicher Streuung, Wandern 0,0, jede dritte 10: 5: 2,6 %, 10: 4,0 %, 20: 4,4 %
+B29  Streuung A 40 Schuss gegen B, Urteil trotz gleicher Streuung, Wandern 0,1, alle 40: 5: 4,2 %, 10: 5,1 %, 20: 5,1 %
+B29  Streuung A 40 Schuss gegen B, Urteil trotz gleicher Streuung, Wandern 0,1, jede dritte 10: 5: 4,3 %, 10: 4,9 %, 20: 4,9 %
+B29  Streuung A 40 Schuss gegen B, Urteil trotz gleicher Streuung, Wandern 0,2, alle 40: 5: 4,2 %, 10: 4,8 %, 20: 5,0 %
+B29  Streuung A 40 Schuss gegen B, Urteil trotz gleicher Streuung, Wandern 0,2, jede dritte 10: 5: 4,3 %, 10: 4,8 %, 20: 4,7 %
+B29  Streuung A 40 gegen B 5 Schuss, Urteil trotz gleicher Streuung, Wandern 0,0: 5: 4,0 %, 10: 4,0 %, 20: 4,4 %
+B29  Streuung A 40 gegen B 5 Schuss, Urteil trotz gleicher Streuung, Wandern 0,1: 5: 4,7 %, 10: 5,3 %, 20: 4,8 %
+B29  Streuung A 40 gegen B 5 Schuss, Urteil trotz gleicher Streuung, Wandern 0,2: 5: 4,6 %, 10: 4,9 %, 20: 5,0 %
 B29  Streuung höchster Fehlalarm: 5,3 %, ohne Wandern 4,5 %
 ```
 

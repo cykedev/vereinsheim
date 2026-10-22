@@ -435,8 +435,10 @@ Spiegels Ids in `apps/treffsicher/src/lib/help/statisticsTopics.ts`.
 #### Zwei Zeiträume im Vergleich
 
 - **Kurz:** Ob sich eine Zahl zwischen zwei Zeiträumen wirklich verändert hat.
-- **Was es ist:** Die Statistik vergleicht die Werte deiner Einheiten aus zwei Zeiträumen. Jede Einheit zählt einmal,
-  egal wie viele Schüsse sie hat.
+- **Was es ist:** Die Statistik vergleicht zwei Zeiträume. Die Werte rechnet sie über alle Schüsse. Eine Einheit mit 40
+  Schuss zählt viermal so viel wie eine mit 10. Sie prüft zuerst, ob deine Einheiten stärker voneinander abweichen, als
+  der Zufall der Schüsse erklärt. Wenn nicht, zählt jeder Schuss. Wenn doch, zählt jede Einheit für sich. Einheiten nur
+  aus Serienergebnissen vergleicht sie Einheit für Einheit.
 - **So liest du es:** Steht „besser“ oder „schwächer“, entstünde so ein Unterschied durch Zufall allein in höchstens 5
   von 100 Vergleichen. Steht „kein klarer Unterschied“, heißt das nicht „gleich geblieben“. Die Einheiten reichen nur
   nicht, es zu zeigen. „Deutlich“ heißt: Der Unterschied ist groß genug, um im Training etwas auszumachen.

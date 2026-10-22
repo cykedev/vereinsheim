@@ -85,6 +85,16 @@ describe("Einflüsse", () => {
     expect(split.low.map((v) => v.value)).toEqual([9.01, 9.02, 9.03, 9.04, 9.05])
   })
 
+  it("der Ø einer Gruppe über alle Schüsse: eine Einheit mit 40 Schuss zählt viermal so viel wie eine mit 10", () => {
+    const short = { value: { id: "k", atMs: 1, value: 9, n: 10 }, factors: { sleep: 90 } }
+    const long = { value: { id: "l", atMs: 2, value: 10, n: 40 }, factors: { sleep: 80 } }
+    const low = { value: { id: "u", atMs: 3, value: 8, n: 40 }, factors: { sleep: 20 } }
+    const lower = { value: { id: "v", atMs: 4, value: 8, n: 40 }, factors: { sleep: 10 } }
+    const sleep = of("sleep", [short, long, low, lower])
+    // 90 + 400 Ringe auf 50 Schuss, nicht 9,5 wie das Mittel der Einheiten
+    expect(sleep.high.mean).toBeCloseTo(9.8, 9)
+  })
+
   it("unter fünf Einheiten je Seite kein Urteil, ohne Werte kein Vergleich", () => {
     const rows = [1, 2, 3, 4, 5, 6, 7, 8].map((i) => entry(9 + i / 10, { motivation: i }))
     const motivation = of("motivation", rows)

@@ -45,7 +45,7 @@ export const STATISTICS_TOPICS = {
   "zeitraum-vergleich": {
     title: "Zwei Zeiträume im Vergleich",
     short: "Ob sich eine Zahl zwischen zwei Zeiträumen wirklich verändert hat.",
-    what: "Die Statistik vergleicht die Werte deiner Einheiten aus zwei Zeiträumen. Jede Einheit zählt einmal, egal wie viele Schüsse sie hat.",
+    what: "Die Statistik vergleicht zwei Zeiträume. Die Werte rechnet sie über alle Schüsse. Eine Einheit mit 40 Schuss zählt viermal so viel wie eine mit 10. Sie prüft zuerst, ob deine Einheiten stärker voneinander abweichen, als der Zufall der Schüsse erklärt. Wenn nicht, zählt jeder Schuss. Wenn doch, zählt jede Einheit für sich. Einheiten nur aus Serienergebnissen vergleicht sie Einheit für Einheit.",
     read: "Steht „besser“ oder „schwächer“, entstünde so ein Unterschied durch Zufall allein in höchstens 5 von 100 Vergleichen. Steht „kein klarer Unterschied“, heißt das nicht „gleich geblieben“. Die Einheiten reichen nur nicht, es zu zeigen. „Deutlich“ heißt: Der Unterschied ist groß genug, um im Training etwas auszumachen.",
     caution: "Unter 5 Einheiten je Seite gibt es kein Urteil.",
   },

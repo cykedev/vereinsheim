@@ -491,7 +491,7 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   letzten fünf, gestrichelt die Mitte der Scheibe. So siehst du, ob deine Lage wandert.
 - *So liest du es:* „Versetzt: rechts tief“ heißt: Die Mitte aller Schüsse des Zeitraums liegt
   rechts unter der Mitte, und das ist kein Zufall. Das ist der geviertelte Kreis im Trefferbild.
-  „Passt“ heißt: Ein Versatz ist nicht belegt.
+  Ohne gesicherten Versatz sagt der Satz, wo deine Mitte liegt und dass das noch nicht sicher ist.
 - *Vorsicht:* „Versetzt“ sagt Spiegel nur, wenn das kein Zufall sein kann. Dafür prüft Spiegel
   zuerst, ob deine Abende verschieden liegen, zur Seite und in der Höhe getrennt. Liegen sie gleich,
   zählt jeder Schuss. Liegen sie verschieden, zählt jeder Abend für sich. Wandern deine Abende nur

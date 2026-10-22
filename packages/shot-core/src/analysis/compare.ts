@@ -1,6 +1,6 @@
-// Zwei Seiten im Vergleich (C2, C3): die Lage zweier Stichproben von Punkten, die Schüsse zweier Scheiben und das Bild
-// beider Seiten. Die Funktionen nehmen Werte und Punkte, keine Scheiben einer App: Schüsse einer Scheibe (Einheit der
-// Schuss) oder Mitten vieler Scheiben (Einheit die Scheibe). Lagen in µm, Mitte (0 | 0), x rechts, y oben.
+// Zwei Seiten im Vergleich (C2, C3): zwei Scheiben Schuss für Schuss, die Lage zweier Zeiträume über Schüsse und
+// Abende ([[adr-034]]) und das Bild beider Seiten. Die Funktionen nehmen Werte, Punkte und die Lagen von Scheiben,
+// keine Scheiben einer App. Lagen in µm, Mitte (0 | 0), x rechts, y oben.
 
 import { centroid, distancesTo, type Point } from "../geometry"
 import {
@@ -52,7 +52,7 @@ function scatter(points: readonly Point[], center: Point) {
 }
 
 /**
- * Lage zweier Seiten (C2 über Schüsse, C3 über die Mitten von Scheiben): Hotelling-T² für zwei Stichproben mit
+ * Lage zweier Scheiben (C2, Schuss für Schuss): Hotelling-T² für zwei Stichproben mit
  * gepoolter Kovarianz S = (Σ₁ + Σ₂)/(n₁ + n₂ − 2), T² = n₁n₂/(n₁ + n₂) · dᵀS⁻¹d, F = (n₁ + n₂ − 3)/(2(n₁ + n₂ − 2)) · T²
  * mit F(2, ν), ν = n₁ + n₂ − 3, geschlossen p = (1 + 2F/ν)^(−ν/2). Versetzt bei p < 0,05. Unter fünf Punkten je Seite
  * oder ohne Ausdehnung (alle auf einer Linie) kein Test. Ohne Punkte auf einer Seite null.

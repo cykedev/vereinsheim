@@ -31,7 +31,7 @@ const MIN_BUCKET_SPREAD = 5
 /** Signifikanzniveau des Vergleichs */
 export const COMPARE_ALPHA = 0.05
 /** bedeutsam ab diesem Anteil der gepoolten Streuung (T3, Hopkins) */
-export const MEANINGFUL_SHARE = 0.3
+const MEANINGFUL_SHARE = 0.3
 const DAY_MS = 86_400_000
 /** Schnitt über die Scheiben dieser Tage vor der letzten (C4), ab so vielen Scheiben */
 const AVERAGE_DAYS = 30

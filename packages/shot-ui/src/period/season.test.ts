@@ -40,9 +40,10 @@ const STATES: Record<string, Partial<PeriodState>> = {
 
 /**
  * das Modell als reiner Wert, wie die Bausteine es lesen: von einer Scheibe Id, Beginn, Art, „nur Probe“ und Schusszahl
- * (die Form der Eingabe ist nicht Teil der Charakterisierung), Maps als sortierte Einträge; je Feld eine Zeile JSON
+ * (die Form der Eingabe ist nicht Teil der Charakterisierung), Maps als sortierte Einträge; je Feld eine Zeile JSON.
+ * Mit `withoutSd` ohne die Streuung der Schusswerte, die das leichte Modell nicht an den Browser gibt
  */
-const plain = (model: PeriodModel) => {
+const plain = (model: PeriodModel, withoutSd = false) => {
   const card = (c: PeriodModel["cards"][number]) => ({
     id: c.id,
     startedAtMs: c.startedAtMs,
@@ -58,8 +59,12 @@ const plain = (model: PeriodModel) => {
   return Object.fromEntries(
     Object.entries(shown).map(([key, value]) => [
       key,
-      JSON.stringify(value, (_key, inner: unknown) =>
-        inner instanceof Map ? [...inner].sort((a, b) => (a[0] < b[0] ? -1 : 1)) : inner
+      JSON.stringify(value, (innerKey, inner: unknown) =>
+        withoutSd && innerKey === "sd"
+          ? undefined
+          : inner instanceof Map
+            ? [...inner].sort((a, b) => (a[0] < b[0] ? -1 : 1))
+            : inner
       ),
     ])
   )
@@ -82,7 +87,7 @@ describe("das ganze Modell über eine Saison", () => {
       const rows = recordRows(model.records, scoring)
       const inPeriod = new Set(model.cards.map((c) => c.id))
       // das leichte Modell für den Browser zeigt dasselbe
-      expect(plain(lightPeriodModel(model))).toEqual(plain(model))
+      expect(plain(lightPeriodModel(model))).toEqual(plain(model, true))
       expect({
         model: plain(model),
         records: rows.map((r) => `${r.key} ${r.label}: ${r.value} (${r.record.cardId})`),

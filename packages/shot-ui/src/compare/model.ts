@@ -48,7 +48,7 @@ export interface CompareSide extends SideName {
   withoutPosition: number
 }
 
-/** eine Kennzahl für A und B; der Vergleich mit Δ = A − B, „höher“ heißt A höher (`compareSides`) */
+/** eine Kennzahl für A und B; der Vergleich mit Δ = A − B, „höher“ heißt A höher (`compareAB`, `compareShots`) */
 export interface CompareRow {
   key: string
   label: string
@@ -62,7 +62,7 @@ export interface CompareRow {
 
 export interface CompareModel {
   type: CompareType
-  /** Einheit der Tests: der Schuss (zwei Scheiben) oder die Scheibe */
+  /** worüber geurteilt wird: Schuss für Schuss (zwei Scheiben) oder über Schüsse und Abende (Zeiträume, Arten) */
   unit: "shot" | "card"
   a: CompareSide
   b: CompareSide

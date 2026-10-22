@@ -20,7 +20,14 @@ import {
   type DateRange,
   type NamedPeriod,
 } from "../period/calendar"
-import { byStart, cardKind, deltasBefore, isProbeOnly, type CardKind } from "../period/model"
+import {
+  byStart,
+  cardKind,
+  DELTA_WINDOW,
+  deltasBefore,
+  isProbeOnly,
+  type CardKind,
+} from "../period/model"
 
 /** eine Liste aus Meyton (`Rangliste`): Kennung für die Adresse, Name wie Meyton ihn schreibt */
 export interface ListOption {
@@ -187,7 +194,7 @@ export function cardListModel(
       includeProbeOnly: true,
     }),
     new Set(shown.map((c) => c.id)),
-    undefined,
+    DELTA_WINDOW,
     // der Schnitt davor über die Schüsse der Scheiben ([[adr-034]])
     (before) => pooledValue(before, meanMetric) as number
   )

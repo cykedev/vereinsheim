@@ -1,7 +1,8 @@
 // Rechnung über zwei Ebenen ([[adr-034]]): Schüsse in Scheiben. Das Mittel ist das über alle Schüsse; seine
 // Unsicherheit kommt aus der Streuung der Schüsse und, wenn die Abende stärker wandern, als der Zufall der Schüsse
 // erklärt, aus dem Wandern der Abende („sometimes pool“ nach Bancroft, Vortest α 0,5). Eine Richtung (Werte je Schuss)
-// oder zwei (Lagen in µm). Symmetrische Matrizen als Liste: eine Richtung [v], zwei [xx, yy, xy].
+// oder zwei (Lagen in µm; die Lage urteilt je Richtung, `levelTestZeroByAxis`, zwei Richtungen zusammen dienen als
+// Bezug zu Hotelling über alle Schüsse). Symmetrische Matrizen als Liste: eine Richtung [v], zwei [xx, yy, xy].
 
 import type { MetricDefinition } from "../metrics"
 import { c4, chiSquareSurvival, fQuantile, fSurvival } from "../stats"
@@ -282,9 +283,10 @@ const verdictOf = (p: number, delta: number): PeriodComparison["verdict"] =>
   p < COMPARE_ALPHA && delta > 0 ? "higher" : p < COMPARE_ALPHA && delta < 0 ? "lower" : "unclear"
 
 /**
- * Streuung zweier Zeiträume: je Seite Vortest auf wandernde Präzision (Q = Σ (νᵢ/2)(ln sᵢ² − ȳ)² mit χ²(k − 1),
- * Wandern bei p < `WANDER_ALPHA`). Ohne Wandern der F-Test der gepoolten Varianzen, zweiseitig; sonst Welch-t über ln sᵢ².
- * Ein Urteil nur, wenn der Test in die Richtung der gepoolten Werte zeigt.
+ * Streuung zweier Zeiträume: je Seite Vortest auf wandernde Präzision (Bartlett: Q = Σ (νᵢ/2)(yᵢ − ȳ)² / C mit
+ * χ²(k − 1), yᵢ = ln sᵢ² + 1/νᵢ + 1/(3νᵢ²), Wandern bei p < `WANDER_ALPHA`). Ohne Wandern der F-Test der gepoolten
+ * Varianzen, zweiseitig; sonst Welch-t über die yᵢ. Ein Urteil nur, wenn der Test in die Richtung der gepoolten Werte
+ * zeigt.
  */
 function compareSpreads(
   a: readonly CardValue[],
@@ -295,10 +297,15 @@ function compareSpreads(
   const side = (values: readonly CardValue[]) => {
     const parts = values.map((v) => spreadOf(v, pooling)).filter((p) => p.nu > 0 && p.variance > 0)
     const nu = parts.reduce((sum, p) => sum + p.nu, 0)
-    const ys = parts.map((p) => Math.log(p.variance))
+    // ln s² liegt im Mittel um ψ(ν/2) − ln(ν/2) ≈ −1/ν − 1/(3ν²) zu tief; ohne Korrektur sähe eine Seite mit kurzen
+    // Scheiben enger aus als eine mit langen
+    const ys = parts.map((p) => Math.log(p.variance) + 1 / p.nu + 1 / (3 * p.nu * p.nu))
     const weighted = parts.reduce((sum, p, i) => sum + (p.nu / 2) * ys[i], 0) / (nu / 2)
-    const q = parts.reduce((sum, p, i) => sum + (p.nu / 2) * (ys[i] - weighted) ** 2, 0)
-    const wander = parts.length > 1 && chiSquareSurvival(q, parts.length - 1) < WANDER_ALPHA
+    // Bartletts Korrektur C, damit der Vortest bei kurzen Scheiben nicht zu oft Wandern meldet
+    const k = parts.length
+    const c = 1 + (parts.reduce((sum, p) => sum + 1 / p.nu, 0) - 1 / nu) / (3 * (k - 1))
+    const q = parts.reduce((sum, p, i) => sum + (p.nu / 2) * (ys[i] - weighted) ** 2, 0) / c
+    const wander = k > 1 && chiSquareSurvival(q, k - 1) < WANDER_ALPHA
     const variance = parts.reduce((sum, p) => sum + p.nu * p.variance, 0) / nu
     return { parts, nu, ys, wander, variance }
   }
@@ -307,7 +314,8 @@ function compareSpreads(
   if (sa.parts.length < 2 || sb.parts.length < 2) return null
   if (!sa.wander && !sb.wander) {
     const upper = fSurvival(sb.variance / sa.variance, sb.nu, sa.nu)
-    return { p: Math.min(1, 2 * Math.min(upper, 1 - upper)), basis: "shots", agrees: true }
+    const agrees = Math.sign(sb.variance - sa.variance) === Math.sign(delta)
+    return { p: Math.min(1, 2 * Math.min(upper, 1 - upper)), basis: "shots", agrees }
   }
   const mean = (ys: readonly number[]) => ys.reduce((sum, y) => sum + y, 0) / ys.length
   const share = (ys: readonly number[]) =>

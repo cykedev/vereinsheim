@@ -1,14 +1,19 @@
 // Einflüsse: Liegt der Ø je Schuss an Tagen mit hohem Befinden oder guter Ausführung anders? Je Merkmal zwei Gruppen
 // der Einheiten im Zeitraum, über und unter dem mittleren Wert (Median) des Merkmals; Einheiten genau auf ihm zählen
-// zur kleineren Gruppe, bei gleich großen zu keiner. Verglichen wird wie zwei Zeiträume (`comparePeriods`, Urteil ab
-// fünf Einheiten je Seite).
+// zur kleineren Gruppe, bei gleich großen zu keiner. Verglichen wird wie zwei Zeiträume: Ø je Schuss über alle Schüsse
+// einer Gruppe, Urteil über Schüsse und Einheiten (`compareValues`, ADR-034, ab fünf Einheiten je Seite).
 
 import {
-  comparePeriods,
+  compareValues,
+  pooledValue,
   type CardValue,
   type PeriodComparison,
 } from "@vereinsheim/shot-core/analysis"
+import { metricByKey, type MetricDefinition } from "@vereinsheim/shot-core/metrics"
 import { median } from "@vereinsheim/shot-core/stats"
+
+/** Ø je Schuss, über die Schüsse gemittelt; auf dem Raster der Zehntel, ganze Ringe liegen darauf */
+const MEAN = metricByKey("result.decimalMean") as MetricDefinition
 
 export const INFLUENCE_KEYS = ["sleep", "energy", "stress", "motivation", "quality"] as const
 export type InfluenceKey = (typeof INFLUENCE_KEYS)[number]
@@ -46,7 +51,7 @@ export interface Influence {
 
 const group = (values: readonly CardValue[]): InfluenceGroup => ({
   n: values.length,
-  mean: values.length ? values.reduce((sum, v) => sum + v.value, 0) / values.length : null,
+  mean: pooledValue(values, MEAN),
 })
 
 /**
@@ -84,7 +89,7 @@ export function influences(entries: readonly InfluenceEntry[]): Influence[] {
       entered,
       high: group(high),
       low: group(low),
-      comparison: comparePeriods(low, high),
+      comparison: compareValues(low, high, MEAN),
     }
   })
 }

@@ -181,9 +181,9 @@ export function positionOverTime(points: readonly PositionPoint[]): PositionOver
     points: points.map(({ scatter: _scatter, ...point }) => point),
     mean: center,
     offsetUm: center ? Math.hypot(center.xUm, center.yUm) : null,
-    p: test?.p ?? null,
-    wander: test?.wander ?? null,
-    wanderAxes: test?.wanderAxes ?? null,
+    p: judged?.p ?? null,
+    wander: judged?.wander ?? null,
+    wanderAxes: judged?.wanderAxes ?? null,
     region: judged ? { xUm: judged.region.x, yUm: judged.region.y } : null,
     verdict: !judged ? "few" : judged.p < ALPHA ? "offset" : "fits",
   }
