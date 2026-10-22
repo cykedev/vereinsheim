@@ -56,5 +56,9 @@ export const ANALYSIS_CATALOG: Readonly<Record<string, readonly string[]>> = Obj
   periodPattern: ["L9"],
   positionPoints: ["L10"],
   positionOverTime: ["L10"],
+  shotGroup: ["L10", "C3"],
+  levelEstimate: ["L10", "C3", "E2", "E4"],
+  levelTestZero: ["L10"],
+  levelCompare: ["C3"],
   outlierDirection: ["L7"],
 })
