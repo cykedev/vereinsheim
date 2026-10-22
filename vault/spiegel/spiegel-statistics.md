@@ -78,7 +78,7 @@ vᵢ ist der Zehntelwert, Ringᵢ der ganze Ring, n die Zahl der zählenden Sch�
 | L7 | Ausreißerrichtung | je Scheibe ab 10 Schuss das weiteste Zehntel (mindestens einer), gemessen von ihrem eigenen Schwerpunkt, Richtung von dort, als Richtungsuhr über alle Scheiben; Vorzugsrichtung nach Rayleigh (Näherung nach Zar) ab 30 Ausreißern, p < 0,05 (B24). Misst das Ausreißen aus der Gruppe, nicht ihren Versatz (L10) | Zeitraum | B | SP-2.7, Fachkern (`outlierDirection`) |
 | L8 | Drift in der Abgabefolge | von-Neumann-Verhältnis je Sprung normiert (≈ 2 unabhängig, < 2 Wandern); ohne Urteil, weil es bei kleinem n stark streut (B8). Ø und größter Sprung führt Spiegel nicht (im Mittel √π · σ) | Scheibe | C | SP-1.10 |
 | L9 | Langzeit-Trefferbild | alle Schüsse eines Zeitraums, wo sie lagen: unter 50 als Treffer in Ringfarbe, bis 3.000 als Treffer in der Farbe der Dichte (sechs Stufen: 99 von 100 bis ein Zehntel der Masse), darüber nur als Umrisse (Hälfte und 9 von 10 der Schüsse, wie beim Vergleichen), je Familie; dazu die Form über mehrere Scheiben (Kovarianz je Scheibe um ihren eigenen Schwerpunkt, gepoolt, ν = Σ(nᵢ − 1)), die eine leichte Streckung (a/b 1,2–1,3) erst sichtbar macht; länglich nach Mauchly (exakt, p = W^((ν − 1)/2)) bei p < 0,05 und a/b ≥ 1,15, ab 100 Schuss aus 5 Scheiben (B23) | Zeitraum | B | SP-2.7, Fachkern (`periodShape`, `periodPattern`) |
-| L10 | Lage über Zeit | Schwerpunkt je Scheibe (ab 3 Schuss mit Lage) als Wolke mit Pfad, nach n gezeichnet; die Mitte ist die aller Schüsse (der geviertelte Kreis im Bild); versetzt nach zwei Ebenen ([[adr-034]], `levels.ts`): Vortest auf Wandern der Abende mit α 0,25, ohne Wandern alle Schüsse als eine Stichprobe, sonst jeder Abend; ab 5 Scheiben (B25). Eine Trefferlage nur als Summe (Ausdruck, [[adr-033]]) kann hier später zählen, nie in L9 und L7 | Zeitraum | B | SP-2.7, Fachkern (`positionPoints`, `positionOverTime`, `levelEstimate`) |
+| L10 | Lage über Zeit | Schwerpunkt je Scheibe (ab 3 Schuss mit Lage) als Wolke mit Pfad, nach n gezeichnet; die Mitte ist die aller Schüsse (der geviertelte Kreis im Bild); versetzt nach zwei Ebenen je Richtung ([[adr-034]], `levels.ts`): seitlich und in der Höhe je ein Vortest auf Wandern der Abende mit α 0,5, ohne Wandern alle Schüsse als eine Stichprobe, sonst jeder Abend; beide nach Bonferroni; dazu der Bereich, in dem die Mitte zu 95 % liegt (je Richtung t zu 97,5 %), als feiner Rahmen um den Kreis, er schließt die Mitte der Scheibe genau bei „versetzt“ aus; ab 5 Scheiben (B25). Eine Trefferlage nur als Summe (Ausdruck, [[adr-033]]) kann hier später zählen, nie in L9 und L7 | Zeitraum | B | SP-2.7, Fachkern (`positionPoints`, `positionOverTime`, `levelEstimate`) |
 | L11 | Visierkorrektur in Klicks | **entfernt:** keine Hinweise zum Visier; Spiegel rechnet, was die Lage kostet (L4), nicht, was man verstellen soll | – | – | entfernt (SP-1.12) |
 
 ### 4 Verteilung
@@ -168,7 +168,7 @@ Nur endgültige, vollständige Scheiben, ohne einen verdächtigen Schuss unter d
 |---|---|---|---|---|
 | C1 | Serie gegen Serie | alle Serien mit jeder Kennzahl, beste und engste markiert | A | SP-1.8 |
 | C2 | Scheibe gegen Scheibe | zwei Scheiben einer Familie Schuss für Schuss, die Wertungsschüsse wie am Ausdruck: Ergebnis über die Werte der Schüsse in der Wertung, Streuung über die Abstände zur Mitte der eigenen Scheibe (wie σ: mit Lage, ohne verdächtige), beide Mann-Whitney zweiseitig, α 0,05; Lage über Hotelling-T² für zwei Stichproben, F(2, n₁ + n₂ − 3); ein Urteil ab 5 Schuss je Scheibe; Fehlalarm höchstens etwa 5,5 % (B26–B28); Bild beider Scheiben übereinander in zwei Farben auf der Seite Vergleichen ([[spiegel-vergleichen]]) | A | SP-2.2, Fachkern (`compareShots`, `compareSides`, `compareCenters`, `comparePicture`) |
-| C3 | Zeitraum gegen Zeitraum | Werte über alle Schüsse zweier Zeiträume ([[adr-034]]); Urteil über zwei Ebenen: Mittel (Ø, Quote) mit Vortest auf Wandern der Abende (α 0,25) und Welch über beide Seiten, Streuung über die Varianzen (F-Test der gepoolten, bei wandernder Präzision Welch-t über ln sⱼ², B29), zweiseitig, α 0,05; ohne Streuung der Schusswerte (Einheiten nur aus Serien) und ohne Pooling Mann-Whitney über die Werte je Scheibe, bis 20 Scheiben je Seite genau ausgezählt; Δ der Werte; Urteil höher, tiefer oder unklar ab fünf Scheiben je Seite, unklar auch, wenn Test und Mittel verschieden zeigen; Fehlalarm höchstens etwa 5 % (B19); die Lage über alle Schüsse und zwei Ebenen (ab 5 Scheiben je Seite, B28); auf der Seite Vergleichen mit zwei Umrissen (Hälfte und 9 von 10 der Schüsse) ab 50 Schuss je Seite ([[spiegel-vergleichen]]); Scheiben in beiden Zeiträumen zählen nur in A | A | SP-2.2, Fachkern (`compareValues`, `compareSamples`, `compareCenterGroups`, `comparePicture`) |
+| C3 | Zeitraum gegen Zeitraum | Werte über alle Schüsse zweier Zeiträume ([[adr-034]]); Urteil über zwei Ebenen: Mittel (Ø, Quote) mit Vortest auf Wandern der Abende (α 0,5) und Welch über beide Seiten, Streuung über die Varianzen (F-Test der gepoolten, bei wandernder Präzision Welch-t über ln sⱼ², B29), zweiseitig, α 0,05; ohne Streuung der Schusswerte (Einheiten nur aus Serien) und ohne Pooling Mann-Whitney über die Werte je Scheibe, bis 20 Scheiben je Seite genau ausgezählt; Δ der Werte; Urteil höher, tiefer oder unklar ab fünf Scheiben je Seite, unklar auch, wenn Test und Mittel verschieden zeigen; Fehlalarm höchstens etwa 5 % (B19); die Lage über alle Schüsse und zwei Ebenen je Richtung nach Bonferroni (ab 5 Scheiben je Seite, B28); auf der Seite Vergleichen mit zwei Umrissen (Hälfte und 9 von 10 der Schüsse) ab 50 Schuss je Seite ([[spiegel-vergleichen]]); Scheiben in beiden Zeiträumen zählen nur in A | A | SP-2.2, Fachkern (`compareValues`, `compareSamples`, `compareCenterGroups`, `comparePicture`) |
 | C4 | Gegen den eigenen Schnitt | Δ der neuesten Scheibe im Zeitraum zum Schnitt der 30 Tage davor (ab drei Scheiben), Perzentil unter den letzten 50 mit ihr (ab zehn, gleiche zur Hälfte), beides über alle Scheiben der Familie, nicht nur im Zeitraum | A | SP-2.2, Fachkern (`againstOwnAverage`); die Oberfläche zeigt seit U2 nur den Abstand zum Schnitt der fünf Scheiben davor, ein Bezug für eine Scheibe ([[spiegel-durchsicht]]) |
 | C5 | Merkmal A gegen B | Welch-t, Mann-Whitney, F-Test; Urteil besser, schlechter oder unklar | B | SP-2.2 nach SP-2.3 |
 | C6 | Vorher/Nachher | Scheiben vor und nach einem Ereignis, gegen den Trend geprüft | B | SP-2.2 nach SP-2.3 |
@@ -215,7 +215,7 @@ Nur endgültige, vollständige Scheiben, ohne einen verdächtigen Schuss unter d
 ## Ehrliche Zahlen
 
 - **Mindestzahl, sonst „–“** (SF-61): Streukreis ab 3, aussagekräftig ab 10; R50 ab 5; Form ab 3, ihr Winkel nur bei gestreckter Gruppe ab 10; Richtungsuhr ab 30; Erkenntnisse über Zeiträume (Schussposition, Reaktion nach Fehler, Tempo gegen Wert) erst ab einigen hundert Schuss oder 20 Ereignissen.
-- **Werte über die Schüsse, Urteile über Schüsse und Abende** ([[adr-034]]): Was sich über Schüsse mitteln lässt (Ø, Quoten, Streuung, Lage), zählt über einen Zeitraum jeden Schuss; eine Scheibe mit 10 Schuss wiegt ein Viertel einer mit 40. Ein Urteil prüft zuerst, ob die Abende stärker wandern, als der Zufall der Schüsse erklärt (α 0,25); dann zählt jeder Abend für sich. Je Scheibe bleibt, was Scheiben zeigt: Verlauf, Formband, Boden und Decke, Rekorde einer Scheibe, „bedeutsam“ und das Tempo.
+- **Werte über die Schüsse, Urteile über Schüsse und Abende** ([[adr-034]]): Was sich über Schüsse mitteln lässt (Ø, Quoten, Streuung, Lage), zählt über einen Zeitraum jeden Schuss; eine Scheibe mit 10 Schuss wiegt ein Viertel einer mit 40. Ein Urteil prüft zuerst, ob die Abende stärker wandern, als der Zufall der Schüsse erklärt (α 0,5, die Lage je Richtung); dann zählt jeder Abend für sich. Je Scheibe bleibt, was Scheiben zeigt: Verlauf, Formband, Boden und Decke, Rekorde einer Scheibe, „bedeutsam“ und das Tempo.
 - **Unsicherheit zeigen:** σ über χ², Lage über Hotelling, Quoten über Wilson, Trends über Mann-Kendall. Bei 10 Schuss reicht der 95-%-Bereich für σ von −26 % bis +46 %, ist also gut zwei Drittel so breit wie σ selbst; ±10 % erreicht er erst bei rund 120 Schuss.
 - **Gleiches n:** Streukreis, Extreme Spread und längste Folge wachsen mit n, der beste Teiler sinkt mit n (Streukreis über 40 gegen 10 Schuss +32 %, B3); R50 fällt bei kleinem n leicht zu klein aus (bei 10 Schuss −4 %, B4; der Faktor √((n − 1)/n) gilt genau nur für den mittleren Radius). σ̂ ist das stabilste Maß für Verläufe über unterschiedliche Schusszahlen.
 - **Robust als Standard in Verläufen:** Median, R50, MAD, Quantilbänder.
@@ -240,7 +240,7 @@ Nur endgültige, vollständige Scheiben, ohne einen verdächtigen Schuss unter d
 Jede Zahl aus einer Simulation, die ein Hilfetext nennt ([[spiegel-statistics-help]]), steht hier und lässt sich nachrechnen: `pnpm --filter @vereinsheim/shot-help simulate` (`packages/shot-help/scripts/simulate.ts`). Methode: mulberry32 mit Box-Muller, fester Seed je Fall, Lagen auf ganze µm, Wertung über `scoreFromCoordinates`, nur die echten Funktionen aus `shot-core`; 5 000 Wiederholungen je Fall, beim Mehrfachtest (B1) 20 000. Normalgruppen: Luftgewehr σ 1,5 mm, Luftpistole σ 15 mm je Richtung. B19 und B20 mit 2 000 Wiederholungen je Fall, je Scheibe 40 Schuss Luftgewehr; die Zahlen über einen Zeitraum
 über Schüsse und Abende ([[adr-034]], 22. Oktober 2026: B19, B25, B28 der Zeiträume, B29) zusätzlich im Raster aus
 Wandern der Abende (τ 0 bis 0,3 σ je Richtung, bei B29 Präzision × exp(N(0, w²)), w 0 bis 0,2), Schusszahlen (alle 40
-oder jede dritte Scheibe 10) und 5, 10, 20 Scheiben, je Zelle 5 000 Wiederholungen; Abnahme Fehlalarm höchstens 6,5 %
+oder jede dritte Scheibe 10) und 5, 10, 20 Scheiben, je Zelle 20 000 Wiederholungen; Abnahme Fehlalarm höchstens 6,5 %
 je Zelle, höchstens 5,5 % ohne Wandern. Stand nach SP-1.12 (7. Oktober 2026), Ausreißer schrittweise, Form ohne Ausreißer, Zeiträume (8. Oktober 2026), B19 mit einer kleinen Veränderung und dem Unterschied je Schuss, B9 auch in ganzen Ringen, B21 neu (Prüfung, 9. Oktober 2026), Wertung mit Meytons Toleranz von 10 µm (SF-75, 9. Oktober 2026; dadurch neu B6, B10, B19, B20, alle übrigen Zeilen unverändert), B1 mit dem Urteil der Ermüdung und B21 neu (20. Oktober 2026), B1 mit Pause und B22 neu (21. Oktober 2026), B26–B28 neu für die Seite Vergleichen (zwei Scheiben zu 20, 40 und 60 Schuss, zwei Seiten zu 5, 10 und 20 Scheiben, 21. Oktober 2026):
 
 ```
@@ -284,9 +284,9 @@ B18  als gestreckt gemeldet, rund (alt → ohne Ausreißer): 10: 5,0 % → 4,1 %
 B18  als gestreckt gemeldet, a/b 2 (alt → ohne Ausreißer): 10: 35,5 % → 30,3 %, 20: 74,1 % → 68,7 %, 40: 97,4 % → 96,0 %
 B18  als gestreckt gemeldet, a/b 3 (alt → ohne Ausreißer): 10: 77,8 % → 66,5 %, 20: 98,9 % → 96,7 %
 B18  als gestreckt gemeldet, rund mit Abreißern (alt → ohne Ausreißer): 10: 13,4 % → 6,3 %, 20: 15,8 % → 7,6 %, 40: 13,0 % → 7,8 %
-B19  gleich, Urteil trotz gleicher Streuung: 5/5 3,0 % (bedeutsam 62,3 %), 10/10 2,5 % (bedeutsam 50,7 %), 20/20 4,0 % (bedeutsam 36,2 %), 30/30 4,0 % (bedeutsam 24,1 %); Δ Ø je Schuss im Mittel 0,000
-B19  σ 1,5 → 1,3 mm, „höher“ erkannt: 5/5 62,1 % (bedeutsam 99,1 %), 10/10 95,0 % (bedeutsam 99,8 %), 20/20 100,0 % (bedeutsam 100,0 %), 30/30 100,0 % (bedeutsam 100,0 %); Δ Ø je Schuss im Mittel 0,101
-B19  σ 1,5 → 1,45 mm, „höher“ erkannt: 5/5 6,0 % (bedeutsam 69,3 %), 10/10 11,9 % (bedeutsam 63,3 %), 20/20 21,4 % (bedeutsam 64,2 %), 30/30 30,9 % (bedeutsam 65,5 %); Δ Ø je Schuss im Mittel 0,025
+B19  gleich, Urteil trotz gleicher Streuung: 5/5 2,2 % (bedeutsam 62,3 %), 10/10 2,1 % (bedeutsam 50,7 %), 20/20 3,8 % (bedeutsam 36,2 %), 30/30 3,5 % (bedeutsam 24,1 %); Δ Ø je Schuss im Mittel 0,000
+B19  σ 1,5 → 1,3 mm, „höher“ erkannt: 5/5 58,4 % (bedeutsam 99,1 %), 10/10 94,5 % (bedeutsam 99,8 %), 20/20 100,0 % (bedeutsam 100,0 %), 30/30 100,0 % (bedeutsam 100,0 %); Δ Ø je Schuss im Mittel 0,101
+B19  σ 1,5 → 1,45 mm, „höher“ erkannt: 5/5 4,6 % (bedeutsam 69,3 %), 10/10 10,8 % (bedeutsam 63,3 %), 20/20 20,6 % (bedeutsam 64,2 %), 30/30 29,9 % (bedeutsam 65,5 %); Δ Ø je Schuss im Mittel 0,025
 B20  Scheiben im Formband (60 Scheiben, ab der zehnten): Median 68,6 %, 95 % zwischen 56,9 % und 80,4 %
 B21  Ermüdung LG σ 1,5 mm, 20 Schuss: Fehlalarm Zehntel 4,5 %, ganze Ringe 0,9 %; Nachlassen erkannt Zehntel 39,9 %, ganze Ringe 22,7 %
 B21  Ermüdung LG σ 1,5 mm, 40 Schuss: Fehlalarm Zehntel 5,1 %, ganze Ringe 1,1 %; Nachlassen erkannt Zehntel 39,9 %, ganze Ringe 24,5 %
@@ -301,23 +301,27 @@ B24  Ausreißerrichtung rund, Richtung gemeldet: 5: 0,0 %, 10: 1,6 %, 20: 1,7 %,
 B24  Ausreißerrichtung a/b 2, Richtung gemeldet: 5: 0,0 %, 10: 2,8 %, 20: 2,6 %, 40: 2,8 %
 B24  Ausreißerrichtung jeder zehnte 2σ links unten, erkannt: 5: 0,0 %, 10: 26,9 %, 20: 57,2 %, 40: 90,9 %
 B24  Ausreißerrichtung jeder zehnte 3σ links unten, erkannt: 5: 0,0 %, 10: 97,6 %, 20: 100,0 %, 40: 100,0 %
-B25  Lage ohne Versatz, versetzt gemeldet, Wandern 0,0, alle 40: 5: 3,9 %, 10: 3,6 %, 20: 4,2 %
-B25  Lage ohne Versatz, versetzt gemeldet, Wandern 0,0, jede dritte 10: 5: 4,0 %, 10: 3,9 %, 20: 3,8 %
-B25  Lage ohne Versatz, versetzt gemeldet, Wandern 0,1, alle 40: 5: 5,7 %, 10: 4,6 %, 20: 5,0 %
-B25  Lage ohne Versatz, versetzt gemeldet, Wandern 0,1, jede dritte 10: 5: 5,7 %, 10: 5,6 %, 20: 5,8 %
-B25  Lage ohne Versatz, versetzt gemeldet, Wandern 0,2, alle 40: 5: 4,7 %, 10: 3,9 %, 20: 4,5 %
-B25  Lage ohne Versatz, versetzt gemeldet, Wandern 0,2, jede dritte 10: 5: 6,0 %, 10: 4,7 %, 20: 5,7 %
-B25  Lage ohne Versatz, versetzt gemeldet, Wandern 0,3, alle 40: 5: 2,4 %, 10: 4,8 %, 20: 4,9 %
-B25  Lage ohne Versatz, versetzt gemeldet, Wandern 0,3, jede dritte 10: 5: 4,0 %, 10: 5,0 %, 20: 5,0 %
-B25  Lage Versatz 0,3σ erkannt, Wandern 0,0, alle 40: 5: 74,1 %, 10: 99,3 %, 20: 100,0 %
-B25  Lage Versatz 0,3σ erkannt, Wandern 0,0, jede dritte 10: 5: 71,2 %, 10: 97,5 %, 20: 100,0 %
-B25  Lage Versatz 0,3σ erkannt, Wandern 0,1, alle 40: 5: 51,5 %, 10: 96,4 %, 20: 100,0 %
-B25  Lage Versatz 0,3σ erkannt, Wandern 0,1, jede dritte 10: 5: 51,7 %, 10: 90,8 %, 20: 100,0 %
-B25  Lage Versatz 0,3σ erkannt, Wandern 0,2, alle 40: 5: 22,1 %, 10: 78,6 %, 20: 99,3 %
-B25  Lage Versatz 0,3σ erkannt, Wandern 0,2, jede dritte 10: 5: 23,0 %, 10: 69,0 %, 20: 97,7 %
-B25  Lage Versatz 0,3σ erkannt, Wandern 0,3, alle 40: 5: 12,5 %, 10: 52,2 %, 20: 91,2 %
-B25  Lage Versatz 0,3σ erkannt, Wandern 0,3, jede dritte 10: 5: 13,7 %, 10: 47,1 %, 20: 85,2 %
-B25  Lage höchster Fehlalarm: 6,0 %, ohne Wandern 4,2 %
+B25  Lage ohne Versatz, versetzt gemeldet, Wandern 0,0, alle 40: 5: 2,5 %, 10: 2,9 %, 20: 3,2 %
+B25  Lage ohne Versatz, versetzt gemeldet, Wandern 0,0, jede dritte 10: 5: 2,8 %, 10: 2,8 %, 20: 3,2 %
+B25  Lage ohne Versatz, versetzt gemeldet, Wandern 0,1, alle 40: 5: 4,2 %, 10: 4,2 %, 20: 4,4 %
+B25  Lage ohne Versatz, versetzt gemeldet, Wandern 0,1, jede dritte 10: 5: 4,1 %, 10: 4,3 %, 20: 4,9 %
+B25  Lage ohne Versatz, versetzt gemeldet, Wandern 0,2, alle 40: 5: 5,1 %, 10: 5,1 %, 20: 4,8 %
+B25  Lage ohne Versatz, versetzt gemeldet, Wandern 0,2, jede dritte 10: 5: 5,8 %, 10: 5,5 %, 20: 5,6 %
+B25  Lage ohne Versatz, versetzt gemeldet, Wandern 0,3, alle 40: 5: 5,3 %, 10: 5,0 %, 20: 5,0 %
+B25  Lage ohne Versatz, versetzt gemeldet, Wandern 0,3, jede dritte 10: 5: 6,1 %, 10: 5,4 %, 20: 5,4 %
+B25  Lage Versatz 0,3σ erkannt, Wandern 0,0, alle 40: 5: 74,4 %, 10: 99,7 %, 20: 100,0 %
+B25  Lage Versatz 0,3σ erkannt, Wandern 0,0, jede dritte 10: 5: 67,0 %, 10: 98,5 %, 20: 100,0 %
+B25  Lage Versatz 0,3σ erkannt, Wandern 0,1, alle 40: 5: 60,8 %, 10: 98,1 %, 20: 100,0 %
+B25  Lage Versatz 0,3σ erkannt, Wandern 0,1, jede dritte 10: 5: 55,1 %, 10: 93,8 %, 20: 100,0 %
+B25  Lage Versatz 0,3σ erkannt, Wandern 0,2, alle 40: 5: 36,6 %, 10: 83,3 %, 20: 99,6 %
+B25  Lage Versatz 0,3σ erkannt, Wandern 0,2, jede dritte 10: 5: 34,4 %, 10: 74,8 %, 20: 98,4 %
+B25  Lage Versatz 0,3σ erkannt, Wandern 0,3, alle 40: 5: 22,4 %, 10: 57,5 %, 20: 92,8 %
+B25  Lage Versatz 0,3σ erkannt, Wandern 0,3, jede dritte 10: 5: 22,5 %, 10: 50,3 %, 20: 86,7 %
+B25  Lage nur seitlich wandernd, ohne Versatz versetzt gemeldet, Wandern 0,3, alle 40: 5: 3,7 %, 10: 3,9 %, 20: 4,2 %
+B25  Lage nur seitlich wandernd, ohne Versatz versetzt gemeldet, Wandern 0,3, jede dritte 10: 5: 4,4 %, 10: 4,2 %, 20: 4,2 %
+B25  Lage nur seitlich wandernd, Versatz 0,3σ in der Höhe erkannt, Wandern 0,3, alle 40: 5: 75,6 %, 10: 99,8 %, 20: 100,0 %
+B25  Lage nur seitlich wandernd, Versatz 0,3σ in der Höhe erkannt, Wandern 0,3, jede dritte 10: 5: 67,7 %, 10: 98,3 %, 20: 100,0 %
+B25  Lage höchster Fehlalarm: 6,1 %, ohne Wandern 3,2 %
 B26  Ergebnis zweier Scheiben LG σ 1,5 mm, Zehntel: Fehlalarm 20: 4,5 %, 40: 4,4 %, 60: 5,5 %
 B26  Ergebnis zweier Scheiben LG σ 1,5 mm, Zehntel: B σ ×1,25 erkannt 20: 22,3 %, 40: 40,5 %, 60: 55,2 %
 B26  Ergebnis zweier Scheiben LG σ 1,5 mm, ganze Ringe: Fehlalarm 20: 2,4 %, 40: 4,6 %, 60: 4,5 %
@@ -332,53 +336,53 @@ B27  Streuung zweier Scheiben B σ ×1,25 erkannt: 20: 22,3 %, 40: 39,3 %, 60: 5
 B27  Streuung zweier Scheiben B σ ×1,5 erkannt: 20: 55,7 %, 40: 85,6 %, 60: 96,3 %
 B28  Lage Schuss für Schuss, ohne Versatz, versetzt gemeldet: 20: 5,4 %, 40: 5,0 %, 60: 4,9 %
 B28  Lage Schuss für Schuss, Versatz 0,5σ erkannt: 20: 25,3 %, 40: 49,1 %, 60: 68,6 %
-B28  Lage zweier Zeiträume ohne Versatz, versetzt gemeldet, Wandern 0,0, alle 40: 5: 2,7 %, 10: 3,5 %, 20: 4,4 %
-B28  Lage zweier Zeiträume ohne Versatz, versetzt gemeldet, Wandern 0,0, jede dritte 10: 5: 3,0 %, 10: 3,3 %, 20: 4,3 %
-B28  Lage zweier Zeiträume ohne Versatz, versetzt gemeldet, Wandern 0,1, alle 40: 5: 3,9 %, 10: 4,6 %, 20: 4,2 %
-B28  Lage zweier Zeiträume ohne Versatz, versetzt gemeldet, Wandern 0,1, jede dritte 10: 5: 4,1 %, 10: 4,5 %, 20: 4,4 %
-B28  Lage zweier Zeiträume ohne Versatz, versetzt gemeldet, Wandern 0,2, alle 40: 5: 2,7 %, 10: 4,2 %, 20: 4,5 %
-B28  Lage zweier Zeiträume ohne Versatz, versetzt gemeldet, Wandern 0,2, jede dritte 10: 5: 3,5 %, 10: 5,1 %, 20: 4,9 %
-B28  Lage zweier Zeiträume ohne Versatz, versetzt gemeldet, Wandern 0,3, alle 40: 5: 3,7 %, 10: 4,7 %, 20: 4,7 %
-B28  Lage zweier Zeiträume ohne Versatz, versetzt gemeldet, Wandern 0,3, jede dritte 10: 5: 3,4 %, 10: 5,3 %, 20: 5,4 %
-B28  Lage zweier Zeiträume Versatz 0,3σ erkannt, Wandern 0,0, alle 40: 5: 55,9 %, 10: 95,5 %, 20: 100,0 %
-B28  Lage zweier Zeiträume Versatz 0,3σ erkannt, Wandern 0,0, jede dritte 10: 5: 47,0 %, 10: 86,4 %, 20: 99,5 %
-B28  Lage zweier Zeiträume Versatz 0,3σ erkannt, Wandern 0,1, alle 40: 5: 39,0 %, 10: 84,3 %, 20: 99,5 %
-B28  Lage zweier Zeiträume Versatz 0,3σ erkannt, Wandern 0,1, jede dritte 10: 5: 34,9 %, 10: 72,5 %, 20: 97,6 %
-B28  Lage zweier Zeiträume Versatz 0,3σ erkannt, Wandern 0,2, alle 40: 5: 18,6 %, 10: 56,5 %, 20: 90,8 %
-B28  Lage zweier Zeiträume Versatz 0,3σ erkannt, Wandern 0,2, jede dritte 10: 5: 17,8 %, 10: 46,9 %, 20: 81,6 %
-B28  Lage zweier Zeiträume Versatz 0,3σ erkannt, Wandern 0,3, alle 40: 5: 12,4 %, 10: 35,1 %, 20: 68,2 %
-B28  Lage zweier Zeiträume Versatz 0,3σ erkannt, Wandern 0,3, jede dritte 10: 5: 11,9 %, 10: 29,2 %, 20: 58,3 %
-B28  Lage zweier Zeiträume höchster Fehlalarm: 5,4 %, ohne Wandern 4,4 %
-B19  Ø je Schuss, Urteil trotz gleicher Streuung, Wandern 0,0, alle 40: 5: 2,6 %, 10: 4,0 %, 20: 3,7 %
-B19  Ø je Schuss, Urteil trotz gleicher Streuung, Wandern 0,0, jede dritte 10: 5: 3,4 %, 10: 3,6 %, 20: 3,2 %
-B19  Ø je Schuss, Urteil trotz gleicher Streuung, Wandern 0,1, alle 40: 5: 3,2 %, 10: 3,8 %, 20: 4,3 %
-B19  Ø je Schuss, Urteil trotz gleicher Streuung, Wandern 0,1, jede dritte 10: 5: 3,0 %, 10: 3,8 %, 20: 4,2 %
-B19  Ø je Schuss, Urteil trotz gleicher Streuung, Wandern 0,2, alle 40: 5: 2,9 %, 10: 3,8 %, 20: 4,3 %
-B19  Ø je Schuss, Urteil trotz gleicher Streuung, Wandern 0,2, jede dritte 10: 5: 3,5 %, 10: 3,9 %, 20: 4,2 %
-B19  Ø je Schuss, Urteil trotz gleicher Streuung, Wandern 0,3, alle 40: 5: 3,7 %, 10: 3,9 %, 20: 4,8 %
-B19  Ø je Schuss, Urteil trotz gleicher Streuung, Wandern 0,3, jede dritte 10: 5: 3,8 %, 10: 4,4 %, 20: 4,9 %
-B19  Ø je Schuss, σ 1,5 → 1,3 mm erkannt, Wandern 0,0, alle 40: 5: 63,0 %, 10: 94,9 %, 20: 100,0 %
-B19  Ø je Schuss, σ 1,5 → 1,3 mm erkannt, Wandern 0,0, jede dritte 10: 5: 55,5 %, 10: 87,6 %, 20: 99,5 %
-B19  Ø je Schuss, σ 1,5 → 1,3 mm erkannt, Wandern 0,1, alle 40: 5: 64,5 %, 10: 95,1 %, 20: 100,0 %
-B19  Ø je Schuss, σ 1,5 → 1,3 mm erkannt, Wandern 0,1, jede dritte 10: 5: 56,4 %, 10: 87,7 %, 20: 99,5 %
-B19  Ø je Schuss, σ 1,5 → 1,3 mm erkannt, Wandern 0,2, alle 40: 5: 62,4 %, 10: 93,5 %, 20: 99,9 %
-B19  Ø je Schuss, σ 1,5 → 1,3 mm erkannt, Wandern 0,2, jede dritte 10: 5: 53,9 %, 10: 85,6 %, 20: 99,5 %
-B19  Ø je Schuss, σ 1,5 → 1,3 mm erkannt, Wandern 0,3, alle 40: 5: 57,7 %, 10: 90,1 %, 20: 99,7 %
-B19  Ø je Schuss, σ 1,5 → 1,3 mm erkannt, Wandern 0,3, jede dritte 10: 5: 49,2 %, 10: 81,5 %, 20: 98,7 %
-B19  Ø je Schuss höchster Fehlalarm: 4,9 %, ohne Wandern 4,0 %
-B29  Streuung, Urteil trotz gleicher Streuung, Wandern 0,0, alle 40: 5: 3,2 %, 10: 4,1 %, 20: 4,7 %
-B29  Streuung, Urteil trotz gleicher Streuung, Wandern 0,0, jede dritte 10: 5: 3,1 %, 10: 4,0 %, 20: 4,0 %
-B29  Streuung, Urteil trotz gleicher Streuung, Wandern 0,1, alle 40: 5: 4,4 %, 10: 4,8 %, 20: 4,7 %
-B29  Streuung, Urteil trotz gleicher Streuung, Wandern 0,1, jede dritte 10: 5: 4,8 %, 10: 4,8 %, 20: 5,0 %
-B29  Streuung, Urteil trotz gleicher Streuung, Wandern 0,2, alle 40: 5: 4,0 %, 10: 5,3 %, 20: 5,4 %
-B29  Streuung, Urteil trotz gleicher Streuung, Wandern 0,2, jede dritte 10: 5: 4,1 %, 10: 4,5 %, 20: 5,0 %
-B29  Streuung σ 1,5 → 1,3 mm erkannt, Wandern 0,0, alle 40: 5: 66,7 %, 10: 95,5 %, 20: 100,0 %
-B29  Streuung σ 1,5 → 1,3 mm erkannt, Wandern 0,0, jede dritte 10: 5: 55,8 %, 10: 79,0 %, 20: 96,9 %
-B29  Streuung σ 1,5 → 1,3 mm erkannt, Wandern 0,1, alle 40: 5: 32,1 %, 10: 63,5 %, 20: 92,0 %
-B29  Streuung σ 1,5 → 1,3 mm erkannt, Wandern 0,1, jede dritte 10: 5: 26,8 %, 10: 50,2 %, 20: 81,2 %
-B29  Streuung σ 1,5 → 1,3 mm erkannt, Wandern 0,2, alle 40: 5: 14,4 %, 10: 29,3 %, 20: 53,2 %
-B29  Streuung σ 1,5 → 1,3 mm erkannt, Wandern 0,2, jede dritte 10: 5: 14,0 %, 10: 24,3 %, 20: 49,0 %
-B29  Streuung höchster Fehlalarm: 5,4 %, ohne Wandern 4,7 %
+B28  Lage zweier Zeiträume ohne Versatz, versetzt gemeldet, Wandern 0,0, alle 40: 5: 1,9 %, 10: 2,6 %, 20: 3,4 %
+B28  Lage zweier Zeiträume ohne Versatz, versetzt gemeldet, Wandern 0,0, jede dritte 10: 5: 2,0 %, 10: 2,5 %, 20: 3,1 %
+B28  Lage zweier Zeiträume ohne Versatz, versetzt gemeldet, Wandern 0,1, alle 40: 5: 3,1 %, 10: 4,0 %, 20: 4,8 %
+B28  Lage zweier Zeiträume ohne Versatz, versetzt gemeldet, Wandern 0,1, jede dritte 10: 5: 3,1 %, 10: 3,8 %, 20: 4,5 %
+B28  Lage zweier Zeiträume ohne Versatz, versetzt gemeldet, Wandern 0,2, alle 40: 5: 4,0 %, 10: 4,4 %, 20: 4,8 %
+B28  Lage zweier Zeiträume ohne Versatz, versetzt gemeldet, Wandern 0,2, jede dritte 10: 5: 4,3 %, 10: 5,1 %, 20: 5,0 %
+B28  Lage zweier Zeiträume ohne Versatz, versetzt gemeldet, Wandern 0,3, alle 40: 5: 4,3 %, 10: 4,7 %, 20: 4,9 %
+B28  Lage zweier Zeiträume ohne Versatz, versetzt gemeldet, Wandern 0,3, jede dritte 10: 5: 4,7 %, 10: 4,9 %, 20: 5,0 %
+B28  Lage zweier Zeiträume Versatz 0,3σ erkannt, Wandern 0,0, alle 40: 5: 55,7 %, 10: 94,7 %, 20: 100,0 %
+B28  Lage zweier Zeiträume Versatz 0,3σ erkannt, Wandern 0,0, jede dritte 10: 5: 45,8 %, 10: 85,5 %, 20: 99,7 %
+B28  Lage zweier Zeiträume Versatz 0,3σ erkannt, Wandern 0,1, alle 40: 5: 42,1 %, 10: 85,4 %, 20: 99,6 %
+B28  Lage zweier Zeiträume Versatz 0,3σ erkannt, Wandern 0,1, jede dritte 10: 5: 36,5 %, 10: 74,0 %, 20: 98,1 %
+B28  Lage zweier Zeiträume Versatz 0,3σ erkannt, Wandern 0,2, alle 40: 5: 24,2 %, 10: 58,3 %, 20: 91,2 %
+B28  Lage zweier Zeiträume Versatz 0,3σ erkannt, Wandern 0,2, jede dritte 10: 5: 22,5 %, 10: 48,9 %, 20: 84,4 %
+B28  Lage zweier Zeiträume Versatz 0,3σ erkannt, Wandern 0,3, alle 40: 5: 14,5 %, 10: 35,9 %, 20: 68,9 %
+B28  Lage zweier Zeiträume Versatz 0,3σ erkannt, Wandern 0,3, jede dritte 10: 5: 14,1 %, 10: 29,7 %, 20: 59,2 %
+B28  Lage zweier Zeiträume höchster Fehlalarm: 5,1 %, ohne Wandern 3,4 %
+B19  Ø je Schuss, Urteil trotz gleicher Streuung, Wandern 0,0, alle 40: 5: 2,2 %, 10: 3,0 %, 20: 3,5 %
+B19  Ø je Schuss, Urteil trotz gleicher Streuung, Wandern 0,0, jede dritte 10: 5: 2,2 %, 10: 3,1 %, 20: 3,2 %
+B19  Ø je Schuss, Urteil trotz gleicher Streuung, Wandern 0,1, alle 40: 5: 2,4 %, 10: 3,0 %, 20: 3,7 %
+B19  Ø je Schuss, Urteil trotz gleicher Streuung, Wandern 0,1, jede dritte 10: 5: 2,4 %, 10: 3,0 %, 20: 3,4 %
+B19  Ø je Schuss, Urteil trotz gleicher Streuung, Wandern 0,2, alle 40: 5: 2,4 %, 10: 3,3 %, 20: 3,5 %
+B19  Ø je Schuss, Urteil trotz gleicher Streuung, Wandern 0,2, jede dritte 10: 5: 2,5 %, 10: 3,2 %, 20: 3,8 %
+B19  Ø je Schuss, Urteil trotz gleicher Streuung, Wandern 0,3, alle 40: 5: 2,8 %, 10: 3,6 %, 20: 4,3 %
+B19  Ø je Schuss, Urteil trotz gleicher Streuung, Wandern 0,3, jede dritte 10: 5: 2,9 %, 10: 3,7 %, 20: 4,2 %
+B19  Ø je Schuss, σ 1,5 → 1,3 mm erkannt, Wandern 0,0, alle 40: 5: 59,6 %, 10: 94,1 %, 20: 100,0 %
+B19  Ø je Schuss, σ 1,5 → 1,3 mm erkannt, Wandern 0,0, jede dritte 10: 5: 51,6 %, 10: 86,3 %, 20: 99,5 %
+B19  Ø je Schuss, σ 1,5 → 1,3 mm erkannt, Wandern 0,1, alle 40: 5: 59,7 %, 10: 94,3 %, 20: 100,0 %
+B19  Ø je Schuss, σ 1,5 → 1,3 mm erkannt, Wandern 0,1, jede dritte 10: 5: 51,1 %, 10: 86,2 %, 20: 99,6 %
+B19  Ø je Schuss, σ 1,5 → 1,3 mm erkannt, Wandern 0,2, alle 40: 5: 58,8 %, 10: 93,3 %, 20: 99,9 %
+B19  Ø je Schuss, σ 1,5 → 1,3 mm erkannt, Wandern 0,2, jede dritte 10: 5: 50,2 %, 10: 84,5 %, 20: 99,4 %
+B19  Ø je Schuss, σ 1,5 → 1,3 mm erkannt, Wandern 0,3, alle 40: 5: 52,8 %, 10: 89,6 %, 20: 99,7 %
+B19  Ø je Schuss, σ 1,5 → 1,3 mm erkannt, Wandern 0,3, jede dritte 10: 5: 44,6 %, 10: 80,3 %, 20: 98,7 %
+B19  Ø je Schuss höchster Fehlalarm: 4,3 %, ohne Wandern 3,5 %
+B29  Streuung, Urteil trotz gleicher Streuung, Wandern 0,0, alle 40: 5: 2,6 %, 10: 3,7 %, 20: 4,5 %
+B29  Streuung, Urteil trotz gleicher Streuung, Wandern 0,0, jede dritte 10: 5: 2,4 %, 10: 3,6 %, 20: 4,1 %
+B29  Streuung, Urteil trotz gleicher Streuung, Wandern 0,1, alle 40: 5: 4,3 %, 10: 4,9 %, 20: 5,0 %
+B29  Streuung, Urteil trotz gleicher Streuung, Wandern 0,1, jede dritte 10: 5: 4,0 %, 10: 4,9 %, 20: 5,0 %
+B29  Streuung, Urteil trotz gleicher Streuung, Wandern 0,2, alle 40: 5: 4,3 %, 10: 5,1 %, 20: 5,3 %
+B29  Streuung, Urteil trotz gleicher Streuung, Wandern 0,2, jede dritte 10: 5: 4,4 %, 10: 4,8 %, 20: 5,2 %
+B29  Streuung σ 1,5 → 1,3 mm erkannt, Wandern 0,0, alle 40: 5: 64,6 %, 10: 95,8 %, 20: 100,0 %
+B29  Streuung σ 1,5 → 1,3 mm erkannt, Wandern 0,0, jede dritte 10: 5: 48,3 %, 10: 75,5 %, 20: 96,3 %
+B29  Streuung σ 1,5 → 1,3 mm erkannt, Wandern 0,1, alle 40: 5: 31,6 %, 10: 64,9 %, 20: 93,0 %
+B29  Streuung σ 1,5 → 1,3 mm erkannt, Wandern 0,1, jede dritte 10: 5: 26,1 %, 10: 50,7 %, 20: 82,3 %
+B29  Streuung σ 1,5 → 1,3 mm erkannt, Wandern 0,2, alle 40: 5: 14,0 %, 10: 28,9 %, 20: 53,3 %
+B29  Streuung σ 1,5 → 1,3 mm erkannt, Wandern 0,2, jede dritte 10: 5: 13,5 %, 10: 25,5 %, 20: 48,1 %
+B29  Streuung höchster Fehlalarm: 5,3 %, ohne Wandern 4,5 %
 ```
 
 Zusätzlich aus den drei Prüfungen vom 6./7. Oktober (nur lesend, eigene Skripte): Ausreißer-Fehlalarm bei a/b 1,5 und 3 (Einzeltest mit α 0,05), Trennschärfe der Form (a/b 1,3: 28 % bei 40 Schuss), Effizienz der Streumaße gegenüber σ̂ (Streukreis 0,77 bei 10 und 0,39 bei 60 Schuss, mittlerer Radius 0,92, Höhe/Breite 0,23–0,43), Teiler-Ø gegen Ø je Schuss r = −0,998.

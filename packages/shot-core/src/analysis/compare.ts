@@ -14,7 +14,7 @@ import {
 } from "../metrics"
 import { quantile } from "../stats"
 import { densityGrid, patternHalf, type DensityGrid } from "./density"
-import { levelCompare, levelEstimate } from "./levels"
+import { levelCompareByAxis } from "./levels"
 import {
   PATTERN_DENSITY_FROM,
   PATTERN_SHOTS_MAX,
@@ -90,8 +90,8 @@ export function compareCenters(a: readonly Point[], b: readonly Point[]): Center
 
 /**
  * Lage zweier Zeiträume (C3) über alle Schüsse ([[adr-034]]): je Seite die Mitte aller Schüsse der Scheiben ab drei
- * Schuss mit Lage (`positionPoints`), der Unterschied über zwei Ebenen (`levelCompare`): Wandern die Abende einer Seite
- * nicht über den Zufall hinaus, zählt jeder Schuss, sonst jeder Abend. Versetzt bei p < 0,05, ein Urteil ab fünf
+ * Schuss mit Lage (`positionPoints`), der Unterschied über zwei Ebenen je Richtung (`levelCompareByAxis`): Wandern die
+ * Abende einer Seite in einer Richtung nicht über den Zufall hinaus, zählt dort jeder Schuss, sonst jeder Abend. Versetzt bei p < 0,05, ein Urteil ab fünf
  * Scheiben je Seite. Ohne Scheibe mit Lage auf einer Seite null.
  */
 export function compareCenterGroups(
@@ -106,10 +106,12 @@ export function compareCenterGroups(
       xUm: points.reduce((sum, p) => sum + p.n * p.center.xUm, 0) / shots,
       yUm: points.reduce((sum, p) => sum + p.n * p.center.yUm, 0) / shots,
     }
-    const estimate = levelEstimate(
-      points.map((p) => ({ n: p.n, mean: [p.center.xUm, p.center.yUm], scatter: p.scatter }))
-    )
-    return { n: points.length, center, estimate }
+    const groups = points.map((p) => ({
+      n: p.n,
+      mean: [p.center.xUm, p.center.yUm],
+      scatter: p.scatter,
+    }))
+    return { n: points.length, center, groups }
   }
   const sa = side(a)
   const sb = side(b)
@@ -122,9 +124,8 @@ export function compareCenterGroups(
     distanceUm: Math.hypot(shiftUm.xUm, shiftUm.yUm),
   }
   const few = { ...summary, p: null, verdict: "few" as const }
-  if (sa.n < MIN_CARDS_PER_SIDE || sb.n < MIN_CARDS_PER_SIDE || !sa.estimate || !sb.estimate)
-    return few
-  const compared = levelCompare(sa.estimate, sb.estimate)
+  if (sa.n < MIN_CARDS_PER_SIDE || sb.n < MIN_CARDS_PER_SIDE) return few
+  const compared = levelCompareByAxis(sa.groups, sb.groups)
   if (!compared) return few
   return { ...summary, p: compared.p, verdict: compared.p < ALPHA ? "shifted" : "none" }
 }

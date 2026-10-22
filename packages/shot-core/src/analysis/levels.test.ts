@@ -1,13 +1,16 @@
 import { describe, expect, it } from "vitest"
 
 import { metricByKey, type MetricDefinition } from "../metrics"
-import { c4, fSurvival } from "../stats"
+import { c4, fQuantile, fSurvival } from "../stats"
 import { confidenceOf } from "./hotelling"
 import {
+  axisGroups,
   compareValues,
   levelCompare,
+  levelCompareByAxis,
   levelEstimate,
   levelTestZero,
+  levelTestZeroByAxis,
   pooledValue,
   shotGroup,
   WANDER_ALPHA,
@@ -121,6 +124,69 @@ describe("zwei Ebenen: Schüsse in Scheiben", () => {
     expect(levelEstimate([ones([1, 2, 3])])).toBeNull()
     expect(levelEstimate([ones([2, 2]), ones([3, 3])])).toBeNull()
     expect(levelEstimate([])).toBeNull()
+  })
+})
+
+describe("Lage je Richtung", () => {
+  // seitlich wie die wandernden Abende oben, in der Höhe ohne Wandern: je Scheibe 1, 3, 1, 3
+  const cards = [
+    [1, 2, 3, 4],
+    [2, 3, 4, 5],
+    [3, 4, 5, 6],
+  ].map((xs) => shotGroup(xs.map((x, i) => [x, i % 2 ? 3 : 1])))
+
+  it("eine Richtung aus Gruppen in zwei", () => {
+    expect(axisGroups(cards, 0)[0]).toEqual({ n: 4, mean: [2.5], scatter: [5] })
+    expect(axisGroups(cards, 1)[0]).toEqual({ n: 4, mean: [2], scatter: [4] })
+  })
+
+  it("je Richtung eigener Vortest und eigene Freiheitsgrade, zusammen nach Bonferroni (Hand-Rechnung)", () => {
+    const test = levelTestZeroByAxis(cards)
+    expect(test).not.toBeNull()
+    expect(test?.wanderAxes).toEqual({ x: true, y: false })
+    // seitlich wie oben p = 0,0261 mit 2 Freiheitsgraden; in der Höhe W = 12/9, M = 0, T = 12/11, V = 1/11, ν = 11,
+    // t² = 2²/(1/11) = 44
+    const px = 1 - Math.sqrt(36.75) / Math.sqrt(38.75)
+    const py = fSurvival(44, 1, 11)
+    expect(test?.p).toBeCloseTo(Math.min(1, 2 * Math.min(px, py)), 12)
+    expect(test?.wander).toBe(true)
+  })
+
+  it("Bereich der Mitte je Richtung: t zweiseitig 97,5 % mal √V (Hand-Rechnung)", () => {
+    const region = levelTestZeroByAxis(cards)?.region
+    // Höhe: V = 1/11, ν = 11; seitlich mit Wandern: V = 1/3, ν = 2
+    expect(region?.y).toBeCloseTo(Math.sqrt(fQuantile(0.975, 1, 11) / 11), 10)
+    expect(region?.x).toBeCloseTo(Math.sqrt(fQuantile(0.975, 1, 2) / 3), 10)
+  })
+
+  it("der Bereich schließt die Mitte der Scheibe genau dann aus, wenn versetzt", () => {
+    let seed = 7
+    const next = () => {
+      seed = (seed * 16807) % 2147483647
+      return seed / 2147483647 - 0.5
+    }
+    for (let run = 0; run < 300; run++) {
+      const offset = [next() * 2, next() * 2]
+      const groups = Array.from({ length: 5 + (run % 6) }, () => {
+        const center = [offset[0] + next() * 2 * (run % 3), offset[1] + next()]
+        return shotGroup(
+          Array.from({ length: 8 }, () => [center[0] + next() * 4, center[1] + next() * 4])
+        )
+      })
+      const test = levelTestZeroByAxis(groups)
+      const e = levelEstimate(groups)
+      if (!test || !e) continue
+      const outside = Math.abs(e.mean[0]) > test.region.x || Math.abs(e.mean[1]) > test.region.y
+      expect(outside, `Lauf ${run}`).toBe(test.p < 0.05)
+    }
+  })
+
+  it("zwei Seiten je Richtung: gleiche Seiten p 1, Unterschied mit Vorzeichen", () => {
+    expect(levelCompareByAxis(cards, cards)?.p).toBe(1)
+    const moved = cards.map((g) => ({ ...g, mean: [g.mean[0], g.mean[1] + 2] }))
+    const result = levelCompareByAxis(cards, moved)
+    expect(result?.delta[1]).toBeCloseTo(-2, 12)
+    expect(result?.p).toBeLessThan(0.05)
   })
 })
 

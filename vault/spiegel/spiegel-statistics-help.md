@@ -75,7 +75,9 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   Violett, dort selten, Hellviolett ganz selten. Unter 50 Schuss trägt jeder Treffer die Farbe
   seines Rings. Der runde Knopf oben links zeigt statt der Treffer Umrisse wie beim Vergleichen:
   durchgezogen die Fläche mit der Hälfte der Schüsse, gestrichelt die mit 9 von 10. Über 3.000
-  Schuss zeigt das Bild nur noch die Umrisse. Der geviertelte Kreis ist die Mitte aller Schüsse.
+  Schuss zeigt das Bild nur noch die Umrisse. Der geviertelte Kreis ist die Mitte aller Schüsse. Der
+  feine Rahmen um ihn zeigt, wo deine Mitte sicher liegt: Liegt die Mitte der Scheibe außerhalb, ist
+  deine Lage sicher versetzt, liegt sie darin, noch nicht.
 - *So liest du es:* Der Satz unter dem Bild ist die Antwort: zuerst, ob deine Lage über den Zeitraum
   versetzt ist, dann, ob deine Gruppe in eine Richtung zieht. Die Belege stehen in der Analyse: die
   Form als Ellipse unter „Präzision“, die Lage über die Zeit unter „Lage“.
@@ -492,18 +494,21 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   rechts unter der Mitte, und das ist kein Zufall. Das ist der geviertelte Kreis im Trefferbild.
   „Passt“ heißt: Ein Versatz ist nicht belegt.
 - *Vorsicht:* „Versetzt“ sagt Spiegel nur, wenn das kein Zufall sein kann. Dafür prüft Spiegel
-  zuerst, ob deine Abende verschieden liegen. Liegen sie gleich, zählt jeder Schuss. Liegen sie
-  verschieden, zählt jeder Abend für sich. Ohne Versatz meldet es in etwa 5 von 100 Fällen trotzdem
-  „versetzt“, auch mit Scheiben zu 10 Schuss und wandernden Abenden in höchstens 6 von 100. Ein
-  Versatz von 0,3 σ (beim Luftgewehr etwa 0,45 mm) zeigt sich bei 5 Scheiben zu 40 Schuss in sieben
-  von zehn Fällen, ab 10 Scheiben fast immer. Wandern deine Abende um 0,2 σ, zeigt er sich bei 10
-  Scheiben in knapp acht von zehn Fällen, ab 20 Scheiben fast immer.
+  zuerst, ob deine Abende verschieden liegen, zur Seite und in der Höhe getrennt. Liegen sie gleich,
+  zählt jeder Schuss. Liegen sie verschieden, zählt jeder Abend für sich. Wandern deine Abende nur
+  zur Seite, zählt in der Höhe weiter jeder Schuss. Ohne Versatz meldet es in etwa 5 von 100 Fällen
+  trotzdem „versetzt“, auch mit Scheiben zu 10 Schuss und wandernden Abenden in höchstens 6 von 100.
+  Ein Versatz von 0,3 σ (beim Luftgewehr etwa 0,45 mm) zeigt sich bei 5 Scheiben zu 40 Schuss in
+  sieben von zehn Fällen, ab 10 Scheiben fast immer. Wandern deine Abende nur zur Seite, zeigt sich
+  ein Versatz in der Höhe genauso oft. Wandern sie in beide Richtungen um 0,2 σ, zeigt er sich bei
+  10 Scheiben in gut acht von zehn Fällen, ab 20 Scheiben fast immer. Der feine Rahmen um den
+  geviertelten Kreis zeigt, wo deine Mitte sicher liegt.
 - *Mindestzahl:* Ab 5 Scheiben mit Lage, je mindestens 3 Schuss.
-- *Formel:* `Mitte x̄ = Σ nⱼmⱼ / N über alle Schüsse; W = Σ Sⱼ / (N − k), M = Σ nⱼ(mⱼ − x̄)(mⱼ −
-  x̄)ᵀ / (k − 1); Vortest F = tr(W⁻¹M)/2 mit F(2(k − 1), 2(N − k)), Wandern bei p < 0,25; ohne
+- *Formel:* `Mitte x̄ = Σ nⱼmⱼ / N über alle Schüsse; je Richtung (seitlich, Höhe): W = Σ Sⱼ / (N −
+  k), M = Σ nⱼ(mⱼ − x̄)² / (k − 1), Vortest F = M/W mit F(k − 1, N − k), Wandern bei p < 0,5; ohne
   Wandern V = T/N mit T = (Σ Sⱼ + (k − 1)M)/(N − 1), ν = N − 1; mit Wandern V = (B Σ nⱼ² + W N)/N²,
-  B = (M − W)/n₀, ν = k − 1; T² = x̄ᵀV⁻¹x̄, F = (ν − 1)/(2ν) · T² mit F(2, ν − 1), versetzt bei p <
-  0,05`
+  B = (M − W)/n₀, ν = k − 1; t² = x̄²/V mit F(1, ν); beide Richtungen nach Bonferroni p = min(1, 2 ·
+  min(pₓ, p_y)), versetzt bei p < 0,05; Rahmen = x̄ ± √(F₀,₉₇₅(1, ν) · V) je Richtung`
 
 **Ausreißerrichtung (L7)**
 - *Was:* Spiegel nimmt von jeder Scheibe das weiteste Zehntel der Schüsse, gemessen von der Mitte
@@ -571,17 +576,17 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   nicht, es zu zeigen oder auszuschließen. Unter 5 Scheiben je Seite steht „zu wenige Scheiben“.
 - *Vorsicht:* Bei gleicher Form gibt Spiegel in höchstens etwa 5 % der Vergleiche trotzdem ein
   Urteil. Wird dein σ beim Luftgewehr von 1,5 auf 1,3 mm kleiner (40 Schuss je Scheibe, im Mittel
-  0,1 Ring mehr je Schuss), erkennt Spiegel das bei 5 gegen 5 Scheiben in sechs von zehn Fällen, bei
-  10 gegen 10 in gut neun von zehn. Eine kleine Veränderung braucht viel mehr Scheiben: Bei σ 1,5
-  auf 1,45 mm (etwa ein Ring mehr auf 40 Schuss) erkennt es Spiegel bei 20 gegen 20 Scheiben nur in
-  etwa jedem fünften Fall, bei 30 gegen 30 in knapp jedem dritten. Fehlt Einheiten die Streuung der
-  Schüsse (Einheiten nur aus Serien), vergleicht Spiegel die Werte je Einheit. Zeigen Test und
-  Mittel dann in verschiedene Richtungen, gibt es kein Urteil. Ein Unterschied zwischen Wettkampf
-  und Training sagt, dass es so ist, nicht warum.
+  0,1 Ring mehr je Schuss), erkennt Spiegel das bei 5 gegen 5 Scheiben in knapp sechs von zehn
+  Fällen, bei 10 gegen 10 in gut neun von zehn. Eine kleine Veränderung braucht viel mehr Scheiben:
+  Bei σ 1,5 auf 1,45 mm (etwa ein Ring mehr auf 40 Schuss) erkennt es Spiegel bei 20 gegen 20
+  Scheiben nur in etwa jedem fünften Fall, bei 30 gegen 30 in knapp jedem dritten. Fehlt Einheiten
+  die Streuung der Schüsse (Einheiten nur aus Serien), vergleicht Spiegel die Werte je Einheit.
+  Zeigen Test und Mittel dann in verschiedene Richtungen, gibt es kein Urteil. Ein Unterschied
+  zwischen Wettkampf und Training sagt, dass es so ist, nicht warum.
 - *Mindestzahl:* Ein Urteil ab 5 Scheiben je Seite.
 - *Formel:* `Werte über alle Schüsse; Mittel (Ø, Quote) über zwei Ebenen: je Seite Vortest auf
-  Wandern der Abende (α 0,25), ohne Wandern V = T/N mit ν = N − 1, sonst V = (B Σ nⱼ² + W N)/N² mit
-  ν = k − 1; t = Δ/√(Vₐ + V_b), ν nach Welch, zweiseitig, α 0,05; Streuung über die Varianzen: ohne
+  Wandern der Abende (α 0,5), ohne Wandern V = T/N mit ν = N − 1, sonst V = (B Σ nⱼ² + W N)/N² mit ν
+  = k − 1; t = Δ/√(Vₐ + V_b), ν nach Welch, zweiseitig, α 0,05; Streuung über die Varianzen: ohne
   Wandern F-Test der gepoolten Varianzen, sonst Welch-t über ln sⱼ²; ohne Streuung der Schüsse
   Mann-Whitney über die Werte je Scheibe; Δ = A − B`
 
@@ -623,7 +628,8 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 - *Formel:* `Hotelling-T² für zwei Stichproben: S = ((n₁ − 1)S₁ + (n₂ − 1)S₂)/(n₁ + n₂ − 2), T² =
   n₁n₂/(n₁ + n₂) · dᵀS⁻¹d, F = (n₁ + n₂ − 3)/(2(n₁ + n₂ − 2)) · T², p = (1 + 2F/ν)^(−ν/2) mit ν =
   Zahl aller Punkte − 3, versetzt bei p < 0,05; bei Zeiträumen die Mitten über alle Schüsse und über
-  zwei Ebenen wie „Lage über Zeit“, Δ = A − B, V = Vₐ + V_b, ν nach Welch über die Spuren`
+  zwei Ebenen je Richtung wie „Lage über Zeit“, Δ = A − B, V = Vₐ + V_b, ν nach Welch über die
+  Spuren`
 
 ## Glossar
 

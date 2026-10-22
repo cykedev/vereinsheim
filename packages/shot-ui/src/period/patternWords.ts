@@ -28,6 +28,9 @@ export const OUTLINES_LABEL = "Umrisse statt Treffer zeigen"
 export const outsideText = (n: number) =>
   `${n} ${n === 1 ? "Schuss liegt" : "Schüsse liegen"} außerhalb des Bilds.`
 export const CENTER_NOTE = "Der geviertelte Kreis ist die Mitte aller Schüsse."
+/** unter dem Trefferbild, wenn es ein Urteil über die Lage gibt */
+export const REGION_NOTE =
+  "Der feine Rahmen um ihn zeigt, wo deine Mitte sicher liegt. Liegt die Mitte der Scheibe darin, ist ein Versatz noch nicht sicher."
 export const PATTERN_LOADING = "Trefferbild wird gerechnet …"
 export const PATTERN_FAILED = "Das Trefferbild ließ sich nicht laden."
 
@@ -82,7 +85,17 @@ export function positionWords(overTime: PositionOverTime): PatternSentence {
       lead: `Deine Lage ist versetzt: ${positionDirection(overTime.mean)}, im Mittel ${formatValue((overTime.offsetUm ?? 0) / 1000, 1)} mm.`,
       more: null,
     }
-  return { lead: "Deine Lage passt.", more: "Ein Versatz zeigt sich nicht." }
+  // ohne gesicherten Versatz sagt der Satz, was das Bild zeigt, und wie sicher es ist; nie „passt“ neben einem Kreis,
+  // der sichtbar daneben liegt
+  const offset = overTime.offsetUm ?? 0
+  const where =
+    offset < 50
+      ? "Deine Mitte liegt in der Mitte."
+      : `Deine Mitte liegt ${formatValue(offset / 1000, 1)} mm ${positionDirection(overTime.mean)}.`
+  return {
+    lead: where,
+    more: `Ob das so bleibt, ist mit ${formatInteger(overTime.points.length)} Scheiben noch nicht sicher.`,
+  }
 }
 
 /** Ausreißerrichtung (L7) */

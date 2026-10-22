@@ -185,6 +185,20 @@ export function fSurvival(f: number, d1: number, d2: number): number {
   return incompleteBeta(d2 / 2, d1 / 2, d2 / (d2 + d1 * f))
 }
 
+/** Quantil der F-Verteilung: f mit P(F ≤ f) = p, per Bisektion auf `fSurvival` */
+export function fQuantile(p: number, d1: number, d2: number): number {
+  if (!(p > 0 && p < 1)) throw new RangeError(`Quantil ${p} liegt nicht strikt zwischen 0 und 1`)
+  let low = 0
+  let high = 1
+  while (1 - fSurvival(high, d1, d2) < p) high *= 2
+  for (let i = 0; i < 200; i++) {
+    const mid = (low + high) / 2
+    if (1 - fSurvival(mid, d1, d2) < p) low = mid
+    else high = mid
+  }
+  return (low + high) / 2
+}
+
 /** regularisierte obere unvollständige Gammafunktion Q(a, x): Reihe unter a + 1, sonst Kettenbruch */
 function gammaSurvival(a: number, x: number): number {
   if (x <= 0) return 1

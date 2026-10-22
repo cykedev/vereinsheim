@@ -702,20 +702,22 @@ const MIXES = [
   ["jede dritte 10", (i: number) => (i % 3 === 2 ? 10 : 40)],
 ] as const
 const GRID_CARDS = [5, 10, 20] as const
-const GRID_RUNS = 5_000
+const GRID_RUNS = 20_000
 
 /** Scheiben mit wandernder Mitte (N(0, τ²σ²) je Richtung um `mx`, `my`) und Schusszahl je Scheibe */
 const wanderingCards = (
   rand: Random,
   count: number,
-  tau: number,
+  tau: number | readonly [number, number],
   shots: (i: number) => number,
   group: Partial<Group> = {}
 ) =>
   Array.from({ length: count }, (_, i) => {
     const sx = group.sx ?? LG.sx
-    const mx = (group.mx ?? 0) + rand.normal() * tau * sx
-    const my = (group.my ?? 0) + rand.normal() * tau * sx
+    // ein τ für beide Richtungen oder je Richtung [seitlich, Höhe]
+    const [tx, ty] = typeof tau === "number" ? [tau, tau] : tau
+    const mx = (group.mx ?? 0) + rand.normal() * tx * sx
+    const my = (group.my ?? 0) + rand.normal() * ty * sx
     return { i, shots: card(rand, { ...LG, ...group, n: shots(i), mx, my }) }
   })
 const asPattern = (cards: ReturnType<typeof wanderingCards>): PatternCard[] =>
@@ -772,9 +774,30 @@ const percent = (v: number) => `${num(100 * v, 1)} %`
     const cards = asPattern(wanderingCards(rand, count, tau, shots, { mx: 0.3 * LG.sx }))
     return positionOverTime(positionPoints(cards)).verdict === "offset"
   })
+  // nur seitlich wandernde Abende (τ 0,3 seitlich, 0 in der Höhe): Fehlalarm und Versatz 0,3σ in der Höhe
+  const sideways = grid(
+    "B25",
+    "Lage nur seitlich wandernd, ohne Versatz versetzt gemeldet",
+    25800,
+    [0.3],
+    (rand, count, tau, shots) => {
+      const cards = asPattern(wanderingCards(rand, count, [tau, 0], shots))
+      return positionOverTime(positionPoints(cards)).verdict === "offset"
+    }
+  )
+  grid(
+    "B25",
+    "Lage nur seitlich wandernd, Versatz 0,3σ in der Höhe erkannt",
+    25900,
+    [0.3],
+    (rand, count, tau, shots) => {
+      const cards = asPattern(wanderingCards(rand, count, [tau, 0], shots, { my: 0.3 * LG.sx }))
+      return positionOverTime(positionPoints(cards)).verdict === "offset"
+    }
+  )
   out(
     "B25",
-    `Lage höchster Fehlalarm: ${percent(alarm.worst)}, ohne Wandern ${percent(alarm.still)}`
+    `Lage höchster Fehlalarm: ${percent(Math.max(alarm.worst, sideways.worst))}, ohne Wandern ${percent(alarm.still)}`
   )
 }
 

@@ -10,6 +10,7 @@ import { HeatLegend, PatternTarget, type PatternView } from "./PatternTarget"
 import {
   basisText,
   CENTER_NOTE,
+  REGION_NOTE,
   LEGEND_OUTLINES,
   LEGEND_POINTS,
   OUTLINES_LABEL,
@@ -97,6 +98,9 @@ function Ready({
   onView?: (view: PatternView) => void
 }) {
   const words = pictureWords(pattern)
+  // der Bereich, in dem die Mitte sicher liegt: nur mit Urteil über die Lage
+  const { mean, region: half } = pattern.overTime
+  const region = mean && half ? { center: mean, ...half } : null
   const sentence = [words.lead, words.more].filter(Boolean).join(" ")
   const style = pattern.picture.style
   // die Wahl gibt es von 50 bis 3.000 Schuss; darunter zeigt das Bild jeden Treffer, darüber nur die Umrisse
@@ -110,6 +114,7 @@ function Ready({
           target={target}
           label={sentence}
           view={outlines ? "outlines" : "density"}
+          region={region}
         />
         {canChoose && onView && (
           <div className="pointer-events-none absolute top-2 left-2">
@@ -143,6 +148,7 @@ function Ready({
             basisText(pattern),
             pattern.picture.outside ? outsideText(pattern.picture.outside) : "",
             CENTER_NOTE,
+            region ? REGION_NOTE : "",
           ]
             .filter(Boolean)
             .join(" ")}

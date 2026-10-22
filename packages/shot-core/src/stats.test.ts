@@ -5,6 +5,7 @@ import {
   chiSquareCdfEven,
   chiSquareQuantileEven,
   chiSquareSurvival,
+  fQuantile,
   fQuantile2,
   fSurvival,
   incompleteBeta,
@@ -125,6 +126,15 @@ describe("Rand der F- und χ²-Verteilung", () => {
   it("F(2, ν) wie die geschlossene Form (1 + 2f/ν)^(−ν/2)", () => {
     expect(fSurvival(2.4, 2, 9)).toBeCloseTo(0.1461, 4)
     expect(fSurvival(0, 3, 7)).toBe(1)
+  })
+
+  it("Quantil der F-Verteilung wie in der Tabelle, Kehrwert des Rands", () => {
+    expect(fQuantile(0.95, 2, 10)).toBeCloseTo(4.1028, 4)
+    expect(fQuantile(0.95, 5, 20)).toBeCloseTo(2.7109, 4)
+    // F(1, ν) = t²: das Quantil 0,95 ist t(6) zweiseitig 95 % = 2,4469, 0,975 ist zweiseitig 97,5 % = 2,9687 (Tabelle)
+    expect(Math.sqrt(fQuantile(0.95, 1, 6))).toBeCloseTo(2.4469, 4)
+    expect(Math.sqrt(fQuantile(0.975, 1, 6))).toBeCloseTo(2.9687, 4)
+    expect(fSurvival(fQuantile(0.3, 3, 17), 3, 17)).toBeCloseTo(0.7, 10)
   })
 
   it("t mit 2 Freiheitsgraden als F(1, 2): 1 − t/√(t² + 2)", () => {

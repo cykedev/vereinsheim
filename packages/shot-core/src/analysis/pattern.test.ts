@@ -187,11 +187,51 @@ describe("positionPoints und positionOverTime (L10)", () => {
     expect(result.p).toBeLessThan(0.001)
   })
 
+  it("nur seitlich wandernde Abende: In der Höhe zählt weiter jeder Schuss", () => {
+    // wie oben, aber die Mitten liegen seitlich weit auseinander (bis 12 mm), in der Höhe ohne Wandern
+    const ring = (x: number, y: number) => {
+      const r = 11000
+      const a = Math.round(r / Math.SQRT2)
+      return [
+        [r, 0],
+        [-r, 0],
+        [0, r],
+        [0, -r],
+        [a, a],
+        [-a, -a],
+        [a, -a],
+        [-a, a],
+      ].map(([dx, dy]) => ({ xUm: x + dx, yUm: y + dy }))
+    }
+    const long = (id: string, x: number, y: number, at: number) =>
+      card(id, Array.from({ length: 5 }, () => ring(x, y)).flat(), at)
+    const short = (id: string, x: number, y: number, at: number) =>
+      card(id, [...ring(x, y), { xUm: x, yUm: y }, { xUm: x, yUm: y }], at)
+    const cards = [
+      long("a", 6000, 2600, 1),
+      long("b", -9000, 3000, 2),
+      short("c", 12000, -1700, 3),
+      long("d", -4000, 2200, 4),
+      long("e", 8000, 2800, 5),
+      short("f", -12000, 800, 6),
+      long("g", -3000, 2400, 7),
+    ]
+    const result = positionOverTime(positionPoints(cards))
+    expect(result.wanderAxes).toEqual({ x: true, y: false })
+    expect(result.wander).toBe(true)
+    expect(result.verdict).toBe("offset")
+    // der Bereich der Mitte schließt die Mitte der Scheibe in der Höhe aus, seitlich nicht
+    expect(result.region).not.toBeNull()
+    expect(Math.abs(result.mean!.yUm)).toBeGreaterThan(result.region!.yUm)
+    expect(Math.abs(result.mean!.xUm)).toBeLessThan(result.region!.xUm)
+  })
+
   it("vier Scheiben: kein Urteil", () => {
     const result = positionOverTime(
       positionPoints([0, 1, 2, 3].map((i) => around(`c${i}`, 400 + i * 10, -300 - i * 7, i)))
     )
     expect(result.verdict).toBe("few")
+    expect(result.region).toBeNull()
   })
 })
 

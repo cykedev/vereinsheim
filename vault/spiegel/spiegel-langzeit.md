@@ -233,9 +233,11 @@ Ergebnis (I7–I9, Z6, Z7, K2, K4, T4, V3–V5, W2–W4 als Zeilen im Vergleich)
   Raster und keinen Knopf, darüber nur die Umrisse. Die Wahl ist, wie gezeichnet wird, nicht was man sieht: Sie steht nicht in der Adresse,
   sondern im Gerät (`localStorage` unter `spiegel-pattern-view`, `usePatternView` in Spiegel; der Baustein ist gesteuert), Vorgabe ist die Dichte. Der User wollte am
   22. Oktober 2026 beides haben: die Dichte zeigt jeden Treffer, die Umrisse lesen sich wie der Vergleich.
-- **Der geviertelte Kreis** ist die Mitte aller Schüsse.
-- **Ein Satz unter dem Bild** gibt die Antwort: zuerst die Lage („passt“ oder „versetzt: rechts tief“, Test über die
-  Schwerpunkte der Scheiben), dann die Form („länglich, eher waagrecht“ oder „keine klare Richtung“, Test über die
+- **Der geviertelte Kreis** ist die Mitte aller Schüsse, der feine Rahmen um ihn der Bereich, in dem sie sicher liegt
+  ([[adr-034]]).
+- **Ein Satz unter dem Bild** gibt die Antwort: zuerst die Lage („versetzt: rechts tief“ oder ohne gesicherten Versatz
+  „Deine Mitte liegt 2,9 mm hoch. Ob das so bleibt, ist mit 7 Scheiben noch nicht sicher.“, nie „passt“ neben einem
+  Kreis, der daneben liegt; Test je Richtung über Schüsse und Abende), dann die Form („länglich, eher waagrecht“ oder „keine klare Richtung“, Test über die
   gepoolte Form); ohne Urteil über die Form kein zweiter Satz.
 - **Rechnen auf dem Server:** aus den gespeicherten Lagen der Projektion (`marks`, 10 µm), erst wenn das Bild oder die
   Reiter Präzision und Lage es brauchen (`periodPatternAction`); an den Browser gehen bis 3.000 Schuss die Treffer mit

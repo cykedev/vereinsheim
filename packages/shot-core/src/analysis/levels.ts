@@ -1,10 +1,10 @@
 // Rechnung über zwei Ebenen ([[adr-034]]): Schüsse in Scheiben. Das Mittel ist das über alle Schüsse; seine
 // Unsicherheit kommt aus der Streuung der Schüsse und, wenn die Abende stärker wandern, als der Zufall der Schüsse
-// erklärt, aus dem Wandern der Abende („sometimes pool“ nach Bancroft, Vortest α 0,25). Eine Richtung (Werte je Schuss)
+// erklärt, aus dem Wandern der Abende („sometimes pool“ nach Bancroft, Vortest α 0,5). Eine Richtung (Werte je Schuss)
 // oder zwei (Lagen in µm). Symmetrische Matrizen als Liste: eine Richtung [v], zwei [xx, yy, xy].
 
 import type { MetricDefinition } from "../metrics"
-import { c4, chiSquareSurvival, fSurvival } from "../stats"
+import { c4, chiSquareSurvival, fQuantile, fSurvival } from "../stats"
 import {
   COMPARE_ALPHA,
   compareSamples,
@@ -15,7 +15,7 @@ import {
 } from "./period"
 
 /** Vortest auf das Wandern der Abende: darunter zählt jeder Abend für sich */
-export const WANDER_ALPHA = 0.25
+export const WANDER_ALPHA = 0.5
 
 /** eine Scheibe als Gruppe von Schüssen: Zahl, Mittel und Abweichungsquadrate um ihr Mittel */
 export interface ShotGroup {
@@ -102,7 +102,10 @@ export function shotGroup(values: readonly (readonly number[])[]): ShotGroup {
  * n₀ = (N − Σ nᵢ²/N)/(k − 1), V = (B Σ nᵢ² + W N)/N², ν = k − 1. Null unter zwei Scheiben, bei N − k ≤ d oder ohne
  * Streuung innerhalb der Scheiben.
  */
-export function levelEstimate(groups: readonly ShotGroup[]): LevelEstimate | null {
+export function levelEstimate(
+  groups: readonly ShotGroup[],
+  alpha = WANDER_ALPHA
+): LevelEstimate | null {
   const k = groups.length
   if (k < 2) return null
   const d = groups[0].mean.length
@@ -126,7 +129,7 @@ export function levelEstimate(groups: readonly ShotGroup[]): LevelEstimate | nul
   if (!withinInverse) return null
   const f = traceOfProduct(withinInverse, among) / d
   const wanderP = fSurvival(f, d * (k - 1), d * (N - k))
-  const wander = wanderP < WANDER_ALPHA
+  const wander = wanderP < alpha
   const base = { shots: N, groups: k, mean, wander, wanderP }
   if (!wander) {
     const total = scale(add(scatter, between), 1 / (N - 1))
@@ -170,6 +173,66 @@ export function levelCompare(
   const t2 = quadratic(inv, delta)
   const p = hotellingP(t2, delta.length, df)
   return p === null ? null : { delta, t2, p, df }
+}
+
+/** eine Richtung (0 seitlich, 1 Höhe) aus Gruppen in zwei Richtungen */
+export function axisGroups(groups: readonly ShotGroup[], axis: 0 | 1): ShotGroup[] {
+  return groups.map((g) => ({ n: g.n, mean: [g.mean[axis]], scatter: [g.scatter[axis]] }))
+}
+
+/** Niveau je Richtung nach Bonferroni: 0,05 über beide, je Richtung zweiseitig 0,025 */
+const BOTH_AXES_ALPHA = 0.025
+
+/** Bonferroni über zwei Richtungen */
+const bothAxes = (px: number, py: number) => Math.min(1, 2 * Math.min(px, py))
+
+/**
+ * Lage gegen die Mitte je Richtung: seitlich und in der Höhe je ein Test über zwei Ebenen mit eigenem Vortest und eigenen
+ * Freiheitsgraden (`levelEstimate` in einer Richtung), zusammen nach Bonferroni p = min(1, 2 · min(pₓ, p_y)). Wandern
+ * die Abende nur zur Seite, zählt in der Höhe weiter jeder Schuss. `region` ist je Richtung der halbe Bereich, in dem die
+ * Mitte zu 95 % liegt (je Richtung 97,5 %, t aus F(1, ν)): Er schließt die Mitte der Scheibe genau dann aus, wenn
+ * p < 0,05. Null, wenn eine Richtung keinen Test hat.
+ */
+export function levelTestZeroByAxis(
+  groups: readonly ShotGroup[],
+  alpha = WANDER_ALPHA
+): {
+  p: number
+  wander: boolean
+  wanderAxes: { x: boolean; y: boolean }
+  region: { x: number; y: number }
+} | null {
+  const ex = levelEstimate(axisGroups(groups, 0), alpha)
+  const ey = levelEstimate(axisGroups(groups, 1), alpha)
+  const tx = ex && levelTestZero(ex)
+  const ty = ey && levelTestZero(ey)
+  if (!ex || !ey || !tx || !ty) return null
+  const wanderAxes = { x: ex.wander, y: ey.wander }
+  const half = (e: LevelEstimate) => Math.sqrt(fQuantile(1 - BOTH_AXES_ALPHA, 1, e.df) * e.cov[0])
+  return {
+    p: bothAxes(tx.p, ty.p),
+    wander: ex.wander || ey.wander,
+    wanderAxes,
+    region: { x: half(ex), y: half(ey) },
+  }
+}
+
+/**
+ * Zwei Seiten je Richtung: Δ = Mittel a − Mittel b, je Richtung `levelCompare` über die Schätzungen in einer Richtung,
+ * zusammen nach Bonferroni. Null, wenn eine Richtung keinen Test hat.
+ */
+export function levelCompareByAxis(
+  a: readonly ShotGroup[],
+  b: readonly ShotGroup[]
+): { delta: number[]; p: number } | null {
+  const compared = ([0, 1] as const).map((axis) => {
+    const ea = levelEstimate(axisGroups(a, axis))
+    const eb = levelEstimate(axisGroups(b, axis))
+    return ea && eb ? levelCompare(ea, eb) : null
+  })
+  const [cx, cy] = compared
+  if (!cx || !cy) return null
+  return { delta: [cx.delta[0], cy.delta[0]], p: bothAxes(cx.p, cy.p) }
 }
 
 /** Raster der Werte je Schuss in einer Wertung: Zehntel und ganze Ringe, damit ein Mittel genau bleibt */
@@ -220,7 +283,7 @@ const verdictOf = (p: number, delta: number): PeriodComparison["verdict"] =>
 
 /**
  * Streuung zweier Zeiträume: je Seite Vortest auf wandernde Präzision (Q = Σ (νᵢ/2)(ln sᵢ² − ȳ)² mit χ²(k − 1),
- * Wandern bei p < 0,25). Ohne Wandern der F-Test der gepoolten Varianzen, zweiseitig; sonst Welch-t über ln sᵢ².
+ * Wandern bei p < `WANDER_ALPHA`). Ohne Wandern der F-Test der gepoolten Varianzen, zweiseitig; sonst Welch-t über ln sᵢ².
  * Ein Urteil nur, wenn der Test in die Richtung der gepoolten Werte zeigt.
  */
 function compareSpreads(

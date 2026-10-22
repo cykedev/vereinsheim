@@ -64,5 +64,8 @@ export const ANALYSIS_CATALOG: Readonly<Record<string, readonly string[]>> = Obj
   levelEstimate: ["L10", "C3", "E2", "E4"],
   levelTestZero: ["L10"],
   levelCompare: ["C3"],
+  axisGroups: ["L10", "C3"],
+  levelTestZeroByAxis: ["L10"],
+  levelCompareByAxis: ["C3"],
   outlierDirection: ["L7"],
 })

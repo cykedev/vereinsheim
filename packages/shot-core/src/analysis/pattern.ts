@@ -6,7 +6,7 @@
 import type { Point } from "../geometry"
 import { cellValue, densityGrid, patternHalf, type DensityGrid } from "./density"
 import { c4 } from "../stats"
-import { levelEstimate, levelTestZero } from "./levels"
+import { levelTestZeroByAxis } from "./levels"
 
 /** ein Schuss im Trefferbild: Lage und, wenn bekannt, der Ring (für die Farbe der Punkte) */
 export interface PatternPoint extends Point {
@@ -147,15 +147,23 @@ export interface PositionOverTime {
   offsetUm: number | null
   /** Wahrscheinlichkeit, dass eine Lage ohne Versatz so weit daneben liegt (zwei Ebenen); null ohne Test */
   p: number | null
-  /** die Abende wandern über den Zufall der Schüsse hinaus: Dann zählt jeder Abend für sich; null ohne Schätzung */
+  /** die Abende wandern in einer Richtung über den Zufall der Schüsse hinaus; null ohne Test */
   wander: boolean | null
+  /** je Richtung: wandern die Abende seitlich (x) oder in der Höhe (y)? Dort zählt jeder Abend für sich */
+  wanderAxes: { x: boolean; y: boolean } | null
+  /**
+   * je Richtung der halbe Bereich in µm, in dem die Mitte zu 95 % liegt; er schließt die Mitte der Scheibe genau dann
+   * aus, wenn `verdict` „offset“ ist. Null ohne Urteil
+   */
+  region: { xUm: number; yUm: number } | null
   verdict: "offset" | "fits" | "few"
 }
 
 /**
  * Lage über Zeit (L10): Ist der Versatz über den Zeitraum echt? Die Mitte aller Schüsse gegen die Mitte der Scheibe,
- * über zwei Ebenen ([[adr-034]], `levelEstimate`): Wandern die Abende nicht über den Zufall hinaus, zählt jeder Schuss,
- * sonst jeder Abend. Versetzt bei p < 0,05, ein Urteil ab fünf Scheiben.
+ * über zwei Ebenen je Richtung ([[adr-034]], `levelTestZeroByAxis`): Wandern die Abende in einer Richtung nicht über
+ * den Zufall hinaus, zählt dort jeder Schuss, sonst jeder Abend; beide Richtungen zusammen nach Bonferroni. Versetzt bei
+ * p < 0,05, ein Urteil ab fünf Scheiben.
  */
 export function positionOverTime(points: readonly PositionPoint[]): PositionOverTime {
   const shots = points.reduce((sum, p) => sum + p.n, 0)
@@ -165,18 +173,19 @@ export function positionOverTime(points: readonly PositionPoint[]): PositionOver
         yUm: points.reduce((sum, p) => sum + p.n * p.center.yUm, 0) / shots,
       }
     : null
-  const estimate = levelEstimate(
+  const test = levelTestZeroByAxis(
     points.map((p) => ({ n: p.n, mean: [p.center.xUm, p.center.yUm], scatter: p.scatter }))
   )
-  const test = estimate && levelTestZero(estimate)
+  const judged = points.length >= POSITION_MIN_CARDS ? test : null
   return {
     points: points.map(({ scatter: _scatter, ...point }) => point),
     mean: center,
     offsetUm: center ? Math.hypot(center.xUm, center.yUm) : null,
     p: test?.p ?? null,
-    wander: estimate?.wander ?? null,
-    verdict:
-      points.length < POSITION_MIN_CARDS || !test ? "few" : test.p < ALPHA ? "offset" : "fits",
+    wander: test?.wander ?? null,
+    wanderAxes: test?.wanderAxes ?? null,
+    region: judged ? { xUm: judged.region.x, yUm: judged.region.y } : null,
+    verdict: !judged ? "few" : judged.p < ALPHA ? "offset" : "fits",
   }
 }
 

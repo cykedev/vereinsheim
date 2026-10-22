@@ -120,8 +120,8 @@ Fachwissen: `vault/spiegel/spiegel-target-library.md`, `vault/spiegel/spiegel-me
 - **Über viele Scheiben** ([[adr-034]]): Werte je Scheibe kommen aus der Registry (`cardValues`, bei
   `pooling: "mean"` mit `sd`). Was über einen Zeitraum zusammengeht, rechnet `pooledValue` über die Schüsse (`pooling`
   an der Kennzahl: Mittel, Streuung einer Richtung, Rayleigh-σ; ohne Pooling das Mittel je Scheibe), Urteile laufen über
-  zwei Ebenen (`levels.ts`: Vortest auf Wandern der Abende mit `WANDER_ALPHA` 0,25, ohne Wandern alle Schüsse, sonst
-  jeder Abend; `compareValues`, `positionOverTime`, `compareCenterGroups`). Ein Schnitt über mehrere Scheiben
+  zwei Ebenen (`levels.ts`: Vortest auf Wandern der Abende mit `WANDER_ALPHA` 0,5, ohne Wandern alle Schüsse, sonst
+  jeder Abend; die Lage je Richtung nach Bonferroni mit dem Bereich der Mitte, `levelTestZeroByAxis`, `levelCompareByAxis`; `compareValues`, `positionOverTime`, `compareCenterGroups`). Ein Schnitt über mehrere Scheiben
   (`periodTrend`, R8) nimmt dieselbe Regel. Familie, Woche, Monat und Tag
   wählt der Aufrufer, denn die Anzeige-Zeitzone liegt in der App. Eine Scheibe nur mit Probe zählt nur mit
   `includeProbeOnly`, dann als Training (`asOnPrintout` → `probeOnlyAsMatch`, `metrics`), dieselbe Regel wie auf der Seite einer

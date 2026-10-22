@@ -26,11 +26,18 @@ const shape = (verdict: PeriodShape["verdict"], angleRad = 0): PeriodShape => ({
 })
 
 const overTime = (verdict: PositionOverTime["verdict"], x = 300, y = -265): PositionOverTime => ({
-  points: [],
+  points: Array.from({ length: 7 }, (_, i) => ({
+    id: `c${i}`,
+    atMs: i,
+    center: { xUm: x, yUm: y },
+    n: 40,
+  })),
   mean: { xUm: x, yUm: y },
   offsetUm: Math.hypot(x, y),
   p: verdict === "offset" ? 0.01 : 0.4,
   wander: false,
+  wanderAxes: { x: false, y: false },
+  region: verdict === "few" ? null : { xUm: 500, yUm: 500 },
   verdict,
 })
 
@@ -56,14 +63,16 @@ describe("Worte zum Trefferbild", () => {
     expect(axisWords(deg(135))).toBe("schräg nach rechts unten")
   })
 
-  it("Lage: versetzt mit Richtung und Abstand, passt, zu wenig", () => {
+  it("Lage: versetzt mit Richtung und Abstand; ohne Urteil sagt der Satz, was das Bild zeigt; zu wenig", () => {
     expect(positionWords(overTime("offset")).lead).toBe(
       "Deine Lage ist versetzt: rechts tief, im Mittel 0,4 mm."
     )
+    // nie „passt“ neben einem Kreis, der daneben liegt: die Lage in Zahlen, dann wie sicher sie ist
     expect(positionWords(overTime("fits"))).toEqual({
-      lead: "Deine Lage passt.",
-      more: "Ein Versatz zeigt sich nicht.",
+      lead: "Deine Mitte liegt 0,4 mm rechts tief.",
+      more: "Ob das so bleibt, ist mit 7 Scheiben noch nicht sicher.",
     })
+    expect(positionWords(overTime("fits", 20, -10)).lead).toBe("Deine Mitte liegt in der Mitte.")
     expect(positionWords(overTime("few"))).toEqual({
       lead: "Für ein Urteil über die Lage fehlen noch Scheiben.",
       more: "Es braucht 5 Scheiben mit Lage.",
@@ -87,11 +96,11 @@ describe("Worte zum Trefferbild", () => {
       more: "Die Gruppe ist länglich, schräg nach rechts oben.",
     })
     expect(pictureWords({ overTime: overTime("fits"), shape: shape("none") })).toEqual({
-      lead: "Deine Lage passt.",
-      more: "Ein Versatz zeigt sich nicht. Die Gruppe zieht in keine klare Richtung.",
+      lead: "Deine Mitte liegt 0,4 mm rechts tief.",
+      more: "Ob das so bleibt, ist mit 7 Scheiben noch nicht sicher. Die Gruppe zieht in keine klare Richtung.",
     })
     expect(pictureWords({ overTime: overTime("fits"), shape: shape("few") }).more).toBe(
-      "Ein Versatz zeigt sich nicht."
+      "Ob das so bleibt, ist mit 7 Scheiben noch nicht sicher."
     )
   })
 
