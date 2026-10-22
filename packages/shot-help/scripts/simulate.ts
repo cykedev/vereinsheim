@@ -9,9 +9,9 @@
 import {
   cardTrend,
   cardValues,
-  compareCenters,
-  comparePeriods,
+  compareCenterGroups,
   compareShots,
+  compareValues,
   directionClock,
   drift,
   fatigue,
@@ -26,6 +26,7 @@ import {
   positionOverTime,
   positionPoints,
   ringLossSplit,
+  type CardValue,
   type PatternCard,
   type PeriodCard,
 } from "@vereinsheim/shot-core/analysis"
@@ -498,7 +499,16 @@ const periodCards = (rand: Random, count: number, sx: number, firstDay = 0): Per
   }))
 const perShot = metric("result.decimalMean")
 
-// B19: Vergleich zweier Zeiträume über Ø je Schuss (Mann-Whitney über die Scheiben): Fehlalarm bei gleicher Streuung,
+/** Ø je Schuss einer Scheibe mit Streuung der Schusswerte, wie `cardValues` für Wertungsschüsse ohne Merkmale */
+function meanValue(id: string, shots: readonly MetricShot[]): CardValue {
+  const xs = shots.map((shot) => (shot.decimalTenths as number) / 10)
+  const value = mean(xs)
+  const sd = Math.sqrt(xs.reduce((s, x) => s + (x - value) ** 2, 0) / (xs.length - 1))
+  return { id, atMs: Number(id), value, n: xs.length, sd }
+}
+const meanValues = (cards: readonly PeriodCard[]) => cards.map((c) => meanValue(c.id, c.shots))
+
+// B19: Vergleich zweier Zeiträume über Ø je Schuss (über Schüsse und Abende, `compareValues`): Fehlalarm bei gleicher Streuung,
 // Trennschärfe bei σ 1,5 → 1,3 mm und bei einer kleinen Veränderung σ 1,5 → 1,45 mm auf Seite b; dazu der Anteil
 // „bedeutsam“ und der Unterschied des Ø je Schuss im Mittel (über die Fälle 30/30), damit ein Text sagen kann, wie groß
 // die Veränderung ist
@@ -516,9 +526,9 @@ const perShot = metric("result.decimalMean")
       let higher = 0
       let meaningful = 0
       repeat(2_000, seed + n, (rand) => {
-        const a = cardValues(periodCards(rand, n, 1500), perShot, "decimal")
-        const b = cardValues(periodCards(rand, n, sxB, n), perShot, "decimal")
-        const result = comparePeriods(a, b)
+        const a = meanValues(periodCards(rand, n, 1500))
+        const b = meanValues(periodCards(rand, n, sxB, n))
+        const result = compareValues(a, b, perShot)
         if (result?.verdict !== "unclear") judged++
         if (result?.verdict === "higher") higher++
         if (result?.meaningful) meaningful++
@@ -682,23 +692,95 @@ for (const [label, make, seed] of [
   )
 }
 
-// B25: Lage über Zeit (Hotelling über die Schwerpunkte der Scheiben): Fehlalarm ohne Versatz, erkannt bei Versatz 0,3σ
-// und 0,5σ nach rechts
-for (const [label, shift, seed] of [
-  ["ohne Versatz, versetzt gemeldet", 0, 25100],
-  ["Versatz 0,3σ erkannt", 0.3, 25200],
-  ["Versatz 0,5σ erkannt", 0.5, 25300],
-] as const) {
+// ---------- Zahlen über einen Zeitraum über Schüsse und Abende ([[adr-034]]): je Zelle Wandern der Abende (τ als
+// Anteil von σ, je Richtung) × Schusszahlen (alle 40 oder jede dritte Scheibe 10) × Zahl der Scheiben. Abnahme: Fehlalarm
+// höchstens 6,5 % in jeder Zelle, höchstens 5,5 % ohne Wandern.
+
+const WANDER = [0, 0.1, 0.2, 0.3] as const
+const MIXES = [
+  ["alle 40", () => 40],
+  ["jede dritte 10", (i: number) => (i % 3 === 2 ? 10 : 40)],
+] as const
+const GRID_CARDS = [5, 10, 20] as const
+const GRID_RUNS = 5_000
+
+/** Scheiben mit wandernder Mitte (N(0, τ²σ²) je Richtung um `mx`, `my`) und Schusszahl je Scheibe */
+const wanderingCards = (
+  rand: Random,
+  count: number,
+  tau: number,
+  shots: (i: number) => number,
+  group: Partial<Group> = {}
+) =>
+  Array.from({ length: count }, (_, i) => {
+    const sx = group.sx ?? LG.sx
+    const mx = (group.mx ?? 0) + rand.normal() * tau * sx
+    const my = (group.my ?? 0) + rand.normal() * tau * sx
+    return { i, shots: card(rand, { ...LG, ...group, n: shots(i), mx, my }) }
+  })
+const asPattern = (cards: ReturnType<typeof wanderingCards>): PatternCard[] =>
+  cards.map(({ i, shots }) => ({
+    id: `c${i}`,
+    atMs: i,
+    points: shots.map((s) => ({ xUm: s.xUm as number, yUm: s.yUm as number })),
+  }))
+
+/**
+ * Anteile im Raster, eine Zeile je Stufe und Schusszahlen mit den Anteilen je Zahl der Scheiben; gibt den größten
+ * Anteil zurück und den größten auf der ersten Stufe (ohne Wandern)
+ */
+function grid(
+  id: string,
+  label: string,
+  seed: number,
+  levels: readonly number[],
+  hit: (rand: Random, count: number, level: number, shots: (i: number) => number) => boolean
+): { worst: number; still: number } {
+  let worst = 0
+  let still = 0
+  levels.forEach((level, li) =>
+    MIXES.forEach(([mix, shots], mi) => {
+      const parts = GRID_CARDS.map((count) => {
+        let hits = 0
+        repeat(GRID_RUNS, seed + 1000 * li + 100 * mi + count, (rand) => {
+          if (hit(rand, count, level, shots)) hits++
+        })
+        worst = Math.max(worst, hits / GRID_RUNS)
+        if (li === 0) still = Math.max(still, hits / GRID_RUNS)
+        return `${count}: ${share(hits, GRID_RUNS)}`
+      })
+      out(id, `${label}, Wandern ${num(level, 1)}, ${mix}: ${parts.join(", ")}`)
+    })
+  )
+  return { worst, still }
+}
+const percent = (v: number) => `${num(100 * v, 1)} %`
+
+// B25: Lage über Zeit (L10, zwei Ebenen): Fehlalarm ohne Versatz, erkannt bei Versatz 0,3σ nach rechts
+{
+  const alarm = grid(
+    "B25",
+    "Lage ohne Versatz, versetzt gemeldet",
+    25100,
+    WANDER,
+    (rand, count, tau, shots) => {
+      const cards = asPattern(wanderingCards(rand, count, tau, shots))
+      return positionOverTime(positionPoints(cards)).verdict === "offset"
+    }
+  )
+  grid("B25", "Lage Versatz 0,3σ erkannt", 25500, WANDER, (rand, count, tau, shots) => {
+    const cards = asPattern(wanderingCards(rand, count, tau, shots, { mx: 0.3 * LG.sx }))
+    return positionOverTime(positionPoints(cards)).verdict === "offset"
+  })
   out(
     "B25",
-    `Lage ${label}: ${perCount(seed, (rand, count) => positionOverTime(positionPoints(patternCards(rand, count, { mx: 1500 * shift }))).verdict === "offset")}`
+    `Lage höchster Fehlalarm: ${percent(alarm.worst)}, ohne Wandern ${percent(alarm.still)}`
   )
 }
 
 // ---------- Vergleichen (C2, C3): zwei Scheiben Schuss für Schuss, zwei Seiten Scheibe für Scheibe
 
 const COMPARE_SHOTS = [20, 40, 60] as const
-const COMPARE_CARDS = [5, 10, 20] as const
 const COMPARE_RUNS = 5_000
 
 /** Anteile je Zahl, etwa „20: 4,9 %, 40: 5,1 %“ */
@@ -770,17 +852,108 @@ for (const [label, shift, seed] of [
   })
   out("B28", `Lage ${label}: ${shares}`)
 }
-for (const [label, shift, seed] of [
-  ["Scheibe für Scheibe, ohne Versatz, versetzt gemeldet", 0, 28300],
-  ["Scheibe für Scheibe, Versatz 0,3σ erkannt", 0.3, 28400],
-] as const) {
-  const centers = (cards: readonly PatternCard[]) => positionPoints(cards).map((p) => p.center)
-  const shares = perSize(COMPARE_CARDS, seed, (rand, count) => {
-    const a = centers(patternCards(rand, count, {}))
-    const b = centers(patternCards(rand, count, { mx: LG.sx * shift }))
-    return compareCenters(a, b)?.verdict === "shifted"
+// B28 (Zeiträume): Lage zweier Seiten über Schüsse und Abende (`compareCenterGroups`): Fehlalarm ohne Versatz, erkannt
+// bei B 0,3σ nach rechts
+{
+  const alarm = grid(
+    "B28",
+    "Lage zweier Zeiträume ohne Versatz, versetzt gemeldet",
+    28300,
+    WANDER,
+    (rand, count, tau, shots) => {
+      const a = asPattern(wanderingCards(rand, count, tau, shots))
+      const b = asPattern(wanderingCards(rand, count, tau, shots))
+      return compareCenterGroups(a, b)?.verdict === "shifted"
+    }
+  )
+  grid(
+    "B28",
+    "Lage zweier Zeiträume Versatz 0,3σ erkannt",
+    28700,
+    WANDER,
+    (rand, count, tau, shots) => {
+      const a = asPattern(wanderingCards(rand, count, tau, shots))
+      const b = asPattern(wanderingCards(rand, count, tau, shots, { mx: 0.3 * LG.sx }))
+      return compareCenterGroups(a, b)?.verdict === "shifted"
+    }
+  )
+  out(
+    "B28",
+    `Lage zweier Zeiträume höchster Fehlalarm: ${percent(alarm.worst)}, ohne Wandern ${percent(alarm.still)}`
+  )
+}
+
+// B19 (Raster): Ø je Schuss zweier Zeiträume über Schüsse und Abende, Fehlalarm bei gleicher Streuung und gleichem
+// Wandern; erkannt bei σ 1,5 → 1,3 mm auf Seite b
+{
+  const values = (cards: ReturnType<typeof wanderingCards>) =>
+    cards.map(({ i, shots }) => meanValue(String(i), shots))
+  const alarm = grid(
+    "B19",
+    "Ø je Schuss, Urteil trotz gleicher Streuung",
+    19100,
+    WANDER,
+    (rand, count, tau, shots) => {
+      const a = values(wanderingCards(rand, count, tau, shots))
+      const b = values(wanderingCards(rand, count, tau, shots))
+      return compareValues(a, b, perShot)?.verdict !== "unclear"
+    }
+  )
+  grid("B19", "Ø je Schuss, σ 1,5 → 1,3 mm erkannt", 19300, WANDER, (rand, count, tau, shots) => {
+    const a = values(wanderingCards(rand, count, tau, shots))
+    const b = values(wanderingCards(rand, count, tau, shots, { sx: 1300 }))
+    return compareValues(a, b, perShot)?.verdict === "higher"
   })
-  out("B28", `Lage ${label}: ${shares}`)
+  out(
+    "B19",
+    `Ø je Schuss höchster Fehlalarm: ${percent(alarm.worst)}, ohne Wandern ${percent(alarm.still)}`
+  )
+}
+
+// B29: Streuung zweier Zeiträume (P5 über die Varianzen, `compareValues`): Wandern der Präzision als σ je Scheibe ×
+// exp(N(0, w²)); Fehlalarm bei gleicher Streuung, erkannt bei σ 1,5 → 1,3 mm auf Seite b
+{
+  const sigma = metric("group.sigma")
+  const spreads = (
+    rand: Random,
+    count: number,
+    w: number,
+    shots: (i: number) => number,
+    sx: number
+  ) =>
+    Array.from({ length: count }, (_, i): CardValue => {
+      const own = card(rand, { ...LG, n: shots(i), sx: sx * Math.exp(rand.normal() * w) })
+      return { id: String(i), atMs: i, value: computeMetric(sigma, own) as number, n: own.length }
+    })
+  const PRECISION = [0, 0.1, 0.2] as const
+  const alarm = grid(
+    "B29",
+    "Streuung, Urteil trotz gleicher Streuung",
+    29100,
+    PRECISION,
+    (rand, count, w, shots) =>
+      compareValues(
+        spreads(rand, count, w, shots, 1500),
+        spreads(rand, count, w, shots, 1500),
+        sigma
+      )?.verdict !== "unclear"
+  )
+  grid(
+    "B29",
+    "Streuung σ 1,5 → 1,3 mm erkannt",
+    29500,
+    PRECISION,
+    (rand, count, w, shots) =>
+      compareValues(
+        spreads(rand, count, w, shots, 1500),
+        spreads(rand, count, w, shots, 1300),
+        sigma
+      )?.verdict === "lower"
+  )
+  out(
+    "B29",
+    `Streuung höchster Fehlalarm: ${percent(alarm.worst)}, ohne Wandern ${percent(alarm.still)}`
+  )
 }
 
 process.stdout.write(`${lines.join("\n")}\n`)
