@@ -62,7 +62,7 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
   (`src/lib/marks-actions.ts`) nach. Das Trefferbild (`show=target`) und die Reiter Präzision und Lage holt
   `periodPatternAction` (`src/lib/pattern-actions.ts`, über `usePeriodPattern`) erst bei Bedarf: Lagen der Projektion
   (`patternCardsOf`), gerechnet auf dem Server; an den Browser gehen bis 3.000 Schuss die Treffer mit Band (nur eigene
-  Scheiben), darüber ein Raster, dazu Schwerpunkte und Urteile. Gerechnet in der Wertung der Familie; ein `scoring` in
+  Scheiben), ab 50 Schuss das Raster für die Umrisse (darüber nur noch das Raster), dazu Schwerpunkte und Urteile. Gerechnet in der Wertung der Familie; ein `scoring` in
   der Adresse gilt nicht. Einen Vergleich bietet der Fortschritt nicht mehr an (`withCompare={false}`): „Genauer
   vergleichen“ hinter dem Satz führt auf die Seite Vergleichen, eine Adresse mit `compare=` leitet dorthin um.
 - **Vergleichen** (`/compare`, [[spiegel-vergleichen]]): Der Server rechnet `comparePageData` (`src/lib/compare.ts`):

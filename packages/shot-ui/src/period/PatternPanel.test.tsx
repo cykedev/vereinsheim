@@ -78,12 +78,15 @@ describe("PatternPanel", () => {
     expect(text(html)).not.toMatch(JARGON)
   })
 
-  it("über 3.000 Schuss die Dichte in sechs Bändern zwischen Flächen und Ringen", () => {
+  it("über 3.000 Schuss nur die Umrisse, ohne Knopf, wie beim Vergleichen", () => {
     const html = render({ status: "ready", pattern: periodPattern(cards(80, 40)) })
-    expect(html).toContain('data-pattern-target="bands"')
-    for (const band of [1, 2, 3, 4, 5, 6]) expect(html).toContain(`data-pattern-band="${band}"`)
+    expect(html).toContain('data-pattern-target="outlines"')
+    expect(html).toContain('data-pattern-view="outlines"')
+    expect(html.match(/data-outline="pattern"/g)).toHaveLength(2)
     expect(html).not.toContain("data-pattern-shot")
-    expect(html.lastIndexOf("data-pattern-band")).toBeLessThan(html.indexOf("data-ring="))
+    expect(html).not.toContain('aria-label="Umrisse statt Treffer zeigen"')
+    expect(html).toContain("Durchgezogen: die Hälfte der Schüsse. Gestrichelt: 9 von 10.")
+    expect(html).not.toContain("data-heat-legend")
     expect(html).not.toContain("Jeder Punkt ist ein Schuss.")
   })
 
@@ -140,14 +143,13 @@ describe("Umrisse statt Dichte", () => {
   })
 
   for (const [name, pattern] of [
-    ["mit Treffern", periodPattern(cards(10, 40))],
-    ["mit Bändern", periodPattern(cards(80, 40))],
+    ["mit dem Knopf", periodPattern(cards(10, 40))],
+    ["über 3.000 Schuss", periodPattern(cards(80, 40))],
   ] as const) {
-    it(`statt der Dichte ${name} die Umrisse wie beim Vergleichen, unter den Ringen`, () => {
+    it(`${name} die Umrisse wie beim Vergleichen, unter den Ringen`, () => {
       const html = drawn(pattern, "outlines")
       expect(html).toContain('data-pattern-view="outlines"')
       expect(html).not.toContain("data-pattern-shot")
-      expect(html).not.toContain("data-pattern-band")
       expect(html).not.toContain("var(--heat-")
       // gestrichelt 9 von 10, durchgezogen und getönt die Hälfte, in der Farbe der Seite A
       expect(html.match(/data-outline="pattern"/g)).toHaveLength(2)

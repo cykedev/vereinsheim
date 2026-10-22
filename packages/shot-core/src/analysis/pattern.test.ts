@@ -245,9 +245,9 @@ describe("periodPattern", () => {
     expect(inner).toBeLessThan(0.2)
   })
 
-  it("über 3.000 Schuss nur die Dichte in sechs Bändern", () => {
+  it("über 3.000 Schuss nur das Raster für die Umrisse, wie beim Vergleichen", () => {
     const pattern = periodPattern(cardsOf(80, 40, 1500))
-    expect(pattern.picture.style).toBe("bands")
+    expect(pattern.picture.style).toBe("outlines")
     expect(pattern.picture.points).toBeNull()
     expect(pattern.picture.grid?.levels).toHaveLength(6)
     expect(PATTERN_SHOTS_MAX).toBe(3000)
@@ -273,9 +273,9 @@ describe("periodPattern", () => {
     expect(JSON.parse(JSON.stringify(pattern))).toEqual(pattern)
   })
 
-  it("150.000 Schuss: ohne Stapelüberlauf, als Bänder", () => {
+  it("150.000 Schuss: ohne Stapelüberlauf, als Umrisse", () => {
     const pattern = periodPattern(cardsOf(3750, 40, 1500))
-    expect(pattern.picture.style).toBe("bands")
+    expect(pattern.picture.style).toBe("outlines")
     expect(pattern.shots).toBe(150_000)
   })
 

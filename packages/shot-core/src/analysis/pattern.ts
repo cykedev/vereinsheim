@@ -223,7 +223,7 @@ export function outlierDirection(cards: readonly PatternCard[]): OutlierDirectio
 
 /** ab so vielen Schüssen färbt das Trefferbild die Treffer nach der Dichte, darunter nach ihrem Ring */
 export const PATTERN_DENSITY_FROM = 50
-/** ab so vielen Schüssen zeigt das Trefferbild die Dichte als Bänder statt jedes Treffers (Menge an den Browser) */
+/** ab so vielen Schüssen zeigt das Trefferbild nur die Umrisse statt jedes Treffers (Menge an den Browser) */
 export const PATTERN_SHOTS_MAX = 3000
 
 /** Raster der Lagen im Muster: 10 µm wie `cardMarks` */
@@ -231,11 +231,12 @@ const PATTERN_UM = 10
 
 /**
  * wie das Trefferbild zeichnet: jeden Treffer in seiner Ringfarbe (wenige Schüsse), jeden Treffer in der Farbe der
- * Dichte an seiner Stelle, oder die Dichte als Bänder (sehr viele Schüsse)
+ * Dichte an seiner Stelle oder die Umrisse, oder nur die Umrisse (sehr viele Schüsse); dieselben Schwellen wie beim
+ * Vergleichen (`comparePicture`)
  */
-export type PatternStyle = "rings" | "shots" | "bands"
+export type PatternStyle = "rings" | "shots" | "outlines"
 
-/** das Bild der Schüsse: Ausschnitt um die Mitte der Scheibe, die Mitte aller Schüsse, Treffer oder Bänder */
+/** das Bild der Schüsse: Ausschnitt um die Mitte der Scheibe, die Mitte aller Schüsse, Treffer oder Umrisse */
 export interface PatternLayer {
   style: PatternStyle
   /** halbe Kantenlänge des Ausschnitts um die Mitte der Scheibe */
@@ -244,12 +245,12 @@ export interface PatternLayer {
   center: Point | null
   /**
    * jeder Schuss als [x, y] in 10 µm, sein Ring (null ohne Wert) und sein Band der Dichte (0 selten bis 5 oft, wie
-   * `HEAT_SHARES`; null bei `rings`), die dichten zuletzt; null bei `bands`
+   * `HEAT_SHARES`; null bei `rings`), die dichten zuletzt; null bei `outlines`
    */
   points: [number, number, number | null, number | null][] | null
   /**
-   * die Dichte als Raster: bei `bands` die Bänder, bei `shots` auch, damit das Bild statt der Treffer die Umrisse (Hälfte
-   * und 9 von 10 der Schüsse) zeigen kann; bei `rings` null
+   * die Dichte als Raster für die Umrisse (Hälfte und 9 von 10 der Schüsse) und die Farben der Treffer; bei `rings`
+   * null
    */
   grid: DensityGrid | null
   /** Treffer außerhalb des Ausschnitts, die das Bild nicht zeigt (nur bei `shots`) */
@@ -314,7 +315,7 @@ function layer(points: readonly PatternPoint[]): PatternLayer {
   const core = patternHalf(points)
   if (points.length > PATTERN_SHOTS_MAX)
     return {
-      style: "bands",
+      style: "outlines",
       halfUm: core,
       center,
       points: null,
@@ -336,7 +337,7 @@ function layer(points: readonly PatternPoint[]): PatternLayer {
 /**
  * Das Trefferbild eines Zeitraums (L9) mit den Urteilen über Form (L9), Lage (L10) und Ausreißerrichtung (L7), für
  * den Browser gerechnet: Er bekommt bis 3.000 Schuss jeden Treffer mit seinem Band der Dichte (unter 50 mit seinem
- * Ring), ab 50 Schuss die Dichte als Raster von 64 × 64 (für Bänder oder Umrisse, darüber nur noch das Raster), dazu
+ * Ring), ab 50 Schuss die Dichte als Raster von 64 × 64 (für die Umrisse, über 3.000 Schuss nur noch das Raster), dazu
  * die Schwerpunkte je Scheibe auf ganze µm.
  */
 export function periodPattern(cards: readonly PatternCard[]): PeriodPattern {

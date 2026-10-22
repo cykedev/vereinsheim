@@ -14,13 +14,12 @@ import {
 import { MpiMark } from "../target/MpiMark"
 import { TargetBoard } from "../target/TargetBoard"
 import { useElementWidth } from "../target/useAnimatedViewBox"
-import { contourPath } from "./contours"
 import { DensityOutlines } from "./DensityOutlines"
 
 const HAIR = { vectorEffect: "non-scaling-stroke" } as const
 /** Raster der Punkte im Muster: 10 µm (`periodPattern`) */
 const POINT_MM = 0.01
-/** Farben der Bänder von außen (selten) nach innen (oft) */
+/** Farben der Dichte von selten nach oft */
 export const HEAT_COLORS = [
   "var(--heat-0)",
   "var(--heat-1)",
@@ -29,24 +28,19 @@ export const HEAT_COLORS = [
   "var(--heat-4)",
   "var(--heat-5)",
 ] as const
-/**
- * Deckkraft der Bänder von außen nach innen: deckend genug, dass sich Violett auch vom Spiegel klar abhebt; nur das
- * ganz leichte äußere Band lässt Papier und Spiegel noch durchscheinen
- */
-const HEAT_OPACITY = [0.6, 0.85, 0.9, 0.93, 0.95, 0.97] as const
 /** Deckkraft der Treffer in der Farbe der Dichte: Überlagerungen bleiben zu sehen, der Spiegel scheint durch */
 const SHOT_HEAT_OPACITY = 0.85
 
-/** wie das Bild ab 50 Schuss zeichnet: Treffer oder Bänder in den Farben der Dichte, oder die Umrisse */
+/** wie das Bild von 50 bis 3.000 Schuss zeichnet: Treffer in den Farben der Dichte oder die Umrisse */
 export type PatternView = "density" | "outlines"
 
 export interface PatternTargetProps {
-  /** das Bild aus `periodPattern`: Treffer in Ringfarbe, Treffer in Dichtefarbe oder die Dichte in Bändern */
+  /** das Bild aus `periodPattern`: Treffer in Ringfarbe, Treffer in Dichtefarbe oder nur die Umrisse */
   layer: PatternLayer
   target: TargetImage
   /** der Satz unter dem Bild als Name des Bilds */
   label: string
-  /** Umrisse nur mit Raster (ab 50 Schuss), sonst wie `density` */
+  /** gilt nur bei `shots`: Unter 50 Schuss stehen immer die Treffer, über 3.000 immer die Umrisse */
   view?: PatternView
   className?: string
 }
@@ -55,10 +49,10 @@ export interface PatternTargetProps {
  * Trefferbild über einen Zeitraum (L9) auf der Scheibe, wie die Seite einer Scheibe sie zeichnet (`TargetBoard`:
  * Papier, Spiegel, Ringe, Ringzahlen). Bis 3.000 Schuss jeder Treffer in Kalibergröße, gefärbt nach der Dichte an
  * seiner Stelle von selten (hellviolett) bis oft (gelb), die dichten zuletzt; unter 50 Schuss in seiner Ringfarbe, weil
- * eine Dichte dann nichts sagt. Darüber die Dichte als sechs Bänder zwischen den Flächen und den Ringen. Der
- * geviertelte Kreis ist die Mitte aller Schüsse. Ringzahlen und Schwerpunkt richten sich wie auf der Scheibe nach der
- * gemessenen Breite. Mit `view` „outlines“ stehen statt Treffern und Bändern die Umrisse wie beim Vergleichen
- * (`DensityOutlines`): durchgezogen und getönt die Hälfte der Schüsse, gestrichelt 9 von 10.
+ * eine Dichte dann nichts sagt. Mit `view` „outlines“ und über 3.000 Schuss immer stehen statt der Treffer die
+ * Umrisse wie beim Vergleichen (`DensityOutlines`): durchgezogen und getönt die Hälfte der Schüsse, gestrichelt 9 von
+ * 10. Der geviertelte Kreis ist die Mitte aller Schüsse. Ringzahlen und Schwerpunkt richten sich wie auf der Scheibe
+ * nach der gemessenen Breite.
  */
 export function PatternTarget({
   layer,
@@ -67,7 +61,10 @@ export function PatternTarget({
   view: wanted = "density",
   className,
 }: PatternTargetProps) {
-  const outlines = wanted === "outlines" && layer.style !== "rings" ? layer.grid : null
+  const outlines =
+    layer.style === "outlines" || (layer.style === "shots" && wanted === "outlines")
+      ? layer.grid
+      : null
   const [width, measure] = useElementWidth()
   const half = layer.halfUm / 1000
   const view = { x: -half, y: -half, w: 2 * half }
@@ -86,8 +83,8 @@ export function PatternTarget({
         className
       )}
     >
-      {/* bei wenigen Treffern wie auf der Seite einer Scheibe; mit Dichte liegen Ringe und Ringzahlen über den Bändern
-          oder Treffern, damit man sieht, was wo ist */}
+      {/* bei wenigen Treffern wie auf der Seite einer Scheibe; sonst liegen Ringe und Ringzahlen über den Treffern
+          oder Umrissen, damit man sieht, was wo ist */}
       <TargetBoard
         target={target}
         view={view}
@@ -103,18 +100,6 @@ export function PatternTarget({
           tint
         />
       )}
-      {!outlines &&
-        layer.style === "bands" &&
-        layer.grid?.levels.map((level, i) => (
-          <path
-            key={i}
-            data-pattern-band={i + 1}
-            d={contourPath(layer.grid!, level, layer.halfUm)}
-            fill={HEAT_COLORS[i]}
-            fillOpacity={HEAT_OPACITY[i]}
-            fillRule="evenodd"
-          />
-        ))}
       {/* jeder Treffer: in der Farbe der Dichte an seiner Stelle, bei wenigen Schüssen in der seines Rings */}
       {(outlines ? [] : (layer.points ?? [])).map(([x, y, ring, band], i) => (
         <circle
@@ -146,7 +131,7 @@ export function PatternTarget({
   )
 }
 
-/** Legende der Heatmap: ein Verlauf von selten nach oft in den Farben der Bänder */
+/** Legende der Dichte: ein Verlauf von selten nach oft in ihren Farben */
 export function HeatLegend() {
   return (
     <div data-heat-legend className="flex items-center gap-2 text-[12px] text-muted-foreground">

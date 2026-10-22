@@ -1,7 +1,6 @@
 // Dichte der Treffer über viele Scheiben als Raster (L9): Punkte in Zellen zählen, dann mit einem Gauß-Kern glätten.
-// Daraus färbt `periodPattern` die Treffer nach ihrem Band oder schickt es ab 3.000 Schuss an den Browser, der die
-// sechs Bänder zeichnet. Nicht über `./analysis`
-// exportiert: Hilfen der Auswertung `periodPattern`, keine eigene Auswertung.
+// Daraus färbt `periodPattern` die Treffer nach ihrem Band, und ab 50 Schuss geht es an den Browser, der daraus die
+// Umrisse zeichnet. Nicht über `./analysis` exportiert: Hilfen der Auswertung `periodPattern`, keine eigene Auswertung.
 
 import type { Point } from "../geometry"
 import { quantile } from "../stats"

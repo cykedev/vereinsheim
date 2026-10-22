@@ -86,10 +86,10 @@ function Placeholder({ text, action }: { text: string; action?: ReactNode }) {
 }
 
 /**
- * Das Trefferbild als Hauptbild der Seite eines Zeitraums: wo die Schüsse lagen, ab 50 Schuss in den Farben der Dichte
- * mit Legende oder, über den Knopf oben links, als Umrisse wie beim Vergleichen; darunter die Antwort (Lage, dann
- * Form) und die Grundlage. Lädt das Muster noch oder ging es schief,
- * steht an seiner Stelle ein Platz gleicher Größe.
+ * Das Trefferbild als Hauptbild der Seite eines Zeitraums: wo die Schüsse lagen, von 50 bis 3.000 Schuss in den
+ * Farben der Dichte mit Legende oder, über den Knopf oben links, als Umrisse wie beim Vergleichen, darüber nur als
+ * Umrisse; darunter die Antwort (Lage, dann Form) und die Grundlage. Lädt das Muster noch oder ging es schief, steht an
+ * seiner Stelle ein Platz gleicher Größe.
  */
 export function PatternPanel({
   state,
@@ -125,9 +125,9 @@ function Ready({ pattern, target }: { pattern: PeriodPattern; target: TargetImag
   const words = pictureWords(pattern)
   const sentence = [words.lead, words.more].filter(Boolean).join(" ")
   const style = pattern.picture.style
-  // Umrisse gibt es nur mit Raster, also ab 50 Schuss; darunter zeigt das Bild jeden Treffer und keinen Knopf
-  const canOutline = style !== "rings" && pattern.picture.grid !== null
-  const outlines = canOutline && view === "outlines"
+  // die Wahl gibt es von 50 bis 3.000 Schuss; darunter zeigt das Bild jeden Treffer, darüber nur die Umrisse
+  const canChoose = style === "shots" && pattern.picture.grid !== null
+  const outlines = style === "outlines" || (canChoose && view === "outlines")
   return (
     <>
       <div className="relative">
@@ -137,7 +137,7 @@ function Ready({ pattern, target }: { pattern: PeriodPattern; target: TargetImag
           label={sentence}
           view={outlines ? "outlines" : "density"}
         />
-        {canOutline && (
+        {canChoose && (
           <div className="pointer-events-none absolute top-2 left-2">
             <CornerButton
               label={OUTLINES_LABEL}
@@ -155,10 +155,8 @@ function Ready({ pattern, target }: { pattern: PeriodPattern; target: TargetImag
         </p>
       ) : (
         <>
-          {style !== "bands" && (
-            <p className="text-[13px] text-muted-foreground">{LEGEND_POINTS}</p>
-          )}
-          {style !== "rings" && <HeatLegend />}
+          <p className="text-[13px] text-muted-foreground">{LEGEND_POINTS}</p>
+          {style === "shots" && <HeatLegend />}
         </>
       )}
       <div className="grid gap-1">

@@ -214,20 +214,23 @@ Ergebnis (I7–I9, Z6, Z7, K2, K4, T4, V3–V5, W2–W4 als Zeilen im Vergleich)
     gezeichnet, Deckkraft 0,85, Ringe und Ringzahlen darüber, damit man sieht, was wo ist; der Ausschnitt reicht bis
     zum weitesten Schuss, höchstens 1,6-mal so weit wie 99 % der Schüsse, wer dann draußen liegt, wird unter dem Bild
     gezählt („1 Schuss liegt außerhalb des Bilds.“);
-  - über 3.000 Schuss (`PATTERN_SHOTS_MAX`, Menge an den Browser) die Dichte als sechs Bänder in denselben Farben
-    zwischen den Flächen und den Ringen (`bands`, Deckkraft 0,6 bis 0,97), Ausschnitt 99 % der Schüsse × 1,35.
+  - über 3.000 Schuss (`PATTERN_SHOTS_MAX`, Menge an den Browser) nur die Umrisse (`outlines`), ohne Knopf,
+    Ausschnitt 99 % der Schüsse × 1,35. Dieselben Schwellen gelten beim Vergleichen. Bis zum 22. Oktober 2026 stand
+    hier die Dichte als sechs Bänder in den Farben der Treffer. Mit den Umrissen fielen sie weg: Sie waren nur eine
+    Notlösung, weil der Server keine Tausende Treffer schickt, und die eigenen Daten erreichen 3.000 Schuss in Jahren
+    nicht (Luftpistole „Alles“ 985 Schuss).
 - **Warum Treffer in Dichtefarbe:** Der User verglich am 21. Oktober 2026 Heatmap, Treffer in Ringfarbe und Treffer in
   Dichtefarbe an den eigenen Daten. Treffer in Ringfarbe wiederholen nur die Ringe (die Farbe hängt am Abstand zur
   Mitte), bei vielen Schüssen versinkt die Dichte; die reine Heatmap zeigt keine Treffer. Treffer in Dichtefarbe zeigen
   jeden Schuss, die seltenen und den Kern. Verworfen davor: hellblaue Flächen, eine zurückgenommene dunkle Scheibe,
   eigene Ringe mit Saum, einzelne seltene Treffer über einer Heatmap.
 - Die Legende ist ein Verlauf „selten … oft“, bei Treffern dazu „Jeder Punkt ist ein Schuss.“
-- **Dichte oder Umrisse:** Ab 50 Schuss schaltet ein runder Knopf oben links im Bild (`CornerButton`, Kreis in einem
+- **Dichte oder Umrisse:** Von 50 bis 3.000 Schuss schaltet ein runder Knopf oben links im Bild (`CornerButton`, Kreis in einem
   gestrichelten) statt der Dichte die Umrisse wie beim Vergleichen ([[spiegel-vergleichen]]): durchgezogen und leicht
   getönt die Fläche mit der Hälfte der Schüsse, gestrichelt die mit 9 von 10, in der Farbe der Seite A
   (`compare-a`), der geviertelte Kreis bleibt. Gezeichnet von einem Baustein für beide Seiten (`DensityOutlines`), die
   Legende ist dieselbe („Durchgezogen: die Hälfte der Schüsse. Gestrichelt: 9 von 10.“). Unter 50 Schuss gibt es kein
-  Raster und keinen Knopf. Die Wahl ist, wie gezeichnet wird, nicht was man sieht: Sie steht nicht in der Adresse,
+  Raster und keinen Knopf, darüber nur die Umrisse. Die Wahl ist, wie gezeichnet wird, nicht was man sieht: Sie steht nicht in der Adresse,
   sondern im Gerät (`localStorage` unter `spiegel-pattern-view`), Vorgabe ist die Dichte. Der User wollte am
   22. Oktober 2026 beides haben: die Dichte zeigt jeden Treffer, die Umrisse lesen sich wie der Vergleich.
 - **Der geviertelte Kreis** ist die Mitte aller Schüsse.
@@ -236,7 +239,7 @@ Ergebnis (I7–I9, Z6, Z7, K2, K4, T4, V3–V5, W2–W4 als Zeilen im Vergleich)
   gepoolte Form); ohne Urteil über die Form kein zweiter Satz.
 - **Rechnen auf dem Server:** aus den gespeicherten Lagen der Projektion (`marks`, 10 µm), erst wenn das Bild oder die
   Reiter Präzision und Lage es brauchen (`periodPatternAction`); an den Browser gehen bis 3.000 Schuss die Treffer mit
-  ihrem Band, ab 50 Schuss das Raster von 64 × 64 (für Bänder und Umrisse), dazu der Schwerpunkt je Scheibe. Gemessen: „Alles“ mit 1.564 Scheiben (Bänder) 56 ms und 156 KB, 90 Tage (76 Scheiben, Treffer in Dichtefarbe) 9 ms und 42 KB
+  ihrem Band, ab 50 Schuss das Raster von 64 × 64 (für die Umrisse), dazu der Schwerpunkt je Scheibe. Gemessen: „Alles“ mit 1.564 Scheiben (nur Raster) 56 ms und 156 KB, 90 Tage (76 Scheiben, Treffer in Dichtefarbe) 9 ms und 42 KB
   ([[spiegel-db-schema]]). Die Dichte glättet 1,3-mal so stark wie nach Silverman, die Ränder sind weiche Kurven.
 - **Reiter Präzision:** die Form über mehrere Scheiben als Ellipse (doppelte Halbachsen der gepoolten Streuung) mit
   ihrer langen Seite und gestrichelt dem Kreis einer runden Gruppe gleicher Streuung, ohne Maßstab; daneben Form, Länge

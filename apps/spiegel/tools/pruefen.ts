@@ -1468,7 +1468,7 @@ async function progress(page: Page) {
  * Das Trefferbild über den Zeitraum (L9) und die Reiter Präzision und Lage: Umschalten schreibt `show=target`, Zurück
  * stellt den Verlauf her; Satz, Legende und Grundlage ohne Fachbegriffe; die Form als Ellipse; ein Punkt der Lage über
  * Zeit wählt die Scheibe der Ablesung; am Telefon kein seitliches Scrollen und über dem Bild höchstens zwei Zeilen
- * Bedienung. Ob die Daten Treffer in Ringfarbe, Treffer in Dichtefarbe oder Bänder ergeben, steht im Detail.
+ * Bedienung. Ob die Daten Treffer in Ringfarbe, Treffer in Dichtefarbe oder nur Umrisse ergeben, steht im Detail.
  */
 async function periodPattern(page: Page) {
   const show = (label: string) =>
@@ -1493,13 +1493,18 @@ async function periodPattern(page: Page) {
     jargon: ${jargonIn("[data-pattern-panel]")},
   })`)
   check(
-    `Trefferbild: Satz, Legende und Grundlage stehen da, keine Fachbegriffe (${state.kind === "bands" ? "Bänder" : state.kind === "shots" ? "Treffer in Dichtefarbe" : "Treffer in Ringfarbe"})`,
+    `Trefferbild: Satz, Legende und Grundlage stehen da, keine Fachbegriffe (${state.kind === "outlines" ? "nur Umrisse" : state.kind === "shots" ? "Treffer in Dichtefarbe" : "Treffer in Ringfarbe"})`,
     words.sentence.length > 0 && words.basis.startsWith("Über ") && words.jargon === null,
     words
   )
-  // Umrisse statt Dichte: ab 50 Schuss ein Knopf, die Wahl bleibt im Gerät, auch nach dem Neuladen
+  // Umrisse statt Dichte: von 50 bis 3.000 Schuss ein Knopf, die Wahl bleibt im Gerät, auch nach dem Neuladen
   const outlinesButton = `$('button[aria-label="Umrisse statt Treffer zeigen"]')`
-  if (state.kind === "rings") {
+  if (state.kind === "outlines") {
+    const only = await page.ev<boolean>(
+      `$("[data-pattern-target]")?.dataset.patternView === "outlines" && !${outlinesButton}`
+    )
+    check("Trefferbild: über 3.000 Schuss nur die Umrisse, ohne Knopf", only, "")
+  } else if (state.kind === "rings") {
     check("Trefferbild: Umrisse statt Dichte", false, "unter 50 Schuss, kein Knopf (nicht belegt)")
   } else {
     await page.ev(`localStorage.removeItem("spiegel-pattern-view")`)
