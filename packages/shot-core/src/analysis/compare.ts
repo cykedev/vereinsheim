@@ -14,7 +14,13 @@ import {
 } from "../metrics"
 import { quantile } from "../stats"
 import { densityGrid, patternHalf, type DensityGrid } from "./density"
-import { PATTERN_DENSITY_FROM, PATTERN_SHOTS_MAX } from "./pattern"
+import { levelCompare, levelEstimate } from "./levels"
+import {
+  PATTERN_DENSITY_FROM,
+  PATTERN_SHOTS_MAX,
+  positionPoints,
+  type PatternCard,
+} from "./pattern"
 import { compareSamples, MIN_CARDS_PER_SIDE, type PeriodComparison } from "./period"
 
 const ALPHA = 0.05
@@ -80,6 +86,47 @@ export function compareCenters(a: readonly Point[], b: readonly Point[]): Center
   const f = (nu / (2 * df)) * t2
   const p = (1 + (2 * f) / nu) ** (-nu / 2)
   return { ...summary, p, verdict: p < ALPHA ? "shifted" : "none" }
+}
+
+/**
+ * Lage zweier Zeiträume (C3) über alle Schüsse ([[adr-034]]): je Seite die Mitte aller Schüsse der Scheiben ab drei
+ * Schuss mit Lage (`positionPoints`), der Unterschied über zwei Ebenen (`levelCompare`): Wandern die Abende einer Seite
+ * nicht über den Zufall hinaus, zählt jeder Schuss, sonst jeder Abend. Versetzt bei p < 0,05, ein Urteil ab fünf
+ * Scheiben je Seite. Ohne Scheibe mit Lage auf einer Seite null.
+ */
+export function compareCenterGroups(
+  a: readonly PatternCard[],
+  b: readonly PatternCard[]
+): CenterComparison | null {
+  const side = (cards: readonly PatternCard[]) => {
+    const points = positionPoints(cards)
+    const shots = points.reduce((sum, p) => sum + p.n, 0)
+    if (!shots) return null
+    const center = {
+      xUm: points.reduce((sum, p) => sum + p.n * p.center.xUm, 0) / shots,
+      yUm: points.reduce((sum, p) => sum + p.n * p.center.yUm, 0) / shots,
+    }
+    const estimate = levelEstimate(
+      points.map((p) => ({ n: p.n, mean: [p.center.xUm, p.center.yUm], scatter: p.scatter }))
+    )
+    return { n: points.length, center, estimate }
+  }
+  const sa = side(a)
+  const sb = side(b)
+  if (!sa || !sb) return null
+  const shiftUm = { xUm: sa.center.xUm - sb.center.xUm, yUm: sa.center.yUm - sb.center.yUm }
+  const summary = {
+    a: { n: sa.n, center: sa.center },
+    b: { n: sb.n, center: sb.center },
+    shiftUm,
+    distanceUm: Math.hypot(shiftUm.xUm, shiftUm.yUm),
+  }
+  const few = { ...summary, p: null, verdict: "few" as const }
+  if (sa.n < MIN_CARDS_PER_SIDE || sb.n < MIN_CARDS_PER_SIDE || !sa.estimate || !sb.estimate)
+    return few
+  const compared = levelCompare(sa.estimate, sb.estimate)
+  if (!compared) return few
+  return { ...summary, p: compared.p, verdict: compared.p < ALPHA ? "shifted" : "none" }
 }
 
 /**

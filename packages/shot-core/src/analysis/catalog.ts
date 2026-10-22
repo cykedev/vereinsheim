@@ -47,6 +47,7 @@ export const ANALYSIS_CATALOG: Readonly<Record<string, readonly string[]>> = Obj
   compareSamples: ["C2", "C3", "T3"],
   compareSides: ["C2", "C3", "T3"],
   compareCenters: ["C2", "C3"],
+  compareCenterGroups: ["C3"],
   compareShots: ["C2"],
   comparePicture: ["C2", "C3"],
   againstOwnAverage: ["C4"],

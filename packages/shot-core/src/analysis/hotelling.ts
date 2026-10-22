@@ -1,15 +1,12 @@
-// Hotelling-T² eines Schwerpunkts gegen die Mitte, über beliebige Punkte: die Treffer einer Scheibe (`mpiConfidence`,
-// L3) und die Schwerpunkte vieler Scheiben (`positionOverTime`, L10). Nicht über `./analysis` exportiert: eine Hilfe,
-// keine Auswertung (`ANALYSIS_CATALOG`).
+// Hotelling-T² eines Schwerpunkts gegen die Mitte über die Treffer einer Scheibe (`mpiConfidence`, L3). Über viele
+// Scheiben rechnet `levels.ts` über zwei Ebenen. Nicht über `./analysis` exportiert: eine Hilfe, keine Auswertung
+// (`ANALYSIS_CATALOG`).
 
 import { centroid, covarianceEllipse, type Point } from "../geometry"
 import { fQuantile2 } from "../stats"
 import type { MpiConfidence } from "./position"
 
-/**
- * Hotelling-T² des Schwerpunkts beliebiger Punkte gegen die Mitte, wie `mpiConfidence`: für die Treffer einer
- * Scheibe und für die Schwerpunkte vieler Scheiben (L10, `pattern.ts`, Einheit die Scheibe)
- */
+/** Hotelling-T² des Schwerpunkts beliebiger Punkte gegen die Mitte, wie `mpiConfidence` für die Treffer einer Scheibe */
 export function confidenceOf(points: readonly Point[]): MpiConfidence | null {
   const n = points.length
   if (n < 3) return null

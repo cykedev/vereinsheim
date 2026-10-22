@@ -1,11 +1,12 @@
 // Trefferbild über viele Scheiben (Katalog L9, L10, L7): die Form über alle Scheiben, jede um ihre eigene Mitte
-// (gepoolt), die Lage als Schwerpunkt je Scheibe und die Richtung, in die Schüsse aus der Gruppe reißen. Einheit
-// ist die Scheibe, wo ein Urteil über die Lage fällt; die Form zählt Abweichungen innerhalb der Scheiben. Lagen in
-// µm, Mitte (0 | 0), x rechts, y oben, wie gezeichnet (ohne verdächtige Schüsse, `cardMarks`).
+// (gepoolt), die Lage über alle Schüsse mit einem Urteil über Schüsse und Abende ([[adr-034]]) und die Richtung, in
+// die Schüsse aus der Gruppe reißen. Die Form zählt Abweichungen innerhalb der Scheiben. Lagen in µm, Mitte (0 | 0),
+// x rechts, y oben, wie gezeichnet (ohne verdächtige Schüsse, `cardMarks`).
 
 import type { Point } from "../geometry"
 import { cellValue, densityGrid, patternHalf, type DensityGrid } from "./density"
-import { confidenceOf } from "./hotelling"
+import { c4 } from "../stats"
+import { levelEstimate, levelTestZero } from "./levels"
 
 /** ein Schuss im Trefferbild: Lage und, wenn bekannt, der Ring (für die Farbe der Punkte) */
 export interface PatternPoint extends Point {
@@ -95,18 +96,22 @@ export function periodShape(cards: readonly PatternCard[]): PeriodShape | null {
       : p < ALPHA && ratio >= SHAPE_MIN_RATIO
         ? "elongated"
         : "none"
-  return { shots, cards: counted, sigmaUm: Math.sqrt(half), ratio, angleRad, p, verdict }
+  // wie σ je Scheibe (P5): erwartungstreu mit c4 über 2ν Freiheitsgrade
+  const sigmaUm = Math.sqrt(half) / c4(2 * nu + 1)
+  return { shots, cards: counted, sigmaUm, ratio, angleRad, p, verdict }
 }
 
 /** Lage über Zeit (L10): ein Urteil ab so vielen Scheiben */
 const POSITION_MIN_CARDS = 5
 
-/** Schwerpunkt einer Scheibe und wie viele Schüsse ihn tragen */
+/** Schwerpunkt einer Scheibe, wie viele Schüsse ihn tragen und wie sie um ihn streuen */
 export interface PositionPoint {
   id: string
   atMs: number
   center: Point
   n: number
+  /** Abweichungsquadrate der Schüsse um den Schwerpunkt: [Σdx², Σdy², Σdx·dy] */
+  scatter: [number, number, number]
 }
 
 /**
@@ -116,48 +121,62 @@ export interface PositionPoint {
 export function positionPoints(cards: readonly PatternCard[]): PositionPoint[] {
   return cards
     .filter((card) => card.points.length >= MIN_CARD_POINTS)
-    .map((card) => ({
-      id: card.id,
-      atMs: card.atMs,
-      center: mean(card.points),
-      n: card.points.length,
-    }))
+    .map((card) => {
+      const center = mean(card.points)
+      const scatter: [number, number, number] = [0, 0, 0]
+      for (const p of card.points) {
+        const dx = p.xUm - center.xUm
+        const dy = p.yUm - center.yUm
+        scatter[0] += dx * dx
+        scatter[1] += dy * dy
+        scatter[2] += dx * dy
+      }
+      return { id: card.id, atMs: card.atMs, center, n: card.points.length, scatter }
+    })
     .sort((a, b) => a.atMs - b.atMs)
 }
 
+/** ein Schwerpunkt im Verlauf, ohne die Streuung (die braucht nur das Urteil) */
+export type TimelinePoint = Omit<PositionPoint, "scatter">
+
 export interface PositionOverTime {
-  points: PositionPoint[]
-  /** Mittel der Schwerpunkte, jede Scheibe gleich; null ohne Scheibe */
+  points: TimelinePoint[]
+  /** Mitte aller Schüsse dieser Scheiben (jeder Schuss gleich); null ohne Scheibe */
   mean: Point | null
-  /** Abstand dieses Mittels zur Mitte */
+  /** Abstand dieser Mitte zur Mitte der Scheibe */
   offsetUm: number | null
-  /** Hotelling-T² über die Schwerpunkte und seine 95-%-Grenze; null unter drei Scheiben oder auf einer Linie */
-  t2: number | null
-  critical: number | null
+  /** Wahrscheinlichkeit, dass eine Lage ohne Versatz so weit daneben liegt (zwei Ebenen); null ohne Test */
+  p: number | null
+  /** die Abende wandern über den Zufall der Schüsse hinaus: Dann zählt jeder Abend für sich; null ohne Schätzung */
+  wander: boolean | null
   verdict: "offset" | "fits" | "few"
 }
 
 /**
- * Lage über Zeit (L10): Ist der Versatz über den Zeitraum echt? Einheit ist die Scheibe wie beim Vergleich zweier
- * Zeiträume: Hotelling-T² über die Schwerpunkte gegen die Mitte, ab fünf Scheiben. Viele Schüsse aus wenigen Abenden
- * sind keine breite Grundlage, deshalb nicht über alle Schüsse.
+ * Lage über Zeit (L10): Ist der Versatz über den Zeitraum echt? Die Mitte aller Schüsse gegen die Mitte der Scheibe,
+ * über zwei Ebenen ([[adr-034]], `levelEstimate`): Wandern die Abende nicht über den Zufall hinaus, zählt jeder Schuss,
+ * sonst jeder Abend. Versetzt bei p < 0,05, ein Urteil ab fünf Scheiben.
  */
 export function positionOverTime(points: readonly PositionPoint[]): PositionOverTime {
-  const centers = points.map((p) => p.center)
-  const center = centers.length ? mean(centers) : null
-  const confidence = confidenceOf(centers)
+  const shots = points.reduce((sum, p) => sum + p.n, 0)
+  const center = shots
+    ? {
+        xUm: points.reduce((sum, p) => sum + p.n * p.center.xUm, 0) / shots,
+        yUm: points.reduce((sum, p) => sum + p.n * p.center.yUm, 0) / shots,
+      }
+    : null
+  const estimate = levelEstimate(
+    points.map((p) => ({ n: p.n, mean: [p.center.xUm, p.center.yUm], scatter: p.scatter }))
+  )
+  const test = estimate && levelTestZero(estimate)
   return {
-    points: [...points],
+    points: points.map(({ scatter: _scatter, ...point }) => point),
     mean: center,
     offsetUm: center ? Math.hypot(center.xUm, center.yUm) : null,
-    t2: confidence?.t2 ?? null,
-    critical: confidence?.critical ?? null,
+    p: test?.p ?? null,
+    wander: estimate?.wander ?? null,
     verdict:
-      points.length < POSITION_MIN_CARDS || !confidence
-        ? "few"
-        : confidence.real
-          ? "offset"
-          : "fits",
+      points.length < POSITION_MIN_CARDS || !test ? "few" : test.p < ALPHA ? "offset" : "fits",
   }
 }
 

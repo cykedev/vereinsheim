@@ -108,7 +108,14 @@ describe("positionPoints und positionOverTime (L10)", () => {
       card("c", [{ xUm: 0, yUm: 0 }], 3),
     ])
     expect(points.map((p) => p.id)).toEqual(["a", "b"])
-    expect(points[0]).toEqual({ id: "a", atMs: 1, center: { xUm: 30, yUm: 40 }, n: 4 })
+    // Abweichungsquadrate um die Mitte: 2 · 100² je Richtung, ohne Kovarianz
+    expect(points[0]).toEqual({
+      id: "a",
+      atMs: 1,
+      center: { xUm: 30, yUm: 40 },
+      n: 4,
+      scatter: [20000, 20000, 0],
+    })
   })
 
   it("fünf Scheiben um (400 | −300): versetzt", () => {
@@ -141,6 +148,43 @@ describe("positionPoints und positionOverTime (L10)", () => {
     )
     expect(result.verdict).toBe("fits")
     expect(result.offsetUm).toBeCloseTo(0, 6)
+  })
+
+  it("Mitte über alle Schüsse, Abende ohne Wandern: kurze tiefe Scheiben machen keinen Versatz zu Zufall", () => {
+    // fünf Scheiben zu 40 Schuss hoch, zwei zu 10 tief, Streuung je Schuss gleich (Fall vom 22. Oktober 2026)
+    const ring = (x: number, y: number, r: number) => {
+      const a = Math.round(r / Math.SQRT2)
+      return [
+        [r, 0],
+        [-r, 0],
+        [0, r],
+        [0, -r],
+        [a, a],
+        [-a, -a],
+        [a, -a],
+        [-a, a],
+      ].map(([dx, dy]) => ({ xUm: x + dx, yUm: y + dy }))
+    }
+    const long = (id: string, x: number, y: number, at: number) =>
+      card(id, Array.from({ length: 5 }, () => ring(x, y, 11000)).flat(), at)
+    const short = (id: string, x: number, y: number, at: number) =>
+      card(id, [...ring(x, y, 11000), { xUm: x, yUm: y }, { xUm: x, yUm: y }], at)
+    const cards = [
+      long("a", 100, 2600, 1),
+      long("b", -200, 3000, 2),
+      short("c", 300, -1700, 3),
+      long("d", 150, 2200, 4),
+      long("e", -50, 2800, 5),
+      short("f", -300, 800, 6),
+      long("g", 0, 2400, 7),
+    ]
+    const result = positionOverTime(positionPoints(cards))
+    const all = cards.flatMap((c) => c.points)
+    expect(result.mean?.yUm).toBeCloseTo(all.reduce((s, p) => s + p.yUm, 0) / all.length, 6)
+    expect(result.mean?.yUm).toBeCloseTo(511000 / 220, 6)
+    expect(result.wander).toBe(false)
+    expect(result.verdict).toBe("offset")
+    expect(result.p).toBeLessThan(0.001)
   })
 
   it("vier Scheiben: kein Urteil", () => {

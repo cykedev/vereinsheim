@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest"
 import { normalPoints } from "../__fixtures__/random"
 import type { Point } from "../geometry"
 import { FLAG_SUSPICIOUS, type MetricShot } from "../metrics"
-import { compareCenters, comparePicture, compareShots } from "./compare"
+import { compareCenterGroups, compareCenters, comparePicture, compareShots } from "./compare"
 
 const shifted = (points: readonly Point[], dxUm: number, dyUm = 0) =>
   points.map((p) => ({ xUm: p.xUm + dxUm, yUm: p.yUm + dyUm }))
@@ -90,6 +90,57 @@ const shot = (
 /** Schüsse an den Punkten mit gleichem Wert */
 const shotsAt = (points: readonly Point[], decimalTenths = 100) =>
   points.map((p) => shot(decimalTenths, p.xUm, p.yUm))
+
+describe("compareCenterGroups (C3)", () => {
+  const sideOf = (offsets: readonly (readonly [number, number])[], repeat = 1) =>
+    offsets.map(([x, y], i) => ({
+      id: `c${i}`,
+      atMs: i,
+      points: Array.from({ length: repeat }, () => shifted(CROSS, x, y)).flat(),
+    }))
+  const still = [
+    [0, 0],
+    [0, 0],
+    [0, 0],
+    [0, 0],
+    [0, 0],
+  ] as const
+
+  it("gleiche Seiten: kein Versatz, p 1", () => {
+    const result = compareCenterGroups(sideOf(still), sideOf(still))
+    expect(result?.verdict).toBe("none")
+    expect(result?.p).toBeCloseTo(1, 12)
+  })
+
+  it("Mitte über alle Schüsse: eine Scheibe mit doppelt so vielen Schüssen zählt doppelt", () => {
+    const a = [
+      ...sideOf([[3000, 0]], 2),
+      ...sideOf([
+        [0, 0],
+        [0, 0],
+        [0, 0],
+        [0, 0],
+      ]),
+    ]
+    const result = compareCenterGroups(a, sideOf(still))
+    // 10 Schuss bei 3 mm und 20 bei 0: Mitte 1 mm, nicht 0,6 mm wie das Mittel der Mitten
+    expect(result?.a.center.xUm).toBeCloseTo(1000, 9)
+    expect(result?.shiftUm.xUm).toBeCloseTo(1000, 9)
+    expect(result?.a.n).toBe(5)
+  })
+
+  it("dieselben Abende 2 mm weiter rechts: versetzt", () => {
+    const moved = still.map(([x, y]) => [x + 2000, y] as const)
+    const result = compareCenterGroups(sideOf(moved), sideOf(still))
+    expect(result?.verdict).toBe("shifted")
+    expect(result?.distanceUm).toBeCloseTo(2000, 9)
+  })
+
+  it("unter fünf Scheiben je Seite kein Urteil, ohne Scheiben null", () => {
+    expect(compareCenterGroups(sideOf(still.slice(0, 4)), sideOf(still))?.verdict).toBe("few")
+    expect(compareCenterGroups([], sideOf(still))).toBeNull()
+  })
+})
 
 describe("compareShots (C2)", () => {
   const points = normalPoints(40, 1500, 5)

@@ -29,8 +29,8 @@ const overTime = (verdict: PositionOverTime["verdict"], x = 300, y = -265): Posi
   points: [],
   mean: { xUm: x, yUm: y },
   offsetUm: Math.hypot(x, y),
-  t2: 20,
-  critical: 10,
+  p: verdict === "offset" ? 0.01 : 0.4,
+  wander: false,
   verdict,
 })
 
