@@ -675,9 +675,36 @@ describe("Registry", () => {
         "nSensitive",
         "excludeMisses",
         "onMissing",
+        "pooling",
       ] as const) {
         expect(other[field], `${metric.key}.${field}`).toEqual(metric[field])
       }
+    }
+  })
+
+  it("ein Mittel über Schüsse ist das Mittel seines Werts je Schuss", () => {
+    const means = METRICS.filter((metric) => metric.pooling === "mean")
+    expect(means.map((m) => m.key).sort()).toEqual([
+      "result.decimalMean",
+      "result.ringsMean",
+      "result.tensRate",
+    ])
+    for (const metric of means) {
+      const perShot = metric.perShot as (shot: MetricShot) => number
+      expect(perShot, metric.key).toBeTypeOf("function")
+      const counted = eligibleShots(metric, MATCH)
+      expect(counted.length, metric.key).toBeGreaterThan(1)
+      const mean = counted.reduce((sum, shot) => sum + perShot(shot), 0) / counted.length
+      expectNear(computeMetric(metric, MATCH), mean)
+    }
+  })
+
+  it("Streuungen poolen über ihre Freiheitsgrade, alle übrigen gar nicht", () => {
+    expect(def("group.sdX").pooling).toBe("spreadAxis")
+    expect(def("group.sdY").pooling).toBe("spreadAxis")
+    expect(def("group.sigma").pooling).toBe("spreadRadial")
+    for (const key of ["result.rings", "result.tens", "group.r50", "time.intervalMedian"]) {
+      expect(def(key).pooling, key).toBeUndefined()
     }
   })
 
@@ -696,6 +723,8 @@ describe("Registry", () => {
 
   it("defineMetric lehnt unvollständige Definitionen ab", () => {
     const base = METRICS[0] as MetricDefinition
+    expect(() => defineMetric({ ...base, pooling: "mean" })).toThrow(RangeError)
+    expect(() => defineMetric({ ...base, perShot: () => 1 })).toThrow(RangeError)
     expect(() => defineMetric({ ...base, version: 0 })).toThrow(RangeError)
     expect(() => defineMetric({ ...base, minShots: 0 })).toThrow(RangeError)
     expect(() => defineMetric({ ...base, appliesTo: [] })).toThrow(RangeError)

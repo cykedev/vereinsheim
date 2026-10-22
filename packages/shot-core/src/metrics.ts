@@ -121,6 +121,14 @@ export interface MetricDefinition {
   scoring?: Scoring
   counterpart?: string
   /**
+   * Wie der Wert über die Schüsse vieler Scheiben zusammengeht ([[adr-034]]): `mean` als Mittel über alle Schüsse
+   * (dann sagt `perShot`, was ein Schuss beiträgt), `spreadAxis` als Streuung einer Richtung über ν = n − 1, `spreadRadial`
+   * als Rayleigh-σ über ν = 2(n − 1). Ohne Angabe bleibt der Wert eine Zahl je Scheibe.
+   */
+  pooling?: "mean" | "spreadAxis" | "spreadRadial"
+  /** nur bei `pooling: "mean"`: der Beitrag eines gezählten Schusses; `compute` ist ihr Mittel */
+  perShot?: (shot: MetricShot) => number
+  /**
    * Die Formel. Sie rechnet nur über `computeMetric` richtig: Erst das filtert die Schüsse und
    * garantiert die Angaben, die `needs` verlangt. `context`: Karte und Arten der Auswahl, für Abstände
    * (SF-04).
@@ -156,6 +164,9 @@ export function defineMetric(def: MetricDefinition): Readonly<MetricDefinition> 
     def.counterpart === def.key
   ) {
     throw new RangeError(`${def.key}: scoring und counterpart nur zusammen, mit fremdem Schlüssel`)
+  }
+  if ((def.pooling === "mean") !== (def.perShot !== undefined)) {
+    throw new RangeError(`${def.key}: perShot genau dann, wenn pooling "mean" ist`)
   }
   return Object.freeze({
     ...def,
@@ -512,6 +523,8 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
   }),
   defineMetric({
     key: "result.decimalMean",
+    pooling: "mean",
+    perShot: (shot) => (shot.decimalTenths as number) / 10,
     catalogId: "E2",
     label: "Ø je Schuss",
     unit: "Ringe",
@@ -531,6 +544,8 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
   }),
   defineMetric({
     key: "result.ringsMean",
+    pooling: "mean",
+    perShot: (shot) => shot.ring as number,
     catalogId: "E2",
     label: "Ø je Schuss",
     unit: "Ringe",
@@ -584,6 +599,8 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
   }),
   defineMetric({
     key: "result.tensRate",
+    pooling: "mean",
+    perShot: (shot) => ((shot.ring as number) >= 10 ? 100 : 0),
     catalogId: "E4",
     label: "Zehnerquote",
     unit: "%",
@@ -681,6 +698,7 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
   }),
   defineMetric({
     key: "group.sigma",
+    pooling: "spreadRadial",
     catalogId: "P5",
     label: "Präzision σ",
     unit: "mm",
@@ -705,6 +723,7 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
   }),
   defineMetric({
     key: "group.sdX",
+    pooling: "spreadAxis",
     catalogId: "P6",
     label: "Streuung x",
     unit: "mm",
@@ -723,6 +742,7 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
   }),
   defineMetric({
     key: "group.sdY",
+    pooling: "spreadAxis",
     catalogId: "P6",
     label: "Streuung y",
     unit: "mm",
