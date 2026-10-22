@@ -26,7 +26,7 @@ versetzt (p 0,5 bis 3,3 %), hoch 2,7 bis 2,9 mm bei 30 und 90 Tagen.
 ## Entscheidung (ADR-034)
 
 Werte über die Schüsse, Urteile über Schüsse und Abende, je Scheibe bleibt, was Scheiben zeigt. Wortlaut und Begründung:
-[`vault/decisions/adr-034.md`](../vault/decisions/adr-034.md), Status `Proposed`. Mit der Freigabe dieses Plans setzt
+[`vault/decisions/adr-034.md`](../vault/decisions/adr-034.md), Status `Accepted` (22. Oktober 2026). Mit der Freigabe dieses Plans setzte
 die Hauptsitzung sie vor `/implement` auf `Accepted` (der Autopilot darf `vault/decisions/` nicht ändern).
 
 Entschieden mit diesem Plan (zur Freigabe):
