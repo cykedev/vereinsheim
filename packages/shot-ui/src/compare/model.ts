@@ -1,14 +1,16 @@
 // Modell der Seite Vergleichen: zwei Seiten A und B, die Zeilen Ø je Schuss, Streuung und Lage, alle Kennzahlen und das
-// Bild. Gerechnet aus dem Fachkern (`compareSides`, `compareCenters`, `compareShots`, `comparePicture`), nie hier. Zwei
-// Scheiben zählen Schuss für Schuss, Zeiträume und Arten Scheibe für Scheibe (aus den Einträgen, `PeriodItem`).
+// Bild. Gerechnet aus dem Fachkern (`compareValues`, `compareCenterGroups`, `compareShots`, `comparePicture`), nie hier.
+// Zwei Scheiben zählen Schuss für Schuss, Zeiträume und Arten über alle Schüsse mit einem Urteil über Schüsse und Abende
+// (aus den Einträgen, `PeriodItem`, [[adr-034]]).
 
 import {
   cardValues,
-  compareCenters,
+  compareCenterGroups,
   comparePicture,
   compareShots,
-  compareSides,
-  positionPoints,
+  compareValues,
+  pooledValue,
+  type CardValue,
   type CenterComparison,
   type ComparePicture,
   type PatternCard,
@@ -79,8 +81,15 @@ const SPREAD_KEY = "group.sigma"
 
 const metric = (key: string) => metricByKey(key) as Readonly<MetricDefinition>
 
-const mean = (values: readonly number[]) =>
-  values.length ? values.reduce((sum, v) => sum + v, 0) / values.length : null
+/** A gegen B über die Schüsse: Δ = A − B, „höher“ heißt A höher (wie `compareSides`) */
+function compareAB(
+  a: readonly CardValue[],
+  b: readonly CardValue[],
+  shown: Readonly<MetricDefinition>
+): PeriodComparison | null {
+  const result = compareValues(b, a, shown)
+  return result && { ...result, a: result.b, b: result.a }
+}
 
 /** eine Zeile ohne Werte: Name, Einheit, Stellen und Richtung der Kennzahl in der Wertung */
 function rowOf(key: string, scoring: Scoring): Omit<CompareRow, "a" | "b" | "comparison"> {
@@ -95,9 +104,9 @@ function rowOf(key: string, scoring: Scoring): Omit<CompareRow, "a" | "b" | "com
 }
 
 /**
- * Zwei Gruppen von Scheiben (Zeiträume oder Arten): Werte je Scheibe aus den Einträgen, Ergebnis und Streuung über
- * `compareSides`, die Lage über die Mitten der Scheiben (`positionPoints`, ab 3 Schuss mit Lage), das Bild aus allen
- * Lagen. Ein Training nur aus Probe zählt nur mit `includeProbeOnly`, wie im Fortschritt; `positions` sind die Lagen
+ * Zwei Gruppen von Scheiben (Zeiträume oder Arten): Werte über alle Schüsse aus den Einträgen (`pooledValue`), Ergebnis,
+ * Streuung und Kacheln über `compareValues`, die Lage über alle Schüsse der Scheiben ab 3 Schuss mit Lage
+ * (`compareCenterGroups`), das Bild aus allen Lagen. Ein Training nur aus Probe zählt nur mit `includeProbeOnly`, wie im Fortschritt; `positions` sind die Lagen
  * je Scheibe (fehlt eine, zählt sie weder im Bild noch als Scheibe ohne Lage).
  */
 export function groupCompareModel(input: {
@@ -131,11 +140,16 @@ export function groupCompareModel(input: {
   const a = counted(input.a)
   const b = counted(input.b)
   const row = (key: string): CompareRow => {
-    const va = itemValues(a, metric(key), scoring, options).map((v) => v.value)
-    const vb = itemValues(b, metric(key), scoring, options).map((v) => v.value)
-    return { ...rowOf(key, scoring), a: mean(va), b: mean(vb), comparison: compareSides(va, vb) }
+    const shown = inScoring(metric(key), scoring)
+    const va = itemValues(a, metric(key), scoring, options)
+    const vb = itemValues(b, metric(key), scoring, options)
+    return {
+      ...rowOf(key, scoring),
+      a: pooledValue(va, shown),
+      b: pooledValue(vb, shown),
+      comparison: compareAB(va, vb, shown),
+    }
   }
-  const centers = (cards: readonly PatternCard[]) => positionPoints(cards).map((p) => p.center)
   const pa = positionsOf(a)
   const pb = positionsOf(b)
   return {
@@ -146,7 +160,7 @@ export function groupCompareModel(input: {
     shared: input.shared,
     result: row(RESULT_KEY),
     spread: row(SPREAD_KEY),
-    position: compareCenters(centers(pa), centers(pb)),
+    position: compareCenterGroups(pa, pb),
     metrics: PERIOD_TILE_KEYS.map(row),
     picture: comparePicture(
       pa.flatMap((card) => card.points),

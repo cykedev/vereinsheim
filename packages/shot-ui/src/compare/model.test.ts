@@ -89,8 +89,21 @@ describe("groupCompareModel", () => {
     expect(model.shared).toBe(2)
   })
 
-  it("die Lage über die Mitten der Scheiben", () => {
-    expect(group(strong, weak).position?.a.n).toBe(6)
+  it("Werte über alle Schüsse: eine kurze Scheibe zählt weniger (ADR-034)", () => {
+    const withShort = [...cardsOf("a", 5, 100), periodCard("k", 20, [109])]
+    const model = group(withShort, weak)
+    // 25 Schuss zu 10,0 und einer zu 10,9: 260,9/26, nicht 10,15 wie das Mittel der Scheiben
+    expect(model.result.a).toBeCloseTo(260.9 / 26, 9)
+    expect(model.result.comparison?.a.mean).toBeCloseTo(260.9 / 26, 9)
+    expect(["shots", "evenings"]).toContain(model.result.comparison?.basis)
+  })
+
+  it("die Lage über alle Schüsse der Scheiben mit Lage", () => {
+    const model = group(strong, weak)
+    expect(model.position?.a.n).toBe(6)
+    const points = positionsOf(strong).flatMap((card) => card.points)
+    const meanX = points.reduce((sum, p) => sum + p.xUm, 0) / points.length
+    expect(model.position?.a.center.xUm).toBeCloseTo(meanX, 9)
   })
 })
 
