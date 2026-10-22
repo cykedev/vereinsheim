@@ -25,7 +25,7 @@ export interface PeriodItem {
    * Werte der Kennzahlen der Ebene Scheibe nach Schlüssel in der Wertung (`inScoring(…).key`), mit n; ohne Wert fehlt
    * der Schlüssel oder steht null
    */
-  metrics: Readonly<Record<string, { value: number; n: number } | null>>
+  metrics: Readonly<Record<string, { value: number; n: number; sd?: number | null } | null>>
   /** Bausteine der Rekorde je Wertung (`cardRecordCandidates`); null, wenn der Eintrag für Rekorde nicht zählt */
   records: Readonly<Record<Scoring, RecordCandidates | null>>
   /** Merkmale; für Rekorde zählt `FLAG_COUNTED_AS_MATCH` */
@@ -53,7 +53,10 @@ export function itemValues(
   return inOrder(items).flatMap((item) => {
     if (item.probeOnly && !options.includeProbeOnly) return []
     const entry = item.metrics[key]
-    return entry ? [{ id: item.id, atMs: item.startedAtMs, value: entry.value, n: entry.n }] : []
+    if (!entry) return []
+    const value: CardValue = { id: item.id, atMs: item.startedAtMs, value: entry.value, n: entry.n }
+    if (entry.sd !== undefined) value.sd = entry.sd
+    return [value]
   })
 }
 

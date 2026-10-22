@@ -12,6 +12,7 @@ import {
   type MetricShot,
   type Scoring,
 } from "../metrics"
+import { standardDeviation } from "../geometry"
 import { mad, mannWhitney, median, quantile } from "../stats"
 import { byStart, cardShots } from "./card-shots"
 
@@ -66,6 +67,11 @@ export interface CardValue {
   value: number
   /** Schüsse, die für den Wert zählen (`eligibleShots`), für Maße, die an der Schusszahl hängen */
   n: number
+  /**
+   * nur bei Kennzahlen, die sich über Schüsse mitteln (`pooling: "mean"`): Standardabweichung der Werte je Schuss
+   * (`perShot`, n − 1), null unter zwei Schüssen; die Rechnung über zwei Ebenen braucht sie ([[adr-034]])
+   */
+  sd?: number | null
 }
 
 /**
@@ -88,14 +94,18 @@ export function cardValues(
     // die ganze Karte für Abstände: eine späte Probe ist keine Lücke (SF-04)
     const value = computeMetric(scored, shots, chosen.whole)
     if (value === null) return []
-    return [
-      {
-        id: card.id,
-        atMs: card.startedAtMs,
-        value: Math.round(value * VALUE_DIGITS) / VALUE_DIGITS,
-        n: eligibleShots(scored, shots).length,
-      },
-    ]
+    const counted = eligibleShots(scored, shots)
+    const entry: CardValue = {
+      id: card.id,
+      atMs: card.startedAtMs,
+      value: Math.round(value * VALUE_DIGITS) / VALUE_DIGITS,
+      n: counted.length,
+    }
+    if (scored.pooling === "mean" && scored.perShot) {
+      const sd = standardDeviation(counted.map(scored.perShot))
+      entry.sd = sd === null ? null : Math.round(sd * VALUE_DIGITS) / VALUE_DIGITS
+    }
+    return [entry]
   })
 }
 

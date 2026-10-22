@@ -28,6 +28,19 @@ describe("Werte je Scheibe (T1)", () => {
     ])
   })
 
+  it("ein Mittel über Schüsse trägt die Streuung seiner Schusswerte (n − 1), unter zwei Schuss null", () => {
+    const cards = [card("a", 1, [100, 102, 104]), card("b", 2, [95])]
+    const [a, b] = cardValues(cards, mean, "decimal")
+    // 10,0 · 10,2 · 10,4: Mittel 10,2, Σ(x − x̄)² = 0,08, s = √(0,08/2) = 0,2
+    expect(a.sd).not.toBeNull()
+    expect(a.sd).toBeCloseTo(0.2, 9)
+    expect(b.sd).toBeNull()
+    const tens = cardValues(cards, metricByKey("result.tensRate")!, "decimal")
+    // Zehner 1, 1, 1: keine Streuung
+    expect(tens[0].sd).toBe(0)
+    expect("sd" in cardValues(cards, metricByKey("result.decimal")!, "decimal")[0]).toBe(false)
+  })
+
   it("bei gleichem Beginn nach Kennung", () => {
     const cards = [card("b", 1, [90]), card("a", 1, [100])]
     expect(cardValues(cards, mean, "decimal").map((v) => v.id)).toEqual(["a", "b"])

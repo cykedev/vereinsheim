@@ -54,6 +54,8 @@ describe("eine Einheit als Eintrag der Seite eines Zeitraums", () => {
     const item = periodItem(MIXED)!
     expect(item.metrics["result.decimalMean"]?.value).toBeCloseTo(142 / 15, 8)
     expect(item.metrics["result.decimalMean"]?.n).toBe(15)
+    // mit Einzelschüssen die Streuung der Schusswerte für die Rechnung über zwei Ebenen
+    expect(item.metrics["result.decimalMean"]?.sd).toBeGreaterThan(0)
     expect(item.shots).toBe(15)
     expect(item.withShots).toBe(true)
     expect(item.probeOnly).toBe(false)
@@ -96,6 +98,8 @@ describe("eine Einheit als Eintrag der Seite eines Zeitraums", () => {
     expect(item.metrics["result.decimal"]).toEqual({ value: 192.4, n: 20 })
     expect(item.metrics["result.decimalMean"]?.value).toBeCloseTo(9.62, 10)
     expect(item.metrics["result.decimalMean"]?.n).toBe(20)
+    // ohne Einzelschüsse keine Streuung der Schusswerte: Das Urteil bleibt der Rangtest über die Einheiten
+    expect(item.metrics["result.decimalMean"]?.sd).toBeUndefined()
     expect(item.metrics["result.ringsMean"] ?? null).toBeNull()
     expect(item.metrics["result.tens"] ?? null).toBeNull()
     expect(item.records).toEqual({ decimal: null, rings: null })

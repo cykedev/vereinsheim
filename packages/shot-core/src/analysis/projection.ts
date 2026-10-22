@@ -30,9 +30,10 @@ import {
  * Stand der Rechnung, die nicht in den Versionen der Kennzahlen steht: Form der Projektion, die Kandidaten der Rekorde
  * (`cardRecordCandidates`) und die Lagen (`cardMarks`), die mit ihr gespeichert werden. Erhöhen, wenn sich eins davon
  * ändert; dann werden alle Projektionen neu gerechnet. 2: Lagen für die kleinen Scheiben. 3: ohne verdächtige Schüsse
- * (SF-15). 4: Zehner und Innenzehner je Serie, Folge ab 9, schwächster Schuss, Spanne der Serien.
+ * (SF-15). 4: Zehner und Innenzehner je Serie, Folge ab 9, schwächster Schuss, Spanne der Serien. 5: Streuung der
+ * Schusswerte (`sd`) der Kennzahlen, die sich über Schüsse mitteln.
  */
-const PROJECTION_VERSION = 4
+const PROJECTION_VERSION = 5
 
 const CARD_METRICS = METRICS.filter((metric) => metric.scopes.includes("card"))
 
@@ -46,7 +47,7 @@ export interface CardProjection {
   /** Schüsse wie am Ausdruck (Wertung, bei nur Probe die Probe) */
   printedShots: number
   /** jede Kennzahl der Ebene Scheibe in beiden Wertungen, nach Schlüssel; fehlt ohne Wert */
-  values: Record<string, { value: number; n: number }>
+  values: Record<string, { value: number; n: number; sd?: number | null }>
   /** Rekord-Kandidaten je Wertung; null ohne Schüsse */
   records: Record<Scoring, RecordCandidates | null>
 }
@@ -101,7 +102,12 @@ export function cardProjection(input: PeriodCard): CardProjection {
     const [value] = cardValues([card], metric, metric.scoring ?? "decimal", {
       includeProbeOnly: true,
     })
-    if (value) values[metric.key] = { value: value.value, n: value.n }
+    if (value)
+      values[metric.key] = {
+        value: value.value,
+        n: value.n,
+        ...(value.sd !== undefined ? { sd: value.sd } : {}),
+      }
   }
   const counted = cardShots(card.shots, true)?.match ?? []
   return {
@@ -221,7 +227,10 @@ export function projectedValues(
   return byStart(cards).flatMap((card) => {
     if (card.projection.probeOnly && !options.includeProbeOnly) return []
     const entry = card.projection.values[key]
-    return entry ? [{ id: card.id, atMs: card.startedAtMs, value: entry.value, n: entry.n }] : []
+    if (!entry) return []
+    const value: CardValue = { id: card.id, atMs: card.startedAtMs, value: entry.value, n: entry.n }
+    if (entry.sd !== undefined) value.sd = entry.sd
+    return [value]
   })
 }
 

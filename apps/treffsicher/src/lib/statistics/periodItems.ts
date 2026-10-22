@@ -133,7 +133,7 @@ export function periodItem(session: SessionForPeriod): SessionItem | null {
   if (shots) {
     const card: PeriodCard = { ...base, complete: true, official: scoring, shots }
     const projection = cardProjection(card)
-    const metrics: Record<string, { value: number; n: number } | null> = {
+    const metrics: Record<string, { value: number; n: number; sd?: number | null } | null> = {
       ...projection.values,
     }
     for (const key of WITHOUT_POSITION) delete metrics[key]
