@@ -18,7 +18,7 @@ export interface PeriodResultProps {
 }
 
 /**
- * Ergebnis-Box der Seite eines Zeitraums, wie `CardResult`: Ø je Schuss als Mittel der Scheiben
+ * Ergebnis-Box der Seite eines Zeitraums, wie `CardResult`: Ø je Schuss über alle Wertungsschüsse ([[adr-034]])
  * groß, darunter Scheiben und Wertungsschüsse und die beste Scheibe unter der häufigsten Schusszahl; mit Vergleich
  * der Unterschied mit Urteil („deutlich“ nur neben einem Urteil). Auf dem Telefon im Kopf, ab 768 px als Box.
  */

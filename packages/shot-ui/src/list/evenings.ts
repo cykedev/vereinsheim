@@ -9,6 +9,7 @@ import {
   type MetricDefinition,
   type Scoring,
 } from "@vereinsheim/shot-core/metrics"
+import { pooledValue } from "@vereinsheim/shot-core/analysis"
 import { projectedValues, type ProjectedCard } from "@vereinsheim/shot-core/projection"
 
 import type { ListQuery } from "../nav/routes"
@@ -185,7 +186,10 @@ export function cardListModel(
     projectedValues(ofKind, metricByKey("result.decimalMean")!, context.scoring, {
       includeProbeOnly: true,
     }),
-    new Set(shown.map((c) => c.id))
+    new Set(shown.map((c) => c.id)),
+    undefined,
+    // der Schnitt davor über die Schüsse der Scheiben ([[adr-034]])
+    (before) => pooledValue(before, meanMetric) as number
   )
 
   const days = new Map<string, Evening>()

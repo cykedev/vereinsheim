@@ -19,8 +19,8 @@ export interface PeriodTilesProps {
 }
 
 /**
- * Zahlen über den Zeitraum: je Kennzahl das Mittel der Werte je Scheibe (Einheit Scheibe) und die
- * Zahl der Scheiben; mit Vergleich der Wert im Vergleichszeitraum, der Unterschied und das Urteil („deutlich“ nur
+ * Zahlen über den Zeitraum: je Kennzahl der Wert über alle Schüsse ([[adr-034]]; das Tempo als Mittel je Scheibe) und
+ * die Zahl der Scheiben; mit Vergleich der Wert im Vergleichszeitraum, der Unterschied und das Urteil („deutlich“ nur
  * neben einem Urteil). Kacheln mit Wert, Einheit und kurzer Angabe, drei Spalten ab 27rem Breite.
  */
 export function PeriodTiles({ tiles, compareLabel, onHelp, className }: PeriodTilesProps) {

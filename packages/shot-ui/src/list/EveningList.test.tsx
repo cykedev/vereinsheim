@@ -124,9 +124,10 @@ describe("Scheiben-Liste nach Abend (Form wie die Liste eines Zeitraums)", () =>
     expect(html).not.toMatch(/<th[^>]*>Ergebnis<\/th>/)
     expect(rowA).toMatch(/data-mean[^>]*>10,00</)
     expect(rowA).toContain("<svg")
-    // vor b liegen d (9,9) und a (10,0): 10,2 − 9,95 = +0,25; vor a nur d: +0,10
+    // vor b liegen d (1 Schuss 9,9) und a (3 Schuss 10,0), über die Schüsse 39,9/4 = 9,975: 10,2 − 9,975 = +0,225,
+    // gerundet +0,23 (als Mittel der Scheiben wären es +0,25); vor a nur d: +0,10
     const rowB = html.slice(html.indexOf('data-card-row="b"'))
-    expect(rowB).toMatch(/data-delta[^>]*>\+0,25</)
+    expect(rowB).toMatch(/data-delta[^>]*>\+0,23</)
     expect(rowA).toMatch(/data-delta[^>]*>\+0,10</)
     // der Knopf nennt die Werte mit ihrer Bedeutung und dem Datum
     expect(html).toContain(

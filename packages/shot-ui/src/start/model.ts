@@ -4,8 +4,13 @@
 // die Scheibe (Regel „Über viele Scheiben“): Der Streifen zeigt Scheiben, das Band ist das des Fortschritts, seine
 // Mitte der gleitende Schnitt bis zum Abend; der Satz misst gegen den Schnitt der fünf Scheiben davor.
 
-import { periodTrend, type PeriodComparison } from "@vereinsheim/shot-core/analysis"
-import { metricByKey, type Scoring } from "@vereinsheim/shot-core/metrics"
+import {
+  periodTrend,
+  pooledValue,
+  type CardValue,
+  type PeriodComparison,
+} from "@vereinsheim/shot-core/analysis"
+import { inScoring, metricByKey, type Scoring } from "@vereinsheim/shot-core/metrics"
 import { pooledMean, projectedRecords, projectedValues } from "@vereinsheim/shot-core/projection"
 
 import { cardListModel, lastEvening, type ListInputCard, type ListRow } from "../list/evenings"
@@ -128,18 +133,17 @@ export function startModel(input: StartInput): StartModel {
     const shots = evening.reduce((sum, card) => sum + card.projection.printedShots, 0)
     const mean = pooledMean(evening, scoring)
     // Werte je Scheibe in der Wertung, nur Probe dabei (wie im Fortschritt mit seiner Grundeinstellung)
-    const values = projectedValues(ofFamily, metricByKey("result.decimalMean")!, scoring, {
-      includeProbeOnly: true,
-    })
+    const meanMetric = inScoring(metricByKey("result.decimalMean")!, scoring)
+    const values = projectedValues(ofFamily, meanMetric, scoring, { includeProbeOnly: true })
+    // ein Schnitt über mehrere Scheiben rechnet über ihre Schüsse ([[adr-034]])
+    const overShots = (window: readonly CardValue[]) => pooledValue(window, meanMetric) as number
     // der Abend ist der neueste Tag: davor liegt alles, was vor seiner ersten Scheibe beginnt
     const earlier = values.filter((v) => v.atMs < firstMs)
     const window = earlier.slice(-BEFORE)
-    const average = window.length
-      ? { value: window.reduce((sum, v) => sum + v.value, 0) / window.length, n: window.length }
-      : null
+    const average = window.length ? { value: overShots(window), n: window.length } : null
     // das Band wie im Verlauf des Fortschritts über alle Scheiben („Alles“): an der letzten Scheibe des Abends, mit
     // ihr gerechnet; so sagen Start und Fortschritt dasselbe
-    const trend = periodTrend(values)
+    const trend = periodTrend(values, overShots)
     const band = trend.points.at(-1)?.band ?? null
     const verdict =
       band && mean !== null

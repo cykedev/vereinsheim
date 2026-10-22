@@ -44,10 +44,10 @@ describe("Modell der Seite: Zeitraum, Werte, Ergebnis", () => {
     expect(m.values.map((v) => v.value)).toEqual([10, 9.1, 9.5])
   })
 
-  it("Ergebnis: Mittel der Scheiben, nicht der Schüsse", () => {
-    // je Scheibe 10,0 / 9,1 / 9,5 → 9,5333; über alle fünf Schüsse wären es 9,54
+  it("Ergebnis über alle Schüsse, nicht als Mittel der Scheiben (ADR-034)", () => {
+    // je Scheibe 10,0 / 9,1 / 9,5 wären im Mittel 9,5333; über alle fünf Schüsse sind es 47,7 / 5 = 9,54
     const { summary } = model(THREE)
-    expect(summary.mean).toBeCloseTo(28.6 / 3, 12)
+    expect(summary.mean).toBeCloseTo(9.54, 12)
     expect(summary.cards).toBe(3)
     expect(summary.shots).toBe(5)
   })
@@ -68,7 +68,7 @@ describe("Modell der Seite: Zeitraum, Werte, Ergebnis", () => {
   it("die erste Kachel ist Ø je Schuss mit demselben Mittel", () => {
     const { tiles } = model(THREE)
     expect(tiles.map((t) => t.key)).toEqual([...PERIOD_TILE_KEYS])
-    expect(tiles[0].value).toBeCloseTo(28.6 / 3, 12)
+    expect(tiles[0].value).toBeCloseTo(9.54, 12)
     expect(tiles[0].n).toBe(3)
     expect(tiles[0].compare).toBeNull()
   })

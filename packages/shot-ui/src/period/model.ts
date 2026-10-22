@@ -4,9 +4,10 @@
 // Treffsicher aus einer Einheit.
 
 import {
-  comparePeriods,
+  compareValues as compareOverShots,
   periodBuckets,
   periodTrend,
+  pooledValue,
   type CardValue,
   type PeriodBucket,
   type PeriodComparison,
@@ -311,8 +312,13 @@ export function periodModel(input: {
   const otherCards = otherAll ? otherAll.filter((c) => !inPeriod.has(c.id)) : null
 
   const chartMetric = metricByKey(state.metric) as Readonly<MetricDefinition>
+  // ein Schnitt über mehrere Scheiben rechnet über ihre Schüsse, wo die Kennzahl das kann ([[adr-034]])
+  const averageOf =
+    (metric: Readonly<MetricDefinition>) =>
+    (window: readonly CardValue[]): number =>
+      pooledValue(window, inScoring(metric, scoring)) as number
   const values = itemValues(cards, chartMetric, scoring, options)
-  const trend = periodTrend(values)
+  const trend = periodTrend(values, averageOf(chartMetric))
   const compareValues = otherCards ? itemValues(otherCards, chartMetric, scoring, options) : null
 
   const day = (ms: number) => formatIsoDate(new Date(ms), timeZone)
@@ -331,7 +337,7 @@ export function periodModel(input: {
   // Scheiben der Familie in der Art der Seite, auch vor dem Zeitraum: für den Abstand zum Schnitt davor
   const family = input.items.filter(ofKind).sort(byStart)
   const familyValues = itemValues(family, chartMetric, scoring, options)
-  const deltas = deltasBefore(familyValues, inPeriod)
+  const deltas = deltasBefore(familyValues, inPeriod, DELTA_WINDOW, averageOf(chartMetric))
   // je Abend wie die Liste (vor 4 Uhr der Vortag), für Wochen und Kalender gleich
   const evening = (ms: number) => eveningDay(ms, timeZone)
   const volume = new Map(
@@ -354,10 +360,14 @@ export function periodModel(input: {
       unit: metric.unit,
       decimals: metric.decimals,
       better: metric.better,
-      value: mean(own),
+      value: pooledValue(own, metric),
       n: own.length,
       compare: theirs
-        ? { value: mean(theirs), n: theirs.length, comparison: comparePeriods(theirs, own) }
+        ? {
+            value: pooledValue(theirs, metric),
+            n: theirs.length,
+            comparison: compareOverShots(theirs, own, metric),
+          }
         : null,
     }
   })
@@ -394,9 +404,10 @@ export function periodModel(input: {
     const ownIds = new Set(ownCards.map((c) => c.id))
     const previousCards = within(previous).filter((c) => !ownIds.has(c.id))
     return {
-      comparison: comparePeriods(
+      comparison: compareOverShots(
         itemValues(previousCards, summaryMetric, scoring, options),
-        itemValues(ownCards, summaryMetric, scoring, options)
+        itemValues(ownCards, summaryMetric, scoring, options),
+        inScoring(summaryMetric, scoring)
       ),
       label: previous.label,
       lastDays: all ? FORM_DAYS : null,
@@ -430,7 +441,7 @@ export function periodModel(input: {
       includeProbeOnly: state.includeProbeOnly,
     }),
     summary: {
-      mean: mean(perShot),
+      mean: pooledValue(perShot, inScoring(summaryMetric, scoring)),
       cards: perShot.length,
       shots: perShot.reduce((sum, v) => sum + v.n, 0),
       best: best ? { ...best, shots: best.n } : null,
