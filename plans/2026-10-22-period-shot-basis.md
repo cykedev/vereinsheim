@@ -280,6 +280,24 @@ Commit: `docs(shot-help): explain period numbers over shots and evenings`
 
 Commit: `docs: record period numbers over shots (ADR-034)`
 
+### A13. Lage je Richtung (Nachtrag vom 22. Oktober, nach der Validierung)
+
+Die Validierung zeigte: Wandern die Abende nur seitlich, zählt der Vortest in zwei Richtungen auch für die Höhe jeden
+Abend (an den Daten des Users bei 30 Tagen p 0,058 trotz klarem Versatz in der Höhe). Freigegeben vom User: Vortest je
+Richtung.
+
+- `levels.ts`: `axisGroups(groups, axis)` (eine Richtung aus Gruppen in zwei), `levelTestZeroByAxis(groups)` und
+  `levelCompareByAxis(a, b)`: je Richtung `levelEstimate` (d = 1, eigener Vortest und eigene Freiheitsgrade), Test je
+  Richtung, zusammen nach Bonferroni p = min(1, 2 · min(pₓ, p_y)); dazu je Richtung `wander`.
+- `positionOverTime` und `compareCenterGroups` nehmen diese Tests; `wander` ist „eine Richtung wandert“, neu
+  `wanderAxes: { x, y }`.
+- Tests: der Fall vom 22. Oktober mit Wandern nur seitlich (Höhe versetzt, ohne Wandern) wird „offset“; Hand-Rechnung
+  je Richtung wie in A4; Mutation (Bonferroni weg, ein gemeinsamer Vortest) muss rot werden.
+- Simulation: B25 und B28 neu, dazu „nur seitlich wandern“ (τₓ 0,3, τ_y 0) mit Versatz 0,3σ in der Höhe; Abnahme wie A10.
+- Hilfe (L10, Lage im Vergleich), Katalog (L10, C3) und ADR-034 (Abschnitt Entscheidung) nennen den Vortest je Richtung.
+
+Commit: `feat(shot-core): test the position per direction`
+
 ## Texte (zur Freigabe mit dem Plan)
 
 Keine neuen Texte auf den ersten beiden Ebenen. Geändert werden die Erklärungen im Blatt „?“:
