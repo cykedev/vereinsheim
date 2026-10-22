@@ -21,6 +21,7 @@ const comparison: PeriodComparison = {
   a: { n: 10, mean: 9.2 },
   b: { n: 8, mean: 9 },
   delta: 0.2,
+  basis: "cards",
   test: { p: 0.01, exact: true },
   verdict: "higher",
   meaningful: true,

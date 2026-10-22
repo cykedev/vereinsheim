@@ -160,6 +160,7 @@ describe("Vergleich und Satz", () => {
       a: { n: 5, mean: 1 },
       b: { n: 5, mean: 2 },
       delta: 1,
+      basis: "cards" as const,
       test: { p: 0.01, exact: true },
     }
     expect(verdictText({ ...base, verdict: "higher", meaningful: true }, "higher")).toBe(

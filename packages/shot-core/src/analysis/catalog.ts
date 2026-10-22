@@ -41,6 +41,9 @@ export const ANALYSIS_CATALOG: Readonly<Record<string, readonly string[]>> = Obj
   // je Woche (T6) oder je Abend für den Kalender (T7)
   trainingVolume: ["T6", "T7"],
   comparePeriods: ["C3", "T3"],
+  meaningfulChange: ["T3"],
+  pooledValue: ["E2", "E4", "P5", "P6"],
+  compareValues: ["C3", "T3"],
   compareSamples: ["C2", "C3", "T3"],
   compareSides: ["C2", "C3", "T3"],
   compareCenters: ["C2", "C3"],

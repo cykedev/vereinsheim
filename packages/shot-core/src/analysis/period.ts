@@ -29,9 +29,9 @@ const VALUE_DIGITS = 1e9
 /** ab so vielen Scheiben in einem Abschnitt Boden und Decke */
 const MIN_BUCKET_SPREAD = 5
 /** Signifikanzniveau des Vergleichs */
-const COMPARE_ALPHA = 0.05
+export const COMPARE_ALPHA = 0.05
 /** bedeutsam ab diesem Anteil der gepoolten Streuung (T3, Hopkins) */
-const MEANINGFUL_SHARE = 0.3
+export const MEANINGFUL_SHARE = 0.3
 const DAY_MS = 86_400_000
 /** Schnitt über die Scheiben dieser Tage vor der letzten (C4), ab so vielen Scheiben */
 const AVERAGE_DAYS = 30
@@ -227,8 +227,14 @@ export interface PeriodComparison {
   b: { n: number; mean: number }
   /** Mittel b − Mittel a */
   delta: number
-  /** Mann-Whitney über die Scheibenwerte; null unter fünf Scheiben je Seite */
+  /** der Test (`basis`); null unter fünf Scheiben je Seite */
   test: { p: number; exact: boolean } | null
+  /**
+   * worüber geurteilt wurde ([[adr-034]]): über alle Schüsse, über die Abende (sie wandern über den Zufall der Schüsse
+   * hinaus) oder als Rangtest über die Werte je Scheibe (ohne Streuung der Schusswerte oder ohne Pooling); bei zwei
+   * Scheiben Schuss für Schuss „shots“
+   */
+  basis: "shots" | "evenings" | "cards"
   /**
    * „höher“ oder „tiefer“ beschreibt die Zahl, ob das besser ist, sagt `metric.better`. „unklar“ bei p ≥ 0,05,
    * zu wenigen Scheiben oder wenn Rangtest und Mittel in verschiedene Richtungen zeigen.
@@ -241,6 +247,18 @@ export interface PeriodComparison {
 const meanOf = (xs: readonly number[]) => xs.reduce((sum, x) => sum + x, 0) / xs.length
 const squares = (xs: readonly number[], center: number) =>
   xs.reduce((sum, x) => sum + (x - center) ** 2, 0)
+
+/** bedeutsam (T3): |Δ| ≥ 0,3 × gepoolte Streuung der Werte je Scheibe beider Seiten */
+export function meaningfulChange(
+  xa: readonly number[],
+  xb: readonly number[],
+  delta: number
+): boolean {
+  const pooled = Math.sqrt(
+    (squares(xa, meanOf(xa)) + squares(xb, meanOf(xb))) / (xa.length + xb.length - 2)
+  )
+  return delta !== 0 && Math.abs(delta) >= MEANINGFUL_SHARE * pooled
+}
 
 /**
  * Vergleich zweier Zeiträume (C3, T3): Einheit ist die Scheibe. Mann-Whitney auf den Scheibenwerten,
@@ -264,13 +282,14 @@ export function comparePeriods(
  */
 export function compareSamples(
   xa: readonly number[],
-  xb: readonly number[]
+  xb: readonly number[],
+  basis: PeriodComparison["basis"] = "cards"
 ): PeriodComparison | null {
   if (!xa.length || !xb.length) return null
   const ma = meanOf(xa)
   const mb = meanOf(xb)
   const delta = mb - ma
-  const summary = { a: { n: xa.length, mean: ma }, b: { n: xb.length, mean: mb }, delta }
+  const summary = { a: { n: xa.length, mean: ma }, b: { n: xb.length, mean: mb }, delta, basis }
   if (xa.length < MIN_CARDS_PER_SIDE || xb.length < MIN_CARDS_PER_SIDE) {
     return { ...summary, test: null, verdict: "unclear", meaningful: null }
   }
@@ -284,8 +303,7 @@ export function compareSamples(
       : significant && delta < 0 && !ranksUp
         ? "lower"
         : "unclear"
-  const pooled = Math.sqrt((squares(xa, ma) + squares(xb, mb)) / (xa.length + xb.length - 2))
-  const meaningful = delta !== 0 && Math.abs(delta) >= MEANINGFUL_SHARE * pooled
+  const meaningful = meaningfulChange(xa, xb, delta)
   return { ...summary, test: { p: test.p, exact: test.exact }, verdict, meaningful }
 }
 

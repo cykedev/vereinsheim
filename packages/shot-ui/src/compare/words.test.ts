@@ -33,6 +33,7 @@ const comparison = (
   a: { n: 10, mean: 9 + delta },
   b: { n: 10, mean: 9 },
   delta,
+  basis: "cards",
   test: test ? { p: verdict === "unclear" ? 0.4 : 0.01, exact: true } : null,
   verdict,
   meaningful: null,

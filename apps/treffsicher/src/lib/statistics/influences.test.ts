@@ -123,6 +123,7 @@ describe("Urteil eines Merkmals", () => {
     a: { n: 6, mean: 9 },
     b: { n: 6, mean: 9.5 },
     delta: 0.5,
+    basis: "cards" as const,
     test: { p: 0.01, exact: true },
     verdict: "higher" as const,
     meaningful: true,

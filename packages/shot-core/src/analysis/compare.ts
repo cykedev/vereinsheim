@@ -86,8 +86,12 @@ export function compareCenters(a: readonly Point[], b: readonly Point[]): Center
  * Seite A gegen Seite B (C2, C3): wie `compareSamples`, aber in der Lesart der Seite Vergleichen. `a` ist A, `b` ist B,
  * Δ = Mittel A − Mittel B, „höher“ heißt: A liegt höher. Ohne Werte auf einer Seite null.
  */
-export function compareSides(a: readonly number[], b: readonly number[]): PeriodComparison | null {
-  const result = compareSamples(b, a)
+export function compareSides(
+  a: readonly number[],
+  b: readonly number[],
+  basis: PeriodComparison["basis"] = "cards"
+): PeriodComparison | null {
+  const result = compareSamples(b, a, basis)
   return result && { ...result, a: result.b, b: result.a }
 }
 
@@ -138,8 +142,8 @@ export function compareShots(
   const sa = sideOf(a, scoring)
   const sb = sideOf(b, scoring)
   return {
-    result: compareSides(sa.values, sb.values),
-    spread: compareSides(sa.distances, sb.distances),
+    result: compareSides(sa.values, sb.values, "shots"),
+    spread: compareSides(sa.distances, sb.distances, "shots"),
     position: compareCenters(sa.points, sb.points),
     shots: { a: sa.shots, b: sb.shots },
   }

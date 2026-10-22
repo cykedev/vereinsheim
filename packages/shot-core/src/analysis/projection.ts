@@ -16,6 +16,7 @@ import {
   type Scoring,
 } from "../metrics"
 import { byStart, cardShots } from "./card-shots"
+import { pooledValue } from "./levels"
 import { cardValues, type CardValue, type PeriodCard, type VolumeBucket } from "./period"
 import {
   FLAG_COUNTED_AS_MATCH,
@@ -196,22 +197,12 @@ export function projectedVolume(
 
 /**
  * Ø je Schuss über alle Schüsse mehrerer Scheiben zusammen, nicht das Mittel der Mittel: wie `computeMetric` mit dem
- * Ø je Schuss über ihre Schüsse wie am Ausdruck (nur Probe zählt). Aus Wert und n je Scheibe wird die Summe zurück auf
- * das Raster der Wertung gerundet (Zehntel bzw. ganze Ringe); so ist sie exakt, obwohl der Wert gerundet gespeichert
- * ist. null ohne Schuss mit Wert.
+ * Ø je Schuss über ihre Schüsse wie am Ausdruck (nur Probe zählt), gerechnet wie jeder Wert eines Zeitraums
+ * (`pooledValue`, auf dem Raster der Wertung). null ohne Schuss mit Wert.
  */
 export function pooledMean(cards: readonly ProjectedCard[], scoring: Scoring): number | null {
-  const key = inScoring(metricByKey("result.decimalMean") as MetricDefinition, scoring).key
-  const step = scoring === "decimal" ? 10 : 1
-  let units = 0
-  let n = 0
-  for (const card of cards) {
-    const entry = card.projection.values[key]
-    if (!entry) continue
-    units += Math.round(entry.value * entry.n * step)
-    n += entry.n
-  }
-  return n ? units / step / n : null
+  const metric = inScoring(metricByKey("result.decimalMean") as MetricDefinition, scoring)
+  return pooledValue(projectedValues(cards, metric, scoring, { includeProbeOnly: true }), metric)
 }
 
 /** wie `cardValues`, aus den Projektionen */

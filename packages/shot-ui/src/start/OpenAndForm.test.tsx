@@ -55,6 +55,7 @@ describe("Form der letzten 90 Tage", () => {
       a: { n: 30, mean: 10.24 },
       b: { n: 37, mean: 10.27 },
       delta: 0.03,
+      basis: "cards",
       test: { p: 0.4, exact: false },
       verdict: "unclear",
       meaningful: null,

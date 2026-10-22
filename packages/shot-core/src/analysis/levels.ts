@@ -3,7 +3,16 @@
 // erklärt, aus dem Wandern der Abende („sometimes pool“ nach Bancroft, Vortest α 0,25). Eine Richtung (Werte je Schuss)
 // oder zwei (Lagen in µm). Symmetrische Matrizen als Liste: eine Richtung [v], zwei [xx, yy, xy].
 
-import { fSurvival } from "../stats"
+import type { MetricDefinition } from "../metrics"
+import { c4, chiSquareSurvival, fSurvival } from "../stats"
+import {
+  COMPARE_ALPHA,
+  compareSamples,
+  meaningfulChange,
+  MIN_CARDS_PER_SIDE,
+  type CardValue,
+  type PeriodComparison,
+} from "./period"
 
 /** Vortest auf das Wandern der Abende: darunter zählt jeder Abend für sich */
 export const WANDER_ALPHA = 0.25
@@ -161,4 +170,157 @@ export function levelCompare(
   const t2 = quadratic(inv, delta)
   const p = hotellingP(t2, delta.length, df)
   return p === null ? null : { delta, t2, p, df }
+}
+
+/** Raster der Werte je Schuss in einer Wertung: Zehntel und ganze Ringe, damit ein Mittel genau bleibt */
+const RASTER: Record<string, number> = { decimal: 10, rings: 1 }
+
+/** Freiheitsgrade und Varianz einer Streuung je Scheibe: Richtung ν = n − 1, Rayleigh-σ ν = 2(n − 1), s = σ̂ · c4 */
+function spreadOf(value: CardValue, pooling: "spreadAxis" | "spreadRadial") {
+  const nu = pooling === "spreadAxis" ? value.n - 1 : 2 * (value.n - 1)
+  const s = pooling === "spreadAxis" || nu < 1 ? value.value : value.value * c4(nu + 1)
+  return { nu, variance: s * s }
+}
+
+/**
+ * Der Wert eines Zeitraums über alle Schüsse ([[adr-034]]): bei `pooling: "mean"` Σ vᵢnᵢ / Σ nᵢ (in einer Wertung
+ * auf ihrem Raster, wie `pooledMean`), bei Streuungen √(Σ νᵢsᵢ² / Σ νᵢ) (Rayleigh-σ geteilt durch c4(Σ νᵢ + 1)), ohne
+ * `pooling` das Mittel der Werte je Scheibe. Null ohne Werte.
+ */
+export function pooledValue(values: readonly CardValue[], metric: MetricDefinition): number | null {
+  if (!values.length) return null
+  if (metric.pooling === "mean") {
+    const shots = values.reduce((sum, v) => sum + v.n, 0)
+    if (!shots) return null
+    const step = metric.scoring ? RASTER[metric.scoring] : undefined
+    if (step === undefined) return values.reduce((sum, v) => sum + v.value * v.n, 0) / shots
+    const units = values.reduce((sum, v) => sum + Math.round(v.value * v.n * step), 0)
+    return units / step / shots
+  }
+  if (metric.pooling === "spreadAxis" || metric.pooling === "spreadRadial") {
+    const pooling = metric.pooling
+    const parts = values.map((v) => spreadOf(v, pooling)).filter((p) => p.nu > 0)
+    const nu = parts.reduce((sum, p) => sum + p.nu, 0)
+    if (!nu) return null
+    const s = Math.sqrt(parts.reduce((sum, p) => sum + p.nu * p.variance, 0) / nu)
+    return pooling === "spreadAxis" ? s : s / c4(nu + 1)
+  }
+  return values.reduce((sum, v) => sum + v.value, 0) / values.length
+}
+
+/** die Gruppen eines Mittels über Schüsse, wenn jede Scheibe die Streuung ihrer Schusswerte kennt */
+function meanGroups(values: readonly CardValue[]): ShotGroup[] | null {
+  if (values.some((v) => v.sd === undefined)) return null
+  return values.map((v) => ({ n: v.n, mean: [v.value], scatter: [(v.n - 1) * (v.sd ?? 0) ** 2] }))
+}
+
+/** Urteil aus p und der Richtung von Δ */
+const verdictOf = (p: number, delta: number): PeriodComparison["verdict"] =>
+  p < COMPARE_ALPHA && delta > 0 ? "higher" : p < COMPARE_ALPHA && delta < 0 ? "lower" : "unclear"
+
+/**
+ * Streuung zweier Zeiträume: je Seite Vortest auf wandernde Präzision (Q = Σ (νᵢ/2)(ln sᵢ² − ȳ)² mit χ²(k − 1),
+ * Wandern bei p < 0,25). Ohne Wandern der F-Test der gepoolten Varianzen, zweiseitig; sonst Welch-t über ln sᵢ².
+ * Ein Urteil nur, wenn der Test in die Richtung der gepoolten Werte zeigt.
+ */
+function compareSpreads(
+  a: readonly CardValue[],
+  b: readonly CardValue[],
+  pooling: "spreadAxis" | "spreadRadial",
+  delta: number
+): { p: number; basis: "shots" | "evenings"; agrees: boolean } | null {
+  const side = (values: readonly CardValue[]) => {
+    const parts = values.map((v) => spreadOf(v, pooling)).filter((p) => p.nu > 0 && p.variance > 0)
+    const nu = parts.reduce((sum, p) => sum + p.nu, 0)
+    const ys = parts.map((p) => Math.log(p.variance))
+    const weighted = parts.reduce((sum, p, i) => sum + (p.nu / 2) * ys[i], 0) / (nu / 2)
+    const q = parts.reduce((sum, p, i) => sum + (p.nu / 2) * (ys[i] - weighted) ** 2, 0)
+    const wander = parts.length > 1 && chiSquareSurvival(q, parts.length - 1) < WANDER_ALPHA
+    const variance = parts.reduce((sum, p) => sum + p.nu * p.variance, 0) / nu
+    return { parts, nu, ys, wander, variance }
+  }
+  const sa = side(a)
+  const sb = side(b)
+  if (sa.parts.length < 2 || sb.parts.length < 2) return null
+  if (!sa.wander && !sb.wander) {
+    const upper = fSurvival(sb.variance / sa.variance, sb.nu, sa.nu)
+    return { p: Math.min(1, 2 * Math.min(upper, 1 - upper)), basis: "shots", agrees: true }
+  }
+  const mean = (ys: readonly number[]) => ys.reduce((sum, y) => sum + y, 0) / ys.length
+  const share = (ys: readonly number[]) =>
+    ys.reduce((sum, y) => sum + (y - mean(ys)) ** 2, 0) / (ys.length - 1) / ys.length
+  const va = share(sa.ys)
+  const vb = share(sb.ys)
+  const diff = mean(sb.ys) - mean(sa.ys)
+  const v = va + vb
+  if (!(v > 0)) return null
+  const df = (v * v) / ((va * va) / (sa.ys.length - 1) + (vb * vb) / (sb.ys.length - 1))
+  const p = fSurvival((diff * diff) / v, 1, df)
+  return { p, basis: "evenings", agrees: Math.sign(diff) === Math.sign(delta) }
+}
+
+/**
+ * Vergleich zweier Zeiträume über die Schüsse ([[adr-034]]), in der Form von `comparePeriods` (Δ = b − a): die Werte
+ * über alle Schüsse (`pooledValue`), das Urteil über zwei Ebenen (`levelCompare` bei Mitteln mit Streuung der
+ * Schusswerte, sonst die Streuungen über ihre Varianzen). Fehlt die Streuung der Schusswerte oder hat die Kennzahl kein
+ * Pooling, der Rangtest über die Werte je Scheibe (`compareSamples`). Ein Urteil ab fünf Scheiben je Seite; „bedeutsam“
+ * (T3) aus den Werten je Scheibe. Ohne Werte auf einer Seite null.
+ */
+export function compareValues(
+  a: readonly CardValue[],
+  b: readonly CardValue[],
+  metric: MetricDefinition
+): PeriodComparison | null {
+  const ma = pooledValue(a, metric)
+  const mb = pooledValue(b, metric)
+  if (ma === null || mb === null) return null
+  const xa = a.map((v) => v.value)
+  const xb = b.map((v) => v.value)
+  const delta = mb - ma
+  const summary = { a: { n: a.length, mean: ma }, b: { n: b.length, mean: mb }, delta }
+  const few = a.length < MIN_CARDS_PER_SIDE || b.length < MIN_CARDS_PER_SIDE
+  const undecided = (basis: PeriodComparison["basis"]): PeriodComparison => ({
+    ...summary,
+    basis,
+    test: null,
+    verdict: "unclear",
+    meaningful: null,
+  })
+  const byCards = (): PeriodComparison | null => {
+    const ranked = compareSamples(xa, xb)
+    if (!ranked) return null
+    // der Rangtest urteilt nur, wenn das Mittel über die Schüsse in dieselbe Richtung zeigt
+    const agrees = Math.sign(ranked.delta) === Math.sign(delta)
+    return { ...ranked, ...summary, verdict: agrees ? ranked.verdict : "unclear" }
+  }
+  if (metric.pooling === "mean") {
+    const ga = meanGroups(a)
+    const gb = meanGroups(b)
+    const ea = ga && levelEstimate(ga)
+    const eb = gb && levelEstimate(gb)
+    if (!ea || !eb) return byCards()
+    const basis = ea.wander || eb.wander ? "evenings" : "shots"
+    const compared = few ? null : levelCompare(eb, ea)
+    if (!compared) return undecided(basis)
+    return {
+      ...summary,
+      basis,
+      test: { p: compared.p, exact: false },
+      verdict: verdictOf(compared.p, delta),
+      meaningful: meaningfulChange(xa, xb, delta),
+    }
+  }
+  if (metric.pooling === "spreadAxis" || metric.pooling === "spreadRadial") {
+    const spreads = compareSpreads(a, b, metric.pooling, delta)
+    if (!spreads) return byCards()
+    if (few) return undecided(spreads.basis)
+    return {
+      ...summary,
+      basis: spreads.basis,
+      test: { p: spreads.p, exact: false },
+      verdict: spreads.agrees ? verdictOf(spreads.p, delta) : "unclear",
+      meaningful: meaningfulChange(xa, xb, delta),
+    }
+  }
+  return byCards()
 }
