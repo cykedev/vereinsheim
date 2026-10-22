@@ -102,7 +102,7 @@ bleibt der eingebaute Vergleich.
     die in beiden Zeiträumen liegen, zählen nur im gewählten
   - Art (alle, Training, Wettkampf), „Trainings nur aus Probe mitzählen“
   - „Als Zeitraum speichern“ fehlt noch.
-- **Ergebnis-Box** wie `CardResult`: Ø je Schuss als Mittel der Scheiben groß, darunter Scheiben und
+- **Ergebnis-Box** wie `CardResult`: Ø je Schuss über alle Wertungsschüsse groß ([[adr-034]]), darunter Scheiben und
   Wertungsschüsse, die beste Scheibe unter der häufigsten Schusszahl (eine kurze Scheibe hätte es sonst leichter).
   Bei einem Vergleich steht dazu der Unterschied mit Urteil, etwa „+0,08 gegen Zeitraum davor · kein klarer
   Unterschied“.
@@ -146,7 +146,7 @@ bleibt der eingebaute Vergleich.
 
 ### Zahlen und Analyse
 
-- **Zahlen:** sechs Kacheln über den Zeitraum (Mittel je Scheibe, nur Kennzahlen, die nicht an der Schusszahl
+- **Zahlen:** sechs Kacheln über den Zeitraum (über alle Schüsse, das Tempo als Mittel je Scheibe; nur Kennzahlen, die nicht an der Schusszahl
   hängen). Mit Vergleich stehen in jeder Kachel der Wert dort, Δ und das Urteil in Alltagsworten: „deutlich besser“,
   „schwächer“, „kein klarer Unterschied“; die Kacheln heißen „Streuung“ und „Tempo“.
 - **Analyse heute: „Rekorde“** über alle Scheiben der Familie:

@@ -34,7 +34,7 @@ defineMetric({
 })
 ```
 
-`appliesTo`, `minShots`, `nSensitive`, `excludeMisses`, `needs` und `onMissing` kommen aus dem Sonderfall-Katalog: Sie steuern, ob eine Probe-Scheibe einen Wert bekommt, ab wann er gilt, ob ein Vergleich gleich viele Schüsse braucht und was mit Ausreißern und fehlenden Angaben geschieht. Eine neue Kennzahl ist eine Funktion plus Test. Ändert sich eine Formel, steigt die Version, und Spiegel rechnet die gespeicherten Werte neu ([[spiegel-ingest-pipeline]]). Die Funktionen liegen in `packages/shot-core` und laufen auf Server und Client.
+`appliesTo`, `minShots`, `nSensitive`, `excludeMisses`, `needs` und `onMissing` kommen aus dem Sonderfall-Katalog: Sie steuern, ob eine Probe-Scheibe einen Wert bekommt, ab wann er gilt, ob ein Vergleich gleich viele Schüsse braucht und was mit Ausreißern und fehlenden Angaben geschieht. `pooling` sagt, wie ein Wert über die Schüsse vieler Scheiben zusammengeht (Mittel mit `perShot`, Streuung einer Richtung, Rayleigh-σ; ohne Angabe bleibt er eine Zahl je Scheibe, [[adr-034]]). Eine neue Kennzahl ist eine Funktion plus Test. Ändert sich eine Formel, steigt die Version, und Spiegel rechnet die gespeicherten Werte neu ([[spiegel-ingest-pipeline]]). Die Funktionen liegen in `packages/shot-core` und laufen auf Server und Client.
 
 ## Kennzahlen für den Anfang
 

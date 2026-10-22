@@ -59,9 +59,12 @@ Fortschritt und am Desktop über einen Untereintrag. Der Vergleich aus dem Forts
   nicht und sagt das.
 - **Scheiben in beiden Zeiträumen** zählen nur in A; die Grundlage nennt sie.
 - **Die Tests** ([[spiegel-statistics]], C2, C3, Belege B26–B28), ein Urteil ab 5 Einheiten je Seite:
-  - Ø je Schuss: Mann-Whitney über die Werte der Schüsse (zwei Scheiben) bzw. den Ø je Schuss jeder Scheibe.
-  - Streuung: Der Wert ist σ. Getestet werden die Abstände der Schüsse zur Mitte ihrer Scheibe bzw. σ je Scheibe.
-  - Lage: Hotelling-T² für zwei Stichproben über die Lagen der Schüsse bzw. die Mitten der Scheiben.
+  - Ø je Schuss: Mann-Whitney über die Werte der Schüsse (zwei Scheiben); bei Zeiträumen der Ø über alle Schüsse,
+    geurteilt über Schüsse und Abende ([[adr-034]], `compareValues`).
+  - Streuung: Der Wert ist σ. Getestet werden die Abstände der Schüsse zur Mitte ihrer Scheibe (zwei Scheiben) bzw.
+    die gepoolten Varianzen, bei wandernder Präzision σ je Abend (Zeiträume, B29).
+  - Lage: Hotelling-T² für zwei Stichproben über die Lagen der Schüsse (zwei Scheiben) bzw. die Mitten aller Schüsse
+    über zwei Ebenen (Zeiträume, `compareCenterGroups`).
 
 ## Aufbau nach den drei Ebenen
 

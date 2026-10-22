@@ -20,7 +20,8 @@ Einheit und die Trefferlage. Neu: Einflüsse, Selbstbild als Zeilen, Rekorde. Ho
 
 - **Server** (`src/lib/statistics/`): `statisticsSessions` liest höchstens 1.200 Einheiten (Training und Wettkampf,
   [[treffsicher-dos-protection]]), `periodItems` macht aus jeder Einheit einen `PeriodItem` (Ø je Schuss, Zehner,
-  Rekord-Kandidaten, Lage als Schwerpunkt-Abstand), `statisticsPage` rechnet `periodModel` für die gewählte Disziplin und
+  Rekord-Kandidaten, Lage als Schwerpunkt-Abstand; mit Einzelschüssen auch die Streuung der Schusswerte, sonst urteilt
+  ein Vergleich über die Einheiten, [[adr-034]]), `statisticsPage` rechnet `periodModel` für die gewählte Disziplin und
   dazu Einflüsse, Selbstbild, Tabelle, Trefferlage und Ringverteilung über die Einheiten der Seite (Zeitraum und Art).
   Der Browser bekommt das leichte Modell (`lightPeriodModel`).
 - **Browser** (`src/components/app/statistics/`): `StatisticsScreen` wie Spiegels `ProgressScreen`. Filter schreiben die

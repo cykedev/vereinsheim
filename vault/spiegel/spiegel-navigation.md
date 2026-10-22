@@ -168,7 +168,7 @@ Form; auf dem Telefon Offen, Abend, Form untereinander.
   - „Abend in Scheiben ›“.
 - **Form:** „Form der letzten 90 Tage“ für die zuletzt gewählte Familie als Titel und ein Satz („Luftgewehr: Ø 10,25 je
   Schuss, deutlich besser als in den 90 Tagen davor (+0,15).“), mit Link in den Fortschritt (`FormLine`).
-- **Einheit ist die Scheibe** (Regel des Fachkerns): Der Verlauf zeigt Scheiben, nicht Abende.
+- **Der Verlauf zeigt Scheiben**, nicht Abende. Schnitte über mehrere Scheiben rechnen über ihre Schüsse ([[adr-034]]).
 - **Das Band** ist das des Verlaufs im Fortschritt über alle Scheiben der Familie, an der letzten Scheibe des Abends und
   mit ihr gerechnet. Start und Fortschritt sagen so dasselbe. Ein Band nur aus den Scheiben davor wäre für einen neuen
   Abend zu schmal: Ein gewöhnlicher Abend fiele in vier von zehn Fällen heraus, und Start widerspräche dem Fortschritt
