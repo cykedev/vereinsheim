@@ -119,6 +119,21 @@ describe("Verlauf mit gleitendem Schnitt und Formband (T1, T2)", () => {
     expect(points[5].mean).toBeCloseTo(9.6, 12)
   })
 
+  it("mit einem Schnitt über die Schüsse zählt eine lange Scheibe mehr als eine kurze", () => {
+    const weighted = [9, 10, 9, 10, 9].map((value, i) => ({
+      id: `s${i + 1}`,
+      atMs: i * DAY,
+      value,
+      n: value === 9 ? 10 : 40,
+    }))
+    const byShots = (window: readonly CardValue[]) =>
+      window.reduce((s, v) => s + v.value * v.n, 0) / window.reduce((s, v) => s + v.n, 0)
+    const { points } = periodTrend(weighted, byShots)
+    // 3 × 90 + 2 × 400 = 1070 Ringe auf 110 Schuss, nicht 9,4 wie das Mittel der Werte
+    expect(points[4].mean).toBeCloseTo(1070 / 110, 12)
+    expect(periodTrend(weighted).points[4].mean).toBeCloseTo(9.4, 12)
+  })
+
   it("Formband: Schnitt ± 1,4826 · MAD der Abweichungen der vollen Fenster", () => {
     // volle Schnitte 9,2 / 9,6 / 9,4 / 9,8 / 9,4 / 9,6 / 9,2 / 9,4; Abweichungen −0,2 / 1,4 / −0,4 / 0,2 /
     // −1,4 / 0,4 / −0,2 / 0,6, Median 0, MAD 0,4 → Schwankung 0,59304

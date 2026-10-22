@@ -109,6 +109,10 @@ export function cardValues(
   })
 }
 
+/** Mittel der Werte je Scheibe */
+const meanOfValues = (window: readonly CardValue[]) =>
+  window.reduce((sum, v) => sum + v.value, 0) / window.length
+
 export interface TrendPoint extends CardValue {
   /** Schnitt der letzten fünf Scheiben bis hierher; `partial`, solange es noch keine fünf sind */
   mean: number
@@ -124,17 +128,20 @@ export interface TrendPoint extends CardValue {
  * Verlauf mit gleitendem Schnitt über die letzten fünf Scheiben (T1) und Formband (T2): Die
  * typische Schwankung ist 1,4826 · MAD der Abweichungen der Scheiben vom vollen Schnitt, ab zehn Scheiben.
  * Ist der MAD 0 (mehr als die Hälfte der Abweichungen genau 0, etwa bei Zählungen wie den Innenzehnern),
- * gibt es kein Band: Eines der Breite null wäre scheingenau.
+ * gibt es kein Band: Eines der Breite null wäre scheingenau. Den Schnitt eines Fensters rechnet `average`, für
+ * Kennzahlen mit Pooling über die Schüsse (`pooledValue`, [[adr-034]]); ohne ihn das Mittel der Werte.
  */
-export function periodTrend(values: readonly CardValue[]): {
+export function periodTrend(
+  values: readonly CardValue[],
+  average: (window: readonly CardValue[]) => number = meanOfValues
+): {
   points: TrendPoint[]
   /** 1,4826 · MAD der Abweichungen vom vollen Schnitt; null unter zehn Werten oder ohne Schwankung */
   spread: number | null
 } {
   const window = TREND_WINDOW
   const means = values.map((_, i) => {
-    const slice = values.slice(Math.max(0, i - window + 1), i + 1)
-    return slice.reduce((sum, v) => sum + v.value, 0) / slice.length
+    return average(values.slice(Math.max(0, i - window + 1), i + 1))
   })
   const residuals = values.flatMap((v, i) => (i + 1 >= window ? [v.value - means[i]] : []))
   const deviation = values.length >= MIN_BAND_CARDS ? mad(residuals) : null

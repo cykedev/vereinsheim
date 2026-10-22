@@ -212,6 +212,22 @@ describe("Rekorde (R1–R8)", () => {
     expect(best?.value).toBeCloseTo(9.58, 9)
   })
 
+  it("R8 über die Schüsse: kurze starke Scheiben heben die Form nicht über lange", () => {
+    // fünf Scheiben: zwei zu einem Schuss 10,9, drei zu vier Schuss 9,0; dann fünf zu vier Schuss 9,6
+    const first = [
+      card("a1", 1, [109]),
+      card("a2", 2, [90, 90, 90, 90]),
+      card("a3", 3, [109]),
+      card("a4", 4, [90, 90, 90, 90]),
+      card("a5", 5, [90, 90, 90, 90]),
+    ]
+    const second = [6, 7, 8, 9, 10].map((d) => card(`b${d}`, d, [96, 96, 96, 96]))
+    const best = periodRecords([...first, ...second], "decimal").bestForm
+    // über die Schüsse vorn (21,8 + 108)/14 = 9,27 gegen 9,6; als Mittel der Werte wären es 9,76
+    expect(best?.cardId).toBe("b10")
+    expect(best?.value).toBeCloseTo(9.6, 9)
+  })
+
   it("nur Wettkampf, wenn gewünscht", () => {
     const cards = [card("t", 1, tens(10)), card("w", 2, tens(10, 95), { kind: "competition" })]
     expect(periodRecords(cards, "decimal").bestCard[10].cardId).toBe("t")

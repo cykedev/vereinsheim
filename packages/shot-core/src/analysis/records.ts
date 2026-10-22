@@ -20,6 +20,7 @@ import { modalLength } from "../stats"
 import { MAX_DECIMAL_TENTHS } from "../targets"
 import { byStart, cardShots } from "./card-shots"
 import { longestRun, seriesCurve } from "./course"
+import { pooledValue } from "./levels"
 import { cardValues, periodTrend, type PeriodCard } from "./period"
 import { decimalHistogram, seriesConsistency, shotExtremes } from "./result"
 import { valueNeed, valueTenths } from "./values"
@@ -351,7 +352,8 @@ export function combineRecords(entries: readonly RecordEntry[]): PeriodRecords {
   const values = entries.flatMap(({ id, atMs, candidates }) =>
     candidates.mean ? [{ id, atMs, value: candidates.mean.value, n: candidates.mean.n }] : []
   )
-  for (const point of periodTrend(values).points) {
+  // beste Form über die Schüsse der fünf Scheiben, nicht als Mittel ihrer Werte ([[adr-034]])
+  for (const point of periodTrend(values, (window) => pooledValue(window, MEAN) as number).points) {
     if (!point.partial && beats(point.mean, bestForm, "higher")) {
       bestForm = { value: point.mean, cardId: point.id, atMs: point.atMs }
     }

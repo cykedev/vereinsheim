@@ -219,20 +219,22 @@ export { byStart } from "./item"
 const DELTA_WINDOW = 5
 
 /**
- * Abstand jedes Werts zum Mittel der bis zu `window` Werte davor, ohne den Wert selbst;
+ * Abstand jedes Werts zum Schnitt der bis zu `window` Werte davor, ohne den Wert selbst;
  * der erste hat keinen. Mit `ids` nur für diese Werte, gerechnet über alle davor, auch außerhalb des Zeitraums.
- * Geteilt von der Seite eines Zeitraums und der Scheiben-Liste.
+ * Den Schnitt rechnet `average`, für Kennzahlen mit Pooling über die Schüsse (`pooledValue`, [[adr-034]]); ohne ihn
+ * das Mittel der Werte. Geteilt von der Seite eines Zeitraums und der Scheiben-Liste.
  */
 export function deltasBefore(
   values: readonly CardValue[],
   ids: ReadonlySet<string> | null,
-  window = DELTA_WINDOW
+  window = DELTA_WINDOW,
+  average: (before: readonly CardValue[]) => number = (before) => mean(before) as number
 ): Map<string, { delta: number; n: number }> {
   const deltas = new Map<string, { delta: number; n: number }>()
   values.forEach((value, i) => {
     if (!i || (ids && !ids.has(value.id))) return
     const before = values.slice(Math.max(0, i - window), i)
-    deltas.set(value.id, { delta: value.value - (mean(before) as number), n: before.length })
+    deltas.set(value.id, { delta: value.value - average(before), n: before.length })
   })
   return deltas
 }

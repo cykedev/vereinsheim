@@ -109,7 +109,17 @@ describe("Hilfen der Bilder", () => {
   })
 
   it("Schnitt der letzten fünf, am Anfang über so viele, wie es gibt", () => {
-    expect(trailingMean([1, 2, 3, 4, 5, 6])).toEqual([1, 1.5, 2, 2.5, 3, 4])
+    const even = [1, 2, 3, 4, 5, 6].map((value) => ({ value, n: 40 }))
+    expect(trailingMean(even)).toEqual([1, 1.5, 2, 2.5, 3, 4])
+  })
+
+  it("Schnitt über die Schüsse: eine Scheibe mit 40 Schuss zählt viermal so viel wie eine mit 10", () => {
+    expect(
+      trailingMean([
+        { value: 0, n: 10 },
+        { value: 1000, n: 40 },
+      ])
+    ).toEqual([0, 800])
   })
 
   it("die Höhe der Zeitreihen folgt neun von zehn Scheiben, eine weit draußen staucht sie nicht", () => {

@@ -25,11 +25,15 @@ const ROW_H = 92
 const GAP = 14
 export const TIMELINE_HEIGHT = PAD.top + 2 * ROW_H + GAP + PAD.bottom
 
-/** gleitender Schnitt der bis zu fünf letzten Werte, in Folge */
-export function trailingMean(values: readonly number[], window = 5): number[] {
+/** gleitender Schnitt der bis zu fünf letzten Scheiben über ihre Schüsse, in Folge ([[adr-034]]) */
+export function trailingMean(
+  values: readonly { value: number; n: number }[],
+  window = 5
+): number[] {
   return values.map((_, i) => {
     const part = values.slice(Math.max(0, i - window + 1), i + 1)
-    return part.reduce((s, v) => s + v, 0) / part.length
+    const shots = part.reduce((s, v) => s + v.n, 0)
+    return part.reduce((s, v) => s + v.value * v.n, 0) / shots
   })
 }
 
@@ -103,7 +107,7 @@ export function PositionTimeline({
           const top = PAD.top + r * (ROW_H + GAP)
           const yOf = (um: number) => top + ROW_H / 2 - (um / limit) * (ROW_H / 2)
           const values = points.map((p) => row.value(p.center))
-          const mean = trailingMean(values)
+          const mean = trailingMean(points.map((p, i) => ({ value: values[i], n: p.n })))
           return (
             <g key={row.key} data-timeline-row={row.key}>
               <rect

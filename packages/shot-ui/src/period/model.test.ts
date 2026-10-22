@@ -482,6 +482,19 @@ describe("Abstand zum Schnitt der Scheiben davor", () => {
     expect(deltas.get("c7")?.delta).toBeCloseTo(-0.18, 9)
   })
 
+  it("mit einem Schnitt über die Schüsse zählt eine lange Scheibe davor mehr", () => {
+    const mixed = [
+      { id: "a", atMs: 0, value: 9, n: 10 },
+      { id: "b", atMs: 1, value: 10, n: 40 },
+      { id: "c", atMs: 2, value: 10, n: 40 },
+    ]
+    const byShots = (before: readonly { value: number; n: number }[]) =>
+      before.reduce((s, v) => s + v.value * v.n, 0) / before.reduce((s, v) => s + v.n, 0)
+    // vor c: 90 + 400 Ringe auf 50 Schuss = 9,8, nicht 9,5
+    expect(deltasBefore(mixed, null, 5, byShots).get("c")?.delta).toBeCloseTo(0.2, 9)
+    expect(deltasBefore(mixed, null).get("c")?.delta).toBeCloseTo(0.5, 9)
+  })
+
   it("mit Ids nur für diese, gerechnet über alle davor", () => {
     const deltas = deltasBefore(values, new Set(["c3"]))
     expect([...deltas.keys()]).toEqual(["c3"])
