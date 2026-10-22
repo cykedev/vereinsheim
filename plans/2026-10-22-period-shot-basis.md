@@ -298,6 +298,25 @@ Richtung.
 
 Commit: `feat(shot-core): test the position per direction`
 
+**Ergebnis der ersten Simulation:** Mit Vortest α 0,25 je Richtung bis 10,2 % Fehlalarm (Breaker). Verglichen im
+Scratchpad: gemeinsamer Vortest höchstens 6,1 %, je Richtung mit α 0,5 höchstens 6,3 % bei deutlich besserer
+Trefferquote (7 Scheiben, Versatz 0,3σ, nur seitlich wandernd: 88–95 % statt 72–84 %). Vom User an Claude übergeben
+(„finde du eine gute Lösung“): **je Richtung, `WANDER_ALPHA` 0,5 für alle Urteile**, Simulation aller Blöcke neu.
+
+### A14. Satz und Bild ohne Widerspruch
+
+- `levelTestZeroByAxis` liefert je Richtung den halben 95-%-Bereich (Bonferroni: je Richtung 97,5 %, t aus F(1, ν)
+  über `fQuantile`); `positionOverTime` gibt ihn als `region: { xUm, yUm } | null` weiter. Der Bereich schließt die
+  Mitte der Scheibe genau dann aus, wenn das Urteil „versetzt“ ist (Test).
+- Trefferbild: ein gestrichelter Rahmen mit runden Ecken um den geviertelten Kreis (`PatternTarget`, Prop `region`),
+  nur mit Urteil.
+- Satz ohne gesicherten Versatz: „Deine Mitte liegt {Richtung} {x} mm daneben.“ statt „Deine Lage passt.“, dazu „Bei {k}
+  Scheiben kann das noch Zufall sein.“; gesichert wie bisher „Deine Lage ist versetzt: …“. Grundlage: „Der gestrichelte
+  Rahmen zeigt, wo deine Mitte sicher liegt. Liegt die Mitte der Scheibe darin, ist ein Versatz noch nicht sicher.“
+- Hilfe (L10, Trefferbild über den Zeitraum), Katalog L10.
+
+Commit: `feat(shot-ui): show where the center surely lies and never contradict the picture`
+
 ## Texte (zur Freigabe mit dem Plan)
 
 Keine neuen Texte auf den ersten beiden Ebenen. Geändert werden die Erklärungen im Blatt „?“:
