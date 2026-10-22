@@ -55,7 +55,7 @@ export const VIEW_HELP: readonly ViewHelp[] = [
   {
     id: "vergleichen",
     title: "Vergleichen",
-    what: "Zwei Seiten nebeneinander: zwei Scheiben, zwei Zeiträume oder deine Wettkämpfe gegen dein Training im selben Zeitraum. A ist blau, B orange. Bei zwei Scheiben zählt jeder Schuss einzeln. Bei Zeiträumen zählt jede Scheibe einmal, damit ein Abend mit vielen Schüssen nicht alles bestimmt.",
+    what: "Zwei Seiten nebeneinander: zwei Scheiben, zwei Zeiträume oder deine Wettkämpfe gegen dein Training im selben Zeitraum. A ist blau, B orange. Bei zwei Scheiben zählt jeder Schuss einzeln. Bei Zeiträumen auch, solange deine Abende gleich liegen. Liegen sie verschieden, zählt jeder Abend für sich, damit ein einzelner Abend nicht alles bestimmt.",
     read: "Der Satz oben ist die Antwort. Das Bild zeigt beide Seiten auf der Scheibe. Mit vielen Schüssen zeigt es Umrisse: durchgezogen die Fläche mit der Hälfte der Schüsse, gestrichelt die mit 9 von 10. Bei wenigen Schüssen steht jeder Schuss als Punkt in der Farbe seiner Seite. Die geviertelten Kreise mit dem farbigen Ring sind die beiden Mitten. Die Lupe zeigt die ganze Scheibe. Die Tabelle nennt alle Zahlen beider Seiten. Ein Wert in Gold unterscheidet sich klar und ist der bessere.",
   },
   {

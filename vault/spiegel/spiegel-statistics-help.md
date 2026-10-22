@@ -83,8 +83,8 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 **Vergleichen**
 - *Was:* Zwei Seiten nebeneinander: zwei Scheiben, zwei Zeiträume oder deine Wettkämpfe gegen dein
   Training im selben Zeitraum. A ist blau, B orange. Bei zwei Scheiben zählt jeder Schuss einzeln.
-  Bei Zeiträumen zählt jede Scheibe einmal, damit ein Abend mit vielen Schüssen nicht alles
-  bestimmt.
+  Bei Zeiträumen auch, solange deine Abende gleich liegen. Liegen sie verschieden, zählt jeder Abend
+  für sich, damit ein einzelner Abend nicht alles bestimmt.
 - *So liest du es:* Der Satz oben ist die Antwort. Das Bild zeigt beide Seiten auf der Scheibe. Mit
   vielen Schüssen zeigt es Umrisse: durchgezogen die Fläche mit der Hälfte der Schüsse, gestrichelt
   die mit 9 von 10. Bei wenigen Schüssen steht jeder Schuss als Punkt in der Farbe seiner Seite. Die
@@ -104,14 +104,16 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 
 **Ergebnis und Ø je Schuss (E1, E2)**
 - *Was:* Das Ergebnis ist die Summe aller Wertungsschüsse, der Ø der Durchschnitt je Schuss.
-  Probeschüsse zählen nicht mit.
+  Probeschüsse zählen nicht mit. Über einen Zeitraum ist der Ø alle Ringe des Zeitraums geteilt
+  durch alle Wertungsschüsse. Eine Scheibe mit 40 Schuss zählt viermal so viel wie eine mit 10.
 - *So liest du es:* Der Ø je Schuss vergleicht Scheiben mit verschiedener Schusszahl fair, das
   Ergebnis nur Scheiben mit gleich vielen Schüssen. Oben schaltest du zwischen ganzen Ringen und
   Zehnteln um. Was dir zum Höchstwert fehlt, zeigt „Ringverlust nach Ursache“ (Reiter „Lage“).
 - *Vorsicht:* Fehlt einem Schuss der Wert, gibt es kein Ergebnis: Eine Summe über einen Teil der
   Schüsse wäre keins. Den Ø gibt es trotzdem, über die Schüsse mit Wert.
 - *Mindestzahl:* Ab 1 Schuss.
-- *Formel:* `Ergebnis = Σ vᵢ (Zehntel) bzw. Σ Ringᵢ; Ø = Σ vᵢ / n über die Schüsse mit Wert`
+- *Formel:* `Ergebnis = Σ vᵢ (Zehntel) bzw. Σ Ringᵢ; Ø = Σ vᵢ / n über die Schüsse mit Wert, über
+  einen Zeitraum über alle Schüsse aller Scheiben`
 
 **Ringverteilung (V1)**
 - *Was:* Wie viele Schüsse in jedem Ring liegen, dazu die Innenzehner.
@@ -164,6 +166,7 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 **Quoten mit Unsicherheit (E4, E5, E11, I10)**
 - *Was:* Der Anteil deiner Schüsse ab einer Schwelle (Zehner; Luftgewehr auch ab 10,5, Luftpistole
   ab 9,0; in ganzen Ringen Ring 10 und ab Ring 9) mit 95-%-Bereich und die längste Folge ab 10,0.
+  Über einen Zeitraum rechnet Spiegel die Zehnerquote über alle Schüsse.
 - *So liest du es:* Der Punkt ist gemessen, der Balken zeigt, wo dein wahrer Anteil wahrscheinlich
   liegt. Bei 40 Schuss ist er noch breit: Bei 20 Zehnern aus 40 Schuss reicht er etwa von 35 % bis
   65 %.
@@ -180,7 +183,8 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 **Streuung σ (P5)**
 - *Was:* Wie stark deine Treffer um ihren eigenen Schwerpunkt streuen, als eine Zahl in mm. Bei
   einer runden Gruppe liegen etwa 39 % der Treffer innerhalb von σ um den Schwerpunkt und 86 %
-  innerhalb von 2σ.
+  innerhalb von 2σ. Über einen Zeitraum ist es die Streuung über alle Schüsse. Spiegel misst dabei
+  jede Scheibe um ihre eigene Mitte.
 - *So liest du es:* Kleiner ist besser. σ hängt kaum von der Schusszahl ab und ist deshalb das
   richtige Maß, um einen Abend mit 20 Schuss mit einem mit 40 zu vergleichen.
 - *Vorsicht:* Bei 10 Schuss reicht der 95-%-Bereich von etwa einem Viertel darunter bis knapp die
@@ -188,7 +192,8 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   mit und kann es vervielfachen; R50 lässt ihn weg.
 - *Mindestzahl:* Ab 3 Schuss.
 - *Formel:* `σ̂ = √(Σ rᵢ² / (2(n − 1))) / c4(2n − 1); 95-%-Bereich über χ² mit 2(n − 1)
-  Freiheitsgraden`
+  Freiheitsgraden; über einen Zeitraum √(Σ νⱼsⱼ² / Σ νⱼ) / c4(Σ νⱼ + 1) mit νⱼ = 2(nⱼ − 1) und sⱼ =
+  σ̂ⱼ · c4(2nⱼ − 1)`
 
 **Maße der Gruppe (P1, P4, P6, P9)**
 - *Was:* Der Streukreis ist der kleinste Kreis um alle Trefferzentren, Mitte zu Mitte; die Zahl ist
@@ -205,7 +210,8 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   Schüssen etwas zu klein aus, bei 10 Schuss um etwa 4 %. Ein Fehlschuss bläht Streukreis und
   Streuung auf, R50 nicht. Streuung x und y rechnen mit allen Schüssen, die Form ohne Ausreißer; ein
   einzelner Abreißer hebt die Streuung nur in seiner Richtung. Abende mit unterschiedlicher
-  Schusszahl vergleichst du über σ.
+  Schusszahl vergleichst du über σ. Über einen Zeitraum rechnet Spiegel die Streuung x und y über
+  alle Schüsse, jede Scheibe um ihre eigene Mitte.
 - *Mindestzahl:* Ab 3 Schuss, R50 ab 5.
 - *Formel:* `Streukreis = Durchmesser des kleinsten umschließenden Kreises (Welzl); R50 = Median der
   rᵢ ohne Fehlschüsse; Streuung mit n − 1; in Ringbreiten: R50 / W`
@@ -358,7 +364,8 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   liegt in einem Fenster dieser Breite. Dazu die Dauer vom ersten bis zum letzten Schuss. Schießt du
   zwischendurch Probe, zählt der Abstand von Wertungsschuss zu Wertungsschuss.
 - *Vorsicht:* Gleichmäßiger ist nicht automatisch besser. Die Streuung ist ein Merkmal, das du mit
-  deinem Ergebnis vergleichen kannst.
+  deinem Ergebnis vergleichen kannst. Über einen Zeitraum ist das Tempo das Mittel der Tempi deiner
+  Scheiben: Ein Median lässt sich nicht über Scheiben zusammenrechnen.
 - *Mindestzahl:* Tempo ab 3 Schuss mit Zeit, die Tempo-Streuung ab 4, die Dauer ab 2.
 - *Formel:* `Tempo = Median der Abstände ohne Pausen; Pause = Abstand über max(60 s, min(180 s, 2 ×
   Median aller Abstände bis 180 s, auch späterer Pausen)), auf ganze Sekunden, unter 5 solchen
@@ -426,12 +433,12 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 
 **Verlauf und Form (T1, T2, T5)**
 - *Was:* Jeder Punkt ist eine Scheibe, mit dem Wert der gewählten Zahl über ihre Wertungsschüsse.
-  Die Linie ist der Schnitt der letzten fünf Scheiben (gestrichelt, solange es noch keine fünf
-  sind). Das Formband um die Linie zeigt, wie weit deine Scheiben üblicherweise um diesen Schnitt
-  schwanken. Je Monat zeigt Spiegel dazu Boden und Decke: den Wert, den du an einem schwachen Tag
-  hältst, den mittleren und den, den du an einem guten Tag erreichst. Unter „Scheiben“ und beim
-  Ablesen steht, wie weit eine Scheibe vom Schnitt der bis zu fünf Scheiben davor liegt, ohne sie
-  selbst.
+  Die Linie ist der Schnitt der letzten fünf Scheiben, über ihre Schüsse gerechnet (gestrichelt,
+  solange es noch keine fünf sind). Das Formband um die Linie zeigt, wie weit deine Scheiben
+  üblicherweise um diesen Schnitt schwanken. Je Monat zeigt Spiegel dazu Boden und Decke: den Wert,
+  den du an einem schwachen Tag hältst, den mittleren und den, den du an einem guten Tag erreichst.
+  Unter „Scheiben“ und beim Ablesen steht, wie weit eine Scheibe vom Schnitt der bis zu fünf
+  Scheiben davor liegt, ohne sie selbst.
 - *So liest du es:* Liegt eine Scheibe im Band, war sie für deine Form normal: Bei einem
   gleichbleibenden Schützen liegen etwa zwei von drei Scheiben darin. Wird dein Boden über die
   Monate besser (beim Ø höher, bei σ kleiner), werden deine schwachen Tage besser, auch wenn die
@@ -441,10 +448,10 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   verschiedene Schusszahlen nimm σ. Eine einzelne Scheibe außerhalb des Bands ist noch kein
   Formknick. Sind deine Werte fast immer gleich (etwa die Zahl der Innenzehner), gibt es kein Band.
 - *Mindestzahl:* Ab 1 Scheibe, das Formband ab 10 Scheiben, Boden und Decke ab 5 Scheiben im Monat.
-- *Formel:* `Schnitt über die letzten 5 Scheiben; Formband = Schnitt ± 1,4826 · MAD der Abweichungen
-  der Scheiben vom vollen Schnitt; Boden und Decke = P10 und P90 der Scheibenwerte je Monat (bei σ
-  umgekehrt), dazu der Median („Mitte“); Abstand zum Schnitt = Wert − Mittel der bis zu 5 Scheiben
-  davor`
+- *Formel:* `Schnitt über die letzten 5 Scheiben, bei Ø, Quote und Streuung über ihre Schüsse, sonst
+  als Mittel der Werte; Formband = Schnitt ± 1,4826 · MAD der Abweichungen der Scheiben vom vollen
+  Schnitt; Boden und Decke = P10 und P90 der Scheibenwerte je Monat (bei σ umgekehrt), dazu der
+  Median („Mitte“); Abstand zum Schnitt = Wert − Schnitt der bis zu 5 Scheiben davor`
 
 **Trainingsumfang (T6, T7)**
 - *Was:* Je Woche die Zahl deiner Schüsse (wie am Ausdruck, Trainings nur aus Probe zählen mit),
@@ -481,17 +488,22 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 - *Was:* Zwei Verläufe über die Zeit: oben, wie weit die Mitte jeder Scheibe links oder rechts
   liegt, unten, wie weit tief oder hoch. Jeder Punkt ist eine Scheibe, die Linie der Schnitt der
   letzten fünf, gestrichelt die Mitte der Scheibe. So siehst du, ob deine Lage wandert.
-- *So liest du es:* „Versetzt: rechts tief“ heißt: Über den Zeitraum liegen deine Scheiben im Mittel
-  rechts unter der Mitte, und das ist kein Zufall. Jede Scheibe zählt dabei einmal, egal wie viele
-  Schüsse sie hat. „Passt“ heißt: Ein Versatz ist nicht belegt.
-- *Vorsicht:* Viele Schüsse an wenigen Abenden sind keine breite Grundlage. Darum urteilt Spiegel
-  hier über Scheiben, nicht über Schüsse. Ohne Versatz meldet es in etwa 5 von 100 Fällen trotzdem
-  „versetzt“. Ein Versatz von 0,3 σ (beim Luftgewehr etwa 0,45 mm) zeigt sich bei 5 Scheiben zu 40
-  Schuss in sechs von zehn Fällen, ab 10 Scheiben fast immer. Wandert die Mitte von Abend zu Abend,
-  kann das Mittel trotzdem passen.
+- *So liest du es:* „Versetzt: rechts tief“ heißt: Die Mitte aller Schüsse des Zeitraums liegt
+  rechts unter der Mitte, und das ist kein Zufall. Das ist der geviertelte Kreis im Trefferbild.
+  „Passt“ heißt: Ein Versatz ist nicht belegt.
+- *Vorsicht:* „Versetzt“ sagt Spiegel nur, wenn das kein Zufall sein kann. Dafür prüft Spiegel
+  zuerst, ob deine Abende verschieden liegen. Liegen sie gleich, zählt jeder Schuss. Liegen sie
+  verschieden, zählt jeder Abend für sich. Ohne Versatz meldet es in etwa 5 von 100 Fällen trotzdem
+  „versetzt“, auch mit Scheiben zu 10 Schuss und wandernden Abenden in höchstens 6 von 100. Ein
+  Versatz von 0,3 σ (beim Luftgewehr etwa 0,45 mm) zeigt sich bei 5 Scheiben zu 40 Schuss in sieben
+  von zehn Fällen, ab 10 Scheiben fast immer. Wandern deine Abende um 0,2 σ, zeigt er sich bei 10
+  Scheiben in knapp acht von zehn Fällen, ab 20 Scheiben fast immer.
 - *Mindestzahl:* Ab 5 Scheiben mit Lage, je mindestens 3 Schuss.
-- *Formel:* `Schwerpunkt mⱼ je Scheibe; Hotelling-T² des Mittels der mⱼ gegen die Mitte, Grenze 2(k
-  − 1)/(k − 2) · F₀,₉₅(2, k − 2) bei k Scheiben`
+- *Formel:* `Mitte x̄ = Σ nⱼmⱼ / N über alle Schüsse; W = Σ Sⱼ / (N − k), M = Σ nⱼ(mⱼ − x̄)(mⱼ −
+  x̄)ᵀ / (k − 1); Vortest F = tr(W⁻¹M)/2 mit F(2(k − 1), 2(N − k)), Wandern bei p < 0,25; ohne
+  Wandern V = T/N mit T = (Σ Sⱼ + (k − 1)M)/(N − 1), ν = N − 1; mit Wandern V = (B Σ nⱼ² + W N)/N²,
+  B = (M − W)/n₀, ν = k − 1; T² = x̄ᵀV⁻¹x̄, F = (ν − 1)/(2ν) · T² mit F(2, ν − 1), versetzt bei p <
+  0,05`
 
 **Ausreißerrichtung (L7)**
 - *Was:* Spiegel nimmt von jeder Scheibe das weiteste Zehntel der Schüsse, gemessen von der Mitte
@@ -520,18 +532,19 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 - *Vorsicht:* Eine Scheibe ist eine Scheibe: Ein Abstand zum Schnitt, der in deinem Formband bleibt,
   ist normal.
 - *Mindestzahl:* Ab der zweiten Scheibe; mit weniger als fünf davor über so viele, wie es gibt.
-- *Formel:* `Δ = Ø je Schuss der Scheibe − Mittel der Ø je Schuss der bis zu fünf Scheiben davor,
-  ohne sie selbst`
+- *Formel:* `Δ = Ø je Schuss der Scheibe − Ø je Schuss über alle Wertungsschüsse der bis zu fünf
+  Scheiben davor, ohne sie selbst`
 
 **Rekorde (R1, R2, R3, R4, R5, R6, R7, R8, R10, R11)**
 - *Was:* Bestes Ergebnis, beste Serie, bester Teiler, engste Serie zu zehn und engste Scheibe,
   meiste 10,9 (nur in Zehnteln), meiste Zehner und Innenzehner auf einer Scheibe und in einer Serie,
   längste Folge von Zehnern, längste Folge ohne Schuss unter 9, dein bester schwächster Schuss, die
   kleinste Spanne zwischen bester und schwächster Serie und deine beste Form: der höchste Schnitt je
-  Schuss über fünf Scheiben in Folge. Ergebnis, engste Scheibe, die Zahl der 10,9, Zehner und
-  Innenzehner auf einer Scheibe, der schwächste Schuss und die Spanne der Serien gelten je
-  Schusszahl der Scheibe („Scheibe zu 40 Schuss“), denn 40 und 60 Schuss sind nicht vergleichbar.
-  Die beste Serie und die Zehner einer Serie gelten je Serienlänge („Serie zu 10 Schuss“).
+  Schuss über fünf Scheiben in Folge, über ihre Schüsse gerechnet. Ergebnis, engste Scheibe, die
+  Zahl der 10,9, Zehner und Innenzehner auf einer Scheibe, der schwächste Schuss und die Spanne der
+  Serien gelten je Schusszahl der Scheibe („Scheibe zu 40 Schuss“), denn 40 und 60 Schuss sind nicht
+  vergleichbar. Die beste Serie und die Zehner einer Serie gelten je Serienlänge („Serie zu 10
+  Schuss“).
 - *So liest du es:* Bei Gleichstand bleibt der frühere Rekord, denn er hat ihn zuerst gesetzt.
   Rekorde gibt es je Wertung (Zehntel oder ganze Ringe) und wahlweise nur für Training oder nur für
   Wettkampf; sie gelten über alle deine Scheiben, nicht nur über den gewählten Zeitraum.
@@ -545,10 +558,12 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 ## Vergleichen
 
 **Zwei Zeiträume im Vergleich (C3, T3)**
-- *Was:* Spiegel vergleicht die Werte deiner Scheiben aus zwei Zeiträumen, etwa vor und nach einem
-  neuen Abzug. Genauso vergleicht es deine Wettkämpfe mit deinem Training im selben Zeitraum. Jede
-  Scheibe zählt einmal, egal wie viele Schüsse sie hat. Der Unterschied ist die Differenz der
-  Mittel. Liegt eine Scheibe in beiden Zeiträumen, zählt sie nur in A.
+- *Was:* Spiegel vergleicht zwei Zeiträume, etwa vor und nach einem neuen Abzug. Genauso vergleicht
+  es deine Wettkämpfe mit deinem Training im selben Zeitraum. Die Werte rechnet es über alle
+  Schüsse. Spiegel prüft zuerst, ob deine Abende stärker voneinander abweichen, als der Zufall der
+  Schüsse erklärt. Wenn nicht, zählt jeder Schuss. Wenn doch, zählt jeder Abend für sich. So macht
+  ein einzelner guter oder schlechter Abend nicht zu sicher. Liegt eine Scheibe in beiden
+  Zeiträumen, zählt sie nur in A.
 - *So liest du es:* Ein Wert in Gold ist klar besser: So ein Unterschied entstünde durch Zufall
   allein in höchstens 5 von 100 Vergleichen. Der Satz oben nennt das „ein klarer Unterschied“. Ob
   kleiner besser ist, weiß Spiegel je Zahl. Bei der Streuung ist kleiner besser. Steht nichts in
@@ -556,15 +571,19 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   nicht, es zu zeigen oder auszuschließen. Unter 5 Scheiben je Seite steht „zu wenige Scheiben“.
 - *Vorsicht:* Bei gleicher Form gibt Spiegel in höchstens etwa 5 % der Vergleiche trotzdem ein
   Urteil. Wird dein σ beim Luftgewehr von 1,5 auf 1,3 mm kleiner (40 Schuss je Scheibe, im Mittel
-  0,1 Ring mehr je Schuss), erkennt Spiegel das bei 5 gegen 5 Scheiben in gut der Hälfte der Fälle,
-  bei 10 gegen 10 in gut neun von zehn. Eine kleine Veränderung braucht viel mehr Scheiben: Bei σ
-  1,5 auf 1,45 mm (etwa ein Ring mehr auf 40 Schuss) erkennt es Spiegel bei 20 gegen 20 Scheiben nur
-  in etwa jedem fünften Fall, bei 30 gegen 30 in knapp jedem dritten. Zeigen Test und Mittel in
-  verschiedene Richtungen, gibt es kein Urteil. Ein Unterschied zwischen Wettkampf und Training
-  sagt, dass es so ist, nicht warum.
+  0,1 Ring mehr je Schuss), erkennt Spiegel das bei 5 gegen 5 Scheiben in sechs von zehn Fällen, bei
+  10 gegen 10 in gut neun von zehn. Eine kleine Veränderung braucht viel mehr Scheiben: Bei σ 1,5
+  auf 1,45 mm (etwa ein Ring mehr auf 40 Schuss) erkennt es Spiegel bei 20 gegen 20 Scheiben nur in
+  etwa jedem fünften Fall, bei 30 gegen 30 in knapp jedem dritten. Fehlt Einheiten die Streuung der
+  Schüsse (Einheiten nur aus Serien), vergleicht Spiegel die Werte je Einheit. Zeigen Test und
+  Mittel dann in verschiedene Richtungen, gibt es kein Urteil. Ein Unterschied zwischen Wettkampf
+  und Training sagt, dass es so ist, nicht warum.
 - *Mindestzahl:* Ein Urteil ab 5 Scheiben je Seite.
-- *Formel:* `Mann-Whitney über die Scheibenwerte, zweiseitig, α 0,05; bis 20 Scheiben je Seite genau
-  ausgezählt, darüber Normalnäherung mit Korrektur für gleiche Werte; Δ = Mittel in A − Mittel in B`
+- *Formel:* `Werte über alle Schüsse; Mittel (Ø, Quote) über zwei Ebenen: je Seite Vortest auf
+  Wandern der Abende (α 0,25), ohne Wandern V = T/N mit ν = N − 1, sonst V = (B Σ nⱼ² + W N)/N² mit
+  ν = k − 1; t = Δ/√(Vₐ + V_b), ν nach Welch, zweiseitig, α 0,05; Streuung über die Varianzen: ohne
+  Wandern F-Test der gepoolten Varianzen, sonst Welch-t über ln sⱼ²; ohne Streuung der Schüsse
+  Mann-Whitney über die Werte je Scheibe; Δ = A − B`
 
 **Zwei Scheiben im Vergleich (C2)**
 - *Was:* Spiegel legt die Wertungsschüsse zweier Scheiben nebeneinander, wie sie auf dem Ausdruck
@@ -587,8 +606,9 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 
 **Lage im Vergleich (C2, C3)**
 - *Was:* Spiegel vergleicht, wo die Mitte der Schüsse von A und wo die von B liegt. Bei zwei
-  Scheiben zählt jeder Schuss. Bei zwei Zeiträumen zählt die Mitte jeder Scheibe einmal, egal wie
-  viele Schüsse sie hat. Die Zahl ist der Abstand der beiden Mitten.
+  Scheiben zählt jeder Schuss. Bei zwei Zeiträumen ist jede Mitte die aller Schüsse einer Seite.
+  Liegen die Abende einer Seite verschieden, zählt dort jeder Abend für sich. Die Zahl ist der
+  Abstand der beiden Mitten.
 - *So liest du es:* Steht der Abstand in Gold, liegen die Mitten klar auseinander: Zufall allein
   schafft das in höchstens 5 von 100 Vergleichen. In welche Richtung, sagt der Satz oben. Ohne Gold
   ist kein Versatz belegt. Das heißt nicht, dass beide Mitten genau gleich liegen.
@@ -596,13 +616,14 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   Scheiben zu 40 Schuss erkennt es einen Versatz von einem halben σ (beim Luftgewehr etwa 0,75 mm)
   in etwa der Hälfte der Fälle. Bei zwei Zeiträumen erkennt es einen Versatz von 0,3 σ bei 5
   Scheiben je Seite in gut der Hälfte der Fälle, bei 10 Scheiben je Seite in gut neun von zehn.
-  Wandert deine Mitte von Abend zu Abend, braucht es mehr Scheiben.
+  Wandert deine Mitte von Abend zu Abend um 0,2 σ, zeigt er sich erst bei 20 Scheiben je Seite in
+  neun von zehn Fällen.
 - *Mindestzahl:* Ab 5 Schuss je Scheibe, bei Zeiträumen ab 5 Scheiben je Seite mit je mindestens 3
   Schuss mit Lage.
 - *Formel:* `Hotelling-T² für zwei Stichproben: S = ((n₁ − 1)S₁ + (n₂ − 1)S₂)/(n₁ + n₂ − 2), T² =
   n₁n₂/(n₁ + n₂) · dᵀS⁻¹d, F = (n₁ + n₂ − 3)/(2(n₁ + n₂ − 2)) · T², p = (1 + 2F/ν)^(−ν/2) mit ν =
-  Zahl aller Punkte − 3, versetzt bei p < 0,05; bei Zeiträumen sind die Punkte die Schwerpunkte der
-  Scheiben`
+  Zahl aller Punkte − 3, versetzt bei p < 0,05; bei Zeiträumen die Mitten über alle Schüsse und über
+  zwei Ebenen wie „Lage über Zeit“, Δ = A − B, V = Vₐ + V_b, ν nach Welch über die Spuren`
 
 ## Glossar
 
