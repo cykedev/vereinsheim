@@ -42,10 +42,6 @@ export interface PatternTargetProps {
   label: string
   /** gilt nur bei `shots`: Unter 50 Schuss stehen immer die Treffer, über 3.000 immer die Umrisse */
   view?: PatternView
-  /**
-   * der Bereich, in dem die Mitte sicher liegt (L10, `PositionOverTime.region` um `mean`), in µm; ohne Urteil keiner
-   */
-  region?: { center: { xUm: number; yUm: number }; xUm: number; yUm: number } | null
   className?: string
 }
 
@@ -63,7 +59,6 @@ export function PatternTarget({
   target,
   label,
   view: wanted = "density",
-  region = null,
   className,
 }: PatternTargetProps) {
   const outlines =
@@ -124,29 +119,6 @@ export function PatternTarget({
       ))}
       {layer.style !== "rings" && (
         <TargetBoard target={target} view={view} ringLabel={sizes.ringLabel} part="lines" />
-      )}
-      {region && (
-        // wie die Vertrauensellipse auf der Seite einer Scheibe: fein gestrichelt mit hellem Saum
-        <g data-overlay="region">
-          {[
-            { stroke: "var(--overlay-halo)", width: 3, dash: undefined },
-            { stroke: "var(--overlay)", width: 1.25, dash: "5 3" },
-          ].map((line) => (
-            <rect
-              key={line.stroke}
-              x={(region.center.xUm - region.xUm) / 1000}
-              y={-(region.center.yUm + region.yUm) / 1000}
-              width={(2 * region.xUm) / 1000}
-              height={(2 * region.yUm) / 1000}
-              rx={Math.min(region.xUm, region.yUm) / 4000}
-              fill="none"
-              stroke={line.stroke}
-              strokeWidth={line.width}
-              strokeDasharray={line.dash}
-              {...HAIR}
-            />
-          ))}
-        </g>
       )}
       {layer.center && (
         <MpiMark

@@ -95,19 +95,12 @@ describe("PatternPanel", () => {
     expect(html).not.toContain("Jeder Punkt ist ein Schuss.")
   })
 
-  it("Satz aus Lage und Form, Grundlage, die Mitte aller Schüsse und der Bereich, in dem sie sicher liegt", () => {
+  it("Satz aus Lage und Form, Grundlage und die Mitte aller Schüsse", () => {
     const pattern = periodPattern(cards(10, 40))
     const html = render({ status: "ready", pattern })
     expect(html).toContain(
-      "Über 400 Schuss aus 10 Scheiben. Der geviertelte Kreis ist die Mitte aller Schüsse. Der feine Rahmen um ihn zeigt, wo deine Mitte sicher liegt. Liegt die Mitte der Scheibe darin, ist ein Versatz noch nicht sicher."
+      "Über 400 Schuss aus 10 Scheiben. Der geviertelte Kreis ist die Mitte aller Schüsse."
     )
-    // der Rahmen steht um die Mitte des Urteils, so breit wie der Bereich je Richtung
-    const region = pattern.overTime.region!
-    const mean = pattern.overTime.mean!
-    const rect = html.match(/<g data-overlay="region">.*?<\/g>/)?.[0] ?? ""
-    expect(rect).toContain(`width="${(2 * region.xUm) / 1000}"`)
-    expect(rect).toContain(`height="${(2 * region.yUm) / 1000}"`)
-    expect(rect).toContain(`x="${(mean.xUm - region.xUm) / 1000}"`)
     // erst die Lage, dann die Form
     const sentence = text(html.match(/<p data-pattern-sentence[^>]*>.*?<\/p>/)?.[0] ?? "")
     expect(sentence).toMatch(/^\s*Deine (Lage|Mitte) .*Die Gruppe /)
@@ -120,9 +113,6 @@ describe("PatternPanel", () => {
     expect(html).not.toContain("data-pattern-placeholder")
     expect(html).toContain("Für ein Urteil über die Lage fehlen noch Scheiben.")
     expect(html).toContain("Über 0 Schuss aus 0 Scheiben.")
-    // ohne Urteil kein Rahmen und keine Erklärung dazu
-    expect(html).not.toContain('data-overlay="region"')
-    expect(html).not.toContain("Der feine Rahmen")
   })
 
   it("lädt es noch oder ging es schief, steht ein Platz gleicher Größe da", () => {

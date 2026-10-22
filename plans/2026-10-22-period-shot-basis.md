@@ -317,6 +317,10 @@ Trefferquote (7 Scheiben, Versatz 0,3σ, nur seitlich wandernd: 88–95 % statt 
 
 Commit: `feat(shot-ui): show where the center surely lies and never contradict the picture`
 
+**Sichtprüfung:** Der Rahmen ist im Trefferbild bei 518 Schuss kleiner als das Zeichen des Kreises, bei 213 Schuss
+etwa 23 × 10 px zwischen dichten Treffern; er wäre eine Frage, keine Antwort. Entschieden: kein Rahmen im Trefferbild,
+der Bereich bleibt im Fachkern (`region`) für eine lesbare Stelle (Vorschlag: Band je Richtung in „Lage über Zeit“).
+
 ## Texte (zur Freigabe mit dem Plan)
 
 Keine neuen Texte auf den ersten beiden Ebenen. Geändert werden die Erklärungen im Blatt „?“:

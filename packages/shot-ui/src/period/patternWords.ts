@@ -28,9 +28,6 @@ export const OUTLINES_LABEL = "Umrisse statt Treffer zeigen"
 export const outsideText = (n: number) =>
   `${n} ${n === 1 ? "Schuss liegt" : "Schüsse liegen"} außerhalb des Bilds.`
 export const CENTER_NOTE = "Der geviertelte Kreis ist die Mitte aller Schüsse."
-/** unter dem Trefferbild, wenn es ein Urteil über die Lage gibt */
-export const REGION_NOTE =
-  "Der feine Rahmen um ihn zeigt, wo deine Mitte sicher liegt. Liegt die Mitte der Scheibe darin, ist ein Versatz noch nicht sicher."
 export const PATTERN_LOADING = "Trefferbild wird gerechnet …"
 export const PATTERN_FAILED = "Das Trefferbild ließ sich nicht laden."
 

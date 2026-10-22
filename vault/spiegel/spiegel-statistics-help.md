@@ -75,9 +75,8 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   Violett, dort selten, Hellviolett ganz selten. Unter 50 Schuss trägt jeder Treffer die Farbe
   seines Rings. Der runde Knopf oben links zeigt statt der Treffer Umrisse wie beim Vergleichen:
   durchgezogen die Fläche mit der Hälfte der Schüsse, gestrichelt die mit 9 von 10. Über 3.000
-  Schuss zeigt das Bild nur noch die Umrisse. Der geviertelte Kreis ist die Mitte aller Schüsse. Der
-  feine Rahmen um ihn zeigt, wo deine Mitte sicher liegt: Liegt die Mitte der Scheibe außerhalb, ist
-  deine Lage sicher versetzt, liegt sie darin, noch nicht.
+  Schuss zeigt das Bild nur noch die Umrisse. Der geviertelte Kreis ist die Mitte aller Schüsse.
+  Ohne gesicherten Versatz sagt der Satz, wo deine Mitte liegt und dass das noch nicht sicher ist.
 - *So liest du es:* Der Satz unter dem Bild ist die Antwort: zuerst, ob deine Lage über den Zeitraum
   versetzt ist, dann, ob deine Gruppe in eine Richtung zieht. Die Belege stehen in der Analyse: die
   Form als Ellipse unter „Präzision“, die Lage über die Zeit unter „Lage“.
@@ -501,14 +500,13 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   Ein Versatz von 0,3 σ (beim Luftgewehr etwa 0,45 mm) zeigt sich bei 5 Scheiben zu 40 Schuss in
   sieben von zehn Fällen, ab 10 Scheiben fast immer. Wandern deine Abende nur zur Seite, zeigt sich
   ein Versatz in der Höhe genauso oft. Wandern sie in beide Richtungen um 0,2 σ, zeigt er sich bei
-  10 Scheiben in gut acht von zehn Fällen, ab 20 Scheiben fast immer. Der feine Rahmen um den
-  geviertelten Kreis zeigt, wo deine Mitte sicher liegt.
+  10 Scheiben in gut acht von zehn Fällen, ab 20 Scheiben fast immer.
 - *Mindestzahl:* Ab 5 Scheiben mit Lage, je mindestens 3 Schuss.
 - *Formel:* `Mitte x̄ = Σ nⱼmⱼ / N über alle Schüsse; je Richtung (seitlich, Höhe): W = Σ Sⱼ / (N −
   k), M = Σ nⱼ(mⱼ − x̄)² / (k − 1), Vortest F = M/W mit F(k − 1, N − k), Wandern bei p < 0,5; ohne
   Wandern V = T/N mit T = (Σ Sⱼ + (k − 1)M)/(N − 1), ν = N − 1; mit Wandern V = (B Σ nⱼ² + W N)/N²,
   B = (M − W)/n₀, ν = k − 1; t² = x̄²/V mit F(1, ν); beide Richtungen nach Bonferroni p = min(1, 2 ·
-  min(pₓ, p_y)), versetzt bei p < 0,05; Rahmen = x̄ ± √(F₀,₉₇₅(1, ν) · V) je Richtung`
+  min(pₓ, p_y)), versetzt bei p < 0,05`
 
 **Ausreißerrichtung (L7)**
 - *Was:* Spiegel nimmt von jeder Scheibe das weiteste Zehntel der Schüsse, gemessen von der Mitte
