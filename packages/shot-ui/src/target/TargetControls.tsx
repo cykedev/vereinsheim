@@ -97,6 +97,14 @@ const LAYER_LABELS: Readonly<Record<Layer, string>> = {
 /** das Zeichen der Lupe: auf die Gruppe zoomen und zurück (auch beim Vergleichen) */
 export const ZOOM_ICON = ICONS.zoom
 
+/** das Zeichen der Umrisse: ein Kreis durchgezogen in einem gestrichelten (Trefferbild eines Zeitraums) */
+export const OUTLINES_ICON = (
+  <svg {...svgProps}>
+    <circle cx={12} cy={12} r={9} strokeDasharray="3 3" />
+    <circle cx={12} cy={12} r={4.5} />
+  </svg>
+)
+
 /** ein runder Knopf in einer Ecke eines Bilds der Scheibe (auch das Bild beim Vergleichen) */
 export function CornerButton({
   label,

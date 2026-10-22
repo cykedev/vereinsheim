@@ -1497,6 +1497,50 @@ async function periodPattern(page: Page) {
     words.sentence.length > 0 && words.basis.startsWith("Über ") && words.jargon === null,
     words
   )
+  // Umrisse statt Dichte: ab 50 Schuss ein Knopf, die Wahl bleibt im Gerät, auch nach dem Neuladen
+  const outlinesButton = `$('button[aria-label="Umrisse statt Treffer zeigen"]')`
+  if (state.kind === "rings") {
+    check("Trefferbild: Umrisse statt Dichte", false, "unter 50 Schuss, kein Knopf (nicht belegt)")
+  } else {
+    await page.ev(`localStorage.removeItem("spiegel-pattern-view")`)
+    await page.click(outlinesButton, { settle: 200 })
+    const outlined = await page.ev<{
+      view: string
+      lines: number
+      legend: string
+      pressed: string
+    }>(`({
+      view: $("[data-pattern-target]")?.dataset.patternView ?? "",
+      lines: $$('[data-outline="pattern"]').length,
+      legend: txt($('[data-pattern-legend="outlines"]')),
+      pressed: ${outlinesButton}?.getAttribute("aria-pressed") ?? "",
+    })`)
+    check(
+      "Trefferbild: der Knopf zeigt Umrisse statt Dichte, mit eigener Legende",
+      outlined.view === "outlines" &&
+        outlined.lines === 2 &&
+        outlined.legend.startsWith("Durchgezogen") &&
+        outlined.pressed === "true" &&
+        !(await page.ev<boolean>(`!!$("[data-heat-legend]")`)),
+      outlined
+    )
+    await page.goto(`${BASE}/progress${state.search}`)
+    const kept = await page.waitFor(
+      `$("[data-pattern-target]")?.dataset.patternView === "outlines"`,
+      15_000
+    )
+    check(
+      "Trefferbild: die Umrisse bleiben nach dem Neuladen",
+      kept,
+      await page.ev(`localStorage.getItem("spiegel-pattern-view")`)
+    )
+    await page.click(outlinesButton, { settle: 200 })
+    const density = await page.ev<boolean>(
+      `$("[data-pattern-target]")?.dataset.patternView === "density" && !!$("[data-heat-legend]")`
+    )
+    check("Trefferbild: ein zweites Tippen zeigt wieder die Dichte", density, "")
+    await page.ev(`localStorage.removeItem("spiegel-pattern-view")`)
+  }
   await page.ev(`history.back()`)
   const back = await page.waitFor(
     `!location.search.includes("show=target") && !$("[data-pattern-panel]") && $$("[data-card-point]").length > 0`,

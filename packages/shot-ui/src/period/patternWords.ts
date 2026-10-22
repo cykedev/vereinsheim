@@ -19,6 +19,10 @@ export interface PatternSentence {
 }
 
 export const LEGEND_POINTS = "Jeder Punkt ist ein Schuss."
+/** Legende der Umrisse, im Trefferbild und beim Vergleichen */
+export const LEGEND_OUTLINES = "Durchgezogen: die Hälfte der Schüsse. Gestrichelt: 9 von 10."
+/** Name des Knopfs, der statt der Treffer die Umrisse zeigt */
+export const OUTLINES_LABEL = "Umrisse statt Treffer zeigen"
 
 /** „1 Schuss liegt außerhalb des Bilds.“ */
 export const outsideText = (n: number) =>

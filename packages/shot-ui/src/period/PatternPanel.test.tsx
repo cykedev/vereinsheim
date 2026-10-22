@@ -6,6 +6,7 @@ import { periodPattern, type PatternCard } from "@vereinsheim/shot-core/analysis
 import { LG_10M } from "@vereinsheim/shot-core/targets"
 
 import { PatternPanel, type PatternState } from "./PatternPanel"
+import { PatternTarget, type PatternView } from "./PatternTarget"
 import { PeriodChartBar } from "./PeriodChartBar"
 
 /**
@@ -30,6 +31,10 @@ function cards(count: number, shots: number, base = { xUm: 0, yUm: 0 }): Pattern
 
 const render = (state: PatternState) =>
   renderToStaticMarkup(createElement(PatternPanel, { state, target: LG_10M, onRetry: () => {} }))
+const drawn = (pattern: ReturnType<typeof periodPattern>, view: PatternView) =>
+  renderToStaticMarkup(
+    createElement(PatternTarget, { layer: pattern.picture, target: LG_10M, label: "", view })
+  )
 const text = (html: string) => html.replace(/<[^>]+>/g, " ")
 const JARGON = /σ|Hotelling|Mauchly|Rayleigh|Median|95 ?%|\b[Uu]nklar\b/
 
@@ -110,6 +115,48 @@ describe("PatternPanel", () => {
     expect(failed).toContain("Das Trefferbild ließ sich nicht laden.")
     expect(failed).toContain("Noch einmal")
   })
+})
+
+describe("Umrisse statt Dichte", () => {
+  const BUTTON = 'aria-label="Umrisse statt Treffer zeigen"'
+
+  it("ab 50 Schuss ein Knopf oben links, anfangs mit der Dichte", () => {
+    const html = render({ status: "ready", pattern: periodPattern(cards(10, 40)) })
+    expect(html).toContain(BUTTON)
+    expect(html).toContain('aria-pressed="false"')
+    expect(html).toContain('data-pattern-view="density"')
+    expect(html).toContain("data-heat-legend")
+    expect(html).not.toContain("Durchgezogen")
+  })
+
+  it("unter 50 Schuss kein Knopf: Jeder Treffer steht in seiner Ringfarbe", () => {
+    const few = periodPattern(cards(1, 40))
+    expect(render({ status: "ready", pattern: few })).not.toContain(BUTTON)
+    // auch wer die Umrisse verlangt, bekommt die Treffer
+    const html = drawn(few, "outlines")
+    expect(html).toContain('data-pattern-view="density"')
+    expect(html.match(/data-pattern-shot/g)).toHaveLength(40)
+    expect(html).not.toContain("data-outline=")
+  })
+
+  for (const [name, pattern] of [
+    ["mit Treffern", periodPattern(cards(10, 40))],
+    ["mit Bändern", periodPattern(cards(80, 40))],
+  ] as const) {
+    it(`statt der Dichte ${name} die Umrisse wie beim Vergleichen, unter den Ringen`, () => {
+      const html = drawn(pattern, "outlines")
+      expect(html).toContain('data-pattern-view="outlines"')
+      expect(html).not.toContain("data-pattern-shot")
+      expect(html).not.toContain("data-pattern-band")
+      expect(html).not.toContain("var(--heat-")
+      // gestrichelt 9 von 10, durchgezogen und getönt die Hälfte, in der Farbe der Seite A
+      expect(html.match(/data-outline="pattern"/g)).toHaveLength(2)
+      expect(html.match(/data-dashed="true"/g)).toHaveLength(1)
+      expect(html).toContain('fill="var(--compare-a)" fill-opacity="0.4"')
+      expect(html.lastIndexOf("data-outline=")).toBeLessThan(html.indexOf("data-ring="))
+      expect(html).toContain("<title>Schwerpunkt</title>")
+    })
+  }
 })
 
 describe("PeriodChartBar mit Hauptbild", () => {

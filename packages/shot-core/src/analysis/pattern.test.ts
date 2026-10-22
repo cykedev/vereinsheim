@@ -227,7 +227,9 @@ describe("periodPattern", () => {
     const flier = { xUm: 9000, yUm: 0, ring: 7 }
     const pattern = periodPattern([...cardsOf(10, 40, 1500), card("weit", [flier])])
     expect(pattern.picture.style).toBe("shots")
-    expect(pattern.picture.grid).toBeNull()
+    // das Raster kommt mit: aus ihm zeichnet das Bild die Umrisse statt der Treffer
+    expect(pattern.picture.grid?.cells).toHaveLength(64 * 64)
+    expect(pattern.picture.grid?.levels).toHaveLength(6)
     const points = pattern.picture.points!
     expect(points).toHaveLength(401)
     const bands = points.map((p) => p[3] as number)

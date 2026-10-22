@@ -247,15 +247,18 @@ export interface PatternLayer {
    * `HEAT_SHARES`; null bei `rings`), die dichten zuletzt; null bei `bands`
    */
   points: [number, number, number | null, number | null][] | null
-  /** die Dichte in Bändern; nur bei `bands` */
+  /**
+   * die Dichte als Raster: bei `bands` die Bänder, bei `shots` auch, damit das Bild statt der Treffer die Umrisse (Hälfte
+   * und 9 von 10 der Schüsse) zeigen kann; bei `rings` null
+   */
   grid: DensityGrid | null
   /** Treffer außerhalb des Ausschnitts, die das Bild nicht zeigt (nur bei `shots`) */
   outside: number
 }
 
 /**
- * das Trefferbild eines Zeitraums, wie es an den Browser geht: bis 3.000 Schuss die Treffer mit Band, darüber ein
- * Raster, dazu Mitten und Urteile
+ * das Trefferbild eines Zeitraums, wie es an den Browser geht: bis 3.000 Schuss die Treffer mit Band, ab 50 das Raster
+ * (für die Umrisse), dazu Mitten und Urteile
  */
 export interface PeriodPattern {
   /** Schüsse mit Lage */
@@ -327,13 +330,14 @@ function layer(points: readonly PatternPoint[]): PatternLayer {
     .sort((a, b) => a.band - b.band)
     .map(({ p, band }) => toShot(p, band))
   const outside = points.filter((p) => Math.max(Math.abs(p.xUm), Math.abs(p.yUm)) > halfUm).length
-  return { style: "shots", halfUm, center, points: shots, grid: null, outside }
+  return { style: "shots", halfUm, center, points: shots, grid, outside }
 }
 
 /**
  * Das Trefferbild eines Zeitraums (L9) mit den Urteilen über Form (L9), Lage (L10) und Ausreißerrichtung (L7), für
  * den Browser gerechnet: Er bekommt bis 3.000 Schuss jeden Treffer mit seinem Band der Dichte (unter 50 mit seinem
- * Ring), darüber nur die Dichte als Raster von 64 × 64, dazu die Schwerpunkte je Scheibe auf ganze µm.
+ * Ring), ab 50 Schuss die Dichte als Raster von 64 × 64 (für Bänder oder Umrisse, darüber nur noch das Raster), dazu
+ * die Schwerpunkte je Scheibe auf ganze µm.
  */
 export function periodPattern(cards: readonly PatternCard[]): PeriodPattern {
   const all = cards.flatMap((card) => card.points)

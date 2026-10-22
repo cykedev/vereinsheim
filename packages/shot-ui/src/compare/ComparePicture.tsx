@@ -8,7 +8,7 @@ import { cn } from "@vereinsheim/lib/utils"
 import { useState } from "react"
 
 import { caliberRadius, screenSizes, targetView, unitsPerPixel } from "../geometry"
-import { contourPath } from "../period/contours"
+import { DensityOutlines } from "../period/DensityOutlines"
 import type { ViewBox } from "../types"
 import { MpiMark } from "../target/MpiMark"
 import { TargetBoard } from "../target/TargetBoard"
@@ -18,33 +18,12 @@ import { useAnimatedViewBox, useElementWidth } from "../target/useAnimatedViewBo
 const HAIR = { vectorEffect: "non-scaling-stroke" } as const
 /** Raster der Punkte: 10 µm (`comparePicture`) */
 const POINT_MM = 0.01
-/** Stufen der Umrisse in `HEAT_SHARES`: 9 von 10 und die Hälfte der Schüsse */
-const OUTER = 1
-const INNER = 3
 /** Saum unter Linien und Buchstaben, damit sie auf Papier, Spiegel und Ringen stehen */
 const EDGE = "var(--shot-edge)"
 
 export const SIDE_COLORS = { a: "var(--compare-a)", b: "var(--compare-b)" } as const
 
 type Side = keyof typeof SIDE_COLORS
-
-/** ein Umriss mit dunklem Saum: gestrichelt die Fläche mit 9 von 10, durchgezogen die mit der Hälfte der Schüsse */
-function Outline({ d, side, dashed }: { d: string; side: Side; dashed: boolean }) {
-  return (
-    <g data-compare-outline={side} data-dashed={dashed || undefined}>
-      <path d={d} fill="none" stroke={EDGE} strokeWidth={5} fillRule="evenodd" {...HAIR} />
-      <path
-        d={d}
-        fill="none"
-        stroke={SIDE_COLORS[side]}
-        strokeWidth={2.5}
-        strokeDasharray={dashed ? "6 4" : undefined}
-        fillRule="evenodd"
-        {...HAIR}
-      />
-    </g>
-  )
-}
 
 /** die Mitte einer Seite: das Zeichen des Schwerpunkts mit einem Ring in der Farbe der Seite */
 function Center({ at, side, radius }: { at: Point; side: Side; radius: number }) {
@@ -153,19 +132,15 @@ export function ComparePicture({
                 {...HAIR}
               />
             ))
-          const inner = contourPath(own.grid, own.grid.levels[INNER], picture.halfUm)
           return (
-            <g key={side}>
-              {side === "a" && (
-                <path d={inner} fill={SIDE_COLORS.a} fillOpacity={0.4} fillRule="evenodd" />
-              )}
-              <Outline
-                d={contourPath(own.grid, own.grid.levels[OUTER], picture.halfUm)}
-                side={side}
-                dashed
-              />
-              <Outline d={inner} side={side} dashed={false} />
-            </g>
+            <DensityOutlines
+              key={side}
+              grid={own.grid}
+              halfUm={picture.halfUm}
+              color={SIDE_COLORS[side]}
+              name={side}
+              tint={side === "a"}
+            />
           )
         })}
         <TargetBoard target={target} view={view} ringLabel={sizes.ringLabel} part="lines" />

@@ -29,11 +29,9 @@ describe("ComparePicture", () => {
   it("ab 50 Schuss je Seite: je Seite zwei Umrisse, einer gestrichelt, A getönt, B zuerst", () => {
     const html = render(ring(60), ring(60, { xUm: 800, yUm: 0 }))
     expect(html).toContain('data-compare-picture="outlines"')
-    expect(html.match(/data-compare-outline="/g)).toHaveLength(4)
+    expect(html.match(/data-outline="/g)).toHaveLength(4)
     expect(html.match(/data-dashed="true"/g)).toHaveLength(2)
-    expect(html.indexOf('data-compare-outline="b"')).toBeLessThan(
-      html.indexOf('data-compare-outline="a"')
-    )
+    expect(html.indexOf('data-outline="b"')).toBeLessThan(html.indexOf('data-outline="a"'))
     expect(html).toContain('fill="var(--compare-a)" fill-opacity="0.4"')
     expect(html).not.toContain("data-compare-shot")
   })

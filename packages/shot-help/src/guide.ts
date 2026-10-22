@@ -49,7 +49,7 @@ export const VIEW_HELP: readonly ViewHelp[] = [
   {
     id: "langzeit-trefferbild",
     title: "Trefferbild über den Zeitraum",
-    what: "Alle Schüsse der Scheiben im Zeitraum auf einer Scheibe, wo sie lagen. Ab 50 Schuss hat jeder Treffer die Farbe der Dichte an seiner Stelle: Gelb heißt, dort liegen deine Schüsse oft, Violett, dort selten, Hellviolett ganz selten. Unter 50 Schuss trägt jeder Treffer die Farbe seines Rings. Über 3.000 Schuss zeigt das Bild statt jedes Treffers Flächen in denselben Farben. Der geviertelte Kreis ist die Mitte aller Schüsse.",
+    what: "Alle Schüsse der Scheiben im Zeitraum auf einer Scheibe, wo sie lagen. Ab 50 Schuss hat jeder Treffer die Farbe der Dichte an seiner Stelle: Gelb heißt, dort liegen deine Schüsse oft, Violett, dort selten, Hellviolett ganz selten. Unter 50 Schuss trägt jeder Treffer die Farbe seines Rings. Über 3.000 Schuss zeigt das Bild statt jedes Treffers Flächen in denselben Farben. Ab 50 Schuss zeigt der runde Knopf oben links statt der Farben Umrisse wie beim Vergleichen: durchgezogen die Fläche mit der Hälfte der Schüsse, gestrichelt die mit 9 von 10. Der geviertelte Kreis ist die Mitte aller Schüsse.",
     read: "Der Satz unter dem Bild ist die Antwort: zuerst, ob deine Lage über den Zeitraum versetzt ist, dann, ob deine Gruppe in eine Richtung zieht. Die Belege stehen in der Analyse: die Form als Ellipse unter „Präzision“, die Lage über die Zeit unter „Lage“.",
   },
   {

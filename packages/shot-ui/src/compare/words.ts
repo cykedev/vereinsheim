@@ -11,6 +11,7 @@ import {
 
 import { directionName, formatValue } from "../format"
 import { PREVIOUS_LABEL, type DateRange, type PeriodChoice } from "../period/calendar"
+import { LEGEND_OUTLINES } from "../period/patternWords"
 import type { CardKind } from "../period/state"
 import type { CompareModel, CompareRow, SideName } from "./model"
 
@@ -198,10 +199,9 @@ export function basisText(model: CompareModel): string {
 
 /** die Legende unter dem Bild; ohne jede Lage der Hinweis, dass das Bild fehlt */
 export function pictureLegend(picture: CompareModel["picture"]): string {
-  const outlines = "Durchgezogen: die Hälfte der Schüsse. Gestrichelt: 9 von 10."
-  if (picture.style === "outlines") return outlines
+  if (picture.style === "outlines") return LEGEND_OUTLINES
   if (picture.style === "mixed")
-    return `${outlines} Die kleinere Seite steht mit jedem Schuss als Punkt.`
+    return `${LEGEND_OUTLINES} Die kleinere Seite steht mit jedem Schuss als Punkt.`
   const none = (side: CompareModel["picture"]["a"]) => side.kind === "dots" && !side.points.length
   if (none(picture.a) && none(picture.b)) return "Für das Bild fehlen die Lagen der Schüsse."
   return "Jeder Punkt ist ein Schuss. Der Ringwert steht in den Zahlen."

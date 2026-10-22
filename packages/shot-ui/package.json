@@ -98,6 +98,7 @@
     "./period/PositionTimeline": "./src/period/PositionTimeline.tsx",
     "./period/ShapeEllipse": "./src/period/ShapeEllipse.tsx",
     "./period/contours": "./src/period/contours.ts",
+    "./period/DensityOutlines": "./src/period/DensityOutlines.tsx",
     "./target/TargetBoard": "./src/target/TargetBoard.tsx",
     "./target/TargetFace": "./src/target/TargetFace.tsx",
     "./nav/routes": "./src/nav/routes.ts",

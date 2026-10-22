@@ -15,6 +15,7 @@ import { MpiMark } from "../target/MpiMark"
 import { TargetBoard } from "../target/TargetBoard"
 import { useElementWidth } from "../target/useAnimatedViewBox"
 import { contourPath } from "./contours"
+import { DensityOutlines } from "./DensityOutlines"
 
 const HAIR = { vectorEffect: "non-scaling-stroke" } as const
 /** Raster der Punkte im Muster: 10 µm (`periodPattern`) */
@@ -36,12 +37,17 @@ const HEAT_OPACITY = [0.6, 0.85, 0.9, 0.93, 0.95, 0.97] as const
 /** Deckkraft der Treffer in der Farbe der Dichte: Überlagerungen bleiben zu sehen, der Spiegel scheint durch */
 const SHOT_HEAT_OPACITY = 0.85
 
+/** wie das Bild ab 50 Schuss zeichnet: Treffer oder Bänder in den Farben der Dichte, oder die Umrisse */
+export type PatternView = "density" | "outlines"
+
 export interface PatternTargetProps {
   /** das Bild aus `periodPattern`: Treffer in Ringfarbe, Treffer in Dichtefarbe oder die Dichte in Bändern */
   layer: PatternLayer
   target: TargetImage
   /** der Satz unter dem Bild als Name des Bilds */
   label: string
+  /** Umrisse nur mit Raster (ab 50 Schuss), sonst wie `density` */
+  view?: PatternView
   className?: string
 }
 
@@ -51,9 +57,17 @@ export interface PatternTargetProps {
  * seiner Stelle von selten (hellviolett) bis oft (gelb), die dichten zuletzt; unter 50 Schuss in seiner Ringfarbe, weil
  * eine Dichte dann nichts sagt. Darüber die Dichte als sechs Bänder zwischen den Flächen und den Ringen. Der
  * geviertelte Kreis ist die Mitte aller Schüsse. Ringzahlen und Schwerpunkt richten sich wie auf der Scheibe nach der
- * gemessenen Breite.
+ * gemessenen Breite. Mit `view` „outlines“ stehen statt Treffern und Bändern die Umrisse wie beim Vergleichen
+ * (`DensityOutlines`): durchgezogen und getönt die Hälfte der Schüsse, gestrichelt 9 von 10.
  */
-export function PatternTarget({ layer, target, label, className }: PatternTargetProps) {
+export function PatternTarget({
+  layer,
+  target,
+  label,
+  view: wanted = "density",
+  className,
+}: PatternTargetProps) {
+  const outlines = wanted === "outlines" && layer.style !== "rings" ? layer.grid : null
   const [width, measure] = useElementWidth()
   const half = layer.halfUm / 1000
   const view = { x: -half, y: -half, w: 2 * half }
@@ -66,6 +80,7 @@ export function PatternTarget({ layer, target, label, className }: PatternTarget
       role="img"
       aria-label={`Trefferbild über den Zeitraum: ${label}`}
       data-pattern-target={layer.style}
+      data-pattern-view={outlines ? "outlines" : "density"}
       className={cn(
         "block aspect-square h-auto w-full rounded-xl border border-border select-none",
         className
@@ -79,7 +94,17 @@ export function PatternTarget({ layer, target, label, className }: PatternTarget
         ringLabel={sizes.ringLabel}
         part={layer.style === "rings" ? "all" : "fills"}
       />
-      {layer.style === "bands" &&
+      {outlines && (
+        <DensityOutlines
+          grid={outlines}
+          halfUm={layer.halfUm}
+          color="var(--compare-a)"
+          name="pattern"
+          tint
+        />
+      )}
+      {!outlines &&
+        layer.style === "bands" &&
         layer.grid?.levels.map((level, i) => (
           <path
             key={i}
@@ -91,7 +116,7 @@ export function PatternTarget({ layer, target, label, className }: PatternTarget
           />
         ))}
       {/* jeder Treffer: in der Farbe der Dichte an seiner Stelle, bei wenigen Schüssen in der seines Rings */}
-      {(layer.points ?? []).map(([x, y, ring, band], i) => (
+      {(outlines ? [] : (layer.points ?? [])).map(([x, y, ring, band], i) => (
         <circle
           key={i}
           data-pattern-shot

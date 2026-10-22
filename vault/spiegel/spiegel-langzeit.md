@@ -3,7 +3,7 @@ id: spiegel-langzeit
 type: concept
 title: "Spiegel über viele Scheiben — Langzeit-Konzept"
 aliases: [spiegel-zeitraum, langzeit-konzept, fortschritt-konzept]
-keywords: [analyse über den zeitraum, erkenntnisse, trefferbild als hauptbild, langzeit, zeitraum, saison, fortschritt, verlauf, formband, gleitender schnitt, rekorde, kalender, vergleich, zeitraum gegen zeitraum, besser werden, form, langzeit-trefferbild, dichte, filter, disziplin-familie, training, wettkampf, benannter zeitraum, auswahl, navigation, drill-down, ablesung, scheiben-liste, erkenntnisse, mindestzahl, nicht nachweisbar]
+keywords: [analyse über den zeitraum, erkenntnisse, trefferbild als hauptbild, langzeit, zeitraum, saison, fortschritt, verlauf, formband, gleitender schnitt, rekorde, kalender, vergleich, zeitraum gegen zeitraum, besser werden, form, langzeit-trefferbild, dichte, umrisse, heatmap, filter, disziplin-familie, training, wettkampf, benannter zeitraum, auswahl, navigation, drill-down, ablesung, scheiben-liste, erkenntnisse, mindestzahl, nicht nachweisbar]
 part_of: ["[[spiegel]]"]
 governed_by: ["[[adr-030]]"]
 relates_to: ["[[spiegel-vergleichen]]", "[[spiegel-ui-design]]", "[[spiegel-roadmap]]", "[[spiegel-statistics]]", "[[spiegel-metrics]]", "[[spiegel-mobile]]", "[[spiegel-data-model]]", "[[statistics-visualization]]"]
@@ -222,13 +222,21 @@ Ergebnis (I7–I9, Z6, Z7, K2, K4, T4, V3–V5, W2–W4 als Zeilen im Vergleich)
   jeden Schuss, die seltenen und den Kern. Verworfen davor: hellblaue Flächen, eine zurückgenommene dunkle Scheibe,
   eigene Ringe mit Saum, einzelne seltene Treffer über einer Heatmap.
 - Die Legende ist ein Verlauf „selten … oft“, bei Treffern dazu „Jeder Punkt ist ein Schuss.“
+- **Dichte oder Umrisse:** Ab 50 Schuss schaltet ein runder Knopf oben links im Bild (`CornerButton`, Kreis in einem
+  gestrichelten) statt der Dichte die Umrisse wie beim Vergleichen ([[spiegel-vergleichen]]): durchgezogen und leicht
+  getönt die Fläche mit der Hälfte der Schüsse, gestrichelt die mit 9 von 10, in der Farbe der Seite A
+  (`compare-a`), der geviertelte Kreis bleibt. Gezeichnet von einem Baustein für beide Seiten (`DensityOutlines`), die
+  Legende ist dieselbe („Durchgezogen: die Hälfte der Schüsse. Gestrichelt: 9 von 10.“). Unter 50 Schuss gibt es kein
+  Raster und keinen Knopf. Die Wahl ist, wie gezeichnet wird, nicht was man sieht: Sie steht nicht in der Adresse,
+  sondern im Gerät (`localStorage` unter `spiegel-pattern-view`), Vorgabe ist die Dichte. Der User wollte am
+  22. Oktober 2026 beides haben: die Dichte zeigt jeden Treffer, die Umrisse lesen sich wie der Vergleich.
 - **Der geviertelte Kreis** ist die Mitte aller Schüsse.
 - **Ein Satz unter dem Bild** gibt die Antwort: zuerst die Lage („passt“ oder „versetzt: rechts tief“, Test über die
   Schwerpunkte der Scheiben), dann die Form („länglich, eher waagrecht“ oder „keine klare Richtung“, Test über die
   gepoolte Form); ohne Urteil über die Form kein zweiter Satz.
 - **Rechnen auf dem Server:** aus den gespeicherten Lagen der Projektion (`marks`, 10 µm), erst wenn das Bild oder die
   Reiter Präzision und Lage es brauchen (`periodPatternAction`); an den Browser gehen bis 3.000 Schuss die Treffer mit
-  ihrem Band, darüber ein Raster von 64 × 64, dazu der Schwerpunkt je Scheibe. Gemessen: „Alles“ mit 1.564 Scheiben (Bänder) 56 ms und 156 KB, 90 Tage (76 Scheiben, Treffer in Dichtefarbe) 9 ms und 42 KB
+  ihrem Band, ab 50 Schuss das Raster von 64 × 64 (für Bänder und Umrisse), dazu der Schwerpunkt je Scheibe. Gemessen: „Alles“ mit 1.564 Scheiben (Bänder) 56 ms und 156 KB, 90 Tage (76 Scheiben, Treffer in Dichtefarbe) 9 ms und 42 KB
   ([[spiegel-db-schema]]). Die Dichte glättet 1,3-mal so stark wie nach Silverman, die Ränder sind weiche Kurven.
 - **Reiter Präzision:** die Form über mehrere Scheiben als Ellipse (doppelte Halbachsen der gepoolten Streuung) mit
   ihrer langen Seite und gestrichelt dem Kreis einer runden Gruppe gleicher Streuung, ohne Maßstab; daneben Form, Länge
