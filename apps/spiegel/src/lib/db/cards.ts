@@ -34,6 +34,7 @@ import {
   verifyShots,
 } from "../ingest/card-checks"
 import { standScoringOf } from "../scoring"
+import { lockCard } from "./purge"
 import { VISIBLE_CARD } from "./visible"
 
 type Tx = Prisma.TransactionClient
@@ -340,8 +341,10 @@ export async function writeRevision(db: Db, input: RevisionInput): Promise<Revis
     if (sourceId !== null && scheibenId !== null)
       await tx.$executeRaw`SELECT pg_advisory_xact_lock(${sourceId}::int, ${scheibenId}::int)`
     const existing = await findCard(tx, input, cycle, block)
+    // die Wahl gilt, solange der Stand die Disziplin bringt, gegen die sie getroffen wurde; bringt er eine andere (auch
+    // die gewählte), gilt wieder seine: Die Wahl war nur für dasselbe Scheibenbild geprüft
     const chosen =
-      existing?.standDisciplineId != null && existing.disciplineId !== input.card.disciplineId
+      existing?.standDisciplineId != null && existing.standDisciplineId === input.card.disciplineId
         ? existing.disciplineId
         : null
     const disciplineId = chosen ?? input.card.disciplineId
@@ -367,7 +370,10 @@ export async function writeRevision(db: Db, input: RevisionInput): Promise<Revis
   })
 }
 
-/** der Stand in der Transaktion von `writeRevision`, mit den Merkmalen der Scheibe, wie sie danach gelten */
+/**
+ * der Stand in der Transaktion von `writeRevision` mit den Merkmalen aus `features`; bei einer gewählten Disziplin rechnet
+ * `recomputeDisciplineCard` sie danach neu
+ */
 async function writeCard(
   tx: Tx,
   input: RevisionInput,
@@ -984,7 +990,7 @@ export async function chooseCardKind(
   return (await db.card.count({ where: own })) ? "probeOnly" : "missing"
 }
 
-/** eine Disziplin, die der Schütze für eine Scheibe wählen kann (`disciplineOptions`) */
+/** eine Disziplin, die der Schütze für eine Scheibe wählen kann (`disciplineOptions` in reads) */
 export interface DisciplineOption {
   id: number
   name: string
@@ -994,10 +1000,12 @@ export interface DisciplineOption {
   stand: boolean
   /** die, mit der die Scheibe gerade zählt */
   current: boolean
+  /** die Wertung, in der die Scheibe mit ihr zählt (`cardScoring`): eine eigene Wahl bleibt, sonst die der Disziplin */
+  scoring: Scoring
 }
 
 /** was für die Wahl der Disziplin an der Scheibe hängt: ihre und die vom Stand, mit Anlage und Scheibenbild */
-const CHOICE_SELECT = {
+export const CHOICE_SELECT = {
   disciplineId: true,
   standDisciplineId: true,
   discipline: { select: { siteId: true, targetId: true } },
@@ -1005,85 +1013,64 @@ const CHOICE_SELECT = {
 } satisfies Prisma.CardSelect
 
 /**
- * Wählbar sind die Disziplinen der Anlage mit demselben Scheibenbild wie die vom Stand, nicht ignoriert, dazu immer die
- * vom Stand (zurück). Die Werte bleiben, wie Meyton sie gemessen hat: Ein anderes Scheibenbild zeigte die Treffer auf
- * Ringen, mit denen Meyton nicht gewertet hat. Ohne Scheibenbild am Stand gibt es keine Wahl.
+ * Wählbar sind an der Anlage der Disziplin vom Stand: die aktuelle, die vom Stand (zurück), solange der Admin sie nicht
+ * ignoriert (sonst verschwände die Scheibe), und die eingeordneten Disziplinen mit Familie und demselben Scheibenbild,
+ * nicht ignoriert. Die Werte bleiben, wie Meyton sie gemessen hat: Ein anderes Scheibenbild zeigte die Treffer auf Ringen,
+ * mit denen Meyton nicht gewertet hat. Ohne Scheibenbild am Stand nur zurück.
  */
-function choiceWhere(card: Prisma.CardGetPayload<{ select: typeof CHOICE_SELECT }>) {
+export function choiceWhere(card: Prisma.CardGetPayload<{ select: typeof CHOICE_SELECT }>) {
   const standId = card.standDisciplineId ?? card.disciplineId
   const stand = card.standDiscipline ?? card.discipline
-  if (stand.targetId === null) return null
   return {
     standId,
     where: {
       siteId: stand.siteId,
-      targetId: stand.targetId,
-      OR: [{ ignoredAt: null }, { id: standId }],
+      OR: [
+        { id: card.disciplineId },
+        { id: standId, ignoredAt: null },
+        ...(stand.targetId === null
+          ? []
+          : [
+              {
+                targetId: stand.targetId,
+                ignoredAt: null,
+                confirmedAt: { not: null },
+                familyId: { not: null },
+              },
+            ]),
+      ],
     } satisfies Prisma.DisciplineWhereInput,
   }
 }
 
 /**
- * Die Disziplinen, die der Schütze für eine eigene, sichtbare Scheibe wählen kann, nach Familie und Name; leer, wenn es
- * die Scheibe für ihn nicht gibt oder ihre Disziplin am Stand kein Scheibenbild hat
- */
-export async function disciplineOptions(
-  db: Db,
-  query: { cardId: string; ownerId: string }
-): Promise<DisciplineOption[]> {
-  const card = await db.card.findFirst({
-    where: { id: query.cardId, ownerId: query.ownerId, ...VISIBLE_CARD },
-    select: CHOICE_SELECT,
-  })
-  const choice = card && choiceWhere(card)
-  if (!card || !choice) return []
-  const rows = await db.discipline.findMany({
-    where: choice.where,
-    select: { id: true, name: true, family: { select: { name: true } } },
-    orderBy: [{ family: { name: "asc" } }, { name: "asc" }, { id: "asc" }],
-  })
-  return rows.map((row) => ({
-    id: row.id,
-    name: row.name,
-    family: row.family?.name ?? null,
-    stand: row.id === choice.standId,
-    current: row.id === card.disciplineId,
-  }))
-}
-
-/**
  * Die Disziplin einer eigenen, sichtbaren Scheibe wählen (Seite der Scheibe): Die Familie zieht mit, Merkmale und
  * Projektion rechnet `recomputeDisciplineCard` mit der gewählten neu; die vom Stand bleibt vermerkt, bis der Schütze
- * sie wieder wählt. Unter derselben Sperre wie `writeRevision` (Quelle, ScheibenID), dann die Zeile. `missing`, wenn es
- * die Scheibe für ihn nicht gibt; `notAllowed` für eine Disziplin außerhalb von `disciplineOptions`.
+ * sie wieder wählt. Unter derselben Sperre wie `writeRevision` (Quelle, ScheibenID, dann die Zeile), die gewählte
+ * Disziplin `FOR SHARE` vor der Prüfung (gegen ein gleichzeitiges Umordnen durch den Admin). `missing`, wenn es die
+ * Scheibe für ihn nicht gibt; `notAllowed` für eine Disziplin außerhalb von `choiceWhere`.
  */
 export async function chooseCardDiscipline(
   db: Db,
   query: { cardId: string; ownerId: string; disciplineId: number }
 ): Promise<"saved" | "missing" | "notAllowed"> {
   return db.$transaction(async (tx) => {
-    const [key] = await tx.$queryRaw<{ sourceId: number | null; scheibenId: number | null }[]>`
-      SELECT "sourceId", "scheibenId" FROM "Card" WHERE id = ${query.cardId}`
-    if (!key) return "missing"
-    if (key.sourceId !== null && key.scheibenId !== null)
-      await tx.$executeRaw`SELECT pg_advisory_xact_lock(${key.sourceId}::int, ${key.scheibenId}::int)`
-    await tx.$queryRaw`SELECT id FROM "Card" WHERE id = ${query.cardId} FOR UPDATE`
+    if (!(await lockCard(tx, query.cardId))) return "missing"
     const card = await tx.card.findFirst({
       where: { id: query.cardId, ownerId: query.ownerId, ...VISIBLE_CARD },
       select: CHOICE_SELECT,
     })
     if (!card) return "missing"
-    const choice = choiceWhere(card)
-    if (!choice) return "notAllowed"
     if (query.disciplineId === card.disciplineId) return "saved"
+    const [discipline] = await tx.$queryRaw<{ familyId: number | null }[]>`
+      SELECT "familyId" FROM "Discipline" WHERE id = ${query.disciplineId} FOR SHARE`
+    if (!discipline) return "notAllowed"
+    const choice = choiceWhere(card)
     const allowed = await tx.discipline.findFirst({
-      where: { ...choice.where, id: query.disciplineId },
+      where: { AND: [choice.where, { id: query.disciplineId }] },
       select: { id: true },
     })
     if (!allowed) return "notAllowed"
-    // die Familie gegen ein gleichzeitiges Umhängen durch den Admin (`setDisciplineFamily`), wie `writeRevision`
-    const [discipline] = await tx.$queryRaw<{ familyId: number | null }[]>`
-      SELECT "familyId" FROM "Discipline" WHERE id = ${query.disciplineId} FOR SHARE`
     await tx.card.update({
       where: { id: query.cardId },
       data: {

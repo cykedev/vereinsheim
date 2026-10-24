@@ -17,7 +17,13 @@ import type { CardState, Prisma } from "@/generated/prisma/client"
 
 import type { Db } from "../db"
 import { cardScoring } from "../scoring"
-import { shotFromRow, toMetricShot } from "./cards"
+import {
+  CHOICE_SELECT,
+  choiceWhere,
+  shotFromRow,
+  toMetricShot,
+  type DisciplineOption,
+} from "./cards"
 import { NOT_MINE } from "./purge"
 import { trashEndsAt } from "./trash"
 import { PENDING_CARD, SHOWN_DISCIPLINE, VISIBLE_CARD } from "./visible"
@@ -294,14 +300,52 @@ export async function cardWithShots(
 
 /**
  * Geteilte Scheibe (`/share/<uuid>`): wie `cardWithShots`, aber über den Link statt über den Besitzer; null, wenn das
- * Teilen beendet ist, die Scheibe gelöscht ist, wartet, ihre Disziplin ignoriert ist oder das Konto aus ist
+ * Teilen beendet ist, die Scheibe gelöscht ist, wartet, ihre Disziplin ignoriert ist oder das Konto aus ist. Ob der
+ * Besitzer die Disziplin gewählt hat, steht nicht darin.
  */
 export async function sharedCard(db: Db, shareId: string): Promise<PageCard | null> {
   const row = await db.card.findFirst({
     where: { shareId, ...VISIBLE_CARD, owner: { isActive: true } },
     select: PAGE_CARD_SELECT,
   })
-  return row ? toPageCard(row) : null
+  const card = row ? toPageCard(row) : null
+  return card && { ...card, standDiscipline: null }
+}
+
+/**
+ * Die Disziplinen, die der Schütze für eine eigene, sichtbare Scheibe wählen kann (`choiceWhere`), nach Familie und Name,
+ * je mit der Wertung, in der die Scheibe dann zählt; leer, wenn es die Scheibe für ihn nicht gibt
+ */
+export async function disciplineOptions(
+  db: Db,
+  query: { cardId: string; ownerId: string }
+): Promise<DisciplineOption[]> {
+  const card = await db.card.findFirst({
+    where: { id: query.cardId, ownerId: query.ownerId, ...VISIBLE_CARD },
+    select: {
+      ...CHOICE_SELECT,
+      standScoring: true,
+      scoringChoice: true,
+      projection: { select: { probeOnly: true } },
+    },
+  })
+  if (!card) return []
+  const choice = choiceWhere(card)
+  const rows = await db.discipline.findMany({
+    where: choice.where,
+    select: { id: true, name: true, officialScoring: true, family: { select: { name: true } } },
+    orderBy: [{ family: { name: "asc" } }, { name: "asc" }, { id: "asc" }],
+  })
+  // nur Probe hat keine Wertung der Disziplin (wie `toPageCard`)
+  const probeOnly = card.projection?.probeOnly ?? false
+  return rows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    family: row.family?.name ?? null,
+    stand: row.id === choice.standId,
+    current: row.id === card.disciplineId,
+    scoring: scoringOfRow(card, probeOnly ? null : row.officialScoring),
+  }))
 }
 
 /** der Link einer eigenen Scheibe; null, wenn sie nicht geteilt ist */

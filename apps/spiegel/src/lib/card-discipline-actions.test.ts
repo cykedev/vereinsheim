@@ -29,12 +29,21 @@ beforeAll(async () => {
         meytonId: 10_211_030,
         name: "LP Auflage 30",
         targetId: "lp-10m",
+        familyId: site.familyId,
+        confirmedAt: new Date(),
       },
     })
   ).id
   rifle = (
     await db.discipline.create({
-      data: { siteId: site.siteId, meytonId: 10_110_040, name: "LG 40", targetId: "lg-10m" },
+      data: {
+        siteId: site.siteId,
+        meytonId: 10_110_040,
+        name: "LG 40",
+        targetId: "lg-10m",
+        familyId: site.familyId,
+        confirmedAt: new Date(),
+      },
     })
   ).id
   const cards = generateSeason({

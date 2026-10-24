@@ -7,9 +7,9 @@ import { routeFromUrl } from "@vereinsheim/shot-ui/nav/routes"
 import { CardScreen } from "@/components/card/CardScreen"
 import { requireSession } from "@/lib/auth-helpers"
 import { db } from "@/lib/db"
-import { disciplineOptions } from "@/lib/db/cards"
 import {
   cardWithShots,
+  disciplineOptions,
   ownCardShare,
   ownCardState,
   ownerCards,
