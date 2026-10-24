@@ -33,9 +33,9 @@ func (m *memory) Round(_ context.Context, choose func([]Lifesign, *string) []int
 	var lifesigns []Lifesign
 	for id, stamp := range m.stamps {
 		l := Lifesign{ID: id, Stamp: stamp}
-		// die SportpassID der Zeile wie `readLifesigns`
-		if rows := m.data[id].Scheiben.Rows; len(rows) == 1 {
-			l.Sportpass = rows[0]["SportpassID"]
+		// die SportpassID der Zeile wie `readLifesigns`, als eigener Text: Die Erkennung behält ihn bis zur nächsten Runde
+		if rows := m.data[id].Scheiben.Rows; len(rows) == 1 && rows[0]["SportpassID"] != nil {
+			l.Sportpass = text(*rows[0]["SportpassID"])
 		}
 		lifesigns = append(lifesigns, l)
 	}
@@ -213,6 +213,23 @@ func TestCorrectionWithoutLifesignWhileActive(t *testing.T) {
 	}
 	if last := m.reads[len(m.reads)-1]; len(last) != 0 {
 		t.Fatalf("ruhende Scheibe gelesen: %v", last)
+	}
+}
+
+func TestSameText(t *testing.T) {
+	for _, c := range []struct {
+		a, b *string
+		want bool
+	}{
+		{nil, nil, true},
+		{nil, text("0"), false},
+		{text("0"), nil, false},
+		{text("12345678"), text("12345678"), true},
+		{text("12345678"), text("87654321"), false},
+	} {
+		if got := sameText(c.a, c.b); got != c.want {
+			t.Fatalf("sameText(%v, %v) = %v", c.a, c.b, got)
+		}
 	}
 }
 
@@ -397,8 +414,8 @@ func TestBulkSportpassChangeReadsEachCardAtMostTwiceWhileShooting(t *testing.T) 
 	}
 }
 
-// Abgleich im Leerlauf (SF-21): Eine Korrektur ohne Lebenszeichen, nachdem die Scheibe ruht, liest die Brücke nach
-// `ReconcileEvery` seit der letzten Lesung; danach erst wieder nach demselben Abstand.
+// Abgleich im Leerlauf (SF-21): Eine Korrektur ohne Lebenszeichen, nachdem die Scheibe ruht, liest die Brücke eine
+// Stunde (`ReconcileEvery`) nach der letzten Lesung; danach erst wieder nach demselben Abstand.
 func TestReconcileReadsRestingCardsWhenIdle(t *testing.T) {
 	m, c := newMemory(), start()
 	w := New(Defaults, c.now)
@@ -412,7 +429,7 @@ func TestReconcileReadsRestingCardsWhenIdle(t *testing.T) {
 	if last := m.reads[len(m.reads)-1]; len(last) != 0 {
 		t.Fatalf("vor dem Abgleich gelesen: %v", last)
 	}
-	c.advance(Defaults.ReconcileEvery - 25*time.Minute)
+	c.advance(time.Hour - 25*time.Minute)
 	r := tick(t, w, m)
 	if last := m.reads[len(m.reads)-1]; fmt.Sprint(last) != "[7]" || len(r.Snapshots) != 0 {
 		t.Fatalf("Abgleich: gelesen %v, gesendet %v", last, ids(r))
@@ -424,7 +441,7 @@ func TestReconcileReadsRestingCardsWhenIdle(t *testing.T) {
 	}
 	c.advance(time.Second)
 	tick(t, w, m)
-	c.advance(Defaults.ReconcileEvery - 2*time.Second)
+	c.advance(time.Hour - 2*time.Second)
 	tick(t, w, m)
 	for _, read := range m.reads[len(m.reads)-2:] {
 		if len(read) != 0 {
@@ -483,9 +500,11 @@ func TestReconcileOnlyWithinTheWindow(t *testing.T) {
 	tick(t, w, m)
 	c.advance(time.Second)
 	tick(t, w, m)
-	// 15 Tage später schießt Stand 9, und an Scheibe 7 ändert sich etwas ohne Lebenszeichen
+	// 15 Tage später schießt Stand 9, und an Scheibe 7 ändert sich etwas ohne Lebenszeichen. Scheibe 8 liegt 13 Tage vor 9,
+	// noch im Fenster.
 	c.advance(15 * 24 * time.Hour)
 	m.put(9, "2026-10-28 18:00:00", 3, "100")
+	m.put(8, "2026-10-15 18:00:00", 20, "100")
 	m.data[7] = cardData(7, 20, "95")
 	from := len(m.reads)
 	tick(t, w, m)
@@ -495,19 +514,21 @@ func TestReconcileOnlyWithinTheWindow(t *testing.T) {
 	idle := len(m.reads)
 	for range 3 {
 		tick(t, w, m)
-		c.advance(Defaults.ReconcileEvery)
+		c.advance(time.Hour)
 	}
-	reconciled := false
+	reconciled := map[int32]bool{}
 	for i, read := range m.reads[from:] {
 		for _, id := range read {
 			if id == 7 {
 				t.Fatalf("außerhalb des Fensters gelesen: %v", m.reads[from:])
 			}
+			if from+i >= idle {
+				reconciled[id] = true
+			}
 		}
-		reconciled = reconciled || (from+i >= idle && fmt.Sprint(read) == "[9]")
 	}
-	if !reconciled {
-		t.Fatalf("Scheibe 9 im Fenster nicht abgeglichen: %v", m.reads[from:])
+	if !reconciled[8] || !reconciled[9] {
+		t.Fatalf("im Fenster nicht abgeglichen: %v", m.reads[from:])
 	}
 }
 
