@@ -17,6 +17,7 @@ import {
 } from "@vereinsheim/ingest-contract/api"
 import { sportpassHash } from "@vereinsheim/ingest-contract/sportpass"
 
+import { openRequestsOf, recordRequestOutcomes } from "../card-requests/queries"
 import { ACTIVE_CONSENT } from "../consent/status"
 import type { Db } from "../db"
 import { FINAL_AFTER_MS, INCOMPLETE_FLAGS, RESTING_AFTER_MS } from "./meyton-ssmdb2"
@@ -255,6 +256,9 @@ export async function recordHeartbeat(
       },
       data: { historyLoadedAt: new Date(nowMs) },
     })
+  // Aufträge per ID, die die Brücke nicht holen kann (nicht in der Ablage, verdeckt oder gesperrt); nur offene der Anlage
+  if (heartbeat.requestsDone?.length)
+    await recordRequestOutcomes(db, bridge.siteId, heartbeat.requestsDone, nowMs)
   await advanceCardStates(db, bridge.siteId, {
     nowMs,
     runStartedAt: newRun ? runStartedAt : null,
@@ -279,6 +283,7 @@ async function consentSaltOf(db: Db, siteId: number): Promise<string> {
 
 /** die Grenzen des Vertrags (`stateResponseV1`) */
 const MAX_HISTORY_REQUESTS = 1_000
+const MAX_CARD_REQUESTS = 1_000
 const MAX_BLOCKED = 100_000
 
 /** was die Brücke beim Start und danach alle paar Minuten holt (`GET /state`) */
@@ -332,11 +337,15 @@ export async function bridgeState(
       since: (c.historyRequestedAt ?? c.confirmedAt!).toISOString(),
       sportpassHash: sportpassHash(salt, c.sportpassId),
     }))
-  // mit offenem Auftrag liest die Brücke die ganze Ablage: dann alle Sperren, damit eine alte, gesperrte Scheibe das Gerät
-  // gar nicht erst verlässt
+  // Aufträge per ID: genau diese Scheiben, auch ohne Zustimmung
+  const requests = await openRequestsOf(db, siteId, { nowMs, limit: MAX_CARD_REQUESTS })
+  // mit offenem Auftrag liest die Brücke die ganze Ablage oder eine alte Scheibe: dann alle Sperren, damit eine alte,
+  // gesperrte Scheibe das Gerät gar nicht erst verlässt
   const blockedWhere = {
     source: { siteId },
-    ...(history.length ? {} : { startedAt: { gte: new Date(nowMs - BLOCKED_WINDOW_MS) } }),
+    ...(history.length || requests.length
+      ? {}
+      : { startedAt: { gte: new Date(nowMs - BLOCKED_WINDOW_MS) } }),
   }
   const blockedSelect = {
     scheibenId: true,
@@ -369,5 +378,6 @@ export async function bridgeState(
     })),
     watermark: newest ? new Date(newest).toISOString() : null,
     history,
+    requests,
   }
 }

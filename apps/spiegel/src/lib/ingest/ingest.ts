@@ -9,6 +9,8 @@ import type { SnapshotV1 } from "@vereinsheim/ingest-contract/snapshot"
 import { plannedShotsOf } from "@vereinsheim/shot-core/discipline"
 import type { TargetId } from "@vereinsheim/shot-core/targets"
 
+import { eveningOfStart } from "../card-requests/id"
+import { closeRequest, openRequestsFor } from "../card-requests/queries"
 import { ACTIVE_CONSENT } from "../consent/status"
 import type { Db } from "../db"
 import {
@@ -426,6 +428,24 @@ export async function ingestBatch(
   const lifesigns = new Map<string, { sourceId: number; scheibenId: number; atMs: number }>()
   /** Sperren je Scheibe nur einmal je Stapel nachsehen (die meisten Stände sind Lebenszeichen derselben Scheiben) */
   const blocked = new Map<string, boolean>()
+  /**
+   * offene Aufträge per ID (`CardRequest`) für die Scheiben dieses Stapels: Ein Auftrag gilt wie eine Zustimmung für genau
+   * diese Scheibe, wenn ihr Beginn auf den genannten Abend fällt. Geschlossen wird er hier (anderer Abend, gehalten,
+   * vergeben) oder nach dem Schreiben (`claims`)
+   */
+  const requests = await openRequestsFor(
+    db,
+    target.siteId,
+    snapshots.map((s) => s.scheibenId)
+  )
+  const closed = new Set<number>()
+  const close = async (id: number, status: "mismatch" | "held" | "taken") => {
+    if (closed.has(id)) return
+    closed.add(id)
+    await closeRequest(db, { id, status, nowMs })
+  }
+  /** Auftrag → Scheibe, die ihn erfüllen soll; geschlossen nach dem Schreiben, wenn die Scheibe beim Auftraggeber liegt */
+  const claims = new Map<number, { userId: string; sourceId: number; scheibenId: number }>()
 
   const order = snapshots
     .map((snapshot, index) => ({ snapshot, index }))
@@ -448,12 +468,24 @@ export async function ingestBatch(
       continue
     }
     const sportpassId = sportpassIdOf(snapshot)
-    const owner = sportpassId === null ? undefined : consents.get(sportpassId.toString())
+    let owner = sportpassId === null ? undefined : consents.get(sportpassId.toString())
+    // ein Auftrag per ID: nur für den Abend, den der Schütze genannt hat; eine Zustimmung per Sportpass geht vor
+    let claim: (typeof requests)[number] | undefined
+    const open = requests.filter((r) => r.scheibenId === snapshot.scheibenId && !closed.has(r.id))
+    if (open.length) {
+      const evening = eveningOfStart(startOf(snapshot))
+      for (const r of open) if (r.day !== evening) await close(r.id, "mismatch")
+      const matching = open.filter((r) => r.day === evening)
+      claim = owner ? matching.find((r) => r.userId === owner!.userId) : matching[0]
+      for (const r of matching) if (r !== claim) await close(r.id, "taken")
+      if (!owner && claim) owner = { userId: claim.userId, pending: false }
+    }
     if (!owner) {
       result("discarded", "no-consent")
       continue
     }
     if (hasHeldShot(snapshot)) {
+      if (claim) await close(claim.id, "held")
       result("discarded", "hidden")
       continue
     }
@@ -470,6 +502,7 @@ export async function ingestBatch(
         )
       )
     if (blocked.get(key)) {
+      if (claim) await close(claim.id, "held")
       result("discarded", "blocked")
       continue
     }
@@ -481,9 +514,16 @@ export async function ingestBatch(
     )
     if (stored.outcome === "blocked") {
       blocked.set(key, true)
+      if (claim) await close(claim.id, "held")
       result("discarded", "blocked")
       continue
     }
+    if (claim)
+      claims.set(claim.id, {
+        userId: claim.userId,
+        sourceId: source.sourceId,
+        scheibenId: snapshot.scheibenId,
+      })
     const adapt = (previous: PreviousLifesign) => {
       const snapshotId = (stored as { snapshotId: bigint }).snapshotId
       const entry = toAdapt.get(key) ?? { sourceId: source.sourceId, owner, items: [] }
@@ -522,6 +562,19 @@ export async function ingestBatch(
   }
   for (const { sourceId, scheibenId, atMs } of lifesigns.values())
     await touchLifesign(db, sourceId, scheibenId, atMs)
+  // erfüllte Aufträge: die Scheibe liegt beim Auftraggeber; gehört sie (schon vorher) einem anderen, ist sie vergeben.
+  // Ohne Scheibe (Quarantäne, Fehler) bleibt der Auftrag offen, der nächste Stand versucht es wieder
+  for (const [id, claim] of claims) {
+    const card = await db.card.findFirst({
+      where: { sourceId: claim.sourceId, scheibenId: claim.scheibenId },
+      orderBy: [{ cycle: "desc" }, { block: "desc" }],
+      select: { id: true, ownerId: true },
+    })
+    if (!card) continue
+    if (card.ownerId === claim.userId)
+      await closeRequest(db, { id, status: "done", cardId: card.id, nowMs })
+    else await closeRequest(db, { id, status: "taken", nowMs })
+  }
   if (failure) throw failure
 
   return results.sort((a, b) => a.index - b.index)
