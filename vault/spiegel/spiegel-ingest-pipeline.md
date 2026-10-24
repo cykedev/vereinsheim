@@ -22,9 +22,9 @@ und eingefrorene Beispiele der Anfragen und Antworten liegen im Vertrag (`@verei
 |---|---|
 | `POST /api/ingest/v1/pair` | Kopplung mit Einmal-Code (15 min, einmal), liefert Geräte-Token |
 | `POST /api/ingest/v1/snapshots` | Stapel von Snapshots (1 bis 50, höchstens 4 MiB); Ergebnis je Snapshot |
-| `POST /api/ingest/v1/heartbeat` | Version, Beginn des Laufs, Rückstau, letzter DB-Kontakt, Uhrabweichung, Zurückgehaltenes, erledigte Aufträge zum Nachladen (setzt `historyLoadedAt`, nur aktive, offene Zustimmungen der Anlage) |
-| `GET /api/ingest/v1/state` | was die Brücke ohne eigenen Zustand braucht: Epoche, gehashte SportpassIDs mit Zustimmung, Grabsteine und Löschsperren, Wasserstand, offene Aufträge zum Nachladen (aktive Zustimmung ohne `historyLoadedAt`) |
-| `GET /api/ingest/v1/commands`, `POST …/commands/<id>/result` | Aufträge (Scheibe per ID, Fundbüro, Diagnose): offen (SP-1.5, SP-1.7); das Nachladen läuft über `state` und `heartbeat` |
+| `POST /api/ingest/v1/heartbeat` | Version, Beginn des Laufs, Rückstau, letzter DB-Kontakt, Uhrabweichung, Zurückgehaltenes, erledigte Aufträge zum Nachladen (setzt `historyLoadedAt`, nur aktive, offene Zustimmungen der Anlage), Ausgang der Aufträge per ID (`missing` und `held` schließen offene Aufträge der Anlage, `sent` schließt das Einlesen) |
+| `GET /api/ingest/v1/state` | was die Brücke ohne eigenen Zustand braucht: Epoche, gehashte SportpassIDs mit Zustimmung, Grabsteine und Löschsperren, Wasserstand, offene Aufträge zum Nachladen (aktive Zustimmung ohne `historyLoadedAt`), offene Aufträge per ID aktiver Konten (`requests`, Frist 30 Tage) |
+| `GET /api/ingest/v1/commands`, `POST …/commands/<id>/result` | Aufträge mit Vorschau (QR-Weg, Fundbüro, Diagnose): offen (SP-1.5, SP-1.7); Nachladen und Scheibe per ID laufen über `state` und `heartbeat` |
 
 Ergebnis je Snapshot: `stored`, `unchanged`, `lifesign` (nur das Lebenszeichen bewegt), `stale`, `future`,
 `discarded` (mit Grund `no-consent`, `blocked`, `hidden`), `quarantined`, `epoch-unconfirmed`,
@@ -81,6 +81,15 @@ und nimmt aus ihr nichts an (`epoch-unconfirmed`); die Übersicht des Admins zei
 Lebenszeichen, → endgültig nach zwölf Stunden oder wenn ein neuer Lauf der Brücke begann (die Brücke wurde neu gestartet; mitten am
 Abend öffnet der nächste Stand die Scheibe wieder).
 `complete` gilt erst endgültig und ohne `unvollstaendig`; erst dann zählt die Scheibe für Rekorde (SF-66).
+
+## Auftrag per ID beim Einlesen
+
+`ingestBatch` liest die offenen Aufträge der Anlage für die ScheibenIDs des Stapels (`openRequestsFor`). Ohne Zustimmung
+gilt ein Auftrag wie eine Zustimmung für genau diese Scheibe, wenn der Abend aus dem groben Beginn (`startHintMs`,
+`eveningOfStart`) der genannte ist; der älteste passende Auftrag bekommt sie, nicht wartend. Andere Abende schließen ihre
+Aufträge als `mismatch`, ohne dass etwas gespeichert wird; eine aktive Zustimmung eines anderen Kontos und weitere
+Aufträge desselben Abends als `taken`; verdeckt oder gesperrt als `held`. Nach dem Schreiben schließt `done` mit der
+Scheibe (jüngster Block der Kennung beim Auftraggeber). Tests: `src/lib/ingest/requests.test.ts`.
 
 ## Rohdaten
 

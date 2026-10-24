@@ -286,6 +286,13 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
   Navigation der Aktion). Eine alte Adresse einer gelöschten Scheibe führt in den Papierkorb (`ownCardState`). Der
   Papierkorb zeigt auch, was nicht von selbst wiederkommt (`blockedCards`: eigene Sperren und Meldungen „nicht meine“);
   die Admin-Übersicht zählt nur die Meldungen der Anlage, ohne Namen.
+- **Scheibe per ID holen** (Profil, `src/lib/card-requests/`): Der Schütze tippt die ID vom Ausdruck (`parseCardId`, acht
+  Hex-Zeichen wie im Fuß) und den Tag. `requestCard` legt einen `CardRequest` an, außer die Scheibe des Abends liegt schon
+  in Spiegel (eigene: Weg zu ihr, fremde: „vergeben“), höchstens zehn offene je Konto, Frist 30 Tage (`expireRequests`).
+  `bridgeState` nennt offene Aufträge aktiver Konten (`requests`, dann alle Sperren), `ingestBatch` nimmt einen Stand ohne
+  Zustimmung nur mit offenem Auftrag und passendem Abend an (`eveningOfStart` aus `startHintMs`) und schließt den Auftrag
+  (`done`, `mismatch`, `taken`, `held`), `recordHeartbeat` schließt `missing` und `held` aus `requestsDone`. Eine
+  Zustimmung per Sportpass geht vor. Abschnitt `CardRequests` im Profil, Texte `cardRequest`, `cardRequestWithdraw`.
 - **Ältere Scheiben nachladen:** Eine aktive Zustimmung ohne
   `historyLoadedAt` ist ein Auftrag mit `since` (`historyRequestedAt`, gesetzt beim Bestätigen und Aufheben; alte Zeilen:
   `confirmedAt`); `bridgeState` nennt sie in `history` und liefert dann alle Sperren, nicht nur die jüngsten 60 Tage.

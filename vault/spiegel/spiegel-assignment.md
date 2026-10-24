@@ -17,6 +17,7 @@ relates_to: ["[[meyton-printout]]", "[[spiegel-bridge]]", "[[spiegel-privacy]]",
 |---|---|---|---|
 | Opt-in per Sportpass (Standard) | Starter aus der Schützenliste mit SportpassID (nicht bei allen gepflegt; für Interessierte pflegt der Admin sie in der Meyton-Schützenverwaltung nach) | einmal im Profil eintragen und zustimmen, Admin bestätigt; die Brücke lädt jede passende Scheibe live am Abend hoch, auch rückwirkend | hoch |
 | Meyton-QR | ohne Sportpass, Training ohne Starter, auswärts; bis eine Woche danach. Den QR gibt es zu jedem Ausdruck | Meyton zeigt den QR am Stand; in Spiegel scannen oder Link einfügen; Spiegel lädt und speichert das PDF, liest die ID, die Brücke holt die Scheibe; Vorschau, bestätigen. Bei einer schon vorhandenen Scheibe hängt der Scan nur das PDF an | hoch |
+| ID vom Ausdruck (gebaut, 24. Oktober 2026) | ohne Sportpass, wenn der QR nicht zur Hand ist, aber der Ausdruck | im Profil die ID aus dem Fuß und den Tag eintippen; die Brücke holt genau diese Scheibe, Spiegel nimmt sie nur an, wenn ihr Beginn auf den Tag fällt | mittel bis hoch (siehe unten) |
 | „Scheibe holen“ (Fundbüro) | QR verloren oder Link abgelaufen (selten) | Stand und Zeitraum wählen; Spiegel fragt die Brücke nach Scheiben ohne Besitzer; Vorschau, bestätigen | mittel, mit Protokoll |
 | Admin | Korrekturen, Sammelzuweisung nach dem Training | zuweisen und umhängen, mit Protokoll | hoch |
 
@@ -52,6 +53,32 @@ Spiegel hängt dabei nicht vom Layout des Meyton-PDFs ab ([[adr-028]], Änderung
 **Brücke aus:** Anlage und Brücke werden nach dem Training ausgeschaltet. Scannst du den QR später, zum Beispiel zu Hause, liegt das PDF sofort in Spiegel und lässt sich ansehen; Vorschau und Bestätigung folgen beim nächsten Einschalten, und Spiegel meldet sich dann.
 
 **Auswärts,** ohne Brücke, liest Spiegel das ganze PDF, soweit der vollständige Parser das Layout kennt, und legt ein **Ergebnis ohne Rohdaten** an (Serien, Schusswerte, Teiler, Trefferlage). Klappt das nicht, bleibt das PDF ohne Werte angehängt (SP-2.6).
+
+## Scheibe per ID (gebaut)
+
+Der Kern des QR-Wegs ohne Scannen und ohne PDF (User, 24. Oktober 2026: „eine bekannte Scheiben-ID zu mir
+importieren“):
+
+1. **Profil → „Scheibe per ID holen“:** die ID wie im Fuß des Ausdrucks (`ID: ff914420`, acht Hex-Zeichen, `parseCardId`)
+   und den Tag der Scheibe. Die Rückfrage sagt, was passiert (`cardRequest`). Liegt die Scheibe dieses Abends schon in
+   Spiegel, gibt es keinen Auftrag: beim Schützen der Weg zu ihr, bei einem anderen Konto nur „gehört zu einem anderen
+   Konto“. Höchstens zehn offene Aufträge je Konto; ein wartender lässt sich zurückziehen.
+2. **Auftrag** (`CardRequest`): `GET /state` nennt ihn der Brücke (`requests`). Die Brücke liest die ScheibenID beim
+   nächsten Durchgang, auch während geschossen wird, und schickt sie ohne Zustimmung; verdeckte Wertung und gesperrte
+   Scheiben bleiben im Schützenhaus ([[spiegel-bridge]]).
+3. **Annehmen:** Spiegel nimmt den Stand nur an, wenn der Beginn der Scheibe auf den genannten Abend fällt (vor 4 Uhr
+   der Vortag). Sonst wird nichts gespeichert, und der Auftrag endet mit „an diesem Tag nicht gefunden“. Eine aktive
+   Zustimmung per Sportpass eines anderen Kontos geht vor („gehört zu einem anderen Konto“). Die Scheibe gehört dem
+   Auftraggeber sofort, ohne „Offen“.
+4. **Ausgang** im Profil: wartet auf die Anlage, geholt (mit Link), nicht gefunden (nicht in der Ablage oder nach 30
+   Tagen), an diesem Tag nicht gefunden, lässt sich nicht holen (verdeckt oder gesperrt), gehört zu einem anderen Konto,
+   zurückgezogen. Den Ausgang meldet die Brücke im Heartbeat (`requestsDone`) oder das Einlesen.
+
+Grenzen: Ein Tippfehler in den mittleren Stellen der ID kann am selben Abend die Scheibe eines anderen treffen; der Tag
+fängt das nicht. Dann hilft „Löschen“ (mit Sperre). Die Vorschau vor dem Holen (SF-41) kommt mit dem QR-Weg. Nach dem
+Holen liest die Brücke die Scheibe nicht mehr von selbst; eine spätere Korrektur der Standaufsicht kommt nur mit einer
+Zustimmung per Sportpass. Die Brücke braucht dafür die Version mit Aufträgen (vor Ort einspielen); eine ältere ignoriert
+`requests`, und die Aufträge bleiben offen.
 
 ## Fundbüro: Scheiben ohne Besitzer
 

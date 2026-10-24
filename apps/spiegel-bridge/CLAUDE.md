@@ -4,9 +4,9 @@ Die Brücke im Schützenhaus ([ADR-027](../../vault/decisions/adr-027.md),
 [`spiegel-bridge`](../../vault/spiegel/spiegel-bridge.md)): liest die Meyton-Ablage (SSMDB2) nur lesend und baut
 Snapshots v1 für Spiegel. **Go**, ein statisches Binary ohne Laufzeit. Sie umfasst Leser, Änderungserkennung und
 Snapshots; Kopplung, Upload, Heartbeat und die Filter (Zustimmung, verdeckt, gesperrt); das Nachholen beim Start ab dem
-Wasserstand, das Nachladen der Historie und den Dienst für systemd mit `deploy/install.sh`. Offen
+Wasserstand, das Nachladen der Historie, Aufträge per ID und den Dienst für systemd mit `deploy/install.sh`. Offen
 ([`spiegel-roadmap`](../../vault/spiegel/spiegel-roadmap.md)): Selbst-Update, Statusseite, Dienst unter Windows,
-Aufträge.
+Aufträge mit Vorschau.
 
 ## Befehle
 
@@ -116,6 +116,12 @@ einen laufenden Server (legt `SSMDB2` neu an). Go ist Pflicht im Dev-Setup wie N
   `since` derselben Id (Meldungen aufgehoben) öffnet die passenden Scheiben wieder (`Reopen`), auch was der Lauf schon
   gemeldet hat. Wartet eine Scheibe, die sich im Lauf nie bewegt hat (Nachholen, Nachladen), bleibt sie liegen, solange
   geschossen wird. Ohne Speicher: Ein Neustart beginnt von vorn, Spiegel antwortet „unverändert“.
+- **Aufträge per ID:** `state.requests` nennt ScheibenIDs, die ein Schütze mit der ID vom Ausdruck angefragt hat. `run`
+  gibt der Erkennung ein Prädikat (`SetRequested`); eine angefragte Scheibe hat Rang 1 (nicht nur im Leerlauf, auch
+  wartend nicht), und hält den Takt hoch, bis sie `handled` ist. Der Filter lässt sie ohne Zustimmung hinaus, verdeckt
+  und gesperrt nicht. Ein neu genannter Auftrag liest die Scheibe noch einmal (`Resend`), auch wenn dieser Lauf sie schon
+  ohne Zustimmung zurückhielt. Der Heartbeat meldet je Auftrag `missing` (nicht in der letzten Runde), `held` (vom Filter
+  gehalten) oder `sent` (`RequestState`), bis Spiegel ihn nicht mehr nennt (höchstens 100). Den Tag prüft Spiegel.
 - **Dienst** (`deploy/`): `install.sh` legt Binary, Benutzer, `/etc/spiegel-bridge` (0700) und die Unit an; die Unit
   läuft ohne Rechte, mit schreibgeschütztem System, 128 MB, kein Neustart bei Exit 2 und 3. `pair` fragt den Zugang
   zur SSMDB2 auf stdin ab, wenn weder `--dsn` noch die Umgebung ihn nennen. Geprüft in `debian:12` mit
