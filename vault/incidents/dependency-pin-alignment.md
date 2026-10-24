@@ -30,6 +30,11 @@ Active LTS). Umgesetzt:
   ebenso Zeichen); der Ingest-Vertrag zählt wie die Brücke Codeeinheiten und prüft das jetzt selbst (`utf16Text` in
   `packages/ingest-contract/src/text.ts`). Aufgefallen am Testvektor `zelle-zu-lang-utf16`.
 - **prettier 3.9.10**: die im August offene Formatierungs-Churn ist erledigt (kurze Unions einzeilig).
+- **vitest 5** legt einen Modul-Cache für den ganzen Workspace unter `node_modules/.vitest-cache` an und leert ihn nach
+  jeder Änderung am Lockfile. Die Suites, die turbo parallel startet, räumten dann gleichzeitig auf und scheiterten mit
+  `ENOTEMPTY`; alle Konfigurationen setzen deshalb `fsModuleCache: false`. Offen und harmlos: Vite warnt bei den drei
+  Apps, dass `vitest.config.ts` ESM in einem CommonJS-Paket ist (`configLoader: 'native'` wird erst in einer künftigen
+  Vite-Major Standard).
 
 ## Zurückgestellte Bumps (Stand Oktober 2026)
 
