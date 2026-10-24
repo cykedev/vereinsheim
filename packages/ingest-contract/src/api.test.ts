@@ -16,6 +16,7 @@ import {
   pairRequestV1,
   PAIRING_CODE_ALPHABET,
   PAIRING_CODE_LENGTH,
+  REQUEST_OUTCOMES,
   RETRY_OUTCOMES,
   SNAPSHOT_OUTCOMES,
   snapshotsResponseV1,
@@ -161,6 +162,46 @@ describe("Nachladen älterer Scheiben (additiv)", () => {
       Array.from({ length: 101 }, (_, i) => ({ id: i + 1, since })),
     ])
       expect(parseApi(heartbeatV1, { ...heartbeat, historyDone }).ok).toBe(false)
+  })
+})
+
+describe("Scheibe per ID holen (additiv)", () => {
+  const state = load("examples/api-v1/state-response.json") as Record<string, unknown>
+  const heartbeat = load("examples/api-v1/heartbeat.json") as Record<string, unknown>
+
+  it("Zustand mit und ohne Aufträge; je Auftrag Id und ScheibenID, nie mehr", () => {
+    expect(stateResponseV1.safeParse(state).success).toBe(true)
+    expect(
+      stateResponseV1.safeParse({ ...state, requests: [{ id: 3, scheibenId: -7257056 }] }).success
+    ).toBe(true)
+    for (const requests of [
+      [{ id: 0, scheibenId: 1 }],
+      [{ id: 3 }],
+      [{ id: 3, scheibenId: 2 ** 31 }],
+      [{ id: 3, scheibenId: "ff914420" }],
+      [{ id: 3, scheibenId: 1, day: "2026-10-21" }],
+      Array.from({ length: 1_001 }, (_, i) => ({ id: i + 1, scheibenId: i })),
+    ])
+      expect(stateResponseV1.safeParse({ ...state, requests }).success).toBe(false)
+  })
+
+  it("Heartbeat mit und ohne Ausgang der Aufträge; nur die festen Ausgänge, höchstens 100", () => {
+    expect(REQUEST_OUTCOMES).toEqual(["sent", "missing", "held"])
+    expect(parseApi(heartbeatV1, heartbeat).ok).toBe(true)
+    expect(
+      parseApi(heartbeatV1, {
+        ...heartbeat,
+        requestsDone: REQUEST_OUTCOMES.map((outcome, i) => ({ id: i + 1, outcome })),
+      }).ok
+    ).toBe(true)
+    for (const requestsDone of [
+      [{ id: 3 }],
+      [{ id: 3, outcome: "stored" }],
+      [{ id: 0, outcome: "sent" }],
+      [{ id: 3, outcome: "sent", scheibenId: 1 }],
+      Array.from({ length: 101 }, (_, i) => ({ id: i + 1, outcome: "sent" })),
+    ])
+      expect(parseApi(heartbeatV1, { ...heartbeat, requestsDone }).ok).toBe(false)
   })
 })
 

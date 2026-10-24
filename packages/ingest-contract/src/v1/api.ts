@@ -72,6 +72,13 @@ export const BRIDGE_STATUS = [
 export const BRIDGE_CLOCK_TOLERANCE_MS = 30_000
 
 /**
+ * Wie ein Auftrag, eine Scheibe per ID zu holen, bei der Brücke ausging (`heartbeat.requestsDone`): `sent` Spiegel hat
+ * den Stand endgültig beantwortet, `missing` die ID steht nicht in der Ablage, `held` die Scheibe bleibt im Schützenhaus
+ * (verdeckt oder gesperrt)
+ */
+export const REQUEST_OUTCOMES = ["sent", "missing", "held"] as const
+
+/**
  * `POST /heartbeat`, einmal je Minute. Nie Namen oder Sportpassnummern (SF-59); der Fingerabdruck der Quelle
  * besteht nur aus Version, Zeilenzahlen und dem ältesten Zeitstempel (SF-23).
  */
@@ -114,6 +121,14 @@ export const heartbeatV1 = z
      */
     historyDone: z
       .array(z.strictObject({ id: z.int().min(1), since: instant }))
+      .max(100)
+      .optional(),
+    /**
+     * additiv: Aufträge aus `state.requests`, die die Brücke in diesem Lauf abgearbeitet hat, mit ihrem Ausgang; gemeldet,
+     * bis Spiegel den Auftrag nicht mehr nennt
+     */
+    requestsDone: z
+      .array(z.strictObject({ id: z.int().min(1), outcome: z.enum(REQUEST_OUTCOMES) }))
       .max(100)
       .optional(),
   })
@@ -168,6 +183,15 @@ export const stateResponseV1 = z
           sportpassHash: z.string().regex(/^[0-9a-f]{64}$/),
         })
       )
+      .max(1_000)
+      .optional(),
+    /**
+     * additiv: offene Aufträge, genau eine Scheibe per ID zu holen (die ID im Fuß des Ausdrucks). Die Brücke liest sie
+     * beim nächsten Durchgang, auch ohne Zustimmung per Sportpass; verdeckt oder gesperrt bleibt sie im Schützenhaus.
+     * Den Tag prüft Spiegel beim Annehmen. Solange einer offen ist, enthält `blocked` alle Sperren.
+     */
+    requests: z
+      .array(z.strictObject({ id: z.int().min(1), scheibenId: z.int32() }))
       .max(1_000)
       .optional(),
   })
@@ -250,6 +274,7 @@ export type HeartbeatV1 = z.infer<typeof heartbeatV1>
 export type HeartbeatResponseV1 = z.infer<typeof heartbeatResponseV1>
 export type StateResponseV1 = z.infer<typeof stateResponseV1>
 export type SnapshotOutcome = (typeof SNAPSHOT_OUTCOMES)[number]
+export type RequestOutcome = (typeof REQUEST_OUTCOMES)[number]
 export type DiscardReason = (typeof DISCARD_REASONS)[number]
 export type SnapshotsResponseV1 = z.infer<typeof snapshotsResponseV1>
 export type ApiErrorCode = (typeof API_ERROR_CODES)[number]

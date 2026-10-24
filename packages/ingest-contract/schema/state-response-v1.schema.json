@@ -108,6 +108,27 @@
         "required": ["id", "since", "sportpassHash"],
         "additionalProperties": false
       }
+    },
+    "requests": {
+      "maxItems": 1000,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "scheibenId": {
+            "type": "integer",
+            "minimum": -2147483648,
+            "maximum": 2147483647
+          }
+        },
+        "required": ["id", "scheibenId"],
+        "additionalProperties": false
+      }
     }
   },
   "required": ["site", "epoch", "sportpass", "blocked", "watermark"],

@@ -155,6 +155,26 @@
         "required": ["id", "since"],
         "additionalProperties": false
       }
+    },
+    "requestsDone": {
+      "maxItems": 100,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "outcome": {
+            "type": "string",
+            "enum": ["sent", "missing", "held"]
+          }
+        },
+        "required": ["id", "outcome"],
+        "additionalProperties": false
+      }
     }
   },
   "required": [
