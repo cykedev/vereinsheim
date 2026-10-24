@@ -44,7 +44,8 @@ SF-27, SF-59, SF-69 in `vault/spiegel/spiegel-edge-cases.md`.
   und holt den Stand erst beim nächsten Start nach).
 - **Annehmen nur über `parseSnapshot`/`parseSnapshotBatch`**, nie direkt über `snapshotV1`: Davor
   liegen Versionsprüfung und das Verbot von `__proto__` (Zod verwirft den Schlüssel still), danach die
-  Prüfsumme. Längen zählen in UTF-16-Codeeinheiten (Zod), nicht in Codepoints (JSON-Schema).
+  Prüfsumme. Längen zählen in UTF-16-Codeeinheiten (`utf16Text` in `src/text.ts`), nicht in Codepoints
+  (Zod-`max` und JSON-Schema).
 - **Fehler ohne Inhalt** (SF-59): `ContractIssue` ist nur `{ path, code }`, Pfade enden an `columns` und
   `rows[i]`. Zod-Meldungen nie nach außen geben.
 - **JSON-Schema wird erzeugt**, nie von Hand editiert: `pnpm --filter @vereinsheim/ingest-contract

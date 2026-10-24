@@ -1,6 +1,7 @@
 import { z } from "zod"
 
 import { LIMITS } from "../limits"
+import { utf16Text } from "../text"
 
 /**
  * API v1 zwischen Brücke und Spiegel neben dem Snapshot: Kopplung, Heartbeat, Zustand der Brücke
@@ -9,11 +10,7 @@ import { LIMITS } from "../limits"
  * `/api/ingest/v1`. Alles außer `pair` mit `Authorization: Bearer <token>`.
  */
 
-const shortText = z
-  .string()
-  .min(1)
-  .max(LIMITS.maxShortTextLength)
-  .refine((value) => value.isWellFormed())
+const shortText = utf16Text(1, LIMITS.maxShortTextLength).refine((value) => value.isWellFormed())
 const instant = z.iso.datetime({ precision: 3 })
 const count = z.int().min(0).max(1_000_000)
 
@@ -35,7 +32,7 @@ export function normalizePairingCode(input: string): string | null {
 export const pairRequestV1 = z
   .strictObject({
     contractVersion: z.literal(1),
-    code: z.string().min(1).max(32),
+    code: utf16Text(1, 32),
     /** Name des Geräts, frei („Pi im Schützenhaus“); sonst vergibt der Admin ihn beim Erzeugen des Codes */
     name: shortText.nullable(),
     bridgeVersion: shortText,

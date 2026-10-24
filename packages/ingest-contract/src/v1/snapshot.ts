@@ -1,6 +1,7 @@
 import { z } from "zod"
 
 import { LIMITS } from "../limits"
+import { utf16Text } from "../text"
 
 /**
  * Snapshot-Format v1: der vollständige Stand **einer** Scheibe, wie die Brücke ihn aus der SSMDB2
@@ -23,16 +24,16 @@ const wellFormed = (schema: z.ZodString) =>
     params: { contractCode: CONTRACT_ISSUE.malformedString },
   })
 
-const shortText = wellFormed(z.string().min(1).max(LIMITS.maxShortTextLength))
+const shortText = wellFormed(utf16Text(1, LIMITS.maxShortTextLength))
 
 /** Zellwert: Text, wie MySQL ihn im Textprotokoll liefert, oder `null`. */
-const cell = wellFormed(z.string().max(LIMITS.maxCellLength)).nullable()
+const cell = wellFormed(utf16Text(0, LIMITS.maxCellLength)).nullable()
 
-const columnName = wellFormed(z.string().min(1).max(LIMITS.maxColumnNameLength))
+const columnName = wellFormed(utf16Text(1, LIMITS.maxColumnNameLength))
 
 /** Spaltenliste von `SELECT *` mit dem Typ aus `information_schema.COLUMNS.COLUMN_TYPE`. */
 const columns = z
-  .record(columnName, wellFormed(z.string().min(1).max(LIMITS.maxColumnTypeLength)))
+  .record(columnName, wellFormed(utf16Text(1, LIMITS.maxColumnTypeLength)))
   .refine(
     (value) => {
       const count = Object.keys(value).length
