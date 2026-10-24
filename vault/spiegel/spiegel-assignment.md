@@ -118,3 +118,4 @@ Ein Check-in gilt, bis man sich abmeldet, jemand anderes am selben Stand einchec
 - Abholen ist umkehrbar; jede Zuordnung wird protokolliert.
 - Haben zwei Schützen nacheinander auf derselben Scheibe geschossen, lässt sie sich an einer Schussnummer teilen (SF-12).
 - Wer den QR hat, kann die Scheibe holen, wie mit einem Papierausdruck. Dagegen helfen Protokoll, Umkehr und „Das war ich“ (SF-40).
+- Bucht die Aufsicht eine Scheibe in Meyton auf einen anderen Schützen um, liest die Brücke sie neu (SF-80). Mit Zustimmung der neuen Nummer kommt sie an. Stand sie schon bei einem anderen Konto, hält Spiegel den neuen Stand zurück. Nach „Nicht meine“ sperrt der Grabstein die ganze ScheibenID. Beides ist offen ([[spiegel-roadmap]]).

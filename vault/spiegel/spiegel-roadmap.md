@@ -293,6 +293,11 @@ Was zwischen den Features offen ist und keinen eigenen Abschnitt hat.
   und was bis dahin gilt ([[spiegel-privacy]]).
 - **Export (JSON/CSV) und Konto löschen** sind nicht gebaut; ein Admin kann ein Konto nur deaktivieren
   ([[spiegel-privacy]]).
+- **Umbuchen zwischen zwei Konten** (SF-80): Stand eine Scheibe schon bei einem Konto und bucht die Aufsicht sie auf
+  eine andere Nummer mit Zustimmung um, stellt Spiegel den neuen Stand in Quarantäne („SportpassID oder Besitzer
+  gewechselt“), ohne Oberfläche für den Admin. Nach „Nicht meine“ sperrt der Grabstein die ganze ScheibenID, auch für
+  den richtigen Schützen, und „Scheibe per ID holen“ nimmt den Abend nicht an. Vorschlag: Grabstein je Nummer, Umhängen
+  zwischen bestätigten Nummern. Berührt SF-28, SF-37 und [[spiegel-assignment]].
 
 ### Prüfung im Browser
 

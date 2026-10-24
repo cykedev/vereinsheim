@@ -56,7 +56,11 @@ einen laufenden Server (legt `SSMDB2` neu an). Go ist Pflicht im Dev-Setup wie N
   (`mysql.SetLogger`), `columnsWithAlias` ist aus.
 - **Erkennung** (`watch`): gelesen wird, was wartet (vorige Lesung neu, noch nicht bestätigt), was sich bewegt hat
   (neu oder Lebenszeichen anders, auch wenn das Budget von 50 Scheiben je Runde es verschob) und was aktiv ist
-  (Lebenszeichen in den letzten 20 min, fängt Korrekturen ohne Lebenszeichen, SF-21, SF-22, SF-74). Beim Start gilt
+  (Lebenszeichen in den letzten 20 min, fängt Korrekturen ohne Lebenszeichen, SF-21, SF-22, SF-74). Als Bewegung zählt
+  auch eine andere SportpassID als in der letzten Runde: In Meyton umgebucht, bewegt sich das Lebenszeichen nicht
+  (SF-80, Log `card-reassigned` mit der ScheibenID). Im Leerlauf liest der **Abgleich** jede in diesem Lauf gelesene
+  Scheibe der letzten 14 Tage (ab dem jüngsten Lebenszeichen) eine Stunde nach ihrer letzten Lesung neu, Rang 3 wie
+  das Nachholen: späte Korrekturen nach den 20 min. Nach einem Neustart gilt für Älteres der Wasserstand. Beim Start gilt
   als neu, was bis 12 h vor dem jüngsten Lebenszeichen liegt; Lebenszeichen mehr als einen Tag nach der Uhr der Anlage
   (`NOW(3)`) verankern das Fenster nicht (ein vorgehender Stand, SF-73). `Busy` zählt nur Scheiben, die in der Runde in
   der Ablage standen. `observedAt` ist die echte Beobachtung, nur die Folgenummer zählt nach einem Rücksprung der Uhr

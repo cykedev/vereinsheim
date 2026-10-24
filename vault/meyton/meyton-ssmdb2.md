@@ -90,7 +90,8 @@ Handbuchstände: V5 (08/2023) → V7 (03/2024): `SportpassID` von `int(11)` auf 
 | `ScheibenID` vorzeichenbehaftet 32 Bit, oft negativ, nur je Instanz eindeutig; vermutlich ein Millisekunden-Zähler, der etwa alle 49,7 Tage überläuft (innerhalb eines Abends steigend, über Abende springend) | Schlüssel Quelle + Epoche + ScheibenID; kein Wasserstand über die ID (SF-77) |
 | Platzhalter `--frei--` für freie Stände; beim Verein keiner, dafür 112 Scheiben mit Nach- und Vorname `unknown`, alle in der Starterliste „Trash“ (299 Scheiben) und alle mit Sportpassnummer | nur Scheiben ohne Treffer weglassen, nie nach dem Namen filtern; `unknown` ist kein Name (SF-13, SF-78) |
 | keine Standbelegung in der DB | für Live optional LANA ([[meyton-interfaces]]) |
-| Korrekturen und Löschungen ändern Zeilen nachträglich | Snapshots mit Revision, Abgleich der letzten Tage |
+| Korrekturen und Löschungen ändern Zeilen nachträglich | Snapshots mit Revision; die Brücke liest im Leerlauf stündlich die Scheiben der letzten 14 Tage neu ([[spiegel-bridge]]) |
+| Eine Scheibe lässt sich nachträglich einem anderen Schützen zuweisen; ob dabei `Zeitstempel` mitläuft, ist offen (eine umgebuchte Scheibe kam im Oktober 2026 nicht an) | die Brücke vergleicht die SportpassID jeder Runde mit der zuletzt gesehenen (SF-80) |
 | Probeschüsse werden **gelöscht**: alle mit dem ersten Wertungsschuss, ebenso die alte Probe mit dem ersten Schuss nach einem Neustart der Probe (gleiche ScheibenID, Nummern ab 1; belegt am 9. Oktober 2026) | Probe nur, solange sie in der Ablage steht; Spiegel macht aus jedem live gesehenen Block eine eigene Scheibe (SF-03, SF-72, [[adr-027]]) |
 | Eine Lesung kann **zerrissen** sein: einzelne oder alle Schüsse fehlen für genau einen Durchgang, auch bei fertigen Scheiben (16-mal in 51 Minuten) | nur senden, wenn zwei Lesungen hintereinander gleich sind; Fehlen ist keine Löschung (SF-71) |
 | `SportpassID` war bis Handbuch V5 `int(11)` (höchstens 2147483647), Sportpassnummern dürfen 12 Stellen haben; seit V7 `bigint(20)`. Ältere Einträge können gekappt sein, dann teilen sich viele Schützen eine ID | Typ und Spitzenwerte vor Ort prüfen; mehrdeutige IDs nie automatisch zuordnen ([[spiegel-assignment]]) |
@@ -179,5 +180,6 @@ Diese Versuche schießen wir mit der Standaufsicht an einem Abend, während ein 
 9. **Korrektur:** Die Aufsicht löscht einen Schuss und korrigiert einen Wert, soweit die Anlage das erlaubt. Rücken die Nummern nach, ändert sich `Text`?
 10. **Falsche Disziplin:** ein paar Schuss mit dem Luftgewehr auf einer Luftpistolen-Disziplin. Was steht in `Ring01`?
 11. **Verdeckte Wertung:** wenn die Aufsicht es einrichten kann, zwei Schuss im Modus 10. Was zeigen `Treffer` und `TotalRing`?
+12. **Umbuchen:** eine fertige Scheibe nach 25 Minuten einem anderen Schützen zuweisen. Ändern sich `Zeitstempel`, `SportpassID`, Name, ScheibenID? Die Brücke meldet einen Wechsel der SportpassID im Log als `card-reassigned` (SF-80).
 
 Fehlschüsse schießen wir nicht absichtlich; die SQL-Checkliste sucht sie in der Historie (`Ring <= 1`).
