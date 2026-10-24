@@ -135,6 +135,14 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
   Wertung der Disziplin, folgt die Seite (`seenScoring` in `CardScreen`). `Status` der SSMDB2 ist an der Vereinsanlage leer
   ([[meyton-ssmdb2]]). Sitzung und
   Kennung prüfen die Actions über `src/lib/action-guards.ts`.
+- **Disziplin je Scheibe:** `Card.disciplineId` ist die Disziplin, mit der alles rechnet (Familie, Scheibenbild,
+  Schusszahl, Admin). Hat der Schütze eine andere gewählt, steht die vom Stand in `Card.standDisciplineId`; null heißt
+  keine Wahl. `writeRevision` lässt eine Wahl stehen, schreibt die Disziplin des Stands dorthin und rechnet die Merkmale
+  mit `recomputeDisciplineCard` in derselben Transaktion nach; bringt der Stand die gewählte, fällt die Wahl weg.
+  Gewählt wird nur über `chooseCardDiscipline` (`src/lib/card-discipline-actions.ts`), aus `disciplineOptions`: Anlage
+  und Scheibenbild der Disziplin vom Stand, nicht ignoriert, dazu die vom Stand (zurück). Bedient am Ende der Seite einer
+  Scheibe über dem Teilen (`CardDiscipline`, Blatt und Rückfrage `cardDiscipline`). Ein anderes Scheibenbild mit
+  Neu-Wertung (SF-16) ist offen.
 - **Darstellung der Scheibe gemerkt:** Ebenen, „übrige blass/aus“ und Ausschnitt (ganze
   Scheibe oder Gruppe) als Cookie
   `spiegel-target` (`src/lib/target-display*.ts`, Format aus `@vereinsheim/shot-ui/target/display`). Die Seite einer

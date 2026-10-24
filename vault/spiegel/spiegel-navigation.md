@@ -324,6 +324,22 @@ Eine eigene Scheibe lässt sich löschen, über Papierkorb und weiche Sperre ([[
 - Der Papierkorb zeigt auch, was nicht von selbst wiederkommt: eigene endgültig gelöschte Scheiben und eigene Meldungen
   „nicht meine“.
 
+## Disziplin einer Scheibe
+
+War am Stand die falsche Disziplin gewählt (etwa Auflage auf einer LP-Scheibe), stellt der Schütze sie an der Scheibe um
+(User, 24. Oktober 2026; SF-16 für dieselbe Scheibe):
+
+- **Wo:** am Ende der Seite einer Scheibe, über dem Teilen (`CardDiscipline`): „Disziplin LP 40“, nach einer eigenen
+  Wahl leise „Am Stand gewählt: …“. „Disziplin ändern“ öffnet ein Blatt mit den Disziplinen derselben Scheibe nach
+  Familie; die Wahl fragt mit Folgen (`cardDiscipline`), „Ändern“ stellt um, die Disziplin vom Stand „Zurückstellen“.
+  Ohne andere Möglichkeit steht nur der Name da. Nicht auf der geteilten Seite.
+- **Was wählbar ist:** die Disziplinen der Anlage mit demselben Scheibenbild wie die vom Stand, nicht ignoriert
+  (`disciplineOptions`). Die Werte bleiben, wie Meyton sie gemessen hat; ohne Scheibenbild am Stand keine Wahl.
+- **Was passiert:** Die Familie zieht mit (Liste, Fortschritt, Rekorde, Start), Schusszahl und Merkmale rechnet Spiegel
+  mit der gewählten neu. Gewählte Wertung und Art bleiben. Spätere Stände aus Meyton lassen die Wahl stehen.
+- **Offen:** eine Disziplin mit anderem Scheibenbild (LG-Schütze auf LP-Disziplin), dafür wertet Spiegel aus x/y neu
+  und setzt `neu-gewertet` (SF-16, [[spiegel-target-library]] „Neu werten“).
+
 ## Teilen per Link
 
 Eine eigene Scheibe lässt sich per Link zeigen, ohne dass die andere Seite ein Konto braucht ([[spiegel-privacy]]):
