@@ -15,12 +15,12 @@ Heute gilt: Jeder Stand schreibt `Card.disciplineId` neu (`cardFeatures` in `wri
 ## Approach
 
 - **D1 Wo die Wahl steht:** `Card.disciplineId` bleibt die Disziplin, mit der Spiegel überall rechnet (Familie für den
-  Index, Scheibenbild, Schusszahl, Gegenprobe, Zählen im Admin, `SHOWN_DISCIPLINE`). Neu ist `Card.sourceDisciplineId
+  Index, Scheibenbild, Schusszahl, Gegenprobe, Zählen im Admin, `SHOWN_DISCIPLINE`). Neu ist `Card.standDisciplineId
   Int?`: die Disziplin aus Meyton, solange der Schütze eine andere gewählt hat; null heißt keine eigene Wahl. So bleiben
   alle Abfragen, Joins und Filter, wie sie sind. Verworfen: eine Spalte `disciplineChoiceId`, die jede Abfrage als
   `choice ?? disciplineId` lesen müsste (Familie im Index, `VISIBLE_CARD`, `refreshDisciplineCards`, Admin-Zahlen).
 - **D2 Jeder Stand respektiert die Wahl:** `writeRevision` liest zuerst die vorhandene Scheibe. Hat sie eine Wahl
-  (`sourceDisciplineId` nicht null), bleibt `disciplineId` die gewählte; `sourceDisciplineId` bekommt die Disziplin des
+  (`standDisciplineId` nicht null), bleibt `disciplineId` die gewählte; `standDisciplineId` bekommt die Disziplin des
   Stands. Ist die des Stands gleich der gewählten (Meyton nachträglich richtig), fällt die Wahl weg (null). Die Merkmale
   rechnet dann `recomputeDisciplineCard` in derselben Transaktion mit der gewählten Disziplin neu (Gegenprobe,
   Schusszahl, `complete`, Projektion), statt der Merkmale, die der Adapter mit der Disziplin aus Meyton gerechnet hat.
@@ -28,7 +28,7 @@ Heute gilt: Jeder Stand schreibt `Card.disciplineId` neu (`cardFeatures` in `wri
   bleiben, wie Meyton sie gemessen hat; mit einem anderen Scheibenbild stünden die Treffer auf Ringen, mit denen Meyton
   nicht gewertet hat. Hat die Disziplin aus Meyton kein Scheibenbild, gibt es keine Wahl (der Admin ordnet sie erst
   ein). Gruppiert nach Familie, sortiert nach Familie und Name; die aktuelle steht vorn markiert.
-- **D4 Zurück:** Die Disziplin aus Meyton zu wählen hebt die Wahl auf (`sourceDisciplineId` null).
+- **D4 Zurück:** Die Disziplin aus Meyton zu wählen hebt die Wahl auf (`standDisciplineId` null).
 - **D5 Wer:** nur die eigene, sichtbare Scheibe (`VISIBLE_CARD`), auch Admins nur ihre eigenen; nicht auf der geteilten
   Seite. Unter der Sperre wie `writeRevision` (Advisory-Lock Quelle und ScheibenID, dann die Zeile).
 - **D6 Folgen:** Die Familie zieht mit (Liste, Fortschritt, Rekorde, Start); gewählte Wertung und Art bleiben; die
@@ -56,10 +56,10 @@ Heute gilt: Jeder Stand schreibt `Card.disciplineId` neu (`cardFeatures` in `wri
 
 ## Files
 
-- `apps/spiegel/prisma/schema.prisma`, neue Migration `apps/spiegel/prisma/migrations/<ts>_card_source_discipline/`
+- `apps/spiegel/prisma/schema.prisma`, neue Migration `apps/spiegel/prisma/migrations/<ts>_card_stand_discipline/`
 - `apps/spiegel/src/lib/db/cards.ts` (`writeRevision`, `chooseCardDiscipline`, `disciplineOptions`)
 - `apps/spiegel/src/lib/card-discipline-actions.ts` (+ Test)
-- `apps/spiegel/src/lib/db/reads.ts` (`PageCard.sourceDiscipline`)
+- `apps/spiegel/src/lib/db/reads.ts` (`PageCard.standDiscipline`)
 - `apps/spiegel/src/lib/admin/consequences.ts` (+ Test)
 - `apps/spiegel/src/components/card/CardDiscipline.tsx`, `CardScreen.tsx`, `src/app/(app)/cards/[id]/page.tsx`
 - `apps/spiegel/src/lib/db/cards-choice.test.ts` (neu)
@@ -75,7 +75,7 @@ Heute gilt: Jeder Stand schreibt `Card.disciplineId` neu (`cardFeatures` in `wri
 
 ## Tasks
 
-1. Schema und Migration: `sourceDisciplineId Int?` mit Relation `SourceDiscipline` (`onDelete: NoAction` wie
+1. Schema und Migration: `standDisciplineId Int?` mit Relation `StandDiscipline` (`onDelete: NoAction` wie
    `disciplineId`), Index nicht nötig. SQL über `prisma migrate diff` erzeugen, mit `prisma migrate deploy` anwenden
    (die Dev-Datenbank will sonst einen Reset), `prisma generate`.
 2. `writeRevision` nach D2, Test zuerst (`cards-choice.test.ts`): eine Wahl übersteht einen neuen Stand mit derselben
@@ -87,7 +87,7 @@ Heute gilt: Jeder Stand schreibt `Card.disciplineId` neu (`cardFeatures` in `wri
 4. Server Action `setCardDiscipline(cardId, disciplineId)` mit `shooterId`/`isCardIdInput`, Ganzzahl prüfen,
    `revalidatePath("/", "layout")`, Test wie `card-kind-actions.test.ts`.
 5. `consequences.ts`: `cardDiscipline({ evening, from, to, family, toSource })`, Tests mit Wortlaut und `OLD_WORDS`.
-6. Lesen: `PageCard.sourceDiscipline: string | null`; die Seite lädt die Möglichkeiten (`disciplineOptions`) nur für den
+6. Lesen: `PageCard.standDiscipline: string | null`; die Seite lädt die Möglichkeiten (`disciplineOptions`) nur für den
    Besitzer.
 7. `CardDiscipline.tsx` (Abschnitt, Blatt, Rückfrage), in `CardScreen` über Teilen; Markup-Test.
 8. Skriptprüfung: Abschnitt „Disziplin“ steht da, das Blatt öffnet und schließt mit Esc, ohne zu speichern.

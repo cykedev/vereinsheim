@@ -363,13 +363,13 @@ model FamilyScoring {
 
 // Meyton-Disziplin; Vereinsvarianten können dieselbe DisziplinID tragen (SF-70)
 model Discipline {
-  id              Int      @id @default(autoincrement())
+  id              Int       @id @default(autoincrement())
   siteId          Int
-  site            Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  site            Site      @relation(fields: [siteId], references: [id], onDelete: Cascade)
   meytonId        Int
   name            String
   familyId        Int?
-  family          Family?  @relation(fields: [familyId], references: [id], onDelete: SetNull)
+  family          Family?   @relation(fields: [familyId], references: [id], onDelete: SetNull)
   // Scheibenbild aus shot-core (`TARGETS`); null: unbekannt (ADR-029)
   targetId        String?
   // Wertung der Disziplin (Admin), Vorgabe für Training und Wettkampf; im Wettkampf die amtliche (SF-74); null: wie am
@@ -387,6 +387,8 @@ model Discipline {
   // Trainingsscheiben)
   ignoredAt       DateTime? @db.Timestamptz(3)
   cards           Card[]
+  // Scheiben, deren Schütze statt dieser Disziplin vom Stand eine andere gewählt hat
+  chosenOver      Card[]    @relation("StandDiscipline")
 
   @@unique([siteId, meytonId, name])
 }
@@ -432,6 +434,10 @@ model Card {
   discipline        Discipline      @relation(fields: [disciplineId], references: [id], onDelete: NoAction)
   // `Discipline.version`, mit der Merkmale, Gegenprobe und `complete` gerechnet sind; -1: ohne Zuordnung geschrieben
   disciplineVersion Int             @default(0)
+  // die Disziplin am Stand (aus Meyton), solange der Schütze eine andere gewählt hat (`disciplineId`); null: keine
+  // eigene Wahl. Jeder Stand schreibt hier seine Disziplin und lässt die gewählte stehen (`writeRevision`)
+  standDisciplineId Int?
+  standDiscipline   Discipline?     @relation("StandDiscipline", fields: [standDisciplineId], references: [id], onDelete: NoAction)
   // Familie der Disziplin, hier mitgeführt für den Index der Übersichten; ändert die Admin-Zuordnung die
   // Familie, zieht sie die Scheiben mit (`moveDisciplineFamily`)
   familyId          Int?
