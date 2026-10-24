@@ -7,6 +7,8 @@ import {
   bridgeRevoke,
   cardDelete,
   cardDiscipline,
+  cardRequest,
+  cardRequestWithdraw,
   cardPurgeNow,
   cardShare,
   cardShareStop,
@@ -560,6 +562,38 @@ describe("Disziplin einer Scheibe", () => {
   })
 })
 
+describe("Scheibe per ID holen", () => {
+  it("holen: welche Scheibe, was zu prüfen ist, wann sie kommt, was nicht passiert", () => {
+    const d = cardRequest({ id: "ff914420", day: "Di 21.10.2026" })
+    wellFormed(d)
+    expect(d).toEqual({
+      title: "Scheibe holen?",
+      about: "Du holst die Scheibe mit der ID ff914420 vom Di 21.10.2026.",
+      check: "Die ID steht unten auf deinem Ausdruck. Der Tag muss der Tag der Scheibe sein.",
+      happens: [
+        "Läuft die Anlage, holt Spiegel genau diese Scheibe in dein Konto. Das dauert ein paar Minuten.",
+        "Ist die Anlage aus, holt Spiegel sie beim nächsten Einschalten.",
+        "Passt der Tag nicht, holt Spiegel nichts und sagt es hier.",
+      ],
+      notHappening: [
+        "Andere Scheiben holt Spiegel nicht.",
+        "An der Meyton-Anlage ändert sich nichts.",
+      ],
+      undo: "Den Auftrag hier zurückziehen, solange er wartet. Eine geholte Scheibe auf ihrer Seite löschen.",
+      confirmLabel: "Scheibe holen",
+      destructive: false,
+    })
+  })
+
+  it("zurückziehen", () => {
+    const d = cardRequestWithdraw({ id: "ff914420", day: "Di 21.10.2026" })
+    wellFormed(d)
+    expect(d.title).toBe("Auftrag zurückziehen?")
+    expect(d.happens).toEqual(["Spiegel holt die Scheibe nicht."])
+    expect(d.destructive).toBe(true)
+  })
+})
+
 /**
  * Schreibregeln als Leitplanke (Lektion [[spiegel-dialog-texts-not-understood]]): keine Semikolons und keines der
  * alten Wörter des Codes. Ob ein Text verständlich ist, prüft ein Mensch; dieser Test hält nur fest, dass die alten
@@ -616,6 +650,8 @@ describe("Schreibregeln", () => {
     ["endgültig löschen", cardPurgeNow({ evening })],
     ["teilen", cardShare({ evening })],
     ["teilen beenden", cardShareStop({ evening })],
+    ["Scheibe holen", cardRequest({ id: "ff914420", day: "Di 21.10.2026" })],
+    ["Auftrag zurückziehen", cardRequestWithdraw({ id: "ff914420", day: "Di 21.10.2026" })],
     [
       "Disziplin der Scheibe",
       cardDiscipline({

@@ -491,6 +491,43 @@ export function cardDiscipline({
 }
 
 /**
+ * eine Scheibe per ID vom Ausdruck holen (Profil): `id` wie auf dem Ausdruck, `day` der Tag in Worten („Di 21.10.2026“).
+ * Spiegel holt sie, wenn die Anlage läuft, und nur, wenn der Tag passt
+ */
+export function cardRequest({ id, day }: { id: string; day: string }): Decision {
+  return {
+    title: "Scheibe holen?",
+    about: `Du holst die Scheibe mit der ID ${id} vom ${day}.`,
+    check: "Die ID steht unten auf deinem Ausdruck. Der Tag muss der Tag der Scheibe sein.",
+    happens: [
+      "Läuft die Anlage, holt Spiegel genau diese Scheibe in dein Konto. Das dauert ein paar Minuten.",
+      "Ist die Anlage aus, holt Spiegel sie beim nächsten Einschalten.",
+      "Passt der Tag nicht, holt Spiegel nichts und sagt es hier.",
+    ],
+    notHappening: [
+      "Andere Scheiben holt Spiegel nicht.",
+      "An der Meyton-Anlage ändert sich nichts.",
+    ],
+    undo: "Den Auftrag hier zurückziehen, solange er wartet. Eine geholte Scheibe auf ihrer Seite löschen.",
+    confirmLabel: "Scheibe holen",
+    destructive: false,
+  }
+}
+
+/** einen wartenden Auftrag per ID zurückziehen */
+export function cardRequestWithdraw({ id, day }: { id: string; day: string }): Decision {
+  return {
+    title: "Auftrag zurückziehen?",
+    about: `Spiegel soll die Scheibe mit der ID ${id} vom ${day} holen.`,
+    happens: ["Spiegel holt die Scheibe nicht."],
+    notHappening: ["Deine anderen Scheiben und Aufträge bleiben."],
+    undo: "Die Scheibe hier neu anfragen.",
+    confirmLabel: "Zurückziehen",
+    destructive: true,
+  }
+}
+
+/**
  * Zurückgewiesene Scheiben („nicht meine“) einer Sportpassnummer wieder zulassen: Die Scheiben dürfen
  * wiederkommen und warten in „Offen“. `consentActive`: Die Nummer ist bestätigt; sonst kommen sie erst, wenn sie es
  * wieder ist. Neutral formuliert: Zurückgewiesen haben kann auch ein früheres Konto mit dieser Nummer.
