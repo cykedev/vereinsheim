@@ -290,6 +290,99 @@ func TestReassignedCardLeavesWhileShooting(t *testing.T) {
 	}
 }
 
+// Die neue SportpassID gilt nur für ihren eigenen Stand: Ein späterer wartender Stand derselben Scheibe, die sich in
+// diesem Lauf nie bewegt hat, wartet wieder auf den Leerlauf.
+func TestReassignedOnlyForItsOwnStand(t *testing.T) {
+	m, c := newMemory(), start()
+	w := New(Defaults, c.now)
+	m.stamps[1] = "2026-10-09 21:00:00"
+	m.data[1] = withSportpass(cardData(1, 40, "100"), "87654321")
+	m.put(9, "2026-10-13 20:00:00", 3, "100")
+	w.SetCatchUpFrom("2026-10-08 22:00:00")
+	tick(t, w, m)
+	// Stand 9 ruht: Scheibe 1 kommt über das Nachholen, dann umgebucht
+	c.advance(25 * time.Minute)
+	for range 3 {
+		tick(t, w, m)
+		c.advance(time.Second)
+	}
+	m.data[1] = withSportpass(cardData(1, 40, "100"), "12345678")
+	sent := false
+	for range 3 {
+		sent = sent || fmt.Sprint(ids(tick(t, w, m))) == "[1]"
+		c.advance(time.Second)
+	}
+	if !sent {
+		t.Fatal("umgebucht nicht gesendet")
+	}
+	// eine Stunde später findet der Abgleich eine Korrektur, ihr Stand wartet auf die zweite Lesung
+	c.advance(time.Hour)
+	m.data[1] = withSportpass(cardData(1, 40, "95"), "12345678")
+	tick(t, w, m)
+	c.advance(time.Second)
+	// Stand 9 schießt wieder: Der wartende Stand von 1 bleibt bis zum Leerlauf liegen
+	from := len(m.reads)
+	for range 3 {
+		m.stamps[9] = c.t.Add(2 * time.Hour).Format(stampLayout)
+		tick(t, w, m)
+		c.advance(time.Second)
+	}
+	for _, read := range m.reads[from:] {
+		for _, id := range read {
+			if id == 1 {
+				t.Fatalf("wartender Stand gelesen, während geschossen wird: %v", m.reads[from:])
+			}
+		}
+	}
+}
+
+// Wird in der Meyton-Schützenliste eine Nummer korrigiert, ändert sich die SportpassID aller alten Scheiben dieses
+// Schützen auf einmal ([[meyton-printout]]). Während geschossen wird, liest die Brücke jede davon höchstens zweimal, statt
+// sie 20 Minuten lang jede Runde zu lesen (SF-52).
+func TestBulkSportpassChangeReadsEachCardAtMostTwiceWhileShooting(t *testing.T) {
+	m, c := newMemory(), start()
+	w := New(Defaults, c.now)
+	const n = 120
+	for i := range n {
+		id := int32(1000 + i)
+		m.stamps[id] = fmt.Sprintf("2025-03-%02d 19:00:00", 1+i%28)
+		m.data[id] = withSportpass(cardData(id, 40, "100"), "87654321")
+	}
+	m.put(9, "2026-10-13 20:00:00", 3, "100")
+	tick(t, w, m)
+	c.advance(time.Second)
+	for i := range n {
+		id := int32(1000 + i)
+		m.data[id] = withSportpass(m.data[id], "12345678")
+	}
+	from := len(m.reads)
+	sent, reassigned := map[int32]bool{}, 0
+	for range 60 {
+		m.stamps[9] = c.t.Add(2 * time.Hour).Format(stampLayout)
+		r := tick(t, w, m)
+		reassigned += len(r.Reassigned)
+		for _, id := range ids(r) {
+			sent[id] = true
+		}
+		c.advance(time.Second)
+	}
+	reads := map[int32]int{}
+	for _, read := range m.reads[from:] {
+		for _, id := range read {
+			reads[id]++
+		}
+	}
+	if reassigned != n {
+		t.Fatalf("umgebucht gemeldet: %d", reassigned)
+	}
+	for i := range n {
+		id := int32(1000 + i)
+		if reads[id] > 2 || !sent[id] {
+			t.Fatalf("Scheibe %d: %d Lesungen, gesendet %v", id, reads[id], sent[id])
+		}
+	}
+}
+
 // Abgleich im Leerlauf (SF-21): Eine Korrektur ohne Lebenszeichen, nachdem die Scheibe ruht, liest die Brücke nach
 // `ReconcileEvery` seit der letzten Lesung; danach erst wieder nach demselben Abstand.
 func TestReconcileReadsRestingCardsWhenIdle(t *testing.T) {

@@ -99,6 +99,14 @@ type card struct {
 	sportpass *string
 	// zuletzt ganz gelesen ohne Treffer: geht nie hinaus (SF-13), für einen Auftrag per ID keine Scheibe
 	empty bool
+	// der wartende Stand kommt von einer neuen SportpassID (SF-80): die zweite Lesung wartet nicht auf den Leerlauf
+	reassigned bool
+}
+
+// setWaiting: Ohne wartenden Stand ist auch eine neue SportpassID erledigt.
+func (c *card) setWaiting(waiting bool) {
+	c.waiting = waiting
+	c.reassigned = c.reassigned && waiting
 }
 
 // handled: in diesem Lauf gelesen, kein Stand wartet auf Spiegel, und seither ist nichts neu zu lesen
@@ -313,8 +321,9 @@ func (w *Watcher) plan(now time.Time, lifesigns []Lifesign, from, reconcileFrom 
 		switch {
 		case c != nil && c.waiting:
 			// wartet eine Scheibe, die sich in diesem Lauf nie bewegt hat (Nachholen, Nachladen), bleibt sie liegen, solange
-			// geschossen wird: Scheitert der Upload länger, belegte sie sonst jede Runde das Budget. Eine per ID angefragte nicht
-			p.rank, p.idle = 0, c.movedAt.IsZero() && !w.wantsRequest(l.ID)
+			// geschossen wird: Scheitert der Upload länger, belegte sie sonst jede Runde das Budget. Eine per ID angefragte
+			// und eine mit neuer SportpassID nicht
+			p.rank, p.idle = 0, c.movedAt.IsZero() && !c.reassigned && !w.wantsRequest(l.ID)
 		case w.dirty(l, from):
 			p.rank = 1
 		// ein Auftrag per ID will sie: gleich, nicht erst im Leerlauf
@@ -389,13 +398,14 @@ func (w *Watcher) Tick(ctx context.Context, src Source) (Result, error) {
 			c = &card{}
 			w.cards[l.ID] = c
 		}
-		// bewegt hat sich, was neu oder geändert ist; beim Start nur, was im Startfenster liegt. Ein Umbuchen zählt mit:
-		// Sonst wartete eine Scheibe, die in diesem Lauf nur nachgeholt wurde, mit der zweiten Lesung auf den Leerlauf.
-		reassigned := known && !sameText(c.sportpass, l.Sportpass)
-		if (known && c.stamp != l.Stamp) || (!known && dirty) || reassigned {
+		// bewegt hat sich, was neu oder geändert ist; beim Start nur, was im Startfenster liegt
+		if (known && c.stamp != l.Stamp) || (!known && dirty) {
 			c.movedAt = now
 		}
-		if reassigned {
+		// eine neue SportpassID macht die Scheibe nicht aktiv: Korrigiert Meyton eine Nummer, ändern sich alle alten
+		// Scheiben des Schützen auf einmal, und jede würde 20 Minuten lang jede Runde gelesen (SF-52)
+		if known && !sameText(c.sportpass, l.Sportpass) {
+			c.reassigned = true
 			result.Reassigned = append(result.Reassigned, l.ID)
 		}
 		c.stamp, c.dirty, c.seenAt, c.sportpass = l.Stamp, dirty, now, l.Sportpass
@@ -427,7 +437,8 @@ func (w *Watcher) Tick(ctx context.Context, src Source) (Result, error) {
 			if c.skipped != code {
 				result.Skipped = append(result.Skipped, Skip{ID: id, Code: code})
 			}
-			c.skipped, c.last, c.waiting = code, "", false
+			c.skipped, c.last = code, ""
+			c.setWaiting(false)
 			continue
 		}
 		sum, err := contract.Checksum(data)
@@ -435,7 +446,8 @@ func (w *Watcher) Tick(ctx context.Context, src Source) (Result, error) {
 			if c.skipped != "malformed-string" {
 				result.Skipped = append(result.Skipped, Skip{ID: id, Code: "malformed-string"})
 			}
-			c.skipped, c.last, c.waiting = "malformed-string", "", false
+			c.skipped, c.last = "malformed-string", ""
+			c.setWaiting(false)
 			continue
 		}
 		c.skipped = ""
@@ -446,7 +458,7 @@ func (w *Watcher) Tick(ctx context.Context, src Source) (Result, error) {
 		fresh := sum != c.sent && len(data.Treffer.Rows) > 0
 		// bis Spiegel ihn bestätigt (`Delivered`), wartet ein neuer Stand und wird jede Runde neu gelesen: ohne
 		// Warteschlange schickt die Brücke nach einem gescheiterten Upload, was sie dann liest (ADR-027)
-		c.waiting = fresh
+		c.setWaiting(fresh)
 		// zwei gleiche Lesungen hintereinander (SF-71); gehalten geht nichts hinaus (SF-79)
 		if !fresh || !stable || w.hold {
 			continue
@@ -502,7 +514,7 @@ func (w *Watcher) Delivered(s contract.Snapshot) {
 		return
 	}
 	c.sent = s.Checksum
-	c.waiting = c.last != s.Checksum && c.last != ""
+	c.setWaiting(c.last != s.Checksum && c.last != "")
 	c.sentContent, c.sentAt = contentChecksum(s.Data), w.now()
 }
 
