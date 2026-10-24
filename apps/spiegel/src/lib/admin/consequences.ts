@@ -436,14 +436,17 @@ export function cardPurgeNow({ evening }: { evening: string }): Decision {
 
 /**
  * Die Disziplin einer eigenen Scheibe umstellen (Seite der Scheibe): auf eine andere mit demselben Scheibenbild oder
- * zurück auf die Disziplin vom Stand. `family`: die Familie der neuen, wenn die Scheibe damit in eine andere kommt
+ * zurück auf die Disziplin vom Stand (`back`). `family`: die Familie der neuen, wenn die Scheibe damit in eine andere
+ * kommt; `scoring`: die Wertung der neuen, wenn sie sich damit ändert (keine eigene gewählt)
  */
 export function cardDiscipline({
   evening,
   from,
   to,
   stand,
+  back,
   family,
+  scoring,
 }: {
   evening: string
   /** die Disziplin, mit der die Scheibe gerade zählt */
@@ -451,9 +454,10 @@ export function cardDiscipline({
   to: string
   /** die Disziplin, die am Stand in Meyton gewählt war */
   stand: string
+  back: boolean
   family: string | null
+  scoring: "decimal" | "rings" | null
 }): Decision {
-  const back = to === stand
   return {
     title: back ? "Disziplin vom Stand nehmen?" : "Disziplin ändern?",
     about: back
@@ -465,6 +469,9 @@ export function cardDiscipline({
         ? [
             `Die Scheibe zählt dann bei ${family}. Das gilt in der Liste, im Fortschritt und bei den Rekorden.`,
           ]
+        : []),
+      ...(scoring
+        ? [`Die Wertung der Scheibe ist dann ${scoring === "decimal" ? "Zehntel" : "ganze Ringe"}.`]
         : []),
       `Spiegel prüft die Schusszahl mit ${to}.`,
       back

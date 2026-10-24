@@ -510,6 +510,7 @@ export function CardScreen({
             when={cardWhen(card.startedAtMs, pageContext.timeZone)}
             current={card.discipline}
             family={card.family?.name ?? null}
+            scoring={card.scoring}
             stand={card.standDiscipline}
             options={own.disciplines}
           />

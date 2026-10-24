@@ -464,7 +464,9 @@ describe("Disziplin einer Scheibe", () => {
       from: "LP 40",
       to: "LP Auflage 30",
       stand: "LP 40",
+      back: false,
       family: "Luftpistole Auflage",
+      scoring: null,
     })
     wellFormed(d)
     expect(d).toEqual({
@@ -488,12 +490,43 @@ describe("Disziplin einer Scheibe", () => {
   })
 
   it("in derselben Familie: ohne den Satz zur Familie", () => {
-    const d = cardDiscipline({ evening, from: "LP 40", to: "LP 60", stand: "LP 40", family: null })
+    const d = cardDiscipline({
+      evening,
+      from: "LP 40",
+      to: "LP 60",
+      stand: "LP 40",
+      back: false,
+      family: null,
+      scoring: null,
+    })
     wellFormed(d)
     expect(d.happens).toEqual([
       "Spiegel prüft die Schusszahl mit LP 60.",
       "Kommt die Scheibe später noch einmal aus Meyton, bleibt es bei LP 60.",
     ])
+  })
+
+  it("ändert sich die Wertung mit der Disziplin, sagt es das", () => {
+    const d = cardDiscipline({
+      evening,
+      from: "LP 40",
+      to: "LP Auflage 30",
+      stand: "LP 40",
+      back: false,
+      family: "Luftpistole Auflage",
+      scoring: "decimal",
+    })
+    expect(d.happens).toContain("Die Wertung der Scheibe ist dann Zehntel.")
+    const back = cardDiscipline({
+      evening,
+      from: "LP Auflage 30",
+      to: "LP 40",
+      stand: "LP 40",
+      back: true,
+      family: "Luftpistole",
+      scoring: "rings",
+    })
+    expect(back.happens).toContain("Die Wertung der Scheibe ist dann ganze Ringe.")
   })
 
   it("zurück auf die Disziplin vom Stand", () => {
@@ -502,7 +535,9 @@ describe("Disziplin einer Scheibe", () => {
       from: "LP Auflage 30",
       to: "LP 40",
       stand: "LP 40",
+      back: true,
       family: "Luftpistole",
+      scoring: null,
     })
     wellFormed(d)
     expect(d).toEqual({
@@ -588,12 +623,22 @@ describe("Schreibregeln", () => {
         from: "LP 40",
         to: "LP Auflage 30",
         stand: "LP 40",
+        back: false,
         family: "Luftpistole Auflage",
+        scoring: "decimal",
       }),
     ],
     [
       "Disziplin vom Stand",
-      cardDiscipline({ evening, from: "LP 60", to: "LP 40", stand: "LP 40", family: null }),
+      cardDiscipline({
+        evening,
+        from: "LP 60",
+        to: "LP 40",
+        stand: "LP 40",
+        back: true,
+        family: null,
+        scoring: "rings",
+      }),
     ],
     ["wieder zulassen", notMineLift({ who, sportpassId, cards: 2, consentActive: true })],
     [

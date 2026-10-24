@@ -12,8 +12,15 @@ vi.mock("@/lib/card-discipline-actions", () => ({
 const { CardDiscipline } = await import("./CardDiscipline")
 
 const options: DisciplineOption[] = [
-  { id: 1, name: "LP 40", family: "Luftpistole", stand: true, current: true },
-  { id: 2, name: "LP Auflage 30", family: "Luftpistole Auflage", stand: false, current: false },
+  { id: 1, name: "LP 40", family: "Luftpistole", stand: true, current: true, scoring: "rings" },
+  {
+    id: 2,
+    name: "LP Auflage 30",
+    family: "Luftpistole Auflage",
+    stand: false,
+    current: false,
+    scoring: "decimal",
+  },
 ]
 const render = (props: Partial<Parameters<typeof CardDiscipline>[0]>) =>
   renderToStaticMarkup(
@@ -22,6 +29,7 @@ const render = (props: Partial<Parameters<typeof CardDiscipline>[0]>) =>
       when: "Di 13.10.2026 · 19:12",
       current: "LP 40",
       family: "Luftpistole",
+      scoring: "rings",
       stand: null,
       options,
       ...props,

@@ -15,9 +15,12 @@ import type { DisciplineOption } from "@/lib/db/cards"
 const BUTTON =
   "inline-flex h-10 items-center gap-2 rounded-full px-3.5 text-[13px] font-semibold text-foreground hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-60"
 
-/** eine Wahl im Blatt: ganze Zeile tippbar, die aktuelle getönt (wie die Wahl eines Zeitraums) */
+/**
+ * eine Wahl im Blatt: ein Knopf je Disziplin, die aktuelle getönt. Knöpfe statt Radios: Pfeiltasten in einer Radiogruppe
+ * wählten sofort und öffneten die Rückfrage, die Liste ließe sich mit der Tastatur nicht durchgehen
+ */
 const OPTION =
-  "flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 text-[14px] hover:bg-surface-2 has-[:checked]:bg-accent-wash has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-ring"
+  "grid w-full cursor-pointer justify-items-start rounded-lg px-2 py-1.5 text-left text-[14px] hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-ring aria-[current=true]:bg-accent-wash"
 
 /** die Möglichkeiten nach Familie, in der Reihenfolge von `disciplineOptions` */
 function byFamily(options: readonly DisciplineOption[]) {
@@ -39,6 +42,7 @@ export function CardDiscipline({
   when,
   current,
   family,
+  scoring,
   stand,
   options,
 }: {
@@ -49,6 +53,8 @@ export function CardDiscipline({
   current: string
   /** ihre Familie; null ohne */
   family: string | null
+  /** die Wertung, in der die Scheibe gerade zählt */
+  scoring: "decimal" | "rings"
   /** die Disziplin am Stand, wenn eine andere gewählt ist; null ohne eigene Wahl */
   stand: string | null
   options: readonly DisciplineOption[]
@@ -105,32 +111,29 @@ export function CardDiscipline({
         </p>
         <div data-discipline-options className="grid gap-3">
           {byFamily(options).map(([name, group]) => (
-            <fieldset key={name} className="grid gap-1">
-              <legend className="mb-1 text-[13px] font-semibold text-muted-foreground">
-                {name}
-              </legend>
+            <div key={name} role="group" aria-label={name} className="grid gap-1">
+              <p className="mb-1 text-[13px] font-semibold text-muted-foreground">{name}</p>
               {group.map((option) => (
-                <label key={option.id} className={OPTION}>
-                  <input
-                    type="radio"
-                    name="disziplin"
-                    checked={option.current}
-                    onChange={() => {
-                      setSheet(false)
-                      setChosen(option)
-                      setAsking(true)
-                    }}
-                    className="size-4 accent-[var(--primary)]"
-                  />
-                  <span className="grid">
-                    <span>{option.name}</span>
-                    {option.stand && (
-                      <span className="text-[12.5px] text-muted-foreground">am Stand gewählt</span>
-                    )}
-                  </span>
-                </label>
+                <button
+                  key={option.id}
+                  type="button"
+                  data-discipline-option
+                  aria-current={option.current}
+                  onClick={() => {
+                    setSheet(false)
+                    if (option.current) return
+                    setChosen(option)
+                    setAsking(true)
+                  }}
+                  className={OPTION}
+                >
+                  <span>{option.name}</span>
+                  {option.stand && (
+                    <span className="text-[12.5px] text-muted-foreground">am Stand gewählt</span>
+                  )}
+                </button>
               ))}
-            </fieldset>
+            </div>
           ))}
         </div>
       </Sheet>
@@ -141,7 +144,9 @@ export function CardDiscipline({
             from: current,
             to: chosen.name,
             stand: standName,
+            back: chosen.stand,
             family: chosen.family !== family ? chosen.family : null,
+            scoring: chosen.scoring !== scoring ? chosen.scoring : null,
           })}
           open={asking}
           onOpenChange={setAsking}

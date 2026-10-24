@@ -796,11 +796,6 @@ async function trash(page: Page) {
 }
 
 /**
- * Teilen per Link: auf der Seite einer Scheibe teilen, den Link in einem Fenster ohne Anmeldung öffnen (nur Ansicht,
- * keine Wege aus der Seite, keine Knöpfe mit Folgen, Analyse und Hilfe gehen), dann das Teilen beenden. Am Ende ist die
- * Scheibe wieder ungeteilt.
- */
-/**
  * Disziplin einer Scheibe: Der Abschnitt nennt sie; gibt es eine andere mit derselben Scheibe, öffnet „Disziplin ändern“
  * das Blatt, Esc schließt es ohne Änderung, eine Wahl fragt mit Folgen, „Ändern“ stellt um und „Zurückstellen“ zurück.
  */
@@ -815,9 +810,7 @@ async function cardDiscipline(page: Page, href: string) {
     return
   }
   await page.click(`button("Disziplin ändern")`, { settle: 300 })
-  const options = await page.ev<string[]>(
-    `$$('[data-discipline-options] input[type="radio"]').map((r) => txt(r.closest("label")))`
-  )
+  const options = await page.ev<string[]>(`$$("[data-discipline-option]").map((b) => txt(b))`)
   await page.key("Escape")
   check(
     "Disziplin ändern: das Blatt zeigt die Wahl, Esc schließt ohne Änderung",
@@ -827,9 +820,12 @@ async function cardDiscipline(page: Page, href: string) {
     options.join(" · ")
   )
   await page.click(`button("Disziplin ändern")`, { settle: 300 })
-  await page.click(`$$('[data-discipline-options] input[type="radio"]').find((r) => !r.checked)`, {
-    settle: 300,
-  })
+  await page.click(
+    `$$("[data-discipline-option]").find((b) => b.getAttribute("aria-current") !== "true")`,
+    {
+      settle: 300,
+    }
+  )
   await page.waitFor(`!!$('[role="alertdialog"]')`)
   const dialog = await page.ev<string>(`txt($('[role="alertdialog"]'))`)
   await page.click(`button("Ändern", $('[role="alertdialog"]'))`)
@@ -843,8 +839,10 @@ async function cardDiscipline(page: Page, href: string) {
   )
   await page.click(`button("Disziplin ändern")`, { settle: 300 })
   await page.click(
-    `$$('[data-discipline-options] label').find((l) => txt(l).includes("am Stand gewählt")).querySelector("input")`,
-    { settle: 300 }
+    `$$("[data-discipline-option]").find((b) => txt(b).includes("am Stand gewählt"))`,
+    {
+      settle: 300,
+    }
   )
   await page.waitFor(`!!$('[role="alertdialog"]')`)
   await page.click(`button("Zurückstellen", $('[role="alertdialog"]'))`)
@@ -857,6 +855,11 @@ async function cardDiscipline(page: Page, href: string) {
   )
 }
 
+/**
+ * Teilen per Link: auf der Seite einer Scheibe teilen, den Link in einem Fenster ohne Anmeldung öffnen (nur Ansicht,
+ * keine Wege aus der Seite, keine Knöpfe mit Folgen, Analyse und Hilfe gehen), dann das Teilen beenden. Am Ende ist die
+ * Scheibe wieder ungeteilt.
+ */
 async function sharing(browser: Browser, page: Page, href: string) {
   await page.viewport(1280, 900)
   await page.goto(`${BASE}${href}`)
