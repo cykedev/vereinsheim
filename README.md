@@ -66,7 +66,7 @@ UI language is German; Spiegel uses a light/dark design (Design 2), Ringwerk and
 
 ## Getting started
 
-Requires Node ≥ 24 (see `.nvmrc`), pnpm, Go ≥ 1.24 and Docker.
+Requires Node ≥ 26 (see `.nvmrc`), pnpm, Go ≥ 1.24 and Docker.
 
 ```bash
 git clone https://github.com/cykedev/vereinsheim.git

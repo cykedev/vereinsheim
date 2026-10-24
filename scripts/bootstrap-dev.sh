@@ -5,7 +5,7 @@
 # Idempotent: beliebig oft ausführbar, ohne vorhandene .env/Daten zu überschreiben.
 #
 # WAS DIESES SKRIPT MACHT
-#   1) Vorbedingungen prüfen (node >=24, docker erreichbar)
+#   1) Vorbedingungen prüfen (node >=26, docker erreichbar)
 #   2) corepack enable (pnpm gemäß packageManager-Pin)
 #   3) pnpm install (Workspace-Deps)
 #   4) codegraph-Binary GEPINNT installieren (@colbymchenry/codegraph) + Index bauen
@@ -52,11 +52,11 @@ die() {
 step "Vorbedingungen prüfen (node, go, docker)"
 
 if ! command -v node >/dev/null 2>&1; then
-	die "node nicht gefunden — Node >=24 nötig. Via nvm: 'nvm install && nvm use' (nutzt die .nvmrc)."
+	die "node nicht gefunden — Node >=26 nötig. Via nvm: 'nvm install && nvm use' (nutzt die .nvmrc)."
 fi
 node_major="$(node -v | sed -E 's/^v([0-9]+).*/\1/')"
-if [[ ! "$node_major" =~ ^[0-9]+$ || "$node_major" -lt 24 ]]; then
-	die "node $(node -v) ist zu alt oder nicht erkennbar — Node >=24 nötig. Via nvm: 'nvm install && nvm use' (nutzt die .nvmrc)."
+if [[ ! "$node_major" =~ ^[0-9]+$ || "$node_major" -lt 26 ]]; then
+	die "node $(node -v) ist zu alt oder nicht erkennbar — Node >=26 nötig. Via nvm: 'nvm install && nvm use' (nutzt die .nvmrc)."
 fi
 ok "node $(node -v)"
 
@@ -80,6 +80,10 @@ ok "docker erreichbar"
 
 # ---------- 2) corepack (pnpm gemäß packageManager-Pin) ----------
 step "corepack enable"
+# Node bringt corepack seit 25 nicht mehr mit; fehlt es, kommt es über npm dazu.
+if ! command -v corepack >/dev/null 2>&1; then
+	npm install -g corepack@0.36.0 >/dev/null || die "corepack-Install fehlgeschlagen ('npm install -g corepack@0.36.0')."
+fi
 corepack enable
 ok "corepack aktiv  ${DIM}(pnpm $(pnpm --version 2>/dev/null || echo '?'))${RESET}"
 

@@ -39,7 +39,7 @@ catalog:
   ajv-formats: "3.0.1"
   # --- dev (in beiden Apps, identische Version) ---
   "@tailwindcss/postcss": "4.3.3"
-  "@types/node": "24.13.2"
+  "@types/node": "26.6.5"
   "@types/pg": "8.23.1"
   "@types/react": "19.2.18"
   "@types/react-dom": "19.2.4"

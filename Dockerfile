@@ -11,9 +11,11 @@
 # CLI + recovery.
 ARG APP
 
-# ── Basis: Node 24 + pnpm via corepack ───────────────────────────────────────
-FROM node:24-alpine AS base
-RUN corepack enable
+# ── Basis: Node 26 + pnpm via corepack ───────────────────────────────────────
+# Node bringt corepack seit 25 nicht mehr mit → über npm in fester Version; die
+# pnpm-Version kommt weiter aus `packageManager` in der Root-package.json.
+FROM node:26-alpine AS base
+RUN npm install -g corepack@0.36.0 && corepack enable
 ENV PNPM_HOME=/pnpm
 ENV PATH=$PNPM_HOME:$PATH
 
@@ -37,7 +39,7 @@ RUN pnpm exec turbo run build --filter="${APP}"
 # flach auf /app ab und installiert dort prisma CLI + Recovery-Deps.
 # Bewusst via npm (nicht pnpm): flaches node_modules, kein pnpm-10-Build-Gate —
 # prisma-Engines werden normal per postinstall geholt.
-FROM node:24-alpine AS migrator
+FROM node:26-alpine AS migrator
 ARG APP
 WORKDIR /app
 COPY full/apps/${APP}/prisma ./prisma
@@ -53,7 +55,7 @@ RUN chmod +x /app/scripts/run-migrations-with-recovery.sh
 CMD ["./scripts/run-migrations-with-recovery.sh"]
 
 # ── runner: schlankes Produktions-Image (Next standalone, ohne prisma CLI) ────
-FROM node:24-alpine AS runner
+FROM node:26-alpine AS runner
 ARG APP
 ENV APP=${APP}
 ENV NODE_ENV=production

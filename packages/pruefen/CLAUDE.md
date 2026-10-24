@@ -16,7 +16,7 @@ Bilder von PDFs. Nicht im Gate (braucht Chrome, einen laufenden Server und Daten
 
 ## Regeln
 
-- **Ohne Abhängigkeit:** Node 24 bringt `WebSocket` und `fetch`; Chrome kommt vom System (`CHROME_PATH`), Poppler
+- **Ohne Abhängigkeit:** Node bringt `WebSocket` und `fetch`; Chrome kommt vom System (`CHROME_PATH`), Poppler
   ebenso. Fehlt Poppler, sagt `pdf.ts` in einem Satz, wie es zu installieren ist.
 - **Ergebnisse statt Bericht:** Die Prüfungen liefern `Check { name, ok, detail }`; Bericht, Abschnitte und Konto
   bleiben in der App (`tools/pruefen.ts`).

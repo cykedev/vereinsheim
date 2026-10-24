@@ -1,4 +1,4 @@
-// Chrome headless über das DevTools-Protokoll, ohne Abhängigkeit (der `WebSocket` von Node 24). Eingaben sind echte
+// Chrome headless über das DevTools-Protokoll, ohne Abhängigkeit (der `WebSocket` von Node). Eingaben sind echte
 // Eingaben (`Input.dispatch*`): Fokus, Standardaktionen und `next/link` verhalten sich wie bei einem Menschen. Für die
 // Skriptprüfung der Apps (`tools/pruefen.ts`), nicht im Gate.
 
