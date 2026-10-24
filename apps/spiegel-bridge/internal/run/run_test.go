@@ -77,6 +77,18 @@ func (a *ablage) put(id int32, sportpass string, mode string, shots int) {
 	}
 }
 
+// setSportpass bucht eine Scheibe um wie Meyton: neue SportpassID in `Scheiben`, das Lebenszeichen bleibt.
+func (a *ablage) setSportpass(id int32, sportpass string) {
+	d := a.data[id]
+	row := contract.Row{}
+	for k, v := range d.Scheiben.Rows[0] {
+		row[k] = v
+	}
+	row["SportpassID"] = text(sportpass)
+	d.Scheiben = contract.Table{Columns: d.Scheiben.Columns, Rows: []contract.Row{row}}
+	a.data[id] = d
+}
+
 // spiegel ist Spiegel im Speicher: Antworten der Reihe nach, sonst Erfolg.
 type spiegel struct {
 	state      api.State
@@ -215,6 +227,30 @@ func TestOnlyConsentingVisibleUnblockedCardsLeave(t *testing.T) {
 	}
 	if strings.Join(f.logs, "\n") != "" && strings.Contains(strings.Join(f.logs, "\n"), "Muster") {
 		t.Fatal("Log mit Personenfeld")
+	}
+}
+
+// In Meyton auf einen Schützen mit Zustimmung umgebucht (SF-80): Die ruhende Scheibe geht hinaus, das Log nennt nur die
+// ScheibenID.
+func TestReassignedCardLeavesWithConsent(t *testing.T) {
+	f := setup(t, "12345678")
+	f.ablage.put(1, "87654321", "1", 3)
+	f.runFor(30 * time.Minute)
+	if got := fmt.Sprint(f.sp.sent()); got != "[]" {
+		t.Fatalf("ohne Zustimmung %s", got)
+	}
+	f.ablage.setSportpass(1, "12345678")
+	f.runFor(time.Minute)
+	if got := fmt.Sprint(f.sp.sent()); got != "[1]" {
+		t.Fatalf("nach dem Umbuchen %s", got)
+	}
+	if n, last := f.lines("card-reassigned"); n != 1 || last != "card-reassignedscheibe1" {
+		t.Fatalf("Log %v", f.logs)
+	}
+	for _, l := range f.logs {
+		if strings.Contains(l, "Muster") || strings.Contains(l, "12345678") || strings.Contains(l, "87654321") {
+			t.Fatalf("Log mit Personenfeld: %s", l)
+		}
 	}
 }
 

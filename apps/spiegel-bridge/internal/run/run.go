@@ -490,6 +490,10 @@ func (r *Runner) Step(ctx context.Context) (time.Duration, error) {
 			}
 		}
 	}
+	// in Meyton umgebucht (SF-80): nur die ScheibenID, damit sich vor Ort prüfen lässt, ob Meyton die SportpassID ändert
+	for _, id := range result.Reassigned {
+		r.log("card-reassigned", "scheibe", id)
+	}
 	for _, skip := range result.Skipped {
 		r.log("card-skipped", "scheibe", skip.ID, "code", skip.Code)
 		// gegen den Vertrag geht sie nie hinaus: für einen Auftrag per ID gehalten, nicht gesendet
