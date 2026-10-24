@@ -800,6 +800,63 @@ async function trash(page: Page) {
  * keine Wege aus der Seite, keine Knöpfe mit Folgen, Analyse und Hilfe gehen), dann das Teilen beenden. Am Ende ist die
  * Scheibe wieder ungeteilt.
  */
+/**
+ * Disziplin einer Scheibe: Der Abschnitt nennt sie; gibt es eine andere mit derselben Scheibe, öffnet „Disziplin ändern“
+ * das Blatt, Esc schließt es ohne Änderung, eine Wahl fragt mit Folgen, „Ändern“ stellt um und „Zurückstellen“ zurück.
+ */
+async function cardDiscipline(page: Page, href: string) {
+  await page.viewport(1280, 900)
+  await page.goto(`${BASE}${href}`)
+  const name = () => page.ev<string>(`txt($("[data-discipline-name]"))`)
+  const before = await name()
+  check("Disziplin: der Abschnitt nennt sie", before.length > 0, before)
+  if (!(await page.ev<boolean>(`!!button("Disziplin ändern")`))) {
+    check("Disziplin ändern (nicht belegt: keine andere Disziplin mit derselben Scheibe)", true)
+    return
+  }
+  await page.click(`button("Disziplin ändern")`, { settle: 300 })
+  const options = await page.ev<string[]>(
+    `$$('[data-discipline-options] input[type="radio"]').map((r) => txt(r.closest("label")))`
+  )
+  await page.key("Escape")
+  check(
+    "Disziplin ändern: das Blatt zeigt die Wahl, Esc schließt ohne Änderung",
+    options.length > 1 &&
+      (await page.waitFor(`!$("[data-discipline-options]")?.closest("dialog")?.open`)) &&
+      (await name()) === before,
+    options.join(" · ")
+  )
+  await page.click(`button("Disziplin ändern")`, { settle: 300 })
+  await page.click(`$$('[data-discipline-options] input[type="radio"]').find((r) => !r.checked)`, {
+    settle: 300,
+  })
+  await page.waitFor(`!!$('[role="alertdialog"]')`)
+  const dialog = await page.ev<string>(`txt($('[role="alertdialog"]'))`)
+  await page.click(`button("Ändern", $('[role="alertdialog"]'))`)
+  const changed = await page.waitFor(
+    `!$('[role="alertdialog"]') && !!$("[data-stand-discipline]") && txt($("[data-discipline-name]")) !== ${JSON.stringify(before)}`
+  )
+  check(
+    "Disziplin ändern: Rückfrage mit Folgen, danach die neue und „Am Stand gewählt“",
+    dialog.includes("Die Werte der Schüsse bleiben") && changed,
+    `${dialog.slice(0, 120)} → ${await name()}`
+  )
+  await page.click(`button("Disziplin ändern")`, { settle: 300 })
+  await page.click(
+    `$$('[data-discipline-options] label').find((l) => txt(l).includes("am Stand gewählt")).querySelector("input")`,
+    { settle: 300 }
+  )
+  await page.waitFor(`!!$('[role="alertdialog"]')`)
+  await page.click(`button("Zurückstellen", $('[role="alertdialog"]'))`)
+  check(
+    "Disziplin zurückstellen: wieder die vom Stand, ohne Zeile zum Stand",
+    await page.waitFor(
+      `!$('[role="alertdialog"]') && !$("[data-stand-discipline]") && txt($("[data-discipline-name]")) === ${JSON.stringify(before)}`
+    ),
+    await name()
+  )
+}
+
 async function sharing(browser: Browser, page: Page, href: string) {
   await page.viewport(1280, 900)
   await page.goto(`${BASE}${href}`)
@@ -1858,6 +1915,7 @@ async function main() {
     await section("Offen und Leiste", () => openAndBar(page))
     await section("Papierkorb", () => trash(page))
     await section("Admin ohne Rolle", () => adminWithoutRole(page))
+    await section("Disziplin einer Scheibe", () => cardDiscipline(page, href))
     await section("Geteilte Scheibe", () => sharing(chrome, page, href))
     await section("Gemeinsame Prüfungen", () => commonChecks(page, href))
     // React meldet in der Entwicklung manches über console.error; jede Meldung zählt, damit keine untergeht
