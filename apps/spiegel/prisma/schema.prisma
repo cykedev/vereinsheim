@@ -43,6 +43,18 @@ enum UserRole {
   USER
 }
 
+// Auftrag per ID (`CardRequest`): offen, geholt, nicht in der Ablage (oder Frist vorbei), verdeckt oder gesperrt, an dem
+// Abend nicht gefunden, gehört einem anderen Konto, zurückgezogen
+enum CardRequestStatus {
+  open
+  done
+  missing
+  held
+  mismatch
+  taken
+  withdrawn
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Anlage, Quelle, Brücke
 // ─────────────────────────────────────────────────────────────────────────────
@@ -63,6 +75,7 @@ model Site {
   pairings    BridgePairing[]
   clock       ClockReading[]
   consents    SportpassConsent[]
+  requests    CardRequest[]
 }
 
 // eine SSMDB2-Instanz in einer Epoche (Ablage geleert, neuer Server: neue Epoche, SF-23). ScheibenIDs sind nur
@@ -162,6 +175,30 @@ model SportpassConsent {
 
   @@unique([siteId, sportpassId])
   @@index([userId])
+}
+
+// Auftrag, genau eine Scheibe per ID zu holen (die ID im Fuß des Ausdrucks), ohne Zustimmung per Sportpass. Die Brücke
+// liest sie (`GET /state`, `requests`); Spiegel nimmt den Stand nur an, wenn ihr Beginn auf den genannten Abend fällt
+model CardRequest {
+  id         Int               @id @default(autoincrement())
+  userId     String
+  user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  siteId     Int
+  site       Site              @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  scheibenId Int
+  // der Abend der Scheibe, wie der Schütze ihn nennt (`YYYY-MM-DD`, vor 4 Uhr der Vortag)
+  day        String
+  status     CardRequestStatus @default(open)
+  // die geholte Scheibe; null, solange keine da ist
+  cardId     String?
+  card       Card?             @relation(fields: [cardId], references: [id], onDelete: SetNull)
+  createdAt  DateTime          @default(now()) @db.Timestamptz(3)
+  closedAt   DateTime?         @db.Timestamptz(3)
+
+  // Zustand der Brücke und Einlesen: offene der Anlage je ScheibenID
+  @@index([siteId, status, scheibenId])
+  // Profil: die eigenen der letzten Wochen
+  @@index([userId, createdAt])
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -302,6 +339,7 @@ model User {
   tombstones         Tombstone[]
   familyScorings     FamilyScoring[]
   consents           SportpassConsent[]
+  cardRequests       CardRequest[]
 }
 
 // benannter Zeitraum des Schützen („Vorbereitung Landesmeisterschaft“), Tage in der Anzeige-Zone
@@ -479,6 +517,7 @@ model Card {
   shots             Shot[]
   projection        CardProjection?
   printouts         Printout[]
+  requests          CardRequest[]
 
   @@unique([sourceId, scheibenId, cycle, block])
   // Liste, Fortschritt, Blättern: Scheiben eines Schützen in einer Familie nach Beginn

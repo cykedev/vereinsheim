@@ -27,6 +27,7 @@
     "@prisma/client": "catalog:",
     "@vereinsheim/ingest-contract": "workspace:*",
     "@vereinsheim/lib": "workspace:*",
+    "@vereinsheim/meyton-pdf": "workspace:*",
     "@vereinsheim/shot-core": "workspace:*",
     "@vereinsheim/shot-help": "workspace:*",
     "@vereinsheim/shot-ui": "workspace:*",

@@ -12,6 +12,7 @@ const nextConfig: NextConfig = {
     "@vereinsheim/shot-ui",
     "@vereinsheim/shot-help",
     "@vereinsheim/ingest-contract",
+    "@vereinsheim/meyton-pdf",
   ],
 }
 
