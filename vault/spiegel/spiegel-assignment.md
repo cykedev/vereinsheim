@@ -74,6 +74,11 @@ importieren“):
    Tagen), an diesem Tag nicht gefunden, lässt sich nicht holen (verdeckt oder gesperrt), gehört zu einem anderen Konto,
    zurückgezogen. Den Ausgang meldet die Brücke im Heartbeat (`requestsDone`) oder das Einlesen.
 
+„Nicht gefunden“ meldet die Brücke, sobald die ID in der ersten Runde nach dem Auftrag nicht in der Ablage steht oder
+die Scheibe keine Treffer hat. Weil es zu jedem Ausdruck eine Scheibe in der Ablage gibt, heißt das in der Praxis: ein
+Tippfehler, oder Meyton hat die Scheibe nicht mehr. Für eine Scheibe, die erst noch geschossen wird, taugt ein Auftrag
+nicht (Ende zu Ende geprüft mit `pnpm --filter spiegel bridge-e2e`).
+
 Grenzen: Ein Tippfehler in den mittleren Stellen der ID kann am selben Abend die Scheibe eines anderen treffen; der Tag
 fängt das nicht. Dann hilft „Löschen“ (mit Sperre). Die Vorschau vor dem Holen (SF-41) kommt mit dem QR-Weg. Nach dem
 Holen liest die Brücke die Scheibe nicht mehr von selbst; eine spätere Korrektur der Standaufsicht kommt nur mit einer

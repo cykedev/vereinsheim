@@ -120,8 +120,9 @@ einen laufenden Server (legt `SSMDB2` neu an). Go ist Pflicht im Dev-Setup wie N
   gibt der Erkennung ein Prädikat (`SetRequested`); eine angefragte Scheibe hat Rang 1 (nicht nur im Leerlauf, auch
   wartend nicht), und hält den Takt hoch, bis sie `handled` ist. Der Filter lässt sie ohne Zustimmung hinaus, verdeckt
   und gesperrt nicht. Ein neu genannter Auftrag liest die Scheibe noch einmal (`Resend`), auch wenn dieser Lauf sie schon
-  ohne Zustimmung zurückhielt. Der Heartbeat meldet je Auftrag `missing` (nicht in der letzten Runde), `held` (vom Filter
-  gehalten) oder `sent` (`RequestState`), bis Spiegel ihn nicht mehr nennt (höchstens 100). Den Tag prüft Spiegel.
+  ohne Zustimmung zurückhielt. Der Heartbeat meldet je Auftrag `missing` (nicht in der letzten Runde oder ohne Treffer, SF-13),
+  `held` (vom Filter gehalten) oder `sent` (`RequestState`), bis Spiegel ihn nicht mehr nennt (höchstens 100). Den Tag
+  prüft Spiegel. `missing` ist für Spiegel endgültig: Ein Auftrag nennt eine Scheibe, die es schon gibt (Ausdruck).
 - **Dienst** (`deploy/`): `install.sh` legt Binary, Benutzer, `/etc/spiegel-bridge` (0700) und die Unit an; die Unit
   läuft ohne Rechte, mit schreibgeschütztem System, 128 MB, kein Neustart bei Exit 2 und 3. `pair` fragt den Zugang
   zur SSMDB2 auf stdin ab, wenn weder `--dsn` noch die Umgebung ihn nennen. Geprüft in `debian:12` mit
