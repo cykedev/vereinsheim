@@ -1,6 +1,6 @@
 "use server"
 
-import { isCardIdInput, shooterId } from "@/lib/action-guards"
+import { isCardIdInput, isRowId, shooterId } from "@/lib/action-guards"
 import { db } from "@/lib/db"
 import { chooseCardDiscipline } from "@/lib/db/cards"
 import type { ActionResult } from "@/lib/types"
@@ -8,9 +8,6 @@ import type { ActionResult } from "@/lib/types"
 // Disziplin einer Scheibe wählen: nur eigene Scheiben, auch für Admins, und nur aus `disciplineOptions`. Die Familie
 // zieht mit; danach rechnet die Seite über `router.refresh()` neu (kein `revalidatePath`: nach ihm scrollt Next zum
 // Anker der Adresse).
-
-const isRowId = (value: unknown): value is number =>
-  typeof value === "number" && Number.isInteger(value) && value > 0 && value <= 2_147_483_647
 
 /** die gewählte Disziplin einer eigenen Scheibe speichern; die vom Stand hebt eine Wahl auf */
 export async function setCardDiscipline(

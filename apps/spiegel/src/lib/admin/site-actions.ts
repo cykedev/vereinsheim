@@ -6,7 +6,7 @@ import { z } from "zod"
 import { getDisplayTimeZone, isValidIanaTimeZone } from "@vereinsheim/lib/dateTime"
 import { formatTimeOfDay } from "@vereinsheim/lib/format"
 
-import { adminActor } from "@/lib/action-guards"
+import { adminActor, isRowId } from "@/lib/action-guards"
 import { db } from "@/lib/db"
 import { createPairing, removeBridge, revokeBridge } from "@/lib/ingest/bridges"
 import type { ActionResult } from "@/lib/types"
@@ -86,9 +86,6 @@ export async function pairBridge(
     data: { code: pairing.code, until: formatTimeOfDay(pairing.expiresAt, getDisplayTimeZone()) },
   }
 }
-
-/** Kennung einer Zeile mit `Int`-Spalte: darüber würfe Prisma, statt die Meldung zu geben */
-const isRowId = (id: number) => Number.isSafeInteger(id) && id > 0 && id <= 2_147_483_647
 
 export async function revokeBridgeAction(bridgeId: number): Promise<ActionResult> {
   const actor = await adminActor()

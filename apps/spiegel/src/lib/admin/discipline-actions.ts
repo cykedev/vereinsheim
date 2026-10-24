@@ -6,7 +6,7 @@ import { z } from "zod"
 
 import { TARGETS } from "@vereinsheim/shot-core/targets"
 
-import { adminActor } from "@/lib/action-guards"
+import { adminActor, isRowId } from "@/lib/action-guards"
 import { db } from "@/lib/db"
 import { moveDisciplineFamily, refreshStaleDisciplineCards } from "@/lib/db/cards"
 import type { ActionResult } from "@/lib/types"
@@ -18,10 +18,6 @@ import { familySlug } from "./discipline-model"
 // prüft selbst (`adminActor`), arbeitet auf der ersten Anlage (ADR-029) und gibt ein ActionResult zurück.
 
 const RELOAD = "Das ließ sich nicht speichern. Bitte lade die Seite neu."
-
-/** Kennung einer Zeile mit `Int`-Spalte: darüber würfe Prisma, statt die Meldung zu geben */
-const isRowId = (id: unknown): id is number =>
-  typeof id === "number" && Number.isSafeInteger(id) && id > 0 && id <= 2_147_483_647
 
 const MappingSchema = z.object({
   targetId: z.string().refine((value) => value === "own" || Object.hasOwn(TARGETS, value)),

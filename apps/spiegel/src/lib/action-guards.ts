@@ -15,6 +15,13 @@ export async function shooterId(): Promise<string | null> {
 export const isCardIdInput = (value: unknown): value is string =>
   typeof value === "string" && value.length <= 64 && isCardId(value)
 
+/**
+ * eine Kennung einer Zeile mit `Int`-Spalte aus dem Browser (Disziplin, Familie, Brücke): darüber würfe Prisma, statt die
+ * Meldung zu geben
+ */
+export const isRowId = (value: unknown): value is number =>
+  typeof value === "number" && Number.isSafeInteger(value) && value > 0 && value <= 2_147_483_647
+
 /** ein Admin, der handeln darf (eigenes Passwort schon gesetzt); sonst der Grund als Text */
 export async function adminActor(): Promise<{ id: string } | { error: string }> {
   const session = await getAuthSession()
