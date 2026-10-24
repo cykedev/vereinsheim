@@ -67,13 +67,18 @@ type Rules struct {
 	salt    string
 	consent map[string]bool
 	blocked map[int32][]api.Blocked
+	// ausdrücklich angefragt (ID vom Ausdruck): gilt wie eine Zustimmung, verdeckt und gesperrt nicht
+	requested map[int32]bool
 }
 
 // NewRules bereitet den Zustand vor.
 func NewRules(state api.State) *Rules {
-	r := &Rules{salt: state.Sportpass.Salt, consent: map[string]bool{}, blocked: map[int32][]api.Blocked{}}
+	r := &Rules{salt: state.Sportpass.Salt, consent: map[string]bool{}, blocked: map[int32][]api.Blocked{}, requested: map[int32]bool{}}
 	for _, h := range state.Sportpass.Hashes {
 		r.consent[h] = true
+	}
+	for _, q := range state.Requests {
+		r.requested[q.ScheibenID] = true
 	}
 	for _, b := range state.Blocked {
 		r.blocked[b.ScheibenID] = append(r.blocked[b.ScheibenID], b)
@@ -88,13 +93,13 @@ func cell(row contract.Row, column string) string {
 	return ""
 }
 
-// Decide prüft in der Reihenfolge von Spiegel: Zustimmung, verdeckt, gesperrt.
+// Decide prüft in der Reihenfolge von Spiegel: Zustimmung (oder ein Auftrag per ID), verdeckt, gesperrt.
 func (r *Rules) Decide(s contract.Snapshot) Decision {
 	if len(s.Data.Scheiben.Rows) != 1 {
 		return Decision{Reason: NoConsent}
 	}
 	hash := SportpassHash(r.salt, cell(s.Data.Scheiben.Rows[0], "SportpassID"))
-	if hash == "" || !r.consent[hash] {
+	if !r.requested[s.ScheibenID] && (hash == "" || !r.consent[hash]) {
 		return Decision{Reason: NoConsent}
 	}
 	for _, row := range s.Data.Treffer.Rows {

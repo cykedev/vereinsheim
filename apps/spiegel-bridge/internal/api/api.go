@@ -69,6 +69,31 @@ type State struct {
 	Watermark *time.Time `json:"watermark"`
 	// offene Aufträge, ältere Scheiben einer Zustimmung nachzuladen (additiv); fehlt bei einem älteren Spiegel
 	History []HistoryRequest `json:"history"`
+	// offene Aufträge, genau eine Scheibe per ID zu holen (additiv); fehlt bei einem älteren Spiegel
+	Requests []CardRequest `json:"requests"`
+}
+
+// CardRequest ist ein Auftrag, genau eine Scheibe per ID zu holen (die ID im Fuß des Ausdrucks); die Id meldet die
+// Brücke mit dem Ausgang zurück.
+type CardRequest struct {
+	ID         int   `json:"id"`
+	ScheibenID int32 `json:"scheibenId"`
+}
+
+// Ausgänge eines Auftrags per ID (`REQUEST_OUTCOMES` im Vertrag).
+const (
+	// Spiegel hat den Stand endgültig beantwortet
+	RequestSent = "sent"
+	// die ID steht nicht in der Ablage
+	RequestMissing = "missing"
+	// die Scheibe bleibt im Schützenhaus (verdeckt oder gesperrt)
+	RequestHeld = "held"
+)
+
+// RequestDone meldet den Ausgang eines Auftrags per ID im Heartbeat.
+type RequestDone struct {
+	ID      int    `json:"id"`
+	Outcome string `json:"outcome"`
 }
 
 // HistoryRequest ist ein Auftrag zum Nachladen: Id und `Since` meldet die Brücke zurück, der Hash wie
@@ -114,6 +139,8 @@ type Heartbeat struct {
 	SourceFingerprint   *SourceFingerprint `json:"sourceFingerprint"`
 	// erledigte Aufträge zum Nachladen (additiv): nur Ids, nie Nummern (SF-59)
 	HistoryDone []HistoryDone `json:"historyDone,omitempty"`
+	// additiv: Ausgang der Aufträge per ID, bis Spiegel sie nicht mehr nennt
+	RequestsDone []RequestDone `json:"requestsDone,omitempty"`
 }
 
 // Result ist das Ergebnis eines Snapshots im Stapel.

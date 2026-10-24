@@ -128,3 +128,28 @@ func TestBlockedOnlyInItsEpoch(t *testing.T) {
 		t.Fatalf("ohne Epoche: %+v", got)
 	}
 }
+
+func TestRequestedCardCountsAsConsentOnly(t *testing.T) {
+	stamp := []string{"2026-10-13 20:00:00"}
+	var state api.State
+	state.Sportpass.Salt = salt
+	state.Blocked = []api.Blocked{{ScheibenID: 9, StartedAt: time.Date(2026, 10, 13, 20, 0, 0, 0, time.UTC)}}
+	state.Requests = []api.CardRequest{{ID: 1, ScheibenID: 7}, {ID: 2, ScheibenID: 8}, {ID: 3, ScheibenID: 9}}
+	r := NewRules(state)
+	cases := []struct {
+		name string
+		s    contract.Snapshot
+		want Decision
+	}{
+		{"angefragt, ohne Zustimmung", snapshot(7, "87654321", []string{"1"}, stamp), Decision{Send: true}},
+		{"angefragt, ohne Sportpass", snapshot(7, "0", []string{"1"}, stamp), Decision{Send: true}},
+		{"nicht angefragt, ohne Zustimmung", snapshot(6, "87654321", []string{"1"}, stamp), Decision{Reason: NoConsent}},
+		{"angefragt, verdeckt (SF-19)", snapshot(8, "87654321", []string{"5"}, stamp), Decision{Reason: Hidden, Mode: 5}},
+		{"angefragt, gesperrt", snapshot(9, "87654321", []string{"1"}, stamp), Decision{Reason: Blocked}},
+	}
+	for _, c := range cases {
+		if got := r.Decide(c.s); got != c.want {
+			t.Errorf("%s: %+v statt %+v", c.name, got, c.want)
+		}
+	}
+}

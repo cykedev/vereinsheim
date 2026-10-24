@@ -149,7 +149,16 @@ type Runner struct {
 	history     []api.HistoryRequest
 	historyDone []api.HistoryDone
 	hashOf      map[string]string
+
+	// offene Aufträge per ID aus dem Zustand, ihr Ausgang (Heartbeat) und welche der Filter zurückhielt (verdeckt,
+	// gesperrt)
+	requests      []api.CardRequest
+	requestsDone  []api.RequestDone
+	requestedHeld map[int32]bool
 }
+
+// MaxRequestsDone: so viele Ausgänge von Aufträgen per ID nimmt der Heartbeat
+const MaxRequestsDone = 100
 
 // MaxHistoryDone: so viele erledigte Aufträge nimmt der Heartbeat
 const MaxHistoryDone = 100
@@ -173,17 +182,18 @@ func New(version string, src Source, spiegel Spiegel, log Logger, cfg watch.Conf
 		now = time.Now
 	}
 	return &Runner{
-		version:     version,
-		src:         src,
-		spiegel:     spiegel,
-		log:         log,
-		now:         now,
-		watcher:     watch.New(cfg, now),
-		started:     now(),
-		epoch:       cfg.Epoch,
-		held:        map[int32]int{},
-		noConsent:   map[int32]bool{},
-		unconfirmed: map[int32]bool{},
+		version:       version,
+		src:           src,
+		spiegel:       spiegel,
+		log:           log,
+		now:           now,
+		watcher:       watch.New(cfg, now),
+		started:       now(),
+		epoch:         cfg.Epoch,
+		held:          map[int32]int{},
+		noConsent:     map[int32]bool{},
+		unconfirmed:   map[int32]bool{},
+		requestedHeld: map[int32]bool{},
 	}
 }
 
@@ -239,6 +249,7 @@ func (r *Runner) refreshState(ctx context.Context, now time.Time) error {
 	previous := r.state
 	r.state, r.stateAt, r.rules = &state, now, filter.NewRules(state)
 	r.setHistory(state)
+	r.setRequests(state)
 	epoch := 1
 	if state.Epoch != nil {
 		epoch = *state.Epoch
@@ -301,6 +312,71 @@ func (r *Runner) setHistory(state api.State) {
 		wanted[h.SportpassHash] = true
 	}
 	r.watcher.SetHistory(func(sportpass string) bool { return wanted[r.hash(salt, sportpass)] })
+}
+
+// setRequests übernimmt die offenen Aufträge per ID: Die Erkennung liest ihre Scheiben gleich. Ein neuer Auftrag liest
+// auch eine Scheibe noch einmal, die dieser Lauf schon gelesen und ohne Zustimmung zurückgehalten hat.
+func (r *Runner) setRequests(state api.State) {
+	if len(state.Requests) != len(r.requests) {
+		r.log("card-requests", "open", len(state.Requests))
+	}
+	known := map[api.CardRequest]bool{}
+	for _, q := range r.requests {
+		known[q] = true
+	}
+	wanted := map[int32]bool{}
+	current := map[int]bool{}
+	var fresh []int32
+	for _, q := range state.Requests {
+		wanted[q.ScheibenID] = true
+		current[q.ID] = true
+		if !known[q] {
+			fresh = append(fresh, q.ScheibenID)
+		}
+	}
+	r.requests = state.Requests
+	if len(fresh) > 0 {
+		r.watcher.Resend(fresh)
+	}
+	// gemeldet bleibt nur, was der Zustand noch nennt
+	kept := r.requestsDone[:0]
+	for _, d := range r.requestsDone {
+		if current[d.ID] {
+			kept = append(kept, d)
+		}
+	}
+	r.requestsDone = kept
+	if len(wanted) == 0 {
+		r.watcher.SetRequested(nil)
+		return
+	}
+	r.watcher.SetRequested(func(id int32) bool { return wanted[id] })
+}
+
+// updateRequestsDone: Ein Auftrag per ID ist ausgegangen, wenn seine Scheibe nicht in der Ablage steht (`missing`), der
+// Filter sie hält (`held`) oder Spiegel ihren Stand endgültig beantwortet hat (`sent`). Gemeldet wird er in jedem
+// Heartbeat, bis Spiegel ihn nicht mehr nennt.
+func (r *Runner) updateRequestsDone() {
+	var done []api.RequestDone
+	for _, q := range r.requests {
+		if len(done) >= MaxRequestsDone {
+			break
+		}
+		seen, open := r.watcher.RequestState(q.ScheibenID)
+		switch {
+		case !seen:
+			done = append(done, api.RequestDone{ID: q.ID, Outcome: api.RequestMissing})
+		case open:
+		case r.requestedHeld[q.ScheibenID]:
+			done = append(done, api.RequestDone{ID: q.ID, Outcome: api.RequestHeld})
+		default:
+			done = append(done, api.RequestDone{ID: q.ID, Outcome: api.RequestSent})
+		}
+	}
+	if len(done) != len(r.requestsDone) {
+		r.log("card-requests-done", "done", len(done), "open", len(r.requests)-len(done))
+	}
+	r.requestsDone = done
 }
 
 func (r *Runner) hash(salt, sportpass string) string {
@@ -416,6 +492,7 @@ func (r *Runner) Step(ctx context.Context) (time.Duration, error) {
 		decision := r.rules.Decide(s)
 		delete(r.held, s.ScheibenID)
 		delete(r.noConsent, s.ScheibenID)
+		delete(r.requestedHeld, s.ScheibenID)
 		if decision.Send {
 			// was gegen den Vertrag verstößt, nimmt Spiegel ohnehin nicht; nicht den ganzen Stapel daran scheitern lassen
 			if err := contract.Validate(s); err != nil {
@@ -428,6 +505,9 @@ func (r *Runner) Step(ctx context.Context) (time.Duration, error) {
 		}
 		// zurückgehalten gilt als erledigt, bis sich die Scheibe oder der Zustand ändert
 		r.watcher.Delivered(s)
+		if decision.Reason != filter.NoConsent {
+			r.requestedHeld[s.ScheibenID] = true
+		}
 		switch decision.Reason {
 		case filter.Hidden:
 			r.held[s.ScheibenID] = decision.Mode
@@ -449,6 +529,7 @@ func (r *Runner) Step(ctx context.Context) (time.Duration, error) {
 	}
 	r.backlog = result.Backlog
 	r.updateHistoryDone()
+	r.updateRequestsDone()
 
 	if err := r.heartbeat(ctx, now, true); err != nil {
 		return 0, err
@@ -719,6 +800,7 @@ func (r *Runner) heartbeat(ctx context.Context, now time.Time, dbReachable bool)
 		HeldBack:            heldBack,
 		SourceFingerprint:   fingerprint,
 		HistoryDone:         r.historyDone,
+		RequestsDone:        r.requestsDone,
 	}
 	// gegen eine falsche oder ungeprüfte eigene Uhr gemessen, sagt die Abweichung nichts über die Anlage (SF-79)
 	if r.clock == clockOK {

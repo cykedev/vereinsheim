@@ -127,6 +127,8 @@ type Watcher struct {
 	live bool
 	// offene Aufträge zum Nachladen: will ein Auftrag die Scheibe mit dieser SportpassID? nil: keiner
 	history func(sportpass string) bool
+	// offene Aufträge per ID (ID vom Ausdruck): will einer diese Scheibe? nil: keiner
+	requested func(id int32) bool
 	// Uhr der letzten gelungenen Runde: welche Scheiben in ihr in der Ablage standen
 	roundAt time.Time
 	// die Uhr der Brücke stimmt nicht oder ist ungeprüft (SF-79): nichts herausgeben
@@ -144,6 +146,22 @@ func (w *Watcher) SetHistory(wanted func(sportpass string) bool) { w.history = w
 
 func (w *Watcher) wantsHistory(sportpass *string) bool {
 	return w.history != nil && sportpass != nil && w.history(*sportpass)
+}
+
+// SetRequested legt fest, welche Scheiben ein Auftrag per ID will; nil heißt keiner. Anders als das Nachladen liest die
+// Erkennung sie gleich (Rang 1), auch wenn geschossen wird: Es ist je Auftrag eine Scheibe, und jemand wartet darauf.
+func (w *Watcher) SetRequested(wanted func(id int32) bool) { w.requested = wanted }
+
+func (w *Watcher) wantsRequest(id int32) bool { return w.requested != nil && w.requested(id) }
+
+// RequestState sagt, wie es um die Scheibe eines Auftrags steht: `seen`, ob sie in der letzten Runde in der Ablage stand,
+// `open`, ob sie noch zu lesen ist oder ihr Stand auf Spiegel wartet.
+func (w *Watcher) RequestState(id int32) (seen, open bool) {
+	c := w.cards[id]
+	if c == nil || !c.seenAt.Equal(w.roundAt) {
+		return false, false
+	}
+	return true, !handled(c)
 }
 
 // Reopen: Ein Auftrag zum Nachladen ist neu eröffnet (Meldungen aufgehoben, neu bestätigt). Was er will, liest die
@@ -262,9 +280,12 @@ func (w *Watcher) plan(now time.Time, lifesigns []Lifesign, from string) []int32
 		switch {
 		case c != nil && c.waiting:
 			// wartet eine Scheibe, die sich in diesem Lauf nie bewegt hat (Nachholen, Nachladen), bleibt sie liegen, solange
-			// geschossen wird: Scheitert der Upload länger, belegte sie sonst jede Runde das Budget
-			p.rank, p.idle = 0, c.movedAt.IsZero()
+			// geschossen wird: Scheitert der Upload länger, belegte sie sonst jede Runde das Budget. Eine per ID angefragte nicht
+			p.rank, p.idle = 0, c.movedAt.IsZero() && !w.wantsRequest(l.ID)
 		case w.dirty(l, from):
+			p.rank = 1
+		// ein Auftrag per ID will sie: gleich, nicht erst im Leerlauf
+		case w.wantsRequest(l.ID) && (c == nil || !handled(c)):
 			p.rank = 1
 		case active:
 			p.rank, p.readAt = 2, c.readAt
@@ -419,11 +440,12 @@ func (w *Watcher) Tick(ctx context.Context, src Source) (Result, error) {
 		if c.waiting && c.seenAt.Equal(now) {
 			result.Backlog++
 		}
-		// ein offener Auftrag zum Nachladen hält den Takt hoch, solange niemand schießt
+		// ein offener Auftrag zum Nachladen hält den Takt hoch, solange niemand schießt; einer per ID immer
 		history := w.wantsHistory(c.sportpass) && !handled(c)
+		request := w.wantsRequest(id) && !handled(c)
 		// nur, was in dieser Runde in der Ablage stand: Eine gelöschte Scheibe, die noch wartete, hielte die Brücke sonst
 		// einen Tag lang im Sekundentakt
-		if c.seenAt.Equal(now) && (c.waiting || ((c.backfill || history) && !w.live) || (!c.movedAt.IsZero() && now.Sub(c.movedAt) < time.Minute)) {
+		if c.seenAt.Equal(now) && (c.waiting || request || ((c.backfill || history) && !w.live) || (!c.movedAt.IsZero() && now.Sub(c.movedAt) < time.Minute)) {
 			result.Busy = true
 		}
 	}

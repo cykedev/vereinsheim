@@ -920,3 +920,81 @@ func TestWaitingCardSurvivesWeeksWithoutSource(t *testing.T) {
 		})
 	}
 }
+
+// lastRequests: der Ausgang der Aufträge per ID im jüngsten Heartbeat
+func (f *fixture) lastRequests() string {
+	if len(f.sp.heartbeats) == 0 {
+		return "keiner"
+	}
+	var out []string
+	for _, d := range f.sp.heartbeats[len(f.sp.heartbeats)-1].RequestsDone {
+		out = append(out, fmt.Sprintf("%d:%s", d.ID, d.Outcome))
+	}
+	return fmt.Sprint(out)
+}
+
+func TestRequestedCardLeavesWithoutConsentWhileShooting(t *testing.T) {
+	f := setup(t, "12345678")
+	f.ablage.put(1, "12345678", "1", 3)                     // der laufende Abend, mit Zustimmung
+	f.ablage.put(2, "87654321", "1", 3)                     // ohne Zustimmung, angefragt
+	f.ablage.put(3, "87654321", "1", 3)                     // ohne Zustimmung, nicht angefragt
+	f.ablage.old(4, "0", "1", "2025-05-01 19:00:00")        // alt, ohne Sportpass, angefragt
+	f.ablage.old(5, "87654321", "1", "2025-05-02 19:00:00") // alt, nicht angefragt
+	f.sp.state.Requests = []api.CardRequest{{ID: 7, ScheibenID: 2}, {ID: 8, ScheibenID: 4}}
+	// der Stand ist aktiv: Ein Auftrag per ID wartet nicht auf den Leerlauf (anders als das Nachladen)
+	f.runFor(2 * time.Minute)
+	sent := fmt.Sprint(f.sp.sent())
+	for _, want := range []string{"1", "2", "4"} {
+		if !strings.Contains(sent, want) {
+			t.Fatalf("gesendet %s, %s fehlt", sent, want)
+		}
+	}
+	if strings.Contains(sent, "3") || strings.Contains(sent, "5") {
+		t.Fatalf("gesendet %s: nicht angefragt", sent)
+	}
+	f.runFor(2 * HeartbeatEvery)
+	if got := f.lastRequests(); got != "[7:sent 8:sent]" {
+		t.Fatalf("Ausgang %s", got)
+	}
+	raw, _ := json.Marshal(f.sp.heartbeats[len(f.sp.heartbeats)-1])
+	if strings.Contains(string(raw), "87654321") || strings.Contains(string(raw), "Muster") {
+		t.Fatal("Heartbeat mit Personenfeld (SF-59)")
+	}
+}
+
+func TestRequestMissingOrHeld(t *testing.T) {
+	f := setup(t)
+	f.ablage.put(1, "87654321", "1", 3) // verankert das Startfenster
+	f.ablage.put(2, "87654321", "5", 3) // verdeckt (SF-19)
+	f.ablage.put(3, "87654321", "1", 3) // gesperrt
+	f.sp.state.Blocked = []api.Blocked{{ScheibenID: 3, StartedAt: time.Date(2026, 10, 13, 20, 0, 0, 0, time.UTC)}}
+	f.sp.state.Requests = []api.CardRequest{{ID: 5, ScheibenID: 2}, {ID: 6, ScheibenID: 3}, {ID: 7, ScheibenID: 99}}
+	f.runFor(2 * HeartbeatEvery)
+	if got := fmt.Sprint(f.sp.sent()); got != "[]" {
+		t.Fatalf("gesendet %s", got)
+	}
+	if got := f.lastRequests(); got != "[5:held 6:held 7:missing]" {
+		t.Fatalf("Ausgang %s", got)
+	}
+}
+
+func TestRequestAfterTheCardWasHeldWithoutConsent(t *testing.T) {
+	f := setup(t)
+	f.ablage.put(1, "87654321", "1", 3)
+	f.runFor(3 * time.Minute)
+	if got := fmt.Sprint(f.sp.sent()); got != "[]" {
+		t.Fatalf("ohne Auftrag %s", got)
+	}
+	// der Auftrag kommt mit dem nächsten Zustand: Die schon zurückgehaltene Scheibe wird noch einmal gelesen
+	f.sp.state.Requests = []api.CardRequest{{ID: 9, ScheibenID: 1}}
+	f.runFor(StateEvery + time.Minute)
+	if got := fmt.Sprint(f.sp.sent()); got != "[1]" {
+		t.Fatalf("nach dem Auftrag %s", got)
+	}
+	// Spiegel nennt den Auftrag nicht mehr: nicht mehr melden
+	f.sp.state.Requests = nil
+	f.runFor(StateEvery + HeartbeatEvery)
+	if got := f.lastRequests(); got != "[]" {
+		t.Fatalf("Ausgang nach dem Ende %s", got)
+	}
+}
