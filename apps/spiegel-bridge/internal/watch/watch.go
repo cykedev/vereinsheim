@@ -2,8 +2,9 @@
 // im Arbeitsspeicher (ADR-027).
 //
 // Eine Runde liest in einer Transaktion das Lebenszeichen aller Scheiben und dann die Scheiben ganz, die neu sind,
-// deren Lebenszeichen sich bewegt hat, die noch auf Bestätigung warten oder die aktiv sind. Ein Snapshot entsteht,
-// wenn zwei Lesungen hintereinander gleich sind (SF-71) und sich vom zuletzt gemeldeten Stand unterscheiden.
+// deren Lebenszeichen oder SportpassID sich bewegt hat, die noch auf Bestätigung warten oder die aktiv sind. Ein
+// Snapshot entsteht, wenn zwei Lesungen hintereinander gleich sind (SF-71) und sich vom zuletzt gemeldeten Stand
+// unterscheiden.
 package watch
 
 import (
@@ -20,7 +21,7 @@ type Lifesign struct {
 	ID    int32
 	Stamp string
 	// `Scheiben.SportpassID` als Text, nil ohne: ordnet eine Scheibe einem Auftrag zum Nachladen zu, ohne sie ganz
-	// zu lesen
+	// zu lesen, und zeigt ein Umbuchen in Meyton, das das Lebenszeichen nicht bewegt (SF-80)
 	Sportpass *string
 }
 
@@ -106,6 +107,8 @@ type Result struct {
 	Snapshots []contract.Snapshot
 	// Scheiben, die gegen den Vertrag verstoßen (zu lang, ungültige Bytes): gehen nicht hinaus, der Heartbeat meldet sie
 	Skipped []Skip
+	// Scheiben, deren SportpassID sich seit der letzten Runde geändert hat: in Meyton umgebucht (SF-80)
+	Reassigned []int32
 	// gelesene Scheiben und alle Lebenszeichen
 	Read, Cards int
 	// etwas bewegt sich oder wartet auf Bestätigung: die nächste Runde bald
@@ -239,7 +242,16 @@ func (w *Watcher) startFrom(lifesigns []Lifesign, sourceNow *string) string {
 	return t.Add(-w.cfg.StartWindow).Format(stampLayout)
 }
 
-// dirty: Die Scheibe ist neu oder ihr Lebenszeichen hat sich bewegt, seit sie zuletzt gelesen wurde.
+// sameText: beide ohne Wert oder mit demselben Text
+func sameText(a, b *string) bool {
+	if a == nil || b == nil {
+		return a == b
+	}
+	return *a == *b
+}
+
+// dirty: Die Scheibe ist neu, oder ihr Lebenszeichen oder ihre SportpassID hat sich bewegt, seit sie zuletzt gelesen
+// wurde. Die SportpassID ändert sich beim Umbuchen in Meyton, ohne dass das Lebenszeichen sich bewegt (SF-80).
 // backfill: beim Start eine Scheibe vor dem Startfenster, aber nach dem Wasserstand in Spiegel (Nachholen, SF-55).
 func (w *Watcher) backfill(l Lifesign, from string) bool {
 	if w.started {
@@ -257,7 +269,7 @@ func (w *Watcher) dirty(l Lifesign, from string) bool {
 	case !known:
 		return true
 	default:
-		return c.dirty || c.stamp != l.Stamp
+		return c.dirty || c.stamp != l.Stamp || !sameText(c.sportpass, l.Sportpass)
 	}
 }
 
@@ -359,9 +371,14 @@ func (w *Watcher) Tick(ctx context.Context, src Source) (Result, error) {
 			c = &card{}
 			w.cards[l.ID] = c
 		}
-		// bewegt hat sich, was neu oder geändert ist; beim Start nur, was im Startfenster liegt
-		if (known && c.stamp != l.Stamp) || (!known && dirty) {
+		// bewegt hat sich, was neu oder geändert ist; beim Start nur, was im Startfenster liegt. Ein Umbuchen zählt mit:
+		// Sonst wartete eine Scheibe, die in diesem Lauf nur nachgeholt wurde, mit der zweiten Lesung auf den Leerlauf.
+		reassigned := known && !sameText(c.sportpass, l.Sportpass)
+		if (known && c.stamp != l.Stamp) || (!known && dirty) || reassigned {
 			c.movedAt = now
+		}
+		if reassigned {
+			result.Reassigned = append(result.Reassigned, l.ID)
 		}
 		c.stamp, c.dirty, c.seenAt, c.sportpass = l.Stamp, dirty, now, l.Sportpass
 		c.backfill = backfill && !dirty

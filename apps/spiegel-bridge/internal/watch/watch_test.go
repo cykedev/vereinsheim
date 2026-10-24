@@ -32,7 +32,12 @@ func (m *memory) put(id int32, stamp string, shots int, value string) {
 func (m *memory) Round(_ context.Context, choose func([]Lifesign, *string) []int32) (Round, error) {
 	var lifesigns []Lifesign
 	for id, stamp := range m.stamps {
-		lifesigns = append(lifesigns, Lifesign{ID: id, Stamp: stamp})
+		l := Lifesign{ID: id, Stamp: stamp}
+		// die SportpassID der Zeile wie `readLifesigns`
+		if rows := m.data[id].Scheiben.Rows; len(rows) == 1 {
+			l.Sportpass = rows[0]["SportpassID"]
+		}
+		lifesigns = append(lifesigns, l)
 	}
 	ids := choose(lifesigns, m.now)
 	m.reads = append(m.reads, ids)
@@ -67,6 +72,22 @@ func cardData(id int32, shots int, value string) contract.Data {
 		Serien:  contract.Table{Columns: map[string]string{"ScheibenID": "int(11)"}, Rows: []contract.Row{}},
 		Treffer: treffer,
 	}
+}
+
+// withSportpass gibt die Daten mit dieser SportpassID in `Scheiben` zurück; die Maps von `d` bleiben unverändert.
+func withSportpass(d contract.Data, value string) contract.Data {
+	columns := map[string]string{}
+	for k, v := range d.Scheiben.Columns {
+		columns[k] = v
+	}
+	columns["SportpassID"] = "bigint(20)"
+	row := contract.Row{}
+	for k, v := range d.Scheiben.Rows[0] {
+		row[k] = v
+	}
+	row["SportpassID"] = text(value)
+	d.Scheiben = contract.Table{Columns: columns, Rows: []contract.Row{row}}
+	return d
 }
 
 type clock struct{ t time.Time }
@@ -191,6 +212,80 @@ func TestCorrectionWithoutLifesignWhileActive(t *testing.T) {
 	}
 	if last := m.reads[len(m.reads)-1]; len(last) != 0 {
 		t.Fatalf("ruhende Scheibe gelesen: %v", last)
+	}
+}
+
+// Umbuchen in Meyton (SF-80): Name und SportpassID ändern sich, das Lebenszeichen nicht. Die Brücke liest die ruhende
+// Scheibe trotzdem neu und schickt sie nach zwei gleichen Lesungen.
+func TestSportpassChangeWithoutLifesignIsRead(t *testing.T) {
+	m, c := newMemory(), start()
+	w := New(Defaults, c.now)
+	m.stamps[7] = "2026-10-13 18:00:00"
+	m.data[7] = withSportpass(cardData(7, 20, "100"), "87654321")
+	tick(t, w, m)
+	c.advance(time.Second)
+	if got := ids(tick(t, w, m)); len(got) != 1 {
+		t.Fatalf("erster Stand: %v", got)
+	}
+	c.advance(30 * time.Minute)
+	tick(t, w, m)
+	if last := m.reads[len(m.reads)-1]; len(last) != 0 {
+		t.Fatalf("ruhende Scheibe gelesen: %v", last)
+	}
+	m.data[7] = withSportpass(cardData(7, 20, "100"), "12345678")
+	c.advance(time.Minute)
+	r := tick(t, w, m)
+	if last := m.reads[len(m.reads)-1]; fmt.Sprint(last) != "[7]" {
+		t.Fatalf("umgebuchte Scheibe nicht gelesen: %v", last)
+	}
+	if fmt.Sprint(r.Reassigned) != "[7]" || !r.Busy || len(r.Snapshots) != 0 {
+		t.Fatalf("erste Lesung nach dem Umbuchen: umgebucht %v, busy %v, gesendet %v", r.Reassigned, r.Busy, ids(r))
+	}
+	c.advance(time.Second)
+	r = tick(t, w, m)
+	if len(r.Snapshots) != 1 || *r.Snapshots[0].Data.Scheiben.Rows[0]["SportpassID"] != "12345678" || len(r.Reassigned) != 0 {
+		t.Fatalf("zweite Lesung: gesendet %v, umgebucht %v", ids(r), r.Reassigned)
+	}
+	c.advance(time.Second)
+	if got := ids(tick(t, w, m)); len(got) != 0 {
+		t.Fatalf("danach: %v", got)
+	}
+}
+
+// Ein Wechsel der SportpassID zählt als Bewegung: Eine Scheibe, die in diesem Lauf nur nachgeholt wurde, wartet mit der
+// zweiten Lesung nicht auf den Leerlauf.
+func TestReassignedCardLeavesWhileShooting(t *testing.T) {
+	m, c := newMemory(), start()
+	w := New(Defaults, c.now)
+	m.stamps[1] = "2026-10-09 21:00:00"
+	m.data[1] = withSportpass(cardData(1, 40, "100"), "87654321")
+	m.put(9, "2026-10-13 20:00:00", 3, "100")
+	w.SetCatchUpFrom("2026-10-08 22:00:00")
+	tick(t, w, m)
+	// Stand 9 ruht: Scheibe 1 kommt über das Nachholen
+	c.advance(25 * time.Minute)
+	sent := map[int32]bool{}
+	for range 3 {
+		for _, id := range ids(tick(t, w, m)) {
+			sent[id] = true
+		}
+		c.advance(time.Second)
+	}
+	if !sent[1] {
+		t.Fatalf("nachgeholt: %v", sent)
+	}
+	// Stand 9 schießt wieder, und Scheibe 1 wird umgebucht
+	m.data[1] = withSportpass(cardData(1, 40, "100"), "12345678")
+	sent = map[int32]bool{}
+	for range 3 {
+		m.stamps[9] = c.t.Add(2 * time.Hour).Format(stampLayout)
+		for _, id := range ids(tick(t, w, m)) {
+			sent[id] = true
+		}
+		c.advance(time.Second)
+	}
+	if !sent[1] {
+		t.Fatalf("umgebucht, während geschossen wird: %v", m.reads[len(m.reads)-3:])
 	}
 }
 
