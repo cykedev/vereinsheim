@@ -202,7 +202,7 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
   unverändert. Die Dev-Datenbank setzt der User zurück (`pnpm --filter spiegel exec prisma migrate reset --force`);
   ein Agent setzt sie nicht zurück, Prisma und der Auto-Modus verlangen dafür den User.
 - **Speicher** im Container messen, nicht auf dem Mac (macOS zählt anders; 765 MB auf dem Mac waren 227 MiB im
-  Container): Standalone-Build in `node:24-alpine` mit `--memory=256m`, anmelden, Seiten abrufen, `docker stats`
+  Container): Standalone-Build in `node:26-alpine` mit `--memory=256m`, anmelden, Seiten abrufen, `docker stats`
   (Richtwerte: 57 MiB nach dem Start, 147 bis 152 MiB unter Last). Dafür einen eigenen
   `NEXTAUTH_SECRET` setzen: Produktion verweigert den Beispielwert aus `.env.example`. Mit dem echten Image und den
   Grenzen aus `compose.yml`: `tools/stack-e2e/run.sh --load <min>` (Richtwerte: Spitze 147 MiB, unter Last 108

@@ -12,7 +12,7 @@ documented_in: ["[[conventions#8. Drift-Schutz (Prozess)]]"]
 **TL;DR** Pins sind zwischen den Apps angeglichen (alles Geteilte kommt aus dem Catalog, Drift-Gate
 meldet keine Dependency-Drift). Seit dem Sammel-Update vom 24. Oktober 2026 laufen alle Apps auf Node 26 mit den
 neuesten Patch- und Minor-Versionen, dazu vitest 5, dotenv 18, @hookform/resolvers 6 und prettier 3.9; `pnpm audit`
-meldet nichts. OFFEN bleiben vier bewusst zurückgestellte Majors (TypeScript 7, ESLint 10, Prisma 8, pnpm 11/12) und
+meldet nichts. OFFEN bleiben fünf bewusst zurückgestellte Majors (TypeScript 7, ESLint 10, Prisma 8, pnpm 11/12, Postgres) und
 dass Dependency-Drift im consistency-check nur warnend ist, nicht fatal.
 
 ## Sammel-Update Oktober 2026

@@ -14,7 +14,7 @@ MOC-Hub der REMEMBER-Tier-Notes ([[adr-017]]). Normale Notes, live editiert (kei
 
 - [[best-of-playoff-seeding-round-robin-table]] — best-of-playoff-seeding-round-robin-table
 - [[caddy-x-real-ip-passthrough]] — Caddy reicht ein gefälschtes X-Real-IP durch (Ratenbegrenzung umgangen, behoben mit `header_up`)
-- [[node-heap-above-container-limit]] — Node 24 setzt den Heap über eine kleine Container-Grenze (`--max-old-space-size` dazu)
+- [[node-heap-above-container-limit]] — Node setzt den Heap über eine kleine Container-Grenze (`--max-old-space-size` dazu)
 - [[postgres-image-loopback-trust]] — im Postgres-Image prüft 127.0.0.1 kein Passwort (Prüfung über `-h db`)
 - [[bash-errexit-in-or-list]] — `set -e` gilt nicht in einer Funktion links von `||` (jeder Schritt prüft selbst)
 - [[compose-up-restarts-one-shot-containers]] — `compose up` ohne Dienstliste startet beendete Migratoren neu (`--no-deps`)

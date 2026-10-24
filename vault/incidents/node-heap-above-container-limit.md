@@ -1,14 +1,14 @@
 ---
 id: node-heap-above-container-limit
 type: incident
-title: "Node 24 setzt den Heap über eine kleine Container-Grenze"
+title: "Node setzt den Heap über eine kleine Container-Grenze"
 keywords: [node, v8, heap, max-old-space-size, node_options, mem_limit, cgroup, container, docker, speicher, arbeitsspeicher, oom, oom-kill, memory.peak, memory.current, memory.stat, anon, cache, grenze, limit]
 tags: [incident, operations]
 relates_to: ["[[vps-resource-sizing]]", "[[adr-026]]"]
 part_of: ["[[incidents]]"]
 ---
 
-**TL;DR** 14. Oktober 2026: Node 24 richtet die Obergrenze seines Heaps
+**TL;DR** 14. Oktober 2026 (Node 24, unter Node 26 gleich): Node richtet die Obergrenze seines Heaps
 nach der Grenze des Containers, aber nicht darunter. Bei `--memory` 192, 256 und 384 MB liegt sie gleich bei 259 MiB,
 erst bei 1 GB bei 560 MiB, ohne Grenze bei rund 4,3 GB. Unter rund 384 MB liegt der Heap also über der Grenze des
 Containers: V8 räumt nicht früher auf, und der Kernel beendet den Prozess, bevor Node einen Speicherfehler meldet. Wer

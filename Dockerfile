@@ -12,8 +12,9 @@
 ARG APP
 
 # ── Basis: Node 26 + pnpm via corepack ───────────────────────────────────────
-# Node bringt corepack seit 25 nicht mehr mit → über npm in fester Version; die
-# pnpm-Version kommt weiter aus `packageManager` in der Root-package.json.
+# Node bringt corepack seit 25 nicht mehr mit → über npm in fester Version (dieselbe
+# wie in scripts/bootstrap-dev.sh); die pnpm-Version kommt weiter aus `packageManager`
+# in der Root-package.json.
 FROM node:26-alpine AS base
 RUN npm install -g corepack@0.36.0 && corepack enable
 ENV PNPM_HOME=/pnpm

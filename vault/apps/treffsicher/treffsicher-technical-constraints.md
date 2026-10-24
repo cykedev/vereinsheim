@@ -22,7 +22,7 @@ Diese Regeln dürfen nicht ohne explizite Überprüfung und Begründung geänder
 
 ## Index
 
-- **Hosting / Entwicklungsumgebung** — Docker Compose im Monorepo (Root-`compose.yml`, Dev-Postgres aus Root-`docker-compose.dev.yml`), Node.js 24 LTS
+- **Hosting / Entwicklungsumgebung** — Docker Compose im Monorepo (Root-`compose.yml`, Dev-Postgres aus Root-`docker-compose.dev.yml`), Node.js 26
 - **Persistenz** — PostgreSQL + Named Volumes, Upload-Volume `/app/uploads`, Dateinamen als UUID
 - **Datenbank-Migrationen** — Prisma Migrate deploy im Migrations-Job vor dem App-Start, P3009-Recovery-Script, kein Datenverlust
 - **Tech Stack + Prisma 7** — Verbindliche Versionen; Prisma 7 breaking changes (Client-Pfad, Adapter, Config)
@@ -40,7 +40,7 @@ Diese Regeln dürfen nicht ohne explizite Überprüfung und Begründung geänder
 - **Zielplattform**: Self-hosted via Docker Compose (Produktion: VPS, im `vereinsheim`-Monorepo, Root-`compose.yml`)
 - **Portabilität**: Kein plattformspezifischer Code — die App muss auf jeder Docker-Compose-Umgebung lauffähig sein
 - **Konfiguration**: Alle umgebungsabhängigen Werte (DB-URL, Secrets, Pfade) über Umgebungsvariablen in `.env` — niemals hart im Code verdrahtet
-- **Node.js-Version**: 26 LTS (im Root-`Dockerfile`: `FROM node:26-alpine`)
+- **Node.js-Version**: 26, Active LTS ab 28. Oktober 2026 (im Root-`Dockerfile`: `FROM node:26-alpine`)
 
 ---
 

@@ -80,9 +80,10 @@ ok "docker erreichbar"
 
 # ---------- 2) corepack (pnpm gemäß packageManager-Pin) ----------
 step "corepack enable"
-# Node bringt corepack seit 25 nicht mehr mit; fehlt es, kommt es über npm dazu.
+# Node bringt corepack seit 25 nicht mehr mit; fehlt es, kommt es über npm dazu (dieselbe Version wie im Dockerfile).
 if ! command -v corepack >/dev/null 2>&1; then
-	npm install -g corepack@0.36.0 >/dev/null || die "corepack-Install fehlgeschlagen ('npm install -g corepack@0.36.0')."
+	npm install -g corepack@0.36.0 >/dev/null ||
+		die "corepack-Install fehlgeschlagen ('npm install -g corepack@0.36.0'). Bei EACCES: npm-Prefix auf einen user-schreibbaren Pfad legen (nvm/brew) statt sudo zu nutzen."
 fi
 corepack enable
 ok "corepack aktiv  ${DIM}(pnpm $(pnpm --version 2>/dev/null || echo '?'))${RESET}"
