@@ -856,6 +856,45 @@ async function cardDiscipline(page: Page, href: string) {
 }
 
 /**
+ * Scheibe per ID holen (Profil): Der Abschnitt steht unter der Sportpassnummer; eine falsche ID zeigt den Feldfehler,
+ * ohne zu fragen; eine richtige fragt mit Folgen, „Abbrechen“ legt keinen Auftrag an.
+ */
+async function cardRequests(page: Page) {
+  await page.viewport(1280, 900)
+  await page.goto(`${BASE}/profile`)
+  const before = await page.ev<number>(`$$("[data-card-request]").length`)
+  check(
+    "Scheibe per ID: der Abschnitt steht im Profil, mit ID und Tag",
+    await page.ev<boolean>(
+      `!!$("[data-card-requests]") && !!$("#card-request-id") && !!$("#card-request-day")`
+    )
+  )
+  await page.click(`$("#card-request-id")`)
+  await page.type("ff91442")
+  await page.click(`button("Scheibe holen")`)
+  check(
+    "Scheibe per ID: eine falsche ID zeigt den Feldfehler, ohne Rückfrage",
+    (await page.waitFor(`txt($("[data-card-requests]")).includes("acht Zeichen")`)) &&
+      !(await page.ev<boolean>(`!!$('[role="alertdialog"]')`)) &&
+      (await page.ev<string>(`$("#card-request-id").getAttribute("aria-invalid")`)) === "true"
+  )
+  await page.click(`$("#card-request-id")`)
+  await page.type("0")
+  await page.click(`button("Scheibe holen")`)
+  await page.waitFor(`!!$('[role="alertdialog"]')`)
+  const dialog = await page.ev<string>(`txt($('[role="alertdialog"]'))`)
+  await page.click(`button("Abbrechen", $('[role="alertdialog"]'))`)
+  check(
+    "Scheibe per ID: eine richtige fragt mit Folgen, Abbrechen legt keinen Auftrag an",
+    dialog.includes("ff914420") &&
+      dialog.includes("Andere Scheiben holt Spiegel nicht") &&
+      (await page.waitFor(`!$('[role="alertdialog"]')`)) &&
+      (await page.ev<number>(`$$("[data-card-request]").length`)) === before,
+    dialog.slice(0, 120)
+  )
+}
+
+/**
  * Teilen per Link: auf der Seite einer Scheibe teilen, den Link in einem Fenster ohne Anmeldung öffnen (nur Ansicht,
  * keine Wege aus der Seite, keine Knöpfe mit Folgen, Analyse und Hilfe gehen), dann das Teilen beenden. Am Ende ist die
  * Scheibe wieder ungeteilt.
@@ -1919,6 +1958,7 @@ async function main() {
     await section("Papierkorb", () => trash(page))
     await section("Admin ohne Rolle", () => adminWithoutRole(page))
     await section("Disziplin einer Scheibe", () => cardDiscipline(page, href))
+    await section("Scheibe per ID holen", () => cardRequests(page))
     await section("Geteilte Scheibe", () => sharing(chrome, page, href))
     await section("Gemeinsame Prüfungen", () => commonChecks(page, href))
     // React meldet in der Entwicklung manches über console.error; jede Meldung zählt, damit keine untergeht

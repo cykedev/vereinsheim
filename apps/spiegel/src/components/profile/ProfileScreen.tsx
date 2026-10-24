@@ -13,19 +13,25 @@ import { ThemeSwitch } from "@vereinsheim/ui/design2/theme-switch"
 import { PAGE_SINGLE } from "@vereinsheim/shot-ui/layout/columns"
 import { cn } from "@vereinsheim/lib/utils"
 import type { ConsentRow } from "@/lib/consent/queries"
+import type { OwnRequest } from "@/lib/card-requests/queries"
 import { CURRENT_CONSENT_VERSION } from "@/lib/consent/texts"
 
+import { CardRequests } from "./CardRequests"
 import { SportpassConsents } from "./SportpassConsents"
 
 /**
- * Profil: Konto, Zustimmung per Sportpass, Einstellung des Geräts (Darstellung), Admin für Admins, Abmelden. Die
- * Wertung hat jede Scheibe und jede Familie selbst (Seite der Scheibe, Liste, Fortschritt). Dazu der Papierkorb.
+ * Profil: Konto, Zustimmung per Sportpass, Scheibe per ID holen, Einstellung des Geräts (Darstellung), Admin für Admins,
+ * Abmelden. Die Wertung hat jede Scheibe und jede Familie selbst (Seite der Scheibe, Liste, Fortschritt). Dazu der
+ * Papierkorb.
  */
 export function ProfileScreen({
   name,
   email,
   isAdmin,
   sportpass,
+  requests,
+  today,
+  timeZone,
   trashCount,
 }: {
   name: string | null
@@ -33,6 +39,11 @@ export function ProfileScreen({
   isAdmin: boolean
   /** die eigenen Zustimmungen per Sportpass; nur aktive bringen Scheiben von der Brücke */
   sportpass: ConsentRow[]
+  /** die eigenen Aufträge per ID der letzten Wochen */
+  requests: OwnRequest[]
+  /** heute in der Anzeige-Zone (`YYYY-MM-DD`) */
+  today: string
+  timeZone: string
   /** Scheiben im Papierkorb */
   trashCount: number
 }) {
@@ -53,6 +64,8 @@ export function ProfileScreen({
         </div>
 
         <SportpassConsents consents={sportpass} version={CURRENT_CONSENT_VERSION} />
+
+        <CardRequests requests={requests} today={today} timeZone={timeZone} />
 
         <div className="grid gap-4 rounded-2xl border border-border bg-card p-4">
           <h2 className="text-[15px] font-semibold">Dieses Gerät</h2>
