@@ -477,15 +477,13 @@ describe("Pausen mit der Schwelle der Karte (Z1, Z2)", () => {
   const timed = (gaps: readonly number[], kind: MetricShot["kind"] = "match") =>
     gaps
       .reduce<number[]>((times, gap) => [...times, times.at(-1)! + gap], [0])
-      .map(
-        (s, i): MetricShot => ({
-          ...MATCH[0],
-          seq: i + 1,
-          kind,
-          series: kind === "match" ? (i < 10 ? 1 : 2) : null,
-          firedAtMs: s * 1000,
-        })
-      )
+      .map((s, i): MetricShot => ({
+        ...MATCH[0],
+        seq: i + 1,
+        kind,
+        series: kind === "match" ? (i < 10 ? 1 : 2) : null,
+        firedAtMs: s * 1000,
+      }))
   // Serie 1 im Takt von 30 s, dann 30 s; Serie 2: 30, fünfmal 90, dreimal 30. Die Karte: 14 × 30 und 5 × 90, Median
   // 30 s, Schwelle 60 s, die 90 s sind Pausen. Serie 2 allein: Median 90 s, Schwelle 180 s, keine Pause.
   const CARD20 = timed([...Array(10).fill(30), 30, 90, 90, 90, 90, 90, 30, 30, 30])

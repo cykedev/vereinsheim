@@ -158,13 +158,11 @@ export interface MarkShot {
 export function cardMarks(shots: readonly MetricShot[]): CardMark[] {
   return inShotOrder(asOnPrintout(shots))
     .filter(isDrawn)
-    .map(
-      (shot): CardMark => [
-        Math.round((shot.xUm as number) / MARK_UM) || 0,
-        Math.round((shot.yUm as number) / MARK_UM) || 0,
-        shot.ring ?? null,
-      ]
-    )
+    .map((shot): CardMark => [
+      Math.round((shot.xUm as number) / MARK_UM) || 0,
+      Math.round((shot.yUm as number) / MARK_UM) || 0,
+      shot.ring ?? null,
+    ])
 }
 
 /** die Lagen zurück in µm, wie `MiniTarget` sie zeichnet */

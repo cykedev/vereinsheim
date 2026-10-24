@@ -1,12 +1,6 @@
 /** die Unterseiten eines Wettbewerbs */
 export type CompetitionPage =
-  | "schedule"
-  | "ranking"
-  | "standings"
-  | "playoffs"
-  | "series"
-  | "participants"
-  | "audit-log"
+  "schedule" | "ranking" | "standings" | "playoffs" | "series" | "participants" | "audit-log"
 
 const LABEL: Readonly<Record<CompetitionPage, string>> = {
   schedule: "Spielplan & Tabelle",

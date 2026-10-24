@@ -73,8 +73,8 @@ catalogs:
       specifier: 8.23.1
       version: 8.23.1
     prettier:
-      specifier: 3.8.4
-      version: 3.8.4
+      specifier: 3.9.10
+      version: 3.9.10
     prisma:
       specifier: 7.10.1
       version: 7.10.1
@@ -212,7 +212,7 @@ importers:
         version: 9.39.5(jiti@2.7.0)
       prettier:
         specifier: 'catalog:'
-        version: 3.8.4
+        version: 3.9.10
       shadcn:
         specifier: 'catalog:'
         version: 4.22.1
@@ -318,7 +318,7 @@ importers:
         version: 9.39.5(jiti@2.7.0)
       prettier:
         specifier: 'catalog:'
-        version: 3.8.4
+        version: 3.9.10
       shadcn:
         specifier: 'catalog:'
         version: 4.22.1
@@ -445,7 +445,7 @@ importers:
         version: 9.39.5(jiti@2.7.0)
       prettier:
         specifier: 'catalog:'
-        version: 3.8.4
+        version: 3.9.10
       shadcn:
         specifier: 'catalog:'
         version: 4.22.1
@@ -501,7 +501,7 @@ importers:
         version: 9.39.5(jiti@2.7.0)
       prettier:
         specifier: 'catalog:'
-        version: 3.8.4
+        version: 3.9.10
       tsx:
         specifier: 'catalog:'
         version: 4.23.15
@@ -535,7 +535,7 @@ importers:
         version: 9.39.5(jiti@2.7.0)
       prettier:
         specifier: 'catalog:'
-        version: 3.8.4
+        version: 3.9.10
       react:
         specifier: 'catalog:'
         version: 19.3.1
@@ -563,7 +563,7 @@ importers:
         version: 9.39.5(jiti@2.7.0)
       prettier:
         specifier: 'catalog:'
-        version: 3.8.4
+        version: 3.9.10
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -584,7 +584,7 @@ importers:
         version: 9.39.5(jiti@2.7.0)
       prettier:
         specifier: 'catalog:'
-        version: 3.8.4
+        version: 3.9.10
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -602,7 +602,7 @@ importers:
         version: 9.39.5(jiti@2.7.0)
       prettier:
         specifier: 'catalog:'
-        version: 3.8.4
+        version: 3.9.10
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -626,7 +626,7 @@ importers:
         version: 9.39.5(jiti@2.7.0)
       prettier:
         specifier: 'catalog:'
-        version: 3.8.4
+        version: 3.9.10
       tsx:
         specifier: 'catalog:'
         version: 4.23.15
@@ -669,7 +669,7 @@ importers:
         version: 9.39.5(jiti@2.7.0)
       prettier:
         specifier: 'catalog:'
-        version: 3.8.4
+        version: 3.9.10
       react:
         specifier: 'catalog:'
         version: 19.3.1
@@ -703,7 +703,7 @@ importers:
         version: 9.39.5(jiti@2.7.0)
       prettier:
         specifier: 'catalog:'
-        version: 3.8.4
+        version: 3.9.10
       tsx:
         specifier: 'catalog:'
         version: 4.23.15
@@ -761,7 +761,7 @@ importers:
         version: 9.39.5(jiti@2.7.0)
       prettier:
         specifier: 'catalog:'
-        version: 3.8.4
+        version: 3.9.10
       react:
         specifier: 'catalog:'
         version: 19.3.1
@@ -5040,8 +5040,8 @@ packages:
     resolution: {integrity: sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==}
     engines: {node: '>= 0.8.0'}
 
-  prettier@3.8.4:
-    resolution: {integrity: sha512-N2MylSdi48+5N/6S5j+maeHbUSIzzZ5uOcX5Hm4QpV8Dkb1HFjfAKTKX6yNPJQD9AhcT3ifHNB66tWTTJDi11Q==}
+  prettier@3.9.10:
+    resolution: {integrity: sha512-skGHTH1Yb9QvaTC4hWnRTzEYtCpApF0UMBPz+t/0ZPzP8ihefo/btKd+QA7pUE0fEwA1SbS/NmhyEcstdXOIdA==}
     engines: {node: '>=14'}
     hasBin: true
 
@@ -10184,7 +10184,7 @@ snapshots:
 
   prelude-ls@1.2.1: {}
 
-  prettier@3.8.4: {}
+  prettier@3.9.10: {}
 
   pretty-format@3.8.0: {}
 

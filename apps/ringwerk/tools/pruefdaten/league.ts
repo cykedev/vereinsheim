@@ -236,7 +236,10 @@ async function playGroupPhase(league: League): Promise<void> {
     for (const m of playable.filter((m) => m.round === "FIRST_LEG")) await playRandom(league, m)
     const secondLeg = playable.filter((m) => m.round === "SECOND_LEG")
     for (const m of secondLeg.filter((m) => m.roundIndex <= 2)) await playRandom(league, m)
-    await playRandom(league, secondLeg.find((m) => m.roundIndex === 3)!)
+    await playRandom(
+      league,
+      secondLeg.find((m) => m.roundIndex === 3)!
+    )
     return
   }
 

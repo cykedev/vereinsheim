@@ -21,9 +21,7 @@ import {
 
 /** wie weit das Muster ist: holt der Browser es noch, ist es da, oder ging es schief */
 export type PatternState =
-  | { status: "loading" }
-  | { status: "ready"; pattern: PeriodPattern }
-  | { status: "error" }
+  { status: "loading" } | { status: "ready"; pattern: PeriodPattern } | { status: "error" }
 
 /** Platz in der Größe des Bilds, solange es lädt oder fehlt: Die Seite springt nicht */
 function Placeholder({ text, action }: { text: string; action?: ReactNode }) {

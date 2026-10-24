@@ -149,7 +149,7 @@ function rssMiB(pid: number): number | null {
       .split("\n")
       .map((line) => line.trim().split(/\s+/).map(Number))
     const tree = new Set([pid])
-    for (let changed = true; changed; ) {
+    for (let changed = true; changed;) {
       changed = false
       for (const [p, parent] of rows)
         if (tree.has(parent) && !tree.has(p)) {

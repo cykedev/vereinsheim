@@ -14,8 +14,7 @@ export type Weapon = "lg" | "lp"
 
 /** LP: Der Schuss berührt den Innenzehner. LG: Er schießt den Zehnerpunkt ganz weg. */
 export type InnerTenRule =
-  | { kind: "touch"; diameterMm: number }
-  | { kind: "shotOut"; diameterMm: number }
+  { kind: "touch"; diameterMm: number } | { kind: "shotOut"; diameterMm: number }
 
 export interface TargetSpec {
   id: TargetId

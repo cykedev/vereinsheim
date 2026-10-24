@@ -46,9 +46,8 @@ const ingest = (snapshots: readonly SnapshotV1[]) =>
 function sent(caseId: string, scheibenId: number): SnapshotV1[] {
   const card = frozenExpected(caseId).cards.find((c) => c.scheibenId === scheibenId)!
   const readings = frozenReadings(caseId)
-  return card.sentReadings.map(
-    (n) =>
-      readings.find((r) => r.reading === n)!.snapshots.find((s) => s.scheibenId === scheibenId)!
+  return card.sentReadings.map((n) =>
+    readings.find((r) => r.reading === n)!.snapshots.find((s) => s.scheibenId === scheibenId)!
   )
 }
 /** alle Snapshots eines Falls zu einer Scheibe, auch die nicht gesendeten */

@@ -6,10 +6,7 @@
 // Gibt undefined zurück, wenn für das Feld kein Fehler vorliegt.
 
 type FieldErrorSource =
-  | { error?: string | Record<string, string[] | undefined> }
-  | { success: true }
-  | null
-  | undefined
+  { error?: string | Record<string, string[] | undefined> } | { success: true } | null | undefined
 
 export function getFieldError(state: FieldErrorSource, field: string): string | undefined {
   if (!state || !("error" in state) || !state.error) return undefined

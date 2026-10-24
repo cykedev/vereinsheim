@@ -33,9 +33,7 @@ export interface LoginRateLimitBucketDelegate {
   }): PromiseLike<LoginRateLimitBucketRow | null>
   findMany(args: {
     where?:
-      | { key: { in: string[] } }
-      | { blockedUntil: { gt: Date } }
-      | { lastAttemptAt: { gte: Date } }
+      { key: { in: string[] } } | { blockedUntil: { gt: Date } } | { lastAttemptAt: { gte: Date } }
     select: Select
     orderBy?: { key?: Order; attempts?: Order; blockedUntil?: Order; lastAttemptAt?: Order }[]
     take?: number

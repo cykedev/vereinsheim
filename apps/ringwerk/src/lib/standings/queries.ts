@@ -145,18 +145,16 @@ export async function getBestOfStandingsForCompetition(
     series: m.series
       // Only include series with a duelNumber — tiebreak series always have one too
       .filter((s): s is typeof s & { duelNumber: number } => s.duelNumber !== null)
-      .map(
-        (s): BestOfStandingsSeries => ({
-          participantId: s.participantId,
-          duelNumber: s.duelNumber,
-          isTiebreak: s.isTiebreak,
-          // Prisma 7 returns Decimal objects — convert to number for arithmetic
-          rings: s.rings.toNumber(),
-          teiler: s.teiler.toNumber(),
-          ringteiler: s.ringteiler.toNumber(),
-          teilerFaktor: s.discipline.teilerFaktor.toNumber(),
-        })
-      ),
+      .map((s): BestOfStandingsSeries => ({
+        participantId: s.participantId,
+        duelNumber: s.duelNumber,
+        isTiebreak: s.isTiebreak,
+        // Prisma 7 returns Decimal objects — convert to number for arithmetic
+        rings: s.rings.toNumber(),
+        teiler: s.teiler.toNumber(),
+        ringteiler: s.ringteiler.toNumber(),
+        teilerFaktor: s.discipline.teilerFaktor.toNumber(),
+      })),
   }))
 
   return calculateBestOfStandings(participants, matchups, {

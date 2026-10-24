@@ -233,11 +233,10 @@ describe("der ganze Weg einer Brücke", () => {
     expect(state.status).toBe(200)
     expect(stateResponseV1.parse(await state.json()).sportpass.hashes).toHaveLength(1)
 
-    const sent = SF03.sentReadings.map(
-      (n) =>
-        frozenReadings("SF-03")
-          .find((r) => r.reading === n)!
-          .snapshots.find((s) => s.scheibenId === SF03.scheibenId)!
+    const sent = SF03.sentReadings.map((n) =>
+      frozenReadings("SF-03")
+        .find((r) => r.reading === n)!
+        .snapshots.find((s) => s.scheibenId === SF03.scheibenId)!
     )
     // je Lesung ein Stapel zu ihrer Zeit, wie die Brücke: Die Lesungen liegen 15 min auseinander (SF-79)
     for (const snapshot of sent) {

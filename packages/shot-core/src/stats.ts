@@ -380,7 +380,7 @@ export function mannWhitney(
   )
   const doubled: number[] = new Array(n)
   const ties: number[] = []
-  for (let i = 0; i < n; ) {
+  for (let i = 0; i < n;) {
     let j = i
     while (j + 1 < n && pooled[j + 1].v === pooled[i].v) j++
     // Ränge i + 1 … j + 1, ihr Mittel doppelt: (i + 1) + (j + 1)

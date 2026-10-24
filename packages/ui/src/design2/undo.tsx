@@ -10,8 +10,7 @@ import { getErrorMessage } from "@vereinsheim/lib/forms/fieldErrors"
 
 /** was eine Server Action zum Rückgängigmachen liefert: die Form von `ActionResult` der Apps ([[conventions]] §6) */
 export type UndoResult =
-  | { success: true }
-  | { error: string | Record<string, string[] | undefined> }
+  { success: true } | { error: string | Record<string, string[] | undefined> }
 
 export interface UndoEntry {
   text: string

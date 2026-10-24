@@ -50,12 +50,7 @@ export type ResolutionSource = "admin" | "catalog" | "name" | "unknown"
 export type Anschlag = "freihand" | "auflage"
 export type FamilyId = "lg-freihand" | "lg-auflage" | "lp-freihand" | "lp-auflage"
 export type Completeness =
-  | "leer"
-  | "nur-probe"
-  | "offen"
-  | "unvollstaendig"
-  | "vollstaendig"
-  | "ueber-soll"
+  "leer" | "nur-probe" | "offen" | "unvollstaendig" | "vollstaendig" | "ueber-soll"
 
 interface CatalogEntry {
   rules: readonly string[]

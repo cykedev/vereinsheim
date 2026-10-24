@@ -1,7 +1,6 @@
 /** was ein Klick auf „Deaktivieren“ oder „Aktivieren“ auslöst */
 export type ActiveChange<U> =
-  | { kind: "confirm"; user: U }
-  | { kind: "run"; userId: string; isActive: boolean }
+  { kind: "confirm"; user: U } | { kind: "run"; userId: string; isActive: boolean }
 
 /** Deaktivieren fragt erst nach, Aktivieren läuft sofort (es hat keine Folgen außer der Anmeldung) */
 export function requestActiveChange<U extends { id: string }>(

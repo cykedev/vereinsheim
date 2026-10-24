@@ -54,9 +54,7 @@ export function duelOutcome(
 }
 
 export type BestOfStatus =
-  | { kind: "in_progress" }
-  | { kind: "needs_tiebreak" }
-  | { kind: "complete"; winner: "A" | "B" }
+  { kind: "in_progress" } | { kind: "needs_tiebreak" } | { kind: "complete"; winner: "A" | "B" }
 
 export interface ResolveBestOfOptions {
   /** N in Best-of-N (odd). */

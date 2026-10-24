@@ -3,13 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@vereinsheim/ui/design
 import { HelpMark, HelpShort } from "@/components/app/help/Explain"
 
 type ComparisonDimensionKey =
-  | "fitness"
-  | "nutrition"
-  | "technique"
-  | "tactics"
-  | "mentalStrength"
-  | "environment"
-  | "equipment"
+  "fitness" | "nutrition" | "technique" | "tactics" | "mentalStrength" | "environment" | "equipment"
 
 const comparisonDimensions: Array<{ key: ComparisonDimensionKey; label: string }> = [
   { key: "fitness", label: "Kondition" },
