@@ -49,7 +49,7 @@ COPY full/apps/${APP}/scripts ./scripts
 # pg (Recovery-Skript), dotenv (von prisma.config.ts importiert). KEIN
 # @prisma/client/adapter (effect/electric-sql) und KEIN tsx (esbuild) → schlank.
 RUN npm install --no-package-lock --no-save \
-      prisma@^7.4.1 pg@^8.19.0 dotenv@^17.3.1
+      prisma@^7.10.1 pg@^8.23.1 dotenv@^17.3.1
 ENV NODE_ENV=production
 RUN chmod +x /app/scripts/run-migrations-with-recovery.sh
 CMD ["./scripts/run-migrations-with-recovery.sh"]

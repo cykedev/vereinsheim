@@ -20,7 +20,7 @@
   },
   "prettier": "@vereinsheim/config/prettier",
   "dependencies": {
-    "unpdf": "1.8.1"
+    "unpdf": "1.9.1"
   },
   "devDependencies": {
     "@vereinsheim/config": "workspace:*",
