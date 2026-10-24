@@ -6,6 +6,7 @@ import {
   bridgeRemove,
   bridgeRevoke,
   cardDelete,
+  cardDiscipline,
   cardPurgeNow,
   cardShare,
   cardShareStop,
@@ -454,6 +455,76 @@ describe("Teilen", () => {
   })
 })
 
+describe("Disziplin einer Scheibe", () => {
+  const evening = "Di 13.10.2026 · 19:12"
+
+  it("ändern in eine andere Familie: wo sie zählt, was bleibt, wie es zurückgeht", () => {
+    const d = cardDiscipline({
+      evening,
+      from: "LP 40",
+      to: "LP Auflage 30",
+      stand: "LP 40",
+      family: "Luftpistole Auflage",
+    })
+    wellFormed(d)
+    expect(d).toEqual({
+      title: "Disziplin ändern?",
+      about:
+        "Die Scheibe vom Di 13.10.2026 um 19:12 zählt als LP 40. Du stellst sie auf LP Auflage 30.",
+      check: "Wähle die Disziplin, die du wirklich geschossen hast.",
+      happens: [
+        "Die Scheibe zählt dann bei Luftpistole Auflage. Das gilt in der Liste, im Fortschritt und bei den Rekorden.",
+        "Spiegel prüft die Schusszahl mit LP Auflage 30.",
+        "Kommt die Scheibe später noch einmal aus Meyton, bleibt es bei LP Auflage 30.",
+      ],
+      notHappening: [
+        "Die Werte der Schüsse bleiben, wie Meyton sie gemessen hat.",
+        "An der Meyton-Anlage ändert sich nichts.",
+      ],
+      undo: "Jederzeit hier wieder ändern, auch zurück auf LP 40 vom Stand.",
+      confirmLabel: "Ändern",
+      destructive: false,
+    })
+  })
+
+  it("in derselben Familie: ohne den Satz zur Familie", () => {
+    const d = cardDiscipline({ evening, from: "LP 40", to: "LP 60", stand: "LP 40", family: null })
+    wellFormed(d)
+    expect(d.happens).toEqual([
+      "Spiegel prüft die Schusszahl mit LP 60.",
+      "Kommt die Scheibe später noch einmal aus Meyton, bleibt es bei LP 60.",
+    ])
+  })
+
+  it("zurück auf die Disziplin vom Stand", () => {
+    const d = cardDiscipline({
+      evening,
+      from: "LP Auflage 30",
+      to: "LP 40",
+      stand: "LP 40",
+      family: "Luftpistole",
+    })
+    wellFormed(d)
+    expect(d).toEqual({
+      title: "Disziplin vom Stand nehmen?",
+      about:
+        "Die Scheibe vom Di 13.10.2026 um 19:12 zählt als LP Auflage 30. Du stellst sie zurück auf LP 40, wie am Stand gewählt.",
+      happens: [
+        "Die Scheibe zählt dann bei Luftpistole. Das gilt in der Liste, im Fortschritt und bei den Rekorden.",
+        "Spiegel prüft die Schusszahl mit LP 40.",
+        "Kommt die Scheibe später noch einmal aus Meyton, gilt die Disziplin vom Stand.",
+      ],
+      notHappening: [
+        "Die Werte der Schüsse bleiben, wie Meyton sie gemessen hat.",
+        "An der Meyton-Anlage ändert sich nichts.",
+      ],
+      undo: "Jederzeit hier wieder ändern.",
+      confirmLabel: "Zurückstellen",
+      destructive: false,
+    })
+  })
+})
+
 /**
  * Schreibregeln als Leitplanke (Lektion [[spiegel-dialog-texts-not-understood]]): keine Semikolons und keines der
  * alten Wörter des Codes. Ob ein Text verständlich ist, prüft ein Mensch; dieser Test hält nur fest, dass die alten
@@ -510,6 +581,20 @@ describe("Schreibregeln", () => {
     ["endgültig löschen", cardPurgeNow({ evening })],
     ["teilen", cardShare({ evening })],
     ["teilen beenden", cardShareStop({ evening })],
+    [
+      "Disziplin der Scheibe",
+      cardDiscipline({
+        evening,
+        from: "LP 40",
+        to: "LP Auflage 30",
+        stand: "LP 40",
+        family: "Luftpistole Auflage",
+      }),
+    ],
+    [
+      "Disziplin vom Stand",
+      cardDiscipline({ evening, from: "LP 60", to: "LP 40", stand: "LP 40", family: null }),
+    ],
     ["wieder zulassen", notMineLift({ who, sportpassId, cards: 2, consentActive: true })],
     [
       "wieder zulassen, Nummer nicht aktiv",

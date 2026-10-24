@@ -435,6 +435,55 @@ export function cardPurgeNow({ evening }: { evening: string }): Decision {
 }
 
 /**
+ * Die Disziplin einer eigenen Scheibe umstellen (Seite der Scheibe): auf eine andere mit demselben Scheibenbild oder
+ * zurück auf die Disziplin vom Stand. `family`: die Familie der neuen, wenn die Scheibe damit in eine andere kommt
+ */
+export function cardDiscipline({
+  evening,
+  from,
+  to,
+  stand,
+  family,
+}: {
+  evening: string
+  /** die Disziplin, mit der die Scheibe gerade zählt */
+  from: string
+  to: string
+  /** die Disziplin, die am Stand in Meyton gewählt war */
+  stand: string
+  family: string | null
+}): Decision {
+  const back = to === stand
+  return {
+    title: back ? "Disziplin vom Stand nehmen?" : "Disziplin ändern?",
+    about: back
+      ? `Die Scheibe vom ${spoken(evening)} zählt als ${from}. Du stellst sie zurück auf ${to}, wie am Stand gewählt.`
+      : `Die Scheibe vom ${spoken(evening)} zählt als ${from}. Du stellst sie auf ${to}.`,
+    ...(back ? {} : { check: "Wähle die Disziplin, die du wirklich geschossen hast." }),
+    happens: [
+      ...(family
+        ? [
+            `Die Scheibe zählt dann bei ${family}. Das gilt in der Liste, im Fortschritt und bei den Rekorden.`,
+          ]
+        : []),
+      `Spiegel prüft die Schusszahl mit ${to}.`,
+      back
+        ? "Kommt die Scheibe später noch einmal aus Meyton, gilt die Disziplin vom Stand."
+        : `Kommt die Scheibe später noch einmal aus Meyton, bleibt es bei ${to}.`,
+    ],
+    notHappening: [
+      "Die Werte der Schüsse bleiben, wie Meyton sie gemessen hat.",
+      "An der Meyton-Anlage ändert sich nichts.",
+    ],
+    undo: back
+      ? "Jederzeit hier wieder ändern."
+      : `Jederzeit hier wieder ändern, auch zurück auf ${stand} vom Stand.`,
+    confirmLabel: back ? "Zurückstellen" : "Ändern",
+    destructive: false,
+  }
+}
+
+/**
  * Zurückgewiesene Scheiben („nicht meine“) einer Sportpassnummer wieder zulassen: Die Scheiben dürfen
  * wiederkommen und warten in „Offen“. `consentActive`: Die Nummer ist bestätigt; sonst kommen sie erst, wenn sie es
  * wieder ist. Neutral formuliert: Zurückgewiesen haben kann auch ein früheres Konto mit dieser Nummer.
