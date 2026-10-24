@@ -16,11 +16,11 @@ export const CreateUserSchema = z.object({
     .email("Bitte eine gültige E-Mail angeben."),
   tempPassword: z
     .string()
-    .min(
-      MIN_PASSWORD_LENGTH,
-      `Temporäres Passwort muss mindestens ${MIN_PASSWORD_LENGTH} Zeichen haben.`
-    )
-    .max(MAX_PASSWORD_LENGTH, "Passwort ist zu lang."),
+    // Längen wie beim Ändern und bei der Anmeldung in `String.length` (Zod zählt bei `min`/`max` Codepoints)
+    .refine((v) => v.length >= MIN_PASSWORD_LENGTH, {
+      message: `Temporäres Passwort muss mindestens ${MIN_PASSWORD_LENGTH} Zeichen haben.`,
+    })
+    .refine((v) => v.length <= MAX_PASSWORD_LENGTH, { message: "Passwort ist zu lang." }),
   role: z.enum(["USER", "ADMIN"] as const).default("USER"),
 })
 

@@ -24,10 +24,13 @@ const role = z.enum(ROLES, { message: "Das ließ sich nicht speichern. Bitte lad
 export const CreateUserSchema = z.object({
   name,
   email,
+  // Längen wie beim Ändern und bei der Anmeldung in `String.length` (Zod zählt bei `min`/`max` Codepoints)
   tempPassword: z
     .string()
-    .min(MIN_PASSWORD_LENGTH, `Mindestens ${MIN_PASSWORD_LENGTH} Zeichen`)
-    .max(MAX_PASSWORD_LENGTH, "Das Passwort ist zu lang."),
+    .refine((v) => v.length >= MIN_PASSWORD_LENGTH, {
+      message: `Mindestens ${MIN_PASSWORD_LENGTH} Zeichen`,
+    })
+    .refine((v) => v.length <= MAX_PASSWORD_LENGTH, { message: "Das Passwort ist zu lang." }),
   role,
 })
 
