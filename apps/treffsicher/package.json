@@ -21,7 +21,6 @@
     "pruefen:konto": "tsx tools/pruefen-account.ts"
   },
   "dependencies": {
-    "@hookform/resolvers": "^6.0.0",
     "@prisma/adapter-pg": "catalog:",
     "@prisma/client": "catalog:",
     "@vereinsheim/lib": "workspace:*",
