@@ -73,11 +73,12 @@ type State struct {
 	Requests []CardRequest `json:"requests"`
 }
 
-// CardRequest ist ein Auftrag, genau eine Scheibe per ID zu holen (die ID im Fuß des Ausdrucks); die Id meldet die
-// Brücke mit dem Ausgang zurück.
+// CardRequest ist ein Auftrag, genau eine Scheibe per ID zu holen (die ID im Fuß des Ausdrucks), vom Abend `Day`
+// (`YYYY-MM-DD`, Ortszeit der Anlage, vor 4 Uhr der Vortag); die Id meldet die Brücke mit dem Ausgang zurück.
 type CardRequest struct {
-	ID         int   `json:"id"`
-	ScheibenID int32 `json:"scheibenId"`
+	ID         int    `json:"id"`
+	ScheibenID int32  `json:"scheibenId"`
+	Day        string `json:"day"`
 }
 
 // Ausgänge eines Auftrags per ID (`REQUEST_OUTCOMES` im Vertrag).
@@ -86,8 +87,10 @@ const (
 	RequestSent = "sent"
 	// die ID steht nicht in der Ablage
 	RequestMissing = "missing"
-	// die Scheibe bleibt im Schützenhaus (verdeckt oder gesperrt)
+	// die Scheibe bleibt im Schützenhaus (verdeckt, gesperrt oder gegen den Vertrag)
 	RequestHeld = "held"
+	// die Scheibe ist von einem anderen Abend und bleibt im Schützenhaus
+	RequestMismatch = "mismatch"
 )
 
 // RequestDone meldet den Ausgang eines Auftrags per ID im Heartbeat.

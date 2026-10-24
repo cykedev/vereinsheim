@@ -169,24 +169,28 @@ describe("Scheibe per ID holen (additiv)", () => {
   const state = load("examples/api-v1/state-response.json") as Record<string, unknown>
   const heartbeat = load("examples/api-v1/heartbeat.json") as Record<string, unknown>
 
-  it("Zustand mit und ohne Aufträge; je Auftrag Id und ScheibenID, nie mehr", () => {
+  it("Zustand mit und ohne Aufträge; je Auftrag Id, ScheibenID und Abend, nie mehr", () => {
     expect(stateResponseV1.safeParse(state).success).toBe(true)
+    const day = "2026-10-21"
     expect(
-      stateResponseV1.safeParse({ ...state, requests: [{ id: 3, scheibenId: -7257056 }] }).success
+      stateResponseV1.safeParse({ ...state, requests: [{ id: 3, scheibenId: -7257056, day }] })
+        .success
     ).toBe(true)
     for (const requests of [
-      [{ id: 0, scheibenId: 1 }],
-      [{ id: 3 }],
-      [{ id: 3, scheibenId: 2 ** 31 }],
-      [{ id: 3, scheibenId: "ff914420" }],
-      [{ id: 3, scheibenId: 1, day: "2026-10-21" }],
-      Array.from({ length: 1_001 }, (_, i) => ({ id: i + 1, scheibenId: i })),
+      [{ id: 0, scheibenId: 1, day }],
+      [{ id: 3, day }],
+      [{ id: 3, scheibenId: 1 }],
+      [{ id: 3, scheibenId: 1, day: "21.10.2026" }],
+      [{ id: 3, scheibenId: 2 ** 31, day }],
+      [{ id: 3, scheibenId: "ff914420", day }],
+      [{ id: 3, scheibenId: 1, day, userId: "x" }],
+      Array.from({ length: 1_001 }, (_, i) => ({ id: i + 1, scheibenId: i, day })),
     ])
       expect(stateResponseV1.safeParse({ ...state, requests }).success).toBe(false)
   })
 
   it("Heartbeat mit und ohne Ausgang der Aufträge; nur die festen Ausgänge, höchstens 100", () => {
-    expect(REQUEST_OUTCOMES).toEqual(["sent", "missing", "held"])
+    expect(REQUEST_OUTCOMES).toEqual(["sent", "missing", "held", "mismatch"])
     expect(parseApi(heartbeatV1, heartbeat).ok).toBe(true)
     expect(
       parseApi(heartbeatV1, {

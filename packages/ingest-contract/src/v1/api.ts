@@ -73,10 +73,11 @@ export const BRIDGE_CLOCK_TOLERANCE_MS = 30_000
 
 /**
  * Wie ein Auftrag, eine Scheibe per ID zu holen, bei der Brücke ausging (`heartbeat.requestsDone`): `sent` Spiegel hat
- * den Stand endgültig beantwortet, `missing` die ID steht nicht in der Ablage, `held` die Scheibe bleibt im Schützenhaus
- * (verdeckt oder gesperrt)
+ * den Stand endgültig beantwortet, `missing` die ID steht nicht in der Ablage oder die Scheibe hat keine Treffer, `held`
+ * die Scheibe bleibt im Schützenhaus (verdeckt, gesperrt oder gegen den Vertrag), `mismatch` die Scheibe ist von einem
+ * anderen Abend als `day` und bleibt im Schützenhaus
  */
-export const REQUEST_OUTCOMES = ["sent", "missing", "held"] as const
+export const REQUEST_OUTCOMES = ["sent", "missing", "held", "mismatch"] as const
 
 /**
  * `POST /heartbeat`, einmal je Minute. Nie Namen oder Sportpassnummern (SF-59); der Fingerabdruck der Quelle
@@ -187,11 +188,18 @@ export const stateResponseV1 = z
       .optional(),
     /**
      * additiv: offene Aufträge, genau eine Scheibe per ID zu holen (die ID im Fuß des Ausdrucks). Die Brücke liest sie
-     * beim nächsten Durchgang, auch ohne Zustimmung per Sportpass; verdeckt oder gesperrt bleibt sie im Schützenhaus.
-     * Den Tag prüft Spiegel beim Annehmen. Solange einer offen ist, enthält `blocked` alle Sperren.
+     * beim nächsten Durchgang, auch ohne Zustimmung per Sportpass, und schickt sie nur, wenn ihr Beginn auf den Abend
+     * `day` fällt (Ortszeit der Anlage, vor 4 Uhr der Vortag); verdeckt oder gesperrt bleibt sie im Schützenhaus.
+     * Spiegel prüft den Tag beim Annehmen noch einmal. Solange einer offen ist, enthält `blocked` alle Sperren.
      */
     requests: z
-      .array(z.strictObject({ id: z.int().min(1), scheibenId: z.int32() }))
+      .array(
+        z.strictObject({
+          id: z.int().min(1),
+          scheibenId: z.int32(),
+          day: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+        })
+      )
       .max(1_000)
       .optional(),
   })

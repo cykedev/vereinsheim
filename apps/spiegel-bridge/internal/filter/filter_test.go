@@ -131,10 +131,13 @@ func TestBlockedOnlyInItsEpoch(t *testing.T) {
 
 func TestRequestedCardCountsAsConsentOnly(t *testing.T) {
 	stamp := []string{"2026-10-13 20:00:00"}
+	night := []string{"2026-10-14 01:30:00"}
 	var state api.State
 	state.Sportpass.Salt = salt
+	state.Sportpass.Hashes = []string{SportpassHash(salt, "12345678")}
 	state.Blocked = []api.Blocked{{ScheibenID: 9, StartedAt: time.Date(2026, 10, 13, 20, 0, 0, 0, time.UTC)}}
-	state.Requests = []api.CardRequest{{ID: 1, ScheibenID: 7}, {ID: 2, ScheibenID: 8}, {ID: 3, ScheibenID: 9}}
+	day := "2026-10-13"
+	state.Requests = []api.CardRequest{{ID: 1, ScheibenID: 7, Day: day}, {ID: 2, ScheibenID: 8, Day: day}, {ID: 3, ScheibenID: 9, Day: day}, {ID: 4, ScheibenID: 10, Day: "2026-10-12"}}
 	r := NewRules(state)
 	cases := []struct {
 		name string
@@ -146,6 +149,9 @@ func TestRequestedCardCountsAsConsentOnly(t *testing.T) {
 		{"nicht angefragt, ohne Zustimmung", snapshot(6, "87654321", []string{"1"}, stamp), Decision{Reason: NoConsent}},
 		{"angefragt, verdeckt (SF-19)", snapshot(8, "87654321", []string{"5"}, stamp), Decision{Reason: Hidden, Mode: 5}},
 		{"angefragt, gesperrt", snapshot(9, "87654321", []string{"1"}, stamp), Decision{Reason: Blocked}},
+		{"angefragt, nach Mitternacht zählt der Abend davor", snapshot(7, "87654321", []string{"1"}, night), Decision{Send: true}},
+		{"angefragt für einen anderen Abend", snapshot(10, "87654321", []string{"1"}, stamp), Decision{Reason: WrongDay}},
+		{"mit Zustimmung zählt der Abend des Auftrags nicht", snapshot(10, "12345678", []string{"1"}, stamp), Decision{Send: true}},
 	}
 	for _, c := range cases {
 		if got := r.Decide(c.s); got != c.want {

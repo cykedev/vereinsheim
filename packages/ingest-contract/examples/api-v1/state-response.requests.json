@@ -18,7 +18,8 @@
   "requests": [
     {
       "id": 3,
-      "scheibenId": -7257056
+      "scheibenId": -7257056,
+      "day": "2026-10-09"
     }
   ]
 }

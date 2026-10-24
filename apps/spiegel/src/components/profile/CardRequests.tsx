@@ -32,7 +32,14 @@ export const REQUEST_STATUS_TEXT: Readonly<Record<CardRequestStatus, string>> = 
   mismatch: "an diesem Tag nicht gefunden",
   taken: "gehört zu einem anderen Konto",
   withdrawn: "zurückgezogen",
+  expired: "keine Antwort von der Anlage",
 }
+
+/** der Zustand eines Auftrags in Worten; offen mit Scheibe: Sie ist geholt, weitere Schüsse kommen noch nach */
+export const requestStatusText = (request: Pick<OwnRequest, "status" | "cardId">) =>
+  request.status === "open" && request.cardId
+    ? "geholt, wird noch ergänzt"
+    : REQUEST_STATUS_TEXT[request.status]
 
 /** was nach dem Anfragen unter dem Formular steht */
 function outcomeText(outcome: CardRequestOutcome): string {
@@ -186,7 +193,7 @@ export function CardRequests({
               <span className="grid">
                 <span className="font-mono">{request.hex}</span>
                 <span className="text-[13px] text-muted-foreground">
-                  {`${dayText(request.day)} · ${REQUEST_STATUS_TEXT[request.status]}`}
+                  {`${dayText(request.day)} · ${requestStatusText(request)}`}
                 </span>
               </span>
               {request.cardId && (
@@ -194,7 +201,7 @@ export function CardRequests({
                   Scheibe öffnen
                 </Link>
               )}
-              {request.status === "open" && (
+              {request.status === "open" && !request.cardId && (
                 <button
                   type="button"
                   disabled={pending}

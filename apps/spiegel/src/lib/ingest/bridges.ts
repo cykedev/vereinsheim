@@ -17,7 +17,7 @@ import {
 } from "@vereinsheim/ingest-contract/api"
 import { sportpassHash } from "@vereinsheim/ingest-contract/sportpass"
 
-import { openRequestsOf, recordRequestOutcomes } from "../card-requests/queries"
+import { finishRequests, openRequestsOf, recordRequestOutcomes } from "../card-requests/queries"
 import { ACTIVE_CONSENT } from "../consent/status"
 import type { Db } from "../db"
 import { FINAL_AFTER_MS, INCOMPLETE_FLAGS, RESTING_AFTER_MS } from "./meyton-ssmdb2"
@@ -263,6 +263,8 @@ export async function recordHeartbeat(
     nowMs,
     runStartedAt: newRun ? runStartedAt : null,
   })
+  // geholte Scheiben, die jetzt endgültig sind: ihr Auftrag ist erledigt
+  await finishRequests(db, bridge.siteId, nowMs)
 }
 
 /** das Salz der Anlage für die gehashten SportpassIDs; entsteht beim ersten Abruf */

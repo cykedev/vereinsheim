@@ -150,11 +150,13 @@ type Runner struct {
 	historyDone []api.HistoryDone
 	hashOf      map[string]string
 
-	// offene Aufträge per ID aus dem Zustand, ihr Ausgang (Heartbeat) und welche der Filter zurückhielt (verdeckt,
-	// gesperrt)
-	requests      []api.CardRequest
-	requestsDone  []api.RequestDone
-	requestedHeld map[int32]bool
+	// offene Aufträge per ID aus dem Zustand, ihr Ausgang (Heartbeat), welche der Filter zurückhielt (verdeckt,
+	// gesperrt, gegen den Vertrag) und welche von einem anderen Abend sind
+	requests          []api.CardRequest
+	requestedIDs      map[int32]bool
+	requestsDone      []api.RequestDone
+	requestedHeld     map[int32]bool
+	requestedWrongDay map[int32]bool
 }
 
 // MaxRequestsDone: so viele Ausgänge von Aufträgen per ID nimmt der Heartbeat
@@ -182,18 +184,19 @@ func New(version string, src Source, spiegel Spiegel, log Logger, cfg watch.Conf
 		now = time.Now
 	}
 	return &Runner{
-		version:       version,
-		src:           src,
-		spiegel:       spiegel,
-		log:           log,
-		now:           now,
-		watcher:       watch.New(cfg, now),
-		started:       now(),
-		epoch:         cfg.Epoch,
-		held:          map[int32]int{},
-		noConsent:     map[int32]bool{},
-		unconfirmed:   map[int32]bool{},
-		requestedHeld: map[int32]bool{},
+		version:           version,
+		src:               src,
+		spiegel:           spiegel,
+		log:               log,
+		now:               now,
+		watcher:           watch.New(cfg, now),
+		started:           now(),
+		epoch:             cfg.Epoch,
+		held:              map[int32]int{},
+		noConsent:         map[int32]bool{},
+		unconfirmed:       map[int32]bool{},
+		requestedHeld:     map[int32]bool{},
+		requestedWrongDay: map[int32]bool{},
 	}
 }
 
@@ -334,7 +337,7 @@ func (r *Runner) setRequests(state api.State) {
 			fresh = append(fresh, q.ScheibenID)
 		}
 	}
-	r.requests = state.Requests
+	r.requests, r.requestedIDs = state.Requests, wanted
 	if len(fresh) > 0 {
 		r.watcher.Resend(fresh)
 	}
@@ -353,25 +356,29 @@ func (r *Runner) setRequests(state api.State) {
 	r.watcher.SetRequested(func(id int32) bool { return wanted[id] })
 }
 
-// updateRequestsDone: Ein Auftrag per ID ist ausgegangen, wenn seine Scheibe nicht in der Ablage steht (`missing`), der
-// Filter sie hält (`held`) oder Spiegel ihren Stand endgültig beantwortet hat (`sent`). Gemeldet wird er in jedem
-// Heartbeat, bis Spiegel ihn nicht mehr nennt.
+// updateRequestsDone: Ein Auftrag per ID ist ausgegangen, wenn seine Scheibe nicht in der Ablage steht oder keine
+// Treffer hat (`missing`), von einem anderen Abend ist (`mismatch`), der Filter sie hält (`held`) oder Spiegel ihren
+// Stand endgültig beantwortet hat (`sent`). Gemeldet wird er in jedem Heartbeat, bis Spiegel ihn nicht mehr nennt;
+// `sent` zuletzt, damit die Grenze des Heartbeats die Ausgänge behält, die Spiegel braucht.
 func (r *Runner) updateRequestsDone() {
-	var done []api.RequestDone
+	var done, sent []api.RequestDone
 	for _, q := range r.requests {
-		if len(done) >= MaxRequestsDone {
-			break
-		}
 		seen, open := r.watcher.RequestState(q.ScheibenID)
 		switch {
 		case !seen:
 			done = append(done, api.RequestDone{ID: q.ID, Outcome: api.RequestMissing})
 		case open:
+		case r.requestedWrongDay[q.ScheibenID]:
+			done = append(done, api.RequestDone{ID: q.ID, Outcome: api.RequestMismatch})
 		case r.requestedHeld[q.ScheibenID]:
 			done = append(done, api.RequestDone{ID: q.ID, Outcome: api.RequestHeld})
 		default:
-			done = append(done, api.RequestDone{ID: q.ID, Outcome: api.RequestSent})
+			sent = append(sent, api.RequestDone{ID: q.ID, Outcome: api.RequestSent})
 		}
+	}
+	done = append(done, sent...)
+	if len(done) > MaxRequestsDone {
+		done = done[:MaxRequestsDone]
 	}
 	if len(done) != len(r.requestsDone) {
 		r.log("card-requests-done", "done", len(done), "open", len(r.requests)-len(done))
@@ -485,6 +492,10 @@ func (r *Runner) Step(ctx context.Context) (time.Duration, error) {
 	}
 	for _, skip := range result.Skipped {
 		r.log("card-skipped", "scheibe", skip.ID, "code", skip.Code)
+		// gegen den Vertrag geht sie nie hinaus: für einen Auftrag per ID gehalten, nicht gesendet
+		if r.requestedIDs[skip.ID] {
+			r.requestedHeld[skip.ID] = true
+		}
 	}
 
 	var outgoing []contract.Snapshot
@@ -493,11 +504,15 @@ func (r *Runner) Step(ctx context.Context) (time.Duration, error) {
 		delete(r.held, s.ScheibenID)
 		delete(r.noConsent, s.ScheibenID)
 		delete(r.requestedHeld, s.ScheibenID)
+		delete(r.requestedWrongDay, s.ScheibenID)
 		if decision.Send {
 			// was gegen den Vertrag verstößt, nimmt Spiegel ohnehin nicht; nicht den ganzen Stapel daran scheitern lassen
 			if err := contract.Validate(s); err != nil {
 				r.log("snapshot-invalid", "scheibe", s.ScheibenID, "code", code(err))
 				r.watcher.Delivered(s)
+				if r.requestedIDs[s.ScheibenID] {
+					r.requestedHeld[s.ScheibenID] = true
+				}
 				continue
 			}
 			outgoing = append(outgoing, s)
@@ -505,8 +520,14 @@ func (r *Runner) Step(ctx context.Context) (time.Duration, error) {
 		}
 		// zurückgehalten gilt als erledigt, bis sich die Scheibe oder der Zustand ändert
 		r.watcher.Delivered(s)
-		if decision.Reason != filter.NoConsent {
-			r.requestedHeld[s.ScheibenID] = true
+		if r.requestedIDs[s.ScheibenID] {
+			switch decision.Reason {
+			case filter.WrongDay:
+				r.requestedWrongDay[s.ScheibenID] = true
+			case filter.NoConsent:
+			default:
+				r.requestedHeld[s.ScheibenID] = true
+			}
 		}
 		switch decision.Reason {
 		case filter.Hidden:

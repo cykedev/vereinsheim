@@ -40,11 +40,15 @@ describe("Abschnitt Scheibe per ID holen", () => {
       request({ id: 1 }),
       request({ id: 2, status: "done", cardId: "c1" }),
       request({ id: 3, status: "mismatch" }),
+      request({ id: 4, status: "open", cardId: "c2" }),
     ])
     expect(html).toContain("Mi 21.10.2026 · wartet auf die Anlage")
-    expect(html).toContain("Mi 21.10.2026 · geholt")
+    expect(html).toContain("Mi 21.10.2026 · geholt<")
     expect(html).toContain("Mi 21.10.2026 · an diesem Tag nicht gefunden")
+    expect(html).toContain("Mi 21.10.2026 · geholt, wird noch ergänzt")
     expect(html).toContain('href="/cards/c1"')
+    expect(html).toContain('href="/cards/c2"')
+    // zurückziehen nur, solange nichts geholt ist
     expect(html.match(/Zurückziehen<\/button>/g)).toHaveLength(1)
   })
 

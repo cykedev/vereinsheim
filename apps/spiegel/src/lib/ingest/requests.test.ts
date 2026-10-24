@@ -9,6 +9,8 @@ import { createTestSite, type TestSite } from "../../../test/fixtures"
 import { eveningOfStart } from "../card-requests/id"
 import { startHintMs } from "../db/blocks"
 
+import { finishRequests, recordRequestOutcomes } from "../card-requests/queries"
+
 import { bridgeState, recordHeartbeat } from "./bridges"
 import { ingestBatch } from "./ingest"
 
@@ -97,18 +99,36 @@ const stored = (scheibenId: number) =>
   db.rawSnapshot.count({ where: { sourceId: site.sourceId, scheibenId } })
 
 describe("Einlesen mit Auftrag per ID", () => {
-  it("ohne Zustimmung, mit Auftrag und passendem Abend: beim Auftraggeber, nicht wartend; Auftrag erledigt", async () => {
+  it("ohne Zustimmung, mit Auftrag und passendem Abend: beim Auftraggeber, nicht wartend; erledigt, wenn endgültig", async () => {
     const snapshots = as(sent("SF-03"), "87654321", 70_001)
     const r = await request(site.ownerId, 70_001, eveningOf(snapshots[0]))
-    const results = await ingest(snapshots)
-    expect(results.every((x) => x.outcome !== "discarded")).toBe(true)
+    // die ersten Stände: Die Scheibe hängt am Auftrag, er bleibt offen, damit weitere Schüsse nachkommen
+    const first = await ingest(snapshots.slice(0, 2))
+    expect(first.every((x) => x.outcome !== "discarded")).toBe(true)
     const card = await db.card.findFirstOrThrow({
       where: { sourceId: site.sourceId, scheibenId: 70_001 },
       orderBy: { block: "desc" },
     })
     expect(card.ownerId).toBe(site.ownerId)
     expect(card.ownerPending).toBe(false)
-    expect(await statusOf(r.id)).toEqual({ status: "done", cardId: card.id })
+    expect(card.state).not.toBe("final")
+    await finishRequests(db, site.siteId)
+    expect(await statusOf(r.id)).toEqual({ status: "open", cardId: card.id })
+    const rest = await ingest(snapshots.slice(2))
+    expect(rest.every((x) => x.outcome !== "discarded")).toBe(true)
+    // der Heartbeat schaltet die Scheibe endgültig: der Auftrag ist erledigt
+    await db.card.updateMany({
+      where: { sourceId: site.sourceId, scheibenId: 70_001 },
+      data: { state: "final" },
+    })
+    await finishRequests(db, site.siteId)
+    expect((await statusOf(r.id)).status).toBe("done")
+    // danach gilt der Auftrag nicht mehr: ein späterer Stand ohne Zustimmung bleibt draußen
+    const later = as(sent("SF-03"), "87654321", 70_001).map((s) => ({
+      ...s,
+      sequence: s.sequence + 10_000_000,
+    }))
+    expect((await ingest([later.at(-1)!]))[0].reason).toBe("no-consent")
   })
 
   it("ein anderer Abend: nichts gespeichert, Auftrag „an diesem Tag nicht gefunden“", async () => {
@@ -144,8 +164,60 @@ describe("Einlesen mit Auftrag per ID", () => {
     const first = await request(other, 70_005, eveningOf(snapshots[0]))
     const second = await request(site.ownerId, 70_005, eveningOf(snapshots[0]))
     await ingest(snapshots)
-    expect((await statusOf(first.id)).status).toBe("done")
+    expect((await statusOf(first.id)).cardId).not.toBeNull()
     expect((await statusOf(second.id)).status).toBe("taken")
+  })
+
+  it("eine Sportpassnummer, die ein anderes Konto eingetragen hat (auch wartend), schützt die Scheibe", async () => {
+    await db.sportpassConsent.create({
+      data: { userId: other, siteId: site.siteId, sportpassId: BigInt(55555555) },
+    })
+    const snapshots = as(sent("SF-03"), "55555555", 70_007)
+    const r = await request(site.ownerId, 70_007, eveningOf(snapshots[0]))
+    const results = await ingest(snapshots)
+    expect(results.every((x) => x.reason === "no-consent")).toBe(true)
+    expect(await stored(70_007)).toBe(0)
+    expect((await statusOf(r.id)).status).toBe("taken")
+  })
+
+  it("gesperrt (Grabstein): nichts gespeichert, Auftrag gehalten", async () => {
+    const snapshots = as(sent("SF-03"), "87654321", 70_008)
+    await db.tombstone.create({
+      data: {
+        sourceId: site.sourceId,
+        scheibenId: 70_008,
+        startedAt: new Date(
+          startHintMs(
+            snapshots[0].data.treffer.rows.map((row) => row.Zeitstempel),
+            Date.parse(snapshots[0].observedAt)
+          )
+        ),
+        reason: "not-mine",
+      },
+    })
+    const r = await request(site.ownerId, 70_008, eveningOf(snapshots[0]))
+    const results = await ingest(snapshots)
+    // der erste Stand trifft die Sperre und hält den Auftrag; danach gilt keiner mehr
+    expect(results.map((x) => x.reason)).toEqual([
+      "blocked",
+      ...results.slice(1).map(() => "no-consent"),
+    ])
+    expect(await stored(70_008)).toBe(0)
+    expect((await statusOf(r.id)).status).toBe("held")
+  })
+
+  it("ein Auftrag eines deaktivierten Kontos zählt nicht", async () => {
+    const snapshots = as(sent("SF-03"), "87654321", 70_009)
+    const r = await request(site.ownerId, 70_009, eveningOf(snapshots[0]))
+    await db.user.update({ where: { id: site.ownerId }, data: { isActive: false } })
+    try {
+      const results = await ingest(snapshots)
+      expect(results.every((x) => x.reason === "no-consent")).toBe(true)
+      expect(await stored(70_009)).toBe(0)
+      expect((await statusOf(r.id)).status).toBe("open")
+    } finally {
+      await db.user.update({ where: { id: site.ownerId }, data: { isActive: true } })
+    }
   })
 
   it("verdeckt: nichts gespeichert, Auftrag gehalten", async () => {
@@ -166,16 +238,32 @@ describe("Einlesen mit Auftrag per ID", () => {
 })
 
 describe("Zustand und Heartbeat mit Aufträgen", () => {
-  it("der Zustand nennt offene Aufträge aktiver Konten, mit offenem Auftrag alle Sperren", async () => {
+  it("der Zustand nennt offene Aufträge aktiver Konten mit ihrem Abend, mit offenem Auftrag alle Sperren", async () => {
+    // eine alte Sperre (vor dem Fenster von 60 Tagen): ohne Auftrag nicht im Zustand, mit Auftrag schon
+    const oldBlock = { scheibenId: 70_150, startedAt: new Date(Date.now() - 200 * 86_400_000) }
+    await db.deleteLock.create({
+      data: { sourceId: site.sourceId, userId: site.ownerId, ...oldBlock },
+    })
+    const hasOldBlock = (state: Awaited<ReturnType<typeof bridgeState>>) =>
+      state.blocked.some((b) => b.scheibenId === oldBlock.scheibenId)
+    // ohne Auftrag und ohne Nachladen nur die jüngsten Sperren
+    await db.cardRequest.updateMany({
+      where: { siteId: site.siteId, status: "open" },
+      data: { status: "withdrawn" },
+    })
+    await db.sportpassConsent.updateMany({
+      where: { siteId: site.siteId },
+      data: { historyLoadedAt: new Date() },
+    })
+    expect(hasOldBlock(await bridgeState(db, site.siteId))).toBe(false)
+
     const r = await request(site.ownerId, 70_101, "2026-10-21")
     const state = await bridgeState(db, site.siteId)
-    expect(state.requests).toContainEqual({ id: r.id, scheibenId: 70_101 })
+    expect(state.requests).toContainEqual({ id: r.id, scheibenId: 70_101, day: "2026-10-21" })
+    expect(hasOldBlock(state)).toBe(true)
     await db.user.update({ where: { id: site.ownerId }, data: { isActive: false } })
     try {
-      expect((await bridgeState(db, site.siteId)).requests).not.toContainEqual({
-        id: r.id,
-        scheibenId: 70_101,
-      })
+      expect((await bridgeState(db, site.siteId)).requests?.map((q) => q.id)).not.toContain(r.id)
     } finally {
       await db.user.update({ where: { id: site.ownerId }, data: { isActive: true } })
     }
@@ -185,6 +273,7 @@ describe("Zustand und Heartbeat mit Aufträgen", () => {
     const missing = await request(site.ownerId, 70_201, "2026-10-21")
     const held = await request(site.ownerId, 70_202, "2026-10-21")
     const sentOne = await request(site.ownerId, 70_203, "2026-10-21")
+    const wrongDay = await request(site.ownerId, 70_205, "2026-10-21")
     const closed = await db.cardRequest.create({
       data: {
         userId: site.ownerId,
@@ -215,6 +304,7 @@ describe("Zustand und Heartbeat mit Aufträgen", () => {
           { id: held.id, outcome: "held" },
           { id: sentOne.id, outcome: "sent" },
           { id: closed.id, outcome: "missing" },
+          { id: wrongDay.id, outcome: "mismatch" },
         ],
       },
       now
@@ -223,5 +313,17 @@ describe("Zustand und Heartbeat mit Aufträgen", () => {
     expect((await statusOf(held.id)).status).toBe("held")
     expect((await statusOf(sentOne.id)).status).toBe("open")
     expect((await statusOf(closed.id)).status).toBe("withdrawn")
+    expect((await statusOf(wrongDay.id)).status).toBe("mismatch")
+  })
+
+  it("ein Auftrag, der schon eine Scheibe hat, bleibt bei „nicht gefunden“ offen", async () => {
+    const fetching = await request(site.ownerId, 70_206, "2026-10-21")
+    const card = await db.card.findFirstOrThrow({ where: { sourceId: site.sourceId } })
+    await db.cardRequest.update({ where: { id: fetching.id }, data: { cardId: card.id } })
+    await recordRequestOutcomes(db, site.siteId, [
+      { id: fetching.id, outcome: "missing" },
+      { id: fetching.id, outcome: "held" },
+    ])
+    expect((await statusOf(fetching.id)).status).toBe("open")
   })
 })

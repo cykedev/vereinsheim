@@ -51,6 +51,8 @@ export async function requestCardAction(
         return { error: "Diese Scheibe gehört schon zu einem anderen Konto." }
       case "duplicate":
         return { error: "Diese Scheibe ist schon angefragt." }
+      case "blocked":
+        return { error: "Diese Scheibe lässt sich nicht holen." }
       case "tooMany":
         return {
           error:

@@ -20,6 +20,8 @@ const (
 	NoConsent = "no-consent"
 	Hidden    = "hidden"
 	Blocked   = "blocked"
+	// angefragt per ID, aber von einem anderen Abend: geht nicht hinaus (die Brücke meldet den Auftrag `mismatch`)
+	WrongDay = "wrong-day"
 )
 
 // HeldDisplayModes: am Monitor verdeckt (5, 10) oder unbekannt (0); verlassen die Anlage nicht ohne Freigabe (SF-19,
@@ -67,18 +69,22 @@ type Rules struct {
 	salt    string
 	consent map[string]bool
 	blocked map[int32][]api.Blocked
-	// ausdrücklich angefragt (ID vom Ausdruck): gilt wie eine Zustimmung, verdeckt und gesperrt nicht
-	requested map[int32]bool
+	// ausdrücklich angefragt (ID vom Ausdruck) mit den Abenden der Aufträge: gilt wie eine Zustimmung, wenn die Scheibe
+	// an einem davon begann; verdeckt und gesperrt nicht
+	requested map[int32]map[string]bool
 }
 
 // NewRules bereitet den Zustand vor.
 func NewRules(state api.State) *Rules {
-	r := &Rules{salt: state.Sportpass.Salt, consent: map[string]bool{}, blocked: map[int32][]api.Blocked{}, requested: map[int32]bool{}}
+	r := &Rules{salt: state.Sportpass.Salt, consent: map[string]bool{}, blocked: map[int32][]api.Blocked{}, requested: map[int32]map[string]bool{}}
 	for _, h := range state.Sportpass.Hashes {
 		r.consent[h] = true
 	}
 	for _, q := range state.Requests {
-		r.requested[q.ScheibenID] = true
+		if r.requested[q.ScheibenID] == nil {
+			r.requested[q.ScheibenID] = map[string]bool{}
+		}
+		r.requested[q.ScheibenID][q.Day] = true
 	}
 	for _, b := range state.Blocked {
 		r.blocked[b.ScheibenID] = append(r.blocked[b.ScheibenID], b)
@@ -93,14 +99,27 @@ func cell(row contract.Row, column string) string {
 	return ""
 }
 
-// Decide prüft in der Reihenfolge von Spiegel: Zustimmung (oder ein Auftrag per ID), verdeckt, gesperrt.
+// Evening ist der Abend eines Beginns als `YYYY-MM-DD`: Ortszeit (wie `startHint` sie liefert), vor 4 Uhr der Vortag;
+// wie `eveningDay` in Spiegel.
+func Evening(start time.Time) string {
+	return start.Add(-4 * time.Hour).Format("2006-01-02")
+}
+
+// Decide prüft in der Reihenfolge von Spiegel: Zustimmung (oder ein Auftrag per ID für den Abend der Scheibe), verdeckt,
+// gesperrt.
 func (r *Rules) Decide(s contract.Snapshot) Decision {
 	if len(s.Data.Scheiben.Rows) != 1 {
 		return Decision{Reason: NoConsent}
 	}
 	hash := SportpassHash(r.salt, cell(s.Data.Scheiben.Rows[0], "SportpassID"))
-	if !r.requested[s.ScheibenID] && (hash == "" || !r.consent[hash]) {
-		return Decision{Reason: NoConsent}
+	if hash == "" || !r.consent[hash] {
+		days := r.requested[s.ScheibenID]
+		if days == nil {
+			return Decision{Reason: NoConsent}
+		}
+		if !days[Evening(startHint(s))] {
+			return Decision{Reason: WrongDay}
+		}
 	}
 	for _, row := range s.Data.Treffer.Rows {
 		text := cell(row, "Wertung")

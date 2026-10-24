@@ -43,8 +43,8 @@ enum UserRole {
   USER
 }
 
-// Auftrag per ID (`CardRequest`): offen, geholt, nicht in der Ablage (oder Frist vorbei), verdeckt oder gesperrt, an dem
-// Abend nicht gefunden, gehört einem anderen Konto, zurückgezogen
+// Auftrag per ID (`CardRequest`): offen, geholt, nicht in der Ablage, verdeckt oder gesperrt, an dem Abend nicht
+// gefunden, gehört einem anderen Konto, zurückgezogen, ohne Antwort der Anlage in der Frist
 enum CardRequestStatus {
   open
   done
@@ -53,6 +53,7 @@ enum CardRequestStatus {
   mismatch
   taken
   withdrawn
+  expired
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -189,7 +190,7 @@ model CardRequest {
   // der Abend der Scheibe, wie der Schütze ihn nennt (`YYYY-MM-DD`, vor 4 Uhr der Vortag)
   day        String
   status     CardRequestStatus @default(open)
-  // die geholte Scheibe; null, solange keine da ist
+  // die geholte Scheibe; null, solange keine da ist. Offen mit Scheibe: Sie wird noch ergänzt, bis sie endgültig ist
   cardId     String?
   card       Card?             @relation(fields: [cardId], references: [id], onDelete: SetNull)
   createdAt  DateTime          @default(now()) @db.Timestamptz(3)

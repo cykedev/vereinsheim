@@ -28,6 +28,10 @@
     {
       "id": 4,
       "outcome": "missing"
+    },
+    {
+      "id": 5,
+      "outcome": "mismatch"
     }
   ]
 }

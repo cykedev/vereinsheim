@@ -169,7 +169,7 @@
           },
           "outcome": {
             "type": "string",
-            "enum": ["sent", "missing", "held"]
+            "enum": ["sent", "missing", "held", "mismatch"]
           }
         },
         "required": ["id", "outcome"],

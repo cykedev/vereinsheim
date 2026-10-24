@@ -147,6 +147,21 @@ describe("requestCard", () => {
       await db.cardRequest.deleteMany({ where: { userId: { in: [user, other] } } })
     }
   })
+
+  it("eine Sperre oder ein Grabstein an diesem Abend: kein Auftrag; an einem anderen Abend schon", async () => {
+    const at = { sourceId: site.sourceId, startedAt: new Date(Date.UTC(2026, 9, 21, 18)) }
+    await db.tombstone.create({ data: { ...at, scheibenId: 84_001, reason: "not-mine" } })
+    await db.deleteLock.create({ data: { ...at, scheibenId: 84_002, userId: user } })
+    try {
+      for (const scheibenId of [84_001, 84_002]) {
+        const input = { userId: user, siteId: site.siteId, scheibenId }
+        expect(await requestCard(db, { ...input, day: "2026-10-21" })).toEqual({ kind: "blocked" })
+        expect((await requestCard(db, { ...input, day: "2026-10-22" })).kind).toBe("created")
+      }
+    } finally {
+      await db.cardRequest.deleteMany({ where: { userId: user } })
+    }
+  })
 })
 
 describe("withdrawRequest und Frist", () => {
@@ -165,7 +180,7 @@ describe("withdrawRequest und Frist", () => {
     await db.cardRequest.deleteMany({ where: { userId: user } })
   })
 
-  it("ein Auftrag, der länger als die Frist offen ist, gilt als nicht gefunden und verschwindet aus dem Profil", async () => {
+  it("ein Auftrag, der länger als die Frist offen ist: ohne Scheibe ohne Antwort, mit Scheibe erledigt", async () => {
     const now = Date.now()
     await requestCard(db, {
       userId: user,
@@ -178,8 +193,36 @@ describe("withdrawRequest und Frist", () => {
     const row = await db.cardRequest.findFirstOrThrow({
       where: { userId: user, scheibenId: 82_002 },
     })
-    expect(row.status).toBe("missing")
+    expect(row.status).toBe("expired")
     expect(await ownRequests(db, user, now)).toEqual([])
+    await db.cardRequest.deleteMany({ where: { userId: user } })
+
+    // schon geholt, aber nie endgültig geworden: erledigt
+    const card = generateSeason({
+      seed: 4,
+      cards: 1,
+      firstMs: Date.UTC(2026, 8, 1, 17, 30),
+      everyDays: 1,
+      sourceId: site.sourceId,
+      disciplineId: site.disciplineId,
+      ownerId: user,
+      scheibenIdBase: 85_000,
+    })[0]
+    const { cardId } = await writeRevision(db, card)
+    const fetched = await db.cardRequest.create({
+      data: {
+        userId: user,
+        siteId: site.siteId,
+        scheibenId: card.card.scheibenId!,
+        day: "2026-09-01",
+        cardId,
+        createdAt: new Date(now - (REQUEST_DAYS + 1) * DAY),
+      },
+    })
+    await expireRequests(db, now)
+    expect((await db.cardRequest.findUniqueOrThrow({ where: { id: fetched.id } })).status).toBe(
+      "done"
+    )
     await db.cardRequest.deleteMany({ where: { userId: user } })
   })
 })

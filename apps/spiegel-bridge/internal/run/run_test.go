@@ -938,9 +938,9 @@ func TestRequestedCardLeavesWithoutConsentWhileShooting(t *testing.T) {
 	f.ablage.put(1, "12345678", "1", 3)                     // der laufende Abend, mit Zustimmung
 	f.ablage.put(2, "87654321", "1", 3)                     // ohne Zustimmung, angefragt
 	f.ablage.put(3, "87654321", "1", 3)                     // ohne Zustimmung, nicht angefragt
-	f.ablage.old(4, "0", "1", "2025-05-01 19:00:00")        // alt, ohne Sportpass, angefragt
+	f.ablage.old(4, "0", "1", "2025-05-01 19:00:00")        // alt (Lebenszeichen), ohne Sportpass, angefragt; Schüsse wie `put` am 13.
 	f.ablage.old(5, "87654321", "1", "2025-05-02 19:00:00") // alt, nicht angefragt
-	f.sp.state.Requests = []api.CardRequest{{ID: 7, ScheibenID: 2}, {ID: 8, ScheibenID: 4}}
+	f.sp.state.Requests = []api.CardRequest{{ID: 7, ScheibenID: 2, Day: "2026-10-13"}, {ID: 8, ScheibenID: 4, Day: "2026-10-13"}}
 	// der Stand ist aktiv: Ein Auftrag per ID wartet nicht auf den Leerlauf (anders als das Nachladen)
 	f.runFor(2 * time.Minute)
 	sent := fmt.Sprint(f.sp.sent())
@@ -969,7 +969,7 @@ func TestRequestMissingOrHeld(t *testing.T) {
 	f.ablage.put(3, "87654321", "1", 3) // gesperrt
 	f.ablage.put(4, "87654321", "1", 0) // ohne Treffer (SF-13): keine Scheibe
 	f.sp.state.Blocked = []api.Blocked{{ScheibenID: 3, StartedAt: time.Date(2026, 10, 13, 20, 0, 0, 0, time.UTC)}}
-	f.sp.state.Requests = []api.CardRequest{{ID: 5, ScheibenID: 2}, {ID: 6, ScheibenID: 3}, {ID: 7, ScheibenID: 99}, {ID: 8, ScheibenID: 4}}
+	f.sp.state.Requests = []api.CardRequest{{ID: 5, ScheibenID: 2, Day: "2026-10-13"}, {ID: 6, ScheibenID: 3, Day: "2026-10-13"}, {ID: 7, ScheibenID: 99, Day: "2026-10-13"}, {ID: 8, ScheibenID: 4, Day: "2026-10-13"}}
 	f.runFor(2 * HeartbeatEvery)
 	if got := fmt.Sprint(f.sp.sent()); got != "[]" {
 		t.Fatalf("gesendet %s", got)
@@ -987,7 +987,7 @@ func TestRequestAfterTheCardWasHeldWithoutConsent(t *testing.T) {
 		t.Fatalf("ohne Auftrag %s", got)
 	}
 	// der Auftrag kommt mit dem nächsten Zustand: Die schon zurückgehaltene Scheibe wird noch einmal gelesen
-	f.sp.state.Requests = []api.CardRequest{{ID: 9, ScheibenID: 1}}
+	f.sp.state.Requests = []api.CardRequest{{ID: 9, ScheibenID: 1, Day: "2026-10-13"}}
 	f.runFor(StateEvery + time.Minute)
 	if got := fmt.Sprint(f.sp.sent()); got != "[1]" {
 		t.Fatalf("nach dem Auftrag %s", got)
@@ -997,5 +997,19 @@ func TestRequestAfterTheCardWasHeldWithoutConsent(t *testing.T) {
 	f.runFor(StateEvery + HeartbeatEvery)
 	if got := f.lastRequests(); got != "[]" {
 		t.Fatalf("Ausgang nach dem Ende %s", got)
+	}
+}
+
+func TestRequestForAnotherEveningStaysHome(t *testing.T) {
+	f := setup(t)
+	f.ablage.put(1, "87654321", "1", 3) // Schüsse am 13. Oktober, 20 Uhr
+	f.ablage.put(2, "87654321", "1", 3)
+	f.sp.state.Requests = []api.CardRequest{{ID: 5, ScheibenID: 1, Day: "2026-10-12"}, {ID: 6, ScheibenID: 2, Day: "2026-10-13"}}
+	f.runFor(2 * HeartbeatEvery)
+	if got := fmt.Sprint(f.sp.sent()); got != "[2]" {
+		t.Fatalf("gesendet %s: nur die Scheibe vom genannten Abend", got)
+	}
+	if got := f.lastRequests(); got != "[5:mismatch 6:sent]" {
+		t.Fatalf("Ausgang %s", got)
 	}
 }

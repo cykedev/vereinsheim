@@ -1,6 +1,7 @@
 // Aufträge, eine Scheibe per ID zu holen (die ID im Fuß des Ausdrucks), ohne Zustimmung per Sportpass. Der Schütze legt
-// sie im Profil an; die Brücke liest die Scheibe (`GET /state`, `requests`), das Einlesen nimmt sie nur an, wenn ihr
-// Beginn auf den genannten Abend fällt, und schließt den Auftrag. Der Heartbeat meldet, was die Brücke nicht holen kann.
+// sie im Profil an; die Brücke liest die Scheibe (`GET /state`, `requests`) und schickt sie nur vom genannten Abend, das
+// Einlesen prüft den Abend noch einmal. Mit dem ersten Stand hängt die Scheibe am Auftrag; erledigt ist er, wenn sie
+// endgültig ist (bis dahin kommen weitere Schüsse nach). Der Heartbeat meldet, was die Brücke nicht holen kann.
 
 import type { RequestOutcome } from "@vereinsheim/ingest-contract/api"
 import { eveningDay } from "@vereinsheim/shot-ui/period/calendar"
@@ -28,6 +29,8 @@ export type RequestResult =
   | { kind: "exists"; cardId: string; deleted: boolean }
   /** die Scheibe wartet schon in „Offen“ (erste Scheibe einer Sportpassnummer) */
   | { kind: "pending" }
+  /** die Scheibe dieses Abends ist gelöscht oder als „nicht meine“ gemeldet: Spiegel holt sie nicht wieder */
+  | { kind: "blocked" }
   /** die Scheibe an diesem Abend gehört einem anderen Konto */
   | { kind: "taken" }
   /** derselbe Auftrag ist schon offen */
@@ -58,6 +61,18 @@ export async function requestCard(
   if (own?.ownerPending) return { kind: "pending" }
   if (own) return { kind: "exists", cardId: own.id, deleted: own.deletedAt !== null }
   if (sameEvening.length) return { kind: "taken" }
+  // eine Sperre oder ein Grabstein dieses Abends: Die Brücke hielte die Scheibe zurück, der Auftrag endete „gehalten“
+  const blockedWhere = { source: { siteId: site.id }, scheibenId: input.scheibenId }
+  const [tombstones, locks] = await Promise.all([
+    db.tombstone.findMany({ where: blockedWhere, select: { startedAt: true } }),
+    db.deleteLock.findMany({ where: blockedWhere, select: { startedAt: true } }),
+  ])
+  if (
+    [...tombstones, ...locks].some(
+      (b) => eveningDay(b.startedAt.getTime(), site.timeZone) === input.day
+    )
+  )
+    return { kind: "blocked" }
 
   return db.$transaction(async (tx) => {
     await tx.$queryRaw`SELECT id FROM "User" WHERE id = ${input.userId} FOR UPDATE`
@@ -97,11 +112,34 @@ export async function withdrawRequest(
   return count === 1
 }
 
-/** offene Aufträge, die länger als `REQUEST_DAYS` auf die Anlage warten: nicht gefunden */
+/**
+ * offene Aufträge nach `REQUEST_DAYS` Tagen: mit Scheibe erledigt (sie ist seither nicht endgültig geworden, etwa
+ * ohne Heartbeat), ohne ohne Antwort der Anlage (`expired`: Brücke aus oder zu alt für Aufträge)
+ */
 export async function expireRequests(db: Db, nowMs = Date.now()): Promise<number> {
+  const old = {
+    status: "open" as const,
+    createdAt: { lt: new Date(nowMs - REQUEST_DAYS * DAY_MS) },
+  }
+  const closedAt = new Date(nowMs)
+  const [withCard, without] = await Promise.all([
+    db.cardRequest.updateMany({
+      where: { ...old, cardId: { not: null } },
+      data: { status: "done", closedAt },
+    }),
+    db.cardRequest.updateMany({
+      where: { ...old, cardId: null },
+      data: { status: "expired", closedAt },
+    }),
+  ])
+  return withCard.count + without.count
+}
+
+/** offene Aufträge der Anlage, deren Scheibe endgültig ist (der Heartbeat schaltet sie weiter): erledigt */
+export async function finishRequests(db: Db, siteId: number, nowMs = Date.now()): Promise<number> {
   const { count } = await db.cardRequest.updateMany({
-    where: { status: "open", createdAt: { lt: new Date(nowMs - REQUEST_DAYS * DAY_MS) } },
-    data: { status: "missing", closedAt: new Date(nowMs) },
+    where: { siteId, status: "open", card: { is: { state: "final" } } },
+    data: { status: "done", closedAt: new Date(nowMs) },
   })
   return count
 }
@@ -150,18 +188,18 @@ export async function ownRequests(
   }))
 }
 
-/** was die Brücke holen soll: offene Aufträge aktiver Konten der Anlage, älteste zuerst, höchstens `limit` */
+/** was die Brücke holen soll: offene Aufträge aktiver Konten der Anlage mit ihrem Abend, älteste zuerst, höchstens `limit` */
 export async function openRequestsOf(
   db: Db,
   siteId: number,
   { nowMs = Date.now(), limit = 1_000 }: { nowMs?: number; limit?: number } = {}
-): Promise<{ id: number; scheibenId: number }[]> {
+): Promise<{ id: number; scheibenId: number; day: string }[]> {
   await expireRequests(db, nowMs)
   return db.cardRequest.findMany({
     where: { siteId, status: "open", user: { isActive: true } },
     orderBy: { id: "asc" },
     take: limit,
-    select: { id: true, scheibenId: true },
+    select: { id: true, scheibenId: true, day: true },
   })
 }
 
@@ -195,9 +233,15 @@ export async function closeRequest(
   })
 }
 
+/** die geholte Scheibe an einen offenen Auftrag hängen; er bleibt offen, bis sie endgültig ist (`finishRequests`) */
+export async function attachRequestCard(db: Db, id: number, cardId: string): Promise<void> {
+  await db.cardRequest.updateMany({ where: { id, status: "open" }, data: { cardId } })
+}
+
 /**
- * Was die Brücke meldet (`heartbeat.requestsDone`): nicht in der Ablage oder im Schützenhaus gehalten schließt den
- * Auftrag; `sent` nicht, das schließt das Einlesen mit dem Stand. Nur offene Aufträge dieser Anlage.
+ * Was die Brücke meldet (`heartbeat.requestsDone`): nicht in der Ablage, von einem anderen Abend oder im Schützenhaus
+ * gehalten schließt den Auftrag; `sent` nicht, das macht das Einlesen mit dem Stand. Nur offene Aufträge dieser Anlage
+ * ohne Scheibe (eine schon geholte, die noch ergänzt wird, bleibt).
  */
 export async function recordRequestOutcomes(
   db: Db,
@@ -205,11 +249,11 @@ export async function recordRequestOutcomes(
   done: readonly { id: number; outcome: RequestOutcome }[],
   nowMs = Date.now()
 ): Promise<void> {
-  for (const status of ["missing", "held"] as const) {
+  for (const status of ["missing", "held", "mismatch"] as const) {
     const ids = done.filter((d) => d.outcome === status).map((d) => d.id)
     if (ids.length)
       await db.cardRequest.updateMany({
-        where: { id: { in: ids }, siteId, status: "open" },
+        where: { id: { in: ids }, siteId, status: "open", cardId: null },
         data: { status, closedAt: new Date(nowMs) },
       })
   }

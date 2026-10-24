@@ -573,10 +573,12 @@ describe("Scheibe per ID holen", () => {
       happens: [
         "Läuft die Anlage, holt Spiegel genau diese Scheibe in dein Konto. Das dauert ein paar Minuten.",
         "Ist die Anlage aus, holt Spiegel sie beim nächsten Einschalten.",
+        "Wird auf der Scheibe noch geschossen, holt Spiegel die neuen Schüsse nach.",
         "Passt der Tag nicht, holt Spiegel nichts und sagt es hier.",
       ],
       notHappening: [
         "Andere Scheiben holt Spiegel nicht.",
+        "Ändert die Standaufsicht die Scheibe später, holt Spiegel das nicht nach.",
         "An der Meyton-Anlage ändert sich nichts.",
       ],
       undo: "Den Auftrag hier zurückziehen, solange er wartet. Eine geholte Scheibe auf ihrer Seite löschen.",
