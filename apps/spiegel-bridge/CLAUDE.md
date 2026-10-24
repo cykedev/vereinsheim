@@ -118,11 +118,14 @@ einen laufenden Server (legt `SSMDB2` neu an). Go ist Pflicht im Dev-Setup wie N
   geschossen wird. Ohne Speicher: Ein Neustart beginnt von vorn, Spiegel antwortet „unverändert“.
 - **Aufträge per ID:** `state.requests` nennt ScheibenIDs, die ein Schütze mit der ID vom Ausdruck angefragt hat. `run`
   gibt der Erkennung ein Prädikat (`SetRequested`); eine angefragte Scheibe hat Rang 1 (nicht nur im Leerlauf, auch
-  wartend nicht), und hält den Takt hoch, bis sie `handled` ist. Der Filter lässt sie ohne Zustimmung hinaus, verdeckt
-  und gesperrt nicht. Ein neu genannter Auftrag liest die Scheibe noch einmal (`Resend`), auch wenn dieser Lauf sie schon
-  ohne Zustimmung zurückhielt. Der Heartbeat meldet je Auftrag `missing` (nicht in der letzten Runde oder ohne Treffer, SF-13),
-  `held` (vom Filter gehalten) oder `sent` (`RequestState`), bis Spiegel ihn nicht mehr nennt (höchstens 100). Den Tag
-  prüft Spiegel. `missing` ist für Spiegel endgültig: Ein Auftrag nennt eine Scheibe, die es schon gibt (Ausdruck).
+  wartend nicht), und hält den Takt hoch, bis sie `handled` ist. Der Filter lässt sie ohne Zustimmung hinaus, wenn ihr
+  Beginn auf den Abend des Auftrags fällt (`day`, `filter.Evening`: vor 4 Uhr der Vortag), sonst `WrongDay`; verdeckt
+  und gesperrt nie. Ein neu genannter Auftrag liest die Scheibe noch einmal (`Resend`), auch wenn dieser Lauf sie schon
+  ohne Zustimmung zurückhielt. Der Heartbeat meldet je Auftrag `missing` (nicht in der letzten Runde oder ohne Treffer,
+  SF-13), `mismatch` (anderer Abend), `held` (vom Filter gehalten, übersprungen oder ungültig) oder `sent`
+  (`RequestState`), bis Spiegel ihn nicht mehr nennt (höchstens 100, `sent` zuletzt). Spiegel prüft den Abend noch
+  einmal. `missing` ist für Spiegel endgültig, solange noch keine Scheibe am Auftrag hängt: Ein Auftrag nennt eine
+  Scheibe, die es schon gibt (Ausdruck). Spiegel nennt den Auftrag weiter, bis die Scheibe endgültig ist.
 - **Dienst** (`deploy/`): `install.sh` legt Binary, Benutzer, `/etc/spiegel-bridge` (0700) und die Unit an; die Unit
   läuft ohne Rechte, mit schreibgeschütztem System, 128 MB, kein Neustart bei Exit 2 und 3. `pair` fragt den Zugang
   zur SSMDB2 auf stdin ab, wenn weder `--dsn` noch die Umgebung ihn nennen. Geprüft in `debian:12` mit

@@ -87,9 +87,13 @@ Abend öffnet der nächste Stand die Scheibe wieder).
 `ingestBatch` liest die offenen Aufträge der Anlage für die ScheibenIDs des Stapels (`openRequestsFor`). Ohne Zustimmung
 gilt ein Auftrag wie eine Zustimmung für genau diese Scheibe, wenn der Abend aus dem groben Beginn (`startHintMs`,
 `eveningOfStart`) der genannte ist; der älteste passende Auftrag bekommt sie, nicht wartend. Andere Abende schließen ihre
-Aufträge als `mismatch`, ohne dass etwas gespeichert wird; eine aktive Zustimmung eines anderen Kontos und weitere
-Aufträge desselben Abends als `taken`; verdeckt oder gesperrt als `held`. Nach dem Schreiben schließt `done` mit der
-Scheibe (jüngster Block der Kennung beim Auftraggeber). Tests: `src/lib/ingest/requests.test.ts`.
+Aufträge als `mismatch`, ohne dass etwas gespeichert wird; eine Zustimmung eines anderen Kontos für die SportpassID
+(aktiv oder wartend) und weitere Aufträge desselben Abends als `taken`; verdeckt oder gesperrt als `held`. Nach dem
+Schreiben hängt der Auftrag an der Scheibe mit demselben Beginn (`attachRequestCard`) und bleibt offen, damit weitere
+Stände des Abends nachkommen; der Heartbeat schließt ihn als `done`, sobald die Scheibe endgültig ist
+(`finishRequests` nach `advanceCardStates`). Ein Auftrag mit Scheibe ändert ein `missing` oder `held` der Brücke nicht
+mehr. Nach 30 Tagen schließt `expireRequests`: mit Scheibe `done`, ohne `expired`. Tests:
+`src/lib/ingest/requests.test.ts`, `src/lib/card-requests/queries.test.ts`.
 
 ## Rohdaten
 

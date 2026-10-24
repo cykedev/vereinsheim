@@ -237,7 +237,8 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
   geschrieben je Block der letzte; jeder Stand trägt danach `adapterVersion` und `block`). Kopplung, Token, Heartbeat und Zustand in `bridges.ts`, der Adapter in `meyton-ssmdb2.ts` (reine Funktion,
   Tests an allen Fällen von `ssmdb2-cases`).
   - **Nichts ohne Zustimmung speichern:** Was nicht zu einer aktiven SportpassID der Anlage passt (bestätigt, nicht
-    abgelehnt), verwirft das Einlesen, bevor `storeSnapshot` läuft. Eine neue Regel dort braucht einen Test, der zeigt,
+    abgelehnt) oder zu einem offenen Auftrag per ID mit passendem Abend, verwirft das Einlesen, bevor `storeSnapshot`
+    läuft. Eine neue Regel dort braucht einen Test, der zeigt,
     dass nichts abgelegt wird.
   - **Logs nur mit Zahlen und festen Codes** (`Log` in `http.ts`), unerwartete Fehler nur mit ihrem Namen: Die Meldungen
     von Prisma enthalten Werte. Der Test in `http.test.ts` schickt einen Namen durch jede Fehlerart.
@@ -289,10 +290,13 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
 - **Scheibe per ID holen** (Profil, `src/lib/card-requests/`): Der Schütze tippt die ID vom Ausdruck (`parseCardId`, acht
   Hex-Zeichen wie im Fuß) und den Tag. `requestCard` legt einen `CardRequest` an, außer die Scheibe des Abends liegt schon
   in Spiegel (eigene: Weg zu ihr, fremde: „vergeben“), höchstens zehn offene je Konto, Frist 30 Tage (`expireRequests`).
-  `bridgeState` nennt offene Aufträge aktiver Konten (`requests`, dann alle Sperren), `ingestBatch` nimmt einen Stand ohne
-  Zustimmung nur mit offenem Auftrag und passendem Abend an (`eveningOfStart` aus `startHintMs`) und schließt den Auftrag
-  (`done`, `mismatch`, `taken`, `held`), `recordHeartbeat` schließt `missing` und `held` aus `requestsDone`. Eine
-  Zustimmung per Sportpass geht vor. Abschnitt `CardRequests` im Profil, Texte `cardRequest`, `cardRequestWithdraw`.
+  `bridgeState` nennt offene Aufträge aktiver Konten (`requests` mit Abend, dann alle Sperren), `ingestBatch` nimmt einen
+  Stand ohne Zustimmung nur mit offenem Auftrag und passendem Abend an (`eveningOfStart` aus `startHintMs`), hängt die
+  Scheibe an den Auftrag (`attachRequestCard`) oder schließt ihn (`mismatch`, `taken`, `held`). Offen mit Scheibe bleibt
+  er, bis sie endgültig ist (`finishRequests` im Heartbeat, dann `done`); `recordHeartbeat` schließt `missing`, `held`
+  und `mismatch` aus `requestsDone` nur ohne Scheibe. Eine Zustimmung per Sportpass geht vor, auch eine wartende eines
+  anderen Kontos. Gesperrte Abende nimmt `requestCard` gar nicht an (`blocked`). Nach 30 Tagen `expireRequests`: mit
+  Scheibe `done`, ohne `expired`. Abschnitt `CardRequests` im Profil, Texte `cardRequest`, `cardRequestWithdraw`.
 - **Ältere Scheiben nachladen:** Eine aktive Zustimmung ohne
   `historyLoadedAt` ist ein Auftrag mit `since` (`historyRequestedAt`, gesetzt beim Bestätigen und Aufheben; alte Zeilen:
   `confirmedAt`); `bridgeState` nennt sie in `history` und liefert dann alle Sperren, nicht nur die jüngsten 60 Tage.

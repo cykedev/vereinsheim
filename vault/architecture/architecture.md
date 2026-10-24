@@ -50,8 +50,8 @@ vereinsheim/                Code- + Deployment-Monorepo (pnpm + Turborepo)
 │                           Meyton schreibt, Fälle mit Snapshots v1 unter `cases/v1`; `replay` spielt sie in MariaDB ab.
 ├── packages/pruefen/       @vereinsheim/pruefen — Skriptprüfung im Browser für alle Apps: Chrome über das
 │                           DevTools-Protokoll, eigener Build als Server, gemeinsame Prüfungen, PDF als Text und Bilder.
-├── packages/meyton-pdf/    @vereinsheim/meyton-pdf — liest aus Meyton-Ausdrucken (PDF) ID im Fuß und Erstellzeit; noch
-│                           von keiner App genutzt.
+├── packages/meyton-pdf/    @vereinsheim/meyton-pdf — liest aus Meyton-Ausdrucken (PDF) ID im Fuß und Erstellzeit;
+│                           Spiegel nutzt `printout-id` für „Scheibe per ID holen“.
 ├── tools/ssmdb2-erkunden/  Erkundung der Meyton-SSMDB2 vor Ort: Checkliste, Kopie, Schießprotokoll; nur lesend.
 ├── tools/stack-e2e/        der ganze Stack lokal Ende zu Ende mit den echten Images, samt Brücke und Last.
 ├── vault/                  Doku als Obsidian-Vault = Memory-Graph (ADR-025): overview, decisions (ADRs), architecture,

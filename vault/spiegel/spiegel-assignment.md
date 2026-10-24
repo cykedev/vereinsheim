@@ -62,27 +62,33 @@ importieren“):
 1. **Profil → „Scheibe per ID holen“:** die ID wie im Fuß des Ausdrucks (`ID: ff914420`, acht Hex-Zeichen, `parseCardId`)
    und den Tag der Scheibe. Die Rückfrage sagt, was passiert (`cardRequest`). Liegt die Scheibe dieses Abends schon in
    Spiegel, gibt es keinen Auftrag: beim Schützen der Weg zu ihr, bei einem anderen Konto nur „gehört zu einem anderen
-   Konto“. Höchstens zehn offene Aufträge je Konto; ein wartender lässt sich zurückziehen.
-2. **Auftrag** (`CardRequest`): `GET /state` nennt ihn der Brücke (`requests`). Die Brücke liest die ScheibenID beim
-   nächsten Durchgang, auch während geschossen wird, und schickt sie ohne Zustimmung; verdeckte Wertung und gesperrte
-   Scheiben bleiben im Schützenhaus ([[spiegel-bridge]]).
-3. **Annehmen:** Spiegel nimmt den Stand nur an, wenn der Beginn der Scheibe auf den genannten Abend fällt (vor 4 Uhr
-   der Vortag). Sonst wird nichts gespeichert, und der Auftrag endet mit „an diesem Tag nicht gefunden“. Eine aktive
-   Zustimmung per Sportpass eines anderen Kontos geht vor („gehört zu einem anderen Konto“). Die Scheibe gehört dem
-   Auftraggeber sofort, ohne „Offen“.
-4. **Ausgang** im Profil: wartet auf die Anlage, geholt (mit Link), nicht gefunden (nicht in der Ablage oder nach 30
-   Tagen), an diesem Tag nicht gefunden, lässt sich nicht holen (verdeckt oder gesperrt), gehört zu einem anderen Konto,
-   zurückgezogen. Den Ausgang meldet die Brücke im Heartbeat (`requestsDone`) oder das Einlesen.
+   Konto“. Ist sie an diesem Abend gelöscht oder als „nicht meine“ gemeldet, auch nicht. Höchstens zehn offene Aufträge
+   je Konto; ein wartender lässt sich zurückziehen.
+2. **Auftrag** (`CardRequest`): `GET /state` nennt ihn der Brücke (`requests`, ScheibenID und Abend). Die Brücke liest
+   die ScheibenID beim nächsten Durchgang, auch während geschossen wird, und schickt sie ohne Zustimmung, wenn ihr
+   Beginn auf den Abend fällt (vor 4 Uhr der Vortag, `filter.Evening`); sonst meldet sie „anderer Tag“ (`mismatch`).
+   Verdeckte Wertung und gesperrte Scheiben bleiben im Schützenhaus ([[spiegel-bridge]]).
+3. **Annehmen:** Spiegel prüft den Abend noch einmal und speichert sonst nichts; der Auftrag endet dann mit „an diesem
+   Tag nicht gefunden“. Eine aktive oder wartende Zustimmung per Sportpass eines anderen Kontos geht vor („gehört zu
+   einem anderen Konto“). Die Scheibe gehört dem Auftraggeber sofort, ohne „Offen“.
+4. **Bis die Scheibe endgültig ist:** Der Auftrag bleibt offen und hängt an der Scheibe („geholt, wird noch ergänzt“),
+   damit weitere Schüsse und eine Korrektur am selben Abend nachkommen. Der Heartbeat schließt ihn, sobald die Scheibe
+   endgültig ist (`finishRequests`).
+5. **Ausgang** im Profil: wartet auf die Anlage, geholt (mit Link), nicht gefunden (nicht in der Ablage), keine Antwort
+   von der Anlage (nach 30 Tagen ohne Scheibe, `expired`), an diesem Tag nicht gefunden, lässt sich nicht holen
+   (verdeckt oder gesperrt), gehört zu einem anderen Konto, zurückgezogen. Den Ausgang meldet die Brücke im Heartbeat
+   (`requestsDone`) oder das Einlesen.
 
 „Nicht gefunden“ meldet die Brücke, sobald die ID in der ersten Runde nach dem Auftrag nicht in der Ablage steht oder
 die Scheibe keine Treffer hat. Weil es zu jedem Ausdruck eine Scheibe in der Ablage gibt, heißt das in der Praxis: ein
 Tippfehler, oder Meyton hat die Scheibe nicht mehr. Für eine Scheibe, die erst noch geschossen wird, taugt ein Auftrag
-nicht (Ende zu Ende geprüft mit `pnpm --filter spiegel bridge-e2e`).
+nicht (Ende zu Ende geprüft mit `pnpm --filter spiegel bridge-e2e`). Ein „nicht gefunden“ nach dem ersten Stand ändert
+nichts mehr: Ein Auftrag mit Scheibe schließt nur, wenn sie endgültig ist.
 
-Grenzen: Ein Tippfehler in den mittleren Stellen der ID kann am selben Abend die Scheibe eines anderen treffen; der Tag
-fängt das nicht. Dann hilft „Löschen“ (mit Sperre). Die Vorschau vor dem Holen (SF-41) kommt mit dem QR-Weg. Nach dem
-Holen liest die Brücke die Scheibe nicht mehr von selbst; eine spätere Korrektur der Standaufsicht kommt nur mit einer
-Zustimmung per Sportpass. Die Brücke braucht dafür die Version mit Aufträgen (vor Ort einspielen); eine ältere ignoriert
+Grenzen ([[spiegel-privacy]] „Restrisiko beim Holen per ID“): Ein Tippfehler in den mittleren Stellen der ID kann am
+selben Abend die Scheibe eines anderen treffen; der Tag fängt das nicht. Dann hilft „Löschen“ (mit Sperre). Die
+Vorschau vor dem Holen (SF-41) kommt mit dem QR-Weg. Ist die Scheibe endgültig, liest die Brücke sie nicht mehr von
+selbst; eine spätere Korrektur der Standaufsicht kommt nur mit einer Zustimmung per Sportpass. Die Brücke braucht dafür die Version mit Aufträgen (vor Ort einspielen); eine ältere ignoriert
 `requests`, und die Aufträge bleiben offen.
 
 ## Fundbüro: Scheiben ohne Besitzer

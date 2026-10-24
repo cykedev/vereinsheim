@@ -20,12 +20,26 @@ relates_to: ["[[spiegel-assignment]]", "[[spiegel-bridge]]", "[[treffsicher-user
 - **Datensparsamkeit in der Brücke:** Scheiben ohne zugestimmten Besitzer bleiben im Schützenhaus; die Brücke kennt dafür nur gehashte Kennungen ([[spiegel-bridge]]). Sie hält keinen eigenen Zustand; die Probe fremder Scheiben höchstens begrenzt im Arbeitsspeicher, bis zum Ausschalten. Hinaus geht sie nur mit Opt-in oder Abholung.
 - **Doppelt geprüft:** Spiegel nimmt nur Scheiben an, die zu einem Opt-in oder einem offenen Auftrag passen ([[spiegel-ingest-pipeline]]).
 - **Scheibe per ID** ([[spiegel-assignment]] „Scheibe per ID“): ein ausdrückliches Holen ohne Sportpass. Die Brücke
-  schickt genau die angefragte ScheibenID, Spiegel nimmt sie nur an, wenn ihr Beginn auf den genannten Tag fällt, und
-  speichert sonst nichts. Ein Tippfehler kann am selben Abend die Scheibe eines anderen treffen; „Löschen“ gibt sie mit
-  Sperre zurück. Die Vorschau vor dem Holen kommt mit dem QR-Weg.
+  schickt genau die angefragte ScheibenID, und nur, wenn ihr Beginn auf den genannten Abend fällt; Spiegel prüft den
+  Abend noch einmal und speichert sonst nichts. Verdeckte Wertung, Grabsteine und Löschsperren gelten auch hier. Eine
+  aktive oder wartende Zustimmung eines anderen Kontos für die SportpassID der Scheibe geht vor. Die Vorschau vor dem
+  Holen (SF-41) kommt mit dem QR-Weg.
+- **Restrisiko beim Holen per ID** (bewusst so gelassen, Stand 24. Oktober 2026):
+  - Wer den Ausdruck eines anderen in der Hand hat (ID und Tag), holt dessen Scheibe, solange für ihre SportpassID keine
+    Zustimmung in Spiegel steht. Ein Tippfehler in den mittleren Stellen der ID kann am selben Abend ebenso eine fremde
+    Scheibe treffen. „Löschen“ gibt sie mit Sperre zurück.
+  - Die Rohdaten einer so geholten Scheibe enthalten wie jede Zeile der SSMDB2 Name und SportpassID des Schützen am
+    Stand. Die Oberfläche zeigt sie nicht, der Admin sieht keine fremden Schüsse.
+  - Bekommt der Schütze am Stand später eine Zustimmung, gehört die geholte Scheibe weiter dem Auftraggeber; neue Stände
+    dieser Scheibe gehen in Quarantäne („Besitzer gewechselt“), bis jemand sie löscht.
+  - Die Ausgänge „gehört zu einem anderen Konto“, „lässt sich nicht holen“ und „an diesem Tag nicht gefunden“ verraten,
+    dass es eine Scheibe mit dieser ID gibt, aber nicht, wem sie gehört.
+  - Ein Auftrag hebt weder Grabstein noch Löschsperre auf: Eine Scheibe, die an diesem Abend gelöscht oder als „nicht
+    meine“ gemeldet ist, lässt sich per ID nicht holen (`requestCard` → „blocked“, die Brücke hält sie zurück).
+  Bei rund 15 Mitgliedern, Ausdrucken, die beim Schützen bleiben, und Konten nur vom Admin ist das vertretbar.
 - **Falsche Zuordnung:** Wählt jemand am Stand einen fremden Namen, landet seine Scheibe beim Falschen. „Nicht meine“ nimmt sie sofort heraus; ohne Besitzer wird sie gelöscht ([[spiegel-assignment]]). Bei der ersten Scheibe entfernt „Nicht meine“ die Scheibe mit Revisionen, Schüsse, Projektion, Ausdrucke, ihre Rohdaten (Stände im Fenster von 30 Tagen um den Beginn, Zeilen ohne verbliebenen Stand), dazu ein Grabstein.
 - **Grabsteine:** Abgelehnte und fremde Scheiben („Nicht meine“) merken sich Spiegel und Brücke als Grabstein, damit der nächste Abgleich sie nicht wieder hochlädt. Ein Grabstein trägt, wer gemeldet hat und unter welcher SportpassID die Scheibe kam, keine Schussdaten. Der Schütze sieht seine Meldungen mit Tag und Uhrzeit im Papierkorb, der Admin nur ihre Zahl in der Übersicht.
-- **Eigene Scheibe löschen** ([[spiegel-navigation]]): erst 30 Tage Papierkorb, danach endgültig. Es bleibt eine weiche Sperre, nur der Schlüssel ohne Schussdaten, auch an die Brücke verteilt. Sie verhindert, dass der Abgleich die Scheibe von selbst zurückbringt. Ein ausdrückliches Holen (QR, „Scheibe holen“) soll sie aufheben; das kommt mit diesen Wegen (SP-1.7 b, SP-2.4). Nur der Schütze selbst sieht seine Sperren, im Papierkorb. An die Brücke gehen Sperren und Grabsteine nur für Scheiben der letzten 60 Tage (`GET /state`); ältere liest die Brücke ohnehin nicht mehr, und Spiegel verwirft einen Stand dazu selbst (`isKeyBlocked`).
+- **Eigene Scheibe löschen** ([[spiegel-navigation]]): erst 30 Tage Papierkorb, danach endgültig. Es bleibt eine weiche Sperre, nur der Schlüssel ohne Schussdaten, auch an die Brücke verteilt. Sie verhindert, dass der Abgleich die Scheibe von selbst zurückbringt. Auch „Scheibe per ID holen“ hebt sie nicht auf; ob der QR-Weg sie aufheben soll, entscheidet SP-1.7 b bzw. SP-2.4. Nur der Schütze selbst sieht seine Sperren, im Papierkorb. An die Brücke gehen Sperren und Grabsteine nur für Scheiben der letzten 60 Tage (`GET /state`); ältere liest die Brücke ohnehin nicht mehr, und Spiegel verwirft einen Stand dazu selbst (`isKeyBlocked`).
 - **Netztrennung:** Die Handys sind im Gäste-LAN, Anlage und Brücke im Gerätenetz. Der Standard-Zugang zur SSMDB2 ist überall gleich; die Trennung hält ihn von den Handys fern.
 - **Protokolle ohne Namen:** Diagnose und Logs der Brücke enthalten keine Namen und Sportpassnummern.
 - **Verdeckte Wertung** (Meyton-Modus 5: Wert und Lage verdeckt, Modus 10: Wert verdeckt, unbekannte Modi) wird nie hochgeladen. Nach einem Preis- oder Königsschießen kann ein Admin freigeben.

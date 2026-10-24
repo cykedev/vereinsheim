@@ -37,7 +37,7 @@ Fachwissen: `vault/meyton/meyton-printout.md`, Sonderfälle SF-41 bis SF-48 in
 - **Keine echten Ausdrucke im Paket** (Namen, #Nummer; ADR-029). Tests bauen ihre PDFs mit
   `src/__fixtures__/buildPdf.ts` (Ghostscript-Weg: Type1 mit Literal-Strings; Qt-Weg: Type0/Identity-H
   mit ToUnicode und einem Glyph je `Tj`). Echte PDFs nur lokal in der Validierung.
-- `unpdf` in derselben festen Version wie Treffsicher (`1.8.1`); in den Katalog kommt es, sobald
+- `unpdf` in derselben festen Version wie Treffsicher (`1.9.1`); in den Katalog kommt es, sobald
   Treffsicher das Paket nutzt.
 - Muster, Dekodierung oder Datumsformate nur mit Test ändern; `toBeCloseTo` nimmt null als 0
   (`vault/conventions.md` §9).
