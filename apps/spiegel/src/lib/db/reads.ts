@@ -222,6 +222,7 @@ const PAGE_CARD_SELECT = {
   scoringChoice: true,
   disciplineId: true,
   discipline: { select: { name: true, targetId: true, officialScoring: true } },
+  standDiscipline: { select: { name: true } },
   family: { select: { slug: true, name: true } },
   currentRevision: {
     select: { number: true, shots: { orderBy: { seq: "asc" } } },
@@ -238,6 +239,8 @@ export interface PageCard extends PeriodCard {
   revision: number
   disciplineId: number
   discipline: string
+  /** die Disziplin am Stand, wenn der Schütze eine andere gewählt hat; null ohne eigene Wahl */
+  standDiscipline: string | null
   /** Scheibenbild aus der Disziplin; null, solange es unbekannt ist */
   targetId: TargetId | null
   family: { slug: string; name: string } | null
@@ -262,6 +265,7 @@ function toPageCard(row: PageCardRow): PageCard | null {
     revision: row.currentRevision.number,
     disciplineId: row.disciplineId,
     discipline: row.discipline.name,
+    standDiscipline: row.standDiscipline?.name ?? null,
     targetId: isTargetId(row.discipline.targetId) ? row.discipline.targetId : null,
     family: row.family,
     scoring: scoringOfRow(row, official),

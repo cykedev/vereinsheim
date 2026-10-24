@@ -37,6 +37,7 @@ const card: PageCard = {
   revision: 1,
   disciplineId: 1,
   discipline: "LP 40",
+  standDiscipline: null,
   targetId: "lp-10m",
   family: { slug: "lp", name: "Luftpistole" },
   scoring: "rings",
@@ -63,15 +64,17 @@ describe("Seite einer Scheibe: eigene und geteilte", () => {
       paging: true,
       share: null,
       previous: null,
+      disciplines: [],
     })
     expect(html).toContain("data-result-actions")
+    expect(html).toContain("data-card-discipline")
     expect(html).toContain("data-share-card")
     expect(html).toContain("data-delete-card")
     expect(html).toMatch(/<a [^>]*href="\/cards/)
   })
 
   it("mit einer Scheibe davor der Weg auf die Seite Vergleichen, ohne keiner", () => {
-    const own = { near: null, paging: false, share: null }
+    const own = { near: null, paging: false, share: null, disciplines: [] }
     const html = render({ ...own, previous: "c0" })
     expect(html).toContain("data-compare-previous")
     expect(html).toContain(`href="/compare?type=cards&amp;a=${card.id}&amp;b=c0"`)
@@ -84,6 +87,7 @@ describe("Seite einer Scheibe: eigene und geteilte", () => {
     expect(html).toContain(`id="shot-table"`)
     for (const part of [
       "data-result-actions",
+      "data-card-discipline",
       "data-share-card",
       "data-delete-card",
       "data-compare-previous",

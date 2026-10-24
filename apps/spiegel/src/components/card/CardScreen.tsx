@@ -64,6 +64,7 @@ import {
 } from "@vereinsheim/shot-ui/view-state"
 import { ToggleChip } from "@vereinsheim/ui/design2/toggle-chip"
 
+import { CardDiscipline } from "@/components/card/CardDiscipline"
 import { CompareWithPrevious } from "@/components/card/CompareWithPrevious"
 import { DeleteCard } from "@/components/card/DeleteCard"
 import { ShareCard } from "@/components/card/ShareCard"
@@ -72,6 +73,7 @@ import { useSavedChoice } from "@/components/shell/useSavedChoice"
 import { useHelp } from "@vereinsheim/ui/design2/help-sheet"
 import { addressScoring, nextCardAddress, ownHash } from "@/lib/card-address"
 import { cardWhen } from "@/lib/open"
+import type { DisciplineOption } from "@/lib/db/cards"
 import type { PageCard } from "@/lib/db/reads"
 import { setCardKind } from "@/lib/card-kind-actions"
 import { toggleOfficial } from "@/lib/scoring"
@@ -129,8 +131,8 @@ function stateFromRoute(
  * der Adresse (Reload und Zurück finden sie wieder), der Reiter der Analyse im Anker; Rückweg und Blättern im Kontext der
  * Herkunft rechnet der Server (`near`). Die Seite öffnet in der Wertung der Adresse, sonst der der Scheibe; Umschalten
  * speichert sie an der Scheibe (`setCardScoring`), die Adresse trägt sie nur, solange sie nicht die der Scheibe ist.
- * Ohne `own` ist es die geteilte Seite (`/share/<uuid>`): nur Ansicht, ohne Rückweg, Blättern, Art, Wertung, Teilen und
- * Löschen, und die Adresse bleibt, wie sie ist (nur der Anker des Reiters).
+ * Ohne `own` ist es die geteilte Seite (`/share/<uuid>`): nur Ansicht, ohne Rückweg, Blättern, Art, Wertung, Disziplin,
+ * Teilen und Löschen, und die Adresse bleibt, wie sie ist (nur der Anker des Reiters).
  */
 export function CardScreen({
   card,
@@ -142,13 +144,15 @@ export function CardScreen({
 }: {
   card: PageCard
   route: CardRoute
-  /** was nur der Besitzer hat: Rückweg und Blättern, Art und Wertung, Teilen, Löschen; null auf der geteilten Seite */
+  /** was nur der Besitzer hat: Rückweg und Blättern, Art und Wertung, Disziplin, Teilen, Löschen; null auf der geteilten Seite */
   own: {
     near: { prev: string | null; next: string | null } | null
     paging: boolean
     share: Share | null
     /** die Scheibe davor in derselben Familie, für „Mit der Scheibe davor vergleichen“; null ohne */
     previous: string | null
+    /** die Disziplinen, die der Schütze für die Scheibe wählen kann (`disciplineOptions`) */
+    disciplines: readonly DisciplineOption[]
   } | null
   /** die Adresse dieser Seite, für Anker und Fortschreiben (`/cards/<id>` bzw. `/share/<uuid>`) */
   path: string
@@ -501,6 +505,14 @@ export function CardScreen({
       {own && (
         <>
           {own.previous && <CompareWithPrevious cardId={card.id} previous={own.previous} />}
+          <CardDiscipline
+            cardId={card.id}
+            when={cardWhen(card.startedAtMs, pageContext.timeZone)}
+            current={card.discipline}
+            family={card.family?.name ?? null}
+            stand={card.standDiscipline}
+            options={own.disciplines}
+          />
           <ShareCard
             cardId={card.id}
             when={cardWhen(card.startedAtMs, pageContext.timeZone)}

@@ -7,6 +7,7 @@ import { routeFromUrl } from "@vereinsheim/shot-ui/nav/routes"
 import { CardScreen } from "@/components/card/CardScreen"
 import { requireSession } from "@/lib/auth-helpers"
 import { db } from "@/lib/db"
+import { disciplineOptions } from "@/lib/db/cards"
 import {
   cardWithShots,
   ownCardShare,
@@ -22,7 +23,7 @@ import { targetDisplay } from "@/lib/target-display"
 export const metadata: Metadata = { title: "Scheibe" }
 
 // Seite einer Scheibe: nur die eigene; Rückweg und Blättern im Kontext der Herkunft (Liste, Start, Fortschritt), dazu
-// der Link zum Teilen
+// der Link zum Teilen und die Disziplinen, die der Schütze wählen kann
 export default async function CardRoutePage({
   params,
   searchParams,
@@ -72,6 +73,7 @@ export default async function CardRoutePage({
         paging: ids !== null,
         share: await ownCardShare(db, { cardId: id, ownerId }),
         previous,
+        disciplines: await disciplineOptions(db, { cardId: id, ownerId }),
       }}
       path={`/cards/${encodeURIComponent(id)}`}
       context={context}
