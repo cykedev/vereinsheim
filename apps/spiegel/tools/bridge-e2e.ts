@@ -5,6 +5,8 @@
 // danach kommen die Schritte der Fälle im Abstand von vier Sekunden; sie liest dann jede Sekunde.
 // Geprüft in der Datenbank: Was ankommt, gehört dem Konto mit Zustimmung, nichts Verdecktes und nichts ohne Zustimmung,
 // der Heartbeat ist vermerkt. Danach ist alles entfernt (Anlage, Konto, Container, Konfiguration mit dem Token).
+// Aufträge per ID: die Scheibe „--frei--“ aus SF-13 (Schüsse, kein Sportpass) mit dem Tag von heute kommt beim Konto an,
+// die ohne Treffer und eine ID, die es nicht gibt, meldet die Brücke als nicht gefunden.
 // Dazu ein älterer Abend (SF-02, 40 Tage zurück) schon vor dem Start in der Ablage: Ohne Auftrag zum Nachladen
 // (`historyLoadedAt` gesetzt) kommt er nie. Mit `--historie` ist der Auftrag offen; die Brücke holt ihn, sobald 20 Minuten
 // nichts läuft, und meldet ihn erledigt (`historyLoadedAt`). Das dauert gut 20 Minuten.
@@ -22,6 +24,7 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 
 import { zonedWallTimeMs } from "@vereinsheim/lib/format"
+import { eveningDay } from "@vereinsheim/shot-ui/period/calendar"
 
 import { createPrismaClient } from "../src/lib/db"
 import { createPairing } from "../src/lib/ingest/bridges"
@@ -39,7 +42,11 @@ const CONSENTED = BigInt(12345678)
 const STEP_MS = 4000
 /** Scheiben der Fälle, die ankommen dürfen bzw. nie */
 const ARRIVE = [1168956429, 651756429, -1915210867, -1912810867]
-const NEVER = [650556429, 650556430]
+const NEVER = [650556429]
+/** angefragt per ID: „--frei--“ mit Schüssen kommt, ohne Treffer und unbekannt nicht */
+const REQUESTED = 650556430
+const REQUESTED_EMPTY = 650556429
+const REQUESTED_UNKNOWN = 4242
 const HIDDEN = [-1916410867, -1915210867, -1912810867]
 /** der ältere Abend (SF-02): nur mit offenem Auftrag zum Nachladen */
 const OLDER = 1082556429
@@ -146,6 +153,15 @@ async function main() {
         historyLoadedAt: HISTORY ? null : new Date(),
       },
     })
+    // die Aufträge stehen schon im ersten Zustand der Brücke; der Tag ist heute, wie die Fälle verschoben werden
+    const today = eveningDay(Date.now(), "Europe/Berlin")
+    const [requested, requestedEmpty, requestedUnknown] = await Promise.all(
+      [REQUESTED, REQUESTED_EMPTY, REQUESTED_UNKNOWN].map((scheibenId) =>
+        db.cardRequest.create({
+          data: { userId: user.id, siteId: site.id, scheibenId, day: today },
+        })
+      )
+    )
     if (!EXTERNAL) server = await startServer({ app: "spiegel", port: PORT, base: BASE, out })
     const port = startMariadb(container)
     // der ältere Abend liegt schon in der Ablage, bevor die Brücke startet
@@ -166,13 +182,15 @@ async function main() {
     // gälte der ältere Abend (allein in der Ablage) als der jüngste und käme ohne Auftrag
     const [first, ...rest] = steps("SF-03")
     mariadb(container, first)
+    // SF-13 liegt schon in der Ablage, wie eine Scheibe mit Ausdruck: Ein Auftrag per ID nennt eine Scheibe, die es gibt;
+    // steht die ID in der ersten Runde nicht in der Ablage, meldet die Brücke sie gleich als nicht gefunden
+    for (const sql of steps("SF-13")) mariadb(container, sql)
     bridge = spawn(binary, ["run", "--config", config], { env })
     bridge.stderr?.on("data", (chunk: Buffer) => (bridgeLog += chunk.toString()))
     // die Schritte im Takt eines Abends, nur schneller: die Brücke sieht jeden Stand mindestens zweimal
     await sleep(32_000)
     for (const [id, sqls] of [
       ["SF-03", rest],
-      ["SF-13", steps("SF-13")],
       ["SF-19", steps("SF-19")],
     ] as const) {
       for (const sql of sqls) {
@@ -237,6 +255,25 @@ async function main() {
       problems.push("Heartbeat ohne zurückgehaltene verdeckte Scheibe")
     const heartbeat = JSON.stringify(registered?.heartbeat ?? null)
     if (!registered?.lastHeartbeatAt) problems.push("kein Heartbeat")
+    // Aufträge per ID: „--frei--“ beim Konto und erledigt, die anderen nicht gefunden (Heartbeat, einmal je Minute)
+    const statusOf = (id: number) =>
+      db.cardRequest.findUniqueOrThrow({ where: { id }, select: { status: true, cardId: true } })
+    for (let i = 0; i < 40; i++) {
+      const [a, b] = await Promise.all([statusOf(requestedEmpty.id), statusOf(requestedUnknown.id)])
+      if (a.status !== "open" && b.status !== "open") break
+      await sleep(2000)
+    }
+    const [fetched, empty, unknown] = await Promise.all(
+      [requested, requestedEmpty, requestedUnknown].map((r) => statusOf(r.id))
+    )
+    const fetchedCard = cards.find((c) => c.scheibenId === REQUESTED)
+    out(`Aufträge per ID: ${fetched.status}, ${empty.status}, ${unknown.status}`)
+    if (!arrived.includes(REQUESTED) || !fetchedCard)
+      problems.push(`die angefragte Scheibe ${REQUESTED} kam nicht`)
+    if (fetched.status !== "done" || !fetched.cardId)
+      problems.push(`Auftrag ${REQUESTED}: ${fetched.status} statt erledigt`)
+    if (empty.status !== "missing") problems.push(`Auftrag ohne Treffer: ${empty.status}`)
+    if (unknown.status !== "missing") problems.push(`Auftrag unbekannte ID: ${unknown.status}`)
     if (/Muster|12345678/.test(heartbeat + bridgeLog))
       problems.push("Personenfeld in Heartbeat oder Log")
     out(`Heartbeat: ${heartbeat}`)
