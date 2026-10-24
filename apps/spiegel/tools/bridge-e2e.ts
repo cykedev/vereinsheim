@@ -5,8 +5,8 @@
 // danach kommen die Schritte der Fälle im Abstand von vier Sekunden; sie liest dann jede Sekunde.
 // Geprüft in der Datenbank: Was ankommt, gehört dem Konto mit Zustimmung, nichts Verdecktes und nichts ohne Zustimmung,
 // der Heartbeat ist vermerkt. Danach ist alles entfernt (Anlage, Konto, Container, Konfiguration mit dem Token).
-// Aufträge per ID: die Scheibe „--frei--“ aus SF-13 (Schüsse, kein Sportpass) mit dem Tag von heute kommt beim Konto an,
-// die ohne Treffer und eine ID, die es nicht gibt, meldet die Brücke als nicht gefunden.
+// Aufträge per ID: die Scheibe „--frei--“ aus SF-13 (Schüsse, kein Sportpass) mit dem Tag von heute kommt beim Konto an
+// und hängt am Auftrag; die ohne Treffer und eine ID, die es nicht gibt, meldet die Brücke als nicht gefunden.
 // Dazu ein älterer Abend (SF-02, 40 Tage zurück) schon vor dem Start in der Ablage: Ohne Auftrag zum Nachladen
 // (`historyLoadedAt` gesetzt) kommt er nie. Mit `--historie` ist der Auftrag offen; die Brücke holt ihn, sobald 20 Minuten
 // nichts läuft, und meldet ihn erledigt (`historyLoadedAt`). Das dauert gut 20 Minuten.
@@ -219,6 +219,7 @@ async function main() {
       where: { source: { siteId: site.id } },
       orderBy: [{ scheibenId: "asc" }, { block: "asc" }],
       select: {
+        id: true,
         scheibenId: true,
         cycle: true,
         block: true,
@@ -255,7 +256,8 @@ async function main() {
       problems.push("Heartbeat ohne zurückgehaltene verdeckte Scheibe")
     const heartbeat = JSON.stringify(registered?.heartbeat ?? null)
     if (!registered?.lastHeartbeatAt) problems.push("kein Heartbeat")
-    // Aufträge per ID: „--frei--“ beim Konto und erledigt, die anderen nicht gefunden (Heartbeat, einmal je Minute)
+    // Aufträge per ID: „--frei--“ beim Konto, der Auftrag hängt an der Scheibe und bleibt offen, bis sie endgültig ist
+    // (frühestens nach zwölf Stunden); die anderen nicht gefunden (Heartbeat, einmal je Minute)
     const statusOf = (id: number) =>
       db.cardRequest.findUniqueOrThrow({ where: { id }, select: { status: true, cardId: true } })
     for (let i = 0; i < 40; i++) {
@@ -270,8 +272,8 @@ async function main() {
     out(`Aufträge per ID: ${fetched.status}, ${empty.status}, ${unknown.status}`)
     if (!arrived.includes(REQUESTED) || !fetchedCard)
       problems.push(`die angefragte Scheibe ${REQUESTED} kam nicht`)
-    if (fetched.status !== "done" || !fetched.cardId)
-      problems.push(`Auftrag ${REQUESTED}: ${fetched.status} statt erledigt`)
+    if (!["open", "done"].includes(fetched.status) || fetched.cardId !== fetchedCard?.id)
+      problems.push(`Auftrag ${REQUESTED}: ${fetched.status} ohne die geholte Scheibe`)
     if (empty.status !== "missing") problems.push(`Auftrag ohne Treffer: ${empty.status}`)
     if (unknown.status !== "missing") problems.push(`Auftrag unbekannte ID: ${unknown.status}`)
     if (/Muster|12345678/.test(heartbeat + bridgeLog))
