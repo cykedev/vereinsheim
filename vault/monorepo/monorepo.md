@@ -234,7 +234,9 @@ Geliefert: Produktions-Build aus dem Monorepo via `turbo prune <app> --docker`. 
 - **`<sha>` = Monorepo-HEAD** (beide Apps teilen ihn); Tag-Schema unverändert. `build-and-push.sh`
   zentralisiert die Logik; `PUSH=0` → lokale `--load`-Testbuilds (kein Push/Gate), `vereinsheim
   local-build` ruft genau das.
-- **Image-Größen**: runner ~300 MB (node:24-alpine + Standalone, wie zuvor), migrator ~950 MB (prisma 7
+- **Image-Basis** `node:26-alpine` (seit Oktober 2026). Node bringt corepack seit 25 nicht mehr mit; die
+  Stufe `base` installiert es über npm in fester Version, die pnpm-Version kommt weiter aus `packageManager`.
+- **Image-Größen**: runner ~300 MB (Node-Alpine + Standalone, wie zuvor), migrator ~950 MB (prisma 7
   zieht effect/electric-sql als eigene Deps — vergleichbar zum alten Full-App-Migrator).
 - **Verifikation lokal**: runner serviert (HTTP 200), migrator `migrate deploy` (Exit 0, alle Migrationen),
   und der **ganze `compose.yml`-Stack** (db-init → migrate → app) kommt sauber hoch. **VPS-Deploy gelaufen**

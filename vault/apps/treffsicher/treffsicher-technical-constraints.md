@@ -40,7 +40,7 @@ Diese Regeln dürfen nicht ohne explizite Überprüfung und Begründung geänder
 - **Zielplattform**: Self-hosted via Docker Compose (Produktion: VPS, im `vereinsheim`-Monorepo, Root-`compose.yml`)
 - **Portabilität**: Kein plattformspezifischer Code — die App muss auf jeder Docker-Compose-Umgebung lauffähig sein
 - **Konfiguration**: Alle umgebungsabhängigen Werte (DB-URL, Secrets, Pfade) über Umgebungsvariablen in `.env` — niemals hart im Code verdrahtet
-- **Node.js-Version**: 24 LTS (im Root-`Dockerfile`: `FROM node:24-alpine`)
+- **Node.js-Version**: 26 LTS (im Root-`Dockerfile`: `FROM node:26-alpine`)
 
 ---
 

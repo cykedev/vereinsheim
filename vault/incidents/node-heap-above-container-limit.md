@@ -22,6 +22,9 @@ docker run --rm --memory=256m node:24-alpine node -e "console.log(require('v8').
 
 ergab 259 (auch bei 192m und 384m); `process.constrainedMemory()` meldet die Grenze richtig (256).
 
+Unter Node 26 (`node:26-alpine`, 24. Oktober 2026) gleich: 262 MiB bei 192, 256 und 384 MB, 536 MiB bei 1 GB; mit
+`NODE_OPTIONS=--max-old-space-size=160` bei 256 MB 166 MiB. Die Regel unten gilt unverändert.
+
 ## Messen
 
 Die Spitze eines Containers seit seinem Start liefert cgroup v2 ohne Werkzeug: `memory.peak`, dazu `memory.current` und
