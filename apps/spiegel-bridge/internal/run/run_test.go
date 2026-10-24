@@ -967,13 +967,14 @@ func TestRequestMissingOrHeld(t *testing.T) {
 	f.ablage.put(1, "87654321", "1", 3) // verankert das Startfenster
 	f.ablage.put(2, "87654321", "5", 3) // verdeckt (SF-19)
 	f.ablage.put(3, "87654321", "1", 3) // gesperrt
+	f.ablage.put(4, "87654321", "1", 0) // ohne Treffer (SF-13): keine Scheibe
 	f.sp.state.Blocked = []api.Blocked{{ScheibenID: 3, StartedAt: time.Date(2026, 10, 13, 20, 0, 0, 0, time.UTC)}}
-	f.sp.state.Requests = []api.CardRequest{{ID: 5, ScheibenID: 2}, {ID: 6, ScheibenID: 3}, {ID: 7, ScheibenID: 99}}
+	f.sp.state.Requests = []api.CardRequest{{ID: 5, ScheibenID: 2}, {ID: 6, ScheibenID: 3}, {ID: 7, ScheibenID: 99}, {ID: 8, ScheibenID: 4}}
 	f.runFor(2 * HeartbeatEvery)
 	if got := fmt.Sprint(f.sp.sent()); got != "[]" {
 		t.Fatalf("gesendet %s", got)
 	}
-	if got := f.lastRequests(); got != "[5:held 6:held 7:missing]" {
+	if got := f.lastRequests(); got != "[5:held 6:held 7:missing 8:missing]" {
 		t.Fatalf("Ausgang %s", got)
 	}
 }

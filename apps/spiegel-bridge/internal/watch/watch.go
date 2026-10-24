@@ -88,6 +88,8 @@ type card struct {
 	skipped     string // Code, mit dem die letzte Lesung übersprungen wurde (einmal melden)
 	// `Scheiben.SportpassID` aus dem Lebenszeichen; ein offener Auftrag zum Nachladen will sie
 	sportpass *string
+	// zuletzt ganz gelesen ohne Treffer: geht nie hinaus (SF-13), für einen Auftrag per ID keine Scheibe
+	empty bool
 }
 
 // handled: in diesem Lauf gelesen, kein Stand wartet auf Spiegel, und seither ist nichts neu zu lesen
@@ -154,11 +156,15 @@ func (w *Watcher) SetRequested(wanted func(id int32) bool) { w.requested = wante
 
 func (w *Watcher) wantsRequest(id int32) bool { return w.requested != nil && w.requested(id) }
 
-// RequestState sagt, wie es um die Scheibe eines Auftrags steht: `seen`, ob sie in der letzten Runde in der Ablage stand,
-// `open`, ob sie noch zu lesen ist oder ihr Stand auf Spiegel wartet.
+// RequestState sagt, wie es um die Scheibe eines Auftrags steht: `seen`, ob sie in der letzten Runde in der Ablage stand
+// und Treffer hat (ohne Treffer geht sie nie hinaus, SF-13), `open`, ob sie noch zu lesen ist oder ihr Stand auf Spiegel
+// wartet.
 func (w *Watcher) RequestState(id int32) (seen, open bool) {
 	c := w.cards[id]
 	if c == nil || !c.seenAt.Equal(w.roundAt) {
+		return false, false
+	}
+	if handled(c) && c.empty {
 		return false, false
 	}
 	return true, !handled(c)
@@ -398,6 +404,7 @@ func (w *Watcher) Tick(ctx context.Context, src Source) (Result, error) {
 			continue
 		}
 		c.skipped = ""
+		c.empty = len(data.Treffer.Rows) == 0
 		stable := sum == c.last
 		c.last = sum
 		// nur ein neuer Stand (nach einer zerrissenen Lesung kommt oft der alte wieder) und ohne Treffer nie (SF-13)
