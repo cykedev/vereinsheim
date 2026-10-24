@@ -2,9 +2,9 @@
 // im Arbeitsspeicher (ADR-027).
 //
 // Eine Runde liest in einer Transaktion das Lebenszeichen aller Scheiben und dann die Scheiben ganz, die neu sind,
-// deren Lebenszeichen oder SportpassID sich bewegt hat, die noch auf Bestätigung warten oder die aktiv sind. Ein
-// Snapshot entsteht, wenn zwei Lesungen hintereinander gleich sind (SF-71) und sich vom zuletzt gemeldeten Stand
-// unterscheiden.
+// deren Lebenszeichen oder SportpassID sich bewegt hat, die noch auf Bestätigung warten oder die aktiv sind; im
+// Leerlauf dazu den Abgleich. Ein Snapshot entsteht, wenn zwei Lesungen hintereinander gleich sind (SF-71) und sich vom
+// zuletzt gemeldeten Stand unterscheiden.
 package watch
 
 import (
@@ -21,7 +21,7 @@ type Lifesign struct {
 	ID    int32
 	Stamp string
 	// `Scheiben.SportpassID` als Text, nil ohne: ordnet eine Scheibe einem Auftrag zum Nachladen zu, ohne sie ganz
-	// zu lesen, und zeigt ein Umbuchen in Meyton, das das Lebenszeichen nicht bewegt (SF-80)
+	// zu lesen, und zeigt ein Umbuchen in Meyton, auch wenn sich das Lebenszeichen dabei nicht bewegt (SF-80)
 	Sportpass *string
 }
 
@@ -72,7 +72,7 @@ var Defaults = Config{
 	MaxCards:      50,
 	ForgetAfter:   24 * time.Hour,
 	LifesignEvery: 30 * time.Second,
-	// zwei Wochen decken die nächsten zwei Trainings, rund 30 Scheiben: eine Runde
+	// eine Korrektur bis zwei Wochen später, rund 30 Scheiben: eine Runde
 	ReconcileWindow: 14 * 24 * time.Hour,
 	ReconcileEvery:  time.Hour,
 }
@@ -251,7 +251,7 @@ const stampLayout = "2006-01-02 15:04:05"
 // Startfenster (was noch als neu gilt), in jeder Runde das Fenster des Abgleichs. `YYYY-MM-DD HH:MM:SS` sortiert als Text
 // wie als Zeit. Die Uhr eines einzelnen Stands kann vorgehen (SF-73): Was mehr als einen Tag nach der Uhr der Anlage
 // liegt, verankert das Fenster nicht (ein Tag deckt die Zone der Ortszeit ab). Ohne lesbares Lebenszeichen und ohne Uhr
-// leer: alles im Fenster.
+// leer: Beim Start gilt dann alles als neu, der Abgleich liest nichts.
 func (w *Watcher) windowFrom(lifesigns []Lifesign, sourceNow *string, d time.Duration) string {
 	limit := ""
 	if sourceNow != nil && len(*sourceNow) >= len(stampLayout) {
@@ -283,8 +283,6 @@ func sameText(a, b *string) bool {
 	return *a == *b
 }
 
-// dirty: Die Scheibe ist neu, oder ihr Lebenszeichen oder ihre SportpassID hat sich bewegt, seit sie zuletzt gelesen
-// wurde. Die SportpassID ändert sich beim Umbuchen in Meyton, ohne dass das Lebenszeichen sich bewegt (SF-80).
 // backfill: beim Start eine Scheibe vor dem Startfenster, aber nach dem Wasserstand in Spiegel (Nachholen, SF-55).
 func (w *Watcher) backfill(l Lifesign, from string) bool {
 	if w.started {
@@ -294,6 +292,8 @@ func (w *Watcher) backfill(l Lifesign, from string) bool {
 	return w.catchUpFrom != "" && l.Stamp >= w.catchUpFrom && l.Stamp < from
 }
 
+// dirty: Die Scheibe ist neu, oder ihr Lebenszeichen oder ihre SportpassID hat sich bewegt, seit sie zuletzt gelesen
+// wurde. Die SportpassID ändert sich beim Umbuchen in Meyton, womöglich ohne dass sich das Lebenszeichen bewegt (SF-80).
 func (w *Watcher) dirty(l Lifesign, from string) bool {
 	c, known := w.cards[l.ID]
 	switch {
@@ -315,7 +315,7 @@ func (w *Watcher) reconcileDue(c *card, l Lifesign, now time.Time, from string) 
 // plan wählt die Scheiben einer Runde, ohne den Speicher zu ändern; erst eine gelungene Runde übernimmt ihn. Reihenfolge:
 // was auf Bestätigung wartet, dann was sich bewegt hat (die jüngsten zuerst), dann die aktiven, die am längsten nicht
 // gelesen wurden. So verhungert keine Scheibe am Budget. Nachzuholende, Nachzuladende und der Abgleich ab
-// `reconcileFrom` kommen nur, wenn sonst nichts zu lesen ist: ältere Scheiben nur, wenn gerade niemand schießt (SF-52).
+// `reconcileFrom` kommen nach diesen und nur, wenn gerade niemand schießt (SF-52).
 func (w *Watcher) plan(now time.Time, lifesigns []Lifesign, from, reconcileFrom string) []int32 {
 	type pick struct {
 		id     int32

@@ -131,10 +131,22 @@ Benutzer, Rechte, `systemd-analyze verify`, Exit 2 ohne Konfiguration.
 | `code=tls-time` (bei `state-failed`, `heartbeat-failed`, `upload-failed`) | die Uhr am Gerät liegt vor dem Beginn des Zertifikats von Spiegel (etwa 1970): `timedatectl` prüfen |
 | `code=tls-expired` | das Zertifikat von Spiegel ist abgelaufen (oder die Uhr am Gerät geht weit vor) |
 | `possible-reset` | viele Scheiben fehlen auf einmal (Ablage geleert?); nur gemeldet |
+| `card-reassigned scheibe=… lifesign=same` / `lifesign=moved` | die SportpassID einer Scheibe hat sich geändert (in Meyton umgebucht oder die Nummer in der Schützenliste korrigiert, SF-80); `same`: das Lebenszeichen blieb stehen, `moved`: es lief mit. Die Brücke liest die Scheibe neu |
 | `unauthorized hint=neu-koppeln` | Brücke in Spiegel getrennt (Exit 3, kein Neustart): neu verbinden |
 | `config-missing` | noch nicht verbunden (Exit 2, kein Neustart) |
 | `notify-failed code=socket` | systemd nimmt die Meldungen der Brücke nicht an; der Dienst gilt dann nicht als gestartet. Unit und Version prüfen (Abschnitt „Updates“) |
 | `Watchdog timeout`, `SIGABRT: abort`, Goroutinen, `status=6/ABRT` | Zeilen von systemd und Go: Die Brücke hing 10 min, systemd hat sie beendet und startet sie nach 10 s neu. Die Goroutinen zeigen, wo sie hing (nur Funktionen und Zahlen) |
+
+**Umbuchen prüfen** (SF-80, einmal nach dem Update, das `card-reassigned` mitbringt): Was Meyton beim Umbuchen in die
+SSMDB2 schreibt, ist nicht belegt.
+
+1. Eine kurze Scheibe unter einem Namen ohne Zustimmung schießen (etwa einem Gastnamen) und 25 Minuten ruhen lassen.
+2. In Meyton die Scheibe einem Schützen zuweisen, dessen Sportpassnummer in Spiegel bestätigt ist.
+3. `journalctl -u spiegel-bridge --since "-10 min" | grep card-reassigned` zeigt die ScheibenID mit `lifesign=same`
+   oder `moved`, und die Scheibe steht in Spiegel unter „Scheiben“ dieses Schützen.
+4. Fehlt die Zeile, ändert Meyton beim Umbuchen die SportpassID in der SSMDB2 nicht. Das in [[meyton-ssmdb2]]
+   eintragen, die Scheibe dann über „Scheibe per ID holen“ holen.
+5. Den Befund zu `lifesign` als Antwort auf Schritt 12 des Schießprotokolls in [[meyton-ssmdb2]] eintragen.
 
 ## Dauerbetrieb
 
