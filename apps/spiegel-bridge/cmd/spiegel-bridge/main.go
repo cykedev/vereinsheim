@@ -153,6 +153,9 @@ func runWatch(args []string, stdout, stderr io.Writer) int {
 			for _, skip := range result.Skipped {
 				log.log("card-skipped", "scheibe", skip.ID, "code", skip.Code)
 			}
+			for _, re := range result.Reassigned {
+				log.log("card-reassigned", "scheibe", re.ID, "lifesign", re.LifesignCode())
+			}
 			// eine Zeile je Runde mit Ergebnis, nicht je Sekunde, solange nur gelesen wird
 			if len(result.Snapshots) > 0 {
 				log.log("round", "cards", result.Cards, "read", result.Read, "snapshots", len(result.Snapshots), "ms", took.Milliseconds())

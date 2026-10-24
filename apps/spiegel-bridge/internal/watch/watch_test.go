@@ -216,8 +216,9 @@ func TestCorrectionWithoutLifesignWhileActive(t *testing.T) {
 	}
 }
 
-// Umbuchen in Meyton (SF-80): Name und SportpassID ändern sich, das Lebenszeichen nicht. Die Brücke liest die ruhende
-// Scheibe trotzdem neu und schickt sie nach zwei gleichen Lesungen.
+// Umbuchen in Meyton (SF-80): Name und SportpassID ändern sich, das Lebenszeichen womöglich nicht (offen, Schritt 12 des
+// Schießprotokolls in [[meyton-ssmdb2]]). Die Brücke liest die ruhende Scheibe trotzdem neu und schickt sie nach zwei
+// gleichen Lesungen.
 func TestSportpassChangeWithoutLifesignIsRead(t *testing.T) {
 	m, c := newMemory(), start()
 	w := New(Defaults, c.now)
@@ -239,7 +240,7 @@ func TestSportpassChangeWithoutLifesignIsRead(t *testing.T) {
 	if last := m.reads[len(m.reads)-1]; fmt.Sprint(last) != "[7]" {
 		t.Fatalf("umgebuchte Scheibe nicht gelesen: %v", last)
 	}
-	if fmt.Sprint(r.Reassigned) != "[7]" || !r.Busy || len(r.Snapshots) != 0 {
+	if fmt.Sprint(r.Reassigned) != "[{7 false}]" || !r.Busy || len(r.Snapshots) != 0 {
 		t.Fatalf("erste Lesung nach dem Umbuchen: umgebucht %v, busy %v, gesendet %v", r.Reassigned, r.Busy, ids(r))
 	}
 	c.advance(time.Second)
@@ -251,10 +252,17 @@ func TestSportpassChangeWithoutLifesignIsRead(t *testing.T) {
 	if got := ids(tick(t, w, m)); len(got) != 0 {
 		t.Fatalf("danach: %v", got)
 	}
+	// noch einmal umgebucht, diesmal mit bewegtem Lebenszeichen: das Log sagt es
+	m.stamps[7] = "2026-10-13 18:45:00"
+	m.data[7] = withSportpass(cardData(7, 20, "100"), "87654321")
+	c.advance(time.Second)
+	if r := tick(t, w, m); fmt.Sprint(r.Reassigned) != "[{7 true}]" {
+		t.Fatalf("mit Lebenszeichen: %v", r.Reassigned)
+	}
 }
 
-// Ein Wechsel der SportpassID zählt als Bewegung: Eine Scheibe, die in diesem Lauf nur nachgeholt wurde, wartet mit der
-// zweiten Lesung nicht auf den Leerlauf.
+// Mit neuer SportpassID wartet die zweite Lesung nicht auf den Leerlauf, auch bei einer Scheibe, die sich in diesem Lauf
+// nie bewegt hat (nachgeholt). Gemeldet wird der Wechsel einmal, nicht bei jedem Lebenszeichen eines anderen Stands.
 func TestReassignedCardLeavesWhileShooting(t *testing.T) {
 	m, c := newMemory(), start()
 	w := New(Defaults, c.now)
@@ -278,15 +286,21 @@ func TestReassignedCardLeavesWhileShooting(t *testing.T) {
 	// Stand 9 schießt wieder, und Scheibe 1 wird umgebucht
 	m.data[1] = withSportpass(cardData(1, 40, "100"), "12345678")
 	sent = map[int32]bool{}
+	var reassigned []string
 	for range 3 {
 		m.stamps[9] = c.t.Add(2 * time.Hour).Format(stampLayout)
-		for _, id := range ids(tick(t, w, m)) {
+		r := tick(t, w, m)
+		for _, id := range ids(r) {
 			sent[id] = true
 		}
+		reassigned = append(reassigned, fmt.Sprint(r.Reassigned))
 		c.advance(time.Second)
 	}
 	if !sent[1] {
 		t.Fatalf("umgebucht, während geschossen wird: %v", m.reads[len(m.reads)-3:])
+	}
+	if fmt.Sprint(reassigned) != "[[{1 false}] [] []]" {
+		t.Fatalf("gemeldet je Runde: %v", reassigned)
 	}
 }
 

@@ -118,13 +118,29 @@ type Skip struct {
 	Code string
 }
 
+// Reassign ist eine Scheibe, deren SportpassID sich seit der letzten Runde geändert hat: in Meyton umgebucht oder die
+// Nummer in der Schützenliste korrigiert (SF-80). `LifesignMoved`: In derselben Runde hat sich auch das Lebenszeichen
+// bewegt.
+type Reassign struct {
+	ID            int32
+	LifesignMoved bool
+}
+
+// LifesignCode ist `LifesignMoved` als fester Code fürs Log: `moved` oder `same`.
+func (r Reassign) LifesignCode() string {
+	if r.LifesignMoved {
+		return "moved"
+	}
+	return "same"
+}
+
 // Result ist das Ergebnis einer Runde.
 type Result struct {
 	Snapshots []contract.Snapshot
 	// Scheiben, die gegen den Vertrag verstoßen (zu lang, ungültige Bytes): gehen nicht hinaus, der Heartbeat meldet sie
 	Skipped []Skip
-	// Scheiben, deren SportpassID sich seit der letzten Runde geändert hat: in Meyton umgebucht (SF-80)
-	Reassigned []int32
+	// Scheiben mit neuer SportpassID, je einmal (SF-80)
+	Reassigned []Reassign
 	// gelesene Scheiben und alle Lebenszeichen
 	Read, Cards int
 	// etwas bewegt sich oder wartet auf Bestätigung: die nächste Runde bald
@@ -406,7 +422,7 @@ func (w *Watcher) Tick(ctx context.Context, src Source) (Result, error) {
 		// Scheiben des Schützen auf einmal, und jede würde 20 Minuten lang jede Runde gelesen (SF-52)
 		if known && !sameText(c.sportpass, l.Sportpass) {
 			c.reassigned = true
-			result.Reassigned = append(result.Reassigned, l.ID)
+			result.Reassigned = append(result.Reassigned, Reassign{ID: l.ID, LifesignMoved: c.stamp != l.Stamp})
 		}
 		c.stamp, c.dirty, c.seenAt, c.sportpass = l.Stamp, dirty, now, l.Sportpass
 		c.backfill = backfill && !dirty

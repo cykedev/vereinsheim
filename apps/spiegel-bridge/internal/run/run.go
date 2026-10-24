@@ -490,9 +490,10 @@ func (r *Runner) Step(ctx context.Context) (time.Duration, error) {
 			}
 		}
 	}
-	// in Meyton umgebucht (SF-80): nur die ScheibenID, damit sich vor Ort prüfen lässt, ob Meyton die SportpassID ändert
-	for _, id := range result.Reassigned {
-		r.log("card-reassigned", "scheibe", id)
+	// neue SportpassID (SF-80): nur die ScheibenID und ob sich das Lebenszeichen mitbewegt hat, damit sich vor Ort prüfen
+	// lässt, was Meyton beim Umbuchen schreibt
+	for _, re := range result.Reassigned {
+		r.log("card-reassigned", "scheibe", re.ID, "lifesign", re.LifesignCode())
 	}
 	for _, skip := range result.Skipped {
 		r.log("card-skipped", "scheibe", skip.ID, "code", skip.Code)

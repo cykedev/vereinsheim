@@ -244,7 +244,7 @@ func TestReassignedCardLeavesWithConsent(t *testing.T) {
 	if got := fmt.Sprint(f.sp.sent()); got != "[1]" {
 		t.Fatalf("nach dem Umbuchen %s", got)
 	}
-	if n, last := f.lines("card-reassigned"); n != 1 || last != "card-reassignedscheibe1" {
+	if n, last := f.lines("card-reassigned"); n != 1 || last != "card-reassignedscheibe1lifesignsame" {
 		t.Fatalf("Log %v", f.logs)
 	}
 	for _, l := range f.logs {
