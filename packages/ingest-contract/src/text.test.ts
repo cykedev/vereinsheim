@@ -14,9 +14,13 @@ describe("utf16Text", () => {
     expect(result.error?.issues.map((issue) => issue.code)).toEqual(["too_big"])
   })
 
-  it("nimmt die Grenze genau an", () => {
+  it("nimmt die Grenze genau an und meldet eine Überschreitung einmal", () => {
     expect(utf16Text(1, 3).safeParse("abc").success).toBe(true)
-    expect(utf16Text(1, 3).safeParse("abcd").success).toBe(false)
+    expect(
+      utf16Text(1, 3)
+        .safeParse("abcd")
+        .error?.issues.map((issue) => issue.code)
+    ).toEqual(["too_big"])
   })
 
   it("verlangt die Mindestlänge", () => {
