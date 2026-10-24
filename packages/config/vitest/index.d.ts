@@ -6,6 +6,7 @@ export declare function createVitestConfig(appDir: string): {
   test: {
     environment: "node"
     maxWorkers: string
+    fsModuleCache: boolean
     exclude: string[]
   }
   resolve: {

@@ -14,6 +14,10 @@ export function createVitestConfig(appDir) {
       // Die App-Suites laufen via turbo parallel. Ohne Cap startet jede ~cores
       // Worker → Oversubscription → CPU-Starvation-Flakes.
       maxWorkers: "50%",
+      // Kein Modul-Cache auf der Platte: Vitest legt ihn für alle Pakete gemeinsam unter node_modules/.vitest-cache an
+      // und leert ihn nach jeder Änderung am Lockfile. Die Suites laufen via turbo parallel und räumten dann
+      // gleichzeitig auf (ENOTEMPTY beim Start).
+      fsModuleCache: false,
       // Build-Output ausschliessen: next build (output:"standalone") kopiert src
       // inkl. *.test.ts nach .next/standalone → vitest würde diese Duplikate laden
       // und am Modul-Resolve scheitern. Plus Worktrees. configDefaults behält die
