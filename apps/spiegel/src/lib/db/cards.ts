@@ -295,6 +295,8 @@ function withSticky(
 
 const EXISTING_SELECT = {
   id: true,
+  disciplineId: true,
+  standDisciplineId: true,
   flags: true,
   sourceId: true,
   scheibenId: true,
@@ -323,11 +325,12 @@ async function findCard(tx: Tx, input: RevisionInput, cycle: number, block: numb
  *   Disziplin (`FOR SHARE`, gegen `setDisciplineFamily`) und die Zeile der Scheibe;
  * - ein Snapshot mit nicht größerer Folgenummer als der zuletzt geschriebene ändert nichts (SF-26);
  * - gleiche Schüsse: nur die Merkmale; Schüsse dazu: dieselbe Revision; eine Korrektur der Wertung: eine neue, die
- *   vorige bleibt. Jede Änderung an den Schüssen rechnet die Projektion neu.
+ *   vorige bleibt. Jede Änderung an den Schüssen rechnet die Projektion neu;
+ * - hat der Schütze eine andere Disziplin gewählt, bleibt sie: Der Stand schreibt seine nur als Disziplin am Stand, und
+ *   die Merkmale rechnet `recomputeDisciplineCard` mit der gewählten neu. Bringt der Stand die gewählte, fällt die Wahl weg.
  */
 export async function writeRevision(db: Db, input: RevisionInput): Promise<RevisionResult> {
   assertUniqueShots(input.shots)
-  const hash = contentHash(input.shots)
   const sequence = input.sequence === undefined ? null : BigInt(input.sequence)
   const { sourceId, scheibenId } = input.card
   const cycle = input.card.cycle ?? 0
@@ -336,120 +339,160 @@ export async function writeRevision(db: Db, input: RevisionInput): Promise<Revis
   return db.$transaction(async (tx) => {
     if (sourceId !== null && scheibenId !== null)
       await tx.$executeRaw`SELECT pg_advisory_xact_lock(${sourceId}::int, ${scheibenId}::int)`
-    const [discipline] = await tx.$queryRaw<{ familyId: number | null }[]>`
-      SELECT "familyId" FROM "Discipline" WHERE id = ${input.card.disciplineId} FOR SHARE`
-    if (!discipline) throw new RangeError(`Disziplin ${input.card.disciplineId} fehlt`)
-    const features = cardFeatures(input.card, input.shots, discipline.familyId)
-
     const existing = await findCard(tx, input, cycle, block)
-    if (!existing) {
-      const { id: cardId } = await tx.card.create({
-        data: {
-          ...features,
-          sourceId,
-          scheibenId,
-          cycle,
-          block,
-          origin: input.card.origin,
-          ownerId: input.card.ownerId ?? null,
-          ownerPending: input.card.ownerPending ?? false,
-          lastSequence: sequence,
-        },
-        select: { id: true },
-      })
-      return newRevision(tx, cardId, 1, input, hash)
-    }
-
-    const cardId = existing.id
-    await tx.$queryRaw`SELECT id FROM "Card" WHERE id = ${cardId} FOR UPDATE`
-    const current = existing.currentRevision
-    if (
-      current &&
-      sequence !== null &&
-      existing.lastSequence !== null &&
-      sequence <= existing.lastSequence
-    )
-      return {
-        cardId,
-        revisionId: current.id,
-        number: current.number,
-        change: "stale",
-        added: 0,
-        removed: 0,
-      }
-
-    const stored = current
-      ? await tx.shot.findMany({ where: { revisionId: current.id }, orderBy: { seq: "asc" } })
-      : []
-    if (
-      !input.cardId &&
-      Math.abs(existing.startedAt.getTime() - input.card.startedAtMs) > RECURRENCE_MIN_MS
-    ) {
-      // dieselbe ScheibenID, aber ein Beginn Wochen entfernt: nur dieselbe Scheibe, wenn ein Schuss wiederkehrt
-      const known = new Set(stored.map((row) => row.fingerprint))
-      if (!input.shots.some((shot) => known.has(shotFingerprint(shot))))
-        throw new CardIdentityConflictError(cardId, cycle)
-    }
-    const change =
-      current && current.contentHash !== hash
-        ? shotChange(stored.map(shotFromRow), input.shots)
+    const chosen =
+      existing?.standDisciplineId != null && existing.disciplineId !== input.card.disciplineId
+        ? existing.disciplineId
         : null
-    await tx.card.update({
-      where: { id: cardId },
+    const disciplineId = chosen ?? input.card.disciplineId
+    const [discipline] = await tx.$queryRaw<{ familyId: number | null }[]>`
+      SELECT "familyId" FROM "Discipline" WHERE id = ${disciplineId} FOR SHARE`
+    if (!discipline) throw new RangeError(`Disziplin ${disciplineId} fehlt`)
+    const card: CardInput =
+      chosen === null ? input.card : { ...input.card, disciplineId, disciplineVersion: -1 }
+    const result = await writeCard(tx, { ...input, card }, existing, {
+      sequence,
+      cycle,
+      block,
+      features: {
+        ...cardFeatures(card, input.shots, discipline.familyId),
+        ...(existing
+          ? { standDisciplineId: chosen === null ? null : input.card.disciplineId }
+          : {}),
+      },
+    })
+    if (chosen !== null && result.change !== "stale")
+      await recomputeDisciplineCard(tx, result.cardId)
+    return result
+  })
+}
+
+/** der Stand in der Transaktion von `writeRevision`, mit den Merkmalen der Scheibe, wie sie danach gelten */
+async function writeCard(
+  tx: Tx,
+  input: RevisionInput,
+  existing: Prisma.CardGetPayload<{ select: typeof EXISTING_SELECT }> | null,
+  {
+    sequence,
+    cycle,
+    block,
+    features,
+  }: {
+    sequence: bigint | null
+    cycle: number
+    block: number
+    features: ReturnType<typeof cardFeatures> & { standDisciplineId?: number | null }
+  }
+): Promise<RevisionResult> {
+  const hash = contentHash(input.shots)
+  const { sourceId, scheibenId } = input.card
+  if (!existing) {
+    const { id: cardId } = await tx.card.create({
       data: {
         ...features,
-        flags: withSticky(features.flags, existing.flags, change?.kind === "correction"),
-        ...identityUpdate(existing, input.card, cycle, block),
-        ...(sequence === null ? {} : { lastSequence: sequence }),
+        sourceId,
+        scheibenId,
+        cycle,
+        block,
+        origin: input.card.origin,
+        ownerId: input.card.ownerId ?? null,
+        ownerPending: input.card.ownerPending ?? false,
+        lastSequence: sequence,
       },
+      select: { id: true },
     })
+    return newRevision(tx, cardId, 1, input, hash)
+  }
 
-    if (!current) return newRevision(tx, cardId, 1, input, hash)
-    if (!change)
-      return {
-        cardId,
-        revisionId: current.id,
-        number: current.number,
-        change: "unchanged",
-        added: 0,
-        removed: 0,
-      }
-    if (change.kind === "same") {
-      // derselbe Inhalt unter einer älteren Prüfsumme (etwa nachgerechnete Merkmale): keine neue Revision
-      await tx.cardRevision.update({ where: { id: current.id }, data: { contentHash: hash } })
-      return {
-        cardId,
-        revisionId: current.id,
-        number: current.number,
-        change: "unchanged",
-        added: 0,
-        removed: 0,
-      }
-    }
-    if (change.kind !== "update") return newRevision(tx, cardId, current.number + 1, input, hash)
-
-    const idOf = new Map(stored.map((row) => [shotKey(row), row.id]))
-    await tx.shot.deleteMany({
-      where: { id: { in: change.remove.map((shot) => idOf.get(shotKey(shot))!) } },
-    })
-    await tx.shot.createMany({ data: shotRows(current.id, cardId, change.add) })
-    await tx.cardRevision.update({
-      where: { id: current.id },
-      data: {
-        contentHash: hash,
-        ...(input.rawSnapshotId ? { rawSnapshotId: input.rawSnapshotId } : {}),
-      },
-    })
-    await saveProjection(tx, cardId, current.id, input.shots.map(toMetricShot))
+  const cardId = existing.id
+  await tx.$queryRaw`SELECT id FROM "Card" WHERE id = ${cardId} FOR UPDATE`
+  const current = existing.currentRevision
+  if (
+    current &&
+    sequence !== null &&
+    existing.lastSequence !== null &&
+    sequence <= existing.lastSequence
+  )
     return {
       cardId,
       revisionId: current.id,
       number: current.number,
-      change: "updated",
-      added: change.add.length,
-      removed: change.remove.length,
+      change: "stale",
+      added: 0,
+      removed: 0,
     }
+
+  const stored = current
+    ? await tx.shot.findMany({ where: { revisionId: current.id }, orderBy: { seq: "asc" } })
+    : []
+  if (
+    !input.cardId &&
+    Math.abs(existing.startedAt.getTime() - input.card.startedAtMs) > RECURRENCE_MIN_MS
+  ) {
+    // dieselbe ScheibenID, aber ein Beginn Wochen entfernt: nur dieselbe Scheibe, wenn ein Schuss wiederkehrt
+    const known = new Set(stored.map((row) => row.fingerprint))
+    if (!input.shots.some((shot) => known.has(shotFingerprint(shot))))
+      throw new CardIdentityConflictError(cardId, cycle)
+  }
+  const change =
+    current && current.contentHash !== hash
+      ? shotChange(stored.map(shotFromRow), input.shots)
+      : null
+  await tx.card.update({
+    where: { id: cardId },
+    data: {
+      ...features,
+      flags: withSticky(features.flags, existing.flags, change?.kind === "correction"),
+      ...identityUpdate(existing, input.card, cycle, block),
+      ...(sequence === null ? {} : { lastSequence: sequence }),
+    },
   })
+
+  if (!current) return newRevision(tx, cardId, 1, input, hash)
+  if (!change)
+    return {
+      cardId,
+      revisionId: current.id,
+      number: current.number,
+      change: "unchanged",
+      added: 0,
+      removed: 0,
+    }
+  if (change.kind === "same") {
+    // derselbe Inhalt unter einer älteren Prüfsumme (etwa nachgerechnete Merkmale): keine neue Revision
+    await tx.cardRevision.update({ where: { id: current.id }, data: { contentHash: hash } })
+    return {
+      cardId,
+      revisionId: current.id,
+      number: current.number,
+      change: "unchanged",
+      added: 0,
+      removed: 0,
+    }
+  }
+  if (change.kind !== "update") return newRevision(tx, cardId, current.number + 1, input, hash)
+
+  const idOf = new Map(stored.map((row) => [shotKey(row), row.id]))
+  await tx.shot.deleteMany({
+    where: { id: { in: change.remove.map((shot) => idOf.get(shotKey(shot))!) } },
+  })
+  await tx.shot.createMany({ data: shotRows(current.id, cardId, change.add) })
+  await tx.cardRevision.update({
+    where: { id: current.id },
+    data: {
+      contentHash: hash,
+      ...(input.rawSnapshotId ? { rawSnapshotId: input.rawSnapshotId } : {}),
+    },
+  })
+  await saveProjection(tx, cardId, current.id, input.shots.map(toMetricShot))
+  return {
+    cardId,
+    revisionId: current.id,
+    number: current.number,
+    change: "updated",
+    added: change.add.length,
+    removed: change.remove.length,
+  }
 }
 
 /**
@@ -939,4 +982,118 @@ export async function chooseCardKind(
   })
   if (count === 1) return "saved"
   return (await db.card.count({ where: own })) ? "probeOnly" : "missing"
+}
+
+/** eine Disziplin, die der Schütze für eine Scheibe wählen kann (`disciplineOptions`) */
+export interface DisciplineOption {
+  id: number
+  name: string
+  /** Anzeige der Familie; null ohne */
+  family: string | null
+  /** die Disziplin am Stand (aus Meyton) */
+  stand: boolean
+  /** die, mit der die Scheibe gerade zählt */
+  current: boolean
+}
+
+/** was für die Wahl der Disziplin an der Scheibe hängt: ihre und die vom Stand, mit Anlage und Scheibenbild */
+const CHOICE_SELECT = {
+  disciplineId: true,
+  standDisciplineId: true,
+  discipline: { select: { siteId: true, targetId: true } },
+  standDiscipline: { select: { siteId: true, targetId: true } },
+} satisfies Prisma.CardSelect
+
+/**
+ * Wählbar sind die Disziplinen der Anlage mit demselben Scheibenbild wie die vom Stand, nicht ignoriert, dazu immer die
+ * vom Stand (zurück). Die Werte bleiben, wie Meyton sie gemessen hat: Ein anderes Scheibenbild zeigte die Treffer auf
+ * Ringen, mit denen Meyton nicht gewertet hat. Ohne Scheibenbild am Stand gibt es keine Wahl.
+ */
+function choiceWhere(card: Prisma.CardGetPayload<{ select: typeof CHOICE_SELECT }>) {
+  const standId = card.standDisciplineId ?? card.disciplineId
+  const stand = card.standDiscipline ?? card.discipline
+  if (stand.targetId === null) return null
+  return {
+    standId,
+    where: {
+      siteId: stand.siteId,
+      targetId: stand.targetId,
+      OR: [{ ignoredAt: null }, { id: standId }],
+    } satisfies Prisma.DisciplineWhereInput,
+  }
+}
+
+/**
+ * Die Disziplinen, die der Schütze für eine eigene, sichtbare Scheibe wählen kann, nach Familie und Name; leer, wenn es
+ * die Scheibe für ihn nicht gibt oder ihre Disziplin am Stand kein Scheibenbild hat
+ */
+export async function disciplineOptions(
+  db: Db,
+  query: { cardId: string; ownerId: string }
+): Promise<DisciplineOption[]> {
+  const card = await db.card.findFirst({
+    where: { id: query.cardId, ownerId: query.ownerId, ...VISIBLE_CARD },
+    select: CHOICE_SELECT,
+  })
+  const choice = card && choiceWhere(card)
+  if (!card || !choice) return []
+  const rows = await db.discipline.findMany({
+    where: choice.where,
+    select: { id: true, name: true, family: { select: { name: true } } },
+    orderBy: [{ family: { name: "asc" } }, { name: "asc" }, { id: "asc" }],
+  })
+  return rows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    family: row.family?.name ?? null,
+    stand: row.id === choice.standId,
+    current: row.id === card.disciplineId,
+  }))
+}
+
+/**
+ * Die Disziplin einer eigenen, sichtbaren Scheibe wählen (Seite der Scheibe): Die Familie zieht mit, Merkmale und
+ * Projektion rechnet `recomputeDisciplineCard` mit der gewählten neu; die vom Stand bleibt vermerkt, bis der Schütze
+ * sie wieder wählt. Unter derselben Sperre wie `writeRevision` (Quelle, ScheibenID), dann die Zeile. `missing`, wenn es
+ * die Scheibe für ihn nicht gibt; `notAllowed` für eine Disziplin außerhalb von `disciplineOptions`.
+ */
+export async function chooseCardDiscipline(
+  db: Db,
+  query: { cardId: string; ownerId: string; disciplineId: number }
+): Promise<"saved" | "missing" | "notAllowed"> {
+  return db.$transaction(async (tx) => {
+    const [key] = await tx.$queryRaw<{ sourceId: number | null; scheibenId: number | null }[]>`
+      SELECT "sourceId", "scheibenId" FROM "Card" WHERE id = ${query.cardId}`
+    if (!key) return "missing"
+    if (key.sourceId !== null && key.scheibenId !== null)
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(${key.sourceId}::int, ${key.scheibenId}::int)`
+    await tx.$queryRaw`SELECT id FROM "Card" WHERE id = ${query.cardId} FOR UPDATE`
+    const card = await tx.card.findFirst({
+      where: { id: query.cardId, ownerId: query.ownerId, ...VISIBLE_CARD },
+      select: CHOICE_SELECT,
+    })
+    if (!card) return "missing"
+    const choice = choiceWhere(card)
+    if (!choice) return "notAllowed"
+    if (query.disciplineId === card.disciplineId) return "saved"
+    const allowed = await tx.discipline.findFirst({
+      where: { ...choice.where, id: query.disciplineId },
+      select: { id: true },
+    })
+    if (!allowed) return "notAllowed"
+    // die Familie gegen ein gleichzeitiges Umhängen durch den Admin (`setDisciplineFamily`), wie `writeRevision`
+    const [discipline] = await tx.$queryRaw<{ familyId: number | null }[]>`
+      SELECT "familyId" FROM "Discipline" WHERE id = ${query.disciplineId} FOR SHARE`
+    await tx.card.update({
+      where: { id: query.cardId },
+      data: {
+        disciplineId: query.disciplineId,
+        standDisciplineId: query.disciplineId === choice.standId ? null : choice.standId,
+        familyId: discipline.familyId,
+        disciplineVersion: -1,
+      },
+    })
+    await recomputeDisciplineCard(tx, query.cardId)
+    return "saved"
+  })
 }
