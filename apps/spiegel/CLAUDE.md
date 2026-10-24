@@ -137,12 +137,15 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
   Kennung prüfen die Actions über `src/lib/action-guards.ts`.
 - **Disziplin je Scheibe:** `Card.disciplineId` ist die Disziplin, mit der alles rechnet (Familie, Scheibenbild,
   Schusszahl, Admin). Hat der Schütze eine andere gewählt, steht die vom Stand in `Card.standDisciplineId`; null heißt
-  keine Wahl. `writeRevision` lässt eine Wahl stehen, schreibt die Disziplin des Stands dorthin und rechnet die Merkmale
-  mit `recomputeDisciplineCard` in derselben Transaktion nach; bringt der Stand die gewählte, fällt die Wahl weg.
-  Gewählt wird nur über `chooseCardDiscipline` (`src/lib/card-discipline-actions.ts`), aus `disciplineOptions`: Anlage
-  und Scheibenbild der Disziplin vom Stand, nicht ignoriert, dazu die vom Stand (zurück). Bedient am Ende der Seite einer
-  Scheibe über dem Teilen (`CardDiscipline`, Blatt und Rückfrage `cardDiscipline`). Ein anderes Scheibenbild mit
-  Neu-Wertung (SF-16) ist offen.
+  keine Wahl. `writeRevision` lässt eine Wahl stehen, solange der Stand die Disziplin bringt, gegen die gewählt wurde, und
+  rechnet die Merkmale mit `recomputeDisciplineCard` in derselben Transaktion nach; bringt er eine andere (auch die
+  gewählte), gilt wieder seine. Gewählt wird nur über `chooseCardDiscipline` (`src/lib/card-discipline-actions.ts`,
+  Regeln in `choiceWhere`): eingeordnete Disziplinen der Anlage mit Familie und demselben Scheibenbild wie die vom Stand,
+  nicht ignoriert, dazu die vom Stand (zurück, solange sie nicht ignoriert ist). `disciplineOptions` (reads) liefert sie
+  mit der Wertung, in der die Scheibe dann zählt. Bedient am Ende der Seite einer Scheibe über dem Teilen
+  (`CardDiscipline`, Blatt mit Knöpfen, Rückfrage `cardDiscipline`); die geteilte Seite verrät die Wahl nicht. Neue
+  Blöcke derselben ScheibenID erben die Wahl nicht (wie Art und Wertung). Ein anderes Scheibenbild mit Neu-Wertung
+  (SF-16) ist offen.
 - **Darstellung der Scheibe gemerkt:** Ebenen, „übrige blass/aus“ und Ausschnitt (ganze
   Scheibe oder Gruppe) als Cookie
   `spiegel-target` (`src/lib/target-display*.ts`, Format aus `@vereinsheim/shot-ui/target/display`). Die Seite einer

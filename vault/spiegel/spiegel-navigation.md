@@ -331,12 +331,16 @@ War am Stand die falsche Disziplin gewählt (etwa Auflage auf einer LP-Scheibe),
 
 - **Wo:** am Ende der Seite einer Scheibe, über dem Teilen (`CardDiscipline`): „Disziplin LP 40“, nach einer eigenen
   Wahl leise „Am Stand gewählt: …“. „Disziplin ändern“ öffnet ein Blatt mit den Disziplinen derselben Scheibe nach
-  Familie; die Wahl fragt mit Folgen (`cardDiscipline`), „Ändern“ stellt um, die Disziplin vom Stand „Zurückstellen“.
-  Ohne andere Möglichkeit steht nur der Name da. Nicht auf der geteilten Seite.
-- **Was wählbar ist:** die Disziplinen der Anlage mit demselben Scheibenbild wie die vom Stand, nicht ignoriert
-  (`disciplineOptions`). Die Werte bleiben, wie Meyton sie gemessen hat; ohne Scheibenbild am Stand keine Wahl.
+  Familie (Knöpfe, mit der Tastatur durchgehbar); die Wahl fragt mit Folgen (`cardDiscipline`), „Ändern“ stellt um, die
+  Disziplin vom Stand „Zurückstellen“. Ohne andere Möglichkeit steht nur der Name da. Nicht auf der geteilten Seite, die
+  auch nicht verrät, dass gewählt wurde.
+- **Was wählbar ist:** eingeordnete Disziplinen der Anlage mit Familie und demselben Scheibenbild wie die vom Stand,
+  nicht ignoriert (`choiceWhere`), und die vom Stand, solange der Admin sie nicht ignoriert (sonst verschwände die
+  Scheibe). Die Werte bleiben, wie Meyton sie gemessen hat; ohne Scheibenbild am Stand nur zurück.
 - **Was passiert:** Die Familie zieht mit (Liste, Fortschritt, Rekorde, Start), Schusszahl und Merkmale rechnet Spiegel
-  mit der gewählten neu. Gewählte Wertung und Art bleiben. Spätere Stände aus Meyton lassen die Wahl stehen.
+  mit der gewählten neu. Ohne eigene Wertung folgt die Wertung der neuen Disziplin; die Rückfrage sagt das. Gewählte
+  Wertung und Art bleiben. Spätere Stände aus Meyton mit derselben Disziplin lassen die Wahl stehen; bringt Meyton eine
+  andere, gilt wieder die vom Stand. Ein neuer Block derselben ScheibenID erbt die Wahl nicht.
 - **Offen:** eine Disziplin mit anderem Scheibenbild (LG-Schütze auf LP-Disziplin), dafür wertet Spiegel aus x/y neu
   und setzt `neu-gewertet` (SF-16, [[spiegel-target-library]] „Neu werten“).
 
