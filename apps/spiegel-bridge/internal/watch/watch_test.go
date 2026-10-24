@@ -202,7 +202,8 @@ func TestCorrectionWithoutLifesignWhileActive(t *testing.T) {
 	if got := ids(tick(t, w, m)); len(got) != 1 {
 		t.Fatalf("Korrektur innerhalb von 20 Minuten: %v", got)
 	}
-	// später ruht die Scheibe: Ohne Lebenszeichen liest die Brücke sie nicht mehr (den Abgleich bringt das Nachholen beim Start)
+	// später ruht die Scheibe: Ohne Lebenszeichen liest die Brücke sie vorerst nicht mehr (den Abgleich im Leerlauf bringt
+	// sie nach `ReconcileEvery`, TestReconcileReadsRestingCardsWhenIdle)
 	c.advance(25 * time.Minute)
 	m.data[7] = cardData(7, 20, "90")
 	tick(t, w, m)
@@ -286,6 +287,143 @@ func TestReassignedCardLeavesWhileShooting(t *testing.T) {
 	}
 	if !sent[1] {
 		t.Fatalf("umgebucht, während geschossen wird: %v", m.reads[len(m.reads)-3:])
+	}
+}
+
+// Abgleich im Leerlauf (SF-21): Eine Korrektur ohne Lebenszeichen, nachdem die Scheibe ruht, liest die Brücke nach
+// `ReconcileEvery` seit der letzten Lesung; danach erst wieder nach demselben Abstand.
+func TestReconcileReadsRestingCardsWhenIdle(t *testing.T) {
+	m, c := newMemory(), start()
+	w := New(Defaults, c.now)
+	m.put(7, "2026-10-13 18:00:00", 20, "100")
+	tick(t, w, m)
+	c.advance(time.Second)
+	tick(t, w, m)
+	c.advance(25 * time.Minute)
+	m.data[7] = cardData(7, 20, "95")
+	tick(t, w, m)
+	if last := m.reads[len(m.reads)-1]; len(last) != 0 {
+		t.Fatalf("vor dem Abgleich gelesen: %v", last)
+	}
+	c.advance(Defaults.ReconcileEvery - 25*time.Minute)
+	r := tick(t, w, m)
+	if last := m.reads[len(m.reads)-1]; fmt.Sprint(last) != "[7]" || len(r.Snapshots) != 0 {
+		t.Fatalf("Abgleich: gelesen %v, gesendet %v", last, ids(r))
+	}
+	c.advance(time.Second)
+	r = tick(t, w, m)
+	if len(r.Snapshots) != 1 || *r.Snapshots[0].Data.Treffer.Rows[0]["Ring01"] != "95" {
+		t.Fatalf("Korrektur gesendet: %v", ids(r))
+	}
+	c.advance(time.Second)
+	tick(t, w, m)
+	c.advance(Defaults.ReconcileEvery - 2*time.Second)
+	tick(t, w, m)
+	for _, read := range m.reads[len(m.reads)-2:] {
+		if len(read) != 0 {
+			t.Fatalf("vor dem nächsten Abgleich gelesen: %v", m.reads[len(m.reads)-2:])
+		}
+	}
+	c.advance(2 * time.Second)
+	tick(t, w, m)
+	if last := m.reads[len(m.reads)-1]; fmt.Sprint(last) != "[7]" {
+		t.Fatalf("nächster Abgleich: %v", last)
+	}
+}
+
+// Der Abgleich wartet, solange geschossen wird (SF-52).
+func TestReconcileWaitsWhileShooting(t *testing.T) {
+	m, c := newMemory(), start()
+	w := New(Defaults, c.now)
+	m.put(7, "2026-10-13 18:00:00", 20, "100")
+	tick(t, w, m)
+	c.advance(time.Second)
+	tick(t, w, m)
+	c.advance(2 * time.Hour)
+	m.data[7] = cardData(7, 20, "95")
+	m.put(9, "2026-10-13 20:00:00", 3, "100")
+	for range 3 {
+		m.stamps[9] = c.t.Format(stampLayout)
+		tick(t, w, m)
+		c.advance(time.Second)
+	}
+	for _, read := range m.reads[len(m.reads)-3:] {
+		for _, id := range read {
+			if id != 9 {
+				t.Fatalf("Abgleich, während geschossen wird: %v", m.reads[len(m.reads)-3:])
+			}
+		}
+	}
+	// Stand 9 ruht
+	c.advance(25 * time.Minute)
+	sent := map[int32]bool{}
+	for range 2 {
+		for _, id := range ids(tick(t, w, m)) {
+			sent[id] = true
+		}
+		c.advance(time.Second)
+	}
+	if !sent[7] {
+		t.Fatalf("Korrektur nach dem Schießen: %v", sent)
+	}
+}
+
+// Der Abgleich reicht `ReconcileWindow` vor das jüngste Lebenszeichen, nicht weiter.
+func TestReconcileOnlyWithinTheWindow(t *testing.T) {
+	m, c := newMemory(), start()
+	w := New(Defaults, c.now)
+	m.put(7, "2026-10-13 18:00:00", 20, "100")
+	tick(t, w, m)
+	c.advance(time.Second)
+	tick(t, w, m)
+	// 15 Tage später schießt Stand 9, und an Scheibe 7 ändert sich etwas ohne Lebenszeichen
+	c.advance(15 * 24 * time.Hour)
+	m.put(9, "2026-10-28 18:00:00", 3, "100")
+	m.data[7] = cardData(7, 20, "95")
+	from := len(m.reads)
+	tick(t, w, m)
+	c.advance(time.Second)
+	tick(t, w, m)
+	c.advance(25 * time.Minute)
+	idle := len(m.reads)
+	for range 3 {
+		tick(t, w, m)
+		c.advance(Defaults.ReconcileEvery)
+	}
+	reconciled := false
+	for i, read := range m.reads[from:] {
+		for _, id := range read {
+			if id == 7 {
+				t.Fatalf("außerhalb des Fensters gelesen: %v", m.reads[from:])
+			}
+		}
+		reconciled = reconciled || (from+i >= idle && fmt.Sprint(read) == "[9]")
+	}
+	if !reconciled {
+		t.Fatalf("Scheibe 9 im Fenster nicht abgeglichen: %v", m.reads[from:])
+	}
+}
+
+// Der Abgleich liest nur, was dieser Lauf schon gelesen hat: Was vor dem Startfenster und vor dem Wasserstand liegt, hat
+// Spiegel (SF-55).
+func TestReconcileSkipsCardsNeverReadInThisRun(t *testing.T) {
+	m, c := newMemory(), start()
+	w := New(Defaults, c.now)
+	m.put(3, "2026-10-10 20:00:00", 40, "100")
+	m.put(9, "2026-10-13 20:00:00", 3, "100")
+	for range 3 {
+		tick(t, w, m)
+		c.advance(time.Hour)
+	}
+	for _, read := range m.reads {
+		for _, id := range read {
+			if id == 3 {
+				t.Fatalf("nie gelesene Scheibe abgeglichen: %v", m.reads)
+			}
+		}
+	}
+	if fmt.Sprint(m.reads[2]) != "[9]" {
+		t.Fatalf("Scheibe 9 nicht abgeglichen: %v", m.reads)
 	}
 }
 

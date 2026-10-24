@@ -57,6 +57,11 @@ type Config struct {
 	ForgetAfter time.Duration
 	// ein Stand, der sich vom gesendeten nur im Lebenszeichen unterscheidet, höchstens so oft
 	LifesignEvery time.Duration
+	// so weit vor dem jüngsten Lebenszeichen liest der Abgleich im Leerlauf schon gelesene Scheiben neu: späte
+	// Korrekturen und Umbuchen ohne neues Lebenszeichen (SF-21, SF-80)
+	ReconcileWindow time.Duration
+	// so lange nach der letzten Lesung ist eine Scheibe für den Abgleich wieder dran
+	ReconcileEvery time.Duration
 }
 
 // Defaults sind die voreingestellten Regeln.
@@ -67,6 +72,9 @@ var Defaults = Config{
 	MaxCards:      50,
 	ForgetAfter:   24 * time.Hour,
 	LifesignEvery: 30 * time.Second,
+	// zwei Wochen decken die nächsten zwei Trainings, rund 30 Scheiben: eine Runde
+	ReconcileWindow: 14 * 24 * time.Hour,
+	ReconcileEvery:  time.Hour,
 }
 
 // LifesignColumn ist die Spalte des Lebenszeichens in `Scheiben`.
@@ -215,11 +223,12 @@ func New(cfg Config, now func() time.Time) *Watcher {
 
 const stampLayout = "2006-01-02 15:04:05"
 
-// startFrom ist beim ersten Lauf das älteste Lebenszeichen, das noch als neu gilt: das Startfenster vor dem jüngsten.
-// `YYYY-MM-DD HH:MM:SS` sortiert als Text wie als Zeit. Die Uhr eines einzelnen Stands kann vorgehen (SF-73): Was mehr als
-// einen Tag nach der Uhr der Anlage liegt, verankert das Fenster nicht (ein Tag deckt die Zone der Ortszeit ab). Ohne
-// lesbares Lebenszeichen und ohne Uhr gilt alles als neu.
-func (w *Watcher) startFrom(lifesigns []Lifesign, sourceNow *string) string {
+// windowFrom ist das älteste Lebenszeichen in einem Fenster der Länge `d` vor dem jüngsten: beim ersten Lauf das
+// Startfenster (was noch als neu gilt), in jeder Runde das Fenster des Abgleichs. `YYYY-MM-DD HH:MM:SS` sortiert als Text
+// wie als Zeit. Die Uhr eines einzelnen Stands kann vorgehen (SF-73): Was mehr als einen Tag nach der Uhr der Anlage
+// liegt, verankert das Fenster nicht (ein Tag deckt die Zone der Ortszeit ab). Ohne lesbares Lebenszeichen und ohne Uhr
+// leer: alles im Fenster.
+func (w *Watcher) windowFrom(lifesigns []Lifesign, sourceNow *string, d time.Duration) string {
 	limit := ""
 	if sourceNow != nil && len(*sourceNow) >= len(stampLayout) {
 		if t, err := time.Parse(stampLayout, (*sourceNow)[:len(stampLayout)]); err == nil {
@@ -239,7 +248,7 @@ func (w *Watcher) startFrom(lifesigns []Lifesign, sourceNow *string) string {
 	if err != nil {
 		return ""
 	}
-	return t.Add(-w.cfg.StartWindow).Format(stampLayout)
+	return t.Add(-d).Format(stampLayout)
 }
 
 // sameText: beide ohne Wert oder mit demselben Text
@@ -273,11 +282,17 @@ func (w *Watcher) dirty(l Lifesign, from string) bool {
 	}
 }
 
+// reconcileDue: Die Scheibe ist für den Abgleich dran. Sie liegt im Fenster ab `from`, und ihre letzte Lesung ist
+// `ReconcileEvery` her. Nur in diesem Lauf gelesene: Was davor liegt, deckt nach einem Neustart der Wasserstand (SF-55).
+func (w *Watcher) reconcileDue(c *card, l Lifesign, now time.Time, from string) bool {
+	return c != nil && !c.readAt.IsZero() && from != "" && l.Stamp >= from && now.Sub(c.readAt) >= w.cfg.ReconcileEvery
+}
+
 // plan wählt die Scheiben einer Runde, ohne den Speicher zu ändern; erst eine gelungene Runde übernimmt ihn. Reihenfolge:
 // was auf Bestätigung wartet, dann was sich bewegt hat (die jüngsten zuerst), dann die aktiven, die am längsten nicht
-// gelesen wurden. So verhungert keine Scheibe am Budget. Nachzuholende kommen nur, wenn sonst nichts zu lesen ist:
-// ältere Scheiben nur, wenn gerade niemand schießt (SF-52).
-func (w *Watcher) plan(now time.Time, lifesigns []Lifesign, from string) []int32 {
+// gelesen wurden. So verhungert keine Scheibe am Budget. Nachzuholende, Nachzuladende und der Abgleich ab
+// `reconcileFrom` kommen nur, wenn sonst nichts zu lesen ist: ältere Scheiben nur, wenn gerade niemand schießt (SF-52).
+func (w *Watcher) plan(now time.Time, lifesigns []Lifesign, from, reconcileFrom string) []int32 {
 	type pick struct {
 		id     int32
 		rank   int
@@ -308,6 +323,9 @@ func (w *Watcher) plan(now time.Time, lifesigns []Lifesign, from string) []int32
 		case active:
 			p.rank, p.readAt = 2, c.readAt
 		case w.backfill(l, from):
+			p.rank, p.idle = 3, true
+		// Abgleich: späte Korrekturen ohne Lebenszeichen (SF-21), wie das Nachholen nur im Leerlauf
+		case w.reconcileDue(c, l, now, reconcileFrom):
 			p.rank, p.idle = 3, true
 		// ein Auftrag zum Nachladen will sie: wie das Nachholen, nur im Leerlauf
 		case w.wantsHistory(l.Sportpass) && (c == nil || !handled(c)):
@@ -354,9 +372,9 @@ func (w *Watcher) Tick(ctx context.Context, src Source) (Result, error) {
 	var from string
 	round, err := src.Round(ctx, func(lifesigns []Lifesign, sourceNow *string) []int32 {
 		if !w.started {
-			from = w.startFrom(lifesigns, sourceNow)
+			from = w.windowFrom(lifesigns, sourceNow, w.cfg.StartWindow)
 		}
-		chosen = w.plan(now, lifesigns, from)
+		chosen = w.plan(now, lifesigns, from, w.windowFrom(lifesigns, sourceNow, w.cfg.ReconcileWindow))
 		return chosen
 	})
 	if err != nil {
