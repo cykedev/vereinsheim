@@ -171,8 +171,8 @@ export const stateResponseV1 = z
     /** jüngste Beobachtungszeit, die Spiegel von dieser Anlage hat; Nachholen beim Start ab hier (SF-55) */
     watermark: instant.nullable(),
     /**
-     * additiv: offene Aufträge, die älteren Scheiben einer Zustimmung nachzuladen, soweit die Anlage sie hat und nur,
-     * wenn niemand schießt. `id` und `since` (wann der Auftrag eröffnet wurde) meldet die Brücke in `historyDone`
+     * additiv: offene Aufträge, die älteren Scheiben einer Zustimmung nachzuladen, soweit die Anlage sie hat; solange
+     * geschossen wird, in kleinen Portionen (SF-52). `id` und `since` (wann der Auftrag eröffnet wurde) meldet die Brücke in `historyDone`
      * zurück; ein neues `since` heißt: neu lesen, auch was schon gemeldet ist. Der Hash wie in `sportpass.hashes`.
      * Solange einer offen ist, enthält `blocked` alle Sperren, nicht nur die jüngsten.
      */
