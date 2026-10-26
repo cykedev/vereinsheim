@@ -10,7 +10,10 @@ import {
   metricByKey,
   selectShots,
   shotNumbers,
+  sumsResult,
+  summaryValue,
   type CardFlag,
+  type CardSums,
   type MetricDefinition,
   type MetricShot,
   type Scoring,
@@ -18,7 +21,7 @@ import {
 } from "../metrics"
 import { modalLength } from "../stats"
 import { MAX_DECIMAL_TENTHS } from "../targets"
-import { byStart, cardShots } from "./card-shots"
+import { byStart, cardShots, shotCountOf } from "./card-shots"
 import { longestRun, seriesCurve } from "./course"
 import { pooledValue } from "./levels"
 import { cardValues, periodTrend, type PeriodCard } from "./period"
@@ -166,13 +169,62 @@ export interface RecordCandidates {
   mean: { value: number; n: number } | null
 }
 
+/** beste Serie voller Länge (die häufigste Länge) aus den Serien-Summen mit Wert der Wertung, bei Gleichstand die frühere */
+function bestSeriesSum(
+  sums: CardSums | undefined,
+  scoring: Scoring
+): RecordCandidates["bestSeries"] {
+  if (!sums?.series.length) return null
+  const full = modalLength(sums.series.map((s) => s.shots)) as number
+  let best: RecordCandidates["bestSeries"] = null
+  for (const s of [...sums.series].sort((a, b) => a.series - b.series)) {
+    const tenths = scoring === "rings" ? (s.rings === null ? null : s.rings * 10) : s.decimalTenths
+    if (s.shots !== full || tenths === null) continue
+    if (!best || tenths / 10 > best.value)
+      best = { length: full, value: tenths / 10, series: s.series }
+  }
+  return best
+}
+
+/**
+ * Kandidaten einer Scheibe ohne zählende Schüsse aus ihren Summen ([[adr-033]]): Ergebnis (R1), beste Serie (R2) und
+ * Ø je Schuss (R8); was Einzelschüsse braucht, fehlt. Null, wenn die Summen in dieser Wertung nichts geben
+ */
+function sumsCandidates(
+  card: PeriodCard,
+  scoring: Scoring,
+  includeProbeOnly: boolean
+): RecordCandidates | null {
+  const bestSeries = bestSeriesSum(card.sums, scoring)
+  if (!sumsResult(card.sums, scoring) && !bestSeries) return null
+  const mean = cardValues([card], MEAN, scoring, { includeProbeOnly })[0]
+  return {
+    n: shotCountOf(card),
+    result: summaryValue(inScoring(RESULT, scoring), card.sums)?.value ?? null,
+    tens: null,
+    innerTens: null,
+    perfect: null,
+    tightest: null,
+    bestSeries,
+    tightestSeries: null,
+    bestTeiler: null,
+    longestTenRun: null,
+    seriesTens: null,
+    seriesInnerTens: null,
+    longestNineRun: null,
+    weakestShot: null,
+    seriesSpan: null,
+    mean: mean ? { value: mean.value, n: mean.n } : null,
+  }
+}
+
 export function cardRecordCandidates(
   card: PeriodCard,
   scoring: Scoring,
   includeProbeOnly = false
 ): RecordCandidates | null {
   const chosen = cardShots(card.shots, includeProbeOnly)
-  if (!chosen) return null
+  if (!chosen) return sumsCandidates(card, scoring, includeProbeOnly)
   // Kennzahlen der Registry über die Wertungsschüsse; Auswertungen, die selbst auswählen und nummerieren,
   // über die ganze Karte (erst ordnen, dann auswählen)
   const { match: shots, whole } = chosen
@@ -238,13 +290,16 @@ export function cardRecordCandidates(
   const mean = cardValues([card], MEAN, scoring, { includeProbeOnly })[0]
   return {
     n,
-    result: computeMetric(inScoring(RESULT, scoring), shots),
+    result:
+      computeMetric(inScoring(RESULT, scoring), shots) ??
+      summaryValue(inScoring(RESULT, scoring), card.sums)?.value ??
+      null,
     tens: count(computeMetric(TENS, shots)),
     innerTens: count(computeMetric(INNER_TENS, shots)),
     perfect:
       scoring === "decimal" ? count(decimalHistogram(whole).counts[MAX_DECIMAL_TENTHS]) : null,
     tightest: eligibleShots(ENCLOSING, shots).length === n ? computeMetric(ENCLOSING, shots) : null,
-    bestSeries,
+    bestSeries: bestSeries ?? bestSeriesSum(card.sums, scoring),
     tightestSeries,
     bestTeiler: best ? { value: best.teiler, shot: best.number } : null,
     longestTenRun:

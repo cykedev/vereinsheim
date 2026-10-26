@@ -4,17 +4,18 @@
 // Wochen, Monate und Tage ordnet er zu, denn die Anzeige-Zeitzone liegt in der App.
 
 import {
-  asOnPrintout,
   computeMetric,
   eligibleShots,
   inScoring,
+  summaryValue,
+  type CardSums,
   type MetricDefinition,
   type MetricShot,
   type Scoring,
 } from "../metrics"
 import { standardDeviation } from "../geometry"
 import { mad, mannWhitney, median, quantile } from "../stats"
-import { byStart, cardShots } from "./card-shots"
+import { byStart, cardShots, shotCountOf } from "./card-shots"
 
 /** Faktor, der den MAD bei normalverteilten Werten zur Standardabweichung macht */
 const MAD_TO_SD = 1.4826
@@ -59,6 +60,8 @@ export interface PeriodCard {
    */
   official?: Scoring
   shots: readonly MetricShot[]
+  /** Angaben ohne oder neben Einzelschüssen (Serien-Summen, Gesamtergebnis, Trefferlage, [[adr-033]]) */
+  sums?: CardSums
 }
 
 export interface CardValue {
@@ -69,7 +72,8 @@ export interface CardValue {
   n: number
   /**
    * nur bei Kennzahlen, die sich über Schüsse mitteln (`pooling: "mean"`): Standardabweichung der Werte je Schuss
-   * (`perShot`, n − 1), null unter zwei Schüssen; die Rechnung über zwei Ebenen braucht sie ([[adr-034]])
+   * (`perShot`, n − 1), null unter zwei Schüssen; die Rechnung über zwei Ebenen braucht sie ([[adr-034]]). Fehlt bei
+   * Werten aus Summen: Zeiträume urteilen dann mit dem Rangtest über die Scheiben (`compareValues`)
    */
   sd?: number | null
 }
@@ -77,8 +81,9 @@ export interface CardValue {
 /**
  * Wert einer Registry-Kennzahl je Scheibe (T1), in der Folge der Scheiben (`startedAtMs`, bei Gleichstand
  * die Kennung), über die Wertungsschüsse; eine Scheibe nur mit Probe nur mit `includeProbeOnly`, dann über
- * die Probe. Ohne Wert (Mindestzahl, fehlende Angaben) fällt die Scheibe weg. Der Wert ist auf neun
- * Nachkommastellen gerundet, damit gleiche Werte gleich sind.
+ * die Probe. Geben die Schüsse keinen Wert, der aus den Summen (`summaryValue`, ohne `sd`). Ohne Wert (Mindestzahl,
+ * fehlende Angaben) fällt die Scheibe weg. Der Wert ist auf neun Nachkommastellen gerundet, damit gleiche Werte gleich
+ * sind.
  */
 export function cardValues(
   cards: readonly PeriodCard[],
@@ -89,12 +94,20 @@ export function cardValues(
   const scored = inScoring(metric, scoring)
   return byStart(cards).flatMap((card) => {
     const chosen = cardShots(card.shots, options.includeProbeOnly)
-    if (!chosen) return []
-    const shots = chosen.match
     // die ganze Karte für Abstände: eine späte Probe ist keine Lücke (SF-04)
-    const value = computeMetric(scored, shots, chosen.whole)
-    if (value === null) return []
-    const counted = eligibleShots(scored, shots)
+    const value = chosen && computeMetric(scored, chosen.match, chosen.whole)
+    if (!chosen || value === null) {
+      const summary = summaryValue(scored, card.sums)
+      if (!summary) return []
+      const fromSums: CardValue = {
+        id: card.id,
+        atMs: card.startedAtMs,
+        value: Math.round(summary.value * VALUE_DIGITS) / VALUE_DIGITS,
+        n: summary.n,
+      }
+      return [fromSums]
+    }
+    const counted = eligibleShots(scored, chosen.match)
     const entry: CardValue = {
       id: card.id,
       atMs: card.startedAtMs,
@@ -208,7 +221,7 @@ export interface VolumeBucket {
 
 /**
  * Trainingsumfang je Abschnitt (T6): Schüsse wie am Ausdruck (`asOnPrintout`: die Wertung, bei einem Training nur aus
- * Probe seine Probe), Scheiben und Tage. Keine Netto-Zeit, sie folgt aus den Abständen. Abschnitte in der Folge ihrer
+ * Probe seine Probe; ohne Schüsse die Schusszahl der Summen, `shotCountOf`), Scheiben und Tage. Keine Netto-Zeit, sie folgt aus den Abständen. Abschnitte in der Folge ihrer
  * ersten Scheibe. Anders als die übrigen Auswertungen zählt der Umfang jede Scheibe, auch eine nur mit Probe
  * (`includeProbeOnly` gilt für Werte, nicht für den Umfang); Training oder Wettkampf wählt der Aufrufer.
  */
@@ -220,7 +233,7 @@ export function trainingVolume(
   return [...groupBy(byStart(cards), (card) => bucketOf(card.startedAtMs))].map(([key, group]) => ({
     key,
     // wie am Ausdruck: eine Probe neben Wertung zeigt keine Seite, ein Training nur aus Probe zählt
-    shots: group.reduce((sum, card) => sum + asOnPrintout(card.shots).length, 0),
+    shots: group.reduce((sum, card) => sum + shotCountOf(card), 0),
     cards: group.length,
     days: new Set(group.map((card) => dayOf(card.startedAtMs))).size,
   }))
