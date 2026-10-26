@@ -28,7 +28,7 @@ export default async function AdminDisciplineRoute({
   return (
     <Page>
       <section className={cn("grid gap-4", PAGE_SINGLE)}>
-        <AdminTabs current="disciplines" />
+        <AdminTabs current="disciplines" detail />
         <DisciplineForm row={detail.row} families={detail.families} key={detail.row.id} />
       </section>
     </Page>

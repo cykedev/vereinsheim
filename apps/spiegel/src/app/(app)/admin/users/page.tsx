@@ -5,7 +5,7 @@ import { getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
 import { LoginRateLimitInsights } from "@vereinsheim/ui/admin/LoginRateLimitInsights"
 
 import { AdminLoginRateLimitTable } from "@/components/admin/AdminLoginRateLimitTable"
-import { AdminTabs } from "@/components/admin/AdminTabs"
+import { AdminHeader } from "@/components/admin/AdminHeader"
 import { UserRowFacts } from "@/components/admin/UserRowFacts"
 import { requireAdmin } from "@/lib/auth-helpers"
 import { getAdminLoginRateLimitInsights } from "@/lib/admin/actions"
@@ -59,23 +59,20 @@ export default async function AdminUsersRoute() {
   return (
     <Page>
       <section className={cn("grid gap-4", PAGE_SINGLE)}>
-        <AdminTabs current="users" />
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div className="grid gap-1">
-            <h1 className="font-display text-[1.7rem] leading-tight font-bold tracking-tight">
-              Konten
-            </h1>
-            <p className="text-foreground-2">
-              Konten legt nur ein Admin an. Selbst registrieren kann sich niemand.
-            </p>
-          </div>
-          <Link
-            href="/admin/users/new"
-            className="rounded-full bg-primary px-4 py-2 text-[13px] font-semibold text-primary-foreground hover:opacity-90 focus-visible:outline-2 focus-visible:outline-ring"
-          >
-            Neues Konto
-          </Link>
-        </div>
+        <AdminHeader
+          current="users"
+          title="Konten"
+          action={
+            <Link
+              href="/admin/users/new"
+              className="rounded-full bg-primary px-4 py-2 text-[13px] font-semibold text-primary-foreground hover:opacity-90 focus-visible:outline-2 focus-visible:outline-ring"
+            >
+              Neues Konto
+            </Link>
+          }
+        >
+          Konten legt nur ein Admin an. Selbst registrieren kann sich niemand.
+        </AdminHeader>
         {consents.length > 0 && (
           <Link
             href="/admin"

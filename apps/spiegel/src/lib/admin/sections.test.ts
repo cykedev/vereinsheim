@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs"
+import { existsSync, readdirSync, readFileSync } from "node:fs"
 import { join } from "node:path"
 
 import { describe, expect, it } from "vitest"
@@ -25,6 +25,17 @@ describe("Bereiche des Admins", () => {
     for (const { href } of ADMIN_SECTIONS) {
       expect(isAdminPath(href)).toBe(true)
       expect(existsSync(join(APP, href, "page.tsx")), href).toBe(true)
+    }
+  })
+
+  it("jede Seite unter Admin trägt die Reiter, auch die Unterseiten", () => {
+    const pages = readdirSync(join(APP, "admin"), { recursive: true, encoding: "utf8" }).filter(
+      (file) => file.endsWith("page.tsx")
+    )
+    expect(pages.length).toBeGreaterThanOrEqual(9)
+    for (const file of pages) {
+      const page = readFileSync(join(APP, "admin", file), "utf8")
+      expect(/<Admin(Header|Tabs)\s/.test(page), file).toBe(true)
     }
   })
 })

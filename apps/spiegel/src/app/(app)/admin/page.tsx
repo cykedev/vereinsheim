@@ -3,7 +3,7 @@ import type { Metadata } from "next"
 import { getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
 
 import { AdminOverview } from "@/components/admin/AdminOverview"
-import { AdminTabs } from "@/components/admin/AdminTabs"
+import { AdminHeader } from "@/components/admin/AdminHeader"
 import { Page } from "@vereinsheim/ui/design2/page"
 import { PAGE_SINGLE } from "@vereinsheim/shot-ui/layout/columns"
 import { cn } from "@vereinsheim/lib/utils"
@@ -19,15 +19,9 @@ export default async function AdminRoute() {
   return (
     <Page>
       <section className={cn("grid gap-4", PAGE_SINGLE)}>
-        <div className="grid gap-3">
-          <AdminTabs current="overview" />
-          <h1 className="font-display text-[1.7rem] leading-tight font-bold tracking-tight">
-            Übersicht
-          </h1>
-          <p className="text-foreground-2">
-            So kommen Scheiben aus dem Schützenhaus zu den Schützen.
-          </p>
-        </div>
+        <AdminHeader current="overview" title="Übersicht">
+          So kommen Scheiben aus dem Schützenhaus zu den Schützen.
+        </AdminHeader>
         <AdminOverview model={model} />
       </section>
     </Page>
