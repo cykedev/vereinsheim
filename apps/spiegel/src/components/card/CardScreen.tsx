@@ -64,10 +64,8 @@ import {
 } from "@vereinsheim/shot-ui/view-state"
 import { ToggleChip } from "@vereinsheim/ui/design2/toggle-chip"
 
-import { CardDiscipline } from "@/components/card/CardDiscipline"
+import { CardActions } from "@/components/card/CardActions"
 import { CompareWithPrevious } from "@/components/card/CompareWithPrevious"
-import { DeleteCard } from "@/components/card/DeleteCard"
-import { ShareCard } from "@/components/card/ShareCard"
 import { Page } from "@vereinsheim/ui/design2/page"
 import { useSavedChoice } from "@/components/shell/useSavedChoice"
 import { useHelp } from "@vereinsheim/ui/design2/help-sheet"
@@ -505,27 +503,20 @@ export function CardScreen({
       {own && (
         <>
           {own.previous && <CompareWithPrevious cardId={card.id} previous={own.previous} />}
-          <CardDiscipline
+          <CardActions
             cardId={card.id}
             when={cardWhen(card.startedAtMs, pageContext.timeZone)}
-            current={card.discipline}
-            family={card.family?.name ?? null}
-            scoring={card.scoring}
-            stand={card.standDiscipline}
-            options={own.disciplines}
-          />
-          <ShareCard
-            cardId={card.id}
-            when={cardWhen(card.startedAtMs, pageContext.timeZone)}
-            share={share}
-            onChange={setShare}
             timeZone={pageContext.timeZone}
-          />
-          <DeleteCard
-            cardId={card.id}
-            when={cardWhen(card.startedAtMs, pageContext.timeZone)}
+            discipline={{
+              current: card.discipline,
+              family: card.family?.name ?? null,
+              scoring: card.scoring,
+              stand: card.standDiscipline,
+              options: own.disciplines,
+            }}
+            share={share}
+            onShareChange={setShare}
             back={urlFromRoute(backRoute(route))}
-            shared={share !== null}
           />
         </>
       )}
