@@ -25,14 +25,18 @@ export interface RingDistribution {
   n: number
   /** Index = Ring 0 … 10 */
   counts: number[]
-  innerTens: number
+  /** null, wenn einem gezählten Schuss die Angabe fehlt */
+  innerTens: number | null
 }
 
 export function ringDistribution(shots: readonly MetricShot[]): RingDistribution {
   const counted = selectShots(shots, { kinds: MATCH, need: "ring" })
   const counts = new Array<number>(11).fill(0)
   for (const shot of counted) counts[Math.min(10, Math.max(0, shot.ring as number))]++
-  return { n: counted.length, counts, innerTens: counted.filter((shot) => shot.innerTen).length }
+  const innerTens = counted.some((shot) => shot.innerTen === null)
+    ? null
+    : counted.filter((shot) => shot.innerTen === true).length
+  return { n: counted.length, counts, innerTens }
 }
 
 /** Zählung je Zehntelwert 0 … 109 (Index = Wert in Zehnteln) */

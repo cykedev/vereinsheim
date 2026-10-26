@@ -80,6 +80,28 @@ describe("Ergebnis-Kennzahlen", () => {
     expect(value("result.rings", noRing)).toBeNull()
   })
 
+  it("Innenzehner unbekannt (eingetragen ohne Lage): kein Wert, nicht 0 (E5)", () => {
+    const tenShots = (innerTen: boolean | null, flags: string[] = []): MetricShot[] =>
+      Array.from({ length: 10 }, (_, i) => ({
+        seq: i + 1,
+        xUm: null,
+        yUm: null,
+        decimalTenths: null,
+        ring: 10,
+        innerTen,
+        firedAtMs: null,
+        kind: "match",
+        series: 1,
+        flags,
+      }))
+    expect(value("result.innerTens", tenShots(null))).toBeNull()
+    const known = value("result.innerTens", tenShots(false))
+    expect(known).not.toBeNull()
+    expect(known).toBe(0)
+    // wertbasiert: ein verdächtiger Schuss zählt mit seiner Angabe (SF-15)
+    expect(value("result.innerTens", tenShots(true, [FLAG_SUSPICIOUS]))).toBe(10)
+  })
+
   it("ohne Lage (Ergebnis nur aus dem PDF): Ergebnis ja, Trefferbild nein", () => {
     const pdfOnly = MATCH.map((shot) => ({ ...shot, xUm: null, yUm: null }))
     expect(value("result.rings", pdfOnly)).toBe(49)

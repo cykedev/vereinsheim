@@ -38,7 +38,7 @@ import { gapsOf, pauseRule, tempo, type PauseRule } from "./time"
 export type ShotKind = "match" | "probe"
 export type MetricUnit = "Ringe" | "Teiler" | "mm" | "s" | "Schuss" | "%"
 export type MetricScope = "series" | "card"
-export type MetricNeed = "ring" | "decimal" | "position" | "distance" | "time"
+export type MetricNeed = "ring" | "decimal" | "position" | "distance" | "time" | "innerTen"
 export type Scoring = "rings" | "decimal"
 
 /** Fehlschuss (Nuller, Treffer weit außen): robuste Maße lassen ihn weg (SF-14) */
@@ -84,7 +84,8 @@ export interface MetricShot {
   /** Wert in Zehnteln (94 = 9,4), amtlich oder neu gewertet; null unbekannt */
   decimalTenths: number | null
   ring: number | null
-  innerTen: boolean
+  /** null unbekannt, etwa eingetragen ohne Lage */
+  innerTen: boolean | null
   /** Abstand zur Mitte in µm, etwa aus dem Teiler; sonst aus der Lage */
   distanceUm?: number | null
   /** Abgabezeit in ms (UTC); null unbekannt */
@@ -200,6 +201,9 @@ function satisfies(shot: MetricShot, need: MetricNeed): boolean {
       return hasDistance(shot) || hasPosition(shot)
     case "time":
       return finite(shot.firedAtMs)
+    case "innerTen":
+      // ein Innenzehner ist ein Zehner: ohne Ring ist auch er unbekannt
+      return typeof shot.innerTen === "boolean" && finite(shot.ring)
   }
 }
 
@@ -217,7 +221,8 @@ export interface ShotFilter {
 function allowed(shot: MetricShot, filter: ShotFilter): boolean {
   if (!(filter.kinds ?? BOTH).includes(shot.kind)) return false
   const flags = shot.flags ?? []
-  const valueOnly = filter.need === "ring" || filter.need === "decimal"
+  const valueOnly =
+    filter.need === "ring" || filter.need === "decimal" || filter.need === "innerTen"
   if (!valueOnly && flags.includes(FLAG_SUSPICIOUS)) return false
   const placed = filter.need === "position" || filter.need === "distance"
   if (placed && flags.includes(FLAG_OVER_TARGET)) return false
@@ -588,14 +593,15 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
     decimals: 0,
     scopes: SERIES_AND_CARD,
     better: "higher",
-    version: 1,
+    // 2: unbekannt ist kein Innenzehner, sondern kein Wert
+    version: 2,
     appliesTo: MATCH_ONLY,
     minShots: 1,
     nSensitive: true,
     excludeMisses: false,
-    needs: "ring",
+    needs: "innerTen",
     onMissing: "null",
-    compute: (shots) => shots.filter((shot) => shot.innerTen).length,
+    compute: (shots) => shots.filter((shot) => shot.innerTen === true).length,
   }),
   defineMetric({
     key: "result.tensRate",

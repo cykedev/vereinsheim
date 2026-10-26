@@ -122,7 +122,7 @@ export function resultCards({ input, explain, onHelp }: CardContext): CardSpec[]
           {dist.n ? (
             <>
               <RingBars dist={dist} />
-              <Note>{`${dist.innerTens} Innenzehner · n = ${dist.n}`}</Note>
+              <Note>{`${dist.innerTens === null ? "" : `${dist.innerTens} Innenzehner · `}n = ${dist.n}`}</Note>
             </>
           ) : (
             <Note>ab 1 Schuss</Note>

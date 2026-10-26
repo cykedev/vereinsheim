@@ -43,6 +43,15 @@ describe("Ringverteilung und Zehntelverteilung (V1, V2)", () => {
   })
 })
 
+describe("Ringverteilung ohne Angabe der Innenzehner", () => {
+  it("fehlt einem gezählten Schuss die Angabe, sind die Innenzehner unbekannt", () => {
+    const [first, ...rest] = MATCH
+    const distribution = ringDistribution([{ ...first, innerTen: null }, ...rest])
+    expect(distribution.n).toBe(6)
+    expect(distribution.innerTens).toBeNull()
+  })
+})
+
 describe("Beste und weiteste Teiler (E8)", () => {
   it("die drei besten und weitesten Teiler mit Nummer, ohne eigene Angabe über den Wert", () => {
     const extremes = shotExtremes(CARD)
