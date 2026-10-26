@@ -67,6 +67,7 @@ describe("Seite einer Scheibe: eigene und geteilte", () => {
       disciplines: [],
     })
     expect(html).toContain("data-result-actions")
+    expect(html).toContain("data-card-actions")
     expect(html).toContain("data-card-discipline")
     expect(html).toContain("data-share-card")
     expect(html).toContain("data-delete-card")
@@ -79,6 +80,8 @@ describe("Seite einer Scheibe: eigene und geteilte", () => {
     expect(html).toContain("data-compare-previous")
     expect(html).toContain(`href="/compare?type=cards&amp;a=${card.id}&amp;b=c0"`)
     expect(html).toContain("Mit der Scheibe davor vergleichen")
+    // Vergleichen steht über dem Kasten „Diese Scheibe“
+    expect(html.indexOf("data-compare-previous")).toBeLessThan(html.indexOf("data-card-actions"))
     expect(render({ ...own, previous: null })).not.toContain("data-compare-previous")
   })
 
@@ -87,6 +90,7 @@ describe("Seite einer Scheibe: eigene und geteilte", () => {
     expect(html).toContain(`id="shot-table"`)
     for (const part of [
       "data-result-actions",
+      "data-card-actions",
       "data-card-discipline",
       "data-share-card",
       "data-delete-card",
