@@ -29,6 +29,12 @@ describe("Zeile im Kasten „Diese Scheibe“", () => {
     expect(html).toMatch(/<div class="grid min-w-36 flex-1 basis-0 gap-0\.5"><h3/)
   })
 
+  it("die Zeile richtet sich nach ihrer Breite: ab 18 rem die Aktion daneben, schmaler in jeder Zeile darunter", () => {
+    const html = renderToStaticMarkup(createElement(ActionRow, { title: "Löschen", state: "…" }))
+    expect(html).toMatch(/^<div class="@container grid/)
+    expect(html).toMatch(/<div class="grid justify-items-start gap-2 @min-\[18rem\]:flex /)
+  })
+
   it("ohne Aktion nur Titel und Zustand", () => {
     const html = renderToStaticMarkup(
       createElement(ActionRow, { title: "Disziplin", state: "LP 40" })
