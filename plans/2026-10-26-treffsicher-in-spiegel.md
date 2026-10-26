@@ -149,6 +149,9 @@ Folgen, die der Teilplan von Stufe 3 klärt:
   - einzeln mit `--from`/`--to`, zum Testen und für die Fälle mit `check`;
   - über die geprüfte Zuordnungsdatei aus V1 für alle Zeilen mit `ok` und `new`;
   - `status`: wer übernommen ist, wer nicht, und welche Zeilen der Datei offen sind. So geht niemand vergessen.
+- **Nur geprüfte Zeilen:** Der Lauf über die Datei lehnt Zeilen mit `check` ab und bricht ab, wenn dasselbe `from`
+  mehrmals mit verschiedenem `to` steht. `parseMappingCsv` aus V1 prüft nur das Format; diese Regeln gehören ins CLI.
+  Zweitnamen („Erika Maria Muster“ gegen „Erika Muster“) erkennt der Abgleich aus V1 nicht.
 - **Abbruch statt Zusammenführen:** Zeigen zwei Treffsicher-Konten auf dasselbe Spiegel-Konto, oder trägt das Ziel schon
   Übernommenes aus einem anderen Treffsicher-Konto, bricht der Lauf ab und sagt warum. Ein Tippfehler in der Datei
   vermischt so nie zwei Personen.
@@ -175,7 +178,7 @@ nach Stufe 3. Wie Treffsicher lesend läuft, solange der Basisbranch nicht auf `
 
 | Teil | Plan | Branch | Session | Stand |
 |---|---|---|---|---|
-| V1 | `plans/2026-10-26-tis-v1-accounts.md` | `feat/tis-v1-accounts` | | geplant |
+| V1 | `plans/2026-10-26-tis-v1-accounts.md` | `feat/tis-v1-accounts` | tis-v1-accounts | im Basisbranch (`f7edbdab`) |
 | 1a | | | | offen |
 | 1b | | | | offen |
 | 1c | | | | offen |
