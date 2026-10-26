@@ -8,7 +8,9 @@
 // Speicherbudget im Container (256 MiB): die App unter Last 147 bis 152 MiB, der Kindprozess bis 96 MiB, dann bricht
 // die Wache ab. Reicht das einmal nicht, trifft der OOM-Killer den Kindprozess (`oom_score_adj` in `reader-child.ts`).
 // `--max-old-space-size` begrenzt keine ArrayBuffer, und pdf.js entpackt in Uint8Arrays: Deshalb liest die App unter
-// Linux alle 50 ms `VmRSS` des Kindprozesses.
+// Linux alle 50 ms `VmRSS` des Kindprozesses. Der Kindprozess läuft mit `--lite-mode`, ohne optimierenden Compiler:
+// Schon das Laden von pdf.js bringt ihn sonst nahe an die Grenze, gemessen an echten Ausdrucken. Ein Ausdruck ist klein,
+// das Lesen wird dadurch kaum langsamer.
 
 import { spawn } from "node:child_process"
 import { existsSync, readFileSync } from "node:fs"
@@ -59,6 +61,8 @@ export interface IsolatedReadOptions {
 const heapFlags = (heapMb: number) => [
   `--max-old-space-size=${heapMb}`,
   `--max-semi-space-size=${CHILD_SEMI_SPACE_MB}`,
+  // ohne optimierenden Compiler: weniger Speicher für Code (siehe oben)
+  "--lite-mode",
 ]
 
 /** Argumente für `node`: das Skript der Tests, sonst das Bündel, ohne Bündel (Dev, Tests) die Quelle über tsx */

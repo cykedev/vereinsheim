@@ -158,6 +158,13 @@ describe("Start des Kindprozesses", () => {
     expect(args).toContain("--import")
     expect(args).toContain("tsx")
     expect(args).toContain("--max-old-space-size=80")
+    expect(args).toContain("--lite-mode")
+    expect(readerArgs("/x/printout-reader.mjs")).toEqual([
+      "--max-old-space-size=48",
+      "--max-semi-space-size=2",
+      "--lite-mode",
+      "/x/printout-reader.mjs",
+    ])
     expect(Object.keys(childEnv())).toEqual(["NODE_ENV"])
   })
 })
