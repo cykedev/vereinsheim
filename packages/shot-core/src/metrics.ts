@@ -96,6 +96,59 @@ export interface MetricShot {
   flags?: readonly string[]
 }
 
+/** Serien-Summe ohne Einzelschüsse oder neben ihnen: Schusszahl, Summe in ganzen Ringen und in Zehnteln (984 = 98,4) */
+export interface SeriesSum {
+  series: number
+  shots: number
+  rings: number | null
+  decimalTenths: number | null
+}
+
+/**
+ * Angaben einer Scheibe ohne oder neben Einzelschüssen ([[adr-033]]): Serien-Summen, das Gesamtergebnis und die
+ * Trefferlage als Summe (Mitte der Schüsse in µm), jede mit ihrer gespeicherten Schusszahl
+ */
+export interface CardSums {
+  series: readonly SeriesSum[]
+  total: { shots: number; rings: number | null; decimalTenths: number | null } | null
+  center: { xUm: number; yUm: number; shots: number } | null
+}
+
+/** woher ein Ergebnis aus Summen kommt */
+export type SumSource = "series" | "total"
+
+/** Schusszahl der Summen: die der Serien, wenn es welche gibt, sonst die des Gesamtergebnisses */
+export function sumsShots(sums?: CardSums): number {
+  if (!sums) return 0
+  if (sums.series.length) return sums.series.reduce((total, s) => total + s.shots, 0)
+  return sums.total?.shots ?? 0
+}
+
+/**
+ * Ergebnis aus Summen in Zehnteln, damit beide Wertungen eine Rechnung haben: die Serien, wenn jede den Wert der
+ * Wertung trägt, sonst das Gesamtergebnis mit diesem Wert, sonst null
+ */
+export function sumsResult(
+  sums: CardSums | undefined,
+  scoring: Scoring
+): { tenths: number; shots: number; source: SumSource } | null {
+  if (!sums) return null
+  const tenthsOf = (sum: { rings: number | null; decimalTenths: number | null }) =>
+    scoring === "rings" ? (sum.rings === null ? null : sum.rings * 10) : sum.decimalTenths
+  const series = sums.series.map(tenthsOf)
+  if (series.length && series.every((t) => t !== null)) {
+    return {
+      tenths: series.reduce((total: number, t) => total + (t as number), 0),
+      shots: sumsShots(sums),
+      source: "series",
+    }
+  }
+  const total = sums.total === null ? null : tenthsOf(sums.total)
+  return sums.total && total !== null
+    ? { tenths: total, shots: sums.total.shots, source: "total" }
+    : null
+}
+
 export interface MetricDefinition {
   key: string
   /** Katalog-ID aus vault/spiegel/spiegel-statistics.md, etwa "P5"; die Hilfe erklärt sie (shot-help) */
@@ -135,6 +188,11 @@ export interface MetricDefinition {
    * (SF-04).
    */
   compute: (shots: readonly MetricShot[], context: ShotContext) => number | null
+  /**
+   * Wert aus Angaben ohne Einzelschüsse (`CardSums`), nur wenn die Schüsse keinen geben; nur Kennzahlen der Ebene
+   * Scheibe, nie für Streuung ([[adr-033]]). `n` ist die gespeicherte Schusszahl der Angabe.
+   */
+  summary?: (sums: CardSums) => { value: number; n: number } | null
 }
 
 const KEY = /^[a-z][a-zA-Z]*(\.[a-z][a-zA-Z0-9]*)+$/
@@ -168,6 +226,12 @@ export function defineMetric(def: MetricDefinition): Readonly<MetricDefinition> 
   }
   if ((def.pooling === "mean") !== (def.perShot !== undefined)) {
     throw new RangeError(`${def.key}: perShot genau dann, wenn pooling "mean" ist`)
+  }
+  if (def.summary && !def.scopes.includes("card")) {
+    throw new RangeError(`${def.key}: summary nur für Kennzahlen der Ebene Scheibe`)
+  }
+  if (def.summary && (def.pooling === "spreadAxis" || def.pooling === "spreadRadial")) {
+    throw new RangeError(`${def.key}: summary nie für eine Streuung`)
   }
   return Object.freeze({
     ...def,
@@ -274,6 +338,19 @@ export function computeMetric(
   if (metric.onMissing === "null" && eligible.length < counting.length) return null
   if (eligible.length < metric.minShots) return null
   return metric.compute(eligible, contextOf(shots, card))
+}
+
+/**
+ * Wert einer Kennzahl aus den Angaben ohne Einzelschüsse (`summary`): ohne sie oder ohne Angaben null, ebenso unter der
+ * Mindestzahl der Kennzahl
+ */
+export function summaryValue(
+  metric: Readonly<MetricDefinition>,
+  sums?: CardSums
+): { value: number; n: number } | null {
+  if (!metric.summary || !sums) return null
+  const result = metric.summary(sums)
+  return result && result.n >= metric.minShots ? result : null
 }
 
 /**
@@ -505,6 +582,10 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
     onMissing: "null",
     scoring: "rings",
     counterpart: "result.decimal",
+    summary: (sums) => {
+      const r = sumsResult(sums, "rings")
+      return r && { value: r.tenths / 10, n: r.shots }
+    },
     compute: sumRings,
   }),
   defineMetric({
@@ -524,6 +605,10 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
     onMissing: "null",
     scoring: "decimal",
     counterpart: "result.rings",
+    summary: (sums) => {
+      const r = sumsResult(sums, "decimal")
+      return r && { value: r.tenths / 10, n: r.shots }
+    },
     compute: (shots) => sumTenths(shots) / 10,
   }),
   defineMetric({
@@ -545,6 +630,10 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
     onMissing: "drop",
     scoring: "decimal",
     counterpart: "result.ringsMean",
+    summary: (sums) => {
+      const r = sumsResult(sums, "decimal")
+      return r && { value: r.tenths / 10 / r.shots, n: r.shots }
+    },
     compute: (shots) => sumTenths(shots) / 10 / shots.length,
   }),
   defineMetric({
@@ -566,6 +655,10 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
     onMissing: "drop",
     scoring: "rings",
     counterpart: "result.decimalMean",
+    summary: (sums) => {
+      const r = sumsResult(sums, "rings")
+      return r && { value: r.tenths / 10 / r.shots, n: r.shots }
+    },
     compute: (shots) => sumRings(shots) / shots.length,
   }),
   defineMetric({
@@ -658,6 +751,12 @@ export const METRICS: readonly Readonly<MetricDefinition>[] = Object.freeze([
     excludeMisses: false,
     needs: "position",
     onMissing: "drop",
+    // die Trefferlage als Summe: nur Versatz und Richtung, nie Streuung
+    summary: (sums) =>
+      sums.center && {
+        value: Math.hypot(sums.center.xUm, sums.center.yUm) / 1000,
+        n: sums.center.shots,
+      },
     compute: (shots) => {
       const center = centroid(points(shots))
       return center === null ? null : Math.hypot(center.xUm, center.yUm) / 1000

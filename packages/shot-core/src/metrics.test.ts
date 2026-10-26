@@ -22,6 +22,9 @@ import {
   type MetricDefinition,
   type MetricShot,
   CARD_FLAGS,
+  sumsResult,
+  summaryValue,
+  type CardSums,
 } from "./metrics"
 import { CARD, MATCH, PROBE, SPREAD } from "./__fixtures__/cards"
 import { tempo } from "./time"
@@ -760,6 +763,60 @@ describe("Registry", () => {
     expect(() => defineMetric({ ...base, catalogId: "" })).toThrow(RangeError)
     expect(() => defineMetric({ ...base, catalogId: "e1" })).toThrow(RangeError)
     expect(() => defineMetric({ ...base, catalogId: "X1" })).toThrow(RangeError)
+  })
+
+  it("nur Ergebnis, Ø je Schuss und Schwerpunkt-Abstand haben einen Wert aus Summen", () => {
+    expect(
+      METRICS.filter((m) => m.summary)
+        .map((m) => m.key)
+        .sort()
+    ).toEqual([
+      "group.mpiDistance",
+      "result.decimal",
+      "result.decimalMean",
+      "result.rings",
+      "result.ringsMean",
+    ])
+    const summary = () => ({ value: 1, n: 10 })
+    const spread = def("group.sigma") as MetricDefinition
+    expect(spread.pooling).toBe("spreadRadial")
+    expect(() => defineMetric({ ...spread, key: "group.sigmaSum", summary })).toThrow(RangeError)
+    const rings = METRICS[0] as MetricDefinition
+    expect(() =>
+      defineMetric({ ...rings, key: "result.seriesOnly", scopes: ["series"], summary })
+    ).toThrow(RangeError)
+  })
+
+  it("Summen: erst die Serien, wenn jede den Wert der Wertung trägt, sonst das Gesamtergebnis", () => {
+    const series = (rings: (number | null)[]): CardSums["series"] =>
+      rings.map((r, i) => ({ series: i + 1, shots: 10, rings: r, decimalTenths: null }))
+    expect(
+      sumsResult({ series: series([93, 95, 94, 96]), total: null, center: null }, "rings")
+    ).toEqual({ tenths: 3780, shots: 40, source: "series" })
+    const total = { shots: 40, rings: 378, decimalTenths: null }
+    expect(
+      sumsResult({ series: series([93, null, 94, 96]), total, center: null }, "rings")
+    ).toEqual({
+      tenths: 3780,
+      shots: 40,
+      source: "total",
+    })
+    expect(
+      sumsResult({ series: series([93, null, 94, 96]), total: null, center: null }, "rings")
+    ).toBeNull()
+    expect(
+      sumsResult({ series: series([93, 95, 94, 96]), total, center: null }, "decimal")
+    ).toBeNull()
+    // unter der Mindestzahl kein Wert: ein Schwerpunkt-Abstand braucht zwei Schuss
+    const center = { xUm: 300, yUm: 400, shots: 1 }
+    expect(summaryValue(def("group.mpiDistance"), { series: [], total: null, center })).toBeNull()
+    expect(
+      summaryValue(def("group.mpiDistance"), {
+        series: [],
+        total: null,
+        center: { ...center, shots: 2 },
+      })
+    ).toEqual({ value: 0.5, n: 2 })
   })
 
   it("jede Kennzahl trägt ihre Katalog-ID (vault/spiegel/spiegel-statistics.md)", () => {

@@ -65,10 +65,10 @@ export const PERIOD_TILE_KEYS = [
 ] as const
 
 /**
- * eine Kennzahl, wie die Seite sie zeigt: ihre Angaben ohne `compute` und `perShot`. Funktionen gehen nicht vom Server zum Browser
+ * eine Kennzahl, wie die Seite sie zeigt: ihre Angaben ohne `compute`, `perShot` und `summary`. Funktionen gehen nicht vom Server zum Browser
  * (Fortschritt in der App), die Bausteine lesen nur Schlüssel, Name, Einheit, Stellen und Richtung
  */
-export type PeriodMetric = Readonly<Omit<MetricDefinition, "compute" | "perShot">>
+export type PeriodMetric = Readonly<Omit<MetricDefinition, "compute" | "perShot" | "summary">>
 
 /** ab so vielen Scheiben zeigt der Verlauf je Monat, bis der Schütze selbst wählt */
 export const MONTH_VIEW_FROM = 60
@@ -420,7 +420,12 @@ export function periodModel(input: {
     cards,
     metric: (() => {
       // der Name auf der Seite: Achse, Liste und Ablesung sagen „Streuung“, nicht „Präzision σ“
-      const { compute: _compute, perShot: _perShot, ...shown } = inScoring(chartMetric, scoring)
+      const {
+        compute: _compute,
+        perShot: _perShot,
+        summary: _summary,
+        ...shown
+      } = inScoring(chartMetric, scoring)
       return { ...shown, label: metricLabel(shown) }
     })(),
     values,
