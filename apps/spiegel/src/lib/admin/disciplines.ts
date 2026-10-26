@@ -54,11 +54,17 @@ async function rows(siteId: number, timeZone: string, id?: number): Promise<Disc
       by: ["disciplineId", "ownerId"],
       where: { ...visible, ownerId: { not: null } },
     }),
-    db.card.groupBy({ by: ["disciplineId", "standScoring"], where: visible, _count: true }),
+    // die Wertung eingetragener Scheiben ist „wie eingetragen“, nicht am Stand
+    db.card.groupBy({
+      by: ["disciplineId", "standScoring"],
+      where: { ...visible, origin: "raw" },
+      _count: true,
+    }),
     db.$queryRaw<{ disciplineId: number; printedShots: number; n: number }[]>`
       SELECT c."disciplineId", p."printedShots", count(*)::int AS n
         FROM "Card" c JOIN "CardProjection" p ON p."cardId" = c.id
-       WHERE c."deletedAt" IS NULL AND NOT p."probeOnly" AND c."disciplineId" = ANY(${ids})
+       WHERE c."deletedAt" IS NULL AND NOT p."probeOnly" AND p."printedShots" > 0
+         AND c."disciplineId" = ANY(${ids})
        GROUP BY 1, 2`,
   ])
 

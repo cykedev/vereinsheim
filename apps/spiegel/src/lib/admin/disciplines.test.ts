@@ -6,6 +6,7 @@ import { db } from "@/lib/db"
 import { generateSeason } from "../../../test/generate"
 import { createTestSite, type TestSite } from "../../../test/fixtures"
 import { writeRevision } from "../db/cards"
+import { writeEnteredCard } from "../db/entered"
 
 const mocks = vi.hoisted(() => ({ checked: 0 }))
 vi.mock("@/lib/auth-helpers", () => ({
@@ -133,6 +134,24 @@ describe("disciplineOverview", () => {
     expect(lp.stats.owners).toBe(3)
     expect(lp.stats.stand).not.toBeNull()
     expect(lp.stats.shots?.of).toBe(4)
+  })
+
+  it("eine eingetragene Scheibe ohne Werte zählt nicht bei der Schusszahl und nie bei der Anzeige am Stand", async () => {
+    const before = (await mine()).find((r) => r.id === disciplines.lp)!.stats
+    const result = await writeEnteredCard(db, {
+      ownerId: owners[0],
+      origin: "pdf",
+      disciplineId: disciplines.lp,
+      startedAtMs: Date.UTC(2026, 9, 20, 18),
+      kind: "training",
+      details: {},
+      reason: "eingetragen",
+    })
+    expect(result.kind).toBe("saved")
+    const after = (await mine()).find((r) => r.id === disciplines.lp)!.stats
+    expect(after.cards).toBe(before.cards + 1)
+    expect(after.shots).toEqual(before.shots)
+    expect(after.stand).toEqual(before.stand)
   })
 
   it("Zustände, Reihenfolge und die übernommene Zuordnung einer umbenannten", async () => {

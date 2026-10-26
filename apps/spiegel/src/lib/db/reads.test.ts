@@ -14,6 +14,7 @@ import { generateSeason } from "../../../test/generate"
 import { createTestSite, type TestSite } from "../../../test/fixtures"
 
 import { chooseCardKind, chooseCardScoring, refreshProjections, writeRevision } from "./cards"
+import { writeEnteredCard } from "./entered"
 import {
   cardWithShots,
   familyCards,
@@ -340,6 +341,32 @@ describe("cardWithShots", () => {
     expect(page).not.toHaveProperty("official")
     const all = await ownerCards(db, { ownerId: site.ownerId })
     expect(all.find((c) => c.id === probeOnly.id)).not.toHaveProperty("official")
+  })
+
+  it("eine Scheibe nur aus Serien-Summen und eine ohne Werte sind keine Probe: Sie tragen die Wertung der Disziplin", async () => {
+    const ids: string[] = []
+    try {
+      for (const details of [
+        { series: [1, 2, 3, 4].map((series) => ({ series, shots: 10, rings: 94 })) },
+        {},
+      ]) {
+        const result = await writeEnteredCard(db, {
+          ownerId: site.ownerId,
+          origin: "manual",
+          disciplineId: site.disciplineId,
+          startedAtMs: FIRST_MS - DAY_MS,
+          kind: "training",
+          details,
+          reason: "eingetragen",
+        })
+        if (result.kind !== "saved") throw new Error(result.kind)
+        ids.push(result.cardId)
+      }
+      for (const cardId of ids)
+        expect((await cardWithShots(db, { cardId, ownerId: site.ownerId }))?.official).toBe("rings")
+    } finally {
+      await db.card.deleteMany({ where: { id: { in: ids } } })
+    }
   })
 
   it("ohne amtliche Wertung an der Disziplin keine an der Scheibe", async () => {

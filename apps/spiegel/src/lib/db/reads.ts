@@ -258,8 +258,9 @@ export interface PageCard extends PeriodCard {
 
 function toPageCard(row: PageCardRow): PageCard | null {
   if (!row.currentRevision) return null
-  // nur Probe hat keine Wertung der Disziplin
-  const probeOnly = !row.currentRevision.shots.some((shot) => shot.stellung !== 0)
+  // nur Probe hat keine Wertung der Disziplin; eine Scheibe ohne Schüsse (Summen, wartet auf die Anlage) ist keine Probe
+  const shots = row.currentRevision.shots
+  const probeOnly = shots.length > 0 && shots.every((shot) => shot.stellung === 0)
   const official = probeOnly ? null : row.discipline.officialScoring
   return {
     id: row.id,

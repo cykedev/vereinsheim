@@ -6,6 +6,7 @@ import { createPrismaClient } from "@/lib/db"
 import { generateSeason } from "../../test/generate"
 import { createTestSite, type TestSite } from "../../test/fixtures"
 import { writeRevision } from "./db/cards"
+import { writeEnteredCard } from "./db/entered"
 import { listPageData, progressPageData, startPageData } from "./overview"
 
 const db = createPrismaClient()
@@ -262,5 +263,105 @@ describe("Art der Scheibe", () => {
     } finally {
       await db.card.update({ where: { id: training.id }, data: { kindChoice: null } })
     }
+  })
+})
+
+describe("Scheiben ohne Einzelschüsse", () => {
+  // ein eigenes Konto und eine eigene Familie: Die übrigen Tests sehen diese Scheiben nicht
+  const entered = {
+    owner: "",
+    familyId: 0,
+    slug: "",
+    disciplineId: 0,
+    empty: "",
+    sums: "",
+    shots: "",
+  }
+  const all = { ...DEFAULT_PROGRESS, choice: { type: "all" as const } }
+
+  beforeAll(async () => {
+    entered.owner = (
+      await db.user.create({
+        data: { email: `overview-entered-${site.siteId}@example.com`, passwordHash: "-" },
+      })
+    ).id
+    entered.slug = `lg-eingetragen-${site.siteId}`
+    entered.familyId = (
+      await db.family.create({ data: { slug: entered.slug, name: "LG eingetragen" } })
+    ).id
+    entered.disciplineId = (
+      await db.discipline.create({
+        data: {
+          siteId: site.siteId,
+          meytonId: null,
+          name: "LG 40 eingetragen",
+          familyId: entered.familyId,
+          targetId: "lg-10m",
+          officialScoring: "rings",
+          plannedShots: 40,
+          confirmedAt: new Date(),
+        },
+      })
+    ).id
+    const write = async (
+      details: Parameters<typeof writeEnteredCard>[1]["details"],
+      day: number
+    ) => {
+      const result = await writeEnteredCard(db, {
+        ownerId: entered.owner,
+        origin: day === 0 ? "pdf" : "manual",
+        disciplineId: entered.disciplineId,
+        startedAtMs: FIRST_MS + day * DAY_MS,
+        kind: "training",
+        details,
+        reason: "eingetragen",
+      })
+      if (result.kind !== "saved") throw new Error(result.kind)
+      return result.cardId
+    }
+    entered.empty = await write({}, 0)
+    entered.sums = await write(
+      { series: [93, 95, 94, 96].map((rings, i) => ({ series: i + 1, rings })) },
+      1
+    )
+    entered.shots = await write(
+      {
+        shots: [10, 9, 10, 8, 9, 10, 10, 9, 9, 10].map((ring) => ({
+          series: 1,
+          ring,
+          decimalTenths: null,
+        })),
+      },
+      2
+    )
+  })
+  afterAll(async () => {
+    await db.card.deleteMany({ where: { ownerId: entered.owner } })
+    await db.discipline.delete({ where: { id: entered.disciplineId } })
+    await db.family.delete({ where: { id: entered.familyId } })
+    await db.user.delete({ where: { id: entered.owner } })
+  })
+
+  it("Start, Liste und Fortschritt rechnen, Schusszahl und Ø aus den Summen, die leere ohne Werte", async () => {
+    await expect(startPageData(db, entered.owner, context)).resolves.toBeDefined()
+    await expect(
+      progressPageData(db, entered.owner, { ...all, family: entered.slug }, context)
+    ).resolves.toBeDefined()
+    const { list } = await listPageData(
+      db,
+      entered.owner,
+      { ...DEFAULT_LIST, family: entered.slug },
+      context
+    )
+    const rows = list!.model.evenings.flatMap((e) => e.rows)
+    const sums = rows.find((r) => r.id === entered.sums)!
+    expect(sums.shots).toBe(40)
+    expect(sums.mean).not.toBeNull()
+    expect(sums.mean).toBeCloseTo(9.45, 9)
+    expect(sums.resultScoring).toBe("rings")
+    const empty = rows.find((r) => r.id === entered.empty)!
+    expect(empty).toMatchObject({ result: null, mean: null, shots: 0 })
+    expect(empty.kind).not.toBe("probe")
+    expect(rows.find((r) => r.id === entered.shots)?.shots).toBe(10)
   })
 })
