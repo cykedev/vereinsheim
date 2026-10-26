@@ -331,9 +331,12 @@ async function findCard(tx: Tx, input: RevisionInput, cycle: number, block: numb
  * - gleiche Schüsse: nur die Merkmale; Schüsse dazu: dieselbe Revision; eine Korrektur der Wertung: eine neue, die
  *   vorige bleibt. Jede Änderung an den Schüssen rechnet die Projektion neu;
  * - hat der Schütze eine andere Disziplin gewählt, bleibt sie: Der Stand schreibt seine nur als Disziplin am Stand, und
- *   die Merkmale rechnet `recomputeDisciplineCard` mit der gewählten neu. Bringt der Stand die gewählte, fällt die Wahl weg.
+ *   die Merkmale rechnet `recomputeDisciplineCard` mit der gewählten neu. Bringt der Stand die gewählte, fällt die Wahl weg;
+ * - nur Rohdaten und Ausdrucke: eingetragene Scheiben schreibt `writeEnteredCard`.
  */
 export async function writeRevision(db: Db, input: RevisionInput): Promise<RevisionResult> {
+  if (input.card.origin === "manual" || input.card.origin === "treffsicher")
+    throw new RangeError("eingetragene Scheiben schreibt writeEnteredCard")
   assertUniqueShots(input.shots)
   const sequence = input.sequence === undefined ? null : BigInt(input.sequence)
   const { sourceId, scheibenId } = input.card
@@ -414,6 +417,10 @@ async function writeCard(
   }
 
   const cardId = existing.id
+  // eine Scheibe ohne Quelle bekommt ihre Rohdaten: nur eine vom Ausdruck, eingetragene nie
+  const upgrade = existing.sourceId === null && sourceId !== null
+  if (upgrade && existing.origin !== "pdf")
+    throw new RangeError(`Scheibe ${cardId} ist eingetragen und bekommt keine Rohdaten`)
   await tx.$queryRaw`SELECT id FROM "Card" WHERE id = ${cardId} FOR UPDATE`
   const current = existing.currentRevision
   if (
@@ -443,8 +450,9 @@ async function writeCard(
     if (!input.shots.some((shot) => known.has(shotFingerprint(shot))))
       throw new CardIdentityConflictError(cardId, cycle)
   }
+  // die Angaben des Ausdrucks bleiben in ihrer Revision ([[adr-031]]): Rohdaten sind eine neue, keine Korrektur
   const change =
-    current && current.contentHash !== hash
+    !upgrade && current && current.contentHash !== hash
       ? shotChange(stored.map(shotFromRow), input.shots)
       : null
   await tx.card.update({
@@ -457,7 +465,8 @@ async function writeCard(
     },
   })
 
-  if (!current) return newRevision(tx, cardId, 1, input, hash)
+  if (upgrade || !current)
+    return newRevision(tx, cardId, current ? current.number + 1 : 1, input, hash)
   if (!change)
     return {
       cardId,
@@ -506,7 +515,7 @@ async function writeCard(
 
 /**
  * Die Kennung ändert ein Stand nicht; nur eine Scheibe aus dem PDF bekommt beim ersten Snapshot ihre Rohdaten (Herkunft
- * dann „raw“). Eine andere Kennung als die vorhandene ist ein Fehler, kein stilles Umhängen.
+ * dann „raw“, der Ort ist dann die Anlage). Eine andere Kennung als die vorhandene ist ein Fehler, kein stilles Umhängen.
  */
 function identityUpdate(
   existing: {
@@ -529,6 +538,7 @@ function identityUpdate(
       cycle,
       block,
       origin: "raw" as const,
+      place: null,
     }
   if (
     existing.sourceId !== card.sourceId ||

@@ -257,6 +257,8 @@ describe("writeRevision", () => {
     expect(raw).toMatchObject({ cardId: pdf.cardId, number: 2, change: "created" })
     row = await db.card.findUniqueOrThrow({ where: { id: pdf.cardId } })
     expect(row).toMatchObject({ sourceId: site.sourceId, scheibenId: 1400, origin: "raw" })
+    // Rohdaten sind keine Korrektur des Ausdrucks
+    expect(row.flags).not.toContain("korrigiert")
     // ein späterer Stand aus dem PDF nimmt die Rohdaten nicht wieder weg
     await writeRevision(db, {
       cardId: pdf.cardId,
@@ -272,6 +274,13 @@ describe("writeRevision", () => {
       writeRevision(db, { ...input, cardId: pdf.cardId, card: { ...input.card, scheibenId: 9 } })
     ).rejects.toThrow(RangeError)
     await expect(writeRevision(db, { ...input, cardId: "keine" })).rejects.toThrow()
+  })
+
+  it("eingetragene Scheiben schreibt writeRevision nicht", async () => {
+    const [input] = season(1, 1450)
+    await expect(
+      writeRevision(db, { ...input, card: { ...input.card, origin: "manual" } })
+    ).rejects.toThrow(RangeError)
   })
 
   it("doppelte Stellung und Treffer sind ein Fehler", async () => {
