@@ -258,7 +258,7 @@ nach Stufe 3. Wie Treffsicher lesend läuft, solange der Basisbranch nicht auf `
 |---|---|---|---|---|
 | V1 | `plans/2026-10-26-tis-v1-accounts.md` | `feat/tis-v1-accounts` | tis-v1-accounts | im Basisbranch, Plan entfernt |
 | 1a-1 | `plans/2026-10-27-tis-1a1-card-details.md` | `feat/tis-1a1-card-details` (von `main`) | tis-1a1-card-details | in `main` (`a7c98a09`), noch nicht deployt |
-| 1a-2 | | | | in Planung |
+| 1a-2 | `plans/2026-10-27-tis-1a2-views.md` | `feat/tis-1a2-views` (von `main`) | tis-1a2-views | autonom freigegeben, in Arbeit |
 | 1b-1 | `plans/2026-10-26-tis-1b1-printouts.md` | `feat/tis-1b1-printouts` (von `main`) | tis-1b1-printouts | in `main` (`f0213d9a`), noch nicht deployt |
 | 1b-2 | | | | offen, nach 1a |
 | 1c | | | | offen |
