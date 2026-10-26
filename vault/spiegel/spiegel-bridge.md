@@ -123,8 +123,9 @@ diesen Zahlen:
   (SF-52). Gemessen am 26. Oktober 2026 an der Kopie vom 9. Oktober (1.532 Scheiben, MariaDB 10.6, echter Leser): Eine
   Runde mit zehn laufenden Scheiben liest 1.983 Zeilen in 5,3 ms (Median), mit fünf alten dazu 2.148 Zeilen (+8 %) in
   5,8 ms, mit zwanzig 2.636 (+33 %) in 6,6 ms. Die meiste Arbeit sind ohnehin die Lebenszeichen aller Scheiben. Eine
-  Scheibe braucht zwei gleiche Lesungen, also rund 2,5 Scheiben je Runde: 100 ältere Scheiben in unter einer Minute,
-  solange geschossen wird (Takt 1 s).
+  Scheibe braucht zwei gleiche Lesungen, also rund 2,5 Scheiben je Runde: 100 ältere Scheiben in rund einer Minute,
+  dazu die Uploads. Der Takt bleibt dabei 1 s, auch wenn der Stand gerade ruht: Jede neu gelesene Scheibe wartet auf
+  ihre zweite Lesung und hält ihn hoch.
 - Beim Start gilt als neu, was bis **12 Stunden** vor dem jüngsten Lebenszeichen liegt (nicht gegen die eigene Uhr:
   die der Stände kann falsch gehen; ein Lebenszeichen mehr als einen Tag nach der Uhr der Anlage verankert das Fenster
   nicht). Den Abgleich ab dem Wasserstand in Spiegel bringt das Nachholen beim Start (unten).

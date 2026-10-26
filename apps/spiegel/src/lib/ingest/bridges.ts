@@ -288,7 +288,7 @@ const MAX_HISTORY_REQUESTS = 1_000
 const MAX_CARD_REQUESTS = 1_000
 const MAX_BLOCKED = 100_000
 
-/** was die Brücke beim Start und danach alle paar Minuten holt (`GET /state`) */
+/** was die Brücke beim Start und danach jede Minute holt (`GET /state`) */
 export async function bridgeState(
   db: Db,
   siteId: number,

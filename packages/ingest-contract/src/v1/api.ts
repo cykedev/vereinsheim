@@ -172,9 +172,9 @@ export const stateResponseV1 = z
     watermark: instant.nullable(),
     /**
      * additiv: offene Aufträge, die älteren Scheiben einer Zustimmung nachzuladen, soweit die Anlage sie hat; solange
-     * geschossen wird, in kleinen Portionen (SF-52). `id` und `since` (wann der Auftrag eröffnet wurde) meldet die Brücke in `historyDone`
-     * zurück; ein neues `since` heißt: neu lesen, auch was schon gemeldet ist. Der Hash wie in `sportpass.hashes`.
-     * Solange einer offen ist, enthält `blocked` alle Sperren, nicht nur die jüngsten.
+     * geschossen wird, in kleinen Portionen (SF-52). `id` und `since` (wann der Auftrag eröffnet wurde) meldet die
+     * Brücke in `historyDone` zurück; ein neues `since` heißt: neu lesen, auch was schon gemeldet ist. Der Hash wie in
+     * `sportpass.hashes`. Solange einer offen ist, enthält `blocked` alle Sperren, nicht nur die jüngsten.
      */
     history: z
       .array(
