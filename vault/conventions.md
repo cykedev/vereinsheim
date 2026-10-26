@@ -323,6 +323,14 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
   von `write` blockieren oder beenden (Beispiel: `apps/spiegel/src/lib/printouts/__fixtures__/hang-child.mjs`).
   Aufgefallen im Oktober 2026 beim Leser der Ausdrucke.
 
+- **Ein Pfad aus dem Arbeitsverzeichnis zieht Dateien ins Image**: Steht in Server-Code
+  `join(process.cwd(), "src/…/datei.ts")`, kopiert Next (Turbopack) beim Build das ganze Verzeichnis dieser Datei nach
+  `.next/standalone`, samt Tests und Fixtures. Ein Pfad aus Teilen (`...["src", …]`) ist schlimmer: Dann landet der
+  ganze App-Ordner im Image. Weder `outputFileTracingExcludes` (gilt nicht für `instrumentation`) noch
+  `/* turbopackIgnore: true */` am `join` noch ein Zweig über `NODE_ENV` halfen. Nach so einem Pfad
+  `ls .next/standalone/apps/<app>` prüfen. Offen in Spiegel: `src/lib/printouts/` (Dev-Pfad des Lesers), harmlos, aber
+  Testcode im Image.
+
 - **Mutationsprobe an einer Abbruchgrenze hinterlässt Prozesse**: Nimmt die Mutation den `kill` eines Kindprozesses
   heraus, läuft der Kindprozess nach dem roten Test weiter (eine Endlosschleife braucht dann einen ganzen Kern). Nach so
   einer Probe mit `pgrep -fl <skript>` nachsehen und beenden.
