@@ -855,13 +855,38 @@ async function cardDiscipline(page: Page, href: string) {
   )
 }
 
+/** die ID des Auftrags, den die Prüfung anlegt und wieder entfernt; eine Scheibe mit ihr gibt es nicht */
+const PROBE_REQUEST = "7fff0abc"
+/** seine Zeile in der Liste der Aufträge, im Fenster; null ohne */
+const probeRow = `($$("[data-card-request]").find((li) => txt(li).includes("${PROBE_REQUEST}")) ?? null)`
+
+/** in der Zeile des Auftrags der Prüfung auf `label` tippen und im Dialog mit demselben Knopf bestätigen */
+async function confirmProbeRow(page: Page, label: string): Promise<string> {
+  await page.click(`button("${label}", ${probeRow})`)
+  await page.waitFor(`!!$('[role="alertdialog"]')`)
+  const dialog = await page.ev<string>(`txt($('[role="alertdialog"]'))`)
+  await page.click(`button("${label}", $('[role="alertdialog"]'))`)
+  await page.waitFor(`!$('[role="alertdialog"]')`)
+  return dialog
+}
+
 /**
  * Scheibe per ID holen (Profil): Der Abschnitt steht unter der Sportpassnummer; eine falsche ID zeigt den Feldfehler,
- * ohne zu fragen; eine richtige fragt mit Folgen, „Abbrechen“ legt keinen Auftrag an.
+ * ohne zu fragen; eine richtige fragt mit Folgen, „Abbrechen“ legt keinen Auftrag an. Danach legt die Prüfung einen
+ * Auftrag an, zieht ihn zurück und entfernt ihn; am Ende ist die Liste wie vorher.
  */
 async function cardRequests(page: Page) {
   await page.viewport(1280, 900)
   await page.goto(`${BASE}/profile`)
+  // ein abgebrochener Lauf ließ den Auftrag der Prüfung stehen: erst zurückziehen und entfernen
+  if (await page.ev<boolean>(`!!${probeRow} && !!button("Zurückziehen", ${probeRow})`)) {
+    await confirmProbeRow(page, "Zurückziehen")
+    await page.waitFor(`!!${probeRow} && !!button("Entfernen", ${probeRow})`)
+  }
+  if (await page.ev<boolean>(`!!${probeRow} && !!button("Entfernen", ${probeRow})`)) {
+    await confirmProbeRow(page, "Entfernen")
+    await page.waitFor(`!${probeRow}`)
+  }
   const before = await page.ev<number>(`$$("[data-card-request]").length`)
   check(
     "Scheibe per ID: der Abschnitt steht im Profil, mit ID und Tag",
@@ -891,6 +916,34 @@ async function cardRequests(page: Page) {
       (await page.waitFor(`!$('[role="alertdialog"]')`)) &&
       (await page.ev<number>(`$$("[data-card-request]").length`)) === before,
     dialog.slice(0, 120)
+  )
+
+  // anlegen, zurückziehen, entfernen: am Ende ist die Liste wie vorher
+  await page.click(`$("#card-request-id")`)
+  await page.ev<boolean>(`($("#card-request-id").select(), true)`)
+  await page.type(PROBE_REQUEST)
+  await page.click(`button("Scheibe holen")`)
+  await page.waitFor(`!!$('[role="alertdialog"]')`)
+  await page.click(`button("Scheibe holen", $('[role="alertdialog"]'))`)
+  check(
+    "Scheibe per ID: bestätigt, steht der Auftrag in der Liste und wartet auf die Anlage",
+    (await page.waitFor(`!!${probeRow} && txt(${probeRow}).includes("wartet auf die Anlage")`)) &&
+      (await page.ev<number>(`$$("[data-card-request]").length`)) === before + 1
+  )
+  await confirmProbeRow(page, "Zurückziehen")
+  check(
+    "Scheibe per ID: zurückgezogen, lässt sich der Auftrag entfernen",
+    await page.waitFor(
+      `!!${probeRow} && txt(${probeRow}).includes("zurückgezogen") && !!button("Entfernen", ${probeRow})`
+    )
+  )
+  const removeDialog = await confirmProbeRow(page, "Entfernen")
+  check(
+    "Scheibe per ID: Entfernen fragt mit Folgen, danach ist die Liste wie vorher",
+    removeDialog.includes("verschwindet aus dieser Liste") &&
+      (await page.waitFor(`!${probeRow}`)) &&
+      (await page.ev<number>(`$$("[data-card-request]").length`)) === before,
+    removeDialog.slice(0, 120)
   )
 }
 
