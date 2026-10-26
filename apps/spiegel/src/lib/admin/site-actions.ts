@@ -11,8 +11,8 @@ import { db } from "@/lib/db"
 import { createPairing, removeBridge, revokeBridge } from "@/lib/ingest/bridges"
 import type { ActionResult } from "@/lib/types"
 
-// Admin → Anlage: Anlage anlegen und ändern, Brücke koppeln und widerrufen, Ranglisten (eine neue Epoche bestätigt
-// kein Admin: das ist Technik, keine Entscheidung)
+// Admin → Anlage: Anlage anlegen und ändern, Brücke koppeln und widerrufen (eine neue Epoche bestätigt kein Admin: das
+// ist Technik, keine Entscheidung); dazu die Art der Listen für Admin → Listen
 // (Zustimmungen per Sportpass: `src/lib/consent/actions.ts`). Jede Action prüft selbst (`adminActor`) und gibt ein
 // ActionResult zurück.
 

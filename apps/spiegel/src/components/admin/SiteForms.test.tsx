@@ -127,7 +127,7 @@ describe("Anlage und Brücke (Markup)", () => {
     expect(html).toContain("Lässt sich nicht mehr ändern, weil schon Scheiben da sind.")
   })
 
-  it("die Listen stehen nicht mehr hier, sondern in ihrem eigenen Bereich", () => {
+  it("Anlage und Brücke nennt keine Listen; die haben einen eigenen Bereich", () => {
     const page = readFileSync(join(__dirname, "../../app/(app)/admin/site/page.tsx"), "utf8")
     // nur der Text der Seite, ohne Kommentare
     const text = page.replace(/\/\/.*$/gm, "")
