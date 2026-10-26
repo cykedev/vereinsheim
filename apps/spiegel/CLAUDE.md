@@ -35,7 +35,9 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
   Start `/`, Scheiben `/cards`, Scheibe `/cards/[id]`, Fortschritt `/progress`, Vergleichen `/compare` (Bereich
   Fortschritt, nicht in der Leiste), Profil, Papierkorb `/profile/trash`,
   Offen `/open`, Platzhalter Scannen `/scan` (nicht in der Navigation, `scan={false}` im `AppShell`),
-  Admin `/admin/users`, `/admin/disciplines{/[id]}`, `/admin/site`. `src/app/share/[shareId]` ohne Anmeldung und ohne
+  Admin `/admin` (Übersicht), `/admin/users{/[id],/new}`, `/admin/disciplines{/[id]}`, `/admin/lists{/[id]}`,
+  `/admin/site`; die Bereiche stehen einmal in `src/lib/admin/sections.ts` (Reiter `AdminTabs` auf jeder Admin-Seite,
+  am Telefon oben in Profil). `src/app/share/[shareId]` ohne Anmeldung und ohne
   `AppShell` (`SharedShell`: Kopfzeile als Text, Blatt der Hilfe): eine geteilte Scheibe.
 - Seiten sind Server-Komponenten: Sitzung, Daten (`src/lib/db/reads.ts`), Kontext (`pageContext`: Zone, „jetzt“,
   benannte Zeiträume). Die Hüllen in `src/components/*/…Screen.tsx` sind Client-Komponenten und
@@ -125,7 +127,7 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
   der Quelle (jeder Stand schreibt sie: der Adapter aus `Status`, `seed:own` „training“), `Card.kindChoice` die Wahl des
   Schützen, die kein Stand anfasst. Es gilt `kindChoice ?? ranking.kind ?? kind` (`kindOfRow` in `reads.ts`, der einzige
   Weg zur Art), in Übersicht und Seite. `Ranking` ist die `Rangliste` der SSMDB2 je Anlage: Das
-  Einlesen legt sie ohne Art an (`rankingFor`), der Admin ordnet sie zu (`setRankingKind`, „Anlage und Brücke“); die
+  Einlesen legt sie ohne Art an (`rankingFor`), der Admin ordnet sie zu (`setRankingKind`, Admin → Listen); die
   Zuordnung gilt beim Lesen, keine Scheibe wird umgeschrieben. In der Oberfläche heißt sie „Liste“
   (`OLD_WORDS` hält „Rangliste“ fern): Die Zugriffe liefern sie als `list` (`OverviewCard`, `PageCard`), die Seite einer
   Scheibe nennt sie im Kopf, Scheiben filtern nach ihr (`list=<id>`). Bei einer Scheibe nur aus Probe zählt die Liste nicht
@@ -247,7 +249,8 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
   - **Zustände** schaltet der Heartbeat weiter (`advanceCardStates`), `complete` gilt erst endgültig. `writeRevision` hält
     `korrigiert` und `uhr-abweichung` dauerhaft; eine andere Anzeigeart ist keine Korrektur (`sameScoring`, SF-74).
   - **Admin → Anlage und Brücke** (`/admin/site`): Anlage, Brücken verbinden (Code nur in der Antwort der Action) und
-    trennen, getrennte entfernen (`removeBridge`: nur getrennte, Rohdaten und Codes bleiben mit `bridgeId` null), Listen (`Ranking`) zuordnen. Eine neue Epoche bestätigt niemand in der Oberfläche; die Übersicht
+    trennen, getrennte entfernen (`removeBridge`: nur getrennte, Rohdaten und Codes bleiben mit `bridgeId` null). Die Listen (`Ranking`)
+    ordnet der Admin unter Admin → Listen zu (`/admin/lists`, Blatt je Liste wie bei Disziplinen, `src/lib/admin/rankings.ts`). Eine neue Epoche bestätigt niemand in der Oberfläche; die Übersicht
     zeigt nur einen Hinweis. Zustimmungen per Sportpass bestätigt oder lehnt der Admin am Konto ab
     (`/admin/users/[id]`, offene als Aufgabe in der Übersicht und als Link in „Konten“); eintragen kann nur der Schütze
     im Profil.

@@ -49,8 +49,8 @@ Reiter einer App; das Rückgrat ist die Liste der Scheiben. Die Seiten einer Sch
 | Start | untere Leiste, Zähler für Offen | Seitenleiste, Zähler für Offen | `/` |
 | Scheiben | untere Leiste | Seitenleiste | `/cards?family=lp-auflage&kind=training&flag=nur-pdf#2026-09-25` |
 | Fortschritt | untere Leiste | Seitenleiste | `/progress?range=12m&compare=previous&family=lg-freihand&sighters=0&pick=<id>#history` |
-| Profil | untere Leiste, darin Admin | Seitenleiste | `/profile` |
-| Admin | in Profil, nur für Admins | letzter Eintrag der Seitenleiste, nur für Admins | `/admin/…` |
+| Profil | untere Leiste, für Admins oben die Bereiche des Admins | Seitenleiste | `/profile` |
+| Admin | in Profil oben (Abschnitt „Admin“ mit allen Bereichen), nur für Admins | letzter Eintrag der Seitenleiste, nur für Admins | `/admin{/users,/disciplines,/lists,/site}` |
 | Scannen | nicht in der Navigation bis zum QR-Weg (SP-1.7 b) | ebenso | `/scan` (Platzhalter) |
 
 Seiten ohne eigenen Bereich:
@@ -123,6 +123,10 @@ und über `nav/navigate`.
   - Telefon quer (unter 500 px hoch): eine schmale Leiste links. Eine untere Leiste nähme dort 72 von 375 px, die
     Scheibe passte nicht mehr unter die Sprungleiste.
   - Admin sieht nur ein Admin; auf dem Telefon steckt Admin in Profil, und ist Admin offen, ist dort Profil markiert.
+    Profil nennt dafür ganz oben alle Bereiche des Admins (Übersicht, Konten, Disziplinen, Listen, Anlage und Brücke,
+    `ADMIN_SECTIONS`), so ist jeder zwei Tipps entfernt. Jede Admin-Seite trägt dieselben Reiter (`AdminTabs`), auch
+    Konto, Disziplin und Liste; dort ist der Reiter ihres Bereichs markiert und führt zurück. Listen und Disziplinen
+    sind gleich gebaut: Liste in Abschnitten, jede Zeile führt auf ihr Blatt, dort Einstellen mit den Folgen.
   - Platz der Leiste: `--app-bar` (72 px). Die Pille „Zurück zu …“ (`ReturnPill`), der Abstand der Seite und die Größe
     der Scheibe richten sich danach.
   - Der Inhalt ist `<main>` und steht vor der unteren Leiste; im Querformat bleibt der sichere Rand frei. Die Leisten
@@ -396,7 +400,7 @@ automatisch gespeichert.
 - **Quelle und Wahl:** Die Art der Quelle (`Card.kind`: der Adapter aus `Status` der SSMDB2, `seed:own` „Training“) und
   die Wahl des Schützen (`Card.kindChoice`); neue Lesungen der Brücke schreiben nur die Quelle.
 - **Es gilt** die Wahl, ohne Wahl die Art der Liste aus Meyton (`Rangliste`), die der Admin zugeordnet hat (Admin →
-  „Anlage und Brücken“), sonst die Quelle. `Status` der SSMDB2 ist an der Vereinsanlage leer ([[meyton-ssmdb2]]); eine
+  Listen), sonst die Quelle. `Status` der SSMDB2 ist an der Vereinsanlage leer ([[meyton-ssmdb2]]); eine
   Liste ohne Zuordnung gilt als Training.
 - **Was folgt:** Filter „Art“ in Liste und Fortschritt, der Pokal in der Liste, die Metazeile der Scheibe, die Rekorde
   „nur Wettkampf“ und ob der Umschalter die Wertung „amtlich“ nennt. Die Wertung selbst ändert die Art nicht.
