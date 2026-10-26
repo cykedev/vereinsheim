@@ -1,5 +1,6 @@
 import Link from "next/link"
 
+import { cardsText } from "@/lib/admin/discipline-model"
 import type { RankingRow } from "@/lib/admin/rankings"
 
 const LIST = "divide-y divide-border overflow-hidden rounded-xl border border-border"
@@ -13,8 +14,7 @@ const SECTIONS = [
 
 /** wie viele Scheiben und der Monat der letzten, als Zusatz der Zeile und unter dem Namen auf dem Blatt */
 export function rankingFacts(row: RankingRow): string {
-  const cards =
-    row.cards === 0 ? "noch keine Scheibe" : row.cards === 1 ? "1 Scheibe" : `${row.cards} Scheiben`
+  const cards = cardsText(row.cards)
   return row.lastCardMonth ? `${cards} · zuletzt im ${row.lastCardMonth}` : cards
 }
 

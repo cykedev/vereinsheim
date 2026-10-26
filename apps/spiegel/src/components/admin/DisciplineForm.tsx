@@ -13,6 +13,7 @@ import { DecisionDialog } from "@vereinsheim/ui/design2/decision-dialog"
 import { disciplineChange, type DisciplineMapping } from "@/lib/admin/consequences"
 import { saveDiscipline } from "@/lib/admin/discipline-actions"
 import {
+  cardsText,
   fromIdLabel,
   ignoreHintText,
   shotsText,
@@ -52,10 +53,6 @@ const mappingOf = (row: DisciplineRow): DisciplineMapping => ({
   plannedShots: row.plannedShots,
   confirmed: row.confirmed,
 })
-
-/** wie viele Scheiben, für den Kopf */
-const cardsText = (cards: number) =>
-  cards === 0 ? "noch keine Scheibe" : cards === 1 ? "1 Scheibe" : `${cards} Scheiben`
 
 /**
  * Blatt einer Disziplin: Zustand, Scheibe, Familie, Wertung, Schusszahl, je mit Vorschlag oder dem, was

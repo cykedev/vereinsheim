@@ -125,6 +125,10 @@ export function disciplineRow(input: {
 }
 
 /** Zustand in der Liste als kurzes Wort; null ohne */
+/** wie viele Scheiben, als kurzer Zusatz in Zeilen und Köpfen des Admins (Disziplinen, Listen) */
+export const cardsText = (cards: number) =>
+  cards === 0 ? "noch keine Scheibe" : cards === 1 ? "1 Scheibe" : `${cards} Scheiben`
+
 export function statusChip(row: DisciplineRow): string | null {
   if (row.status === "waiting") return "Scheiben warten"
   if (row.status === "suggested") return row.ignored ? "Vorschlag: ignorieren" : "Vorschlag"

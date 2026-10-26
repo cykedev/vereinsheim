@@ -10,13 +10,9 @@ import { Button } from "@vereinsheim/ui/button"
 import { DecisionDialog } from "@vereinsheim/ui/design2/decision-dialog"
 import { disciplineIgnore, disciplineShow } from "@/lib/admin/consequences"
 import { setDisciplineIgnored } from "@/lib/admin/discipline-actions"
-import { statusChip, type DisciplineRow } from "@/lib/admin/discipline-model"
+import { cardsText, statusChip, type DisciplineRow } from "@/lib/admin/discipline-model"
 
 const LIST = "divide-y divide-border rounded-xl border border-border"
-
-/** wie viele Scheiben, als kurzer Zusatz der Zeile */
-const cardsText = (cards: number) =>
-  cards === 0 ? "noch keine Scheibe" : cards === 1 ? "1 Scheibe" : `${cards} Scheiben`
 
 /** die Disziplinen in Abschnitten: neu, je Familie, ohne Familie, ignoriert (eingeklappt) */
 export function DisciplineList({ rows }: { rows: readonly DisciplineRow[] }) {
