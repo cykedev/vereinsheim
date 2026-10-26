@@ -3,19 +3,26 @@
 // Scheibe statt aller Schüsse; die Seite einer Scheibe rechnet weiter live. Was hier zusammengeführt wird, ist
 // gleich der Rechnung aus den Schüssen (`cardValues`, `periodRecords`); der Test hält das fest.
 
+import { centroid } from "../geometry"
 import {
   FLAG_SUSPICIOUS,
   METRICS,
   asOnPrintout,
+  computeMetric,
+  eligibleShots,
   inScoring,
   inShotOrder,
   metricByKey,
   isDrawn,
+  selectShots,
+  sumsResult,
+  sumsShots,
   type MetricDefinition,
   type MetricShot,
   type Scoring,
+  type SumSource,
 } from "../metrics"
-import { byStart, cardShots } from "./card-shots"
+import { byStart, cardShots, shotCountOf } from "./card-shots"
 import { pooledValue } from "./levels"
 import { cardValues, type CardValue, type PeriodCard, type VolumeBucket } from "./period"
 import {
@@ -32,11 +39,31 @@ import {
  * (`cardRecordCandidates`) und die Lagen (`cardMarks`), die mit ihr gespeichert werden. Erhöhen, wenn sich eins davon
  * ändert; dann werden alle Projektionen neu gerechnet. 2: Lagen für die kleinen Scheiben. 3: ohne verdächtige Schüsse
  * (SF-15). 4: Zehner und Innenzehner je Serie, Folge ab 9, schwächster Schuss, Spanne der Serien. 5: Streuung der
- * Schusswerte (`sd`) der Kennzahlen, die sich über Schüsse mitteln.
+ * Schusswerte (`sd`) der Kennzahlen, die sich über Schüsse mitteln. 6: Angaben ohne Einzelschüsse (Summen, Trefferlage
+ * als Summe), die Grundlage (`detail`), nur Probe erst mit einem Schuss.
  */
-const PROJECTION_VERSION = 5
+const PROJECTION_VERSION = 6
 
 const CARD_METRICS = METRICS.filter((metric) => metric.scopes.includes("card"))
+const RESULT_RINGS = metricByKey("result.rings") as MetricDefinition
+const RESULT_DECIMAL = metricByKey("result.decimal") as MetricDefinition
+const MPI_DISTANCE = metricByKey("group.mpiDistance") as MetricDefinition
+
+/** woher ein Wert kommt: aus den Einzelschüssen oder aus Summen */
+export type ValueSource = "shots" | SumSource
+
+/**
+ * Grundlage der Werte einer Scheibe ([[adr-033]]): woher das Ergebnis je Wertung kommt (null: keins), wie viele Schüsse
+ * wie am Ausdruck eine Lage und eine Zeit haben, und die Mitte der Schüsse aus den Lagen je Schuss oder aus der
+ * Trefferlage als Summe, mit ihrer Schusszahl
+ */
+export interface CardDetail {
+  rings: ValueSource | null
+  tenths: ValueSource | null
+  positions: number
+  times: number
+  center: { xUm: number; yUm: number; n: number; from: "shots" | "summary" } | null
+}
 
 export interface CardProjection {
   /** `projectionVersion(METRICS)` beim Rechnen; weicht sie ab, ist die Projektion veraltet */
@@ -51,6 +78,8 @@ export interface CardProjection {
   values: Record<string, { value: number; n: number; sd?: number | null }>
   /** Rekord-Kandidaten je Wertung; null ohne Schüsse */
   records: Record<Scoring, RecordCandidates | null>
+  /** fehlt in Projektionen vor Version 6, bis `refreshProjections` sie nachrechnet; `cardProjection` liefert sie immer */
+  detail?: CardDetail
 }
 
 /** eine Scheibe, wie sie die Übersichten aus der Datenbank lesen: ihre Merkmale und die Projektion, ohne Schüsse */
@@ -91,6 +120,31 @@ export function projectionVersion(
   return `p${PROJECTION_VERSION}-${fnv1a(parts.join("|"))}`
 }
 
+/** die Grundlage der Werte einer Scheibe (`CardDetail`), über die Schüsse wie am Ausdruck und ihre Summen */
+export function cardDetail(card: PeriodCard): CardDetail {
+  const counted = cardShots(card.shots, true)?.match ?? []
+  const source = (metric: MetricDefinition, scoring: Scoring): ValueSource | null =>
+    computeMetric(metric, counted) !== null
+      ? "shots"
+      : (sumsResult(card.sums, scoring)?.source ?? null)
+  const placed = eligibleShots(MPI_DISTANCE, counted)
+  const middle = centroid(
+    placed.map((shot) => ({ xUm: shot.xUm as number, yUm: shot.yUm as number }))
+  )
+  const summary = card.sums?.center
+  return {
+    rings: source(RESULT_RINGS, "rings"),
+    tenths: source(RESULT_DECIMAL, "decimal"),
+    positions: selectShots(counted, { need: "position" }).length,
+    times: selectShots(counted, { need: "time" }).length,
+    center: middle
+      ? { ...middle, n: placed.length, from: "shots" }
+      : summary
+        ? { xUm: summary.xUm, yUm: summary.yUm, n: summary.shots, from: "summary" }
+        : null,
+  }
+}
+
 /**
  * die Projektion einer Scheibe aus ihren Schüssen, für beide Wertungen und mit Probe (gefiltert wird beim Lesen). Die
  * Schüsse erst in Abgabefolge: Der Streukreis (Welzl) rechnet je nach Folge in der letzten Stelle anders, und die
@@ -113,14 +167,19 @@ export function cardProjection(input: PeriodCard): CardProjection {
   const counted = cardShots(card.shots, true)?.match ?? []
   return {
     version: projectionVersion(),
-    probeOnly: !card.shots.some((shot) => shot.kind === "match"),
+    // eine Scheibe ohne Werte (wartet auf die Anlage) ist nicht nur Probe
+    probeOnly:
+      card.shots.length > 0 &&
+      !card.shots.some((shot) => shot.kind === "match") &&
+      sumsShots(card.sums) === 0,
     suspicious: counted.some((shot) => (shot.flags ?? []).includes(FLAG_SUSPICIOUS)),
-    printedShots: counted.length,
+    printedShots: shotCountOf(card),
     values,
     records: {
       decimal: cardRecordCandidates(card, "decimal", true),
       rings: cardRecordCandidates(card, "rings", true),
     },
+    detail: cardDetail(card),
   }
 }
 
@@ -168,6 +227,27 @@ export function cardMarks(shots: readonly MetricShot[]): CardMark[] {
 /** die Lagen zurück in µm, wie `MiniTarget` sie zeichnet */
 export function markShots(marks: readonly CardMark[]): MarkShot[] {
   return marks.map(([x, y, ring]) => ({ xUm: x * MARK_UM, yUm: y * MARK_UM, ring }))
+}
+
+/**
+ * Mitte der Schüsse mehrerer Scheiben, gewichtet mit der Schusszahl jeder Mitte (Σ nᵢ·cᵢ / Σ nᵢ), aus Lagen je Schuss
+ * und der Trefferlage als Summe; `summaryShots` zählt die Schüsse aus Summen. Nur Versatz und Richtung ([[adr-034]]):
+ * Streuung und Urteile nehmen nur Lagen je Schuss. Null ohne Mitte.
+ */
+export function pooledCenter(
+  cards: readonly Pick<ProjectedCard, "projection">[]
+): { xUm: number; yUm: number; n: number; summaryShots: number } | null {
+  const centers = cards.flatMap((card) =>
+    card.projection.detail?.center ? [card.projection.detail.center] : []
+  )
+  const n = centers.reduce((sum, c) => sum + c.n, 0)
+  if (!n) return null
+  return {
+    xUm: centers.reduce((sum, c) => sum + c.n * c.xUm, 0) / n,
+    yUm: centers.reduce((sum, c) => sum + c.n * c.yUm, 0) / n,
+    n,
+    summaryShots: centers.reduce((sum, c) => sum + (c.from === "summary" ? c.n : 0), 0),
+  }
 }
 
 /** wie `trainingVolume`, aus den Projektionen: Schüsse wie am Ausdruck sind `printedShots` */

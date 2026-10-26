@@ -5,12 +5,17 @@ import { describe, expect, it } from "vitest"
 
 import { card, DAY } from "../__fixtures__/period"
 import {
-  inScoring,
-  metricByKey,
-  type MetricDefinition,
-  type MetricShot,
-  type Scoring,
-} from "../metrics"
+  CASCADE,
+  CENTER_TOTAL,
+  EMPTY,
+  INCOMPLETE,
+  SERIES_TENTHS,
+  SHOTS_RINGS,
+  sumsCard,
+  TOTAL_RINGS,
+  TREFFSICHER,
+} from "../__fixtures__/sums"
+import { inScoring, metricByKey, type MetricDefinition, type Scoring } from "../metrics"
 import { compareValues } from "./levels"
 import { cardValues, trainingVolume, type PeriodCard } from "./period"
 import { cardRecordCandidates, periodRecords } from "./records"
@@ -18,69 +23,6 @@ import { cardRecordCandidates, periodRecords } from "./records"
 const metric = (key: string) => metricByKey(key) as Readonly<MetricDefinition>
 const values = (c: PeriodCard, key: string, scoring: Scoring = "rings") =>
   cardValues([c], metric(key), scoring)
-
-const sumsCard = (id: string, day: number, extra: Partial<PeriodCard> = {}): PeriodCard => ({
-  id,
-  startedAtMs: day * DAY,
-  kind: "training",
-  complete: true,
-  shots: [],
-  ...extra,
-})
-
-/** zehn Wertungsschüsse in ganzen Ringen, ohne Zehntel, ohne Lage, Innenzehner unbekannt: 94 Ringe, 5 Zehner */
-const RING_SHOTS: MetricShot[] = [10, 9, 10, 8, 9, 10, 10, 9, 9, 10].map((ring, i) => ({
-  seq: i + 1,
-  xUm: null,
-  yUm: null,
-  decimalTenths: null,
-  ring,
-  innerTen: null,
-  firedAtMs: null,
-  kind: "match",
-  series: 1,
-}))
-
-const TOTAL_RINGS = sumsCard("total-rings", 1, {
-  sums: { series: [], total: { shots: 40, rings: 371, decimalTenths: null }, center: null },
-})
-const SERIES_TENTHS = sumsCard("series-tenths", 2, {
-  sums: {
-    series: [984, 991, 977, 1002].map((tenths, i) => ({
-      series: i + 1,
-      shots: 10,
-      rings: null,
-      decimalTenths: tenths,
-    })),
-    total: null,
-    center: null,
-  },
-})
-const SHOTS_RINGS = sumsCard("shots-rings", 3, { shots: RING_SHOTS })
-const CASCADE = sumsCard("cascade", 4, {
-  shots: RING_SHOTS,
-  sums: {
-    series: [{ series: 1, shots: 10, rings: 94, decimalTenths: 978 }],
-    total: null,
-    center: null,
-  },
-})
-const CENTER_TOTAL = sumsCard("center-total", 5, {
-  sums: {
-    series: [],
-    total: { shots: 40, rings: 380, decimalTenths: null },
-    center: { xUm: 1200, yUm: -500, shots: 40 },
-  },
-})
-const TREFFSICHER = sumsCard("treffsicher", 6, {
-  shots: RING_SHOTS,
-  sums: { series: [], total: null, center: { xUm: 500, yUm: 1200, shots: 10 } },
-})
-const INCOMPLETE = sumsCard("incomplete", 7, {
-  complete: false,
-  sums: { series: [], total: { shots: 30, rings: 280, decimalTenths: null }, center: null },
-})
-const EMPTY = sumsCard("empty", 8)
 
 describe("Werte aus Summen", () => {
   it("nur Gesamtergebnis in ganzen Ringen: Ergebnis und Ø je Schuss, ohne Streuung der Schusswerte", () => {

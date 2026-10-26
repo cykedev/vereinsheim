@@ -2,6 +2,15 @@ import { describe, expect, it } from "vitest"
 
 import { card } from "../__fixtures__/period"
 import {
+  CASCADE,
+  CENTER_TOTAL,
+  EMPTY,
+  SERIES_TENTHS,
+  SHOTS_RINGS,
+  SUMS,
+  TOTAL_RINGS,
+} from "../__fixtures__/sums"
+import {
   FLAG_OVER_TARGET,
   FLAG_SUSPICIOUS,
   METRICS,
@@ -17,6 +26,7 @@ import {
   cardMarks,
   cardProjection,
   markShots,
+  pooledCenter,
   pooledMean,
   projectCard,
   projectedRecords,
@@ -189,8 +199,8 @@ describe("Projektion je Scheibe (ADR-031)", () => {
     // Wird dieser Test rot, rechnet die Projektion anders als die gespeicherten: PROJECTION_VERSION (oder die
     // `version` der geänderten Kennzahl) erhöhen, damit `refreshProjections` sie neu rechnet, dann beide Werte setzen.
     expect({ version: projectionVersion(), output }).toEqual({
-      version: "p5-2c317885",
-      output: "86025-092bcce2",
+      version: "p6-2c317885",
+      output: "90929-da977734",
     })
   })
 
@@ -367,10 +377,94 @@ describe("Grenzfälle der Projektion", () => {
       const placed = asOnPrintout(c.shots).filter((s) => s.xUm !== null && s.yUm !== null)
       expect(cardMarks(c.shots), c.id).toHaveLength(placed.length)
     }
-    expect(projected.map((c) => c.projection.probeOnly)).toEqual([true, false, false, false, true])
+    // die leere ist nicht nur Probe: Sie wartet auf ihre Werte
+    expect(projected.map((c) => c.projection.probeOnly)).toEqual([false, false, false, false, true])
     const week = (ms: number) => String(Math.floor(ms / (7 * DAY)))
     const day = (ms: number) => String(Math.floor(ms / DAY))
     expect(projectedVolume(projected, week, day)).toEqual(trainingVolume(EDGE, week, day))
     expect(cardMarks(EDGE[1].shots)[1]).toEqual([10, 0, null])
+  })
+})
+
+describe("Projektion von Scheiben mit Angaben ohne Einzelschüsse ([[adr-033]])", () => {
+  // eigene Liste, nicht in `CARDS`: Der Fingerabdruck der Ausgabe hängt nicht an neuen Fällen
+  const projected = SUMS.map(projectCard)
+  const week = (ms: number) => String(Math.floor(ms / (7 * DAY)))
+  const day = (ms: number) => String(Math.floor(ms / DAY))
+  const detailOf = (c: PeriodCard) => cardProjection(c).detail
+
+  it.each(["decimal", "rings"] as const)(
+    "Werte, Rekorde und Umfang wie aus den Angaben (%s)",
+    (scoring) => {
+      for (const includeProbeOnly of [false, true]) {
+        for (const metric of METRICS.filter((m) => m.scopes.includes("card")))
+          expect(
+            projectedValues(projected, metric, scoring, { includeProbeOnly }),
+            `${metric.key} ${includeProbeOnly}`
+          ).toEqual(cardValues(SUMS, metric, scoring, { includeProbeOnly }))
+        expect(projectedRecords(projected, scoring, { includeProbeOnly })).toEqual(
+          periodRecords(SUMS, scoring, { includeProbeOnly })
+        )
+      }
+      expect(projectedVolume(projected, week, day)).toEqual(trainingVolume(SUMS, week, day))
+    }
+  )
+
+  it("Ø je Schuss über ein Gesamtergebnis und Schüsse zusammen: 465 Ringe auf 50 Schuss", () => {
+    expect(pooledMean([TOTAL_RINGS, SHOTS_RINGS].map(projectCard), "rings")).toBe(9.3)
+  })
+
+  it("eine Scheibe ohne Werte: leer, aber nicht nur Probe", () => {
+    expect(cardProjection(EMPTY)).toMatchObject({
+      probeOnly: false,
+      printedShots: 0,
+      values: {},
+      records: { decimal: null, rings: null },
+      detail: { rings: null, tenths: null, positions: 0, times: 0, center: null },
+    })
+  })
+
+  it("die Grundlage nennt, woher Ergebnis und Mitte kommen", () => {
+    expect(detailOf(TOTAL_RINGS)).toMatchObject({ rings: "total", tenths: null })
+    expect(cardProjection(TOTAL_RINGS).printedShots).toBe(40)
+    expect(detailOf(SERIES_TENTHS)?.tenths).toBe("series")
+    expect(detailOf(CASCADE)).toMatchObject({ rings: "shots", tenths: "series" })
+    expect(detailOf(CENTER_TOTAL)?.center).toEqual({
+      xUm: 1200,
+      yUm: -500,
+      n: 40,
+      from: "summary",
+    })
+    const measured = card("gemessen", 1, [100, 101, 99, 102])
+    const projection = cardProjection(measured)
+    expect(projection.detail?.center?.from).toBe("shots")
+    expect(projection.detail?.center?.n).toBe(projection.values["group.mpiDistance"]?.n)
+    expect(projection.detail).toMatchObject({
+      rings: "shots",
+      tenths: "shots",
+      positions: 4,
+      times: 4,
+    })
+  })
+
+  it("Mitten mehrerer Scheiben gewichtet mit ihrer Schusszahl", () => {
+    const shots: ProjectedCard = {
+      ...projectCard(EMPTY),
+      projection: {
+        ...cardProjection(EMPTY),
+        detail: {
+          rings: null,
+          tenths: null,
+          positions: 10,
+          times: 0,
+          center: { xUm: -1000, yUm: 2000, n: 10, from: "shots" },
+        },
+      },
+    }
+    const pooled = pooledCenter([projectCard(CENTER_TOTAL), shots])
+    expect(pooled).toMatchObject({ xUm: 760, n: 50, summaryShots: 40 })
+    expect(pooled?.yUm ?? null).not.toBeNull()
+    expect(pooled?.yUm).toBe(0)
+    expect(pooledCenter([projectCard(EMPTY)])).toBeNull()
   })
 })
