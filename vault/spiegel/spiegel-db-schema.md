@@ -23,7 +23,7 @@ relates_to: ["[[spiegel-data-model]]", "[[spiegel-ingest-pipeline]]", "[[spiegel
 | Disziplinen | `Family`, `Discipline` | `Family.slug` eindeutig (aus dem Fachkern oder beim Anlegen aus dem Namen, steht in der Adresse, fest), `Discipline(siteId, meytonId, name)` eindeutig (SF-70) | Familie für Verläufe, Scheibenbild, amtliche Wertung (SF-74), Schusszahl des Admins (`plannedShots`: null aus der ID, 0 keine feste), eingeordnet (`confirmedAt`), ignoriert (`ignoredAt`), `version` für das Nachrechnen |
 | Scheiben | `Card`, `CardRevision`, `Shot` | `Card(sourceId, scheibenId, cycle, block)` eindeutig; `Card(ownerId, familyId, startedAt)`; `Card(ownerId, startedAt)`; `Card(sportpassId)`; `CardRevision(cardId, number)` eindeutig; `Shot(revisionId, stellung, treffer)` eindeutig; `Shot(cardId, fingerprint)` | die kanonische Scheibe ([[spiegel-data-model]]) |
 | Projektion | `CardProjection` | `cardId` Primärschlüssel, `version` | Kennzahlen und Rekord-Kandidaten je Scheibe |
-| Ausdruck | `Printout` | `(cardId, sha256)` eindeutig, `footerId` (SF-43) | gespeichertes Meyton-PDF mit ID im Fuß und Druckzeit |
+| Ausdruck | `Printout` | `(cardId, sha256)` eindeutig, `footerId` (SF-43) | gespeichertes Meyton-PDF mit ID im Fuß und Druckzeit; Datei unter `UPLOAD_DIR/printouts/<sha256>.pdf`, gleiche Bytes teilen sich eine Datei |
 
 - **Einheiten:** Lage in µm (`xUm`, `yUm`), Abstand in 0,1 µm wie Meytons `Teiler001` (`distanceTenthsUm`), alle Zeiten als `timestamptz(3)` in UTC.
 - **Rohzeilen als `json`, nicht `jsonb`:** Der Vertrag erlaubt U+0000 in Zellen, `jsonb` nicht; `json` hält den Text zudem unverändert.

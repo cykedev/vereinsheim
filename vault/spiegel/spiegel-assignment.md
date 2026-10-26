@@ -16,7 +16,7 @@ relates_to: ["[[meyton-printout]]", "[[spiegel-bridge]]", "[[spiegel-privacy]]",
 | Weg | Wann | Ablauf | Sicherheit |
 |---|---|---|---|
 | Opt-in per Sportpass (Standard) | Starter aus der Schützenliste mit SportpassID (nicht bei allen gepflegt; für Interessierte pflegt der Admin sie in der Meyton-Schützenverwaltung nach) | einmal im Profil eintragen und zustimmen, Admin bestätigt; die Brücke lädt jede passende Scheibe live am Abend hoch, auch rückwirkend | hoch |
-| Meyton-QR | ohne Sportpass, Training ohne Starter, auswärts; bis eine Woche danach. Den QR gibt es zu jedem Ausdruck | Meyton zeigt den QR am Stand; in Spiegel scannen oder Link einfügen; Spiegel lädt und speichert das PDF, liest die ID, die Brücke holt die Scheibe; Vorschau, bestätigen. Bei einer schon vorhandenen Scheibe hängt der Scan nur das PDF an | hoch |
+| Meyton-QR | ohne Sportpass, Training ohne Starter, auswärts; bis eine Woche danach. Den QR gibt es zu jedem Ausdruck | Meyton zeigt den QR am Stand; in Spiegel scannen oder Link einfügen; Spiegel lädt und speichert das PDF, liest ID und Druckzeit, die Brücke holt die Scheibe; geprüft wird automatisch (Abend, Druckzeit), ohne Vorschau. Bei einer schon vorhandenen Scheibe hängt der Scan nur das PDF an | hoch |
 | ID vom Ausdruck (gebaut, 24. Oktober 2026) | ohne Sportpass, wenn der QR nicht zur Hand ist, aber der Ausdruck | im Profil die ID aus dem Fuß und den Tag eintippen; die Brücke holt genau diese Scheibe, Spiegel nimmt sie nur an, wenn ihr Beginn auf den Tag fällt | mittel bis hoch (siehe unten) |
 | „Scheibe holen“ (Fundbüro) | QR verloren oder Link abgelaufen (selten) | Stand und Zeitraum wählen; Spiegel fragt die Brücke nach Scheiben ohne Besitzer; Vorschau, bestätigen | mittel, mit Protokoll |
 | Admin | Korrekturen, Sammelzuweisung nach dem Training | zuweisen und umhängen, mit Protokoll | hoch |
@@ -42,17 +42,38 @@ Frei getippte Namen (bei euch neben der Schützenliste üblich) ergeben nur **Vo
 
 Spiegel hängt dabei nicht vom Layout des Meyton-PDFs ab ([[adr-028]], Änderung vom 6. Oktober 2026).
 
-1. **QR erfassen:** Kamera-Scan in Spiegel (Browser-Kamera auf iPhone und Android, auch als installierte App), Link einfügen oder auf Android „Teilen → Spiegel“. Erlaubt sind nur die in der Konfiguration hinterlegten Meyton-Adressen (heute `qrcode.meyton.eu` und eine feste IP), nie private Netze, nur PDF, ohne Weiterleitungen (SF-47). Die Größengrenze ist eng: Ein Ausdruck hat rund 40 KB, und in Treffsicher hat ein 3,2-MB-PDF schon 665 MB Speicher belegt (SF-48). Das Format beschreibt [[meyton-printout]].
-2. **Speichern und zwei Dinge lesen:** Spiegel speichert das PDF sofort als Original (Meyton hält es nur eine Woche). Daraus liest es nur die ID im Fuß (`ID:` und acht Hex-Zeichen, auf jeder Seite) und die Erstellzeit aus den Metadaten. Ändert Meyton das Layout, ändert sich daran nichts (SF-46).
-3. **Vorschau:** Die ID wird als vorzeichenbehaftete 32-Bit-Zahl dekodiert (`ff914420` → −7257056) und als Auftrag an die Brücke gegeben ([[spiegel-bridge]]). Die Brücke liefert eine Vorschau ohne Namen und ohne Lage: Stand, Beginn, Disziplin, Schusszahl, Ergebnis, kleines Trefferbild.
-4. **Plausibilität:** Die Scheibe muss zur Druckzeit passen: gleicher Abend, ihr erster Schuss vor dem Druck. Bei einem Zwischenausdruck hat die Scheibe danach mehr Schüsse; die Vorschau zeigt beides (SF-42). Passt sie nicht, holt Spiegel nichts, sondern fragt nach (SF-41).
-5. **Bestätigen:** Erst danach holt Spiegel die ganze Scheibe. Werte und Identität kommen aus der SSMDB2; gehört die Scheibe laut SportpassID einem anderen Konto, geht die Anfrage an den Admin. Mehrere Ausdrucke derselben Scheibe hängen alle an ihr (SF-43).
+1. **Erfassen:** Kamera-Scan in Spiegel (Browser-Kamera auf iPhone und Android, auch als installierte App), Link
+   einfügen oder ein einzelnes PDF hochladen (alte Ausdrucke). Es gibt vorerst keine Liste erlaubter Adressen; es
+   bleiben nur PDF, höchstens 1 MiB, 10 s und keine Weiterleitungen (SF-47, [[adr-028]], Nachtrag vom 26. Oktober
+   2026). Ein Ausdruck hat rund 40 KB. Das Format beschreibt [[meyton-printout]].
+2. **Speichern und lesen:** Spiegel liest ID und Druckzeit in einem kurzlebigen Kindprozess mit eigener Speicher- und
+   Zeitgrenze (SF-48) und speichert das PDF als Original nach seiner sha256 im Upload-Volume (Meyton hält es nur eine
+   Woche). Nur mit lesbarer ID und Druckzeit entsteht eine Datei. Ändert Meyton das Layout, ändert sich daran nichts
+   (SF-46).
+3. **Scheibe:** Liegt die eigene Scheibe des Abends schon in Spiegel, hängt der Scan nur das PDF an. Sonst entsteht eine
+   Scheibe, deren einzige Angabe zunächst der Ausdruck ist; Disziplin und Art wählt der Schütze, vorbelegt mit der
+   letzten. Mehrere Ausdrucke derselben Scheibe hängen alle an ihr (SF-43).
+4. **Auftrag und Prüfung:** An der Scheibe hängt ein Auftrag an die Brücke wie bei „Scheibe per ID“ (ID als
+   vorzeichenbehaftete 32-Bit-Zahl, `ff914420` → −7257056, und der Abend aus dem PDF). Bevor die Rohdaten die Scheibe
+   ergänzen, prüft Spiegel selbst: gleicher Abend, ihr erster Schuss vor der Druckzeit. Fällt die Prüfung durch,
+   speichert Spiegel nichts von der Brücke, der Auftrag endet mit „passt nicht zum Ausdruck“, und die Scheibe bleibt
+   beim Ausdruck (SF-41). Bei einem Zwischenausdruck hat die Scheibe danach mehr Schüsse (SF-42). Gehört die Scheibe
+   laut SportpassID einem anderen Konto, geht die Zustimmung dieses Kontos vor.
+5. **Rückweg:** Eine falsche Scheibe löscht man (Papierkorb, Sperre). Einen Auftrag zu entfernen, entfernt nur den
+   Auftrag, nie Scheibe oder PDF.
 
-**Ohne lesbare ID** zeigt Spiegel die Scheiben, die zur Druckzeit auf der Anlage liefen, und du wählst. Fehlen auch die Metadaten, hilft die Auswahl über Stand und Zeitraum wie im Fundbüro.
+Stand: gebaut sind Holen, Lesen und Speichern (1b-1, `apps/spiegel/src/lib/printouts/`). Die Scheibe aus dem Ausdruck
+(braucht die Angaben aus 1a), das Scannen und die Prüfung beim Einlesen folgen (1b-2).
 
-**Brücke aus:** Anlage und Brücke werden nach dem Training ausgeschaltet. Scannst du den QR später, zum Beispiel zu Hause, liegt das PDF sofort in Spiegel und lässt sich ansehen; Vorschau und Bestätigung folgen beim nächsten Einschalten, und Spiegel meldet sich dann.
+**Ohne lesbare ID** oder ohne Druckzeit speichert Spiegel nichts. Eine Auswahl nach der Druckzeit ist verschoben;
+bis dahin hilft „Scheibe per ID“ oder die Auswahl über Stand und Zeitraum wie im Fundbüro.
 
-**Auswärts,** ohne Brücke, liest Spiegel das ganze PDF, soweit der vollständige Parser das Layout kennt, und legt ein **Ergebnis ohne Rohdaten** an (Serien, Schusswerte, Teiler, Trefferlage). Klappt das nicht, bleibt das PDF ohne Werte angehängt (SP-2.6).
+**Brücke aus:** Anlage und Brücke werden nach dem Training ausgeschaltet. Scannst du den QR später, zum Beispiel zu
+Hause, steht die Scheibe sofort mit ihrem PDF in Spiegel; die Rohdaten kommen beim nächsten Einschalten.
+
+**Auswärts,** ohne Brücke, bleibt die Scheibe beim Ausdruck. Mit dem vollständigen Parser liest Spiegel später das
+ganze PDF, soweit es das Layout kennt, und ergänzt ein **Ergebnis ohne Rohdaten** (Serien, Schusswerte, Teiler,
+Trefferlage); klappt das nicht, bleibt das PDF ohne Werte angehängt (SP-2.6).
 
 ## Scheibe per ID (gebaut)
 
@@ -87,8 +108,8 @@ nicht (Ende zu Ende geprüft mit `pnpm --filter spiegel bridge-e2e`). Ein „nic
 nichts mehr: Ein Auftrag mit Scheibe schließt nur, wenn sie endgültig ist.
 
 Grenzen ([[spiegel-privacy]] „Restrisiko beim Holen per ID“): Ein Tippfehler in den mittleren Stellen der ID kann am
-selben Abend die Scheibe eines anderen treffen; der Tag fängt das nicht. Dann hilft „Löschen“ (mit Sperre). Die
-Vorschau vor dem Holen (SF-41) kommt mit dem QR-Weg. Ist die Scheibe endgültig, liest die Brücke sie nicht mehr von
+selben Abend die Scheibe eines anderen treffen; der Tag fängt das nicht. Dann hilft „Löschen“ (mit Sperre). Statt einer
+Vorschau prüft der QR-Weg automatisch über die Druckzeit (SF-41, siehe „Der QR-Weg im Detail“). Ist die Scheibe endgültig, liest die Brücke sie nicht mehr von
 selbst; eine spätere Korrektur der Standaufsicht kommt nur mit einer Zustimmung per Sportpass. Die Brücke braucht dafür die Version mit Aufträgen (vor Ort einspielen); eine ältere ignoriert
 `requests`, und die Aufträge bleiben offen.
 

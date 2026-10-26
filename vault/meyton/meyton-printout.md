@@ -78,9 +78,9 @@ Layout-Wissen ([[adr-028]]). Befund an drei echten PDFs (zwei Treffsicher-Fixtur
   oder Zeitzone gibt es keinen absoluten Zeitpunkt, Jahre vor 1970 gelten nicht.
 - **Grenzen:** 1 MB, 10 Seiten, 20 000 Textstücke, 100 000 Zeichen, 5 s, geprüft zwischen den Schritten
   von pdf.js. Gegen präparierte PDFs schützen sie **nicht**: Ein 3-KB-PDF brachte pdf.js auf 294 MB,
-  ein 128-KB-XMP auf 1,36 GB, eine Operator-Bombe lief 21 s. Der Server soll fremde PDFs deshalb in
-  einem kurzlebigen Kindprozess mit Speichergrenze lesen, der nach 5 s hart beendet wird (SF-48, offen
-  mit SP-1.7 b); ein Worker-Thread reicht nicht. pdf.js bekommt eine Kopie des Puffers, weil es ihn leert.
+  ein 128-KB-XMP auf 1,36 GB, eine Operator-Bombe lief 21 s. Der Server liest fremde PDFs deshalb im
+  Kindprozess (gebaut mit SP-1.7 b, `apps/spiegel/src/lib/printouts/reader.ts`): eigene Speichergrenze, `--lite-mode`,
+  harter Abbruch nach 5 s, einer zur Zeit (SF-48); ein Worker-Thread reicht nicht. pdf.js bekommt eine Kopie des Puffers, weil es ihn leert.
 
 ## Datenschutz
 

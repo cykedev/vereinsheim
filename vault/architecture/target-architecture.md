@@ -9,4 +9,4 @@ relates_to: ["[[network-segmentation]]", "[[caddy-reverse-proxy]]", "[[db-isolat
 documented_in: ["[[overview#Zielarchitektur]]"]
 ---
 
-**TL;DR** Zielarchitektur: Container-Topologie, Netze, Volumes (caddy_data/postgres_data/uploads_treffsicher), Subdomain-Routing — das Soll-Bild des Prod-Deploys.
+**TL;DR** Zielarchitektur: Container-Topologie, Netze, Volumes (caddy_data/postgres_data/uploads_treffsicher/uploads_spiegel, `uploads_spiegel → /app/uploads` im spiegel-Container), Subdomain-Routing — das Soll-Bild des Prod-Deploys.

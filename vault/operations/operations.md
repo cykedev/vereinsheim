@@ -67,8 +67,8 @@ automatisch erkennen:
 | `.vereinsheim.local` | lokal     | VPS_HOST (SSH-Ziel), VPS_REPO_PATH, DOCKER_USER    |
 | `.env.local`         | lokal     | Platzhalter für den lokalen Stack; `local-pull` und `local-up` ergänzen fehlende Schlüssel |
 
-Die Apps stehen an einer Stelle, `scripts/lib/apps.sh` (`APPS=(ringwerk treffsicher spiegel)`, Upload-Volume nur
-`UPLOAD_APPS=(treffsicher)`); das CLI und alle Skripte (Deploy, Backup, Restore, Restore-Probe, `db-ensure`, Build)
+Die Apps stehen an einer Stelle, `scripts/lib/apps.sh` (`APPS=(ringwerk treffsicher spiegel)`, Upload-Volumes
+`UPLOAD_APPS=(treffsicher spiegel)`); das CLI und alle Skripte (Deploy, Backup, Restore, Restore-Probe, `db-ensure`, Build)
 binden sie ein.
 
 Die folgenden Abschnitte beschreiben **was technisch passiert**, damit du
@@ -239,13 +239,14 @@ Ringwerk trägt den laufenden Wettkampfbetrieb und geht allein raus, nie im selb
 
 ### Was wird gesichert
 
-`scripts/backup.sh` legt je Lauf vier Files in `${BACKUP_DIR:-/var/backups/vereinsheim}` ab:
+`scripts/backup.sh` legt je Lauf fünf Files in `${BACKUP_DIR:-/var/backups/vereinsheim}` ab:
 
 - `ringwerk-<TS>.dump` — Postgres custom-format Dump der `ringwerk`-DB
 - `treffsicher-<TS>.dump`, `spiegel-<TS>.dump` — analog
 - `uploads-treffsicher-<TS>.tar.gz` — Inhalt des `uploads_treffsicher`-Volumes
+- `uploads-spiegel-<TS>.tar.gz` — Ausdrucke (PDF) aus dem `uploads_spiegel`-Volume
 
-Ringwerk und Spiegel haben keine persistierten Uploads und werden daher nicht archiviert. Gibt es die Datenbank
+Ringwerk hat keine persistierten Uploads und wird daher nicht archiviert. Gibt es die Datenbank
 einer App noch nicht (vor `vereinsheim db-ensure`), meldet das Backup es und sichert die übrigen.
 
 Retention: 14 Tage rolling (`BACKUP_RETAIN_DAYS=14`, überschreibbar).
@@ -302,9 +303,15 @@ docker compose stop app-treffsicher migrate-treffsicher
   /var/backups/vereinsheim/treffsicher-2026-05-10_0300.dump \
   /var/backups/vereinsheim/uploads-treffsicher-2026-05-10_0300.tar.gz
 docker compose up -d migrate-treffsicher app-treffsicher
+
+docker compose stop app-spiegel migrate-spiegel
+./scripts/restore.sh spiegel \
+  /var/backups/vereinsheim/spiegel-2026-10-20_0300.dump \
+  /var/backups/vereinsheim/uploads-spiegel-2026-10-20_0300.tar.gz
+docker compose up -d migrate-spiegel app-spiegel
 ```
 
-Ringwerk und Spiegel ohne Uploads-Tar (`restore.sh` lehnt einen ab: Sie haben kein Upload-Volume).
+Ringwerk ohne Uploads-Tar (`restore.sh` lehnt einen ab: Ringwerk hat kein Upload-Volume).
 
 `restore.sh`:
 

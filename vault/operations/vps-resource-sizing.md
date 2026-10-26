@@ -51,6 +51,29 @@ Gemessen ist bisher nur direkt nach dem Neustart beim Deploy. Ringwerk läuft mi
 Treffsicher. Nach einigen Tagen Betrieb, einem Ringwerk-PDF und einem Treffsicher-Import den Messbefehl unten erneut
 laufen lassen.
 
+## Offen: Leser der Ausdrucke von Spiegel auf amd64
+
+Spiegel liest fremde PDFs in einem kurzlebigen Kindprozess im Container `app-spiegel` (SP-1.7 b,
+`apps/spiegel/src/lib/printouts/reader.ts`): 48 MB Heap, `--lite-mode`, Abbruch über 96 MiB RSS. Gemessen ist
+`maxRssKb` nur unter arm64 (nativ höchstens 74 MiB mit `--lite-mode`). amd64 lief lokal nur unter Rosetta, und das treibt
+den Speicher hoch (schon ein leeres Node 69 statt 50 MiB, der Leser rund 100 MiB). Den echten Wert misst der User nach
+dem Deploy von 1b-1 auf dem VPS, bevor das Scannen (1b-2) live geht. Liegt er über 80 MiB, wird die Grenze vor 1b-2
+neu entschieden.
+
+Lokal den erfundenen Ausdruck bauen und auf den VPS legen (nach `~/migration/`):
+
+```bash
+pnpm --filter spiegel exec tsx tools/printout-sample.ts > ausdruck-beispiel.pdf && ./scripts/vereinsheim upload ausdruck-beispiel.pdf
+```
+
+Dann auf dem VPS im Repo-Verzeichnis (`vereinsheim ssh`), mit den Flags aus `reader.ts`:
+
+```bash
+docker compose exec -T app-spiegel node --max-old-space-size=48 --max-semi-space-size=2 --lite-mode apps/spiegel/printout-reader.mjs < ~/migration/ausdruck-beispiel.pdf | grep -o '"kind":"found"\|"maxRssKb":[0-9]*'
+```
+
+Erwartet: `"kind":"found"` und `"maxRssKb":<kB>`.
+
 ## Swap als Sicherheitsnetz
 
 Der VPS läuft ohne Swap. Eine kleine Swap-Datei fängt eine kurze Spitze ab, statt dass der Kernel einen Container

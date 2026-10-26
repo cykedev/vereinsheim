@@ -106,6 +106,7 @@ Volumes:
   caddy_data           → /data        (LE-Zertifikate – kritisch!)
   caddy_config         → /config
   uploads_treffsicher  → /app/uploads (im treffsicher-Container)
+  uploads_spiegel      → /app/uploads (im spiegel-Container)
 ```
 
 **Begründung Netzwerk-Split**: Caddy braucht keinen DB-Zugriff. Liegt `db` nur im `data`-Netz, ist sie auch bei einer

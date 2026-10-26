@@ -4,7 +4,7 @@ Dritte App im Monorepo: Schussrohdaten der Meyton-Anlage (SSMDB2) über eine lok
 Sportpass-Opt-in und Meyton-QR ([`vault/spiegel/spiegel.md`](../../vault/spiegel/spiegel.md)). Datenbank, Zugriffe
 und Messung: [ADR-031](../../vault/decisions/adr-031.md), [`spiegel-db-schema`](../../vault/spiegel/spiegel-db-schema.md);
 Seiten und Navigation: [`spiegel-navigation`](../../vault/spiegel/spiegel-navigation.md). Spiegel ist deployt:
-`migrate-spiegel` (192 MB) und `app-spiegel` (256 MB, Heap 160) in `compose.yml`, eine Subdomain mit höchstens 5 MiB
+`migrate-spiegel` (192 MB) und `app-spiegel` (256 MB, Heap 160, Volume `uploads_spiegel` für Ausdrucke) in `compose.yml`, eine Subdomain mit höchstens 5 MiB
 je Anfrage im `Caddyfile`, die Datenbank aus `db-init/` bzw. `scripts/db-ensure.sh`; Betrieb in
 [`vault/operations/operations.md`](../../vault/operations/operations.md). Lokal prüft `tools/stack-e2e/run.sh` den
 Stack Ende zu Ende.
@@ -22,6 +22,7 @@ Stack Ende zu Ende.
 | `pnpm --filter spiegel ingest-load`                        | Lastskript der Ingest-API: ein Abend mit belegten Ständen wie eine Brücke (`--start`, `--docker <name>`)                                                                    |
 | `pnpm --filter spiegel stack-probe`                        | Grenzen hinter Caddy gegen einen laufenden Stack (`BASE_URL`, `DATABASE_URL`; aus `tools/stack-e2e/run.sh`)                                                                 |
 | `pnpm --filter spiegel bridge-e2e`                         | die echte Brücke (Go) Ende zu Ende gegen den eigenen Build auf :3012 mit MariaDB, drei Fällen und Aufträgen per ID (`--keep`), mit `BASE_URL` gegen einen laufenden Spiegel |
+| `pnpm --filter spiegel exec tsx tools/printout-sample.ts`  | erfundener Meyton-Ausdruck (ID `ff914420`) als PDF nach stdout, für den Stack-Test und zum Messen des Lesers (`--kind memory\|time`: präparierte Bomben)                    |
 
 Die Dev-Datenbank legt `dev/db-init` beim ersten Start an, `scripts/bootstrap-dev.sh` zieht sie für bestehende Volumes
 nach. Ohne `.env` nehmen Tests und Messung die Dev-Datenbank aus `.env.example` (`test/dev-database.ts`), NextAuth den
@@ -221,7 +222,8 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
   Grenzen aus `compose.yml`: `tools/stack-e2e/run.sh --load <min>` (Richtwerte: Spitze 147 MiB, unter Last 108
   bis 112 MiB).
 - **seed:own** nur gegen die lokale Dev-Datenbank `spiegel` (prüft die Adresse, `--force` für eine andere lokale).
-- Ausgabe in Werkzeugen über `process.stdout.write`, nicht `console.log` (Lint).
+- Ausgabe in Werkzeugen über `process.stdout.write`, nicht `console.log` (Lint). Werkzeuge und Quellen der App laufen
+  unter tsx als CommonJS (`package.json` ohne `"type"`): kein `await` auf oberster Ebene, sondern `main().catch(…)`.
 - **Skriptprüfung der App** (`tools/pruefen.ts` mit `@vereinsheim/pruefen`): Chrome headless über das DevTools-Protokoll mit dem `WebSocket` von Node,
   ohne Abhängigkeit; Klicks, Ziehen und Tasten sind echte Eingaben (`Input.dispatch*`), Fokus und `next/link` verhalten
   sich wie beim Menschen. Angemeldet mit dem Demo-Konto (vorher `seed:own --demo`). Geprüft wird ohne feste Zahlen
@@ -302,6 +304,21 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
   Scheibe `done`, ohne `expired`. Abschnitt `CardRequests` im Profil, Texte `cardRequest`, `cardRequestWithdraw`. Ein
   beendeter Auftrag ohne Scheibe lässt sich im Profil entfernen (`isRemovable` in `src/lib/card-requests/status.ts`,
   `removeRequest` löscht die Zeile, Text `cardRequestRemove`).
+- **Ausdrucke** (`src/lib/printouts/`, SP-1.7 b, [[meyton-printout]]): Bausteine ohne Oberfläche.
+  - `fetchPrintout` holt per Link: nur http(s), keine Weiterleitungen, 1 MiB, 10 s, nur PDF, nach außen nur ein fester
+    Grund. Keine Liste erlaubter Adressen ([[adr-028]], Restrisiko SF-47).
+  - `readPrintoutIsolated` liest ID und Druckzeit in einem kurzlebigen Kindprozess (SF-48): 48 MB Heap, `--lite-mode`,
+    Abbruch über 96 MiB RSS (Linux), harte Zeitgrenze erst nach „bereit“, einer zur Zeit, höchstens drei warten. Umgebung nur
+    `NODE_ENV`. **Nie `@vereinsheim/meyton-pdf/printout` im Server importieren**, sonst liegt pdf.js im Prozess der App.
+    In Produktion läuft das Bündel `printout-reader.mjs`, gebaut nach `next build` (`tools/build-reader.ts`) direkt in
+    `.next/standalone/apps/spiegel`; in Dev und Tests die Quelle über `--import tsx`. Fehlt das Bündel in Produktion,
+    meldet der Start es.
+  - `storePrintout` prüft, liest und speichert die Datei nach sha256 unter `UPLOAD_DIR/printouts/` (in Produktion
+    Pflicht), ohne Datenbank; nur mit ID und Druckzeit (ohne Zeitzone die Wanduhr der Anlage).
+  - `attachPrintout(tx, file, cardId)` legt die Zeile in der Transaktion des Aufrufers an: Ein Ausdruck hängt immer an
+    einer Scheibe. `printoutFile` liest die Datei nur für den Besitzer, nicht für eine wartende Scheibe.
+  - Dateien löscht nur `removeOrphanPrintoutFiles` (beim Start, stündlich nach dem Papierkorb, nach „Nicht meine“ und
+    `purgeCardNow`): jede Datei ohne Zeile, älter als zehn Minuten; bei ganz leerer Tabelle keine.
 - **Ältere Scheiben nachladen:** Eine aktive Zustimmung ohne
   `historyLoadedAt` ist ein Auftrag mit `since` (`historyRequestedAt`, gesetzt beim Bestätigen und Aufheben; alte Zeilen:
   `confirmedAt`); `bridgeState` nennt sie in `history` und liefert dann alle Sperren, nicht nur die jüngsten 60 Tage.
