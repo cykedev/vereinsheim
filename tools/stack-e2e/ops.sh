@@ -106,6 +106,23 @@ else
 fi
 [[ "$(wait_spiegel)" == "200" ]] || problem "Spiegel nach dem Deploy nicht erreichbar"
 
+echo "==> Spiegel: Upload-Volume und Leser der Ausdrucke"
+if compose exec -T app-spiegel sh -c 'mkdir -p /app/uploads/printouts && test -w /app/uploads/printouts'; then
+	echo "  Upload-Volume beschreibbar"
+else
+	problem "Spiegel kann nicht ins Upload-Volume schreiben"
+fi
+(cd apps/spiegel && ./node_modules/.bin/tsx tools/printout-sample.ts) >"$WORK/sample.pdf"
+compose exec -T app-spiegel node --max-old-space-size=48 --max-semi-space-size=2 --lite-mode \
+	apps/spiegel/printout-reader.mjs \
+	<"$WORK/sample.pdf" >"$WORK/reader.txt" 2>&1
+if grep -q '"kind":"found"' "$WORK/reader.txt"; then
+	echo "  liest den Ausdruck, $(grep -o '"maxRssKb":[0-9]*' "$WORK/reader.txt")"
+else
+	problem "printout-reader.mjs liest den Beispiel-Ausdruck nicht"
+	tail -5 "$WORK/reader.txt"
+fi
+
 echo "==> Vorprüfung: Deploy ohne Rolle spiegel"
 drop_spiegel
 if run ./scripts/deploy.sh; then
@@ -138,9 +155,13 @@ else
 fi
 
 echo "==> Backup mit drei Apps"
+# eine Marke im Volume der Ausdrucke: Der Restore muss sie zurückbringen
+docker run --rm -v "${COMPOSE_PROJECT_NAME}_uploads_spiegel:/d" alpine \
+	sh -c 'mkdir -p /d/printouts && echo e2e >/d/printouts/e2e-marker.txt'
 rm -f "$BACKUP_DIR"/*
 if run ./scripts/backup.sh; then
-	for pattern in 'ringwerk-*.dump' 'treffsicher-*.dump' 'spiegel-*.dump' 'uploads-treffsicher-*.tar.gz'; do
+	for pattern in 'ringwerk-*.dump' 'treffsicher-*.dump' 'spiegel-*.dump' 'uploads-treffsicher-*.tar.gz' \
+		'uploads-spiegel-*.tar.gz'; do
 		compgen -G "$BACKUP_DIR/$pattern" >/dev/null || problem "Backup ohne $pattern"
 	done
 	echo "  $(find "$BACKUP_DIR" -type f | wc -l | tr -d ' ') Dateien"
@@ -177,18 +198,24 @@ rm -f "$bad"
 	problem "Restore-Probe hat nach dem Fehler Wegwerf-Datenbanken stehen lassen"
 
 echo "==> Restore von Spiegel"
-if run ./scripts/restore.sh spiegel "$good"; then
+docker run --rm -v "${COMPOSE_PROJECT_NAME}_uploads_spiegel:/d" alpine rm -f /d/printouts/e2e-marker.txt
+spiegel_tar="$(ls -t "$BACKUP_DIR"/uploads-spiegel-*.tar.gz | head -n 1)"
+if run ./scripts/restore.sh spiegel "$good" "$spiegel_tar"; then
 	compose up -d migrate-spiegel app-spiegel >/dev/null 2>&1
 	[[ "$(wait_spiegel)" == "200" ]] || problem "Spiegel nach dem Restore nicht erreichbar"
-	echo "  eingespielt, Spiegel läuft"
+	if docker run --rm -v "${COMPOSE_PROJECT_NAME}_uploads_spiegel:/d:ro" alpine test -f /d/printouts/e2e-marker.txt; then
+		echo "  eingespielt samt Ausdrucken, Spiegel läuft"
+	else
+		problem "Restore brachte die Ausdrucke von Spiegel nicht zurück"
+	fi
 else
 	problem "restore.sh spiegel endete mit Fehler"
 	tail -8 "$WORK/plain.txt"
 fi
-if run ./scripts/restore.sh spiegel "$good" "$BACKUP_DIR/$(basename "$(ls "$BACKUP_DIR"/uploads-treffsicher-*.tar.gz | head -n 1)")"; then
-	problem "restore.sh nahm einen Uploads-Tar für spiegel an"
+if run ./scripts/restore.sh ringwerk "$(ls -t "$BACKUP_DIR"/ringwerk-*.dump | head -n 1)" "$spiegel_tar"; then
+	problem "restore.sh nahm einen Uploads-Tar für ringwerk an"
 else
-	expect_text "spiegel hat kein Upload-Volume" "restore.sh mit Uploads"
+	expect_text "ringwerk hat kein Upload-Volume" "restore.sh mit Uploads"
 fi
 compose up -d app-spiegel >/dev/null 2>&1
 
