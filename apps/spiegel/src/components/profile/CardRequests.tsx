@@ -13,14 +13,16 @@ import { Input } from "@vereinsheim/ui/input"
 import { Label } from "@vereinsheim/ui/label"
 
 import type { CardRequestStatus } from "@/generated/prisma/client"
-import { cardRequest, cardRequestWithdraw } from "@/lib/admin/consequences"
+import { cardRequest, cardRequestRemove, cardRequestWithdraw } from "@/lib/admin/consequences"
 import {
+  removeCardRequest,
   requestCardAction,
   withdrawCardRequest,
   type CardRequestOutcome,
 } from "@/lib/card-requests/actions"
 import { parseCardId } from "@/lib/card-requests/id"
 import type { OwnRequest } from "@/lib/card-requests/queries"
+import { isRemovable } from "@/lib/card-requests/status"
 import type { ActionResult } from "@/lib/types"
 
 /** der Zustand eines Auftrags in Worten */
@@ -53,10 +55,14 @@ function outcomeText(outcome: CardRequestOutcome): string {
 const LINK =
   "font-semibold text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring"
 
+/** Knopf in einer Zeile der Aufträge: zurückziehen oder entfernen */
+const ROW_ACTION =
+  "inline-flex h-10 items-center rounded-full px-3.5 text-[13px] font-semibold text-destructive hover:bg-destructive-wash focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-60"
+
 /**
  * Scheibe per ID holen (Profil, unter der Sportpassnummer): die ID vom Ausdruck und der Tag der Scheibe, Rückfrage mit
  * Folgen, darunter die Aufträge der letzten Wochen mit Zustand. Eine geholte Scheibe ist ein Link, ein wartender Auftrag
- * lässt sich zurückziehen.
+ * lässt sich zurückziehen, ein beendeter ohne Scheibe entfernen.
  */
 export function CardRequests({
   requests,
@@ -74,6 +80,7 @@ export function CardRequests({
   const [idError, setIdError] = useState<string | null>(null)
   const [asking, setAsking] = useState(false)
   const [withdrawing, setWithdrawing] = useState<OwnRequest | null>(null)
+  const [removing, setRemoving] = useState<OwnRequest | null>(null)
   const [state, setState] = useState<ActionResult<CardRequestOutcome> | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
@@ -206,9 +213,19 @@ export function CardRequests({
                   type="button"
                   disabled={pending}
                   onClick={() => setWithdrawing(request)}
-                  className="inline-flex h-10 items-center rounded-full px-3.5 text-[13px] font-semibold text-destructive hover:bg-destructive-wash focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-60"
+                  className={ROW_ACTION}
                 >
                   Zurückziehen
+                </button>
+              )}
+              {isRemovable(request.status) && (
+                <button
+                  type="button"
+                  disabled={pending}
+                  onClick={() => setRemoving(request)}
+                  className={ROW_ACTION}
+                >
+                  Entfernen
                 </button>
               )}
             </li>
@@ -252,6 +269,27 @@ export function CardRequests({
               setWithdrawing(null)
               if ("error" in result) {
                 setError(getErrorMessage(result) ?? "Der Auftrag ließ sich nicht zurückziehen.")
+                return
+              }
+              router.refresh()
+            })
+          }
+        />
+      )}
+      {removing && (
+        <DecisionDialog
+          decision={cardRequestRemove({ id: removing.hex, day: dayText(removing.day) })}
+          open={removing !== null}
+          onOpenChange={(open) => {
+            if (!open) setRemoving(null)
+          }}
+          onConfirm={() =>
+            startTransition(async () => {
+              setError(null)
+              const result = await removeCardRequest(removing.id)
+              setRemoving(null)
+              if ("error" in result) {
+                setError(getErrorMessage(result) ?? "Der Auftrag ließ sich nicht entfernen.")
                 return
               }
               router.refresh()

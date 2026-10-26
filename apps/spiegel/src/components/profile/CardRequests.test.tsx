@@ -8,6 +8,7 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: () => {} }) }))
 vi.mock("@/lib/card-requests/actions", () => ({
   requestCardAction: async () => ({ success: true }),
   withdrawCardRequest: async () => ({ success: true }),
+  removeCardRequest: async () => ({ success: true }),
 }))
 
 const { CardRequests, REQUEST_STATUS_TEXT } = await import("./CardRequests")
@@ -50,6 +51,26 @@ describe("Abschnitt Scheibe per ID holen", () => {
     expect(html).toContain('href="/cards/c2"')
     // zurückziehen nur, solange nichts geholt ist
     expect(html.match(/Zurückziehen<\/button>/g)).toHaveLength(1)
+  })
+
+  it("entfernen nur bei beendeten Aufträgen ohne Scheibe", () => {
+    const html = render([
+      request({ id: 1, status: "open" }),
+      request({ id: 2, status: "done", cardId: "c1" }),
+      request({ id: 3, status: "missing" }),
+      request({ id: 4, status: "mismatch" }),
+      request({ id: 5, status: "expired" }),
+      request({ id: 6, status: "held" }),
+      request({ id: 7, status: "taken" }),
+      request({ id: 8, status: "withdrawn" }),
+    ])
+    expect(html.match(/Entfernen<\/button>/g)).toHaveLength(6)
+    expect(html.match(/Zurückziehen<\/button>/g)).toHaveLength(1)
+    const row = (status: string) =>
+      html.match(new RegExp(`<li[^>]*data-card-request="${status}"[^>]*>.*?</li>`))![0]
+    expect(row("open")).not.toContain("Entfernen")
+    expect(row("done")).not.toContain("Entfernen")
+    expect(row("missing")).toContain("Entfernen</button>")
   })
 
   it("jeder Zustand hat Worte, ohne Semikolon", () => {
