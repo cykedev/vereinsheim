@@ -14,15 +14,23 @@ SP-4.3 (Design 2 für alle Apps) ist umgesetzt, damit kann Stufe 1 beginnen.
 Die Dev-Datenbank ist eine Kopie von Prod (Stand 26. Oktober 2026). Sie trägt die echten Konten beider Apps und ist
 damit die Grundlage für den Abgleich der Konten und für den Prüfbestand der Übernahme.
 
-## Basisbranch
+## Branches
 
-- Alle Arbeit landet auf `feat/treffsicher-in-spiegel`. Er wird erst nach `main` gemergt, wenn alle vier Stufen fertig
-  sind, und nur mit OK des Users (ff-only).
+Entschieden mit dem User am 26. Oktober 2026:
+
+- **Stufe 1 geht Teil für Teil nach `main`** und in Prod, sobald ein Teil fertig ist, jeweils mit OK des Users
+  (ff-only). Sie berührt Treffsicher nicht und ist für sich nützlich (ADR-033); kleine Deploys sind sicherer als ein
+  großes, und Spiegels Dateien laufen auf einem langen Branch gegen die Fixes auf `main` auseinander. Kindbranches von
+  Stufe 1 zweigen von `main` ab.
+- **Der Basisbranch `feat/treffsicher-in-spiegel` hält Tagebuch, Übernahme und Ruhestand** (V1, Stufen 2 bis 4). Er geht
+  nach `main`, wenn Stufe 2 und das Werkzeug der Übernahme fertig sind, denn die Übernahme Konto für Konto braucht
+  Spiegel mit Tagebuch in Prod. Kindbranches dieser Teile zweigen vom Basisbranch ab.
 - Der Haupt-Checkout steht auf dem Basisbranch. Dort arbeitet nur die koordinierende Session: Teilpläne schreiben und
-  committen, Kindbranches per `git merge --ff-only` übernehmen, den Basisbranch per `git rebase main` nachziehen, wenn
-  `main` sich bewegt (keine Merge-Commits).
-- Jeder Teilplan läuft in einer Kindsession auf einem eigenen Branch `feat/tis-<teil>` in einem eigenen Worktree,
-  abgezweigt vom aktuellen Basisbranch.
+  committen, Kindbranches übernehmen (Basisbranch per `git merge --ff-only`, `main` per `git fetch . <branch>:main`, da
+  `main` nirgends ausgecheckt ist), den Basisbranch per `git rebase main` nachziehen (keine Merge-Commits).
+- Jeder Teilplan läuft in einer Kindsession auf einem eigenen Branch `feat/tis-<teil>` in einem eigenen Worktree. Die
+  Teilpläne schreibt die koordinierende Session auf den Basisbranch; eine Kindsession von Stufe 1 übernimmt ihren Plan
+  als ersten Commit (`git show feat/treffsicher-in-spiegel:plans/<plan>.md`).
 
 ## Regeln für Kindsessions
 
@@ -33,10 +41,10 @@ damit die Grundlage für den Abgleich der Konten und für den Prüfbestand der �
 3. **Rückmeldung nur an die koordinierende Session**, nicht an den User. Fragen, Circuit-Breaker (etwa geschützte Pfade
    wie Schema und Migrationen, ADR-023) und der Abschluss gehen per Nachricht an die koordinierende Session, die mit
    dem User spricht und die Antwort weitergibt.
-4. **Abschluss:** Branch auf den aktuellen Basisbranch rebasen, Gate grün im Worktree (`pnpm check`; der Stop-Hook prüft
+4. **Abschluss:** Branch auf seine Basis rebasen (`main` oder Basisbranch, siehe „Branches“), Gate grün im Worktree (`pnpm check`; der Stop-Hook prüft
    den Haupt-Checkout), dann melden: Branch, Commits, Bericht aus `reports/`, was nicht belegt ist, ob eine neue Brücke
    nötig ist. Kein Merge, kein Push, kein Deploy.
-5. **Aufräumen nach der Übernahme:** Erst wenn die koordinierende Session meldet, dass der Branch im Basisbranch ist,
+5. **Aufräumen nach der Übernahme:** Erst wenn die koordinierende Session meldet, dass der Branch in seiner Basis ist,
    löscht die Kindsession ihren Branch und Worktree und archiviert sich.
 6. **Dev-Datenbank:** Sie ist eine Prod-Kopie und wird nie zurückgesetzt (`db-reset` und `migrate reset` sind tabu).
    Zur selben Zeit ändert höchstens eine Kindsession das Schema einer App. Eine Kindsession mit Dev-Server oder
@@ -81,7 +89,7 @@ Vorgeschlagener Schnitt, endgültig im jeweiligen `/plan`:
   Angabe. Braucht 1a.
 
 Reihenfolge: 1a und 1b zuerst (parallel nur, wenn höchstens eine von beiden das Schema ändert), dann 1c, 1d und 1e,
-soweit sie sich nicht in denselben Dateien treffen.
+soweit sie sich nicht in denselben Dateien treffen. Jeder Teil geht einzeln nach `main` und in Prod.
 
 ### Stufe 2 · Das Tagebuch
 
@@ -106,14 +114,24 @@ Folgen, die der Teilplan von Stufe 3 klärt:
   (ADR-033).
 - **Wiederholbar je Konto:** Ein zweiter Lauf für dasselbe Konto ändert nichts oder ersetzt, was der erste übernommen
   hat. Der Prüfbestand läuft je Konto.
+- **Drei Befehle** (Ergänzungen, entschieden mit dem User am 26. Oktober 2026):
+  - einzeln mit `--from`/`--to`, zum Testen und für die Fälle mit `check`;
+  - über die geprüfte Zuordnungsdatei aus V1 für alle Zeilen mit `ok` und `new`;
+  - `status`: wer übernommen ist, wer nicht, und welche Zeilen der Datei offen sind. So geht niemand vergessen.
+- **Abbruch statt Zusammenführen:** Zeigen zwei Treffsicher-Konten auf dasselbe Spiegel-Konto, oder trägt das Ziel schon
+  Übernommenes aus einem anderen Treffsicher-Konto, bricht der Lauf ab und sagt warum. Ein Tippfehler in der Datei
+  vermischt so nie zwei Personen.
+- **Kurze Zeit mit beiden Apps:** Solange übernommene und nicht übernommene Konten nebeneinander stehen, braucht
+  Treffsicher die Sperre je Konto, und Mitglieder müssen wissen, welche App gilt. Der Teilplan von Stufe 4 legt vorher
+  einen Zeitplan fest: erst das Konto des Users, dann alle übrigen in Tagen, nicht Monaten.
 - **Nach der Übernahme ist das Konto in Treffsicher nur lesend**, mit Hinweis auf Spiegel. Sonst gingen Einträge
   verloren, die danach noch in Treffsicher entstehen. Das ist eine kleine Änderung an Treffsicher, die der Ruhestand
   ohnehin braucht.
 - **Zwei Datenbanken:** Die Übernahme liest Treffsicher und schreibt Spiegel. Die Apps selbst greifen nie quer
   (ADR-002); das CLI läuft als eigener Schritt mit Zugang zu beiden, auch für die Dateien der Anhänge.
 - **Aufruf** über das Ops-CLI `vereinsheim`, auf dem VPS und lokal gegen die Prod-Kopie.
-- **Zeitpunkt in Prod:** Konto für Konto in Prod geht erst, wenn Spiegel mit Tagebuch deployt ist. Der Basisbranch muss
-  dafür auf `main` sein. Bis dahin wird die Übernahme nur lokal gegen die Prod-Kopie geübt.
+- **Zeitpunkt in Prod:** Konto für Konto in Prod geht erst, wenn Spiegel mit Tagebuch deployt ist, also nach dem Merge
+  des Basisbranchs (siehe „Branches“). Bis dahin wird die Übernahme nur lokal gegen die Prod-Kopie geübt.
 - **ADR-033** sagt „Konten ordnen sich über die E-Mail zu“ und „Treffsicher läuft erst nur lesend“ (als Ganzes). Die
   Zuordnung je Konto und das Lesend je Konto verfeinern das; der Teilplan trägt es als Entscheidung in ADR-033 nach.
 
