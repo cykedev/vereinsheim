@@ -7,22 +7,27 @@ import { z } from "zod"
 
 export const READY_LINE = '{"ready":true}'
 
+// die ID landet in Dateinamen und `footerId`, die Ortszeit in der Rechnung der Druckzeit: nur in der Form, die das Paket
+// liefert
+const HEX = z.string().regex(/^[0-9a-f]{8}$/)
+const LOCAL = z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/)
+
 const idSchema = z.discriminatedUnion("kind", [
   z.object({
     kind: z.literal("found"),
-    hex: z.string(),
+    hex: HEX,
     value: z.number().int(),
     pages: z.array(z.number().int()),
   }),
   z.object({ kind: z.literal("missing") }),
-  z.object({ kind: z.literal("conflict"), hexes: z.array(z.string()) }),
+  z.object({ kind: z.literal("conflict"), hexes: z.array(HEX) }),
 ])
 
 const createdAtSchema = z
   .object({
-    local: z.string(),
-    offsetMinutes: z.number().nullable(),
-    epochMs: z.number().nullable(),
+    local: LOCAL,
+    offsetMinutes: z.number().int().nullable(),
+    epochMs: z.number().int().nullable(),
     source: z.enum(["info", "xmp"]),
   })
   .nullable()

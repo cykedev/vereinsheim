@@ -99,6 +99,14 @@ describe("readPrintoutIsolated: Abbruch", () => {
     await expectStillReads()
   })
 
+  it("vom Kernel beendet (SIGKILL ohne eigenen Grund): Speicher", async () => {
+    expect(await readPrintoutIsolated(qtPdf, { script: fixture("killed") })).toEqual({
+      kind: "failed",
+      reason: "memory",
+    })
+    await expectStillReads()
+  })
+
   it("RSS über der Grenze: Speicher", async () => {
     expect(
       await readPrintoutIsolated(qtPdf, { script: fixture("hang"), rssOf: () => 512 * 1024 * 1024 })
@@ -135,6 +143,7 @@ describe("readPrintoutIsolated: Warteschlange", () => {
   it("einer läuft, drei warten, der fünfte ist sofort busy", async () => {
     const states: ReturnType<typeof readerState>[] = []
     const watch = setInterval(() => states.push(readerState()), 10)
+    const started = Date.now()
     const reads = Array.from({ length: 5 }, () =>
       readPrintoutIsolated(qtPdf, { script: fixture("hang"), maxParseMs: 300 })
     )
@@ -149,6 +158,8 @@ describe("readPrintoutIsolated: Warteschlange", () => {
     expect(states.length).toBeGreaterThan(0)
     expect(states.every((state) => state.waiting <= 3)).toBe(true)
     expect(readerState()).toEqual({ running: false, waiting: 0 })
+    // nacheinander, nicht zugleich: vier Zeitgrenzen von je 300 ms hintereinander
+    expect(Date.now() - started).toBeGreaterThanOrEqual(4 * 300)
   }, 15_000)
 })
 

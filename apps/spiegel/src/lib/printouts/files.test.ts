@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto"
+import { createHash, randomUUID } from "node:crypto"
 import { mkdtemp, readdir, readFile, rm, utimes } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
@@ -19,8 +19,10 @@ import {
 const db = createPrismaClient()
 
 const sha = (text: string) => createHash("sha256").update(text).digest("hex")
-const A = sha("a")
-const B = sha("b")
+// je Lauf andere Prüfsummen: Die Dev-Datenbank teilen sich Läufe, auch liegengebliebene
+const RUN = randomUUID()
+const A = sha(`${RUN}-a`)
+const B = sha(`${RUN}-b`)
 const NOW = 1_800_000_000_000
 const GRACE = 10 * 60_000
 const HOUR = 3_600_000
@@ -51,7 +53,7 @@ describe("filesToRemove", () => {
         ...base,
         files: [
           { name: `${A}.pdf`, mtimeMs: old },
-          { name: `${sha("c")}.pdf`, mtimeMs: young },
+          { name: `${sha(`${RUN}-c`)}.pdf`, mtimeMs: young },
           { name: `${B}.pdf`, mtimeMs: old },
           { name: "notes.txt", mtimeMs: old },
           { name: `.tmp-${A}-1`, mtimeMs: old },

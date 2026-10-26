@@ -1,6 +1,9 @@
 // Speichert einen Ausdruck als Original: Größe und Kopf prüfen, sha256, ID und Druckzeit im Kindprozess lesen, dann die
 // Datei nach `UPLOAD_DIR/printouts/<sha256>.pdf`. Nur mit lesbarer ID und Druckzeit entsteht eine Datei.
 //
+// Fehler beim Schreiben der Datei (Rechte, voller Datenträger, `UPLOAD_DIR` fehlt in Produktion) wirft es; abgelehnte
+// Ausdrucke kommen als fester Grund zurück.
+//
 // Keine Zeile in der Datenbank: Die legt `attachPrintout` in der Transaktion des Aufrufers an. Eine Datei ohne Zeile
 // räumt `removeOrphanPrintoutFiles` nach `SWEEP_GRACE_MS` ab.
 

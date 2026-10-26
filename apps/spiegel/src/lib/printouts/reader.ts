@@ -118,6 +118,18 @@ export function readerState(): { running: boolean; waiting: number } {
 
 const failed = (reason: ReadFailure): IsolatedRead => ({ kind: "failed", reason })
 
+/** startet den Kindprozess; null, wenn schon `spawn` scheitert */
+function startChild(script: string | undefined, maxParseMs: number) {
+  try {
+    return spawn(process.execPath, [...readerArgs(script), `--max-parse-ms=${maxParseMs}`], {
+      env: childEnv(),
+      stdio: ["pipe", "pipe", "pipe"],
+    })
+  } catch {
+    return null
+  }
+}
+
 /** ein Kindprozess für ein PDF; löst immer auf, nie mit einem Fehler */
 function runChild(bytes: Uint8Array, options: IsolatedReadOptions): Promise<IsolatedRead> {
   const maxParseMs = options.maxParseMs ?? DEFAULT_LIMITS.maxParseMs
@@ -133,11 +145,8 @@ function runChild(bytes: Uint8Array, options: IsolatedReadOptions): Promise<Isol
     let reason: ReadFailure | null = null
     let settled = false
 
-    const child = spawn(
-      process.execPath,
-      [...readerArgs(options.script), `--max-parse-ms=${maxParseMs}`],
-      { env: childEnv(), stdio: ["pipe", "pipe", "pipe"] }
-    )
+    const child = startChild(options.script, maxParseMs)
+    if (!child) return resolve(failed("crashed"))
 
     const stop = (why: ReadFailure) => {
       reason ??= why
@@ -184,8 +193,10 @@ function runChild(bytes: Uint8Array, options: IsolatedReadOptions): Promise<Isol
       stop("crashed")
       finish(failed(reason ?? "crashed"))
     })
-    child.on("close", (code) => {
+    child.on("close", (code, signal) => {
       if (reason) return finish(failed(reason))
+      // SIGKILL, ohne dass die App ihn schickte: der OOM-Killer (`oom_score_adj` im Kindprozess)
+      if (signal === "SIGKILL") return finish(failed("memory"))
       const line = ready ? Buffer.concat(stdout).toString("utf8").split("\n")[1] : undefined
       const result = code === 0 ? parseResult(line) : null
       if (result) return finish(result)

@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto"
+import { createHash, randomUUID } from "node:crypto"
 import { mkdtemp, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
@@ -14,8 +14,10 @@ import type { StoredPrintout } from "./store"
 const db = createPrismaClient()
 
 const BYTES = new TextEncoder().encode("%PDF-1.4 erfundener Ausdruck")
+// je Lauf andere Prüfsummen: Die Dev-Datenbank teilen sich Läufe, auch liegengebliebene
+const RUN = randomUUID()
 const stored = (text: string, hex = "ff914420"): StoredPrintout => ({
-  sha256: createHash("sha256").update(text).digest("hex"),
+  sha256: createHash("sha256").update(`${RUN}-${text}`).digest("hex"),
   size: text.length,
   fileName: `ausdruck-${hex}.pdf`,
   hex,

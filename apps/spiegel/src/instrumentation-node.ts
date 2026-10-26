@@ -14,7 +14,6 @@ function emptyExpiredTrash() {
     .then(({ purged, failed }) => {
       if (purged) console.warn(`${purged} Scheiben aus dem Papierkorb endgültig gelöscht`)
       if (failed) console.error(`${failed} Scheiben im Papierkorb nicht gelöscht`)
-      sweepPrintoutsSoon(db)
     })
     .catch((error: unknown) =>
       console.error(
@@ -22,6 +21,7 @@ function emptyExpiredTrash() {
         error instanceof Error ? error.name : "unbekannter Fehler"
       )
     )
+    .finally(() => sweepPrintoutsSoon(db))
 }
 
 /** Scheiben mit veralteter Zuordnung ihrer Disziplin nachrechnen; ins Log nur Zahlen und den Namen eines Fehlers */

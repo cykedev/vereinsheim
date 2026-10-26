@@ -133,15 +133,21 @@ export async function removeOrphanPrintoutFiles(
   }
 
   const remove = filesToRemove({ files, referenced, totalRows, nowMs, graceMs })
+  let removed = 0
   for (const name of remove) {
+    // Dieselben Bytes können inzwischen neu geschrieben sein (`rename` auf denselben Namen); dann bleibt die Datei.
+    const before = files.find((file) => file.name === name)
     try {
+      const info = await stat(join(dir, name))
+      if (info.mtimeMs !== before?.mtimeMs) continue
       await unlink(join(dir, name))
+      removed++
     } catch (error) {
       if (!isMissing(error)) throw error
     }
   }
   const skipped = totalRows === 0 && files.some((file) => PDF_FILE.test(file.name))
-  return { removed: remove.length, skipped }
+  return { removed, skipped }
 }
 
 /** räumt im Hintergrund auf; ins Log nur Zahlen und den Namen eines Fehlers */
