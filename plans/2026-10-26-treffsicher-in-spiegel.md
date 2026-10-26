@@ -62,6 +62,11 @@ Entschieden mit dem User am 26. Oktober 2026, gelten für alle Teile:
 - **Keine Detailtiefe ist garantiert.** Eine Scheibe kann nur den Ausdruck haben, nur das Gesamtergebnis, Serien-Summen,
   Treffer in ganzen Ringen oder mit Zehnteln, Lage je Schuss oder nur als Summe, Zeit je Schuss. Jede Ansicht und jede
   Zahl kommt mit jeder Kombination zurecht und zeigt ihre Grundlage.
+- **Immer das Maximum an Daten speichern.** Zehntel werden nie abgeschnitten, auch nicht bei Disziplinen in ganzen
+  Ringen: gespeichert wird, was die Quelle hergibt, gewertet wird in der Ansicht (Ring und Zehntel getrennt, wie
+  `Shot.ring` und `Shot.decimalTenths` heute). Eingaben von Hand und der Parser (1c) nehmen Zehntel, wo es sie gibt. Nur
+  die Übernahme aus Treffsicher bringt bei Disziplinen in ganzen Ringen nur ganze Ringe, weil Treffsicher die Zehntel
+  beim Import abgeschnitten hat.
 - **An dem orientieren, was es schon gibt.** Bedienung und Modell knüpfen an Spiegel und Treffsicher an (etwa: erst
   Disziplin und Art wählen wie in Treffsicher), statt Neues zu erfinden.
 
@@ -92,7 +97,35 @@ Vorgeschlagener Schnitt, endgültig im jeweiligen `/plan`:
   Ausdruck“ und „nur das Gesamtergebnis“ ergänzen die Tabelle in ADR-033), Serien-Summen ohne Schüsse, eingetragene
   Disziplinen ohne Meyton-ID mit Familie, fremde Orte als `Site` ohne Brücke, Projektion und `needs`/`onMissing` für die
   neuen Angaben, wie Liste, Seite der Scheibe und Fortschritt jede Detailtiefe zeigen. Schema, interaktiv. Der Plan
-  entsteht gemeinsam mit dem User.
+  entsteht gemeinsam mit dem User. Entschieden für 1a (26. Oktober 2026):
+  - **Disziplinen aus derselben Liste:** Eine Scheibe von Hand, von einer fremden Anlage oder aus Treffsicher nimmt eine
+    Disziplin aus Admin → Disziplinen (eingeordnet, nicht ignoriert), wie Scheiben der Brücke. Fehlt eine, legt der
+    Admin sie an, auch ohne Meyton-ID (`Discipline.meytonId` wird optional). Keine Disziplinen je Schütze; die
+    „eingetragenen Disziplinen“ aus ADR-033 entfallen. Der Ort ist eine eigene Angabe der Scheibe.
+  - **Ort als Freitext** an der Scheibe, mit Vorschlägen aus den eigenen bisherigen Orten; keine Liste der Orte, kein
+    `Site` für fremde Orte. Scheiben der Brücke tragen den Ort über ihre Anlage. Daheim ist die eigene Anlage, alles
+    andere auswärts.
+  - **Schusszahl bei Summen:** Ohne Einzelschüsse gilt jede Serie als ganze Serie (Serienlänge der Disziplin), ein
+    Gesamtergebnis ohne Serien als volle Schusszahl der Disziplin, außer der Schütze gibt etwas anderes an. Die Zahl
+    wird gespeichert, damit Ø je Schuss und Zeiträume (ADR-034) nicht neu raten. Vollständig ist eine Scheibe, wenn
+    ihre Schusszahl der Disziplin entspricht; eine unvollständige zählt im Ø je Schuss, nicht bei Rekorden des
+    Gesamtergebnisses.
+  - **Trefferlage als Summe zählt nur für die Lage:** Sie ist die Mitte der Schüsse und geht gewichtet mit der
+    Schusszahl in Versatz und Richtung über Zeiträume ein, zusammen mit den Scheiben mit Lage je Schuss. Für die
+    Streuung (Streukreis, R50, σ, engste Gruppe) zählt sie nicht; die Grundlage nennt solche Scheiben. Ein Urteil
+    („versetzt“) braucht die Streuung einzelner Schüsse; aus Summen allein sagt Spiegel die Lage ohne Urteil. Auf der
+    Seite der Scheibe steht die Mitte als Kreuz mit „nur Trefferlage vom Ausdruck“.
+  - **Wörter der Herkunft** (leise im Kopf der Scheibe, Filter in der Liste statt „Nur PDF“): „gemessen“ (Brücke),
+    „vom Ausdruck“ (Scan, Upload), „eingetragen“ (von Hand und aus Treffsicher). Gespeichert bleibt die Herkunft
+    „Treffsicher“ getrennt, damit die Übernahme sich wiederholen und Dubletten finden kann; sichtbar und änderbar ist so
+    eine Scheibe wie eine eingetragene. Fehlende Angaben zeigt die Seite als „–“ mit Grund: „wartet auf die Anlage“
+    (noch ohne Werte, zählt in keiner Zahl), „nur Serien-Summen“, „nur Gesamtergebnis“, „ohne Zehntel“.
+  - **Treffsicher-Einheiten ohne Werte** (weder Summe noch Schuss) werden keine Scheibe, nur ein Tagebucheintrag
+    (Stufe 2 und 3).
+  - **Schnitt:** 1a-1 „Modell und Fachkern“ (Schema, Projektion aus dem, was da ist; interaktiv), dann 1a-2
+    „Ansichten“ (Liste, Start, Seite der Scheibe, Fortschritt, Vergleichen mit „–“ und Grund und der Grundlage in jeder
+    Zahlengruppe; **1e geht darin auf**), dazu erfundene Demo-Scheiben in jeder Detailtiefe für `seed:own --demo` und
+    die Skriptprüfung. 1a-1 läuft parallel zu 1b-1.
 - **1b QR-Weg (SP-1.7 b):** Scannen (Kamera, Link), PDF von erlaubten Adressen in einem kurzlebigen Kindprozess,
   PDF-Volume samt Backup, Auftrag an die Brücke. Berührt Deploy-Vertrag und `scripts/`, interaktiv.
   1b liefert „PDF hängt an, die Brücke holt die Scheibe“; ein Ergebnis aus dem PDF bringt erst 1c.
@@ -147,11 +180,10 @@ Vorgeschlagener Schnitt, endgültig im jeweiligen `/plan`:
     abgeglichen über ID und Abend, wie bei „Scheibe per ID“.
 - **1d Handeingabe (SP-4.4):** „Ergebnis eintragen“ je Serie und je Schuss, Trefferlage als Summe, Beleg an der Scheibe,
   eigene Einträge ändern und löschen. Braucht 1a, für den Beleg den Datei-Speicher aus 1b.
-- **1e Grundlage sichtbar:** „Streuung über 12 von 20 Scheiben, 8 ohne Lage“ in jeder Zahlengruppe, Rekorde je
-  Angabe. Braucht 1a.
+- **1e Grundlage sichtbar:** geht in 1a-2 auf (entschieden mit dem User am 26. Oktober 2026).
 
-Reihenfolge: 1b-1 und 1a parallel (1b-1 ändert kein Schema), dann 1b-2, dann 1c, 1d und 1e, soweit sie sich nicht in
-denselben Dateien treffen. Jeder Teil geht einzeln nach `main` und in Prod.
+Reihenfolge: 1b-1 und 1a-1 parallel (1b-1 ändert kein Schema), dann 1a-2; danach 1b-2, 1d und 1c in einer Reihenfolge,
+die wir nach 1a festlegen. Jeder Teil geht einzeln nach `main` und in Prod.
 
 ### Stufe 2 · Das Tagebuch
 
@@ -211,12 +243,13 @@ nach Stufe 3. Wie Treffsicher lesend läuft, solange der Basisbranch nicht auf `
 | Teil | Plan | Branch | Session | Stand |
 |---|---|---|---|---|
 | V1 | `plans/2026-10-26-tis-v1-accounts.md` | `feat/tis-v1-accounts` | tis-v1-accounts | im Basisbranch (`f7edbdab`) |
-| 1a | | | | als Nächstes planen |
-| 1b-1 | `plans/2026-10-26-tis-1b1-printouts.md` | `feat/tis-1b1-printouts` (von `main`) | | geplant |
+| 1a-1 | | | | in Planung |
+| 1a-2 | | | | offen, nach 1a-1 |
+| 1b-1 | `plans/2026-10-26-tis-1b1-printouts.md` | `feat/tis-1b1-printouts` (von `main`) | tis-1b1-printouts | in Arbeit (`--lite-mode` für den Leser freigegeben) |
 | 1b-2 | | | | offen, nach 1a |
 | 1c | | | | offen |
 | 1d | | | | offen |
-| 1e | | | | offen |
+| 1e | | | | in 1a-2 |
 | 2 | | | | offen |
 | 3 | | | | offen |
 | 4 | | | | offen |
