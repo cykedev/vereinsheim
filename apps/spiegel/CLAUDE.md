@@ -296,7 +296,9 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
   er, bis sie endgültig ist (`finishRequests` im Heartbeat, dann `done`); `recordHeartbeat` schließt `missing`, `held`
   und `mismatch` aus `requestsDone` nur ohne Scheibe. Eine Zustimmung per Sportpass geht vor, auch eine wartende eines
   anderen Kontos. Gesperrte Abende nimmt `requestCard` gar nicht an (`blocked`). Nach 30 Tagen `expireRequests`: mit
-  Scheibe `done`, ohne `expired`. Abschnitt `CardRequests` im Profil, Texte `cardRequest`, `cardRequestWithdraw`.
+  Scheibe `done`, ohne `expired`. Abschnitt `CardRequests` im Profil, Texte `cardRequest`, `cardRequestWithdraw`. Ein
+  beendeter Auftrag ohne Scheibe lässt sich im Profil entfernen (`isRemovable` in `src/lib/card-requests/status.ts`,
+  `removeRequest` löscht die Zeile, Text `cardRequestRemove`).
 - **Ältere Scheiben nachladen:** Eine aktive Zustimmung ohne
   `historyLoadedAt` ist ein Auftrag mit `since` (`historyRequestedAt`, gesetzt beim Bestätigen und Aufheben; alte Zeilen:
   `confirmedAt`); `bridgeState` nennt sie in `history` und liefert dann alle Sperren, nicht nur die jüngsten 60 Tage.

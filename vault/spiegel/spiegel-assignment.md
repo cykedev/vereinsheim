@@ -63,7 +63,8 @@ importieren“):
    und den Tag der Scheibe. Die Rückfrage sagt, was passiert (`cardRequest`). Liegt die Scheibe dieses Abends schon in
    Spiegel, gibt es keinen Auftrag: beim Schützen der Weg zu ihr, bei einem anderen Konto nur „gehört zu einem anderen
    Konto“. Ist sie an diesem Abend gelöscht oder als „nicht meine“ gemeldet, auch nicht. Höchstens zehn offene Aufträge
-   je Konto; ein wartender lässt sich zurückziehen.
+   je Konto; ein wartender lässt sich zurückziehen, ein beendeter ohne Scheibe (nicht gefunden, an diesem Tag nicht
+   gefunden, keine Antwort, gehalten, vergeben, zurückgezogen) entfernen.
 2. **Auftrag** (`CardRequest`): `GET /state` nennt ihn der Brücke (`requests`, ScheibenID und Abend). Die Brücke liest
    die ScheibenID beim nächsten Durchgang, auch während geschossen wird, und schickt sie ohne Zustimmung, wenn ihr
    Beginn auf den Abend fällt (vor 4 Uhr der Vortag, `filter.Evening`); sonst meldet sie „anderer Tag“ (`mismatch`).
