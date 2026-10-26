@@ -2,7 +2,7 @@
 id: vps-resource-sizing
 type: concept
 title: "vps-resource-sizing"
-keywords: [Ressourcen, RAM, Sizing, Speicher, VPS-Größe, Arbeitsspeicher, resource sizing, memory, mem_limit, IONOS, Dimensionierung, memory.peak, Spitze, Messung, cgroup, OOM]
+keywords: [Ressourcen, RAM, Sizing, Speicher, VPS-Größe, Arbeitsspeicher, resource sizing, memory, mem_limit, IONOS, Dimensionierung, memory.peak, Spitze, Messung, cgroup, OOM, Leistung, Performance, bun, Multithreading, CPU, Postgres-Tuning]
 tags: [ops-constraint]
 relates_to: ["[[overview]]", "[[node-heap-above-container-limit]]"]
 part_of: ["[[operations]]"]
@@ -149,6 +149,26 @@ docker compose exec -T app-spiegel node --max-old-space-size=48 --max-semi-space
 
 Erwartet: `"kind":"found"` und `"maxRssKb":<kB>`, danach in der zweiten Zeile die Werte mit `"kind":"ok"` und
 ihrem `"maxRssKb"` (der höhere zählt).
+
+## Später: Leistung der Container
+
+Festgehalten am 26. Oktober 2026 auf Wunsch des Users, ohne Messung. Engpass ist der Speicher, nicht die CPU. Die Hebel
+in dieser Reihenfolge:
+
+1. **Treffsicher abschalten** ([[adr-033]], Stufe 4): Das macht das größte Limit der drei Apps frei (320 MB). Spiegel
+   bekommt danach mehr als 256 MB.
+2. **Messen** mit `tools/stack-e2e/run.sh --load` und dem Messbefehl unten, erst danach Feinarbeit.
+3. **Feinarbeit an Node und Next**, wenn eine App an ihre Grenze kommt: Heap-Grenzen je App, den Cache von Next im
+   Speicher verkleinern oder abschalten (`cacheMaxMemorySize`), weniger Daten an den Browser.
+4. **Postgres** an die Größe des VPS anpassen (`shared_buffers`, `work_mem`); die Datenbank ist der größte Block.
+
+Nicht jetzt:
+
+- **Bun statt Node:** Next 16 standalone, Prisma 7 mit `adapter-pg`, NextAuth v4, vitest und der Kindprozess für
+  Ausdrucke sind auf Node gebaut und geprüft. Der Gewinn ist ungemessen, das Risiko trifft auch Ringwerk mit echten
+  Wettkämpfen. Höchstens als Versuch an Spiegel allein, wenn eine Messung ein echtes Problem zeigt.
+- **Multithreading:** Bei rund 15 Mitgliedern gibt es kaum gleichzeitige Last; die einzige rechenlastige Arbeit, das
+  Lesen der Ausdrucke, läuft schon in einem eigenen Prozess.
 
 ## Swap als Sicherheitsnetz
 
