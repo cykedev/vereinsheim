@@ -11,26 +11,13 @@ vi.mock("@/lib/admin/site-actions", () => ({
   revokeBridgeAction: async () => ({ success: true }),
   removeBridgeAction: async () => ({ success: true }),
   saveSite: async () => ({ success: true }),
-  setRankingKind: async () => ({ success: true }),
 }))
 
-const { BridgeItem, bridgeActionOf, PairBridgeForm, RankingItem, SiteForm } =
-  await import("./SiteForms")
+const { BridgeItem, bridgeActionOf, PairBridgeForm, SiteForm } = await import("./SiteForms")
 const actions = await import("@/lib/admin/site-actions")
 const { bridgeRemove, bridgeRevoke } = await import("@/lib/admin/consequences")
 
 describe("Anlage und Brücke (Markup)", () => {
-  it("Liste: „Nicht festgelegt“, Training, Wettkampf; keine sofortige Speicherung im Markup", () => {
-    const html = renderToStaticMarkup(
-      createElement(RankingItem, {
-        ranking: { id: 1, name: "RWK_LP", kind: null, cards: 23 },
-      })
-    )
-    expect(html).toContain(">Nicht festgelegt<")
-    expect(html).toContain("23 Scheiben")
-    expect(html).toContain('aria-label="Art der Liste RWK_LP"')
-  })
-
   it("„Entfernen“ nur an einer getrennten Brücke, „Trennen“ nur an einer laufenden", () => {
     const item = (revoked: boolean) =>
       renderToStaticMarkup(
@@ -140,16 +127,11 @@ describe("Anlage und Brücke (Markup)", () => {
     expect(html).toContain("Lässt sich nicht mehr ändern, weil schon Scheiben da sind.")
   })
 
-  it("„Listen“ statt „Ranglisten“ auf der Seite", () => {
+  it("die Listen stehen nicht mehr hier, sondern in ihrem eigenen Bereich", () => {
     const page = readFileSync(join(__dirname, "../../app/(app)/admin/site/page.tsx"), "utf8")
     // nur der Text der Seite, ohne Kommentare
-    const text = page.replace(/\/\/.*$/gm, "").replace(/\s+/g, " ")
-    expect(text).not.toMatch(/Rangliste/)
-    expect(text).toContain('Listen <AdminHelp id="ranking" />')
-    expect(text).toContain(
-      "In Meyton gehört jede Scheibe zu einer Liste. Leg hier fest, welche Listen als Wettkampf zählen."
-    )
-    expect(text).toContain("Die Listen erscheinen hier, sobald die ersten Scheiben da sind.")
+    const text = page.replace(/\/\/.*$/gm, "")
+    expect(text).not.toMatch(/Listen|Ranking/)
   })
 
   it("kein „Epoche“ in Seite und Bausteinen", () => {

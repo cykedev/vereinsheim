@@ -4,9 +4,8 @@ import { formatDateOnly, formatDateTime } from "@vereinsheim/lib/format"
 import { requireAdmin } from "@/lib/auth-helpers"
 import { db } from "@/lib/db"
 
-// Lesen für die Admin-Seite „Anlage“: Anlage, Brücken mit ihrem letzten Heartbeat, Ranglisten
-// (Zustimmungen: `src/lib/consent/queries.ts`). Jede Funktion prüft selbst (`requireAdmin`), das Layout allein
-// schützt die Daten nicht.
+// Lesen für die Admin-Seite „Anlage“: Anlage, Brücken mit ihrem letzten Heartbeat (Listen: `rankings.ts`, Zustimmungen:
+// `src/lib/consent/queries.ts`). Jede Funktion prüft selbst (`requireAdmin`), das Layout allein schützt die Daten nicht.
 
 export interface BridgeRow {
   id: number
@@ -25,19 +24,10 @@ export interface BridgeRow {
   heldBack: string | null
 }
 
-/** eine Rangliste der Anlage mit der Art, die der Admin ihr gibt; null: nicht zugeordnet (dann gilt Training) */
-export interface RankingRow {
-  id: number
-  name: string
-  kind: "training" | "competition" | null
-  cards: number
-}
-
 export interface SiteOverview {
   /** `hasCards`: es gibt schon Scheiben; dann ist die Zeitzone fest */
   site: { id: number; name: string; timeZone: string; hasCards: boolean } | null
   bridges: BridgeRow[]
-  rankings: RankingRow[]
 }
 
 const when = (date: Date | null, timeZone: string) => (date ? formatDateTime(date, timeZone) : null)
@@ -49,23 +39,12 @@ export async function siteOverview(timeZone: string): Promise<SiteOverview> {
     orderBy: { id: "asc" },
     select: { id: true, name: true, timeZone: true },
   })
-  if (!site) return { site: null, bridges: [], rankings: [] }
-  const [cards, bridges, rankings] = await Promise.all([
+  if (!site) return { site: null, bridges: [] }
+  const [cards, bridges] = await Promise.all([
     db.card.count({ where: { source: { siteId: site.id } } }),
     db.bridge.findMany({
       where: { siteId: site.id },
       orderBy: [{ revokedAt: { sort: "asc", nulls: "first" } }, { createdAt: "desc" }],
-    }),
-    db.ranking.findMany({
-      where: { siteId: site.id },
-      orderBy: { name: "asc" },
-      select: {
-        id: true,
-        name: true,
-        kind: true,
-        // nur Scheiben, die es in Spiegel noch gibt
-        _count: { select: { cards: { where: { deletedAt: null } } } },
-      },
     }),
   ])
   return {
@@ -89,12 +68,6 @@ export async function siteOverview(timeZone: string): Promise<SiteOverview> {
         heldBack: heldBackText(heartbeat?.heldBack ?? []),
       }
     }),
-    rankings: rankings.map((r) => ({
-      id: r.id,
-      name: r.name,
-      kind: r.kind,
-      cards: r._count.cards,
-    })),
   }
 }
 

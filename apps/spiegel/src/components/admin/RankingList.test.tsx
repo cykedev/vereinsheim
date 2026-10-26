@@ -1,3 +1,6 @@
+import { readFileSync } from "node:fs"
+import { join } from "node:path"
+
 import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it, vi } from "vitest"
@@ -61,5 +64,19 @@ describe("Blatt einer Liste (Markup)", () => {
   it("„Nicht festgelegt“ ist gewählt, solange die Liste keine Art hat", () => {
     const html = renderToStaticMarkup(createElement(RankingForm, { row: row(5, null) }))
     expect(html).toMatch(/aria-checked="true"[^>]*>Nicht festgelegt</)
+  })
+})
+
+describe("Seite „Listen“", () => {
+  it("„Listen“ statt „Ranglisten“, mit dem Satz und dem Leertext", () => {
+    const page = readFileSync(join(__dirname, "../../app/(app)/admin/lists/page.tsx"), "utf8")
+    // nur der Text der Seite, ohne Kommentare
+    const text = page.replace(/\/\/.*$/gm, "").replace(/\s+/g, " ")
+    expect(text).not.toMatch(/Rangliste/)
+    expect(text).toContain('title="Listen" help="ranking"')
+    expect(text).toContain(
+      "In Meyton gehört jede Scheibe zu einer Liste. Leg hier fest, welche Listen als Wettkampf zählen."
+    )
+    expect(text).toContain("Die Listen erscheinen hier, sobald die ersten Scheiben da sind.")
   })
 })

@@ -2,8 +2,8 @@ import type { Metadata } from "next"
 
 import { getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
 
-import { AdminTabs } from "@/components/admin/AdminTabs"
-import { BridgeItem, PairBridgeForm, RankingItem, SiteForm } from "@/components/admin/SiteForms"
+import { AdminHeader } from "@/components/admin/AdminHeader"
+import { BridgeItem, PairBridgeForm, SiteForm } from "@/components/admin/SiteForms"
 import { AdminHelp } from "@/components/admin/AdminHelp"
 import { Page } from "@vereinsheim/ui/design2/page"
 import { PAGE_SINGLE } from "@vereinsheim/shot-ui/layout/columns"
@@ -13,8 +13,8 @@ import { siteOverview } from "@/lib/admin/site"
 
 export const metadata: Metadata = { title: "Anlage" }
 
-// Anlage und Brücke (Admin): Name und Zeitzone, gekoppelte Brücken, „Brücke koppeln“, Listen; jede Änderung mit
-// Folgen fragt (`DecisionDialog`)
+// Anlage und Brücke (Admin): Name und Zeitzone, gekoppelte Brücken, „Brücke koppeln“; jede Änderung mit Folgen fragt
+// (`DecisionDialog`). Die Listen aus Meyton haben einen eigenen Bereich (`/admin/lists`).
 export default async function AdminSiteRoute() {
   await requireAdmin()
   const timeZone = getDisplayTimeZone()
@@ -22,16 +22,10 @@ export default async function AdminSiteRoute() {
   return (
     <Page>
       <section className={cn("grid gap-4", PAGE_SINGLE)}>
-        <div className="grid gap-3">
-          <AdminTabs current="site" />
-          <h1 className="font-display text-[1.7rem] leading-tight font-bold tracking-tight">
-            Anlage und Brücke
-          </h1>
-          <p className="text-foreground-2">
-            Die Brücke ist ein kleines Gerät im Schützenhaus. Sie liest die Scheiben der
-            Meyton-Anlage und schickt Spiegel nur die von Schützen, die zugestimmt haben.
-          </p>
-        </div>
+        <AdminHeader current="site" title="Anlage und Brücke">
+          Die Brücke ist ein kleines Gerät im Schützenhaus. Sie liest die Scheiben der Meyton-Anlage
+          und schickt Spiegel nur die von Schützen, die zugestimmt haben.
+        </AdminHeader>
         <SiteForm site={overview.site} />
         {overview.site && (
           <>
@@ -50,27 +44,6 @@ export default async function AdminSiteRoute() {
               )}
             </section>
             <PairBridgeForm />
-            <section className="grid gap-3 rounded-2xl border border-border bg-card p-5">
-              <h2 className="flex items-center gap-1 text-[15px] font-semibold">
-                Listen <AdminHelp id="ranking" />
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                In Meyton gehört jede Scheibe zu einer Liste. Leg hier fest, welche Listen als
-                Wettkampf zählen. Alle anderen zählen so, wie Meyton sie vermerkt. Meist ist das
-                Training.
-              </p>
-              {overview.rankings.length ? (
-                <ul className="divide-y divide-border rounded-xl border border-border">
-                  {overview.rankings.map((ranking) => (
-                    <RankingItem key={ranking.id} ranking={ranking} />
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  Die Listen erscheinen hier, sobald die ersten Scheiben da sind.
-                </p>
-              )}
-            </section>
           </>
         )}
       </section>

@@ -5,25 +5,18 @@ import { useActionState, useEffect, useState, useTransition } from "react"
 
 import { getErrorMessage, getFieldError, getGeneralError } from "@vereinsheim/lib/forms/fieldErrors"
 import { Button } from "@vereinsheim/ui/button"
-import { Segmented } from "@vereinsheim/ui/design2/segmented"
 import { FieldError } from "@vereinsheim/ui/field-error"
 import { Input } from "@vereinsheim/ui/input"
 import { Label } from "@vereinsheim/ui/label"
 import { DecisionDialog } from "@vereinsheim/ui/design2/decision-dialog"
 import { BRIDGE_STATUS_TEXT } from "@/lib/admin/bridge-status"
-import {
-  bridgeRemove,
-  bridgeRevoke,
-  rankingKind,
-  type RankingChoice,
-} from "@/lib/admin/consequences"
-import type { BridgeRow, RankingRow, SiteOverview } from "@/lib/admin/site"
+import { bridgeRemove, bridgeRevoke } from "@/lib/admin/consequences"
+import type { BridgeRow, SiteOverview } from "@/lib/admin/site"
 import {
   pairBridge,
   removeBridgeAction,
   revokeBridgeAction,
   saveSite,
-  setRankingKind,
 } from "@/lib/admin/site-actions"
 
 import { AdminHelp } from "./AdminHelp"
@@ -233,69 +226,6 @@ export function BridgeItem({ bridge }: { bridge: BridgeRow }) {
             const result = await action.run(bridge.id)
             if ("error" in result) setError(getErrorMessage(result) ?? null)
             else router.refresh()
-          })
-        }
-      />
-    </li>
-  )
-}
-
-const RANKING_OPTIONS = [
-  { value: "open", label: "Nicht festgelegt" },
-  { value: "training", label: "Training" },
-  { value: "competition", label: "Wettkampf" },
-] as const
-
-/**
- * eine Liste aus Meyton (`Ranking`) mit ihrer Art; gespeichert erst nach dem Dialog mit den Folgen, weil eine Wahl
- * alle Scheiben der Liste umstellt
- */
-export function RankingItem({ ranking }: { ranking: RankingRow }) {
-  const router = useRouter()
-  const saved: RankingChoice = ranking.kind ?? "open"
-  const [wanted, setWanted] = useState<RankingChoice>(saved)
-  const [asking, setAsking] = useState(false)
-  const [pending, startTransition] = useTransition()
-  const [error, setError] = useState<string | null>(null)
-  return (
-    <li
-      className="flex flex-wrap items-center justify-between gap-3 px-4 py-3"
-      data-ranking={ranking.id}
-    >
-      <span className="grid min-w-0">
-        <span className="truncate text-[15px] font-semibold">{ranking.name}</span>
-        <span className="text-[13px] text-muted-foreground">
-          {ranking.cards === 1 ? "1 Scheibe" : `${ranking.cards} Scheiben`}
-        </span>
-        {error && (
-          <span role="alert" className="text-[13px] text-destructive">
-            {error}
-          </span>
-        )}
-      </span>
-      <Segmented
-        label={`Art der Liste ${ranking.name}`}
-        options={RANKING_OPTIONS}
-        // während gefragt und gespeichert wird, steht die Wahl da; Abbrechen zeigt wieder die gespeicherte
-        value={asking || pending ? wanted : saved}
-        onChange={(value) => {
-          if (pending || value === saved) return
-          setWanted(value)
-          setAsking(true)
-        }}
-      />
-      <DecisionDialog
-        decision={rankingKind({ ranking: ranking.name, cards: ranking.cards, kind: wanted })}
-        open={asking}
-        onOpenChange={setAsking}
-        onConfirm={() =>
-          startTransition(async () => {
-            const result = await setRankingKind(ranking.id, wanted)
-            if ("error" in result) setError(getErrorMessage(result) ?? null)
-            else {
-              setError(null)
-              router.refresh()
-            }
           })
         }
       />
