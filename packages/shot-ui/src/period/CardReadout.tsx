@@ -7,7 +7,6 @@ import { formatDateOnly, formatShortDay } from "@vereinsheim/lib/format"
 import { cn } from "@vereinsheim/lib/utils"
 
 import { formatSigned, formatValue, unitText } from "../format"
-import { groupView } from "../geometry"
 import { HelpButton } from "../help/HelpButton"
 import { MiniTarget } from "../target/MiniTarget"
 import { KIND_TEXT } from "../list/KindMark"
@@ -138,7 +137,7 @@ export function CardReadout({
             className="block aspect-square w-full"
           />
         ) : marks.length > 0 ? (
-          <MiniTarget target={target} view={groupView(target, marks)} shots={marks} />
+          <MiniTarget target={target} shots={marks} />
         ) : (
           <p className="text-[13px] text-muted-foreground">ohne Lage</p>
         )}

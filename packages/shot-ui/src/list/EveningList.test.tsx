@@ -63,6 +63,17 @@ const text = (html: string) =>
     .replace(/\s+/g, " ")
     .trim()
 
+/** jede kleine Scheibe im Markup: wo steht sie, und wie breit ist sie */
+const miniViews = (html: string) =>
+  [...html.matchAll(/<svg viewBox="([-\d.]+) ([-\d.]+) ([\d.]+) [\d.]+"/g)].map((m) => ({
+    x: Number(m[1]),
+    y: Number(m[2]),
+    w: Number(m[3]),
+  }))
+/** die Mitte der Scheibe in der Mitte der Kachel (Ausschnitt auf 1 µm) */
+const centred = (v: { x: number; y: number; w: number }) =>
+  Math.abs(v.x + v.w / 2) < 0.001 && Math.abs(v.y + v.w / 2) < 0.001
+
 describe("Scheiben-Liste nach Abend (Form wie die Liste eines Zeitraums)", () => {
   const html = render()
 
@@ -244,5 +255,16 @@ describe("KindMark: der Pokal gold und gut zu sehen", () => {
     const competition = renderToStaticMarkup(h(KindMark, { kind: "competition" }))
     expect(competition).toMatch(/lucide-trophy[^"]*\bsize-4\b[^"]*\btext-gold\b/)
     expect(renderToStaticMarkup(h(KindMark, { kind: "training" }))).not.toContain("<svg")
+  })
+})
+
+describe("Kleine Scheiben der Liste", () => {
+  it("stehen um die Mitte, der Spiegel in jeder Zeile gleich groß", () => {
+    const html = render()
+    const tiles = miniViews(html.slice(html.indexOf("<tbody")))
+    // drei Scheiben Luftgewehr, Treffer auf 0 bis 0,2 mm: 15,25 · 1,6 · 2 = 48,8
+    expect(tiles).toHaveLength(3)
+    expect(tiles.every(centred)).toBe(true)
+    expect(tiles.every((v) => Math.abs(v.w - 48.8) < 0.001)).toBe(true)
   })
 })

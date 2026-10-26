@@ -70,6 +70,17 @@ const CARDS = [
   lp(periodCard("b", 0, [88], { startedAtMs: at(25, 19) })),
 ]
 
+/** jede kleine Scheibe im Markup: wo steht sie, und wie breit ist sie */
+const miniViews = (html: string) =>
+  [...html.matchAll(/<svg viewBox="([-\d.]+) ([-\d.]+) ([\d.]+) [\d.]+"/g)].map((m) => ({
+    x: Number(m[1]),
+    y: Number(m[2]),
+    w: Number(m[3]),
+  }))
+/** die Mitte der Scheibe in der Mitte der Kachel (Ausschnitt auf 1 µm) */
+const centred = (v: { x: number; y: number; w: number }) =>
+  Math.abs(v.x + v.w / 2) < 0.001 && Math.abs(v.y + v.w / 2) < 0.001
+
 describe("Block des letzten Abends auf Start", () => {
   const html = render(CARDS)
 
@@ -231,5 +242,17 @@ describe("Block des letzten Abends auf Start", () => {
   it("nur Tokens, keine Palette-Klassen, Schrift ab text-xs", () => {
     expect(html).not.toMatch(/\b(text|bg|border)-(red|green|blue|amber|slate|gray)-\d/)
     expect(html).not.toMatch(/text-\[(?:[0-9]|1[01])px\]/)
+  })
+})
+
+describe("Kleine Scheiben auf Start", () => {
+  it("stehen um die Mitte, der Spiegel in jeder Kachel gleich groß", () => {
+    // ab der ersten Kachel: Symbol und Verlauf davor zählen nicht
+    const html = render(CARDS)
+    const tiles = miniViews(html.slice(html.indexOf("data-start-card")))
+    // Treffer auf 0 bis 0,1 mm, also der Ausschnitt des Spiegels: 29,75 · 1,6 · 2 = 95,2
+    expect(tiles).toHaveLength(2)
+    expect(tiles.every(centred)).toBe(true)
+    expect(tiles.every((v) => Math.abs(v.w - 95.2) < 0.001)).toBe(true)
   })
 })

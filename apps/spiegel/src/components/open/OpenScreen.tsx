@@ -6,7 +6,6 @@ import { useMemo, useState, useTransition } from "react"
 import type { CardMark, MarkShot } from "@vereinsheim/shot-core/projection"
 import { TARGETS } from "@vereinsheim/shot-core/targets"
 import { getErrorMessage } from "@vereinsheim/lib/forms/fieldErrors"
-import { groupView } from "@vereinsheim/shot-ui/geometry"
 import { MiniTarget } from "@vereinsheim/shot-ui/target/MiniTarget"
 import { Button } from "@vereinsheim/ui/button"
 
@@ -95,12 +94,7 @@ function PendingCard({ item, marks }: { item: PendingItem; marks: MarkShot[] }) 
     >
       <div className="flex items-center gap-3">
         {item.targetId && marks.length ? (
-          <MiniTarget
-            target={target}
-            view={groupView(target, marks)}
-            shots={marks}
-            className="size-14 shrink-0"
-          />
+          <MiniTarget target={target} shots={marks} className="size-14 shrink-0" />
         ) : null}
         <div className="grid min-w-0">
           <span className="text-[15px] font-semibold">{item.when}</span>

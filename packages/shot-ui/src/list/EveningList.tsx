@@ -13,7 +13,6 @@ import {
 import { cn } from "@vereinsheim/lib/utils"
 
 import { formatSigned, formatValue } from "../format"
-import { groupView } from "../geometry"
 import { JUMP_BAR } from "@vereinsheim/ui/design2/bar"
 import { RouteLink, shouldIntercept, useRouteNavigate } from "../nav/RouteLink"
 import type { CardRoute, ListRoute } from "../nav/routes"
@@ -232,12 +231,7 @@ export function EveningList({
                                 className="block cursor-pointer rounded-full focus-visible:outline-2 focus-visible:outline-ring"
                               >
                                 {placed.length ? (
-                                  <MiniTarget
-                                    target={target}
-                                    view={groupView(target, placed)}
-                                    shots={placed}
-                                    className="size-8"
-                                  />
+                                  <MiniTarget target={target} shots={placed} className="size-8" />
                                 ) : (
                                   <span className="block size-8" aria-hidden="true" />
                                 )}

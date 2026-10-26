@@ -44,6 +44,17 @@ const render = (props: Partial<Parameters<typeof CardReadout>[0]> = {}) =>
     })
   )
 
+/** jede kleine Scheibe im Markup: wo steht sie, und wie breit ist sie */
+const miniViews = (html: string) =>
+  [...html.matchAll(/<svg viewBox="([-\d.]+) ([-\d.]+) ([\d.]+) [\d.]+"/g)].map((m) => ({
+    x: Number(m[1]),
+    y: Number(m[2]),
+    w: Number(m[3]),
+  }))
+/** die Mitte der Scheibe in der Mitte der Kachel (Ausschnitt auf 1 µm) */
+const centred = (v: { x: number; y: number; w: number }) =>
+  Math.abs(v.x + v.w / 2) < 0.001 && Math.abs(v.y + v.w / 2) < 0.001
+
 describe("Ablesung einer Scheibe", () => {
   it("„?“ am Abstand zum Schnitt davor, nur mit `onHelp`", () => {
     expect(render({ onHelp: () => {} })).toMatch(
@@ -167,5 +178,15 @@ describe("Ablesezeile auf dem Telefon", () => {
     expect(line({ onHelp: () => {}, metric: metricByKey("group.sigma")! })).not.toContain(
       "data-help"
     )
+  })
+})
+
+describe("Kleine Scheibe der Ablesung", () => {
+  it("steht um die Mitte, der Spiegel so groß wie überall", () => {
+    const tiles = miniViews(render())
+    // Luftgewehr, Treffer auf 0 bis 0,2 mm: 15,25 · 1,6 · 2 = 48,8
+    expect(tiles).toHaveLength(1)
+    expect(tiles.every(centred)).toBe(true)
+    expect(Math.abs(tiles[0].w - 48.8)).toBeLessThan(0.001)
   })
 })

@@ -9,7 +9,6 @@ import { Target } from "lucide-react"
 import type { ReactNode } from "react"
 
 import { formatValue } from "../format"
-import { groupView } from "../geometry"
 import type { ListRow } from "../list/evenings"
 import { RouteLink } from "../nav/RouteLink"
 import type { CardRoute, ListRoute } from "../nav/routes"
@@ -172,12 +171,7 @@ export function EveningBlock({
                 className="flex h-full items-start gap-3 rounded-xl border border-line-strong p-2 hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-ring"
               >
                 {placed.length ? (
-                  <MiniTarget
-                    target={target}
-                    view={groupView(target, placed)}
-                    shots={placed}
-                    className="size-14 shrink-0"
-                  />
+                  <MiniTarget target={target} shots={placed} className="size-14 shrink-0" />
                 ) : (
                   <span aria-hidden="true" className="block size-14 shrink-0" />
                 )}
