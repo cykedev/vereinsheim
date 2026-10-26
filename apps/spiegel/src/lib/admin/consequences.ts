@@ -529,6 +529,22 @@ export function cardRequestWithdraw({ id, day }: { id: string; day: string }): D
   }
 }
 
+/** einen beendeten Auftrag per ID ohne Scheibe aus der Liste entfernen */
+export function cardRequestRemove({ id, day }: { id: string; day: string }): Decision {
+  return {
+    title: "Auftrag entfernen?",
+    about: `Spiegel hat die Scheibe mit der ID ${id} vom ${day} nicht geholt.`,
+    happens: ["Der Auftrag verschwindet aus dieser Liste."],
+    notHappening: [
+      "Deine Scheiben und die anderen Aufträge bleiben.",
+      "An der Meyton-Anlage ändert sich nichts.",
+    ],
+    undo: "Die Scheibe hier neu anfragen.",
+    confirmLabel: "Entfernen",
+    destructive: true,
+  }
+}
+
 /**
  * Zurückgewiesene Scheiben („nicht meine“) einer Sportpassnummer wieder zulassen: Die Scheiben dürfen
  * wiederkommen und warten in „Offen“. `consentActive`: Die Nummer ist bestätigt; sonst kommen sie erst, wenn sie es

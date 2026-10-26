@@ -8,6 +8,7 @@ import {
   cardDelete,
   cardDiscipline,
   cardRequest,
+  cardRequestRemove,
   cardRequestWithdraw,
   cardPurgeNow,
   cardShare,
@@ -594,6 +595,23 @@ describe("Scheibe per ID holen", () => {
     expect(d.happens).toEqual(["Spiegel holt die Scheibe nicht."])
     expect(d.destructive).toBe(true)
   })
+
+  it("entfernen, wenn der Auftrag ohne Scheibe endete", () => {
+    const d = cardRequestRemove({ id: "ff914420", day: "Di 21.10.2026" })
+    wellFormed(d)
+    expect(d).toEqual({
+      title: "Auftrag entfernen?",
+      about: "Spiegel hat die Scheibe mit der ID ff914420 vom Di 21.10.2026 nicht geholt.",
+      happens: ["Der Auftrag verschwindet aus dieser Liste."],
+      notHappening: [
+        "Deine Scheiben und die anderen Aufträge bleiben.",
+        "An der Meyton-Anlage ändert sich nichts.",
+      ],
+      undo: "Die Scheibe hier neu anfragen.",
+      confirmLabel: "Entfernen",
+      destructive: true,
+    })
+  })
 })
 
 /**
@@ -654,6 +672,7 @@ describe("Schreibregeln", () => {
     ["teilen beenden", cardShareStop({ evening })],
     ["Scheibe holen", cardRequest({ id: "ff914420", day: "Di 21.10.2026" })],
     ["Auftrag zurückziehen", cardRequestWithdraw({ id: "ff914420", day: "Di 21.10.2026" })],
+    ["Auftrag entfernen", cardRequestRemove({ id: "ff914420", day: "Di 21.10.2026" })],
     [
       "Disziplin der Scheibe",
       cardDiscipline({
