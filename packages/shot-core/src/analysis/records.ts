@@ -65,7 +65,7 @@ export function recordEligible(card: PeriodCard): boolean {
   if (!card.complete) return false
   const excluding: readonly string[] = RECORD_EXCLUDING_FLAGS
   if ((card.flags ?? []).some((flag) => excluding.includes(flag))) return false
-  const counted = cardShots(card.shots, true)?.match ?? []
+  const counted = cardShots(card.shots, true, card.sums)?.match ?? []
   return !counted.some((shot) => (shot.flags ?? []).includes(FLAG_SUSPICIOUS))
 }
 
@@ -223,7 +223,7 @@ export function cardRecordCandidates(
   scoring: Scoring,
   includeProbeOnly = false
 ): RecordCandidates | null {
-  const chosen = cardShots(card.shots, includeProbeOnly)
+  const chosen = cardShots(card.shots, includeProbeOnly, card.sums)
   if (!chosen) return sumsCandidates(card, scoring, includeProbeOnly)
   // Kennzahlen der Registry über die Wertungsschüsse; Auswertungen, die selbst auswählen und nummerieren,
   // über die ganze Karte (erst ordnen, dann auswählen)

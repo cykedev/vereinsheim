@@ -231,7 +231,13 @@ const PAGE_CARD_SELECT = {
   standDiscipline: { select: { name: true } },
   family: { select: { slug: true, name: true } },
   currentRevision: {
-    select: { number: true, shots: { orderBy: { seq: "asc" } } },
+    select: {
+      number: true,
+      shots: { orderBy: { seq: "asc" } },
+      // Summen der Wertung: Probe neben ihnen macht keine Scheibe nur aus Probe
+      totalShots: true,
+      seriesSums: { select: { shots: true } },
+    },
   },
 } satisfies Prisma.CardSelect
 
@@ -258,9 +264,14 @@ export interface PageCard extends PeriodCard {
 
 function toPageCard(row: PageCardRow): PageCard | null {
   if (!row.currentRevision) return null
-  // nur Probe hat keine Wertung der Disziplin; eine Scheibe ohne Schüsse (Summen, wartet auf die Anlage) ist keine Probe
-  const shots = row.currentRevision.shots
-  const probeOnly = shots.length > 0 && shots.every((shot) => shot.stellung === 0)
+  // nur Probe hat keine Wertung der Disziplin; eine Scheibe ohne Schüsse (wartet auf die Anlage) und Probe neben Summen
+  // der Wertung sind keine Probe (wie `probeOnly` der Projektion)
+  const { shots, totalShots, seriesSums } = row.currentRevision
+  const probeOnly =
+    shots.length > 0 &&
+    shots.every((shot) => shot.stellung === 0) &&
+    totalShots === null &&
+    seriesSums.length === 0
   const official = probeOnly ? null : row.discipline.officialScoring
   return {
     id: row.id,

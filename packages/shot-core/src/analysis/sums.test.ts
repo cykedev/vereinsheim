@@ -11,6 +11,8 @@ import {
   INCOMPLETE,
   SERIES_TENTHS,
   SHOTS_RINGS,
+  SIGHTERS_CENTER,
+  SIGHTERS_TOTAL,
   sumsCard,
   TOTAL_RINGS,
   TREFFSICHER,
@@ -81,6 +83,27 @@ describe("Werte aus Summen", () => {
     expect(mean?.value).toBeCloseTo(280 / 30, 9)
     const records = periodRecords([INCOMPLETE], "rings")
     expect(Object.values(records.bestCard).map((r) => r.cardId)).not.toContain("incomplete")
+  })
+})
+
+describe("Probe neben Summen", () => {
+  it("Probe je Schuss, Wertung nur als Gesamtergebnis: es zählt die Wertung, nicht die Probe", () => {
+    for (const includeProbeOnly of [false, true])
+      expect(
+        cardValues([SIGHTERS_TOTAL], metric("result.decimal"), "decimal", { includeProbeOnly })
+      ).toEqual([{ id: "sighters-total", atMs: 9 * DAY, value: 390, n: 40 }])
+    expect(periodRecords([SIGHTERS_TOTAL], "decimal").bestCard).toEqual({
+      40: { value: 390, cardId: "sighters-total", atMs: 9 * DAY },
+    })
+    expect(periodRecords([SIGHTERS_TOTAL], "decimal").bestTeiler).toBeNull()
+  })
+
+  it("nur Probe mit Trefferlage als Summe zählt nur mit includeProbeOnly", () => {
+    const distance = metric("group.mpiDistance")
+    expect(cardValues([SIGHTERS_CENTER], distance, "rings")).toEqual([])
+    expect(
+      cardValues([SIGHTERS_CENTER], distance, "rings", { includeProbeOnly: true })
+    ).toHaveLength(1)
   })
 })
 

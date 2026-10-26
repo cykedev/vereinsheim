@@ -343,12 +343,22 @@ describe("cardWithShots", () => {
     expect(all.find((c) => c.id === probeOnly.id)).not.toHaveProperty("official")
   })
 
-  it("eine Scheibe nur aus Serien-Summen und eine ohne Werte sind keine Probe: Sie tragen die Wertung der Disziplin", async () => {
+  it("Serien-Summen, ohne Werte, Probe neben einem Gesamtergebnis: keine Probe, die Wertung der Disziplin gilt", async () => {
     const ids: string[] = []
     try {
       for (const details of [
         { series: [1, 2, 3, 4].map((series) => ({ series, shots: 10, rings: 94 })) },
         {},
+        // Probe je Schuss, die Wertung nur als Gesamtergebnis
+        {
+          shots: [9, 10, 8].map((ring) => ({
+            series: null,
+            ring,
+            decimalTenths: null,
+            probe: true,
+          })),
+          total: { shots: 40, rings: 371 },
+        },
       ]) {
         const result = await writeEnteredCard(db, {
           ownerId: site.ownerId,

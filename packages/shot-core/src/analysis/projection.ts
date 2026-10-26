@@ -16,13 +16,12 @@ import {
   isDrawn,
   selectShots,
   sumsResult,
-  sumsShots,
   type MetricDefinition,
   type MetricShot,
   type Scoring,
   type SumSource,
 } from "../metrics"
-import { byStart, cardShots, shotCountOf } from "./card-shots"
+import { byStart, cardShots, probeOnlyCard, shotCountOf } from "./card-shots"
 import { pooledValue } from "./levels"
 import { cardValues, type CardValue, type PeriodCard, type VolumeBucket } from "./period"
 import {
@@ -122,7 +121,7 @@ export function projectionVersion(
 
 /** die Grundlage der Werte einer Scheibe (`CardDetail`), über die Schüsse wie am Ausdruck und ihre Summen */
 export function cardDetail(card: PeriodCard): CardDetail {
-  const counted = cardShots(card.shots, true)?.match ?? []
+  const counted = cardShots(card.shots, true, card.sums)?.match ?? []
   const source = (metric: MetricDefinition, scoring: Scoring): ValueSource | null =>
     computeMetric(metric, counted) !== null
       ? "shots"
@@ -164,14 +163,11 @@ export function cardProjection(input: PeriodCard): CardProjection {
         ...(value.sd !== undefined ? { sd: value.sd } : {}),
       }
   }
-  const counted = cardShots(card.shots, true)?.match ?? []
+  const counted = cardShots(card.shots, true, card.sums)?.match ?? []
   return {
     version: projectionVersion(),
     // eine Scheibe ohne Werte (wartet auf die Anlage) ist nicht nur Probe
-    probeOnly:
-      card.shots.length > 0 &&
-      !card.shots.some((shot) => shot.kind === "match") &&
-      sumsShots(card.sums) === 0,
+    probeOnly: probeOnlyCard(card.shots, card.sums),
     suspicious: counted.some((shot) => (shot.flags ?? []).includes(FLAG_SUSPICIOUS)),
     printedShots: shotCountOf(card),
     values,

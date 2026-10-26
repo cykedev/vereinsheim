@@ -19,20 +19,34 @@ export interface CardShots {
  * bleibt dabei Kontext für Abstände und Nummern, damit eine Probe zwischen Wertung keine Lücke reißt (SF-04). Hat sie
  * nur Probe, mit `includeProbeOnly` die Probe wie Wertung (dieselbe Regel wie auf der Seite einer Scheibe, SF-01);
  * sonst null, die Scheibe zählt nicht. Eine Scheibe ohne Schüsse zählt nie, ohne Schüsse zählt die Scheibe nur über
- * ihre Summen (`shotCountOf`, `summaryValue`).
+ * ihre Summen (`shotCountOf`, `summaryValue`). Probe neben Summen der Wertung (`sums`) zählt nie: Am Ausdruck steht dann
+ * die Wertung, nicht die Probe.
  */
 export function cardShots(
   shots: readonly MetricShot[],
-  includeProbeOnly = false
+  includeProbeOnly = false,
+  sums?: CardSums
 ): CardShots | null {
-  if (!shots.length) return null
+  if (!shots.length || sightersBesideSums(shots, sums)) return null
   const printed = asOnPrintout(shots)
   if (shots.some((shot) => shot.kind === "match")) return { match: printed, whole: shots }
   return includeProbeOnly ? { match: printed, whole: printed } : null
 }
 
-/** Schusszahl einer Scheibe: die Schüsse wie am Ausdruck, ohne sie die Schusszahl ihrer Summen */
+/** nur Probe als Schüsse, die Wertung nur als Summe (etwa übernommen: Probe je Schuss, Wertung je Serie) */
+export const sightersBesideSums = (shots: readonly MetricShot[], sums?: CardSums) =>
+  sumsShots(sums) > 0 && !shots.some((shot) => shot.kind === "match")
+
+/**
+ * eine Scheibe nur aus Probe, ohne Summen der Wertung: Sie zählt nur mit `includeProbeOnly`, auch nicht über eine
+ * Trefferlage als Summe
+ */
+export const probeOnlyCard = (shots: readonly MetricShot[], sums?: CardSums) =>
+  shots.length > 0 && !shots.some((shot) => shot.kind === "match") && sumsShots(sums) === 0
+
+/** Schusszahl einer Scheibe: die Schüsse wie am Ausdruck, ohne sie oder neben Probe die Schusszahl ihrer Summen */
 export function shotCountOf(card: { shots: readonly MetricShot[]; sums?: CardSums }): number {
+  if (sightersBesideSums(card.shots, card.sums)) return sumsShots(card.sums)
   return asOnPrintout(card.shots).length || sumsShots(card.sums)
 }
 

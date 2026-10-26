@@ -15,7 +15,7 @@ import {
 } from "../metrics"
 import { standardDeviation } from "../geometry"
 import { mad, mannWhitney, median, quantile } from "../stats"
-import { byStart, cardShots, shotCountOf } from "./card-shots"
+import { byStart, cardShots, probeOnlyCard, shotCountOf } from "./card-shots"
 
 /** Faktor, der den MAD bei normalverteilten Werten zur Standardabweichung macht */
 const MAD_TO_SD = 1.4826
@@ -93,7 +93,9 @@ export function cardValues(
 ): CardValue[] {
   const scored = inScoring(metric, scoring)
   return byStart(cards).flatMap((card) => {
-    const chosen = cardShots(card.shots, options.includeProbeOnly)
+    // nur Probe zählt nur mit `includeProbeOnly`, auch nicht über ihre Trefferlage als Summe
+    if (!options.includeProbeOnly && probeOnlyCard(card.shots, card.sums)) return []
+    const chosen = cardShots(card.shots, options.includeProbeOnly, card.sums)
     // die ganze Karte für Abstände: eine späte Probe ist keine Lücke (SF-04)
     const value = chosen && computeMetric(scored, chosen.match, chosen.whole)
     if (!chosen || value === null) {

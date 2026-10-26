@@ -68,6 +68,29 @@ export const INCOMPLETE = sumsCard("incomplete", 7, {
 })
 export const EMPTY = sumsCard("empty", 8)
 
+/** drei Probeschüsse mit Wert und Lage, keine Wertung als Schuss */
+const SIGHTERS: MetricShot[] = [98, 103, 92].map((decimalTenths, i) => ({
+  seq: i + 1,
+  xUm: 400 * (i - 1),
+  yUm: 300,
+  decimalTenths,
+  ring: Math.floor(decimalTenths / 10),
+  innerTen: false,
+  firedAtMs: null,
+  kind: "probe",
+  series: null,
+}))
+/** Probe je Schuss, die Wertung nur als Gesamtergebnis (wie übernommen): die Probe zählt nicht */
+export const SIGHTERS_TOTAL = sumsCard("sighters-total", 9, {
+  shots: SIGHTERS,
+  sums: { series: [], total: { shots: 40, rings: null, decimalTenths: 3900 }, center: null },
+})
+/** nur Probe und eine Trefferlage als Summe: eine Scheibe nur aus Probe */
+export const SIGHTERS_CENTER = sumsCard("sighters-center", 10, {
+  shots: SIGHTERS,
+  sums: { series: [], total: null, center: { xUm: 600, yUm: 800, shots: 3 } },
+})
+
 /** alle Scheiben oben und eine ohne jede Angabe (Ausdruck, wartet auf die Anlage) */
 export const SUMS: readonly PeriodCard[] = [
   TOTAL_RINGS,
@@ -78,4 +101,6 @@ export const SUMS: readonly PeriodCard[] = [
   TREFFSICHER,
   INCOMPLETE,
   EMPTY,
+  SIGHTERS_TOTAL,
+  SIGHTERS_CENTER,
 ]
