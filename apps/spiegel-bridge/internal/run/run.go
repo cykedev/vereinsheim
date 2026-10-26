@@ -24,7 +24,7 @@ import (
 const (
 	BusyEvery      = time.Second
 	QuietEvery     = 30 * time.Second
-	StateEvery     = 5 * time.Minute
+	StateEvery     = time.Minute
 	HeartbeatEvery = time.Minute
 	// so oft meldet Run beim Warten, dass die Schleife lebt (Watchdog); der Watchdog wartet länger
 	AliveEvery = time.Minute
@@ -222,7 +222,8 @@ func (r *Runner) backoff() time.Duration {
 	return min(wait, RetryMax)
 }
 
-// refreshState holt den Zustand beim Start und alle fünf Minuten. Ohne Zustand lädt die Brücke nichts hoch (SF-38).
+// refreshState holt den Zustand beim Start und jede Minute (Spiegel nimmt sechs je Minute). Ohne Zustand lädt die
+// Brücke nichts hoch (SF-38).
 func (r *Runner) refreshState(ctx context.Context, now time.Time) error {
 	if r.state != nil && now.Sub(r.stateAt) < StateEvery {
 		return nil

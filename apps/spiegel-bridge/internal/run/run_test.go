@@ -590,6 +590,30 @@ func TestStateFailureWaits(t *testing.T) {
 	}
 }
 
+// Neue Zustimmungen, Aufträge und aufgehobene Meldungen erreichen die Brücke binnen einer Minute; öfter, als Spiegel
+// nimmt (sechs je Minute), fragt sie nicht.
+func TestStateEveryMinute(t *testing.T) {
+	f := setup(t)
+	calls := 0
+	f.runner.spiegel = &countingSpiegel{spiegel: f.sp, calls: &calls}
+	f.ablage.put(1, "12345678", "1", 3)
+	begin := f.clock
+	// ein belegter Stand: Runden jede Sekunde
+	for i := 0; f.clock.Sub(begin) < 10*time.Minute; i++ {
+		f.ablage.stamps[1] = fmt.Sprintf("2026-10-13 21:%02d:%02d", i/60%60, i%60)
+		f.step()
+	}
+	if calls < 10 || calls > 11 {
+		t.Fatalf("%d Abfragen des Zustands in 10 min", calls)
+	}
+	// eine Zustimmung kommt dazu: Was ohne sie zurückblieb, geht binnen einer Minute hinaus
+	f.sp.state.Sportpass.Hashes = []string{filter.SportpassHash(salt, "12345678")}
+	f.runFor(time.Minute + 5*time.Second)
+	if got := fmt.Sprint(f.sp.sent()); got != "[1]" {
+		t.Fatalf("nach der Zustimmung %s", got)
+	}
+}
+
 type countingSpiegel struct {
 	*spiegel
 	calls *int
