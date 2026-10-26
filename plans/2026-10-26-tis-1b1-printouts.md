@@ -3,16 +3,20 @@
 Teil 1b-1 aus [`2026-10-26-treffsicher-in-spiegel.md`](2026-10-26-treffsicher-in-spiegel.md) (Stufe 1, QR-Weg SP-1.7 b).
 Branch `feat/tis-1b1-printouts`, abgezweigt von `main` (Stufe 1 geht Teil für Teil nach `main`); diesen Plan als ersten
 Commit übernehmen (`git show feat/treffsicher-in-spiegel:plans/2026-10-26-tis-1b1-printouts.md`). **Interaktiv, nicht
-autonom:** Der Plan berührt geschützte Pfade (Schema und Migration, `compose.yml`, `scripts/`, `vault/decisions/`);
-diese Tasks sind mit **[geschützt]** markiert, die Kindsession holt dort die Freigabe über die koordinierende Session.
+autonom:** Der Plan berührt geschützte Pfade (`compose.yml`, `scripts/`, `vault/decisions/`); diese Tasks sind mit
+**[geschützt]** markiert, die Kindsession holt dort die Freigabe über die koordinierende Session. **Kein Schema, keine
+Migration:** 1b-1 läuft deshalb parallel zu 1a.
 
 ## Context
 
-Der QR-Weg soll einen Meyton-Ausdruck holen (Link aus dem QR oder hochgeladenes PDF), sofort als Original speichern,
-daraus ID und Druckzeit lesen und daraus einen Auftrag wie „Scheibe per ID“ machen (entschieden mit dem User am
-26. Oktober 2026, Koordinationsplan Stufe 1 → 1b). 1b-1 liefert nur die Bausteine auf dem Server, ohne Oberfläche. 1b-2
-(„Scannen“) setzt sie zusammen: `/scan`, Auftrag mit Druckzeit, Prüfung der Druckzeit beim Einlesen, PDF an einer
-vorhandenen Scheibe, Ausliefern an den Besitzer.
+Der QR-Weg soll einen Meyton-Ausdruck holen (Link aus dem QR oder hochgeladenes PDF), sofort als Original speichern und
+daraus ID und Druckzeit lesen (entschieden mit dem User am 26. Oktober 2026, Koordinationsplan Stufe 1 → 1b). 1b-1
+liefert nur die Bausteine auf dem Server, ohne Oberfläche und ohne Änderung am Schema. 1b-2 („Scannen“, nach 1a) setzt
+sie zusammen: Der Scan legt eine Scheibe an, deren einzige Angabe zunächst der Ausdruck ist (Disziplin und Art wählt
+der Schütze, vorbelegt mit der letzten), hängt einen Auftrag an die Brücke an diese Scheibe und ergänzt sie beim
+Einlesen um die Rohdaten. Liegt die Scheibe schon in Spiegel, hängt der Scan nur das PDF an. **Ein Ausdruck hängt
+deshalb immer an einer Scheibe** (`Printout.cardId`, wie heute im Schema); einen Auftrag zu entfernen, entfernt nur den
+Auftrag.
 
 Drei Dinge machen das heikel:
 
@@ -27,21 +31,17 @@ Drei Dinge machen das heikel:
   der Papierkorb entfernen Ausdrucke, [[spiegel-privacy]]).
 
 Entschieden (nicht wieder aufmachen): keine Vorschau, keine Bestätigung; automatische Prüfung (selber Abend, erster
-Schuss vor der Druckzeit) vor dem Speichern einer gelieferten Scheibe, sonst Ausgang „passt nicht zum Ausdruck“; die
-Prüfung selbst baut 1b-2, 1b-1 nur das Schema. **Keine Liste erlaubter Adressen** (Restrisiko SSRF, SF-47 bleibt
-offen); es bleiben Größengrenze, Zeitgrenze, nur PDF. Upload eines einzelnen PDFs als Alternative zum Scan.
+Schuss vor der Druckzeit) vor dem Ergänzen einer Scheibe aus dem Ausdruck, sonst Ausgang „passt nicht zum Ausdruck“;
+Prüfung und Ausgang baut 1b-2. **Keine Liste erlaubter Adressen** (Restrisiko SSRF, SF-47 bleibt offen); es bleiben
+Größengrenze, Zeitgrenze, nur PDF. Upload eines einzelnen PDFs als Alternative zum Scan. **Entfernen entfernt nur das,
+was man entfernt** (Grundsatz des Users): ein Auftrag nie Scheibe oder PDF.
 
-Entschieden mit der Freigabe dieses Plans:
+**Speicher:** Kindprozess mit 48 MB Heap, Abbruch über 96 MiB RSS, `mem_limit` von Spiegel bleibt 256m, bis
+Treffsicher abgeschaltet ist (dann mehr, Stufe 4). Liegt `maxRssKb` eines echten Ausdrucks im Image über 80 MiB, meldet
+die Kindsession das, bevor 1b-2 live geht.
 
-- **Ein Auftrag ohne Scheibe behält sein PDF**, solange der Auftrag steht. Entfernt der Schütze einen Auftrag mit
-  „nicht gefunden“, geht das PDF mit. 1c macht aus solchen Aufträgen später Scheiben aus dem PDF; bis dahin sagt 1b-2
-  beim Entfernen, dass der Ausdruck mitgeht.
-- **Speicher:** Kindprozess mit 48 MB Heap, Abbruch über 96 MiB RSS, `mem_limit` von Spiegel bleibt 256m. Liegt
-  `maxRssKb` eines echten Ausdrucks im Image über 80 MiB, meldet die Kindsession das, bevor 1b-2 live geht.
-
-Die Dev-Datenbank ist eine Prod-Kopie: nie zurücksetzen, Migration über `prisma migrate diff` + `migrate deploy`.
-Zur selben Zeit ändert höchstens eine Kindsession das Schema von Spiegel: Vor Task 2 bei der koordinierenden Session
-nachfragen, ob gerade eine andere am Schema arbeitet.
+Die Dev-Datenbank ist eine Prod-Kopie: nie zurücksetzen. Tests legen ihre Daten über `createTestSite` an und räumen sie
+ab.
 
 ## Approach
 
@@ -81,32 +81,26 @@ ohne Datum `noTime`). Dann die Datei atomar nach `UPLOAD_DIR/printouts/<sha256>.
 `rename`; gleiche Bytes ergeben dieselbe Datei). Ergebnis als Union mit festem Grund. Nur wenn ID und Druckzeit
 lesbar sind, entsteht eine Datei.
 
-**Datenbank** (`queries.ts`): Die Zeile `Printout` entsteht erst in 1b-2, in derselben Transaktion wie der Auftrag.
-Darum ist `storePrintout` frei von der Datenbank, und die Zeile entsteht über `attachPrintout(tx, file, target)`, mit
-`target` = Scheibe oder Auftrag. Dazu `movePrintoutsToCard` (Auftrag → Scheibe, wenn die Brücke liefert, genutzt von
-1b-2) und `printoutFile(db, printoutId, ownerId)` zum Lesen (Besitz über Scheibe oder Auftrag).
-
-**Schema:** `Printout.cardId` optional, neu `requestId` (an `CardRequest`, `onDelete: Cascade`), genau eins von beiden
-gesetzt (CHECK in der Migration), eindeutig `(requestId, sha256)` neben `(cardId, sha256)`, Index auf `sha256`.
-`CardRequest.printedAt` (Druckzeit des Ausdrucks, aus dem der Auftrag entstand; null bei getippter ID).
-`CardRequestStatus` neu `printMismatch` („passt nicht zum Ausdruck“, entfernbar wie die anderen Ausgänge ohne
-Scheibe).
+**Datenbank** (`queries.ts`): Die Zeile `Printout` entsteht erst in 1b-2, in derselben Transaktion wie die Scheibe.
+Darum ist `storePrintout` frei von der Datenbank, und die Zeile entsteht über `attachPrintout(tx, file, cardId)`. Dazu
+`printoutFile(db, printoutId, ownerId)` zum Lesen (Besitz über die Scheibe). Das Schema bleibt, wie es ist:
+`Printout.cardId` Pflicht mit Kaskade, `@@unique([cardId, sha256])`, `footerId`, `printedAt`.
 
 **Löschen:** Zeilen verschwinden auf vielen Wegen (`purgeCards` bei „Nicht meine“, Papierkorb und `purgeCardNow`,
-`removeRequest`, Kaskaden über Konto und Anlage), und gleiche Bytes teilen sich eine Datei. Deshalb **ein Weg**:
+Kaskaden über Konto und Anlage), und gleiche Bytes teilen sich eine Datei. Deshalb **ein Weg**:
 `removeOrphanPrintoutFiles` löscht jede `<sha256>.pdf`, auf die keine Zeile mehr zeigt, älter als 10 Minuten (schützt
 eine gerade geschriebene Datei, deren Zeile noch fehlt). Er löscht nie, wenn die Tabelle ganz leer ist und Dateien da
 sind (Schutz gegen eine falsche oder leere Datenbank). Aufgerufen beim Start, stündlich (nach dem Papierkorb) und
-gleich nach „Nicht meine“, `purgeCardNow` und dem Entfernen eines Auftrags.
+gleich nach „Nicht meine“ und `purgeCardNow`.
 
 **Volume:** `uploads_spiegel:/app/uploads` mit `UPLOAD_DIR=/app/uploads` wie bei Treffsicher. Das Root-`Dockerfile`
 legt `/app/uploads` für jede App schon an (Besitzer `nextjs`), ein neues Named Volume übernimmt das. `UPLOAD_APPS`
 bekommt `spiegel`; Backup, Restore, `download`, `local-up` laufen alle über die Liste. Das Testpaar in `ops.sh` dreht
 sich um: Spiegel mit Uploads-Tar muss gehen, Ringwerk mit Tar nicht.
 
-So setzt 1b-2 zusammen: Scan `fetchPrintout` → `storePrintout` → Transaktion: eigene Scheibe des Abends da →
-`attachPrintout(tx, file, { cardId })`; sonst Auftrag mit `printedAt` anlegen → `attachPrintout(tx, file, {
-requestId })`. Einlesen: Scheibe an den Auftrag → `movePrintoutsToCard`. Seite: `printoutFile`.
+So setzt 1b-2 zusammen: Scan `fetchPrintout` (oder Upload) → `storePrintout` → Transaktion: eigene Scheibe des
+Abends da → `attachPrintout(tx, file, cardId)`; sonst Scheibe aus dem Ausdruck anlegen (Modell aus 1a) →
+`attachPrintout(tx, file, card.id)` → Auftrag an diese Scheibe. Seite: `printoutFile`.
 
 ## Files
 
@@ -136,60 +130,7 @@ requestId })`. Einlesen: Scheibe an den Auftrag → `movePrintoutsToCard`. Seite
   (`apps/spiegel/src/lib/printouts/reader.ts`)“.
 - Commit: `feat(meyton-pdf): error codes, header check and pdf.js preload for the reader process`
 
-### Task 2 · Schema und Migration **[geschützt]**
-
-- `apps/spiegel/prisma/schema.prisma`:
-  - `enum CardRequestStatus`: `printMismatch` nach `expired`; Kommentar über dem Enum um „passt nicht zum Ausdruck
-    (Druckzeit)“ ergänzen.
-  - `model CardRequest`: nach `day` neu
-    `// Druckzeit des Ausdrucks, aus dem der Auftrag entstand (QR oder Upload); null bei getippter ID`
-    `printedAt DateTime? @db.Timestamptz(3)`; nach `closedAt` `printouts Printout[]`.
-  - `model Printout`: `cardId String?`, `card Card? @relation(…, onDelete: Cascade)`, neu `requestId Int?`, `request
-    CardRequest? @relation(fields: [requestId], references: [id], onDelete: Cascade)`, `@@unique([requestId, sha256])`,
-    `@@index([sha256])`. Kommentar: „an der Scheibe, sobald es sie gibt; bis dahin am Auftrag. Genau eins von beiden
-    (CHECK `Printout_one_target` in der Migration). Die Datei liegt unter `UPLOAD_DIR/printouts/<sha256>.pdf`;
-    `fileName` ist nur der Name zum Herunterladen.“
-- Migration (aus dem Repo-Root):
-  1. `pnpm --filter spiegel exec prisma migrate status`: erwartet „Database schema is up to date“ mit sieben
-     Migrationen bis `20261024150000_card_request_expired`. Sonst anhalten und melden.
-  2. `mkdir -p apps/spiegel/prisma/migrations/20261026120000_printout_request`
-  3. `pnpm --filter spiegel exec prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --script
-     > apps/spiegel/prisma/migrations/20261026120000_printout_request/migration.sql`
-  4. Die Datei muss inhaltlich so aussehen (Reihenfolge von Prisma darf abweichen). Ans Ende von Hand:
-     ```sql
-     -- AlterEnum
-     ALTER TYPE "CardRequestStatus" ADD VALUE 'printMismatch';
-     -- AlterTable
-     ALTER TABLE "CardRequest" ADD COLUMN "printedAt" TIMESTAMPTZ(3);
-     -- AlterTable
-     ALTER TABLE "Printout" ADD COLUMN "requestId" INTEGER, ALTER COLUMN "cardId" DROP NOT NULL;
-     -- CreateIndex
-     CREATE INDEX "Printout_sha256_idx" ON "Printout"("sha256");
-     -- CreateIndex
-     CREATE UNIQUE INDEX "Printout_requestId_sha256_key" ON "Printout"("requestId", "sha256");
-     -- AddForeignKey
-     ALTER TABLE "Printout" ADD CONSTRAINT "Printout_requestId_fkey" FOREIGN KEY ("requestId") REFERENCES "CardRequest"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
-     -- Ein Ausdruck hängt an genau einem: an der Scheibe oder, bis sie da ist, am Auftrag (von Hand, Prisma kennt kein CHECK)
-     ALTER TABLE "Printout" ADD CONSTRAINT "Printout_one_target" CHECK (("cardId" IS NULL) <> ("requestId" IS NULL));
-     ```
-  5. `pnpm --filter spiegel exec prisma migrate deploy`, dann `pnpm --filter spiegel db:generate`.
-  6. Gegenprobe: `pnpm --filter spiegel exec prisma migrate diff --from-config-datasource --to-schema
-     prisma/schema.prisma --exit-code` endet mit 0 (kein Unterschied; das CHECK sieht Prisma nicht).
-- Commit: `feat(spiegel): printouts on requests, print time and the print mismatch outcome`
-
-### Task 3 · Ausgang „passt nicht zum Ausdruck“
-
-- `apps/spiegel/src/lib/card-requests/status.ts`: `REMOVABLE_STATUSES` um `"printMismatch"`.
-- `apps/spiegel/src/lib/card-requests/status.test.ts`: die erwartete Liste um `"printMismatch"` (sortiert nach
-  `"mismatch"`).
-- `apps/spiegel/src/components/profile/CardRequests.tsx`: `REQUEST_STATUS_TEXT.printMismatch: "passt nicht zum
-  Ausdruck"` (Wortlaut des Users).
-- `apps/spiegel/src/components/profile/CardRequests.test.tsx`: ein Auftrag mit `printMismatch` zeigt „passt nicht zum
-  Ausdruck“ und den Knopf zum Entfernen.
-- Commit: `feat(spiegel): name the print mismatch outcome of a request`
-
-### Task 4 · Holen per Link
+### Task 2 · Holen per Link
 
 - `apps/spiegel/src/lib/printouts/fetch.ts` (neu):
   - `FETCH_TIMEOUT_MS = 10_000`, `MAX_URL_LENGTH = 2_048`, Größe aus `DEFAULT_LIMITS.maxBytes`
@@ -216,7 +157,7 @@ requestId })`. Einlesen: Scheibe an den Auftrag → `movePrintoutsToCard`. Seite
   geschlossenen Port (Server starten, Port merken, schließen).
 - Commit: `feat(spiegel): fetch a printout by link with size, time and type limits`
 
-### Task 5 · Kindprozess: Protokoll und Skript
+### Task 3 · Kindprozess: Protokoll und Skript
 
 - `apps/spiegel/src/lib/printouts/protocol.ts` (neu, nur Typen und Zod):
   - `READY_LINE = '{"ready":true}'`.
@@ -240,7 +181,7 @@ requestId })`. Einlesen: Scheibe an den Auftrag → `movePrintoutsToCard`. Seite
   Nur relative Imports und Pakete, kein `@/`-Alias, kein `console`.
 - Commit: `feat(spiegel): reader process for printouts`
 
-### Task 6 · Lesen im Kindprozess (App-Seite)
+### Task 4 · Lesen im Kindprozess (App-Seite)
 
 - `apps/spiegel/src/lib/printouts/reader.ts` (neu). Importiert nie `@vereinsheim/meyton-pdf/printout` (sonst läge
   pdf.js im Server).
@@ -302,7 +243,7 @@ requestId })`. Einlesen: Scheibe an den Auftrag → `movePrintoutsToCard`. Seite
      `childEnv()` enthält nur `NODE_ENV`.
 - Commit: `feat(spiegel): read printouts in a short-lived child with memory and time limits`
 
-### Task 7 · Bundle für Produktion
+### Task 5 · Bundle für Produktion
 
 - `apps/spiegel/package.json`:
   - devDependency `"esbuild": "0.28.2"` (dieselbe Version wie im Lockfile; app-eigen, kein Katalog).
@@ -327,7 +268,7 @@ requestId })`. Einlesen: Scheibe an den Auftrag → `movePrintoutsToCard`. Seite
   Scheitert der Bundle-Test, das Ergebnis melden und nicht auf Tracing durch Next ausweichen.
 - Commit: `build(spiegel): bundle the printout reader into the standalone output`
 
-### Task 8 · Dateien und Aufräumen
+### Task 6 · Dateien und Aufräumen
 
 - `apps/spiegel/src/lib/printouts/files.ts` (neu):
   - `uploadDir()`: `process.env.UPLOAD_DIR`; fehlt es in Produktion → `throw new Error("UPLOAD_DIR fehlt")`; sonst
@@ -348,17 +289,17 @@ requestId })`. Einlesen: Scheibe an den Auftrag → `movePrintoutsToCard`. Seite
     ["sha256"] })`), `filesToRemove`, `unlink` (ENOENT ignorieren). `skipped`, wenn die Leere-Tabelle-Sperre griff.
   - `sweepPrintoutsSoon(db)`: `void removeOrphanPrintoutFiles(db).then(log).catch(err => console.error("Ausdrucke
     nicht aufgeräumt:", err instanceof Error ? err.name : "unbekannter Fehler"))`. Ins Log nur Zahlen:
-    `<n> Ausdrucke ohne Scheibe oder Auftrag gelöscht`; bei `skipped` `Ausdrucke: Tabelle leer, Dateien bleiben`.
+    `<n> Ausdrucke ohne Scheibe gelöscht`; bei `skipped` `Ausdrucke: Tabelle leer, Dateien bleiben`.
 - `apps/spiegel/src/lib/printouts/files.test.ts` (neu; `UPLOAD_DIR` je Test auf `mkdtemp`, danach zurück):
   - `filesToRemove` mit Handwerten: alt ohne Zeile weg, jung bleibt, mit Zeile bleibt, `notes.txt` bleibt, alte `.tmp-`
     weg, leere Tabelle → nichts.
   - `writePrintoutFile` zweimal mit denselben Bytes → eine Datei, Inhalt gleich.
   - Mit Datenbank (`createTestSite`): Scheibe (`origin: "pdf"`, ohne Quelle) mit `Printout`, Datei mit `utimes` eine
     Stunde alt; Sweep lässt sie; Scheibe löschen (`db.card.delete`, Kaskade) → Sweep entfernt sie. Eine zweite Zeile mit
-    demselben sha an einem Auftrag hält die Datei, bis auch der Auftrag weg ist (`removeRequest`).
+    demselben sha an einer zweiten Scheibe hält die Datei, bis auch diese Scheibe weg ist.
 - Commit: `feat(spiegel): store printout files by hash and sweep orphans`
 
-### Task 9 · `storePrintout`
+### Task 7 · `storePrintout`
 
 - `apps/spiegel/src/lib/printouts/store.ts` (neu):
   - `interface StoredPrintout { sha256: string; size: number; fileName: string; hex: string; scheibenId: number;
@@ -383,41 +324,32 @@ requestId })`. Einlesen: Scheibe an den Auftrag → `movePrintoutsToCard`. Seite
   Datei; `fileName` `../x.pdf` → `ausdruck-ff914420.pdf`. Nach jeder Ablehnung keine Datei im Verzeichnis.
 - Commit: `feat(spiegel): store a printout after reading id and print time`
 
-### Task 10 · Zeilen: anhängen, umhängen, lesen
+### Task 8 · Zeilen: anhängen und lesen
 
 - `apps/spiegel/src/lib/printouts/queries.ts` (neu):
-  - `type PrintoutTarget = { cardId: string } | { requestId: number }`.
-  - `attachPrintout(tx: Prisma.TransactionClient | Db, file: StoredPrintout, target): Promise<string>`: `upsert` über
-    den passenden Unique-Schlüssel (`cardId_sha256` bzw. `requestId_sha256`), `update: {}`, `footerId: file.hex`,
-    `printedAt`, `fileName`, `size`; gibt die Id.
-  - `movePrintoutsToCard(tx, requestId, cardId): Promise<number>`: sha der Scheibe lesen; Zeilen des Auftrags mit
-    diesen sha löschen; übrige `updateMany({ where: { requestId }, data: { cardId, requestId: null } })`. Kommentar:
-    beides in einem `UPDATE`, das CHECK hält.
+  - `attachPrintout(tx: Prisma.TransactionClient | Db, file: StoredPrintout, cardId: string): Promise<string>`:
+    `upsert` über `cardId_sha256`, `update: {}`, `footerId: file.hex`, `printedAt`, `fileName`, `size`; gibt die Id.
   - `printoutFile(db, printoutId: string, ownerId: string): Promise<{ bytes: Buffer; fileName: string } | null>`:
-    `findFirst({ where: { id, OR: [{ card: { is: { ownerId, ownerPending: false } } }, { request: { is: { userId:
-    ownerId } } }] } })`, dann `readPrintoutBytes`. Fehlt die Datei → `console.error("Ausdruck ohne Datei")` und null.
-- `apps/spiegel/src/lib/printouts/queries.test.ts` (neu, `createTestSite`, Scheibe `origin: "pdf"`, Auftrag über
-  `db.cardRequest.create`):
-  - am Auftrag anhängen, zweimal derselbe sha → eine Zeile.
-  - umhängen auf die Scheibe; die Scheibe hat den sha schon → keine doppelte Zeile.
+    `findFirst({ where: { id, card: { is: { ownerId, ownerPending: false } } } })`, dann `readPrintoutBytes`. Fehlt die
+    Datei → `console.error("Ausdruck ohne Datei")` und null.
+- `apps/spiegel/src/lib/printouts/queries.test.ts` (neu, `createTestSite`, Scheibe `origin: "pdf"`):
+  - anhängen, zweimal derselbe sha → eine Zeile; zwei Ausdrucke derselben Scheibe (SF-43) → zwei Zeilen.
   - `printoutFile` für den Besitzer → Bytes; für ein anderes Konto null; für eine wartende Scheibe (`ownerPending`)
     null.
-  - CHECK: `db.printout.create` ohne beide und mit beiden → `rejects.toThrow()`.
-  - Kaskade: Auftrag löschen nimmt seine Zeilen mit, Scheibe löschen ihre.
-- Commit: `feat(spiegel): attach, move and read stored printouts`
+  - Kaskade: Scheibe löschen nimmt ihre Zeilen mit.
+- Commit: `feat(spiegel): attach and read stored printouts`
 
-### Task 11 · Aufräumen verdrahten
+### Task 9 · Aufräumen verdrahten
 
 - `apps/spiegel/src/instrumentation-node.ts`: in `emptyExpiredTrash` nach dem Leeren (`.then`) `sweepPrintoutsSoon(db)`.
   Damit läuft das Aufräumen beim Start und stündlich.
 - `apps/spiegel/src/lib/first-card-actions.ts` (`rejectFirstCard`), `apps/spiegel/src/lib/trash-actions.ts`
-  (`purgeCardNow`), `apps/spiegel/src/lib/card-requests/actions.ts` (`removeCardRequest`): nach Erfolg und vor
-  `revalidatePath` `sweepPrintoutsSoon(db)`.
+  (`purgeCardNow`): nach Erfolg und vor `revalidatePath` `sweepPrintoutsSoon(db)`.
 - Die Tests dieser Actions bleiben grün: ohne `UPLOAD_DIR` liest der Sweep `apps/spiegel/uploads/printouts`, das fehlt,
   ENOENT → nichts.
 - Commit: `feat(spiegel): remove printout files after purges`
 
-### Task 12 · Volume im Deploy-Vertrag **[geschützt]**
+### Task 10 · Volume im Deploy-Vertrag **[geschützt]**
 
 - `compose.yml`, `app-spiegel`:
   - `environment` um `UPLOAD_DIR: /app/uploads`.
@@ -428,7 +360,7 @@ requestId })`. Einlesen: Scheibe an den Auftrag → `movePrintoutsToCard`. Seite
 - Prüfen: `docker compose --env-file .env.example config --quiet`.
 - Commit: `build(compose): upload volume for spiegel printouts`
 
-### Task 13 · Backup und Restore **[geschützt]**
+### Task 11 · Backup und Restore **[geschützt]**
 
 - `scripts/lib/apps.sh`: `UPLOAD_APPS=(treffsicher spiegel)`; Kommentar „Treffsicher (Anhänge) und Spiegel
   (Ausdrucke) haben ein Upload-Volume“.
@@ -441,7 +373,7 @@ requestId })`. Einlesen: Scheibe an den Auftrag → `movePrintoutsToCard`. Seite
 - `bash -n scripts/lib/apps.sh scripts/backup.sh scripts/restore.sh scripts/vereinsheim`.
 - Commit: `feat(ops): back up and restore spiegel printouts`
 
-### Task 14 · Stack-Test der Ops und Beispiel-Ausdruck
+### Task 12 · Stack-Test der Ops und Beispiel-Ausdruck
 
 - `apps/spiegel/tools/printout-sample.ts` (neu): schreibt einen erfundenen Qt-Ausdruck (ID `ff914420`, Druckzeit mit
   Zeitzone) über `buildPdf` nach stdout. Mit `--kind memory|time` die Bomben (zum Messen von Hand). Kein echter
@@ -468,22 +400,26 @@ requestId })`. Einlesen: Scheibe an den Auftrag → `movePrintoutsToCard`. Seite
 - `bash -n tools/stack-e2e/ops.sh`.
 - Commit: `test(stack-e2e): spiegel printouts in backup, restore and the image`
 
-### Task 15 · Doku und ADR **[geschützt: `vault/decisions/`]**
+### Task 13 · Doku und ADR **[geschützt: `vault/decisions/`]**
 
 - `vault/decisions/adr-028.md`:
   - TL;DR am Ende: „Nachtrag 26. Oktober 2026: ohne Vorschau und Bestätigung, automatische Prüfung der Druckzeit,
     vorerst ohne Liste erlaubter Adressen.“
   - `keywords` um `ssrf, kindprozess, upload, druckzeit, passt nicht zum ausdruck, löschen`.
   - Neuer Abschnitt `## Nachtrag (26. Oktober 2026)` mit den Punkten:
-    - **Ohne Vorschau und Bestätigung:** Ein Scan oder Upload legt einen Auftrag an wie „Scheibe per ID“ (ID und Abend
-      aus dem PDF); die gelieferte Scheibe gehört sofort dem Scanner. Grund: Spiegel ist Tagebuch und Statistik der
-      eigenen Entwicklung, an einer Zuordnung hängt nichts weiter, und wer den Ausdruck hat, kennt dessen Werte.
-      Ersetzt Vorschau (SF-41), Bestätigung und die Vorschau-Stufe aus dem Nachtrag vom 5. Oktober.
-    - **Automatische Prüfung statt Bestätigung:** Vor dem Speichern einer gelieferten Scheibe: selber Abend, erster
+    - **Der Scan legt eine Scheibe an, ohne Vorschau und Bestätigung:** Liegt die Scheibe des Abends schon in
+      Spiegel, hängt der Scan nur das PDF an. Sonst entsteht eine Scheibe, deren einzige Angabe zunächst der Ausdruck
+      ist; Disziplin und Art wählt der Schütze (vorbelegt mit der letzten, vorläufig bis die Brücke liefert). An ihr
+      hängt ein Auftrag an die Brücke wie „Scheibe per ID“ (ID und Abend aus dem PDF), der sie um die Rohdaten
+      ergänzt. Grund: Spiegel ist Tagebuch und Statistik der eigenen Entwicklung, an einer Zuordnung hängt nichts
+      weiter, und wer den Ausdruck hat, kennt dessen Werte. Ersetzt Vorschau (SF-41), Bestätigung und die
+      Vorschau-Stufe aus dem Nachtrag vom 5. Oktober.
+    - **Automatische Prüfung statt Bestätigung:** Bevor die Rohdaten die Scheibe ergänzen: selber Abend, erster
       Schuss vor der Druckzeit; mit SP-2.6 zusätzlich Schuss für Schuss. Fällt sie durch, speichert Spiegel nichts von
-      der Brücke, der Auftrag endet mit „passt nicht zum Ausdruck“. Eine Zustimmung per Sportpass eines anderen Kontos
-      geht weiter vor. Das fängt auch eine Beschriftung, die das Muster für eine ID hält.
-    - **Rückweg ist Löschen** (mit Sperre, Papierkorb).
+      der Brücke, der Auftrag endet mit „passt nicht zum Ausdruck“, die Scheibe bleibt beim Ausdruck. Eine Zustimmung
+      per Sportpass eines anderen Kontos geht weiter vor.
+    - **Entfernen entfernt nur das, was man entfernt:** Einen Auftrag zu entfernen, nimmt weder Scheibe noch PDF mit.
+      Rückweg für eine falsche Scheibe ist Löschen (Papierkorb, Sperre).
     - **Keine Liste erlaubter Adressen, vorerst:** Es bleiben 1 MiB, 10 s, nur PDF, keine Weiterleitungen.
       Restrisiko: Ein Link kann Spiegel Adressen im eigenen Netz abrufen lassen, und ein dort liegendes PDF landet
       beim Scanner (SF-47 offen). Vertretbar bei Konten nur vom Admin und rund 15 Mitgliedern.
@@ -496,12 +432,13 @@ requestId })`. Einlesen: Scheibe an den Auftrag → `movePrintoutsToCard`. Seite
     automatisch (Abend, Druckzeit), ohne Vorschau“.
   - „Der QR-Weg im Detail“ neu (fünf Schritte): erfassen (Kamera, Link, Upload; ohne Liste erlaubter Adressen, nur
     PDF, 1 MiB, 10 s, keine Weiterleitungen); speichern und lesen (Kindprozess, Datei nach sha256, nur mit ID und
-    Druckzeit); Auftrag wie „Scheibe per ID“ mit Druckzeit; Prüfung beim Einlesen (selber Abend, erster Schuss vor der
-    Druckzeit, sonst „passt nicht zum Ausdruck“, nichts gespeichert); Rückweg Löschen. Stand: „gebaut: Holen, Lesen,
-    Speichern (1b-1); Scannen, Prüfung beim Einlesen und PDF an der Scheibe folgen (1b-2)“. Die Absätze zu „Ohne lesbare
-    ID“, „Brücke aus“ (PDF liegt sofort in Spiegel, die Scheibe kommt beim nächsten Einschalten) und „Auswärts“
-    anpassen. „Vorschau“ dort streichen.
-  - „Scheibe per ID“, Schritt 5: Ausgang „passt nicht zum Ausdruck“ (nur aus einem Ausdruck).
+    Druckzeit); Scheibe des Abends da → PDF anhängen, sonst Scheibe aus dem Ausdruck mit gewählter Disziplin und Art;
+    Auftrag an der Scheibe, Prüfung beim Einlesen (selber Abend, erster Schuss vor der Druckzeit, sonst „passt nicht zum
+    Ausdruck“, die Scheibe bleibt beim Ausdruck); Rückweg Löschen, einen Auftrag zu entfernen entfernt nur ihn. Stand:
+    „gebaut: Holen, Lesen, Speichern (1b-1); Scheibe aus dem Ausdruck (braucht die Angaben aus 1a), Scannen und
+    Prüfung beim Einlesen folgen (1b-2)“. Die Absätze zu „Ohne lesbare ID“, „Brücke aus“ (die Scheibe steht sofort mit
+    ihrem PDF in Spiegel, die Rohdaten kommen beim nächsten Einschalten) und „Auswärts“ anpassen. „Vorschau“ dort
+    streichen.
   - Letzter Absatz: „Die Vorschau vor dem Holen (SF-41) kommt mit dem QR-Weg“ ersetzen durch den Verweis auf die
     automatische Prüfung.
 - `vault/spiegel/spiegel-edge-cases.md`:
@@ -510,11 +447,10 @@ requestId })`. Einlesen: Scheibe an den Auftrag → `movePrintoutsToCard`. Seite
   - SF-47: „vorerst ohne Liste erlaubter Adressen (Entscheidung des Users); keine Weiterleitungen, nur PDF, 1 MiB,
     10 s; Restrisiko offen“.
   - SF-48: „Kindprozess gebaut (`apps/spiegel/src/lib/printouts/reader.ts`), Tests mit präparierten PDFs“.
-- `vault/spiegel/spiegel-db-schema.md`, Zeile `Printout`: „an Scheibe oder Auftrag (genau eins, CHECK), `(cardId,
-  sha256)` und `(requestId, sha256)` eindeutig, Datei `UPLOAD_DIR/printouts/<sha256>.pdf`“. Dazu ein Satz zu
-  `CardRequest.printedAt`.
+- `vault/spiegel/spiegel-db-schema.md`, Zeile `Printout`: „Datei unter `UPLOAD_DIR/printouts/<sha256>.pdf`; gleiche
+  Bytes teilen sich eine Datei“.
 - `vault/spiegel/spiegel-privacy.md`: unter „Falsche Zuordnung“ bzw. „Eigene Scheibe löschen“: „Die Datei eines
-  Ausdrucks löscht das Aufräumen, sobald keine Scheibe und kein Auftrag mehr auf sie zeigt (sofort nach dem Löschen,
+  Ausdrucks löscht das Aufräumen, sobald keine Scheibe mehr auf sie zeigt (sofort nach dem Löschen,
   spätestens nach einer Stunde); in den Backups bleibt sie bis zu deren Rotation.“
 - `vault/spiegel/spiegel-roadmap.md`, SP-1.7 Status: „b-1 erledigt: Holen per Link, Lesen im Kindprozess, Ablage nach
   sha256 im Volume samt Backup; b-2 (Scannen) offen“. SP-1.9: „Backups inklusive PDF-Speicher“ als erledigt.
@@ -528,7 +464,7 @@ requestId })`. Einlesen: Scheibe an den Auftrag → `movePrintoutsToCard`. Seite
   `uploads_spiegel → /app/uploads (im spiegel-Container)`.
 - `apps/spiegel/CLAUDE.md`, neuer Regelpunkt **Ausdrucke** (`src/lib/printouts/`): `fetchPrintout` (ohne Liste
   erlaubter Adressen, keine Weiterleitungen), `readPrintoutIsolated` (nie `meyton-pdf/printout` im Server importieren),
-  Bundle nach `next build`, `storePrintout` ohne Datenbank, `attachPrintout`/`movePrintoutsToCard`/`printoutFile`,
+  Bundle nach `next build`, `storePrintout` ohne Datenbank, `attachPrintout`/`printoutFile` (ein Ausdruck hängt immer an einer Scheibe),
   `removeOrphanPrintoutFiles` als einziger Weg, Dateien zu löschen. Im Kopf: `app-spiegel` mit `uploads_spiegel`.
 - `/sync-graph`: `vault-lint` grün.
 - Commits: `docs(adr-028): no preview, automatic print time check, no address list for now` und `docs(vault): printouts
@@ -548,7 +484,7 @@ requestId })`. Einlesen: Scheibe an den Auftrag → `movePrintoutsToCard`. Seite
 ## Test steps
 
 1. `pnpm --filter @vereinsheim/meyton-pdf test` grün.
-2. `pnpm --filter spiegel test -- printouts card-requests trash-actions first-card-actions` grün.
+2. `pnpm --filter spiegel test -- printouts trash-actions first-card-actions` grün.
 3. Mutationsproben (Datei vorher per `cp` sichern, nicht `git checkout`):
    - in `reader.ts` den `SIGKILL` der Zeitgrenze auskommentieren → der `hang`-Test wird rot;
    - in `filesToRemove` die Sperre bei leerer Tabelle entfernen → ihr Test wird rot;
@@ -557,8 +493,7 @@ requestId })`. Einlesen: Scheibe an den Auftrag → `movePrintoutsToCard`. Seite
    und `cd apps/spiegel && ./node_modules/.bin/tsx tools/printout-sample.ts | node --max-old-space-size=48
    --max-semi-space-size=2 .next/standalone/apps/spiegel/printout-reader.mjs`: zwei Zeilen, die zweite mit
    `"kind":"found"`.
-5. Migration: `prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --exit-code` endet mit 0.
-   Danach in `psql` `\d "Printout"` zeigt `Printout_one_target`.
+5. Kein Schema geändert: `git diff main -- apps/spiegel/prisma` ist leer.
 6. `bash -n scripts/lib/apps.sh scripts/backup.sh scripts/restore.sh scripts/vereinsheim tools/stack-e2e/ops.sh` und
    `docker compose --env-file .env.example config --quiet`.
 7. `tools/stack-e2e/run.sh --ops`: „Betrieb gegen den Teststack: in Ordnung.“ Darin: Upload-Volume beschreibbar,
@@ -574,11 +509,9 @@ Die Kindsession meldet an die koordinierende Session:
 
 - Branch und Commits.
 - `maxRssKb` des Lesers im echten Image (aus `ops.sh`) und ob der Wert unter 80 MiB liegt.
-- Dauer der Zeit-Bombe im selben Prozess (Messung aus Task 6) und ob `scale` nötig war.
+- Dauer der Zeit-Bombe im selben Prozess (Messung aus Task 4) und ob `scale` nötig war.
 - Ergebnis von `run.sh --ops` und `--load`.
-- Die Migration samt CHECK, angewandt auf die Dev-Datenbank.
-- Was 1b-2 als Bausteine nutzt (`fetchPrintout`, `storePrintout`, `attachPrintout`, `movePrintoutsToCard`,
-  `printoutFile`, `printMismatch`, `CardRequest.printedAt`).
+- Was 1b-2 als Bausteine nutzt (`fetchPrintout`, `storePrintout`, `attachPrintout`, `printoutFile`).
 
 Nicht belegt bleibt bis 1b-2: der Weg von der Oberfläche bis zur Datei in Produktion und der Speicher von App plus
 Kindprozess unter Last zugleich. Für 1b-1 braucht es keine neue Brücke. Release und Deploy nach `main` entscheidet der

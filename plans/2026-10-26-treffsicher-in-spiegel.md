@@ -53,6 +53,18 @@ Entschieden mit dem User am 26. Oktober 2026:
 7. **Personendaten** (Namen, E-Mails, Sportpassnummern) nur in `reports/` (gitignored) oder im Chat, nie in Code, Tests,
    Doku oder Commits (ADR-029).
 
+## Grundsätze
+
+Entschieden mit dem User am 26. Oktober 2026, gelten für alle Teile:
+
+- **Entfernen entfernt nur das, was man entfernt.** Einen Auftrag zu entfernen, nimmt nie Scheibe oder PDF mit; eine
+  Scheibe zu löschen, lässt einen Tagebucheintrag stehen (ADR-033).
+- **Keine Detailtiefe ist garantiert.** Eine Scheibe kann nur den Ausdruck haben, nur das Gesamtergebnis, Serien-Summen,
+  Treffer in ganzen Ringen oder mit Zehnteln, Lage je Schuss oder nur als Summe, Zeit je Schuss. Jede Ansicht und jede
+  Zahl kommt mit jeder Kombination zurecht und zeigt ihre Grundlage.
+- **An dem orientieren, was es schon gibt.** Bedienung und Modell knüpfen an Spiegel und Treffsicher an (etwa: erst
+  Disziplin und Art wählen wie in Treffsicher), statt Neues zu erfinden.
+
 ## Teile
 
 ### V · Vorab
@@ -76,9 +88,11 @@ Entschieden mit dem User am 26. Oktober 2026:
 
 Vorgeschlagener Schnitt, endgültig im jeweiligen `/plan`:
 
-- **1a Angaben-Modell:** Herkunft und Angaben an der Scheibe, Serien-Summen ohne Schüsse, eingetragene Disziplinen ohne
-  Meyton-ID mit Familie, fremde Orte als `Site` ohne Brücke, Projektion und `needs`/`onMissing` für die neuen Angaben.
-  Schema, interaktiv.
+- **1a Angaben-Modell:** Herkunft und Angaben an der Scheibe in allen Detailtiefen (siehe Grundsätze; „nur der
+  Ausdruck“ und „nur das Gesamtergebnis“ ergänzen die Tabelle in ADR-033), Serien-Summen ohne Schüsse, eingetragene
+  Disziplinen ohne Meyton-ID mit Familie, fremde Orte als `Site` ohne Brücke, Projektion und `needs`/`onMissing` für die
+  neuen Angaben, wie Liste, Seite der Scheibe und Fortschritt jede Detailtiefe zeigen. Schema, interaktiv. Der Plan
+  entsteht gemeinsam mit dem User.
 - **1b QR-Weg (SP-1.7 b):** Scannen (Kamera, Link), PDF von erlaubten Adressen in einem kurzlebigen Kindprozess,
   PDF-Volume samt Backup, Auftrag an die Brücke. Berührt Deploy-Vertrag und `scripts/`, interaktiv.
   1b liefert „PDF hängt an, die Brücke holt die Scheibe“; ein Ergebnis aus dem PDF bringt erst 1c.
@@ -99,11 +113,14 @@ Vorgeschlagener Schnitt, endgültig im jeweiligen `/plan`:
     offen); auch das kommt als Abweichung in den Nachtrag zu ADR-028.
   - **Upload eines einzelnen PDFs** als Alternative zum Scan, wie in Treffsicher heute, etwa für alte Ausdrucke.
   - **Die Brücke im Schützenhaus kann Aufträge** („Scheibe per ID“ läuft); 1b braucht keine neue Brücke.
-  - **Schnitt:** 1b-1 „Ausdruck holen und speichern“ (PDF holen, Kindprozess, Volume samt Backup und Restore, Schema:
-    Ausdruck am Auftrag, bis die Scheibe da ist, Druckzeit am Auftrag, Ausgang „passt nicht zum Ausdruck“; ohne
-    Oberfläche, interaktiv wegen geschützter Pfade). 1b-2 „Scannen“ (`/scan` mit Kamera, Link und Upload, „Scannen“ in
-    der Navigation, Prüfung der Druckzeit beim Einlesen, PDF an einer vorhandenen Scheibe (SF-43), Original-PDF und ID
-    auf der Seite der Scheibe, eigene Sperre durch Scan aufheben; autonom).
+  - **Schnitt:** 1b-1 „Ausdruck holen und speichern“ (PDF holen, Kindprozess, Volume samt Backup und Restore,
+    Aufräumen der Dateien; ohne Oberfläche, **ohne Schema**, interaktiv wegen `compose.yml` und `scripts/`; läuft
+    parallel zu 1a). 1b-2 „Scannen“ **nach 1a**: `/scan` mit Kamera, Link und Upload, „Scannen“ in der Navigation;
+    liegt die Scheibe des Abends schon in Spiegel, hängt der Scan nur das PDF an (SF-43), sonst legt er eine Scheibe
+    an, deren einzige Angabe der Ausdruck ist, mit Disziplin und Art aus der Wahl des Schützen (vorbelegt mit der
+    letzten, vorläufig bis die Brücke liefert, zur Auswahl die eingeordneten Disziplinen der eigenen Anlage); an ihr
+    hängt der Auftrag an die Brücke; beim Einlesen die Prüfung der Druckzeit und der Ausgang „passt nicht zum
+    Ausdruck“; Original-PDF und ID auf der Seite der Scheibe; eigene Sperre durch Scan aufheben.
   - **Verschoben:** „Teilen → Spiegel“ unter Android (SP-2.5), Auswahl nach Druckzeit ohne lesbare ID, Warnung bei
     stummer Brücke (SF-56).
   **ID vom Ausdruck an der Scheibe** (Wunsch des Users, 26. Oktober 2026): Die Seite einer Scheibe zeigt leise die ID,
@@ -133,8 +150,8 @@ Vorgeschlagener Schnitt, endgültig im jeweiligen `/plan`:
 - **1e Grundlage sichtbar:** „Streuung über 12 von 20 Scheiben, 8 ohne Lage“ in jeder Zahlengruppe, Rekorde je
   Angabe. Braucht 1a.
 
-Reihenfolge: 1a und 1b zuerst (parallel nur, wenn höchstens eine von beiden das Schema ändert), dann 1c, 1d und 1e,
-soweit sie sich nicht in denselben Dateien treffen. Jeder Teil geht einzeln nach `main` und in Prod.
+Reihenfolge: 1b-1 und 1a parallel (1b-1 ändert kein Schema), dann 1b-2, dann 1c, 1d und 1e, soweit sie sich nicht in
+denselben Dateien treffen. Jeder Teil geht einzeln nach `main` und in Prod.
 
 ### Stufe 2 · Das Tagebuch
 
@@ -185,7 +202,8 @@ Folgen, die der Teilplan von Stufe 3 klärt:
 
 ### Stufe 4 · Ruhestand von Treffsicher
 
-Erst nur lesend mit Hinweis und Weiterleitung, dann abgeschaltet. Berührt Deploy-Vertrag, Caddy und das CLI. Teilplan
+Erst nur lesend mit Hinweis und Weiterleitung, dann abgeschaltet. Berührt Deploy-Vertrag, Caddy und das CLI. Mit dem
+Speicher von Treffsicher (320 MB) bekommt Spiegel mehr als heute 256 MB (gewünscht vom User am 26. Oktober 2026). Teilplan
 nach Stufe 3. Wie Treffsicher lesend läuft, solange der Basisbranch nicht auf `main` ist, klärt dieser Teilplan.
 
 ## Stand
@@ -193,9 +211,9 @@ nach Stufe 3. Wie Treffsicher lesend läuft, solange der Basisbranch nicht auf `
 | Teil | Plan | Branch | Session | Stand |
 |---|---|---|---|---|
 | V1 | `plans/2026-10-26-tis-v1-accounts.md` | `feat/tis-v1-accounts` | tis-v1-accounts | im Basisbranch (`f7edbdab`) |
-| 1a | | | | offen |
+| 1a | | | | als Nächstes planen |
 | 1b-1 | `plans/2026-10-26-tis-1b1-printouts.md` | `feat/tis-1b1-printouts` (von `main`) | | geplant |
-| 1b-2 | | | | offen |
+| 1b-2 | | | | offen, nach 1a |
 | 1c | | | | offen |
 | 1d | | | | offen |
 | 1e | | | | offen |
