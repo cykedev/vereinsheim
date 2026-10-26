@@ -126,6 +126,13 @@ Vorgeschlagener Schnitt, endgültig im jeweiligen `/plan`:
     „Ansichten“ (Liste, Start, Seite der Scheibe, Fortschritt, Vergleichen mit „–“ und Grund und der Grundlage in jeder
     Zahlengruppe; **1e geht darin auf**), dazu erfundene Demo-Scheiben in jeder Detailtiefe für `seed:own --demo` und
     die Skriptprüfung. 1a-1 läuft parallel zu 1b-1.
+  - **Ansichten (1a-2), nach Skizzen mit dem User am 27. Oktober 2026:** Seite einer Scheibe je Detailtiefe (nur
+    Serien-Summen: große Zahl, Ø je Schuss, Schusszahl und Grund, Serien als Kacheln ohne kleine Scheiben, die Analyse
+    sagt in einem Satz, was fehlt; nur Gesamtergebnis: große Zahl mit Grund, Trefferlage als goldenes Kreuz auf der
+    Scheibe mit „nur die Mitte der Schüsse, keine Streuung“; wartet auf die Anlage: „–“ mit Grund, Platz für PDF und ID
+    vom Ausdruck). Herkunft und Ort leise im Kopf. In der Liste die Herkunft nur bei „eingetragen“ und „vom Ausdruck“,
+    nie „gemessen“; „–“ immer mit Grund. Im Fortschritt und auf Start die Grundlage nur, wenn nicht alle Scheiben
+    zählen („über 12 von 20 Scheiben · 6 ohne Lage je Schuss“); der Versatz nennt Scheiben nur mit Trefferlage.
 - **1b QR-Weg (SP-1.7 b):** Scannen (Kamera, Link), PDF von erlaubten Adressen in einem kurzlebigen Kindprozess,
   PDF-Volume samt Backup, Auftrag an die Brücke. Berührt Deploy-Vertrag und `scripts/`, interaktiv.
   1b liefert „PDF hängt an, die Brücke holt die Scheibe“; ein Ergebnis aus dem PDF bringt erst 1c.
@@ -251,7 +258,7 @@ nach Stufe 3. Wie Treffsicher lesend läuft, solange der Basisbranch nicht auf `
 |---|---|---|---|---|
 | V1 | `plans/2026-10-26-tis-v1-accounts.md` | `feat/tis-v1-accounts` | tis-v1-accounts | im Basisbranch, Plan entfernt |
 | 1a-1 | `plans/2026-10-27-tis-1a1-card-details.md` | `feat/tis-1a1-card-details` (von `main`) | tis-1a1-card-details | in `main` (`a7c98a09`), noch nicht deployt |
-| 1a-2 | | | | als Nächstes planen |
+| 1a-2 | | | | in Planung |
 | 1b-1 | `plans/2026-10-26-tis-1b1-printouts.md` | `feat/tis-1b1-printouts` (von `main`) | tis-1b1-printouts | in `main` (`f0213d9a`), noch nicht deployt |
 | 1b-2 | | | | offen, nach 1a |
 | 1c | | | | offen |
