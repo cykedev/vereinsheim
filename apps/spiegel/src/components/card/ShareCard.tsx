@@ -28,6 +28,19 @@ const useCanSend = () =>
     () => false
   )
 
+type Kind = "share" | "stop"
+
+/**
+ * die Namen der beiden Knöpfe: „…“ nur an der Aktion, die läuft. Nach einer Aktion rechnet die Seite in derselben
+ * Transition neu (`router.refresh()`); der andere Knopf behält solange seinen Namen.
+ */
+export function buttonLabels(pending: boolean, kind: Kind): { share: string; stop: string } {
+  return {
+    share: pending && kind === "share" ? "Teilen…" : "Scheibe teilen",
+    stop: pending && kind === "stop" ? "Beenden…" : "Teilen beenden",
+  }
+}
+
 const BUTTON =
   "inline-flex h-10 items-center gap-2 rounded-full px-3.5 text-[13px] font-semibold focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-60"
 
@@ -52,9 +65,9 @@ export function ShareCard({
   timeZone: string
 }) {
   // welche Rückfrage; sie bleibt beim Schließen stehen, damit der Dialog nicht im Ausblenden den Text wechselt
-  const [kind, setKind] = useState<"share" | "stop">("share")
+  const [kind, setKind] = useState<Kind>("share")
   const [open, setOpen] = useState(false)
-  const ask = (next: "share" | "stop") => {
+  const ask = (next: Kind) => {
     setKind(next)
     setOpen(true)
   }
@@ -65,6 +78,7 @@ export function ShareCard({
   const origin = useOrigin()
   const canSend = useCanSend()
   const link = share ? `${origin}${sharePath(share.shareId)}` : null
+  const labels = buttonLabels(pending, kind)
 
   useEffect(() => {
     if (!copied) return
@@ -130,7 +144,7 @@ export function ShareCard({
               className={`${BUTTON} text-destructive hover:bg-destructive-wash`}
             >
               <Unlink aria-hidden className="size-4" />
-              {pending ? "Beenden…" : "Teilen beenden"}
+              {labels.stop}
             </button>
           </div>
           <p role="status" className="px-3.5 text-sm text-muted-foreground">
@@ -145,7 +159,7 @@ export function ShareCard({
           className={`${BUTTON} text-foreground hover:bg-surface-2`}
         >
           <Share2 aria-hidden className="size-4" />
-          {pending ? "Teilen…" : "Scheibe teilen"}
+          {labels.share}
         </button>
       )}
       {error && (
