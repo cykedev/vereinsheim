@@ -205,6 +205,23 @@ function contentHash(shots: readonly ShotInput[]): string {
   return sha256(`[${sorted.map(shotContent).join(",")}]`)
 }
 
+/**
+ * Inhalt einer Revision ohne Brücke (`writeEnteredCard`): die Schüsse wie `contentHash` und die Angaben ohne
+ * Einzelschüsse; gleiche Angaben, keine neue Revision
+ */
+export function detailsHash(shots: readonly ShotInput[], sums: CardSums | undefined): string {
+  return sha256(
+    canonicalize({
+      shots: [...shots]
+        .sort((a, b) => a.stellung - b.stellung || a.treffer - b.treffer)
+        .map((shot) => ({ ...shot, flags: [...shot.flags].sort() })),
+      series: sums?.series ?? [],
+      total: sums?.total ?? null,
+      center: sums?.center ?? null,
+    })
+  )
+}
+
 function assertUniqueShots(shots: readonly ShotInput[]): void {
   if (new Set(shots.map(shotKey)).size !== shots.length)
     throw new RangeError("Schüsse mit doppelter Stellung und Treffer")
@@ -347,6 +364,9 @@ export async function writeRevision(db: Db, input: RevisionInput): Promise<Revis
   return db.$transaction(async (tx) => {
     if (sourceId !== null && scheibenId !== null)
       await tx.$executeRaw`SELECT pg_advisory_xact_lock(${sourceId}::int, ${scheibenId}::int)`
+    // eine Scheibe ohne Quelle sperrt erst ihre Zeile: Ihre Revision und Herkunft gelten erst danach
+    if (input.cardId)
+      await tx.$queryRaw`SELECT id FROM "Card" WHERE id = ${input.cardId} FOR UPDATE`
     const existing = await findCard(tx, input, cycle, block)
     // die Wahl gilt, solange der Stand die Disziplin bringt, gegen die sie getroffen wurde; bringt er eine andere (auch
     // die gewählte), gilt wieder seine: Die Wahl war nur für dasselbe Scheibenbild geprüft
@@ -419,6 +439,8 @@ async function writeCard(
 
   const cardId = existing.id
   // eine Scheibe ohne Quelle bekommt ihre Rohdaten: nur eine vom Ausdruck, eingetragene nie
+  if (existing.sourceId === null && sourceId === null)
+    throw new RangeError(`Scheibe ${cardId} ohne Brücke: Angaben schreibt writeEnteredCard`)
   const upgrade = existing.sourceId === null && sourceId !== null
   if (upgrade && existing.origin !== "pdf")
     throw new RangeError(`Scheibe ${cardId} ist eingetragen und bekommt keine Rohdaten`)
@@ -585,7 +607,7 @@ async function newRevision(
 
 /**
  * die Angaben einer Revision ohne oder neben Einzelschüssen (Serien-Summen, Gesamtergebnis, Trefferlage,
- * [[adr-033]]); undefined ohne sie, so rechnen Scheiben der Brücke genau wie bisher
+ * [[adr-033]]); undefined ohne sie: Scheiben der Brücke rechnen nur aus ihren Schüssen
  */
 export async function revisionSums(tx: Tx | Db, revisionId: bigint): Promise<CardSums | undefined> {
   const revision = await tx.cardRevision.findUnique({
@@ -991,13 +1013,14 @@ async function recomputeDisciplineCard(tx: Tx, cardId: string): Promise<void> {
   const changed = next.flatMap((shot, i) => (sameFlags(shot.flags, shots[i].flags) ? [] : [i]))
   for (const i of changed)
     await tx.shot.update({ where: { id: rows[i].id }, data: { flags: [...next[i].flags] } })
+  const sums = await revisionSums(tx, revisionId)
+  // eine Revision ohne Brücke hält ihre Angaben in der Prüfsumme (`writeEnteredCard` vergleicht mit ihr)
   if (changed.length)
     await tx.cardRevision.update({
       where: { id: revisionId },
-      data: { contentHash: contentHash(next) },
+      data: { contentHash: row.origin === "raw" ? contentHash(next) : detailsHash(next, sums) },
     })
 
-  const sums = await revisionSums(tx, revisionId)
   const counts = revisionCounts(shots, sums)
   const flags = [
     ...detailFlags({

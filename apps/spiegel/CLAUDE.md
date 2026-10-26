@@ -190,7 +190,7 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
   Ausdruck nur der Ausdruck, eingetragene nur von Hand, aus Treffsicher von Hand oder von der Übernahme). Die Angaben
   (Serien-Summen `SeriesSum`, Gesamtergebnis, Trefferlage) gehören zur Revision; `revisionSums` liest sie für
   Projektion und Nachrechnen, `revisionCounts` und `detailFlags` (`card-checks.ts`) rechnen die Merkmale (ohne Werte
-  weder leer noch nur Probe, Scheiben der Brücke wie bisher). Rohdaten an einer Scheibe vom Ausdruck sind eine neue
+  weder leer noch nur Probe, Scheiben der Brücke behalten alle Merkmale). Rohdaten an einer Scheibe vom Ausdruck sind eine neue
   Revision ohne „korrigiert“; eingetragene bekommen nie Rohdaten. Ort als Freitext (`Card.place`), Schlüssel der
   Übernahme `Card.importKey`.
 - **Familie mitgeführt:** `Card.familyId` kopiert die Familie der Disziplin für den Index; umhängen nur über

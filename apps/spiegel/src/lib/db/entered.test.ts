@@ -306,6 +306,10 @@ describe("Übernahme und ungültige Angaben", () => {
     )
     expect(result).toEqual({ kind: "invalid", problem: "totalMismatch" })
     expect(await db.card.count({ where: { disciplineId } })).toBe(before)
+    expect(
+      await writeEnteredCard(db, input({ total: { rings: 371 } }, { startedAtMs: Number.NaN }))
+    ).toEqual({ kind: "invalid", problem: "startedAt" })
+    expect(await db.card.count({ where: { disciplineId } })).toBe(before)
   })
 })
 
@@ -334,6 +338,18 @@ describe("Rohdaten an einer Scheibe vom Ausdruck", () => {
     expect(await db.shot.count({ where: { revisionId: pdf.revisionId } })).toBe(0)
   })
 
+  it("Angaben einer Scheibe ohne Brücke schreibt writeRevision nicht", async () => {
+    const pdf = await saved({}, { origin: "pdf" })
+    const generated = season(3300)
+    await expect(
+      writeRevision(db, {
+        ...generated,
+        cardId: pdf.cardId,
+        card: { ...generated.card, sourceId: null, scheibenId: null, origin: "pdf" },
+      })
+    ).rejects.toThrow(RangeError)
+  })
+
   it("eine eingetragene bekommt keine Rohdaten", async () => {
     const manual = await saved({ total: { rings: 370 } })
     await expect(writeRevision(db, { ...season(3200), cardId: manual.cardId })).rejects.toThrow(
@@ -352,6 +368,40 @@ describe("Nachrechnen", () => {
     const total = await cardOf(ids.total)
     expect(total.flags).toContain("ueber-soll")
     expect((await cardOf(ids.empty)).flags).not.toContain("leer")
+  })
+
+  it("nach dem Nachrechnen bleiben gleiche Angaben unverändert (die Prüfsumme hält die Angaben)", async () => {
+    const own = await db.discipline.create({
+      data: {
+        siteId: site.siteId,
+        meytonId: null,
+        name: "LG 10 Prüfsumme",
+        familyId: site.familyId,
+        targetId: "lg-10m",
+        plannedShots: 10,
+        confirmedAt: new Date(),
+      },
+    })
+    // neun Schüsse passen zu ihrer Lage, einer nicht: verdächtig, solange das Scheibenbild gilt
+    const shots: EnteredShot[] = RINGS.map((_, i) => {
+      const xUm = i === 9 ? 3000 : 300 * i
+      const fitting = scoreFromCoordinates(LG_10M, xUm, 0).decimalTenths
+      return { series: 1, ring: null, decimalTenths: i === 9 ? 109 : fitting, xUm, yUm: 0 }
+    })
+    const details = { shots, series: undefined }
+    const first = await saved(details, { disciplineId: own.id })
+    const flagged = await db.shot.findMany({ where: { revisionId: first.revisionId } })
+    expect(flagged.filter((shot) => shot.flags.includes("verdaechtig"))).toHaveLength(1)
+    await db.discipline.update({
+      where: { id: own.id },
+      data: { targetId: null, version: { increment: 1 } },
+    })
+    await refreshDisciplineCards(db, { cardIds: [first.cardId] })
+    const again = await writeEnteredCard(
+      db,
+      input(details, { disciplineId: own.id, cardId: first.cardId })
+    )
+    expect(again).toMatchObject({ kind: "saved", change: "unchanged", number: 1 })
   })
 
   it("eine veraltete Projektion rechnet aus den gespeicherten Angaben gleich", async () => {

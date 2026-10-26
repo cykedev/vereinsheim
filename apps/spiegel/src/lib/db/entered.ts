@@ -1,11 +1,8 @@
-// Scheiben ohne Brücke schreiben ([[adr-033]]): der einzige Weg für Scheiben vom Ausdruck (Scan 1b-2, Parser 1c), von
-// Hand (1d) und aus Treffsicher (Übernahme, Stufe 3). Rohdaten schreibt nur `writeRevision`. Die Angaben gehören zur
-// Revision (ADR-031): Eine geänderte Angabe ist eine neue Revision, gleiche Angaben ändern nur die Merkmale. 1b-2 ruft
-// `writeEnteredCardIn` in der Transaktion, in der es `attachPrintout` ruft.
+// Scheiben ohne Brücke schreiben ([[adr-033]]): der einzige Weg für Scheiben vom Ausdruck (Scan, Parser), von Hand und
+// aus der Übernahme aus Treffsicher. Rohdaten schreibt nur `writeRevision`. Die Angaben gehören zur Revision (ADR-031):
+// Eine geänderte Angabe ist eine neue Revision, gleiche Angaben ändern nur die Merkmale. Wer zugleich einen Ausdruck
+// anhängt, ruft `writeEnteredCardIn` in derselben Transaktion.
 
-import { createHash } from "node:crypto"
-
-import { canonicalize } from "@vereinsheim/ingest-contract/canonical"
 import { plannedShotsOf, seriesShotsOf } from "@vereinsheim/shot-core/discipline"
 import { FLAG_SUSPICIOUS } from "@vereinsheim/shot-core/metrics"
 import { TARGETS, type TargetId } from "@vereinsheim/shot-core/targets"
@@ -18,6 +15,7 @@ import {
   checkImportKey,
   detailsWriter,
   enteredScoring,
+  isTimeMs,
   normalizePlace,
   type DetailsInput,
   type DetailsProblem,
@@ -25,7 +23,7 @@ import {
   type NormalizedDetails,
 } from "../entered/details"
 import { detailFlags, isComplete, revisionCounts, verifyShots } from "../ingest/card-checks"
-import { saveProjection, shotRows, toMetricShot } from "./cards"
+import { detailsHash, saveProjection, shotRows, toMetricShot } from "./cards"
 import { lockCard } from "./purge"
 
 type Tx = Prisma.TransactionClient
@@ -61,22 +59,6 @@ export type EnteredResult =
 
 export const writeEnteredCard = (db: Db, input: EnteredCardInput) =>
   db.$transaction((tx) => writeEnteredCardIn(tx, input))
-
-const sha256 = (text: string) => createHash("sha256").update(text, "utf8").digest("hex")
-
-/** Inhalt der Angaben: gleiche Angaben, keine neue Revision; unabhängig von der Folge der Eingabe */
-function detailsHash({ shots, sums }: NormalizedDetails): string {
-  return sha256(
-    canonicalize({
-      shots: [...shots]
-        .sort((a, b) => a.stellung - b.stellung || a.treffer - b.treffer)
-        .map((shot) => ({ ...shot, flags: [...shot.flags].sort() })),
-      series: sums?.series ?? [],
-      total: sums?.total ?? null,
-      center: sums?.center ?? null,
-    })
-  )
-}
 
 /** eine Revision mit ihren Angaben: Gesamtergebnis und Trefferlage an der Revision, Serien-Summen, Schüsse */
 async function createDetailsRevision(
@@ -129,6 +111,7 @@ export async function writeEnteredCardIn(tx: Tx, input: EnteredCardInput): Promi
       FROM "Discipline" WHERE id = ${input.disciplineId} FOR SHARE`
   if (!discipline) return { kind: "missing" }
 
+  if (!isTimeMs(input.startedAtMs)) return { kind: "invalid", problem: "startedAt" }
   const plannedShots = plannedShotsOf(discipline.meytonId, discipline.plannedShots)
   const checked = checkDetails(input.details, {
     plannedShots,
@@ -171,11 +154,13 @@ export async function writeEnteredCardIn(tx: Tx, input: EnteredCardInput): Promi
       standScoring: enteredScoring(details),
     }
   }
-  const hash = detailsHash(details)
+  const hash = detailsHash(details.shots, details.sums)
   const metricShots = details.shots.map(toMetricShot)
 
   let cardId = input.cardId
   if (cardId === undefined && importKey !== null) {
+    // zwei Übernahmen desselben Schlüssels nacheinander: die zweite findet die Scheibe der ersten
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${importKey}))`
     const taken = await tx.card.findUnique({
       where: { importKey },
       select: { id: true, ownerId: true },

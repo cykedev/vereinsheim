@@ -53,6 +53,17 @@ describe("checkDetails: je Problem ein Fall", () => {
       },
     ],
     ["seriesNumber", { series: [{ series: 0, rings: 90 }] }],
+    ["seriesNumber", { series: [{ series: 3_000_000_000, rings: 90 }] }],
+    ["seriesValue", { series: [{ series: 1, shots: 1001, rings: 9000 }] }],
+    ["shotInnerTen", { shots: [{ series: 1, ring: 9, decimalTenths: null, innerTen: true }] }],
+    ["shotPosition", { shots: [{ series: 1, ring: 9, decimalTenths: null, xUm: 1.5, yUm: 0 }] }],
+    ["shotPosition", { shots: [{ series: 1, ring: 9, decimalTenths: null, xUm: 100 }] }],
+    [
+      "shotPosition",
+      { shots: [{ series: 1, ring: 9, decimalTenths: null, distanceTenthsUm: -1 }] },
+    ],
+    ["shotTime", { shots: [{ series: 1, ring: 9, decimalTenths: null, firedAtMs: Number.NaN }] }],
+    ["shotTime", { shots: [{ series: 1, ring: 9, decimalTenths: null, firedAtMs: 1.5 }] }],
     [
       "seriesShotsUnknown",
       { series: [{ series: 1, rings: 90 }] },

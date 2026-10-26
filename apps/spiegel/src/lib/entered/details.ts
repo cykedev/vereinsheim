@@ -45,6 +45,9 @@ export type DetailsProblem =
   | "shotValue"
   | "shotRingTenths"
   | "shotSeries"
+  | "shotInnerTen"
+  | "shotPosition"
+  | "shotTime"
   | "seriesNumber"
   | "seriesShotsUnknown"
   | "seriesValue"
@@ -57,10 +60,15 @@ export type DetailsProblem =
   | "centerValue"
   | "place"
   | "importKey"
+  | "startedAt"
 
 export const PLACE_MAX = 80
-/** so weit von der Mitte liegt keine Trefferlage einer Scheibe (100 mm) */
+/** so weit von der Mitte liegt kein Treffer und keine Trefferlage einer Scheibe (100 mm) */
 const CENTER_MAX_UM = 100_000
+/** Abstand zur Mitte in 0,1 µm: höchstens dieselben 100 mm */
+const DISTANCE_MAX_TENTHS_UM = 10 * CENTER_MAX_UM
+/** so viele Schüsse oder Serien hat keine Scheibe; hält auch jede Zahl im Bereich der Datenbank */
+const MAX_COUNT = 1000
 /** Schlüssel der Übernahme aus Treffsicher: `treffsicher:<id der Einheit>` */
 export const IMPORT_KEY = /^treffsicher:[A-Za-z0-9_-]{1,64}$/
 
@@ -69,7 +77,10 @@ type Failed = { ok: false; problem: DetailsProblem }
 const fail = (problem: DetailsProblem): Failed => ({ ok: false, problem })
 
 const isCount = (value: unknown): value is number =>
-  typeof value === "number" && Number.isInteger(value) && value >= 1
+  typeof value === "number" && Number.isInteger(value) && value >= 1 && value <= MAX_COUNT
+/** eine Zeit in ms (UTC): eine ganze, endliche Zahl, die ein Datum ergibt */
+export const isTimeMs = (value: unknown): value is number =>
+  typeof value === "number" && Number.isInteger(value) && !Number.isNaN(new Date(value).getTime())
 const inRange = (value: number | null, max: number) =>
   value === null || (Number.isInteger(value) && value >= 0 && value <= max)
 
@@ -128,12 +139,21 @@ function normalizeShots(shots: readonly EnteredShot[]): Checked<{ shots: ShotInp
     if (shot.ring !== null && fromTenths !== null && shot.ring !== fromTenths)
       return fail("shotRingTenths")
     if (shot.series !== null && !isCount(shot.series)) return fail("shotSeries")
-    const stellung = shot.probe ? 0 : 1
-    const treffer = (next.get(stellung) ?? 0) + 1
-    next.set(stellung, treffer)
+    const ring = shot.ring ?? fromTenths
+    // ein Innenzehner ist ein Zehner
+    if (shot.innerTen === true && ring !== 10) return fail("shotInnerTen")
     const xUm = shot.xUm ?? null
     const yUm = shot.yUm ?? null
     const distanceTenthsUm = shot.distanceTenthsUm ?? null
+    const placed = (v: number | null) =>
+      v !== null && Number.isInteger(v) && Math.abs(v) <= CENTER_MAX_UM
+    if ((xUm !== null || yUm !== null) && !(placed(xUm) && placed(yUm))) return fail("shotPosition")
+    if (!inRange(distanceTenthsUm, DISTANCE_MAX_TENTHS_UM)) return fail("shotPosition")
+    const firedAtMs = shot.firedAtMs ?? null
+    if (firedAtMs !== null && !isTimeMs(firedAtMs)) return fail("shotTime")
+    const stellung = shot.probe ? 0 : 1
+    const treffer = (next.get(stellung) ?? 0) + 1
+    next.set(stellung, treffer)
     out.push({
       seq: i + 1,
       stellung,
@@ -141,12 +161,12 @@ function normalizeShots(shots: readonly EnteredShot[]): Checked<{ shots: ShotInp
       series: shot.series,
       xUm,
       yUm,
-      ring: shot.ring ?? fromTenths,
+      ring,
       decimalTenths,
       distanceTenthsUm,
       innerTen: shot.innerTen ?? null,
       displayMode: null,
-      firedAtMs: shot.firedAtMs ?? null,
+      firedAtMs,
       // ohne Gegenprobe: die macht der Writer mit dem Scheibenbild der Disziplin
       flags: baseShotFlags({ xUm, yUm, distanceTenthsUm, decimalTenths, overTarget: false }),
     })

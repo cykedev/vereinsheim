@@ -160,7 +160,7 @@ export function revisionCounts(
 /**
  * die Merkmale der Disziplin (`mappingFlags`) für eine Scheibe jeder Herkunft. Eine Scheibe ohne Werte (vom Ausdruck,
  * wartet auf die Brücke) ist weder leer noch nur Probe: Ihr fehlen die Merkmale der Vollständigkeit. Scheiben der Brücke
- * rechnen wie bisher
+ * behalten alle Merkmale
  */
 export function detailFlags(
   input: Parameters<typeof mappingFlags>[0] & { origin: CardOrigin; valued: boolean }

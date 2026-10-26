@@ -7,6 +7,6 @@ export function assertDevDatabase(url: string, force: boolean) {
   const local = ["localhost", "127.0.0.1", "::1", "[::1]"].includes(hostname)
   if (!local || (pathname !== "/spiegel" && !force))
     throw new Error(
-      `seed:own nur gegen die lokale Dev-Datenbank spiegel (nicht ${hostname}${pathname})`
+      `nur gegen die lokale Dev-Datenbank spiegel (nicht ${hostname}${pathname}), sonst --force`
     )
 }
