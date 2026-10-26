@@ -55,6 +55,7 @@ export function RankingForm({ row }: { row: RankingRow }) {
           options={RANKING_OPTIONS}
           value={kind}
           onChange={setKind}
+          wrap
         />
       </section>
       {error && (
