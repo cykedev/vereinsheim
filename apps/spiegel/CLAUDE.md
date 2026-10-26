@@ -26,6 +26,7 @@ Stack Ende zu Ende.
 | `pnpm --filter spiegel stack-probe`                            | Grenzen hinter Caddy gegen einen laufenden Stack (`BASE_URL`, `DATABASE_URL`; aus `tools/stack-e2e/run.sh`)                                                                                                                                                      |
 | `pnpm --filter spiegel bridge-e2e`                             | die echte Brücke (Go) Ende zu Ende gegen den eigenen Build auf :3012 mit MariaDB, drei Fällen und Aufträgen per ID (`--keep`), mit `BASE_URL` gegen einen laufenden Spiegel                                                                                      |
 | `pnpm --filter spiegel exec tsx tools/printout-sample.ts`      | erfundener Meyton-Ausdruck (`--id`, Vorgabe `ff914420`; `--printed` mit Versatz) als PDF nach stdout, für den Stack-Test, die Skriptprüfung (`samplePrintout`) und zum Messen des Lesers (`--values`: stimmig mit Werten und Trefferbild; `--kind memory\|time`) |
+| `pnpm --filter spiegel transfer:accounts dev`                  | Abgleich der Konten Treffsicher ↔ Spiegel vor der Übernahme (ADR-033): Bericht und Vorschlag der Zuordnung nach `reports/tis-v1/` (Personendaten, gitignored); `prod` führt nur der User aus                                                                     |
 
 Die Dev-Datenbank legt `dev/db-init` beim ersten Start an, `scripts/bootstrap-dev.sh` zieht sie für bestehende Volumes
 nach. Ohne `.env` nehmen Tests und Messung die Dev-Datenbank aus `.env.example` (`test/dev-database.ts`), NextAuth den

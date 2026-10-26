@@ -28,7 +28,7 @@ function tis(
     email,
     role: "USER",
     isActive: true,
-    createdAt: "2025-01-01T00:00:00.000Z",
+    createdAt: "2025-01-01",
     sessions: 0,
     sessionsWithResult: 0,
     lastSession: null,
@@ -48,7 +48,7 @@ function sp(id: string, name: string | null, email: string, extra: Partial<Spieg
     role: "USER",
     isActive: true,
     mustChangePassword: false,
-    createdAt: "2025-01-01T00:00:00.000Z",
+    createdAt: "2025-01-01",
     cards: 0,
     lastCard: null,
     consent: null,
@@ -126,6 +126,32 @@ describe("matchAccounts", () => {
     expect(result.suspected[0].candidates[0].reasons).toEqual(["name-similar"])
   })
 
+  it("Tippfehler am Anfang eines Worts, der die Sortierung ändert, ist ein ähnlicher Name", () => {
+    const result = matchAccounts(
+      [tis("t1", "Hans Zimmer", "hz@example.org")],
+      [sp("s1", "Hans Gimmer", "hans@example.net")]
+    )
+    expect(result.suspected[0].candidates[0].reasons).toEqual(["name-similar"])
+  })
+
+  it("zerlegt geschriebener Umlaut (NFD) ist derselbe Name", () => {
+    const result = matchAccounts(
+      [tis("t1", "Ju\u0308rgen Probe", "jp@example.org")],
+      [sp("s1", "Juergen Probe", "juergen@example.net")]
+    )
+    expect(result.suspected[0].candidates[0].reasons).toEqual(["name"])
+  })
+
+  it("zwei Konten einer App mit derselben E-Mail sind ein Fehler ohne Adresse", () => {
+    const call = () =>
+      matchAccounts([tis("t1", null, "A@example.org"), tis("t2", null, "a@example.org")], [])
+    expect(call).toThrow(/1 Konten in Treffsicher/)
+    expect(call).not.toThrow(/example/)
+    expect(() =>
+      matchAccounts([], [sp("s1", null, "a@example.org"), sp("s2", null, " a@example.org")])
+    ).toThrow(/Spiegel/)
+  })
+
   it("kurzer Name unter sechs Zeichen gibt keinen Treffer über den Abstand", () => {
     const result = matchAccounts(
       [tis("t1", "Al Bo", "albo@example.org")],
@@ -138,8 +164,8 @@ describe("matchAccounts", () => {
 
   it("Tippfehler in der Domain bei gleichem Teil vor dem @", () => {
     const result = matchAccounts(
-      [tis("t1", null, "max.probe@exmaple.com")],
-      [sp("s1", null, "max.probe@example.com")]
+      [tis("t1", null, "max.probe@verien.example")],
+      [sp("s1", null, "max.probe@verein.example")]
     )
     expect(result.suspected[0].candidates[0].reasons).toEqual(["domain-typo"])
   })
@@ -212,6 +238,12 @@ describe("parseCsv", () => {
   it("Zeilenumbruch im Feld", () => {
     expect(parseCsv('a,b\n"eins\nzwei",3\n')).toEqual([{ a: "eins\nzwei", b: "3" }])
   })
+  it("Anführungszeichen mitten im Feld ist ein Zeichen", () => {
+    expect(parseCsv('a,b\nab"c,5"\n')).toEqual([{ a: 'ab"c', b: '5"' }])
+  })
+  it("Text nach dem schließenden Anführungszeichen ist ein Fehler mit Zeile", () => {
+    expect(() => parseCsv('a,b\n1,2\n"x"y,3\n')).toThrow(/Zeile 3/)
+  })
   it("falsche Zahl an Feldern ist ein Fehler mit Zeile", () => {
     expect(() => parseCsv("a,b\n1,2,3\n")).toThrow(/Zeile 2/)
   })
@@ -235,10 +267,17 @@ describe("Konten aus der CSV der Abfragen", () => {
       }),
     ])
   })
+  it("eine fehlende Spalte ist ein Fehler", () => {
+    expect(() =>
+      spiegelAccountsFromCsv(
+        "id,name,email,role,active,must_change_password,created_at,cards,last_card,consent\n"
+      )
+    ).toThrow(/Spalte „is_active“ fehlt/)
+  })
   it("Spiegel: Zustimmung und letzte Scheibe", () => {
     const csv =
       "id,name,email,role,is_active,must_change_password,created_at,cards,last_card,consent\n" +
-      "s1,A B,a@example.org,ADMIN,t,t,2025-01-01,40,2026-10-20,confirmed\n"
+      "s1,A B,a@example.org,ADMIN,t,t,2025-01-01,40,2026-10-20,active\n"
     expect(spiegelAccountsFromCsv(csv)).toEqual([
       sp("s1", "A B", "a@example.org", {
         role: "ADMIN",
@@ -246,7 +285,7 @@ describe("Konten aus der CSV der Abfragen", () => {
         createdAt: "2025-01-01",
         cards: 40,
         lastCard: "2026-10-20",
-        consent: "confirmed",
+        consent: "active",
       }),
     ])
   })

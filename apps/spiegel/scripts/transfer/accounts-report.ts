@@ -4,7 +4,7 @@
 // die Konsole gehen nur Zahlen.
 //
 //   tsx scripts/transfer/accounts-report.ts <Verzeichnis> <dev|prod>
-import { readFileSync, statSync, writeFileSync } from "node:fs"
+import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 
 import { formatIsoDate } from "@vereinsheim/lib/format"
@@ -87,6 +87,14 @@ function missing(m: AccountMatch): string {
   )
 }
 
+// Zustände aus spiegel-accounts.sql, wie `consentStatus` in Spiegel
+const CONSENT_TEXT: Record<string, string> = {
+  requested: "wartet",
+  active: "aktiv",
+  rejected: "abgelehnt",
+  returned: "zurück beim Admin",
+}
+
 function suspected(m: AccountMatch): string {
   if (m.suspected.length === 0) return "Keine."
   return table(
@@ -97,6 +105,8 @@ function suspected(m: AccountMatch): string {
       "Spiegel: Name",
       "Spiegel: E-Mail",
       "Scheiben",
+      "letzte Scheibe",
+      "Sportpass",
       "Merkmal",
     ],
     m.suspected.flatMap((s) =>
@@ -107,6 +117,8 @@ function suspected(m: AccountMatch): string {
         c.spiegel.name,
         c.spiegel.email,
         c.spiegel.cards,
+        c.spiegel.lastCard,
+        c.spiegel.consent === null ? null : CONSENT_TEXT[c.spiegel.consent],
         c.reasons.map((r) => REASON_LABELS[r]).join(", "),
       ])
     )
@@ -173,17 +185,26 @@ ${both(match)}
 ${onlySpiegel(match.onlySpiegel)}
 `
 
-const reportPath = join(dir, `konten-${day}.md`)
-const mappingPath = join(dir, `zuordnung-${day}.csv`)
-writeFileSync(reportPath, report, { mode: 0o600 })
-const mapping = proposeMapping(match)
-writeFileSync(mappingPath, formatMappingCsv(mapping), { mode: 0o600 })
-
-// Gegenprobe: jede Gruppe zusammen ergibt die Konten aus Treffsicher, und die Zuordnung liest sich zurück.
+// Gegenprobe vor dem Schreiben: jede Gruppe zusammen ergibt die Konten aus Treffsicher.
 const grouped = match.both.length + match.suspected.length + match.onlyTreffsicher.length
 if (grouped !== treffsicher.length) {
   throw new Error(`Gruppen ergeben ${grouped} statt ${treffsicher.length} Konten aus Treffsicher`)
 }
+
+// Der User bearbeitet die Zuordnung von Hand; ein zweiter Lauf am selben Tag überschreibt sie nicht.
+const reportPath = join(dir, `konten-${day}.md`)
+const mappingPath = join(dir, `zuordnung-${day}.csv`)
+if (existsSync(mappingPath)) {
+  process.stderr.write(
+    `Zuordnung ${mappingPath} gibt es schon. Erst umbenennen oder löschen, dann neu laufen lassen.\n`
+  )
+  process.exit(1)
+}
+const mapping = proposeMapping(match)
+writeFileSync(mappingPath, formatMappingCsv(mapping), { mode: 0o600, flag: "wx" })
+writeFileSync(reportPath, report, { mode: 0o600 })
+
+// Gegenprobe: die Zuordnung liest sich zurück.
 const reread = parseMappingCsv(readFileSync(mappingPath, "utf8"))
 if (reread.length !== mapping.length)
   throw new Error("Zuordnung liest sich nicht vollständig zurück")

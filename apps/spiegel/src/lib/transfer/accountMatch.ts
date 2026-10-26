@@ -41,7 +41,8 @@ export type PairDifference = "role" | "active"
 
 /**
  * Warum ein Spiegel-Konto vermutlich dieselbe Person ist: gleicher Name, ähnlicher Name (Abstand höchstens 2, ab
- * sechs Zeichen), gleicher Teil vor dem @ bei anderer Domain, gleicher Teil vor dem @ mit Tippfehler in der Domain.
+ * sechs Zeichen), gleicher Teil vor dem @ bei anderer Domain, gleicher Teil vor dem @ mit fast gleicher Domain
+ * (Abstand höchstens 2, ein Tippfehler oder eine verwandte Domain desselben Anbieters).
  */
 export type SuspicionReason = "name" | "name-similar" | "local-part" | "domain-typo"
 
@@ -76,10 +77,11 @@ export function normalizeEmail(email: string): string {
   return email.trim().toLowerCase()
 }
 
-/** Klein, Umlaute und ß ausgeschrieben, Wörter sortiert: „Groß Jürgen“ und „Juergen Gross“ sind gleich. */
-export function normalizeName(name: string | null): string {
-  if (!name) return ""
+// Wörter eines Namens in ihrer Reihenfolge: klein, Umlaute und ß ausgeschrieben (auch zerlegt geschriebene, NFC).
+function nameWords(name: string | null): string[] {
+  if (!name) return []
   return name
+    .normalize("NFC")
     .toLowerCase()
     .replace(/ä/g, "ae")
     .replace(/ö/g, "oe")
@@ -87,8 +89,11 @@ export function normalizeName(name: string | null): string {
     .replace(/ß/g, "ss")
     .split(/\s+/)
     .filter((word) => word !== "")
-    .sort()
-    .join(" ")
+}
+
+/** Klein, Umlaute und ß ausgeschrieben, Wörter sortiert: „Groß Jürgen“ und „Juergen Gross“ sind gleich. */
+export function normalizeName(name: string | null): string {
+  return nameWords(name).sort().join(" ")
 }
 
 function levenshtein(a: string, b: string): number {
@@ -119,13 +124,14 @@ function suspicionReasons(
   const a = normalizeName(treffsicher.name)
   const b = normalizeName(spiegel.name)
   if (a !== "" && a === b) reasons.push("name")
-  else if (
-    a !== "" &&
-    b !== "" &&
-    Math.min(a.length, b.length) >= MIN_SIMILAR_NAME &&
-    levenshtein(a, b) <= MAX_NAME_DISTANCE
-  ) {
-    reasons.push("name-similar")
+  else if (a !== "" && b !== "" && Math.min(a.length, b.length) >= MIN_SIMILAR_NAME) {
+    // Sortiert fängt vertauschte Wörter, in der Reihenfolge einen Tippfehler am Anfang eines Worts, der die
+    // Sortierung ändert („Hans Zimmer“, „Hans Gimmer“).
+    const inOrder = levenshtein(
+      nameWords(treffsicher.name).join(" "),
+      nameWords(spiegel.name).join(" ")
+    )
+    if (Math.min(levenshtein(a, b), inOrder) <= MAX_NAME_DISTANCE) reasons.push("name-similar")
   }
 
   const x = emailParts(treffsicher.email)
@@ -136,6 +142,17 @@ function suspicionReasons(
     )
   }
   return reasons
+}
+
+// Die Fehlermeldung nennt nur die Zahl, keine Adresse: Sie landet auf der Konsole.
+function assertUniqueEmails(accounts: { email: string }[], app: string): void {
+  const emails = new Set(accounts.map((account) => normalizeEmail(account.email)))
+  const duplicates = accounts.length - emails.size
+  if (duplicates > 0) {
+    throw new Error(
+      `${duplicates} Konten in ${app} teilen sich eine E-Mail mit einem anderen (ohne Groß- und Kleinschreibung)`
+    )
+  }
 }
 
 function byEmail<T extends { email: string }>(a: T, b: T): number {
@@ -153,6 +170,8 @@ export function matchAccounts(
   treffsicher: TreffsicherAccount[],
   spiegel: SpiegelAccount[]
 ): AccountMatch {
+  assertUniqueEmails(treffsicher, "Treffsicher")
+  assertUniqueEmails(spiegel, "Spiegel")
   const spiegelByEmail = new Map(spiegel.map((account) => [normalizeEmail(account.email), account]))
   const both: AccountPair[] = []
   const unmatched: TreffsicherAccount[] = []
@@ -208,6 +227,8 @@ function csvRecords(text: string): CsvRecord[] {
   let fields: string[] = []
   let field = ""
   let quoted = false
+  // das Feld war in Anführungszeichen und ist geschlossen: danach darf nur Komma oder Zeilenende kommen
+  let closed = false
   let line = 1
   let start = 1
   const endRecord = () => {
@@ -215,6 +236,7 @@ function csvRecords(text: string): CsvRecord[] {
     if (!(fields.length === 1 && fields[0] === "")) records.push({ line: start, fields })
     fields = []
     field = ""
+    closed = false
   }
 
   for (let i = 0; i < input.length; i++) {
@@ -225,21 +247,26 @@ function csvRecords(text: string): CsvRecord[] {
         i++
       } else if (char === '"') {
         quoted = false
+        closed = true
       } else {
         if (char === "\n") line++
         field += char
       }
-    } else if (char === '"') {
-      quoted = true
     } else if (char === ",") {
       fields.push(field)
       field = ""
+      closed = false
     } else if (char === "\n" || char === "\r") {
       if (char === "\r" && input[i + 1] === "\n") i++
       endRecord()
       line++
       start = line
+    } else if (closed) {
+      throw new Error(`Zeile ${line}: nach dem schließenden Anführungszeichen fehlt das Komma`)
+    } else if (char === '"' && field === "") {
+      quoted = true
     } else {
+      // ein Anführungszeichen mitten im Feld ohne Anführungszeichen außen herum gilt als Zeichen
       field += char
     }
   }
@@ -271,6 +298,43 @@ function csvField(value: string): string {
 
 // ── Konten aus der CSV der Abfragen ──────────────────────────────────────────
 
+const TREFFSICHER_COLUMNS = [
+  "id",
+  "name",
+  "email",
+  "role",
+  "is_active",
+  "created_at",
+  "sessions",
+  "sessions_with_result",
+  "last_session",
+  "favourites",
+  "own_disciplines",
+  "goals",
+  "routines",
+]
+
+const SPIEGEL_COLUMNS = [
+  "id",
+  "name",
+  "email",
+  "role",
+  "is_active",
+  "must_change_password",
+  "created_at",
+  "cards",
+  "last_card",
+  "consent",
+]
+
+// Die Spalten koppeln SQL und Parser: Fehlt eine, wären Zählungen still 0 und Konten still inaktiv.
+function accountRows(csv: string, columns: string[]): Record<string, string>[] {
+  const { header, rows } = recordsWithHeader(csv)
+  const missing = columns.find((column) => !header.includes(column))
+  if (missing) throw new Error(`Spalte „${missing}“ fehlt`)
+  return rows.map((row) => Object.fromEntries(header.map((name, i) => [name, row.fields[i]])))
+}
+
 function text(value: string | undefined): string | null {
   return value === undefined || value === "" ? null : value
 }
@@ -286,7 +350,7 @@ function flag(value: string | undefined): boolean {
 }
 
 export function treffsicherAccountsFromCsv(csv: string): TreffsicherAccount[] {
-  return parseCsv(csv).map((row) => ({
+  return accountRows(csv, TREFFSICHER_COLUMNS).map((row) => ({
     id: row.id,
     name: text(row.name),
     email: row.email,
@@ -304,7 +368,7 @@ export function treffsicherAccountsFromCsv(csv: string): TreffsicherAccount[] {
 }
 
 export function spiegelAccountsFromCsv(csv: string): SpiegelAccount[] {
-  return parseCsv(csv).map((row) => ({
+  return accountRows(csv, SPIEGEL_COLUMNS).map((row) => ({
     id: row.id,
     name: text(row.name),
     email: row.email,
@@ -338,7 +402,7 @@ export const REASON_LABELS: Record<SuspicionReason, string> = {
   name: "gleicher Name",
   "name-similar": "ähnlicher Name",
   "local-part": "gleicher Teil vor dem @",
-  "domain-typo": "gleicher Teil vor dem @ mit Tippfehler in der Domain",
+  "domain-typo": "gleicher Teil vor dem @, Domain fast gleich",
 }
 
 /** Der Vorschlag: eine Zeile je Treffsicher-Konto, bei einem Verdacht eine je Kandidat; nach `from` sortiert. */
