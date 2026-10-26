@@ -317,6 +317,16 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
   gesperrt (`buttonLabels` in `apps/spiegel/src/components/card/ShareCard.tsx`). Sonst hieß der Knopf direkt nach dem
   Teilen rund 250 ms „Beenden…“. Aufgefallen im Oktober 2026, als die Skriptprüfung in einem von fünf Läufen scheiterte.
 
+- **Ein Kindprozess schreibt auf macOS in eine Pipe asynchron**: Node schreibt `process.stdout` in eine Pipe unter Linux
+  synchron, auf macOS nicht. Ein Skript, das eine Zeile schreibt und danach blockiert (Endlosschleife, `process.exit`),
+  liefert auf dem Mac nichts, und der Elternprozess wartet bis zu seiner eigenen Zeitgrenze. Deshalb erst im Rückruf
+  von `write` blockieren oder beenden (Beispiel: `apps/spiegel/src/lib/printouts/__fixtures__/hang-child.mjs`).
+  Aufgefallen im Oktober 2026 beim Leser der Ausdrucke.
+
+- **Mutationsprobe an einer Abbruchgrenze hinterlässt Prozesse**: Nimmt die Mutation den `kill` eines Kindprozesses
+  heraus, läuft der Kindprozess nach dem roten Test weiter (eine Endlosschleife braucht dann einen ganzen Kern). Nach so
+  einer Probe mit `pgrep -fl <skript>` nachsehen und beenden.
+
 - **Was nebeneinander steht, steht auf einer Linie**: Kacheln oder Zeilen mit einem Bild und Text, der umbrechen kann,
   richten ihren Text oben am Bild aus (`align-top` in Tabellen) und teilen sich die Zeilen über Kacheln hinweg
   (`grid-rows-subgrid`, Beispiel: `EveningBlock` auf Start). Sonst rutscht der Wert einer Kachel tiefer, sobald in ihr
