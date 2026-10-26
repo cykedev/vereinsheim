@@ -181,12 +181,19 @@ describe("Block des letzten Abends auf Start", () => {
     expect(text(html)).toContain("18:00 · Training 18,8 Zehntel · 18 ganze Ringe")
   })
 
-  it("Kacheln einer Zeile gleich hoch, die kleine Scheibe oben (auch wenn ein Text umbricht)", () => {
+  it("Kacheln einer Zeile teilen zwei Zeilen: Uhrzeit und Art, darunter das Ergebnis auf einer Linie, auch wenn ein Text umbricht", () => {
     for (const id of ["a", "b"]) {
+      const start = html.indexOf(`data-start-card="${id}"`)
+      const li = html.slice(html.lastIndexOf("<li", start), start)
+      expect(li).toMatch(/^<li class="[^"]*\brow-span-2\b[^"]*\bgrid-rows-subgrid\b/)
       const link = html.match(new RegExp(`<a [^>]*data-start-card="${id}"[^>]*>`))![0]
-      expect(link).toMatch(/class="[^"]*\bh-full\b/)
-      expect(link).toMatch(/class="[^"]*\bitems-start\b/)
-      expect(link).not.toMatch(/\bitems-center\b/)
+      expect(link).toMatch(/class="[^"]*\brow-span-2\b/)
+      expect(link).toMatch(/class="[^"]*\bgrid-rows-subgrid\b/)
+      // die kleine Scheibe oben über beide Zeilen, daneben die Zeilen in ihrer Folge
+      const tile = html.slice(start, html.indexOf("</a>", start))
+      expect(tile).toMatch(
+        /^[^>]*><svg [^>]*class="[^"]*\brow-span-2\b[^"]*\bself-start\b[\s\S]*<\/svg><span data-start-meta="true"[\s\S]*<span data-start-result="true"/
+      )
     }
   })
 

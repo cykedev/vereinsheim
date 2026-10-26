@@ -161,46 +161,50 @@ export function EveningBlock({
               ? null
               : `${formatValue(row.otherResult, digits(other(row.resultScoring)))} ${name(other(row.resultScoring))}`
           return (
-            <li key={row.id}>
-              {/* Kacheln einer Zeile gleich hoch, die kleine Scheibe oben: bricht in einer der Text um, steht ihre
-                  Scheibe trotzdem auf der Höhe der anderen */}
+            // zwei Zeilen, die alle Kacheln einer Reihe teilen (Subgrid): Uhrzeit und Art, darunter das Ergebnis. Bricht
+            // in einer Kachel ein Text um, rücken die Zeilen der anderen mit, die Ergebnisse stehen auf einer Linie
+            <li key={row.id} className="row-span-2 grid grid-rows-subgrid">
               <RouteLink
                 route={cardRoute(row.id)}
                 data-start-card={row.id}
                 aria-label={`Scheibe um ${time}, ${KIND[row.kind]}, Ergebnis ${result}${row.result === null ? "" : ` ${name(row.resultScoring)}`}${second ? `, ${second}` : ""}`}
-                className="flex h-full items-start gap-3 rounded-xl border border-line-strong p-2 hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-ring"
+                className="row-span-2 grid grid-cols-[auto_minmax(0,1fr)] grid-rows-subgrid gap-x-3 gap-y-0.5 rounded-xl border border-line-strong p-2 hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-ring"
               >
                 {placed.length ? (
-                  <MiniTarget target={target} shots={placed} className="size-14 shrink-0" />
+                  <MiniTarget
+                    target={target}
+                    shots={placed}
+                    className="row-span-2 size-14 self-start"
+                  />
                 ) : (
-                  <span aria-hidden="true" className="block size-14 shrink-0" />
+                  <span aria-hidden="true" className="row-span-2 block size-14 self-start" />
                 )}
-                <span className="grid min-w-0 gap-0.5">
-                  <span className="text-[13px] text-muted-foreground">{`${time} · ${KIND[row.kind]}`}</span>
-                  {/* umbrechen nur zwischen den Wertungen, jede bleibt beisammen (kein „ganze / Ringe“) */}
-                  <span
-                    data-start-result
-                    className="flex flex-wrap items-baseline gap-x-1.5 tabular-nums"
-                  >
-                    <span className="whitespace-nowrap">
-                      <span data-result className="text-[17px] font-semibold">
-                        {result}
-                      </span>
-                      {row.result !== null && (
-                        <span className="text-[13px] text-muted-foreground">
-                          {` ${name(row.resultScoring)}`}
-                        </span>
-                      )}
+                <span data-start-meta className="text-[13px] text-muted-foreground">
+                  {`${time} · ${KIND[row.kind]}`}
+                </span>
+                {/* umbrechen nur zwischen den Wertungen, jede bleibt beisammen (kein „ganze / Ringe“) */}
+                <span
+                  data-start-result
+                  className="flex flex-wrap items-baseline gap-x-1.5 tabular-nums"
+                >
+                  <span className="whitespace-nowrap">
+                    <span data-result className="text-[17px] font-semibold">
+                      {result}
                     </span>
-                    {second && (
-                      <span
-                        data-other-result
-                        className="text-xs whitespace-nowrap text-muted-foreground"
-                      >
-                        {`· ${second}`}
+                    {row.result !== null && (
+                      <span className="text-[13px] text-muted-foreground">
+                        {` ${name(row.resultScoring)}`}
                       </span>
                     )}
                   </span>
+                  {second && (
+                    <span
+                      data-other-result
+                      className="text-xs whitespace-nowrap text-muted-foreground"
+                    >
+                      {`· ${second}`}
+                    </span>
+                  )}
                 </span>
               </RouteLink>
             </li>
