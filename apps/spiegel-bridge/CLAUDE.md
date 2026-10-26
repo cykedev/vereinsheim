@@ -14,7 +14,7 @@ Aufträge mit Vorschau.
 | ----------------------------------------- | --------------------------------------------------------------------------------------------- |
 | `pnpm --filter spiegel-bridge test`       | Go-Tests: Vertrag gegen die Vektoren aus Python, Erkennung mit einer Ablage im Speicher       |
 | `pnpm --filter spiegel-bridge replay`     | Abnahme: alle Fälle aus `ssmdb2-cases` in `mariadb:10.6` (Docker), nicht im Gate (~5 s)       |
-| `pnpm --filter spiegel-bridge build`      | Binaries nach `dist/` für linux/arm64, linux/amd64, windows/amd64                             |
+| `pnpm --filter spiegel-bridge build`      | Binaries nach `dist/` für linux/arm64, linux/amd64, windows/amd64; Turbo cacht sie nie        |
 | `go run ./cmd/spiegel-bridge watch`       | lokal lesen; je Snapshot eine Zeile ohne Personenfelder, `--json` volle Snapshots, `--once`   |
 | `spiegel-bridge pair --url --code`        | koppeln (Code aus Admin → Anlage und Brücke, „Brücke verbinden“), schreibt die Konfiguration (0600, atomar)      |
 | `spiegel-bridge run`                      | Betrieb: Zustand, Runden, Filter, Upload, Heartbeat; Exit 3 bei widerrufenem Token            |

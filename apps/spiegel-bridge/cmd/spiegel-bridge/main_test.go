@@ -97,3 +97,23 @@ func TestPasswordNeverInUsage(t *testing.T) {
 		}
 	}
 }
+
+// Die Version im Binary kommt aus `git describe`, und das sieht Turbo nicht. Aus dem Cache läge in `dist/` ein Binary
+// mit der Version des Laufs, der es zuerst gebaut hat, etwa aus einer anderen Worktree mit „-dirty“.
+func TestBuildBypassesTurboCache(t *testing.T) {
+	raw, err := os.ReadFile(filepath.Join("..", "..", "turbo.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var cfg struct {
+		Tasks map[string]struct {
+			Cache *bool `json:"cache"`
+		} `json:"tasks"`
+	}
+	if err := json.Unmarshal(raw, &cfg); err != nil {
+		t.Fatal(err)
+	}
+	if c := cfg.Tasks["build"].Cache; c == nil || *c {
+		t.Fatal(`turbo.json: "build" braucht "cache": false`)
+	}
+}

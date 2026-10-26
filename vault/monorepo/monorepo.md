@@ -268,6 +268,11 @@ Gates grün, geprunter Docker-Build verifiziert.
   den Hash seiner Quellen. Ändert sich ein Paket, laufen Tests und Lint jeder App und jedes Pakets neu, die
   davon abhängen. Ohne `^build` kämen sie grün aus dem Cache. Prüfen mit `turbo run test lint --dry=json`:
   Eine Änderung in `lib` ändert die Hashes aller drei Apps, eine in `shot-core` nur die von Spiegel.
+- **Build der Brücke ohne Cache** (`"cache": false` in `apps/spiegel-bridge/turbo.json`, Test
+  `TestBuildBypassesTurboCache`): Die Version im Binary kommt aus `git describe`, und das kennt der Hash nicht. Am
+  26. Oktober 2026 legte `pnpm build` auf `main` ein Binary aus dem Cache nach `dist/`, das das Gate in einer anderen
+  Worktree gebaut hatte. Der Code stimmte, auf dem Pi meldete die Brücke aber `bfd96713-dirty`, einen Commit, den es
+  auf `main` nicht gibt. Go cacht selbst, der Build dauert ohne Turbo-Cache rund eine Sekunde.
 - **pnpm-Strenge**: geteilte Pakete explizit als `"@vereinsheim/ui": "workspace:*"` deklarieren
   (verhindert Phantom-Deps).
 - **Tailwind v4 content/`@source`**: bei UI im Paket müssen die `packages/ui`-Sourcen ins Class-Scanning

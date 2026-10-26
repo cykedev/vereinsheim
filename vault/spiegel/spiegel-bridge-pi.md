@@ -196,7 +196,11 @@ nicht mit den festen Meyton-Adressen, und der MySQL-Zugang ist nicht auf bestimm
 
 ### Brücke: von Hand vor Ort
 
-Laptop im Gerätenetz, neues Binary auf dem Mac gebaut:
+Laptop im Gerätenetz, neues Binary auf dem Mac gebaut: auf `main` ohne offene Änderungen
+`pnpm --filter spiegel-bridge build`. `install.sh` meldet dann den Commit ohne `-dirty`; ein `-dirty` heißt, beim Bauen
+gab es Änderungen, die nicht committet waren. Ob das Binary sauber ist, zeigt vor dem Kopieren
+`go version -m apps/spiegel-bridge/dist/spiegel-bridge-linux-arm64 | grep vcs` (`vcs.modified=false`).
+
 
 ```bash
 scp apps/spiegel-bridge/dist/spiegel-bridge-linux-arm64 apps/spiegel-bridge/deploy/install.sh apps/spiegel-bridge/deploy/spiegel-bridge.service <benutzer>@spiegel-bridge.local:

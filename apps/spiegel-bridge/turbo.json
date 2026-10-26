@@ -18,7 +18,7 @@
       "passThroughEnv": ["GOPROXY", "GOFLAGS", "GOPRIVATE", "GONOSUMDB", "GOTOOLCHAIN"]
     },
     "build": {
-      "outputs": ["dist/**"],
+      "cache": false,
       "passThroughEnv": ["GOPROXY", "GOFLAGS", "GOPRIVATE", "GONOSUMDB", "GOTOOLCHAIN"]
     }
   }
