@@ -163,11 +163,13 @@ export function EveningBlock({
               : `${formatValue(row.otherResult, digits(other(row.resultScoring)))} ${name(other(row.resultScoring))}`
           return (
             <li key={row.id}>
+              {/* Kacheln einer Zeile gleich hoch, die kleine Scheibe oben: bricht in einer der Text um, steht ihre
+                  Scheibe trotzdem auf der Höhe der anderen */}
               <RouteLink
                 route={cardRoute(row.id)}
                 data-start-card={row.id}
                 aria-label={`Scheibe um ${time}, ${KIND[row.kind]}, Ergebnis ${result}${row.result === null ? "" : ` ${name(row.resultScoring)}`}${second ? `, ${second}` : ""}`}
-                className="flex items-center gap-3 rounded-xl border border-line-strong p-2 hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-ring"
+                className="flex h-full items-start gap-3 rounded-xl border border-line-strong p-2 hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-ring"
               >
                 {placed.length ? (
                   <MiniTarget

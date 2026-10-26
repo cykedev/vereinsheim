@@ -181,6 +181,15 @@ describe("Block des letzten Abends auf Start", () => {
     expect(text(html)).toContain("18:00 · Training 18,8 Zehntel · 18 ganze Ringe")
   })
 
+  it("Kacheln einer Zeile gleich hoch, die kleine Scheibe oben (auch wenn ein Text umbricht)", () => {
+    for (const id of ["a", "b"]) {
+      const link = html.match(new RegExp(`<a [^>]*data-start-card="${id}"[^>]*>`))![0]
+      expect(link).toMatch(/class="[^"]*\bh-full\b/)
+      expect(link).toMatch(/class="[^"]*\bitems-start\b/)
+      expect(link).not.toMatch(/\bitems-center\b/)
+    }
+  })
+
   it("jede Kachel zeichnet die Lagen ihrer eigenen Scheibe", () => {
     const tile = (id: string) => {
       const start = html.indexOf(`data-start-card="${id}"`)
