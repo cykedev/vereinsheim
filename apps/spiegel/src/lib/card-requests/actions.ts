@@ -10,7 +10,7 @@ import { db } from "@/lib/db"
 import type { ActionResult } from "@/lib/types"
 
 import { parseCardId } from "./id"
-import { requestCard, requestSiteId, withdrawRequest } from "./queries"
+import { removeRequest, requestCard, requestSiteId, withdrawRequest } from "./queries"
 
 // Scheibe per ID holen (Profil): Der Schütze nennt die ID vom Ausdruck und den Tag der Scheibe; Spiegel legt einen
 // Auftrag an, den die Brücke beim nächsten Durchgang erfüllt. Jede Action prüft selbst und gibt ein ActionResult zurück.
@@ -77,5 +77,19 @@ export async function withdrawCardRequest(requestId: number): Promise<ActionResu
     return { success: true }
   } catch {
     return { error: "Der Auftrag ließ sich nicht zurückziehen." }
+  }
+}
+
+/** einen eigenen, beendeten Auftrag ohne Scheibe aus der Liste entfernen */
+export async function removeCardRequest(requestId: number): Promise<ActionResult> {
+  try {
+    const userId = await shooterId()
+    if (!userId) return { error: "Das geht gerade nicht. Lade die Seite neu." }
+    if (!isRowId(requestId) || !(await removeRequest(db, { userId, requestId })))
+      return { error: "Dieser Auftrag lässt sich nicht entfernen. Lade die Seite neu." }
+    revalidatePath("/profile")
+    return { success: true }
+  } catch {
+    return { error: "Der Auftrag ließ sich nicht entfernen." }
   }
 }

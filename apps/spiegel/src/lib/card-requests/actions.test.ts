@@ -8,7 +8,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock("@/lib/auth-helpers", () => ({ getAuthSession: async () => mocks.session }))
 vi.mock("next/cache", () => ({ revalidatePath: () => {} }))
 
-const { requestCardAction, withdrawCardRequest } = await import("./actions")
+const { removeCardRequest, requestCardAction, withdrawCardRequest } = await import("./actions")
 
 // Die Actions legen an der ersten Anlage an (eine je Installation); der Test räumt die Aufträge seines Kontos weg.
 let user: string
@@ -79,5 +79,35 @@ describe("requestCardAction", () => {
     expect(await withdrawCardRequest(-1)).toEqual({
       error: "Dieser Auftrag wartet nicht mehr. Lade die Seite neu.",
     })
+  })
+})
+
+describe("removeCardRequest", () => {
+  const refused = { error: "Dieser Auftrag lässt sich nicht entfernen. Lade die Seite neu." }
+
+  it("ohne Sitzung nichts", async () => {
+    mocks.session = null
+    expect(await removeCardRequest(1)).toEqual({
+      error: "Das geht gerade nicht. Lade die Seite neu.",
+    })
+  })
+
+  it("entfernt nur eigene, beendete Aufträge ohne Scheibe, einmal", async () => {
+    if (!hasSite) return
+    mocks.session = { user: { id: user, role: "USER" } }
+    expect(await requestCardAction("7fff0002", "2026-10-21")).toMatchObject({ success: true })
+    const row = await db.cardRequest.findFirstOrThrow({
+      where: { userId: user, scheibenId: 0x7fff0002 },
+    })
+    // wartet noch: zurückziehen, nicht entfernen
+    expect(await removeCardRequest(row.id)).toEqual(refused)
+    expect(await withdrawCardRequest(row.id)).toEqual({ success: true })
+    mocks.session = { user: { id: "jemand-anderes", role: "ADMIN" } }
+    expect(await removeCardRequest(row.id)).toEqual(refused)
+    mocks.session = { user: { id: user, role: "USER" } }
+    expect(await removeCardRequest(-1)).toEqual(refused)
+    expect(await removeCardRequest(row.id)).toEqual({ success: true })
+    expect(await removeCardRequest(row.id)).toEqual(refused)
+    expect(await db.cardRequest.count({ where: { id: row.id } })).toBe(0)
   })
 })
