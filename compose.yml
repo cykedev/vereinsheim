@@ -175,7 +175,11 @@ services:
       SEED_ADMIN_PASSWORD: ${SPIEGEL_SEED_ADMIN_PASSWORD}
       DISPLAY_TIME_ZONE: ${DISPLAY_TIME_ZONE:-Europe/Berlin}
       AUTH_TRUST_PROXY_HEADERS: "true"
+      UPLOAD_DIR: /app/uploads
+      # PDFs liest ein Kindprozess mit eigener Grenze, nicht dieser Heap.
       NODE_OPTIONS: --max-old-space-size=160
+    volumes:
+      - uploads_spiegel:/app/uploads
     depends_on:
       db:
         condition: service_healthy
@@ -196,3 +200,4 @@ volumes:
   caddy_data:
   caddy_config:
   uploads_treffsicher:
+  uploads_spiegel:
