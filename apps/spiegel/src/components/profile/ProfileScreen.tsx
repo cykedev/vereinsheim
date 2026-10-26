@@ -12,6 +12,7 @@ import { Page } from "@vereinsheim/ui/design2/page"
 import { ThemeSwitch } from "@vereinsheim/ui/design2/theme-switch"
 import { PAGE_SINGLE } from "@vereinsheim/shot-ui/layout/columns"
 import { cn } from "@vereinsheim/lib/utils"
+import { ADMIN_SECTIONS } from "@/lib/admin/sections"
 import type { ConsentRow } from "@/lib/consent/queries"
 import type { OwnRequest } from "@/lib/card-requests/queries"
 import { CURRENT_CONSENT_VERSION } from "@/lib/consent/texts"
@@ -19,10 +20,13 @@ import { CURRENT_CONSENT_VERSION } from "@/lib/consent/texts"
 import { CardRequests } from "./CardRequests"
 import { SportpassConsents } from "./SportpassConsents"
 
+const PILL =
+  "inline-flex h-10 items-center rounded-full border border-line-strong px-3.5 text-[13px] font-semibold text-primary hover:bg-accent-wash focus-visible:outline-2 focus-visible:outline-ring"
+
 /**
- * Profil: Konto, Zustimmung per Sportpass, Scheibe per ID holen, Einstellung des Geräts (Darstellung), Admin für Admins,
- * Abmelden. Die Wertung hat jede Scheibe und jede Familie selbst (Seite der Scheibe, Liste, Fortschritt). Dazu der
- * Papierkorb.
+ * Profil: Konto, für Admins am Telefon oben die Bereiche des Admins, Zustimmung per Sportpass, Scheibe per ID holen,
+ * Einstellung des Geräts (Darstellung), Abmelden. Die Wertung hat jede Scheibe und jede Familie selbst (Seite der
+ * Scheibe, Liste, Fortschritt). Dazu der Papierkorb.
  */
 export function ProfileScreen({
   name,
@@ -63,6 +67,20 @@ export function ProfileScreen({
           </p>
         </div>
 
+        {/* am Telefon steht Admin nicht in der Leiste: hier oben alle Bereiche, ab 1024 px in der Seitenleiste */}
+        {isAdmin && (
+          <nav aria-label="Admin" data-admin-sections className="grid gap-3 lg:hidden">
+            <h2 className="text-[15px] font-semibold">Admin</h2>
+            <div className="flex flex-wrap gap-3">
+              {ADMIN_SECTIONS.map(({ key, href, label }) => (
+                <Link key={key} href={href} className={PILL}>
+                  {label}
+                </Link>
+              ))}
+            </div>
+          </nav>
+        )}
+
         <SportpassConsents consents={sportpass} version={CURRENT_CONSENT_VERSION} />
 
         <CardRequests requests={requests} today={today} timeZone={timeZone} />
@@ -73,26 +91,12 @@ export function ProfileScreen({
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <RouteLink
-            route={{ page: "trash" }}
-            className="inline-flex h-10 items-center rounded-full border border-line-strong px-3.5 text-[13px] font-semibold text-primary hover:bg-accent-wash focus-visible:outline-2 focus-visible:outline-ring"
-          >
+          <RouteLink route={{ page: "trash" }} className={PILL}>
             {trashCount ? `Papierkorb (${trashCount})` : "Papierkorb"}
           </RouteLink>
-          <Link
-            href="/profile/password"
-            className="inline-flex h-10 items-center rounded-full border border-line-strong px-3.5 text-[13px] font-semibold text-primary hover:bg-accent-wash focus-visible:outline-2 focus-visible:outline-ring"
-          >
+          <Link href="/profile/password" className={PILL}>
             Passwort ändern
           </Link>
-          {isAdmin && (
-            <RouteLink
-              route={{ page: "admin", section: null }}
-              className="inline-flex h-10 items-center rounded-full border border-line-strong px-3.5 text-[13px] font-semibold text-primary hover:bg-accent-wash focus-visible:outline-2 focus-visible:outline-ring"
-            >
-              Admin
-            </RouteLink>
-          )}
           <Button
             variant="outline"
             className="h-10"
