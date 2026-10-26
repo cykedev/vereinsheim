@@ -138,8 +138,8 @@ describe("matchAccounts", () => {
 
   it("Tippfehler in der Domain bei gleichem Teil vor dem @", () => {
     const result = matchAccounts(
-      [tis("t1", null, "max.probe@gmial.com")],
-      [sp("s1", null, "max.probe@gmail.com")]
+      [tis("t1", null, "max.probe@exmaple.com")],
+      [sp("s1", null, "max.probe@example.com")]
     )
     expect(result.suspected[0].candidates[0].reasons).toEqual(["domain-typo"])
   })
