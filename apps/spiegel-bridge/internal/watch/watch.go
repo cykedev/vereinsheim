@@ -165,7 +165,8 @@ type Watcher struct {
 	lastSeq int64
 	// Nachholen beim Start ab hier (Lebenszeichen als Text), aus dem Wasserstand in Spiegel; leer: nur das Startfenster
 	catchUpFrom string
-	// in der letzten Runde bewegte sich etwas oder war aktiv: das Nachholen wartet und hält den Takt nicht hoch
+	// in der letzten Runde bewegte sich etwas oder war aktiv: die Arbeit des Leerlaufs bekommt nur das kleine Budget und
+	// hält den Takt nicht hoch
 	live bool
 	// offene Aufträge zum Nachladen: will ein Auftrag die Scheibe mit dieser SportpassID? nil: keiner
 	history func(sportpass string) bool
@@ -192,7 +193,7 @@ func (w *Watcher) wantsHistory(sportpass *string) bool {
 }
 
 // SetRequested legt fest, welche Scheiben ein Auftrag per ID will; nil heißt keiner. Anders als das Nachladen liest die
-// Erkennung sie gleich (Rang 1), auch wenn geschossen wird: Es ist je Auftrag eine Scheibe, und jemand wartet darauf.
+// Erkennung sie gleich (Rang 1), vor dem Budget des Leerlaufs: Es ist je Auftrag eine Scheibe, und jemand wartet darauf.
 func (w *Watcher) SetRequested(wanted func(id int32) bool) { w.requested = wanted }
 
 func (w *Watcher) wantsRequest(id int32) bool { return w.requested != nil && w.requested(id) }

@@ -278,11 +278,14 @@ func TestSportpassChangeWithoutLifesignIsRead(t *testing.T) {
 	}
 }
 
-// Mit neuer SportpassID wartet die zweite Lesung nicht auf den Leerlauf, auch bei einer Scheibe, die sich in diesem Lauf
-// nie bewegt hat (nachgeholt). Gemeldet wird der Wechsel einmal, nicht bei jedem Lebenszeichen eines anderen Stands.
+// Mit neuer SportpassID zählt die zweite Lesung nicht zum Budget des Leerlaufs (hier ohne Budget), auch bei einer
+// Scheibe, die sich in diesem Lauf nie bewegt hat (nachgeholt). Gemeldet wird der Wechsel einmal, nicht bei jedem
+// Lebenszeichen eines anderen Stands.
 func TestReassignedCardLeavesWhileShooting(t *testing.T) {
 	m, c := newMemory(), start()
-	w := New(Defaults, c.now)
+	cfg := Defaults
+	cfg.IdleWhileLive = 0
+	w := New(cfg, c.now)
 	m.stamps[1] = "2026-10-09 21:00:00"
 	m.data[1] = withSportpass(cardData(1, 40, "100"), "87654321")
 	m.put(9, "2026-10-13 20:00:00", 3, "100")
@@ -911,7 +914,8 @@ func TestIdleBudgetInsideMaxCards(t *testing.T) {
 	m.put(8, "2026-10-13 20:00:00", 3, "100")
 	m.put(9, "2026-10-13 20:00:00", 3, "100")
 	history(w, m, 100, 4)
-	for range 4 {
+	// drei Runden: Danach wartet eine Scheibe aus dem Leerlauf auf ihre zweite Lesung
+	for range 3 {
 		m.stamps[8] = c.t.Add(2 * time.Hour).Format(stampLayout)
 		m.stamps[9] = c.t.Add(2 * time.Hour).Format(stampLayout)
 		tick(t, w, m)
@@ -938,6 +942,53 @@ func TestIdleBudgetInsideMaxCards(t *testing.T) {
 				t.Fatalf("drei laufende, kein Platz: %v", m.reads[from:])
 			}
 		}
+	}
+}
+
+// Im Leerlauf gilt für Nachholen, Nachladen und Abgleich nur `MaxCards`, nicht das kleine Budget.
+func TestHistoryWhenIdleUpToMaxCards(t *testing.T) {
+	m, c := newMemory(), start()
+	w := New(Defaults, c.now)
+	m.put(9, "2026-10-13 20:00:00", 3, "100")
+	history(w, m, 100, 12)
+	w.SetHistory(nil)
+	tick(t, w, m)
+	// Stand 9 ruht, dann kommt der Auftrag
+	c.advance(25 * time.Minute)
+	history(w, m, 100, 12)
+	tick(t, w, m)
+	n := 0
+	for _, id := range m.reads[len(m.reads)-1] {
+		if id >= 100 {
+			n++
+		}
+	}
+	if n != 12 {
+		t.Fatalf("im Leerlauf alle zwölf in einer Runde: %v", m.reads[len(m.reads)-1])
+	}
+}
+
+// Die zweite Lesung einer per ID angefragten Scheibe zählt nicht zum Budget des Leerlaufs: Auch ohne Budget geht sie
+// hinaus, während geschossen wird.
+func TestRequestedWaitingCardIsNotIdle(t *testing.T) {
+	m, c := newMemory(), start()
+	cfg := Defaults
+	cfg.IdleWhileLive = 0
+	w := New(cfg, c.now)
+	m.put(9, "2026-10-13 20:00:00", 3, "100")
+	m.put(4, "2025-05-01 19:00:00", 40, "100")
+	tick(t, w, m)
+	w.SetRequested(func(id int32) bool { return id == 4 })
+	sent := false
+	for range 3 {
+		c.advance(time.Second)
+		m.stamps[9] = c.t.Add(2 * time.Hour).Format(stampLayout)
+		for _, id := range ids(tick(t, w, m)) {
+			sent = sent || id == 4
+		}
+	}
+	if !sent {
+		t.Fatalf("angefragt, während geschossen wird: %v", m.reads)
 	}
 }
 

@@ -581,8 +581,8 @@ func TestStateFailureWaits(t *testing.T) {
 	}
 }
 
-// Neue Zustimmungen, Aufträge und aufgehobene Meldungen erreichen die Brücke binnen einer Minute; öfter, als Spiegel
-// nimmt (sechs je Minute), fragt sie nicht.
+// Neue Zustimmungen, Aufträge und aufgehobene Meldungen erreichen die Brücke binnen einer Minute: Sie fragt einmal je
+// Minute, weit unter dem, was Spiegel nimmt (sechs je Minute).
 func TestStateEveryMinute(t *testing.T) {
 	f := setup(t)
 	calls := 0
@@ -995,7 +995,7 @@ func TestRequestedCardLeavesWithoutConsentWhileShooting(t *testing.T) {
 	f.ablage.old(4, "0", "1", "2025-05-01 19:00:00")        // alt (Lebenszeichen), ohne Sportpass, angefragt; Schüsse wie `put` am 13.
 	f.ablage.old(5, "87654321", "1", "2025-05-02 19:00:00") // alt, nicht angefragt
 	f.sp.state.Requests = []api.CardRequest{{ID: 7, ScheibenID: 2, Day: "2026-10-13"}, {ID: 8, ScheibenID: 4, Day: "2026-10-13"}}
-	// der Stand ist aktiv: Ein Auftrag per ID wartet nicht auf den Leerlauf (anders als das Nachladen)
+	// der Stand ist aktiv: Ein Auftrag per ID kommt vor dem Budget des Leerlaufs (anders als das Nachladen)
 	f.runFor(2 * time.Minute)
 	sent := fmt.Sprint(f.sp.sent())
 	for _, want := range []string{"1", "2", "4"} {
