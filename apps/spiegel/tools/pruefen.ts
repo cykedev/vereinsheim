@@ -857,8 +857,10 @@ async function cardDiscipline(page: Page, href: string) {
 
 /** die ID des Auftrags, den die Prüfung anlegt und wieder entfernt; eine Scheibe mit ihr gibt es nicht */
 const PROBE_REQUEST = "7fff0abc"
-/** seine Zeile in der Liste der Aufträge, im Fenster; null ohne */
+/** seine (erste) Zeile in der Liste der Aufträge, im Fenster; null ohne */
 const probeRow = `($$("[data-card-request]").find((li) => txt(li).includes("${PROBE_REQUEST}")) ?? null)`
+/** wie viele Zeilen mit seiner ID die Liste hat, im Fenster */
+const probeCount = `$$("[data-card-request]").filter((li) => txt(li).includes("${PROBE_REQUEST}")).length`
 
 /** in der Zeile des Auftrags der Prüfung auf `label` tippen und im Dialog mit demselben Knopf bestätigen */
 async function confirmProbeRow(page: Page, label: string): Promise<string> {
@@ -878,14 +880,17 @@ async function confirmProbeRow(page: Page, label: string): Promise<string> {
 async function cardRequests(page: Page) {
   await page.viewport(1280, 900)
   await page.goto(`${BASE}/profile`)
-  // ein abgebrochener Lauf ließ den Auftrag der Prüfung stehen: erst zurückziehen und entfernen
-  if (await page.ev<boolean>(`!!${probeRow} && !!button("Zurückziehen", ${probeRow})`)) {
-    await confirmProbeRow(page, "Zurückziehen")
-    await page.waitFor(`!!${probeRow} && !!button("Entfernen", ${probeRow})`)
-  }
-  if (await page.ev<boolean>(`!!${probeRow} && !!button("Entfernen", ${probeRow})`)) {
+  // abgebrochene Läufe ließen Aufträge der Prüfung stehen: je einen zurückziehen und entfernen, bis keiner mehr da ist
+  for (let left = 5; left > 0; left--) {
+    const rows = await page.ev<number>(probeCount)
+    if (!rows) break
+    if (await page.ev<boolean>(`!!button("Zurückziehen", ${probeRow})`)) {
+      await confirmProbeRow(page, "Zurückziehen")
+      await page.waitFor(`!!button("Entfernen", ${probeRow})`)
+    }
+    if (!(await page.ev<boolean>(`!!button("Entfernen", ${probeRow})`))) break
     await confirmProbeRow(page, "Entfernen")
-    await page.waitFor(`!${probeRow}`)
+    await page.waitFor(`${probeCount} < ${rows}`)
   }
   const before = await page.ev<number>(`$$("[data-card-request]").length`)
   check(
@@ -925,18 +930,21 @@ async function cardRequests(page: Page) {
   await page.click(`button("Scheibe holen")`)
   await page.waitFor(`!!$('[role="alertdialog"]')`)
   await page.click(`button("Scheibe holen", $('[role="alertdialog"]'))`)
+  const created =
+    (await page.waitFor(`!!${probeRow} && txt(${probeRow}).includes("wartet auf die Anlage")`)) &&
+    (await page.ev<number>(`$$("[data-card-request]").length`)) === before + 1
   check(
     "Scheibe per ID: bestätigt, steht der Auftrag in der Liste und wartet auf die Anlage",
-    (await page.waitFor(`!!${probeRow} && txt(${probeRow}).includes("wartet auf die Anlage")`)) &&
-      (await page.ev<number>(`$$("[data-card-request]").length`)) === before + 1
+    created
   )
+  // ohne angelegten Auftrag sagten die nächsten Schritte nichts mehr
+  if (!created) return
   await confirmProbeRow(page, "Zurückziehen")
-  check(
-    "Scheibe per ID: zurückgezogen, lässt sich der Auftrag entfernen",
-    await page.waitFor(
-      `!!${probeRow} && txt(${probeRow}).includes("zurückgezogen") && !!button("Entfernen", ${probeRow})`
-    )
+  const withdrawn = await page.waitFor(
+    `!!${probeRow} && txt(${probeRow}).includes("zurückgezogen") && !!button("Entfernen", ${probeRow})`
   )
+  check("Scheibe per ID: zurückgezogen, lässt sich der Auftrag entfernen", withdrawn)
+  if (!withdrawn) return
   const removeDialog = await confirmProbeRow(page, "Entfernen")
   check(
     "Scheibe per ID: Entfernen fragt mit Folgen, danach ist die Liste wie vorher",
