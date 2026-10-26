@@ -196,7 +196,7 @@ Form; auf dem Telefon Offen, Abend, Form untereinander.
     Schuss, Abstand zum Schnitt der bis zu fünf Scheiben davor (`deltasBefore`, wie im Zeitraum) und Schusszahl; dazu
     andere Familien des Abends, die Merkmale und die Listen aus Meyton der Familie.
 - **Form:** wie die Liste eines Zeitraums (`EveningList`). Je Monat eine Karte mit Kopf („September 2026“, Zahl der
-  Scheiben und Schüsse) und einer Tabelle (Datum, kleine Scheibe, Uhrzeit, Art, Ergebnis, Ø je Schuss, zum Schnitt,
+  Scheiben und Schüsse) und einer Tabelle (Datum, kleine Scheibe 48 px, Uhrzeit, Art, Ergebnis, Ø je Schuss, zum Schnitt,
   Schuss). Ein Abend ist eine Gruppe von Zeilen mit dem ISO-Tag als Anker: Das Datum steht einmal, ohne eigenen Kopf und
   ohne Zahl je Abend. Alle Scheiben eines Abends stehen gleichberechtigt da, nichts ist eingeklappt.
 - **Mischabend:** Wurde am Abend auch eine andere Familie geschossen, steht darunter eine kleine, rechtsbündige Zeile

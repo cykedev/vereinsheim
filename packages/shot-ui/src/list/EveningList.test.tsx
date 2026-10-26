@@ -256,4 +256,12 @@ describe("Kleine Scheiben der Liste", () => {
     expect(tiles.every(centred)).toBe(true)
     expect(tiles.every((v) => Math.abs(v.w - 48.8) < 0.001)).toBe(true)
   })
+
+  it("48 px groß, damit die Gruppe im Ausschnitt des Spiegels zu erkennen bleibt", () => {
+    const svgs = [...render().matchAll(/<svg viewBox="[^"]*"[^>]*class="([^"]*)"/g)].map(
+      (m) => m[1]
+    )
+    expect(svgs).toHaveLength(3)
+    expect(svgs.every((c) => c.split(" ").includes("size-12"))).toBe(true)
+  })
 })

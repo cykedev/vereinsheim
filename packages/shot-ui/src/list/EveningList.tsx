@@ -231,9 +231,9 @@ export function EveningList({
                                 className="block cursor-pointer rounded-full focus-visible:outline-2 focus-visible:outline-ring"
                               >
                                 {placed.length ? (
-                                  <MiniTarget target={target} shots={placed} className="size-8" />
+                                  <MiniTarget target={target} shots={placed} className="size-12" />
                                 ) : (
-                                  <span className="block size-8" aria-hidden="true" />
+                                  <span className="block size-12" aria-hidden="true" />
                                 )}
                               </RouteLink>
                             </td>
