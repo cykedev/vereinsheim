@@ -81,8 +81,21 @@ Vorgeschlagener Schnitt, endgültig im jeweiligen `/plan`:
 - **1b QR-Weg (SP-1.7 b):** Scannen (Kamera, Link, Teilen unter Android), PDF von erlaubten Adressen in einem
   kurzlebigen Kindprozess, PDF-Volume samt Backup, Auftrag an die Brücke, Vorschau und Bestätigung. Berührt
   Deploy-Vertrag und `scripts/`, interaktiv.
-- **1c Ergebnisse fremder Anlagen (SP-2.6):** vollständiger Parser in `packages/meyton-pdf`, Meyton-QR ohne Brücke
-  ergibt eine Scheibe aus dem PDF. Braucht 1a und 1b.
+  1b liefert „PDF hängt an, die Brücke holt die Scheibe“; ein Ergebnis aus dem PDF bringt erst 1c.
+- **1c Ergebnis sofort aus dem PDF (SP-2.6), für jede Anlage:** vollständiger Parser in `packages/meyton-pdf`. Jeder
+  gescannte Ausdruck ergibt sofort eine Scheibe aus dem PDF, sobald der Parser ihn lesen kann, ob von der eigenen oder
+  einer fremden Anlage. Liefert die Brücke die Scheibe, kommen die Rohdaten als neue Revision derselben Scheibe dazu
+  (ADR-031); „nicht gefunden“ heißt nur, dass die Scheibe beim Ergebnis aus dem PDF bleibt. Braucht 1a und 1b.
+  Entschieden mit dem User am 26. Oktober 2026:
+  - **Keine Erkennung fremder Anlagen.** Spiegel fragt für jeden Ausdruck die eigene Brücke; bei einem fremden endet
+    der Auftrag mit „nicht gefunden“, das kostet nichts.
+  - **Dafür prüft Spiegel die Rohdaten gegen das PDF, bevor sie die Scheibe ergänzen:** Die Schüsse des PDFs müssen
+    Schuss für Schuss (Ring und, wenn vorhanden, Zehntel) den ersten Schüssen der Scheibe der Brücke gleichen, am
+    selben Abend. Ein Zwischenausdruck (SF-42) hat weniger Schüsse und passt trotzdem. Passt es nicht, speichert
+    Spiegel von der Scheibe der Brücke nichts und die Scheibe bleibt beim Ergebnis aus dem PDF. So kann eine ID einer
+    fremden Anlage, die zufällig zu einer Scheibe daheim passt, nie die Scheibe eines anderen holen.
+  - **Dubletten:** Liefert die Brücke dieselbe Scheibe ohnehin (Zustimmung per Sportpass), landet der Scan an ihr,
+    abgeglichen über ID und Abend, wie bei „Scheibe per ID“.
 - **1d Handeingabe (SP-4.4):** „Ergebnis eintragen“ je Serie und je Schuss, Trefferlage als Summe, Beleg an der Scheibe,
   eigene Einträge ändern und löschen. Braucht 1a, für den Beleg den Datei-Speicher aus 1b.
 - **1e Grundlage sichtbar:** „Streuung über 12 von 20 Scheiben, 8 ohne Lage“ in jeder Zahlengruppe, Rekorde je
