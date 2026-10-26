@@ -166,7 +166,8 @@ Form; auf dem Telefon Offen, Abend, Form untereinander.
   - das Formband als kleiner Verlauf der letzten 20 Scheiben (`FormStrip`): Zeit nach rechts, Band um den gleitenden
     Schnitt, der Abend rechts groß mit Datum, in einem Rahmen, darunter eine Zeile, die Punkte, Linie und Band erklärt;
   - die Scheiben als Kacheln (12,5 rem breit, kleine Scheibe 56 px), das Ergebnis mit Namen der Wertung („18,8 Zehntel ·
-    18 ganze Ringe“);
+    18 ganze Ringe“); die Kacheln einer Reihe teilen zwei Zeilen (`grid-rows-subgrid`), Uhrzeit und Art oben, das
+    Ergebnis darunter, damit die Ergebnisse auf einer Linie stehen, auch wenn „Training nur Probe“ umbricht;
   - neue Rekorde, nur wenn der Abend welche aufgestellt hat, höchstens fünf in der Reihenfolge des Katalogs, darunter
     „Noch N weitere Rekorde im Fortschritt ›“ (Fortschritt, Abschnitt Analyse, dort „Alle Rekorde“ aufgeklappt);
   - „Abend in Scheiben ›“.

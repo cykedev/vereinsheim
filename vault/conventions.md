@@ -317,6 +317,12 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
   gesperrt (`buttonLabels` in `apps/spiegel/src/components/card/ShareCard.tsx`). Sonst hieß der Knopf direkt nach dem
   Teilen rund 250 ms „Beenden…“. Aufgefallen im Oktober 2026, als die Skriptprüfung in einem von fünf Läufen scheiterte.
 
+- **Was nebeneinander steht, steht auf einer Linie**: Kacheln oder Zeilen mit einem Bild und Text, der umbrechen kann,
+  richten ihren Text oben am Bild aus (`align-top` in Tabellen) und teilen sich die Zeilen über Kacheln hinweg
+  (`grid-rows-subgrid`, Beispiel: `EveningBlock` auf Start). Sonst rutscht der Wert einer Kachel tiefer, sobald in ihr
+  ein Wort umbricht („Training nur Probe“ neben „Training“). Die Wirkung im Browser mit gemischten Texten prüfen, in den
+  Dev-Daten stehen oft gleich lange. Aufgefallen im Oktober 2026 in der Liste und auf Start.
+
 ## 10. Design 2 (alle Apps, ADR-030, ADR-032)
 
 - **Tokens aus `@vereinsheim/ui/design2.css`**: dieselben Namen, die die
