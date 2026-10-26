@@ -77,6 +77,7 @@ describe("seriesShotsOf", () => {
     expect(seriesShotsOf(5, 40)).toBe(5)
     expect(seriesShotsOf(null, null)).toBeNull()
     expect(seriesShotsOf(null, 0)).toBeNull()
+    expect(seriesShotsOf(0, 40)).toBe(10)
   })
 })
 

@@ -149,10 +149,10 @@ export const DEFAULT_SERIES_SHOTS = 10
 
 /**
  * Schüsse je Serie: ohne Einzelschüsse gilt jede Serie als volle Serie ([[adr-033]], Nachtrag 27. Oktober 2026). Die
- * Zahl des Admins, sonst 10, wenn die Schusszahl ein Vielfaches von 10 ist, sonst unbekannt
+ * Zahl des Admins (0 heißt keine), sonst 10, wenn die Schusszahl ein Vielfaches von 10 ist, sonst unbekannt
  */
 export function seriesShotsOf(override: number | null, plannedShots: number | null): number | null {
-  if (override !== null) return override
+  if (override !== null && override > 0) return override
   return plannedShots !== null && plannedShots > 0 && plannedShots % DEFAULT_SERIES_SHOTS === 0
     ? DEFAULT_SERIES_SHOTS
     : null
