@@ -72,6 +72,11 @@ export function scoreColor(ring: number): string {
   return "var(--score-7)"
 }
 
+/** weitester Treffer in x oder y plus halbes Kaliber, in mm; ohne Treffer −∞ */
+const reachMm = (target: TargetImage, points: readonly Point[]) =>
+  Math.max(-Infinity, ...points.map((p) => Math.max(Math.abs(mm(p.xUm)), Math.abs(mm(p.yUm))))) +
+  caliberRadius(target)
+
 /**
  * Ein gemeinsamer Ausschnitt um die Mitte für alle kleinen Scheiben, damit Lage und Streuung der Serien
  * vergleichbar sind: weitester Treffer (in x oder y) plus halbes Kaliber, 12 % Luft, mindestens sechs
@@ -79,10 +84,28 @@ export function scoreColor(ring: number): string {
  */
 export function seriesTileView(target: TargetImage, points: readonly Point[]): ViewBox {
   const calR = caliberRadius(target)
-  const reach =
-    Math.max(-Infinity, ...points.map((p) => Math.max(Math.abs(mm(p.xUm)), Math.abs(mm(p.yUm))))) +
-    calR
-  const half = Math.min(mm(target.ringRadiiUm[0]) + calR, Math.max(reach * 1.12, calR * 6))
+  const half = Math.min(
+    mm(target.ringRadiiUm[0]) + calR,
+    Math.max(reachMm(target, points) * 1.12, calR * 6)
+  )
+  return { x: -half, y: -half, w: 2 * half }
+}
+
+/** halbe Breite einer kleinen Scheibe für sich, gemessen am Radius des Spiegels */
+const MINI_SPIEGEL = 1.6
+
+/**
+ * Ausschnitt einer kleinen Scheibe, die für sich steht (Start, Liste, Ablesung, Offen): um die Mitte, und der Spiegel
+ * ist überall gleich groß (halbe Breite = Radius des Spiegels × 1,6). So stehen die Spiegel nebeneinander auf einer
+ * Linie, und eine Scheibe sieht überall gleich aus. Nur ein Treffer weiter außen vergrößert den Ausschnitt, weiter um
+ * die Mitte: weitester Treffer (in x oder y) plus halbes Kaliber, 12 % Luft, höchstens Ring 1 plus halbes Kaliber.
+ */
+export function miniView(target: TargetImage, points: readonly Point[]): ViewBox {
+  const spiegel = mm(target.ringRadiiUm[target.blackFromRing - 1]) * MINI_SPIEGEL
+  const half = Math.min(
+    mm(target.ringRadiiUm[0]) + caliberRadius(target),
+    Math.max(spiegel, reachMm(target, points) * 1.12)
+  )
   return { x: -half, y: -half, w: 2 * half }
 }
 

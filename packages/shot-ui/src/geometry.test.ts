@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest"
 
 import {
   groupView,
+  miniView,
   nearestShot,
   probeCorner,
   scoreColor,
@@ -129,6 +130,32 @@ describe("Serien als kleine Scheiben", () => {
     // ohne Breite eine Spalte, ohne Kacheln auch
     expect(tileColumns(5, 0)).toBe(1)
     expect(tileColumns(0, 300)).toBe(1)
+  })
+})
+
+describe("Kleine Scheibe für sich", () => {
+  // Spiegel: LP ab Ring 7, Radius 5,75 + 3 · 8 = 29,75 mm; LG ab Ring 4, Radius 0,25 + 6 · 2,5 = 15,25 mm
+  it("um die Mitte, der Spiegel überall gleich groß: halbe Breite = Radius des Spiegels × 1,6", () => {
+    // LP: 29,75 · 1,6 = 47,6; ohne Treffer und mit Treffern innerhalb derselbe Ausschnitt
+    close(miniView(LP_10M, []), -47.6, -47.6, 95.2)
+    // weitester Treffer 40 mm in y: (40 + 2,25) · 1,12 = 47,32 < 47,6
+    close(miniView(LP_10M, [{ xUm: 10000, yUm: -40000 }]), -47.6, -47.6, 95.2)
+    // LG: 15,25 · 1,6 = 24,4 < Ring 1 plus halbes Kaliber (25)
+    close(miniView(LG_10M, [{ xUm: 1000, yUm: 500 }]), -24.4, -24.4, 48.8)
+  })
+
+  it("ein Treffer weiter außen vergrößert den Ausschnitt, weiter um die Mitte", () => {
+    // LP: Treffer bei x = 50 mm: (50 + 2,25) · 1,12 = 58,52
+    close(miniView(LP_10M, [{ xUm: 50000, yUm: 3000 }]), -58.52, -58.52, 117.04)
+    // LG: Treffer bei x = 20 mm: (20 + 2,25) · 1,12 = 24,92
+    close(miniView(LG_10M, [{ xUm: 20000, yUm: 0 }]), -24.92, -24.92, 49.84)
+  })
+
+  it("höchstens Ring 1 plus halbes Kaliber", () => {
+    // LP: (75 + 2,25) · 1,12 = 86,52 > 77,75 + 2,25 = 80
+    close(miniView(LP_10M, [{ xUm: 0, yUm: -75000 }]), -80, -80, 160)
+    // LG: (30 + 2,25) · 1,12 = 36,12 > 25
+    close(miniView(LG_10M, [{ xUm: 30000, yUm: 0 }]), -25, -25, 50)
   })
 })
 
