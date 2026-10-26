@@ -8,10 +8,7 @@
 import { hasPdfHeader } from "@vereinsheim/meyton-pdf/header"
 import { DEFAULT_LIMITS } from "@vereinsheim/meyton-pdf/limits"
 
-/** harmloser Dateiname eines PDFs; sonst null */
-export function safePdfName(name: string | null | undefined): string | null {
-  return name && /^[A-Za-z0-9._-]{1,100}\.pdf$/i.test(name) ? name : null
-}
+import { safePdfName } from "./files"
 
 export const FETCH_TIMEOUT_MS = 10_000
 export const MAX_URL_LENGTH = 2_048
