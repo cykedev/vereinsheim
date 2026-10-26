@@ -51,6 +51,10 @@ Heute fehlt dafür im Modell (geprüft am Code):
 - Die Zählung je Disziplin im Admin (`admin/disciplines.ts:58`) zählt jede Scheibe mit nicht `probeOnly` als
   gewertet. Eine leere zählte dann mit 0 Schuss.
 
+Entschieden mit dem User bei der Freigabe (26. Oktober 2026): **Vollständige Scheiben aus Summen zählen bei den
+Rekorden für Ergebnis (R1), beste Serie (R2) und beste Form (R8)**, gleichrangig mit gemessenen; was Einzelschüsse
+braucht, nur aus Schüssen. Erweitert ADR-033 („Rekorde je Angabe“); Task 14 trägt es dort nach.
+
 Entschieden von der koordinierenden Session (technisch, beim Prüfen dieses Plans):
 
 - **`Card.importKey` schon jetzt** (nullable, eindeutig), damit `writeEnteredCard` wiederholbar und testbar ist und Stufe
