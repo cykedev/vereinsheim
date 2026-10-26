@@ -308,6 +308,12 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
   „flaky“ abtun und nicht im fremden Branch reparieren, sondern eigenen Branch aufmachen. Daten, in denen sich Werte
   überdecken, prüft die Prüfung seither eigens (Stapel eines Abends im Fortschritt).
 
+- **`pending` gilt für die ganze Transition, auch für das `router.refresh()` darin**: Läuft nach der Action noch
+  `router.refresh()` in derselben Transition, bleibt `pending` wahr, bis die Seite neu gerechnet ist. Teilen sich zwei
+  Knöpfe ein `pending`, zeigt „…“ nur der Knopf der Aktion, die läuft; der andere behält seinen Namen und ist höchstens
+  gesperrt (`buttonLabels` in `apps/spiegel/src/components/card/ShareCard.tsx`). Sonst hieß der Knopf direkt nach dem
+  Teilen rund 250 ms „Beenden…“. Aufgefallen im Oktober 2026, als die Skriptprüfung in einem von fünf Läufen scheiterte.
+
 ## 10. Design 2 (alle Apps, ADR-030, ADR-032)
 
 - **Tokens aus `@vereinsheim/ui/design2.css`**: dieselben Namen, die die
