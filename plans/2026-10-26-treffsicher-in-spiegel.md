@@ -156,6 +156,9 @@ Vorgeschlagener Schnitt, endgültig im jeweiligen `/plan`:
     Ausdruck“; Original-PDF und ID auf der Seite der Scheibe; eigene Sperre durch Scan aufheben.
   - **Verschoben:** „Teilen → Spiegel“ unter Android (SP-2.5), Auswahl nach Druckzeit ohne lesbare ID, Warnung bei
     stummer Brücke (SF-56).
+  - **Vor 1b-2 live geht:** den Speicher des Lesers im echten Image auf dem VPS messen (amd64; auf dem Mac nur arm64
+    nativ, 74 MiB mit `--lite-mode`, oder unter Rosetta verfälscht). Der User führt den Einzeiler aus der Doku von 1b-1
+    nach dem Deploy aus. Liegt `maxRssKb` über 80 MiB, Grenze oder Speicher von Spiegel vor 1b-2 anpassen.
   **ID vom Ausdruck an der Scheibe** (Wunsch des Users, 26. Oktober 2026): Die Seite einer Scheibe zeigt leise die ID,
   wie sie im Fuß des Ausdrucks steht (acht Hex-Zeichen, `printedId`), damit der Schütze Papier und Scheibe zuordnen
   kann. Bei Scheiben der Brücke steht sie schon in `Card.scheibenId`, gezeigt wird sie heute nur bei den Aufträgen im
