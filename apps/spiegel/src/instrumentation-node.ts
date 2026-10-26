@@ -2,6 +2,7 @@ import { db } from "@/lib/db"
 import { refreshStaleDisciplineCards, refreshStaleProjections } from "@/lib/db/cards"
 import { purgeExpiredTrash } from "@/lib/db/trash"
 import { rereadOutdatedKeys } from "@/lib/ingest/reread"
+import { readerBundleMissing } from "@/lib/printouts/reader"
 import { ensureSeedAdmin } from "@/lib/startup"
 
 const HOUR_MS = 3_600_000
@@ -57,6 +58,9 @@ function rereadKeys() {
  * Ohne Datenbank startet der Server trotzdem.
  */
 export async function registerNode() {
+  if (readerBundleMissing()) {
+    console.error("printout-reader.mjs fehlt: Ausdrucke lassen sich nicht lesen")
+  }
   void refreshStaleProjections(db)
     .then((count) => {
       if (count) console.warn(`${count} Projektionen beim Start neu gerechnet`)
