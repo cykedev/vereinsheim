@@ -237,7 +237,8 @@ export function shotChange(current: readonly ShotInput[], next: readonly ShotInp
   return add.length || remove.length ? { kind: "update", add, remove } : { kind: "same" }
 }
 
-function shotRows(revisionId: bigint, cardId: string, shots: readonly ShotInput[]) {
+/** die Zeilen der Schüsse einer Revision (auch für `writeEnteredCard`) */
+export function shotRows(revisionId: bigint, cardId: string, shots: readonly ShotInput[]) {
   return shots.map((shot) => ({
     revisionId,
     cardId,
@@ -894,11 +895,14 @@ export async function refreshDisciplineCards(
   {
     limit = 200,
     sourceId,
+    cardIds,
     exclude = [],
     onFailure,
   }: {
     limit?: number
     sourceId?: number
+    /** nur diese Scheiben (eingetragene haben keine Quelle; Tests) */
+    cardIds?: readonly string[]
     /** Scheiben, die hier nicht noch einmal versucht werden (sie sind in diesem Lauf schon gescheitert) */
     exclude?: readonly string[]
     /** mit: eine scheiternde Scheibe wird gemeldet und übergangen; ohne: der Fehler bricht ab */
@@ -907,11 +911,14 @@ export async function refreshDisciplineCards(
 ): Promise<number> {
   const onlySource =
     sourceId === undefined ? Prisma.empty : Prisma.sql`AND c."sourceId" = ${sourceId}`
+  const onlyCards =
+    cardIds === undefined ? Prisma.empty : Prisma.sql`AND c.id = ANY(${[...cardIds]})`
   const notExcluded = exclude.length ? Prisma.sql`AND c.id <> ALL(${[...exclude]})` : Prisma.empty
   const stale = await db.$queryRaw<{ id: string }[]>`
     SELECT c.id FROM "Card" c JOIN "Discipline" d ON d.id = c."disciplineId"
      WHERE c."disciplineVersion" <> d.version
        ${onlySource}
+       ${onlyCards}
        ${notExcluded}
      ORDER BY c.id
      LIMIT ${limit}`
