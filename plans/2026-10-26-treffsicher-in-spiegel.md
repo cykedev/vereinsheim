@@ -194,7 +194,7 @@ nach Stufe 3. Wie Treffsicher lesend läuft, solange der Basisbranch nicht auf `
 |---|---|---|---|---|
 | V1 | `plans/2026-10-26-tis-v1-accounts.md` | `feat/tis-v1-accounts` | tis-v1-accounts | im Basisbranch (`f7edbdab`) |
 | 1a | | | | offen |
-| 1b-1 | | | | in Planung |
+| 1b-1 | `plans/2026-10-26-tis-1b1-printouts.md` | `feat/tis-1b1-printouts` (von `main`) | | geplant |
 | 1b-2 | | | | offen |
 | 1c | | | | offen |
 | 1d | | | | offen |
