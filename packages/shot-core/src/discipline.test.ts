@@ -5,6 +5,7 @@ import {
   parseDisciplineId,
   plannedShotsOf,
   resolveTarget,
+  seriesShotsOf,
   suggestFamily,
   suggestIgnore,
   type AdminMapping,
@@ -60,6 +61,22 @@ describe("plannedShotsOf", () => {
   it("die Zahl des Admins geht vor, 0 heißt keine feste", () => {
     expect(plannedShotsOf(19200020, 3)).toBe(3)
     expect(plannedShotsOf(10110040, 0)).toBeNull()
+  })
+
+  it("ohne DisziplinID nur die Zahl des Admins", () => {
+    expect(plannedShotsOf(null, null)).toBeNull()
+    expect(plannedShotsOf(null, 40)).toBe(40)
+    expect(plannedShotsOf(null, 0)).toBeNull()
+  })
+})
+
+describe("seriesShotsOf", () => {
+  it("die Zahl des Admins, sonst 10 bei einer Schusszahl aus Zehnern, sonst unbekannt", () => {
+    expect(seriesShotsOf(null, 40)).toBe(10)
+    expect(seriesShotsOf(null, 15)).toBeNull()
+    expect(seriesShotsOf(5, 40)).toBe(5)
+    expect(seriesShotsOf(null, null)).toBeNull()
+    expect(seriesShotsOf(null, 0)).toBeNull()
   })
 })
 

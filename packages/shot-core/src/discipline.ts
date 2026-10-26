@@ -135,10 +135,27 @@ export function parseDisciplineId(raw: number): ParsedDisciplineId {
   }
 }
 
-/** Soll der Wertungsschüsse: die Zahl des Admins (0: keine feste), sonst aus der DisziplinID (SF-09) */
-export function plannedShotsOf(meytonId: number, override: number | null): number | null {
-  if (override === null) return parseDisciplineId(meytonId).plannedShots
-  return override === 0 ? null : override
+/**
+ * Soll der Wertungsschüsse: die Zahl des Admins (0: keine feste), sonst aus der DisziplinID (SF-09); ohne DisziplinID
+ * (vom Admin ohne Meyton angelegt) keine
+ */
+export function plannedShotsOf(meytonId: number | null, override: number | null): number | null {
+  if (override === 0) return null
+  if (override !== null) return override
+  return meytonId === null ? null : parseDisciplineId(meytonId).plannedShots
+}
+
+export const DEFAULT_SERIES_SHOTS = 10
+
+/**
+ * Schüsse je Serie: ohne Einzelschüsse gilt jede Serie als volle Serie ([[adr-033]], Nachtrag 27. Oktober 2026). Die
+ * Zahl des Admins, sonst 10, wenn die Schusszahl ein Vielfaches von 10 ist, sonst unbekannt
+ */
+export function seriesShotsOf(override: number | null, plannedShots: number | null): number | null {
+  if (override !== null) return override
+  return plannedShots !== null && plannedShots > 0 && plannedShots % DEFAULT_SERIES_SHOTS === 0
+    ? DEFAULT_SERIES_SHOTS
+    : null
 }
 
 function catalogEntry(parsed: ParsedDisciplineId): CatalogEntry | null {
