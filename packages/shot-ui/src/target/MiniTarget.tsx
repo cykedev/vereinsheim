@@ -2,7 +2,7 @@ import type { MetricShot } from "@vereinsheim/shot-core/metrics"
 import type { TargetImage } from "@vereinsheim/shot-core/targets"
 import { cn } from "@vereinsheim/lib/utils"
 
-import { caliberRadius, probeCorner, scoreColor, SHOT_FILL_OPACITY } from "../geometry"
+import { caliberRadius, miniView, probeCorner, scoreColor, SHOT_FILL_OPACITY } from "../geometry"
 import { hasPosition } from "../shots"
 import { TargetFace } from "./TargetFace"
 import type { ViewBox } from "../types"
@@ -10,15 +10,18 @@ import type { ViewBox } from "../types"
 const HAIR = { vectorEffect: "non-scaling-stroke" } as const
 const mm = (um: number) => um / 1000
 /**
- * der Ausschnitt auf 1 µm: Server und Browser rechnen ihn in der letzten Stelle verschieden (`Math.hypot` im Streukreis),
- * und das gezeichnete HTML passte sonst beim Hydrieren nicht (Übersichten auf dem Server)
+ * der Ausschnitt auf 1 µm: Server und Browser können ihn in der letzten Stelle verschieden rechnen (etwa `Math.hypot` im
+ * Streukreis), und das gezeichnete HTML passte sonst beim Hydrieren nicht (Übersichten auf dem Server)
  */
 const fixed = (value: number) => Math.round(value * 1000) / 1000
 
 export interface MiniTargetProps {
   target: TargetImage
-  /** Ausschnitt in mm, etwa `seriesTileView` oder `groupView` */
-  view: ViewBox
+  /**
+   * Ausschnitt in mm; ohne ihn `miniView` über die eigenen Treffer (um die Mitte, der Spiegel überall gleich groß).
+   * Die Serien geben ihren gemeinsamen Ausschnitt mit (`seriesTileView`).
+   */
+  view?: ViewBox
   /**
    * die Treffer, die sie zeigt; ohne Lage fallen sie weg. Sie braucht nur Lage und Ring: Schüsse oder die kompakten
    * Lagen der Übersichten (`MarkShot` aus `shot-core/projection`)
@@ -32,18 +35,24 @@ export interface MiniTargetProps {
 }
 
 /**
- * Kleine Scheibe (aus den Serien, `SeriesStrip`): Papier, Spiegel, Ringe als Haarlinien, Treffer in
- * Kalibergröße und Ringwert-Farbe, ohne Wert gestrichelt. Nur Bild (`aria-hidden`), die
- * Worte stehen daneben. Auch in der Ablesung einer Scheibe auf der Seite eines Zeitraums.
+ * Kleine Scheibe (Serien, Liste, Start, Ablesung einer Scheibe, Offen): Papier, Spiegel, Ringe als Haarlinien, Treffer
+ * in Kalibergröße und Ringwert-Farbe, ohne Wert gestrichelt. Nur Bild (`aria-hidden`), die Worte stehen daneben.
  */
 export function MiniTarget({
   target,
-  view: computed,
+  view: given,
   shots,
   probeCorner: corner = false,
   dim = false,
   className,
 }: MiniTargetProps) {
+  const drawn = shots.filter(hasPosition)
+  const computed =
+    given ??
+    miniView(
+      target,
+      drawn.map((shot) => ({ xUm: shot.xUm as number, yUm: shot.yUm as number }))
+    )
   const view = { x: fixed(computed.x), y: fixed(computed.y), w: fixed(computed.w) }
   const calR = caliberRadius(target)
   return (
@@ -61,7 +70,7 @@ export function MiniTarget({
           <polygon data-probe-corner="true" points={probeCorner(view)} fill="var(--spiegel)" />
         )}
       </TargetFace>
-      {shots.filter(hasPosition).map((shot, i) => {
+      {drawn.map((shot, i) => {
         const x = mm(shot.xUm as number)
         const y = -mm(shot.yUm as number)
         const color = shot.ring === null ? "var(--paper-line)" : scoreColor(shot.ring)

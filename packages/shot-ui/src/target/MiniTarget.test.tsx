@@ -43,6 +43,17 @@ describe("MiniTarget", () => {
     expect(html).toMatch(/<circle cx="1.5" cy="0"[^>]*fill="var\(--score-9\)"/)
   })
 
+  it("ohne Ausschnitt um die Mitte, der Spiegel gleich groß (miniView über die Treffer mit Lage)", () => {
+    // LG, Treffer bei 0, 0,8 und 1,5 mm: innerhalb, also 15,25 · 1,6 = 24,4
+    const html = renderToStaticMarkup(createElement(MiniTarget, { target: LG_10M, shots: SHOTS }))
+    expect(html).toContain('viewBox="-24.4 -24.4 48.8 48.8"')
+    // ein Treffer bei 20 mm vergrößert ihn: (20 + 2,25) · 1,12 = 24,92
+    const wide = renderToStaticMarkup(
+      createElement(MiniTarget, { target: LG_10M, shots: [...SHOTS, shot("match", 20000, 30)] })
+    )
+    expect(wide).toContain('viewBox="-24.92 -24.92 49.84 49.84"')
+  })
+
   it("nur Bild: aria-hidden, Ecke der Probe und blass nur auf Wunsch", () => {
     expect(render()).toMatch(/^<svg[^>]*aria-hidden="true"/)
     expect(render()).not.toContain("data-probe-corner")
