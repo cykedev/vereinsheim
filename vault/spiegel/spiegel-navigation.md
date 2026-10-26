@@ -275,8 +275,9 @@ Die Liste markiert, wohin man kommt, wie der Fortschritt seine Wahl (`bg-accent-
   - Eine Seite aus dem Cache übernimmt die gemerkte über `useSyncExternalStore` (beim Hydrieren gilt die vom Server).
 - **Kasten „Diese Scheibe“** am Ende (`CardActions`, nur für den Besitzer): Disziplin, Teilen und Löschen als Zeilen, je
   mit Zustand links und Aktion rechts („Ändern“, „Teilen“, „Löschen“; für Screenreader „Disziplin ändern“,
-  „Scheibe teilen“, „Scheibe löschen“). Darüber „Mit der Scheibe davor vergleichen“ als eigener Kasten. Oben stünden sie gegen
-  conventions §2 an der üblichen Stelle; der Kopf ist aber schon voll, und man braucht sie selten.
+  „Scheibe teilen“, „Scheibe löschen“). Darüber „Mit der Scheibe davor vergleichen“ als eigener Kasten. Nach
+  conventions §2 stünden sie oben (`DetailActionBar`); der Kopf ist aber schon voll, und man braucht sie selten. Siehe
+  „Disziplin einer Scheibe“, „Teilen per Link“ und „Löschen und Papierkorb“.
 
 ## Fortschritt
 
@@ -337,11 +338,11 @@ Eine eigene Scheibe lässt sich löschen, über Papierkorb und weiche Sperre ([[
 War am Stand die falsche Disziplin gewählt (etwa Auflage auf einer LP-Scheibe), stellt der Schütze sie an der Scheibe um
 (User, 24. Oktober 2026; SF-16 für dieselbe Scheibe):
 
-- **Wo:** als Zeile im Kasten „Diese Scheibe“ am Ende der Seite einer Scheibe (`CardDiscipline`): „Disziplin“ und
-  „LP 40“, nach einer eigenen Wahl leise „Am Stand gewählt: …“. „Ändern“ öffnet ein Blatt mit den Disziplinen derselben
-  Scheibe nach Familie (Knöpfe, mit der Tastatur durchgehbar); die Wahl fragt mit Folgen (`cardDiscipline`), „Ändern“
-  stellt um, die Disziplin vom Stand „Zurückstellen“. Ohne andere Möglichkeit steht nur der Name da. Nicht auf der
-  geteilten Seite, die auch nicht verrät, dass gewählt wurde.
+- **Wo:** als Zeile im Kasten „Diese Scheibe“ am Ende der Seite einer Scheibe (`CardDiscipline`): „Disziplin“ und „LP
+  40“, nach einer eigenen Wahl leise „Am Stand gewählt: …“. „Ändern“ öffnet ein Blatt mit den Disziplinen derselben
+  Scheibe nach Familie (Knöpfe, mit der Tastatur durchgehbar); die Wahl fragt mit Folgen (`cardDiscipline`), „Ändern“ in
+  der Rückfrage stellt um, die Disziplin vom Stand „Zurückstellen“. Ohne andere Möglichkeit steht nur der Name da. Nicht
+  auf der geteilten Seite, die auch nicht verrät, dass gewählt wurde.
 - **Was wählbar ist:** eingeordnete Disziplinen der Anlage mit Familie und demselben Scheibenbild wie die vom Stand,
   nicht ignoriert (`choiceWhere`), und die vom Stand, solange der Admin sie nicht ignoriert (sonst verschwände die
   Scheibe). Die Werte bleiben, wie Meyton sie gemessen hat; ohne Scheibenbild am Stand nur zurück.
@@ -362,9 +363,9 @@ Eine eigene Scheibe lässt sich per Link zeigen, ohne dass die andere Seite ein 
   Geräts) und „Teilen beenden“ (`cardShareStop`). Ein Link je Scheibe, ohne Ablauf; die UUID kommt aus `randomUUID()`
   und steht an der Scheibe (`Card.shareId`, `sharedAt`).
 - **Die geteilte Seite** (`src/app/share/[shareId]`, frei in `proxy.ts`) ist die Seite einer Scheibe mit `own={null}`:
-  ohne Rahmen der App, Rückweg, Blättern, Kreise für Art und Wertung, Teilen und Löschen. Sie öffnet in der Wertung der
-  Scheibe; Ebenen, Ausschnitt, Serie, Schuss, Lineal, Reiter, Sprungleiste und Hilfe gehen, ändern aber nur die Ansicht.
-  Die Adresse bleibt die des Links, nur der Anker des Reiters wechselt. `noindex`, kein Referrer.
+  ohne Rahmen der App, Rückweg, Blättern, Kreise für Art und Wertung und ohne den Kasten „Diese Scheibe“. Sie öffnet in
+  der Wertung der Scheibe; Ebenen, Ausschnitt, Serie, Schuss, Lineal, Reiter, Sprungleiste und Hilfe gehen, ändern aber
+  nur die Ansicht. Die Adresse bleibt die des Links, nur der Anker des Reiters wechselt. `noindex`, kein Referrer.
 - **Wann der Link nicht geht** (Hinweis aus `not-found.tsx`, 404): Teilen beendet, Scheibe gelöscht (`deleteCard`
   beendet das Teilen; Wiederherstellen bringt den Link nicht zurück), wartend, Disziplin ignoriert, Konto deaktiviert.
   Geprüft beim Lesen in `sharedCard` (`VISIBLE_CARD`, aktives Konto).

@@ -312,13 +312,14 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
   `historyLoadedAt` und `firstCardConfirmedAt` null, die Scheiben kommen wartend wieder. Profil und Übersicht zeigen den
   Stand des Nachladens als Zustand.
 - **Teilen per Link** ([[spiegel-navigation]] „Teilen per Link“): `Card.shareId` (UUID aus `randomUUID`, eindeutig) und
-  `sharedAt`; `shareCard` (unter `lockCard`) und `stopSharingCard` (ein `updateMany`) in `src/lib/share-actions.ts`, ohne
-  `revalidatePath`: Den Stand hält `CardScreen` (sofort aus dem Ergebnis, danach `router.refresh()`, ein anderer vom
-  Server gilt) und gibt ihn an `ShareCard` und `DeleteCard`. `deleteCard` beendet das Teilen. Die
+  `sharedAt`; `shareCard` (unter `lockCard`) und `stopSharingCard` (ein `updateMany`) in `src/lib/share-actions.ts`,
+  ohne `revalidatePath`: Den Stand hält `CardScreen` (sofort aus dem Ergebnis, danach `router.refresh()`, ein anderer
+  vom Server gilt) und gibt ihn über `CardActions` an `ShareCard` und `DeleteCard`. `deleteCard` beendet das Teilen. Die
   geteilte Seite liest nur über `sharedCard` (`PAGE_CARD_SELECT` mit `VISIBLE_CARD` und aktivem Konto, nie Angaben zum
-  Besitzer) und rendert `CardScreen` mit `own={null}`: ohne Kontextleiste, Art, Wertung, Teilen, Löschen und ohne
-  Fortschreiben der Adresse. `proxy.ts` lässt `share/` frei (`src/proxy.test.ts`); die Kennung prüft `isShareId`, bevor
-  eine Abfrage läuft. Skriptprüfung „Geteilte Scheibe“ in einem Fenster ohne Cookies (`newPage({ isolated: true })`).
+  Besitzer) und rendert `CardScreen` mit `own={null}`: ohne Kontextleiste, Art, Wertung, den Kasten „Diese Scheibe“ und
+  ohne Fortschreiben der Adresse. `proxy.ts` lässt `share/` frei (`src/proxy.test.ts`); die Kennung prüft `isShareId`,
+  bevor eine Abfrage läuft. Skriptprüfung „Geteilte Scheibe“ in einem Fenster ohne Cookies
+  (`newPage({ isolated: true })`).
 - **Blättern hängt die Seite neu ein** (`key={card.id}`) und liest den Anker nur auf der eigenen Adresse (`useHash`): Next
   rendert die nächste Scheibe, solange die Adresse noch die der vorigen ist, und ihr `#position` war sonst der Reiter der
   nächsten.

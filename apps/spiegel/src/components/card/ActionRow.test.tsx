@@ -24,6 +24,11 @@ describe("Zeile im Kasten „Diese Scheibe“", () => {
     )
   })
 
+  it("der Text bricht um, bevor die Aktion unter ihn rutscht: er wächst ab 0 und braucht 9 rem", () => {
+    const html = renderToStaticMarkup(createElement(ActionRow, { title: "Löschen", state: "…" }))
+    expect(html).toMatch(/<div class="grid min-w-36 flex-1 basis-0 gap-0\.5"><h3/)
+  })
+
   it("ohne Aktion nur Titel und Zustand", () => {
     const html = renderToStaticMarkup(
       createElement(ActionRow, { title: "Disziplin", state: "LP 40" })

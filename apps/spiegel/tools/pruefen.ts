@@ -503,6 +503,19 @@ async function phoneCard(page: Page, href: string) {
     first.target - first.head <= 812 - 72 && first.gap >= 0 && first.gap <= 30,
     first
   )
+  // Kasten „Diese Scheibe“: die Aktion steht neben ihrem Text, nicht darunter (der Knopf im Kopf der Zeile, nicht im Blatt)
+  const actionRows = await page.ev<string[]>(`$$("[data-card-actions] h3").map((h) => {
+    const row = h.closest("[data-card-discipline], [data-share-card], [data-delete-card]")
+    const b = row && row.firstElementChild.querySelector("button")
+    if (!b) return txt(h) + ": ohne Knopf"
+    const beside = Math.abs(b.getBoundingClientRect().top - h.getBoundingClientRect().top) < 30
+    return txt(h) + (beside ? ": daneben" : ": darunter")
+  })`)
+  check(
+    "Telefon 375 px: im Kasten „Diese Scheibe“ steht jede Aktion neben ihrem Text",
+    actionRows.length === 3 && actionRows.every((r) => !r.endsWith(": darunter")),
+    actionRows.join(" · ")
+  )
   const tabs = await page.ev<string[]>(
     `$$('[role="radiogroup"][aria-label="Thema"] [role="radio"]').map(txt)`
   )
@@ -796,7 +809,7 @@ async function trash(page: Page) {
 }
 
 /**
- * Disziplin einer Scheibe: Der Abschnitt nennt sie; gibt es eine andere mit derselben Scheibe, öffnet „Disziplin ändern“
+ * Disziplin einer Scheibe: Die Zeile nennt sie; gibt es eine andere mit derselben Scheibe, öffnet „Disziplin ändern“
  * das Blatt, Esc schließt es ohne Änderung, eine Wahl fragt mit Folgen, „Ändern“ stellt um und „Zurückstellen“ zurück.
  */
 async function cardDiscipline(page: Page, href: string) {
@@ -804,7 +817,7 @@ async function cardDiscipline(page: Page, href: string) {
   await page.goto(`${BASE}${href}`)
   const name = () => page.ev<string>(`txt($("[data-discipline-name]"))`)
   const before = await name()
-  check("Disziplin: der Abschnitt nennt sie", before.length > 0, before)
+  check("Disziplin: die Zeile nennt sie", before.length > 0, before)
   if (!(await page.ev<boolean>(`!!button("Disziplin ändern")`))) {
     check("Disziplin ändern (nicht belegt: keine andere Disziplin mit derselben Scheibe)", true)
     return
