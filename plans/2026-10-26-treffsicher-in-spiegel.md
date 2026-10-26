@@ -93,6 +93,19 @@ Vorgeschlagener Schnitt, endgültig im jeweiligen `/plan`:
   geht nicht an den Scanner. Damit entfallen Vorschau (SF-41), Bestätigung in „Offen“, eine Änderung am Vertrag und
   eine neue Brücke. Der Plan von 1b trägt das als Nachtrag in ADR-028 ein (Vorschau und Bestätigung ersetzt durch die
   automatischen Prüfungen, Rückweg ist Löschen).
+  Weiter entschieden mit dem User am 26. Oktober 2026:
+  - **Keine Liste erlaubter Adressen** beim Holen des PDFs, vorerst. Es bleiben Größengrenze, Zeitgrenze und „nur
+    PDF“ (Kopf `%PDF-`). Restrisiko: Ein Link kann Spiegel Adressen im eigenen Netz abrufen lassen (SF-47 bleibt
+    offen); auch das kommt als Abweichung in den Nachtrag zu ADR-028.
+  - **Upload eines einzelnen PDFs** als Alternative zum Scan, wie in Treffsicher heute, etwa für alte Ausdrucke.
+  - **Die Brücke im Schützenhaus kann Aufträge** („Scheibe per ID“ läuft); 1b braucht keine neue Brücke.
+  - **Schnitt:** 1b-1 „Ausdruck holen und speichern“ (PDF holen, Kindprozess, Volume samt Backup und Restore, Schema:
+    Ausdruck am Auftrag, bis die Scheibe da ist, Druckzeit am Auftrag, Ausgang „passt nicht zum Ausdruck“; ohne
+    Oberfläche, interaktiv wegen geschützter Pfade). 1b-2 „Scannen“ (`/scan` mit Kamera, Link und Upload, „Scannen“ in
+    der Navigation, Prüfung der Druckzeit beim Einlesen, PDF an einer vorhandenen Scheibe (SF-43), Original-PDF und ID
+    auf der Seite der Scheibe, eigene Sperre durch Scan aufheben; autonom).
+  - **Verschoben:** „Teilen → Spiegel“ unter Android (SP-2.5), Auswahl nach Druckzeit ohne lesbare ID, Warnung bei
+    stummer Brücke (SF-56).
   **ID vom Ausdruck an der Scheibe** (Wunsch des Users, 26. Oktober 2026): Die Seite einer Scheibe zeigt leise die ID,
   wie sie im Fuß des Ausdrucks steht (acht Hex-Zeichen, `printedId`), damit der Schütze Papier und Scheibe zuordnen
   kann. Bei Scheiben der Brücke steht sie schon in `Card.scheibenId`, gezeigt wird sie heute nur bei den Aufträgen im
@@ -181,7 +194,8 @@ nach Stufe 3. Wie Treffsicher lesend läuft, solange der Basisbranch nicht auf `
 |---|---|---|---|---|
 | V1 | `plans/2026-10-26-tis-v1-accounts.md` | `feat/tis-v1-accounts` | tis-v1-accounts | im Basisbranch (`f7edbdab`) |
 | 1a | | | | offen |
-| 1b | | | | offen |
+| 1b-1 | | | | in Planung |
+| 1b-2 | | | | offen |
 | 1c | | | | offen |
 | 1d | | | | offen |
 | 1e | | | | offen |
