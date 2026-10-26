@@ -29,7 +29,7 @@ const SCORING_IN: Readonly<Record<Scoring, string>> = {
 /** auf dem Telefon ohne Uhrzeit, Abstand und Schusszahl; ab 32rem Breite der Liste (Container) mit */
 const WIDE = "hidden @min-[32rem]:table-cell"
 // am Telefon enger: zwei Spalten für die Wertungen brauchen den Platz; ab 32rem breiter
-const CELL = "px-1 py-1 @min-[32rem]:px-2"
+const CELL = "px-1 py-2 @min-[32rem]:px-2"
 
 /** Mittag des Tages: das Datum eines Abends, unabhängig von der Zeitumstellung */
 const noonOf = (day: string, timeZone: string) =>
@@ -140,17 +140,18 @@ export function EveningList({
               <table className="w-full border-collapse text-[13px] tabular-nums">
                 <caption className="sr-only">{`Scheiben im ${title} nach Abend, neueste zuerst`}</caption>
                 <thead className="text-xs text-muted-foreground">
-                  <tr>
+                  {/* oben, auch wenn ein Kopf zweizeilig umbricht */}
+                  <tr className="align-top">
                     <th scope="col" className={cn(CELL, "py-1.5 text-left font-medium")}>
                       Datum
                     </th>
-                    <th scope="col" className="w-12 py-1.5">
+                    <th scope="col" className="w-12 px-1.5 py-1.5 @min-[32rem]:px-2">
                       <span className="sr-only">Scheibe</span>
                     </th>
                     <th scope="col" className={cn(CELL, WIDE, "py-1.5 text-left font-medium")}>
                       Uhrzeit
                     </th>
-                    <th scope="col" className="px-1 py-1.5 text-center font-medium">
+                    <th scope="col" className={cn(CELL, "py-1.5 text-left font-medium")}>
                       Art
                     </th>
                     <th scope="col" className={cn(CELL, "py-1.5 text-right font-medium")}>
@@ -220,7 +221,8 @@ export function EveningList({
                             ) : (
                               <td className={CELL} />
                             )}
-                            <td className="py-1">
+                            {/* Luft zu beiden Seiten der kleinen Scheibe, auch am Telefon */}
+                            <td className="px-1.5 py-2 @min-[32rem]:px-2">
                               <RouteLink
                                 route={cardRoute(row.id)}
                                 aria-label={rowName(row, evening.day, time)}
@@ -239,7 +241,7 @@ export function EveningList({
                               </RouteLink>
                             </td>
                             <td className={cn(CELL, WIDE, "text-foreground-2")}>{time}</td>
-                            <td className="px-1 py-1 text-center text-muted-foreground">
+                            <td className={cn(CELL, "text-muted-foreground")}>
                               <KindMark kind={row.kind} />
                             </td>
                             {/* beide Wertungen mit Namen in eigenen Spalten, die der Scheibe fett */}

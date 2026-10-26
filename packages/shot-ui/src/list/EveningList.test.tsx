@@ -82,7 +82,7 @@ describe("Scheiben-Liste nach Abend (Form wie die Liste eines Zeitraums)", () =>
     expect(html.match(/scope="row"/g)).toHaveLength(2)
     expect(html).not.toContain("rowSpan")
     expect(html).toMatch(
-      /<tr data-card-row="a"[^>]*><td class="px-1 py-1 @min-\[32rem\]:px-2"><\/td>/
+      /<tr data-card-row="a"[^>]*><td class="px-1 py-2 @min-\[32rem\]:px-2"><\/td>/
     )
     expect(html).toMatch(/<td colSpan="9" class="[^"]*text-right"><a [^>]*data-other-family/)
     expect(text(html)).not.toMatch(/\d Scheiben? · \d+ Schuss auch/)
@@ -263,6 +263,13 @@ describe("Kleine Scheiben der Liste", () => {
     )
     expect(svgs).toHaveLength(3)
     expect(svgs.every((c) => c.split(" ").includes("size-12"))).toBe(true)
+  })
+
+  it("die Köpfe stehen oben, auch wenn einer zweizeilig umbricht; Art steht links wie ihre Zellen", () => {
+    const html = render()
+    expect(html).toMatch(/<thead[^>]*><tr class="align-top">/)
+    expect(html).toMatch(/<th scope="col" class="[^"]*text-left[^"]*">Art<\/th>/)
+    expect(html).not.toContain("text-center")
   })
 
   it("Datum, Werte und Zeichen stehen oben neben der kleinen Scheibe, nicht mittig", () => {
