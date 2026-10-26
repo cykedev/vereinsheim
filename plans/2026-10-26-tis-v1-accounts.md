@@ -12,6 +12,9 @@ Bei der Übernahme (Stufe 3, [[adr-033]]) ordnen sich Konten über die E-Mail zu
   Konten,
 - wie viele Konten, Einheiten und Favoriten es gibt (Zählungen, die ADR-033 vor Stufe 3 verlangt).
 
+Die Übernahme läuft später Konto für Konto per CLI, mit Quelle und Ziel (Koordinationsplan, Stufe 3). V1 liefert dafür
+einen Vorschlag für die Zuordnung als Datei, die der User prüft und bearbeitet.
+
 Die Dev-Datenbank ist eine Prod-Kopie vom 26. Oktober 2026. Der Bericht enthält Namen und E-Mails und bleibt deshalb nur
 in `reports/` (gitignored, ADR-029). Vor der echten Übernahme läuft derselbe Abgleich noch einmal gegen Prod, durch den
 User.
@@ -57,6 +60,17 @@ zwischen den Datenbanken (ADR-002), keine neue Abhängigkeit, kein Schema.
   4. „In beiden Apps“: Anzahl, dazu nur die Paare mit abweichender Rolle oder abweichendem Aktiv-Status.
   5. „Nur in Spiegel“: Anzahl.
   Kurzer Absatz oben: Datenstand (Datum der CSV), dass der Bericht Personendaten enthält und nicht weitergegeben wird.
+
+  Daneben schreibt es `reports/tis-v1/zuordnung-<YYYY-MM-DD>.csv`, den Vorschlag für die Übernahme Konto für Konto
+  (Stufe 3) mit den Spalten `from,to,status,reason`, eine Zeile je Treffsicher-Konto:
+  - `both` → `to` = die gleiche E-Mail aus Spiegel, `status` = `ok`.
+  - `suspected` → `to` = die E-Mail des Kandidaten, `status` = `check`, `reason` = die Merkmale. Mehrere Kandidaten:
+    eine Zeile je Kandidat.
+  - `onlyTreffsicher` → `to` = die eigene E-Mail (das Konto entsteht bei der Übernahme), `status` = `new`.
+
+  Der User bearbeitet diese Datei (Zeilen streichen, `to` ändern). Ihr Format ist der Vertrag mit dem CLI aus Stufe 3:
+  `formatMappingCsv(rows)` und `parseMappingCsv(text)` in `accountMatch.ts` erzeugen und lesen es, mit Test für den
+  Hin- und Rückweg und für Kommas und Anführungszeichen in `reason`.
 - `apps/spiegel/scripts/transfer/accounts.sh` (neu): `accounts.sh dev` führt beide SQL gegen den Dev-Postgres aus
   (`docker compose -f docker-compose.dev.yml exec -T db psql -U postgres -d <db> --csv`, SQL über stdin, siehe
   [[docker-exec-stdin]]), prüft, dass beide CSV mehr als eine Zeile haben, und ruft den Bericht. `accounts.sh prod`
@@ -74,8 +88,9 @@ zwischen den Datenbanken (ADR-002), keine neue Abhängigkeit, kein Schema.
 
 1. `pnpm --filter spiegel test -- accountMatch` grün; Mutationsprobe wie oben (Datei vorher per `cp` sichern, nicht
    `git checkout`).
-2. `pnpm --filter spiegel transfer:accounts dev` gegen die Prod-Kopie: beide CSV haben Zeilen, der Bericht liegt unter
-   `reports/tis-v1/`.
+2. `pnpm --filter spiegel transfer:accounts dev` gegen die Prod-Kopie: beide CSV haben Zeilen, Bericht und Vorschlag
+   für die Zuordnung liegen unter `reports/tis-v1/`; der Vorschlag hat mindestens so viele Zeilen wie Treffsicher
+   Konten hat, und `parseMappingCsv` liest ihn fehlerfrei.
 3. Plausibilität: Summe der Gruppen `both + onlyTreffsicher + suspected(Treffsicher-Seite)` = Zahl der
    Treffsicher-Konten; Zahl der Einheiten im Bericht = `select count(*) from "TrainingSession"` in Treffsicher.
 4. `git status` zeigt keine Datei aus `reports/`; `git grep` auf eine E-Mail-Domain aus dem Bericht findet nichts im

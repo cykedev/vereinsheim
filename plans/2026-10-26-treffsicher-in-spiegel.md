@@ -59,7 +59,9 @@ damit die Grundlage für den Abgleich der Konten und für den Prüfbestand der �
   - Dazu die Zählungen, die ADR-033 vor Stufe 3 verlangt, soweit sie ohne das neue Modell gehen: Konten, Einheiten,
     Favoriten.
 
-  Das Skript liegt im Repo (ohne Daten) und läuft vor der Übernahme noch einmal gegen Prod, durch den User.
+  Das Skript liegt im Repo (ohne Daten) und läuft vor der Übernahme noch einmal gegen Prod, durch den User. Dazu
+  schreibt es einen Vorschlag für die Zuordnung (Treffsicher-E-Mail → Spiegel-E-Mail), den der User prüft und der später
+  die Aufrufe der Übernahme Konto für Konto speist (Stufe 3).
 
 ### Stufe 1 · Spiegel lernt vereinfachte Scheiben
 
@@ -90,8 +92,30 @@ wenn das Modell aus 1a steht.
 
 ### Stufe 3 · Die Daten ziehen um
 
-Übernahme mit Prüfbestand, Dubletten mit Scheiben der Brücke, Konten über die E-Mail (Grundlage: V1). Teilpläne nach
-Stufe 2.
+Übernahme mit Prüfbestand, Dubletten mit Scheiben der Brücke (Grundlage: V1). Teilpläne nach Stufe 2.
+
+**Konto für Konto per CLI** (gewünscht vom User am 26. Oktober 2026): Die Übernahme läuft für ein Konto auf einmal,
+mit Quelle und Ziel, etwa `--from <E-Mail in Treffsicher> --to <E-Mail in Spiegel>`. Damit
+
+- ordnet der User Konten mit abweichender E-Mail selbst zu, statt dass nur die gleiche E-Mail zählt,
+- lässt sich zuerst ein einzelnes Konto übernehmen und prüfen, während alle anderen weiter in Treffsicher arbeiten.
+
+Folgen, die der Teilplan von Stufe 3 klärt:
+
+- **Ziel fehlt:** Gibt es das Ziel-Konto in Spiegel nicht, legt die Übernahme es an, mit dem Passwort aus Treffsicher
+  (ADR-033).
+- **Wiederholbar je Konto:** Ein zweiter Lauf für dasselbe Konto ändert nichts oder ersetzt, was der erste übernommen
+  hat. Der Prüfbestand läuft je Konto.
+- **Nach der Übernahme ist das Konto in Treffsicher nur lesend**, mit Hinweis auf Spiegel. Sonst gingen Einträge
+  verloren, die danach noch in Treffsicher entstehen. Das ist eine kleine Änderung an Treffsicher, die der Ruhestand
+  ohnehin braucht.
+- **Zwei Datenbanken:** Die Übernahme liest Treffsicher und schreibt Spiegel. Die Apps selbst greifen nie quer
+  (ADR-002); das CLI läuft als eigener Schritt mit Zugang zu beiden, auch für die Dateien der Anhänge.
+- **Aufruf** über das Ops-CLI `vereinsheim`, auf dem VPS und lokal gegen die Prod-Kopie.
+- **Zeitpunkt in Prod:** Konto für Konto in Prod geht erst, wenn Spiegel mit Tagebuch deployt ist. Der Basisbranch muss
+  dafür auf `main` sein. Bis dahin wird die Übernahme nur lokal gegen die Prod-Kopie geübt.
+- **ADR-033** sagt „Konten ordnen sich über die E-Mail zu“ und „Treffsicher läuft erst nur lesend“ (als Ganzes). Die
+  Zuordnung je Konto und das Lesend je Konto verfeinern das; der Teilplan trägt es als Entscheidung in ADR-033 nach.
 
 ### Stufe 4 · Ruhestand von Treffsicher
 
