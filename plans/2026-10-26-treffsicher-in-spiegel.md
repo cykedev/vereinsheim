@@ -78,10 +78,20 @@ Vorgeschlagener Schnitt, endgültig im jeweiligen `/plan`:
 - **1a Angaben-Modell:** Herkunft und Angaben an der Scheibe, Serien-Summen ohne Schüsse, eingetragene Disziplinen ohne
   Meyton-ID mit Familie, fremde Orte als `Site` ohne Brücke, Projektion und `needs`/`onMissing` für die neuen Angaben.
   Schema, interaktiv.
-- **1b QR-Weg (SP-1.7 b):** Scannen (Kamera, Link, Teilen unter Android), PDF von erlaubten Adressen in einem
-  kurzlebigen Kindprozess, PDF-Volume samt Backup, Auftrag an die Brücke, Vorschau und Bestätigung. Berührt
-  Deploy-Vertrag und `scripts/`, interaktiv.
+- **1b QR-Weg (SP-1.7 b):** Scannen (Kamera, Link), PDF von erlaubten Adressen in einem kurzlebigen Kindprozess,
+  PDF-Volume samt Backup, Auftrag an die Brücke. Berührt Deploy-Vertrag und `scripts/`, interaktiv.
   1b liefert „PDF hängt an, die Brücke holt die Scheibe“; ein Ergebnis aus dem PDF bringt erst 1c.
+  **Ohne Vorschau und ohne Bestätigung** (entschieden mit dem User am 26. Oktober 2026): Spiegel ist Tagebuch und
+  Statistik der eigenen Entwicklung, an einer Zuordnung hängt nichts weiter, und wer den Ausdruck hat, kennt dessen
+  Werte ohnehin. Der Scan legt einen Auftrag an wie „Scheibe per ID“ (ID und Abend aus dem PDF); die gelieferte Scheibe
+  gehört sofort dem Scanner. Ist sie doch nicht die eigene, löscht man sie (Löschen mit Sperre gibt es). Gegen
+  Zufallstreffer (eine ID, die zu einer anderen Scheibe am selben Abend passt) prüft Spiegel automatisch und ohne
+  Oberfläche, bevor die Scheibe gespeichert wird: am selben Abend, erster Schuss vor der Druckzeit; mit 1c zusätzlich
+  Schuss für Schuss gegen das PDF. Fällt eine Prüfung durch, speichert Spiegel nichts von der Brücke, der Auftrag endet
+  mit „passt nicht zum Ausdruck“. Wie heute bleibt: Eine Scheibe, deren Sportpass zu einem Konto mit Zustimmung gehört,
+  geht nicht an den Scanner. Damit entfallen Vorschau (SF-41), Bestätigung in „Offen“, eine Änderung am Vertrag und
+  eine neue Brücke. Der Plan von 1b trägt das als Nachtrag in ADR-028 ein (Vorschau und Bestätigung ersetzt durch die
+  automatischen Prüfungen, Rückweg ist Löschen).
   **ID vom Ausdruck an der Scheibe** (Wunsch des Users, 26. Oktober 2026): Die Seite einer Scheibe zeigt leise die ID,
   wie sie im Fuß des Ausdrucks steht (acht Hex-Zeichen, `printedId`), damit der Schütze Papier und Scheibe zuordnen
   kann. Bei Scheiben der Brücke steht sie schon in `Card.scheibenId`, gezeigt wird sie heute nur bei den Aufträgen im
@@ -96,11 +106,12 @@ Vorgeschlagener Schnitt, endgültig im jeweiligen `/plan`:
   Entschieden mit dem User am 26. Oktober 2026:
   - **Keine Erkennung fremder Anlagen.** Spiegel fragt für jeden Ausdruck die eigene Brücke; bei einem fremden endet
     der Auftrag mit „nicht gefunden“, das kostet nichts.
-  - **Dafür prüft Spiegel die Rohdaten gegen das PDF, bevor sie die Scheibe ergänzen:** Die Schüsse des PDFs müssen
-    Schuss für Schuss (Ring und, wenn vorhanden, Zehntel) den ersten Schüssen der Scheibe der Brücke gleichen, am
-    selben Abend. Ein Zwischenausdruck (SF-42) hat weniger Schüsse und passt trotzdem. Passt es nicht, speichert
-    Spiegel von der Scheibe der Brücke nichts und die Scheibe bleibt beim Ergebnis aus dem PDF. So kann eine ID einer
-    fremden Anlage, die zufällig zu einer Scheibe daheim passt, nie die Scheibe eines anderen holen.
+  - **Zwei automatische Prüfungen, bevor die Rohdaten die Scheibe ergänzen:** immer die Druckzeit aus 1b (selber
+    Abend, erster Schuss vor dem Druck), die nur ID und Erstellzeit braucht und so unabhängig vom Layout bleibt
+    (ADR-028); und, wenn der Parser das PDF lesen konnte, Schuss für Schuss (Ring und, wenn vorhanden, Zehntel) gegen
+    die ersten Schüsse der Scheibe der Brücke. Ein Zwischenausdruck (SF-42) hat weniger Schüsse und passt trotzdem.
+    Passt etwas nicht, speichert Spiegel von der Scheibe der Brücke nichts und die Scheibe bleibt beim Ergebnis aus dem
+    PDF.
   - **Dubletten:** Liefert die Brücke dieselbe Scheibe ohnehin (Zustimmung per Sportpass), landet der Scan an ihr,
     abgeglichen über ID und Abend, wie bei „Scheibe per ID“.
 - **1d Handeingabe (SP-4.4):** „Ergebnis eintragen“ je Serie und je Schuss, Trefferlage als Summe, Beleg an der Scheibe,
