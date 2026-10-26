@@ -84,6 +84,18 @@ describe("disciplineRow", () => {
     expect(chess.visible).toBe(false)
   })
 
+  it("ohne Nummer (vom Admin ohne Meyton angelegt): kein Vorschlag des Fachkerns", () => {
+    const free = row({ meytonId: null, name: "LG eigene" })
+    expect(free.meytonId).toBeNull()
+    expect(free.suggestion).toEqual({
+      targetId: null,
+      source: "unknown",
+      plannedShotsFromId: null,
+      ignore: false,
+      sibling: null,
+    })
+  })
+
   it("ein unbekanntes Scheibenbild gilt als keins", () => {
     expect(row({ targetId: "kk-50m" }).targetId).toBeNull()
     expect(row({ targetId: "constructor" }).targetId).toBeNull()

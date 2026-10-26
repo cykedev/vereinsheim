@@ -106,7 +106,8 @@ export function DisciplineForm({
         {row.name}
       </h1>
       <p className="text-[13px] text-muted-foreground">
-        Nummer {row.meytonId} · {cardsText(row.stats.cards)}
+        {row.meytonId === null ? "" : `Nummer ${row.meytonId} · `}
+        {cardsText(row.stats.cards)}
         {row.stats.lastCardMonth && ` · zuletzt im ${row.stats.lastCardMonth}`}
       </p>
     </div>

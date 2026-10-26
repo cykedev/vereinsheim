@@ -87,7 +87,7 @@ async function rows(siteId: number, timeZone: string, id?: number): Promise<Disc
   const siblingOf = (d: (typeof disciplines)[number]): string | null => {
     if (d.confirmedAt) return null
     const sibling = disciplines
-      .filter((o) => o.meytonId === d.meytonId && o.confirmedAt !== null)
+      .filter((o) => d.meytonId !== null && o.meytonId === d.meytonId && o.confirmedAt !== null)
       .sort((a, b) => b.confirmedAt!.getTime() - a.confirmedAt!.getTime())[0]
     if (!sibling) return null
     const same =

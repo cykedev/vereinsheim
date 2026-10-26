@@ -63,7 +63,7 @@ beforeAll(async () => {
   const create = async (key: string, data: Record<string, unknown>) => {
     disciplines[key] = (
       await db.discipline.create({
-        data: { siteId, ...(data as { meytonId: number; name: string }) },
+        data: { siteId, ...(data as { meytonId: number | null; name: string }) },
       })
     ).id
   }
@@ -90,6 +90,10 @@ beforeAll(async () => {
     plannedShots: 7,
   })
   await create("unknown", { meytonId: 10_199_005, name: `Zimmerstutzen ${tag}` })
+  // ohne Nummer, mit denselben Werten wie eine eingeordnete ohne Nummer und wie „old“: keine umbenannte
+  const free = { meytonId: null, targetId: "lp-10m", familyId, plannedShots: 7 }
+  await create("freeOld", { ...free, name: `LP frei alt ${tag}`, confirmedAt: new Date() })
+  await create("free", { ...free, name: `LP frei ${tag}` })
   await card(disciplines.lp, owners[0], 1)
   await card(disciplines.lp, owners[0], 2)
   await card(disciplines.lp, owners[1], 3)
@@ -141,6 +145,7 @@ describe("disciplineOverview", () => {
     expect(byId("old").status).toBe("confirmed")
     expect(byId("renamed").suggestion.sibling).toBe(`LP 20 ${tag}`)
     expect(byId("lp").suggestion.sibling).toBeNull()
+    expect(byId("free").suggestion.sibling).toBeNull()
     expect(rows[0].id).toBe(disciplines.unknown)
   })
 
@@ -151,7 +156,7 @@ describe("disciplineOverview", () => {
     for (const id of owners) expect(text).not.toContain(id)
     expect(text).not.toContain("@example.com")
     expect(text).not.toMatch(/\d{4}-\d{2}-\d{2}/)
-    expect(families.find((f) => f.id === familyId)).toMatchObject({ disciplines: 3 })
+    expect(families.find((f) => f.id === familyId)).toMatchObject({ disciplines: 5 })
   })
 })
 

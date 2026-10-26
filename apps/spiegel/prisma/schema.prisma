@@ -32,10 +32,13 @@ enum CardState {
   final
 }
 
-// Rohdaten der Anlage oder nur ein gescannter Ausdruck (QR, fremde Anlage)
+// Herkunft: Rohdaten der Brücke, vom Ausdruck (Scan, Upload, Parser), von Hand eingetragen, aus Treffsicher übernommen
+// (gezeigt wie eingetragen, getrennt für Wiederholung und Dubletten der Übernahme)
 enum CardOrigin {
   raw
   pdf
+  manual
+  treffsicher
 }
 
 enum UserRole {
@@ -405,7 +408,8 @@ model Discipline {
   id              Int       @id @default(autoincrement())
   siteId          Int
   site            Site      @relation(fields: [siteId], references: [id], onDelete: Cascade)
-  meytonId        Int
+  // null: vom Admin ohne Meyton angelegt; der eindeutige Schlüssel lässt dann mehrere zu, das Anlegen prüft den Namen
+  meytonId        Int?
   name            String
   familyId        Int?
   family          Family?   @relation(fields: [familyId], references: [id], onDelete: SetNull)
@@ -416,6 +420,8 @@ model Discipline {
   officialScoring Scoring?
   // Wertungsschüsse vom Admin; null: aus der DisziplinID, 0: keine feste Zahl (SF-09)
   plannedShots    Int?
+  // Schüsse je Serie vom Admin; null: 10 bei einer Schusszahl aus Zehnern (`seriesShotsOf`)
+  seriesShots     Int?
   // vom Admin eingeordnet; null: neu, die Werte sind der Vorschlag des Einlesens
   confirmedAt     DateTime? @db.Timestamptz(3)
   // steigt, wenn sich Scheibenbild oder Schusszahl ändern; Scheiben mit anderem Stand rechnet
@@ -508,6 +514,10 @@ model Card {
   // Link zum Teilen (`/share/<uuid>`), vom Schützen erzeugt; null: nicht geteilt. Neu teilen gibt eine neue UUID
   shareId           String?         @unique @db.Uuid
   sharedAt          DateTime?       @db.Timestamptz(3)
+  // Ort als Freitext für Scheiben ohne Brücke; null: die Anlage (Brücke) oder ohne Angabe
+  place             String?
+  // Schlüssel der Übernahme (`treffsicher:<id>`): ein zweiter Lauf ersetzt statt zu verdoppeln
+  importKey         String?         @unique
   // zuletzt bewegtes Lebenszeichen (Beobachtungszeit, um den Versatz verschoben); Grundlage des Zustands (SF-10)
   lifesignAt        DateTime?       @db.Timestamptz(3)
   // Versatz der Uhr des Stands, gemessen am laufenden Lebenszeichen (SF-73); ab fünf Minuten ausgeglichen
@@ -536,20 +546,45 @@ model Card {
 
 // ein Stand der Scheibe; Korrekturen erzeugen eine neue Revision, die vorige bleibt
 model CardRevision {
-  id            BigInt       @id @default(autoincrement())
-  cardId        String
-  card          Card         @relation("Revisions", fields: [cardId], references: [id], onDelete: Cascade)
-  number        Int
+  id                 BigInt       @id @default(autoincrement())
+  cardId             String
+  card               Card         @relation("Revisions", fields: [cardId], references: [id], onDelete: Cascade)
+  number             Int
   // sha256 über Schüsse und Merkmale: gleicher Inhalt, keine neue Revision
-  contentHash   String
-  rawSnapshotId BigInt?
-  rawSnapshot   RawSnapshot? @relation(fields: [rawSnapshotId], references: [id], onDelete: SetNull)
-  reason        String
-  createdAt     DateTime     @default(now()) @db.Timestamptz(3)
-  shots         Shot[]
-  currentOf     Card?        @relation("CurrentRevision")
+  contentHash        String
+  rawSnapshotId      BigInt?
+  rawSnapshot        RawSnapshot? @relation(fields: [rawSnapshotId], references: [id], onDelete: SetNull)
+  reason             String
+  // Angaben ohne Einzelschüsse, an der Revision wie die Schüsse ([[adr-033]]): Gesamtergebnis in ganzen Ringen und in
+  // Zehnteln (3804 = 380,4), getrennt, mit seiner Schusszahl; null ohne Gesamtergebnis
+  totalRings         Int?
+  totalDecimalTenths Int?
+  totalShots         Int?
+  // Trefferlage als Summe (Mitte der Schüsse in µm) mit ihrer Schusszahl; nur für Versatz und Richtung
+  centerXUm          Int?
+  centerYUm          Int?
+  centerShots        Int?
+  createdAt          DateTime     @default(now()) @db.Timestamptz(3)
+  shots              Shot[]
+  seriesSums         SeriesSum[]
+  currentOf          Card?        @relation("CurrentRevision")
 
   @@unique([cardId, number])
+}
+
+// Serien-Summe einer Revision: ohne Einzelschüsse die Angabe der Serie, neben ihnen die Summe vom Ausdruck
+model SeriesSum {
+  id            BigInt       @id @default(autoincrement())
+  revisionId    BigInt
+  revision      CardRevision @relation(fields: [revisionId], references: [id], onDelete: Cascade)
+  series        Int
+  // Schusszahl der Serie, gespeichert mit der Summe ([[adr-033]], Nachtrag 27. Oktober 2026)
+  shots         Int
+  // Summe in ganzen Ringen und in Zehnteln (984 = 98,4), getrennt; mindestens eine
+  rings         Int?
+  decimalTenths Int?
+
+  @@unique([revisionId, series])
 }
 
 // ein Schuss in einer Revision
@@ -572,7 +607,8 @@ model Shot {
   decimalTenths    Int?
   // Abstand zur Mitte in 0,1 µm, wie Meyton `Teiler001`
   distanceTenthsUm Int?
-  innerTen         Boolean
+  // null: unbekannt (eingetragen ohne Lage)
+  innerTen         Boolean?
   // Anzeigeart am Monitor (Treffer.Wertung), nie die amtliche Wertung (SF-74)
   displayMode      Int?
   firedAt          DateTime?    @db.Timestamptz(3)
@@ -598,6 +634,8 @@ model CardProjection {
   records      Json
   /// Lagen der Schüsse wie am Ausdruck für die kleinen Scheiben (`cardMarks`, je [x, y, Ring] in 10 µm)
   marks        Json
+  /// Grundlage der Werte (`CardDetail`); null vor Version 6
+  detail       Json?
   computedAt   DateTime @default(now()) @db.Timestamptz(3)
 
   @@index([version])

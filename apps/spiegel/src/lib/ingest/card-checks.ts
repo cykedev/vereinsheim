@@ -74,7 +74,7 @@ export interface CheckableShot {
   distanceTenthsUm: number | null
   decimalTenths: number | null
   ring: number | null
-  innerTen: boolean
+  innerTen: boolean | null
   /** Merkmale aus den Werten (`baseShotFlags`), ohne die der Gegenprobe */
   flags: readonly string[]
 }

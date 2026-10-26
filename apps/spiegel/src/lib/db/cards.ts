@@ -53,7 +53,8 @@ export interface ShotInput {
   decimalTenths: number | null
   /** Abstand zur Mitte in 0,1 µm (`Teiler001`) */
   distanceTenthsUm: number | null
-  innerTen: boolean
+  /** null: unbekannt (eingetragen ohne Lage) */
+  innerTen: boolean | null
   /** Anzeigeart am Monitor, nie die amtliche Wertung (SF-74) */
   displayMode: number | null
   firedAtMs: number | null
@@ -769,7 +770,7 @@ export function shotFromRow(row: {
   ring: number | null
   decimalTenths: number | null
   distanceTenthsUm: number | null
-  innerTen: boolean
+  innerTen: boolean | null
   displayMode: number | null
   firedAt: Date | null
   flags: string[]
@@ -873,7 +874,7 @@ async function recomputeDisciplineCard(tx: Tx, cardId: string): Promise<void> {
       flags: string[]
       targetId: string | null
       plannedShots: number | null
-      meytonId: number
+      meytonId: number | null
       version: number
     }[]
   >`

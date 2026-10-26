@@ -205,7 +205,7 @@ export async function disciplineContext(
 export type KnownDiscipline = {
   id: number
   targetId: string | null
-  meytonId: number
+  meytonId: number | null
   plannedShots: number | null
   version: number
 }

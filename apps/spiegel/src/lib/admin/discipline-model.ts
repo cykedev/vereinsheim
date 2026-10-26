@@ -33,7 +33,8 @@ export interface DisciplineStats {
 
 export interface DisciplineRow {
   id: number
-  meytonId: number
+  /** null: vom Admin ohne Meyton angelegt */
+  meytonId: number | null
   name: string
   targetId: TargetId | null
   familyId: number | null
@@ -78,10 +79,28 @@ export function disciplineStatus(d: {
   return d.ignored || (d.targetId && d.familyId !== null) ? "suggested" : "waiting"
 }
 
+/** der Vorschlag des Fachkerns aus DisziplinID und Name; ohne DisziplinID keiner */
+function suggestionOf(
+  meytonId: number | null,
+  name: string,
+  sibling: string | null
+): DisciplineRow["suggestion"] {
+  if (meytonId === null)
+    return { targetId: null, source: "unknown", plannedShotsFromId: null, ignore: false, sibling }
+  const resolved = resolveTarget({ disciplineId: meytonId, name })
+  return {
+    targetId: resolved.targetId,
+    source: resolved.source === "admin" ? "catalog" : resolved.source,
+    plannedShotsFromId: parseDisciplineId(meytonId).plannedShots,
+    ignore: suggestIgnore(meytonId),
+    sibling,
+  }
+}
+
 export function disciplineRow(input: {
   discipline: {
     id: number
-    meytonId: number
+    meytonId: number | null
     name: string
     targetId: string | null
     officialScoring: Scoring | null
@@ -99,7 +118,6 @@ export function disciplineRow(input: {
   const confirmed = d.confirmedAt !== null
   const ignored = d.ignoredAt !== null
   const familyId = d.family?.id ?? null
-  const resolved = resolveTarget({ disciplineId: d.meytonId, name: d.name })
   return {
     id: d.id,
     meytonId: d.meytonId,
@@ -113,13 +131,7 @@ export function disciplineRow(input: {
     ignored,
     status: disciplineStatus({ confirmed, ignored, targetId, familyId }),
     visible: !ignored && targetId !== null && familyId !== null,
-    suggestion: {
-      targetId: resolved.targetId,
-      source: resolved.source === "admin" ? "catalog" : resolved.source,
-      plannedShotsFromId: parseDisciplineId(d.meytonId).plannedShots,
-      ignore: suggestIgnore(d.meytonId),
-      sibling: input.sibling ?? null,
-    },
+    suggestion: suggestionOf(d.meytonId, d.name, input.sibling ?? null),
     stats: input.stats,
   }
 }

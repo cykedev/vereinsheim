@@ -88,7 +88,8 @@ export function DisciplineItem({
       >
         <span className="truncate text-[15px] font-semibold">{row.name}</span>
         <span className="text-[13px] text-muted-foreground">
-          Nummer {row.meytonId} · {cardsText(row.stats.cards)}
+          {row.meytonId === null ? "" : `Nummer ${row.meytonId} · `}
+          {cardsText(row.stats.cards)}
         </span>
       </Link>
       {chip && (
