@@ -41,7 +41,8 @@ Entschieden mit dem User am 26. Oktober 2026:
 3. **Rückmeldung nur an die koordinierende Session**, nicht an den User. Fragen, Circuit-Breaker (etwa geschützte Pfade
    wie Schema und Migrationen, ADR-023) und der Abschluss gehen per Nachricht an die koordinierende Session, die mit
    dem User spricht und die Antwort weitergibt.
-4. **Abschluss:** Branch auf seine Basis rebasen (`main` oder Basisbranch, siehe „Branches“), Gate grün im Worktree (`pnpm check`; der Stop-Hook prüft
+4. **Abschluss:** Vault-Notes und Lessons zuerst (der Stop-Hook verlangt sie nach Code-Commits), dann Branch auf seine
+   Basis rebasen (`main` oder Basisbranch, siehe „Branches“), Gate grün im Worktree (`pnpm check`; der Stop-Hook prüft
    den Haupt-Checkout), dann melden: Branch, Commits, Bericht aus `reports/`, was nicht belegt ist, ob eine neue Brücke
    nötig ist. Kein Merge, kein Push, kein Deploy.
 5. **Aufräumen nach der Übernahme:** Erst wenn die koordinierende Session meldet, dass der Branch in seiner Basis ist,
