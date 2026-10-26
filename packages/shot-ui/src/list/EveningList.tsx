@@ -155,7 +155,8 @@ export function EveningList({
                       Art
                     </th>
                     <th scope="col" className={cn(CELL, "py-1.5 text-right font-medium")}>
-                      Ganze Ringe
+                      {/* „Ganze“ reicht im Kopf, neben „Zehntel“; der Screenreader hört „Ganze Ringe“ */}
+                      Ganze<span className="sr-only"> Ringe</span>
                     </th>
                     <th scope="col" className={cn(CELL, "py-1.5 text-right font-medium")}>
                       Zehntel

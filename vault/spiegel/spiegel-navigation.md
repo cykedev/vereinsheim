@@ -203,7 +203,7 @@ Form; auf dem Telefon Offen, Abend, Form untereinander.
   („auch 1 Scheibe Luftpistole ›“). Antippen wechselt die Familie und springt zum selben Abend. So bleibt die Liste rein,
   und kein Abend wirkt unbemerkt unvollständig. Der Hinweis zählt ohne Art, Merkmal und Liste, nur im Zeitraum; der
   Sprung (`listOnEvening`) lässt sie deshalb fallen, so steht der versprochene Abend sicher in der Liste.
-- **Ergebnis in beiden Wertungen:** Spalten „Ganze Ringe“ und „Zehntel“, die Wertung der Scheibe fett (siehe „Wertung
+- **Ergebnis in beiden Wertungen:** Spalten „Ganze“ (für Screenreader „Ganze Ringe“) und „Zehntel“, die Wertung der Scheibe fett (siehe „Wertung
   je Scheibe und je Familie“) und im Namen des Links. Meyton liefert die Anzeigeart je Treffer (`Treffer.Wertung` seit
   ShootMaster 5.2, [[meyton-ssmdb2]]). Ø und Abstand stehen für die ganze Liste in der Wertung der Familie, damit die
   Spalte vergleichbar bleibt.

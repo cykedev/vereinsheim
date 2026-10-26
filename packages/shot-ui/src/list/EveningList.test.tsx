@@ -90,7 +90,8 @@ describe("Scheiben-Liste nach Abend (Form wie die Liste eines Zeitraums)", () =>
       "Datum",
       "Uhrzeit",
       "Art",
-      "Ganze Ringe",
+      // „Ganze“ reicht im Kopf, der Screenreader hört „Ganze Ringe“
+      'Ganze<span class="sr-only"> Ringe</span>',
       "Zehntel",
       "Ø je Schuss",
       "zum Schnitt",
@@ -120,7 +121,9 @@ describe("Scheiben-Liste nach Abend (Form wie die Liste eines Zeitraums)", () =>
     expect(rowA).toMatch(/data-rings[^>]*>29</)
     expect(rowA).toMatch(/data-decimal[^>]*>30,0</)
     expect(rowA).not.toContain("data-card-scoring")
-    expect(html).toMatch(/<th[^>]*>Ganze Ringe<\/th><th[^>]*>Zehntel<\/th>/)
+    expect(html).toMatch(
+      /<th[^>]*>Ganze<span class="sr-only"> Ringe<\/span><\/th><th[^>]*>Zehntel<\/th>/
+    )
     expect(html).not.toMatch(/<th[^>]*>Ergebnis<\/th>/)
     expect(rowA).toMatch(/data-mean[^>]*>10,00</)
     expect(rowA).toContain("<svg")
