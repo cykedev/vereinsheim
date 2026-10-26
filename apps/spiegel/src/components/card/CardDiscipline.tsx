@@ -12,6 +12,8 @@ import { cardDiscipline } from "@/lib/admin/consequences"
 import { setCardDiscipline } from "@/lib/card-discipline-actions"
 import type { DisciplineOption } from "@/lib/db/cards"
 
+import { ActionRow } from "./ActionRow"
+
 const BUTTON =
   "inline-flex h-10 items-center gap-2 rounded-full px-3.5 text-[13px] font-semibold text-foreground hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-60"
 
@@ -33,9 +35,9 @@ function byFamily(options: readonly DisciplineOption[]) {
 }
 
 /**
- * Disziplin am Ende der Seite einer Scheibe, über dem Teilen: der Name, nach einer eigenen Wahl leise die vom Stand.
- * „Disziplin ändern“ öffnet ein Blatt mit den Disziplinen derselben Scheibe; eine Wahl fragt mit Folgen und speichert,
- * danach rechnet die Seite neu. Ohne andere Möglichkeit nur der Name.
+ * Disziplin als Zeile im Kasten „Diese Scheibe“: der Name, nach einer eigenen Wahl leise die vom Stand. „Ändern“ öffnet
+ * ein Blatt mit den Disziplinen derselben Scheibe; eine Wahl fragt mit Folgen und speichert, danach rechnet die Seite
+ * neu. Ohne andere Möglichkeit nur der Name.
  */
 export function CardDiscipline({
   cardId,
@@ -69,38 +71,41 @@ export function CardDiscipline({
   const standName = stand ?? current
 
   return (
-    <section
+    <ActionRow
       data-card-discipline
-      aria-label="Disziplin"
-      className="grid justify-items-start gap-1 pt-2"
+      title="Disziplin"
+      state={
+        <>
+          <span data-discipline-name className="font-semibold text-foreground">
+            {current}
+          </span>
+          {stand && (
+            <span data-stand-discipline className="block">
+              Am Stand gewählt: {stand}
+            </span>
+          )}
+        </>
+      }
+      action={
+        options.length > 1 && (
+          <button
+            type="button"
+            aria-label="Disziplin ändern"
+            disabled={pending}
+            onClick={() => {
+              setError(null)
+              setSheet(true)
+            }}
+            className={BUTTON}
+          >
+            <Target aria-hidden className="size-4" />
+            {pending ? "Ändern…" : "Ändern"}
+          </button>
+        )
+      }
     >
-      <p className="px-3.5 text-sm">
-        <span className="text-muted-foreground">Disziplin </span>
-        <span data-discipline-name className="font-semibold">
-          {current}
-        </span>
-      </p>
-      {stand && (
-        <p data-stand-discipline className="px-3.5 text-sm text-muted-foreground">
-          Am Stand gewählt: {stand}
-        </p>
-      )}
-      {options.length > 1 && (
-        <button
-          type="button"
-          disabled={pending}
-          onClick={() => {
-            setError(null)
-            setSheet(true)
-          }}
-          className={BUTTON}
-        >
-          <Target aria-hidden className="size-4" />
-          {pending ? "Ändern…" : "Disziplin ändern"}
-        </button>
-      )}
       {error && (
-        <p role="alert" className="px-3.5 text-sm text-destructive">
+        <p role="alert" className="text-sm text-destructive">
           {error}
         </p>
       )}
@@ -163,6 +168,6 @@ export function CardDiscipline({
           }
         />
       )}
-    </section>
+    </ActionRow>
   )
 }

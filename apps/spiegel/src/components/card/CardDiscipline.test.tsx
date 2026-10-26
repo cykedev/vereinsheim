@@ -36,11 +36,14 @@ const render = (props: Partial<Parameters<typeof CardDiscipline>[0]>) =>
     })
   )
 
-describe("Abschnitt Disziplin", () => {
-  it("der Name und „Disziplin ändern“, wenn es eine andere gibt; ohne eigene Wahl keine Zeile zum Stand", () => {
+describe("Zeile Disziplin", () => {
+  it("der Name und „Ändern“, wenn es eine andere gibt; ohne eigene Wahl keine Zeile zum Stand", () => {
     const html = render({})
+    expect(html).toMatch(/^<div data-card-discipline="true"/)
+    expect(html).toMatch(/<h3[^>]*>Disziplin<\/h3>/)
     expect(html).toMatch(/data-discipline-name[^>]*>LP 40</)
-    expect(html).toContain("Disziplin ändern</button>")
+    // kurz sichtbar, der volle Name für Screenreader und die Skriptprüfung
+    expect(html).toMatch(/<button[^>]*aria-label="Disziplin ändern"[^>]*>[\s\S]*?Ändern<\/button>/)
     expect(html).not.toContain("data-stand-discipline")
   })
 
@@ -59,7 +62,7 @@ describe("Abschnitt Disziplin", () => {
     for (const only of [[], [options[0]]]) {
       const html = render({ options: only })
       expect(html).toContain("data-discipline-name")
-      expect(html).not.toContain("Disziplin ändern</button>")
+      expect(html).not.toContain('aria-label="Disziplin ändern"')
     }
   })
 })
