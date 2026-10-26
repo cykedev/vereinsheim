@@ -22,11 +22,12 @@ usage() {
 	cat <<-EOF
 		Usage: $0 <ringwerk|treffsicher|spiegel> <dump-file> [uploads-tar.gz]
 
-		Ein Uploads-Tar nur für Treffsicher (die anderen Apps haben kein Upload-Volume).
+		Ein Uploads-Tar nur für Treffsicher und Spiegel (Ringwerk hat kein Upload-Volume).
 
 		Beispiele:
 		  $0 ringwerk    ~/migration/ringwerk-2026-05-11.dump
-		  $0 spiegel     ~/migration/spiegel-2026-10-20.dump
+		  $0 spiegel     ~/migration/spiegel-2026-10-20.dump \\
+		                ~/migration/uploads-spiegel-2026-10-20.tar.gz
 		  $0 treffsicher ~/migration/treffsicher-2026-05-11.dump \\
 		                ~/migration/uploads-treffsicher-2026-05-11.tar.gz
 	EOF

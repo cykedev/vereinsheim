@@ -2,7 +2,7 @@
 # Erstellt:
 #   - pg_dump (custom format) jeder App-Datenbank, die es gibt (eine fehlende,
 #     etwa Spiegel vor `vereinsheim db-ensure`, meldet es und läuft weiter)
-#   - tar.gz der Upload-Volumes (nur Treffsicher hat eins)
+#   - tar.gz der Upload-Volumes (Treffsicher, Spiegel)
 # Behält die letzten BACKUP_RETAIN_DAYS Tage (Default 14), aber
 # immer mindestens BACKUP_MIN_KEEP Dumps/Archive pro App (Default 7),
 # auch wenn diese älter als RETAIN_DAYS sind. So bleibt nach einer
