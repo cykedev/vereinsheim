@@ -84,11 +84,11 @@ describe("Sportpass im Profil", () => {
     const html = render([
       {
         ...row(1, "active", "aktiv"),
-        history: "ältere Scheiben werden nachgeladen, wenn niemand schießt",
+        history: "ältere Scheiben werden geholt, sobald die Meyton-Anlage an ist",
       },
       row(2, "requested", "wartet auf den Admin"),
     ])
-    expect(html).toContain("ältere Scheiben werden nachgeladen, wenn niemand schießt")
+    expect(html).toContain("ältere Scheiben werden geholt, sobald die Meyton-Anlage an ist")
     expect(html.match(/data-consent-history/g)).toHaveLength(1)
   })
 })

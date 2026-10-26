@@ -167,10 +167,10 @@ describe("Übersicht des Admins", () => {
       overviewModel({ ...base, historyPending }).stations.find((s) => s.id === "consents")!.facts
     expect(facts(0)).toHaveLength(1)
     expect(facts(1)[1]).toBe(
-      "Für 1 Schützen holt Spiegel noch ältere Scheiben. Das passiert, wenn im Schützenhaus niemand schießt."
+      "Für 1 Schützen holt Spiegel noch ältere Scheiben. Das passiert, sobald die Meyton-Anlage an ist."
     )
     expect(facts(2)[1]).toBe(
-      "Für 2 Schützen holt Spiegel noch ältere Scheiben. Das passiert, wenn im Schützenhaus niemand schießt."
+      "Für 2 Schützen holt Spiegel noch ältere Scheiben. Das passiert, sobald die Meyton-Anlage an ist."
     )
     expect(overviewModel({ ...base, historyPending: 2 }).tasks).toEqual([])
   })

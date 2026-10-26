@@ -56,7 +56,7 @@ describe("Zustimmungen lesen", () => {
     expect(rows.every((r) => r.consentVersion === "v1")).toBe(true)
     // nur die aktive sagt, ob ihre älteren Scheiben nachgeladen sind
     expect(rows.map((r) => r.history)).toEqual([
-      "ältere Scheiben werden geholt, sobald im Schützenhaus niemand schießt",
+      "ältere Scheiben werden geholt, sobald die Meyton-Anlage an ist",
       null,
       null,
       null,

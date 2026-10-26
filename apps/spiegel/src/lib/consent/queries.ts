@@ -71,7 +71,7 @@ export async function consentRows(userId: string, timeZone: string): Promise<Con
           ? null
           : r.historyLoadedAt
             ? `ältere Scheiben geholt am ${formatDateOnly(r.historyLoadedAt, timeZone)}`
-            : "ältere Scheiben werden geholt, sobald im Schützenhaus niemand schießt",
+            : "ältere Scheiben werden geholt, sobald die Meyton-Anlage an ist",
     }
   })
 }

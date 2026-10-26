@@ -206,7 +206,7 @@ export function overviewModel(input: OverviewInput): AdminOverviewModel {
           `${by("active")} aktiv · ${waiting} ${waiting === 1 ? "wartet" : "warten"} auf dich · ${by("rejected")} abgelehnt`,
           ...(input.historyPending
             ? [
-                `Für ${count(input.historyPending, "Schützen", "Schützen")} holt Spiegel noch ältere Scheiben. Das passiert, wenn im Schützenhaus niemand schießt.`,
+                `Für ${count(input.historyPending, "Schützen", "Schützen")} holt Spiegel noch ältere Scheiben. Das passiert, sobald die Meyton-Anlage an ist.`,
               ]
             : []),
           ...(input.notMine

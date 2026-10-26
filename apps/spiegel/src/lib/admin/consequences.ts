@@ -64,7 +64,7 @@ export function consentConfirm({
       // Wiederzulassen wieder offen)
       ...(historyOpen
         ? [
-            "Auch ältere Scheiben unter dieser Nummer holt Spiegel, soweit die Meyton-Anlage sie noch hat. Das passiert, wenn dort niemand schießt.",
+            "Auch ältere Scheiben unter dieser Nummer holt Spiegel, soweit die Meyton-Anlage sie noch hat. Das passiert, sobald die Anlage an ist.",
           ]
         : []),
       `${who} bestätigt die jüngste Scheibe einmal in der App unter „Offen“. Erst danach erscheinen alle im Konto.`,
@@ -568,7 +568,7 @@ export function notMineLift({
     happens: [
       ...(consentActive
         ? [
-            `Spiegel holt ${cards === 1 ? "die Scheibe" : `die ${cards} Scheiben`} noch einmal aus der Meyton-Anlage. Das passiert, sobald dort niemand schießt.`,
+            `Spiegel holt ${cards === 1 ? "die Scheibe" : `die ${cards} Scheiben`} noch einmal aus der Meyton-Anlage. Das passiert, sobald die Anlage an ist.`,
             `Hat die Anlage sie inzwischen gelöscht, ${cards === 1 ? "kommt sie" : "kommen sie"} nicht mehr.`,
           ]
         : [

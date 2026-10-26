@@ -78,7 +78,7 @@ describe("Folgen der Sportpassnummern (Admin)", () => {
         "Gehört 12345678 in der Meyton-Schützenverwaltung zu Max Muster? Wenn nicht: ablehnen.",
       happens: [
         "Spiegel holt ab jetzt jede Scheibe, die unter dieser Nummer geschossen wird. Läuft die Brücke gerade, dauert das wenige Minuten.",
-        "Auch ältere Scheiben unter dieser Nummer holt Spiegel, soweit die Meyton-Anlage sie noch hat. Das passiert, wenn dort niemand schießt.",
+        "Auch ältere Scheiben unter dieser Nummer holt Spiegel, soweit die Meyton-Anlage sie noch hat. Das passiert, sobald die Anlage an ist.",
         "Max Muster bestätigt die jüngste Scheibe einmal in der App unter „Offen“. Erst danach erscheinen alle im Konto.",
       ],
       notHappening: [
@@ -159,7 +159,7 @@ describe("Folgen der Sportpassnummern (Admin)", () => {
         "Unter der Sportpassnummer 12345678 wurden 2 Scheiben als „nicht meine“ zurückgewiesen. Spiegel hat sie deshalb gelöscht und nimmt sie nicht mehr an.",
       check: "Mach das nur, wenn Max Muster dir sagt: Das waren doch meine Scheiben.",
       happens: [
-        "Spiegel holt die 2 Scheiben noch einmal aus der Meyton-Anlage. Das passiert, sobald dort niemand schießt.",
+        "Spiegel holt die 2 Scheiben noch einmal aus der Meyton-Anlage. Das passiert, sobald die Anlage an ist.",
         "Hat die Anlage sie inzwischen gelöscht, kommen sie nicht mehr.",
         "Max Muster muss sie in der App unter „Offen“ bestätigen. Bis dahin landen auch neue Scheiben von Max Muster zuerst dort.",
       ],
