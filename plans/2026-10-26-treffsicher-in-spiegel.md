@@ -159,6 +159,10 @@ Vorgeschlagener Schnitt, endgültig im jeweiligen `/plan`:
   - **Vor 1b-2 live geht:** den Speicher des Lesers im echten Image auf dem VPS messen (amd64; auf dem Mac nur arm64
     nativ, 74 MiB mit `--lite-mode`, oder unter Rosetta verfälscht). Der User führt den Einzeiler aus der Doku von 1b-1
     nach dem Deploy aus. Liegt `maxRssKb` über 80 MiB, Grenze oder Speicher von Spiegel vor 1b-2 anpassen.
+  - **Aus 1b-1 für 1b-2:** Die Sperre des Aufräumens bei leerer Tabelle hängt an `printout.count()`, dadurch bleibt die
+    letzte verwaiste Datei liegen; an „keine Scheibe“ knüpfen. `printoutFile` liefert auch für eine Scheibe im
+    Papierkorb; mit der Seite der Scheibe entscheiden. Next kopiert `src/lib/printouts/` samt Tests ins
+    Standalone-Image (harmlos, Lesson in 1b-1).
   **ID vom Ausdruck an der Scheibe** (Wunsch des Users, 26. Oktober 2026): Die Seite einer Scheibe zeigt leise die ID,
   wie sie im Fuß des Ausdrucks steht (acht Hex-Zeichen, `printedId`), damit der Schütze Papier und Scheibe zuordnen
   kann. Bei Scheiben der Brücke steht sie schon in `Card.scheibenId`, gezeigt wird sie heute nur bei den Aufträgen im
@@ -248,7 +252,7 @@ nach Stufe 3. Wie Treffsicher lesend läuft, solange der Basisbranch nicht auf `
 | V1 | `plans/2026-10-26-tis-v1-accounts.md` | `feat/tis-v1-accounts` | tis-v1-accounts | im Basisbranch (`f7edbdab`) |
 | 1a-1 | `plans/2026-10-27-tis-1a1-card-details.md` | `feat/tis-1a1-card-details` (von `main`) | tis-1a1-card-details | freigegeben, in Arbeit |
 | 1a-2 | | | | offen, nach 1a-1 |
-| 1b-1 | `plans/2026-10-26-tis-1b1-printouts.md` | `feat/tis-1b1-printouts` (von `main`) | tis-1b1-printouts | in Arbeit (`--lite-mode` für den Leser freigegeben) |
+| 1b-1 | `plans/2026-10-26-tis-1b1-printouts.md` | `feat/tis-1b1-printouts` (von `main`) | tis-1b1-printouts | fertig, wartet auf Merge nach `main` (`f0213d9a`) |
 | 1b-2 | | | | offen, nach 1a |
 | 1c | | | | offen |
 | 1d | | | | offen |
