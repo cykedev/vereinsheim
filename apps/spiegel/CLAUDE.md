@@ -139,15 +139,15 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
   Kennung prüfen die Actions über `src/lib/action-guards.ts`.
 - **Disziplin je Scheibe:** `Card.disciplineId` ist die Disziplin, mit der alles rechnet (Familie, Scheibenbild,
   Schusszahl, Admin). Hat der Schütze eine andere gewählt, steht die vom Stand in `Card.standDisciplineId`; null heißt
-  keine Wahl. `writeRevision` lässt eine Wahl stehen, solange der Stand die Disziplin bringt, gegen die gewählt wurde, und
-  rechnet die Merkmale mit `recomputeDisciplineCard` in derselben Transaktion nach; bringt er eine andere (auch die
+  keine Wahl. `writeRevision` lässt eine Wahl stehen, solange der Stand die Disziplin bringt, gegen die gewählt wurde,
+  und rechnet die Merkmale mit `recomputeDisciplineCard` in derselben Transaktion nach; bringt er eine andere (auch die
   gewählte), gilt wieder seine. Gewählt wird nur über `chooseCardDiscipline` (`src/lib/card-discipline-actions.ts`,
-  Regeln in `choiceWhere`): eingeordnete Disziplinen der Anlage mit Familie und demselben Scheibenbild wie die vom Stand,
-  nicht ignoriert, dazu die vom Stand (zurück, solange sie nicht ignoriert ist). `disciplineOptions` (reads) liefert sie
-  mit der Wertung, in der die Scheibe dann zählt. Bedient am Ende der Seite einer Scheibe über dem Teilen
-  (`CardDiscipline`, Blatt mit Knöpfen, Rückfrage `cardDiscipline`); die geteilte Seite verrät die Wahl nicht. Neue
-  Blöcke derselben ScheibenID erben die Wahl nicht (wie Art und Wertung). Ein anderes Scheibenbild mit Neu-Wertung
-  (SF-16) ist offen.
+  Regeln in `choiceWhere`): eingeordnete Disziplinen der Anlage mit Familie und demselben Scheibenbild wie die vom
+  Stand, nicht ignoriert, dazu die vom Stand (zurück, solange sie nicht ignoriert ist). `disciplineOptions` (reads)
+  liefert sie mit der Wertung, in der die Scheibe dann zählt. Bedient im Kasten „Diese Scheibe“ am Ende der Seite einer
+  Scheibe (`CardActions` mit `CardDiscipline`, Blatt mit Knöpfen, Rückfrage `cardDiscipline`); die geteilte Seite verrät
+  die Wahl nicht. Neue Blöcke derselben ScheibenID erben die Wahl nicht (wie Art und Wertung). Ein anderes Scheibenbild
+  mit Neu-Wertung (SF-16) ist offen.
 - **Darstellung der Scheibe gemerkt:** Ebenen, „übrige blass/aus“ und Ausschnitt (ganze
   Scheibe oder Gruppe) als Cookie
   `spiegel-target` (`src/lib/target-display*.ts`, Format aus `@vereinsheim/shot-ui/target/display`). Die Seite einer
@@ -280,16 +280,16 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
   ScheibenID, gehen nur die Stände dieses Blocks; die Löschsperre entsteht, außer ein späterer Block bleibt. Sperren und Zyklen über
   `src/lib/db/blocks.ts` (`startHintMs`, `isKeyBlocked`, `maxCycleOfKey`); `storeSnapshot` prüft sie unter seiner
   Sperre (`startAtMs`). Beide Actions sperren zuerst die Zeile der Scheibe und gelten je Anlage und SportpassID.
-- **Löschen mit Papierkorb:** `purgeCards(tx, ids, block)` hinterlässt
-  einen Grabstein (`{ tombstone: reason }`, mit `userId` und `sportpassId` der Scheibe: wer gemeldet hat, unter welcher
-  Nummer) oder die weiche Sperre des Besitzers (`{ lock: true }`, `DeleteLock`). Löschen setzt nur `deletedAt`
-  (`src/lib/trash-actions.ts`: `deleteCard`, `restoreCard` bis 30 Tage, `purgeCardNow`, je unter `FOR UPDATE` der Zeile);
-  nach 30 Tagen löscht `purgeExpiredTrash` (`src/lib/db/trash.ts`) beim Start und stündlich endgültig, je Scheibe unter
-  der Sperre ihrer Zeile neu geprüft. Der Knopf steht am Ende der Seite einer Scheibe (`DeleteCard`), danach der Rückweg
-  mit „Scheibe gelöscht · Rückgängig“ (`useUndo` aus `@vereinsheim/ui/design2/undo`, im Rahmen der App, überlebt die
-  Navigation der Aktion). Eine alte Adresse einer gelöschten Scheibe führt in den Papierkorb (`ownCardState`). Der
-  Papierkorb zeigt auch, was nicht von selbst wiederkommt (`blockedCards`: eigene Sperren und Meldungen „nicht meine“);
-  die Admin-Übersicht zählt nur die Meldungen der Anlage, ohne Namen.
+- **Löschen mit Papierkorb:** `purgeCards(tx, ids, block)` hinterlässt einen Grabstein (`{ tombstone: reason }`, mit
+  `userId` und `sportpassId` der Scheibe: wer gemeldet hat, unter welcher Nummer) oder die weiche Sperre des Besitzers
+  (`{ lock: true }`, `DeleteLock`). Löschen setzt nur `deletedAt` (`src/lib/trash-actions.ts`: `deleteCard`,
+  `restoreCard` bis 30 Tage, `purgeCardNow`, je unter `FOR UPDATE` der Zeile); nach 30 Tagen löscht `purgeExpiredTrash`
+  (`src/lib/db/trash.ts`) beim Start und stündlich endgültig, je Scheibe unter der Sperre ihrer Zeile neu geprüft. Der
+  Knopf steht im Kasten „Diese Scheibe“ am Ende der Seite einer Scheibe (`DeleteCard`), danach der Rückweg mit „Scheibe
+  gelöscht · Rückgängig“ (`useUndo` aus `@vereinsheim/ui/design2/undo`, im Rahmen der App, überlebt die Navigation der
+  Aktion). Eine alte Adresse einer gelöschten Scheibe führt in den Papierkorb (`ownCardState`). Der Papierkorb zeigt
+  auch, was nicht von selbst wiederkommt (`blockedCards`: eigene Sperren und Meldungen „nicht meine“); die
+  Admin-Übersicht zählt nur die Meldungen der Anlage, ohne Namen.
 - **Scheibe per ID holen** (Profil, `src/lib/card-requests/`): Der Schütze tippt die ID vom Ausdruck (`parseCardId`, acht
   Hex-Zeichen wie im Fuß) und den Tag. `requestCard` legt einen `CardRequest` an, außer die Scheibe des Abends liegt schon
   in Spiegel (eigene: Weg zu ihr, fremde: „vergeben“), höchstens zehn offene je Konto, Frist 30 Tage (`expireRequests`).

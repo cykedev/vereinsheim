@@ -61,8 +61,11 @@ app-übergreifende Komponenten gehören in diese Liste (in `MUST_MATCH` des Gate
 - **Seitenkopf:** `<PageHeader title description action />` (`design2/page-header`). Kein inline-h1.
   Detailseiten mit oberer Aktionsleiste nutzen stattdessen `DetailActionBar` (siehe unten) + rohes
   `h1` im selben Stil.
-- **Detail-Aktionen:** `<DetailActionBar>` — Inline-`ghost`-Buttons oben rechts, Reihenfolge
-  **fachlich → destruktiv → Zurück**. **Kein** `DropdownMenu`/`MoreHorizontal` für Objekt-Aktionen.
+- **Detail-Aktionen:** `<DetailActionBar>` — Inline-`ghost`-Buttons oben rechts, Reihenfolge **fachlich → destruktiv →
+  Zurück**. **Kein** `DropdownMenu`/`MoreHorizontal` für Objekt-Aktionen. Ausnahme Spiegel: Die Seite einer Scheibe ist
+  lang und oben voll (Rückweg, Titel, Beobachtungen, Sprungleiste). Ihre seltenen Aktionen (Disziplin, Teilen, Löschen)
+  stehen am Ende im Kasten „Diese Scheibe“ (`CardActions`), je eine Zeile mit Zustand und Aktion rechts, fachlich vor
+  destruktiv.
 - **Leerzustände:** `<EmptyState title description icon actionLabel actionHref />`. Kein inline
   `Keine … vorhanden`.
 - **Bestätigungen:** `<DecisionDialog>` mit den Folgen aus `lib/consequences.ts` der App (§10 „Kein Knopf ohne

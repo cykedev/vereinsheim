@@ -6,8 +6,8 @@ import { compareCards } from "@vereinsheim/shot-ui/nav/navigate"
 import { RouteLink } from "@vereinsheim/shot-ui/nav/RouteLink"
 
 /**
- * Am Ende der Seite einer Scheibe, über dem Teilen: der Weg auf die Seite Vergleichen mit dieser Scheibe als A und der
- * Scheibe davor in ihrer Familie als B. Nur für den Besitzer und nur, wenn es eine Scheibe davor gibt.
+ * Am Ende der Seite einer Scheibe, über dem Kasten „Diese Scheibe“: der Weg auf die Seite Vergleichen mit dieser Scheibe
+ * als A und der Scheibe davor in ihrer Familie als B. Nur für den Besitzer und nur, wenn es eine Scheibe davor gibt.
  */
 export function CompareWithPrevious({ cardId, previous }: { cardId: string; previous: string }) {
   return (
