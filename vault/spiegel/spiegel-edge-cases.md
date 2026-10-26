@@ -23,7 +23,7 @@ documented_in: ["[[src-ssmdb2-abend-2026-10-09]]", "[[src-ssmdb2-kopie-2026-10-0
 6. **Nichts verlässt das Schützenhaus ungeprüft.** Erst Vorschau und Gegenprobe, dann die Scheibe; verdeckte Wertung bleibt samt Kopfzeile zurück; Spiegel prüft die Zustimmung ein zweites Mal.
 7. **Im Zweifel keine automatische Zuordnung.** Mehrdeutige SportpassIDs gehen an den Admin, „Nicht meine“ hinterlässt einen Grabstein.
 8. **Vergleichbar machen:** Werte je Schuss, gleiche Schusszahl oder Maße, die kaum von ihr abhängen, robuste Streuung, Disziplin-Familien.
-9. **Die Anlage hat Vorrang.** Kurze Abfragen über Indizes mit Zeitbudget; Nachladen nur, wenn niemand schießt.
+9. **Die Anlage hat Vorrang.** Kurze Abfragen über Indizes mit Zeitbudget; was nicht live ist, liest die Brücke, während geschossen wird, nur in kleinen Portionen.
 10. **Unbekanntes sichtbar machen,** nie still deuten und nie verwerfen.
 11. **Jeder Fall hat einen Testfall.** Die Daten liefert SP-1.0, die Fakten über unsere Anlage SP-0.1 (SQL-Checkliste) und SP-0.6 (Schießprotokoll).
 
@@ -138,7 +138,7 @@ Die Spalte „Prüfen“ nennt, wo der Fall belegt wird: SQL-Checkliste (SP-0.1)
 | SF-49 | Sekündliches Polling ohne Index | Last auf dem Rechner, der live wertet. Beim Verein kein Index auf `Zeitstempel`; `Scheiben` ganz zu lesen kostet 5 ms (1.532 Zeilen, rund 750 mehr im Jahr) | Zweistufige Änderungserkennung: `Scheiben` ganz, `Treffer` nur über die ScheibenID; Zeitbudget je Abfrage | Kopie vom 9. Oktober 2026 |
 | SF-50 | `Scheiben.Zeitstempel` steigt bei Probeschüssen nicht | Probe wird nicht bemerkt. **Erledigt (9. Oktober 2026):** Er steigt als Lebenszeichen alle 5 bis 10 s, auch in der Probe | Kein Weg über `Treffer` nötig | Abend-Mitschnitt 9. Oktober 2026 |
 | SF-51 | MyISAM sperrt beim Lesen, InnoDB zeigt langen Transaktionen keine neuen Zeilen | ShootMaster wartet, oder die Brücke sieht nichts Neues. Beim Verein InnoDB mit `ON DELETE CASCADE`: Schreibt Meyton eine Scheibe neu, fehlen ihre Treffer kurz (SF-71) | Kurze Transaktion je Durchgang | Kopie vom 9. Oktober 2026 |
-| SF-52 | Nachladen der Historie, während geschossen wird | Last zur falschen Zeit | Nachladen nur, wenn niemand schießt | Test |
+| SF-52 | Nachladen der Historie, Nachholen und Abgleich, während geschossen wird | Last zur falschen Zeit; wer am Abend bestätigt wird, bekommt die Historie sonst erst nach dem Abend | Solange geschossen wird, je Runde höchstens 5 Scheiben davon, hinter den laufenden und innerhalb der 50. Gemessen am 26. Oktober 2026 an der Kopie vom 9. Oktober: rund 8 % mehr gelesene Zeilen je Runde ([[spiegel-bridge]], „Stand des Codes“) | Test |
 | SF-53 | Strom aus während Upload oder Schreiben | Halbe Datei, doppelte Lieferung | Brücke ohne eigenen Zustand, nur Konfiguration auf der Platte; idempotente Übertragung | Test: Stecker ziehen während des Uploads |
 | SF-54 | Strom aus während des Selbst-Updates | Die Brücke startet nicht mehr | Atomarer Tausch, vorige Version als Rückfall | Test: Stecker ziehen |
 | SF-55 | Gerät getauscht oder Brücke neu installiert | Brücke weiß nicht, was schon oben ist | Spiegel kennt den letzten bestätigten Stand je Quelle | Test |

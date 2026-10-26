@@ -170,11 +170,11 @@ Wochen (User, 16. Oktober 2026).
   neu, liest sie es über das Startfenster und den Wasserstand in Spiegel nach, wie nach dem Einschalten. Aufträge zum
   Nachladen aus der Pause (QR von zu Hause, neue Zustimmungen) laufen bei durchlaufender Brücke zu Beginn des nächsten
   Abends, bevor geschossen wird. Nach einem Neustart in der Pause gelten die Scheiben im Startfenster zuerst als bewegt,
-  dann warten die Aufträge, bis 20 min nichts mehr läuft (SF-52). Spiegel schaltet die Scheiben eines Abends 12 h später
-  endgültig, nach einem Neustart der Brücke sofort. Startet die Brücke mitten am Abend neu (Absturz, Watchdog), werden
-  offene Scheiben so kurz endgültig; der nächste Schuss oder das nächste Lebenszeichen öffnet sie wieder. Belegt
-  mit `TestWaitingCardSurvivesWeeksWithoutSource`. Fällt auch das Internet im Schützenhaus wochenlang aus, schreibt die
-  Brücke `state-failed` und `heartbeat-failed` jede Minute, das ist dann normal.
+  dann laufen die Aufträge in kleinen Portionen hinter den laufenden Scheiben (SF-52). Spiegel schaltet die Scheiben
+  eines Abends 12 h später endgültig, nach einem Neustart der Brücke sofort. Startet die Brücke mitten am Abend neu
+  (Absturz, Watchdog), werden offene Scheiben so kurz endgültig; der nächste Schuss oder das nächste Lebenszeichen
+  öffnet sie wieder. Belegt mit `TestWaitingCardSurvivesWeeksWithoutSource`. Fällt auch das Internet im Schützenhaus
+  wochenlang aus, schreibt die Brücke `state-failed` und `heartbeat-failed` jede Minute, das ist dann normal.
 
 ## Den Pi im Netz finden (DHCP)
 

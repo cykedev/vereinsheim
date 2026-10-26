@@ -60,11 +60,15 @@ einen laufenden Server (legt `SSMDB2` neu an). Go ist Pflicht im Dev-Setup wie N
   auch eine Scheibe mit anderer SportpassID als in der letzten Runde (in Meyton umgebucht oder die Nummer in der
   Schützenliste korrigiert, SF-80; ob sich beim Umbuchen das Lebenszeichen bewegt, ist offen). Aktiv wird sie dadurch
   nicht: Eine korrigierte Nummer ändert alle alten Scheiben des Schützen auf einmal, und jede würde sonst 20 min lang
-  jede Runde gelesen. Die zweite Lesung wartet trotzdem nicht auf den Leerlauf (`card.reassigned`, endet mit dem
+  jede Runde gelesen. Die zweite Lesung zählt trotzdem nicht zum Budget des Leerlaufs (`card.reassigned`, endet mit dem
   wartenden Stand, `setWaiting`). Log `card-reassigned` mit ScheibenID und `lifesign` `moved` oder `same`, auch in
-  `watch`. Im Leerlauf liest der **Abgleich** jede in diesem Lauf gelesene
+  `watch`. Der **Abgleich** liest jede in diesem Lauf gelesene
   Scheibe der letzten 14 Tage (ab dem jüngsten Lebenszeichen) eine Stunde nach ihrer letzten Lesung neu, Rang 3 wie
-  das Nachholen: späte Korrekturen nach den 20 min. Nach einem Neustart gilt für Älteres der Wasserstand. Beim Start gilt
+  das Nachholen: späte Korrekturen nach den 20 min. Nach einem Neustart gilt für Älteres der Wasserstand. **Arbeit des
+  Leerlaufs** (Nachholen, Nachladen, Abgleich, und was davon auf Spiegel wartet): Solange geschossen wird (`live`),
+  liest eine Runde nach allen anderen höchstens `IdleWhileLive` (5) davon, die wartenden zuerst, innerhalb der 50
+  (SF-52; gemessen am 26. Oktober 2026 an der Kopie vom 9. Oktober: rund 8 % mehr gelesene Zeilen je Runde). Im
+  Leerlauf gilt nur die Grenze von 50. Beim Start gilt
   als neu, was bis 12 h vor dem jüngsten Lebenszeichen liegt; Lebenszeichen mehr als einen Tag nach der Uhr der Anlage
   (`NOW(3)`) verankern das Fenster nicht (ein vorgehender Stand, SF-73). `Busy` zählt nur Scheiben, die in der Runde in
   der Ablage standen. `observedAt` ist die echte Beobachtung, nur die Folgenummer zählt nach einem Rücksprung der Uhr
@@ -91,8 +95,9 @@ einen laufenden Server (legt `SSMDB2` neu an). Go ist Pflicht im Dev-Setup wie N
   genannten Snapshots (`snapshots[i]`), Netz und 5xx mit Pause 5 s bis 60 s. Vor dem Stapel prüft `contract.Validate`
   jeden Snapshot. Keine Weiterleitungen (das Token bliebe im Kopf). Je Stapel eine Zeile `batch` mit den Ergebnissen als
   Zahlen.
-- **Zustand:** nach einem Fehler erst nach Pause (5 s bis 60 s oder `Retry-After`) neu fragen; älter als eine Stunde, lädt
-  die Brücke nichts hoch (Zustimmungen könnten widerrufen sein). Sperren gelten nur in ihrer Epoche (`blocked[].epoch`).
+- **Zustand:** jede Minute (`StateEvery`; Spiegel nimmt sechs je Minute, `GET /state` kostet dort rund 5 ms), nach
+  einem Fehler erst nach Pause (5 s bis 60 s oder `Retry-After`) neu fragen; älter als eine Stunde, lädt die Brücke
+  nichts hoch (Zustimmungen könnten widerrufen sein). Sperren gelten nur in ihrer Epoche (`blocked[].epoch`).
 - **Uhr der Anlage** gemessen neben `NOW(3)` (Mitte der Runde); über zehn Jahre daneben (Uhr auf 2000) wird nicht
   gemeldet, sonst lehnte Spiegel jeden Heartbeat ab.
 - **Eigene Uhr** (SF-79): Jeder Heartbeat
@@ -113,20 +118,20 @@ einen laufenden Server (legt `SSMDB2` neu an). Go ist Pflicht im Dev-Setup wie N
   nicht).
 - **Nachholen beim Start** (SF-55): aus `state.watermark` (UTC) minus einem Tag in der Zone der Anlage
   (`catchUpFrom`, Zonen eingebaut über `time/tzdata`) wird ein Lebenszeichen; Scheiben davor im Startfenster liest die
-  Erkennung einmal (`SetCatchUpFrom`, Rang 3), aber erst, wenn 20 Minuten nichts mehr läuft (SF-52), und hält den Takt
-  bis dahin nicht hoch. Ohne Wasserstand (erste Brücke) nichts.
-- **Nachladen der Historie:** Jede Runde liest die SportpassID mit dem
-  Lebenszeichen (`Lifesign.Sportpass`, NULL als nil). `state.history` nennt offene Aufträge (Id, Hash); `run` gibt der
-  Erkennung ein Prädikat (`SetHistory`, Hash je Nummer einmal gerechnet). Passende Scheiben der ganzen Ablage bekommen
-  Rang 3 wie das Nachholen: nur im Leerlauf, höchstens 50 je Runde. Erledigt ist ein Auftrag, wenn keine seiner Scheiben
-  aus der letzten Runde mehr ungelesen ist oder auf Spiegel wartet (`HistoryOpen`, `handled`); zurückgehaltene zählen
-  als erledigt. Der Heartbeat meldet sie mit `since` (`historyDone`), bis Spiegel sie nicht mehr nennt. Ein neues
-  `since` derselben Id (Meldungen aufgehoben) öffnet die passenden Scheiben wieder (`Reopen`), auch was der Lauf schon
-  gemeldet hat. Wartet eine Scheibe, die sich im Lauf nie bewegt hat (Nachholen, Nachladen), bleibt sie liegen, solange
+  Erkennung einmal (`SetCatchUpFrom`, Rang 3), solange geschossen wird mit dem Budget des Leerlaufs (SF-52); den Takt
+  hält es nur im Leerlauf hoch. Ohne Wasserstand (erste Brücke) nichts.
+- **Nachladen der Historie:** Jede Runde liest die SportpassID mit dem Lebenszeichen (`Lifesign.Sportpass`, NULL als
+  nil). `state.history` nennt offene Aufträge (Id, Hash); `run` gibt der Erkennung ein Prädikat (`SetHistory`, Hash je
+  Nummer einmal gerechnet). Passende Scheiben der ganzen Ablage bekommen Rang 3 wie das Nachholen: im Leerlauf höchstens
+  50 je Runde, solange geschossen wird höchstens 5. Erledigt ist ein Auftrag, wenn keine seiner Scheiben aus der letzten
+  Runde mehr ungelesen ist oder auf Spiegel wartet (`HistoryOpen`, `handled`); zurückgehaltene zählen als erledigt. Der
+  Heartbeat meldet sie mit `since` (`historyDone`), bis Spiegel sie nicht mehr nennt. Ein neues `since` derselben Id
+  (Meldungen aufgehoben) öffnet die passenden Scheiben wieder (`Reopen`), auch was der Lauf schon gemeldet hat. Wartet
+  eine Scheibe, die sich im Lauf nie bewegt hat (Nachholen, Nachladen), zählt sie zum Budget des Leerlaufs, solange
   geschossen wird. Ohne Speicher: Ein Neustart beginnt von vorn, Spiegel antwortet „unverändert“.
 - **Aufträge per ID:** `state.requests` nennt ScheibenIDs, die ein Schütze mit der ID vom Ausdruck angefragt hat. `run`
-  gibt der Erkennung ein Prädikat (`SetRequested`); eine angefragte Scheibe hat Rang 1 (nicht nur im Leerlauf, auch
-  wartend nicht), und hält den Takt hoch, bis sie `handled` ist. Der Filter lässt sie ohne Zustimmung hinaus, wenn ihr
+  gibt der Erkennung ein Prädikat (`SetRequested`); eine angefragte Scheibe hat Rang 1 (vor dem Budget des Leerlaufs,
+  auch wartend), und hält den Takt hoch, bis sie `handled` ist. Der Filter lässt sie ohne Zustimmung hinaus, wenn ihr
   Beginn auf den Abend des Auftrags fällt (`day`, `filter.Evening`: vor 4 Uhr der Vortag), sonst `WrongDay`; verdeckt
   und gesperrt nie. Ein neu genannter Auftrag liest die Scheibe noch einmal (`Resend`), auch wenn dieser Lauf sie schon
   ohne Zustimmung zurückhielt. Der Heartbeat meldet je Auftrag `missing` (nicht in der letzten Runde oder ohne Treffer,
