@@ -8,6 +8,7 @@ import { ACTIVE_CONSENT } from "@/lib/consent/status"
 import { db } from "@/lib/db"
 import { lockCard, NOT_MINE, purgeCards } from "@/lib/db/purge"
 import { PENDING_CARD } from "@/lib/db/visible"
+import { sweepPrintoutsSoon } from "@/lib/printouts/files"
 import type { ActionResult } from "@/lib/types"
 
 // Erste Scheibe bestätigen: Bis der Schütze die
@@ -106,6 +107,8 @@ export async function rejectFirstCard(cardId: string): Promise<ActionResult> {
   } catch {
     return { error: FAILED }
   }
+  // die Dateien der entfernten Ausdrucke
+  sweepPrintoutsSoon(db)
   revalidatePath("/", "layout")
   return { success: true }
 }

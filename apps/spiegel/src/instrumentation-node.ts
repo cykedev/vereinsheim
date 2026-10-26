@@ -2,17 +2,19 @@ import { db } from "@/lib/db"
 import { refreshStaleDisciplineCards, refreshStaleProjections } from "@/lib/db/cards"
 import { purgeExpiredTrash } from "@/lib/db/trash"
 import { rereadOutdatedKeys } from "@/lib/ingest/reread"
+import { sweepPrintoutsSoon } from "@/lib/printouts/files"
 import { readerBundleMissing } from "@/lib/printouts/reader"
 import { ensureSeedAdmin } from "@/lib/startup"
 
 const HOUR_MS = 3_600_000
 
-/** abgelaufene Scheiben im Papierkorb endgültig löschen; ins Log nur Zahlen */
+/** abgelaufene Scheiben im Papierkorb endgültig löschen, danach Ausdrucke ohne Scheibe; ins Log nur Zahlen */
 function emptyExpiredTrash() {
   void purgeExpiredTrash(db, { nowMs: Date.now() })
     .then(({ purged, failed }) => {
       if (purged) console.warn(`${purged} Scheiben aus dem Papierkorb endgültig gelöscht`)
       if (failed) console.error(`${failed} Scheiben im Papierkorb nicht gelöscht`)
+      sweepPrintoutsSoon(db)
     })
     .catch((error: unknown) =>
       console.error(
@@ -66,7 +68,7 @@ export async function registerNode() {
       if (count) console.warn(`${count} Projektionen beim Start neu gerechnet`)
     })
     .catch((error: unknown) => console.error("Projektionen beim Start nicht nachgerechnet:", error))
-  // Papierkorb, Zuordnungen der Disziplinen und Neulesen: beim Start und danach stündlich; `unref` hält den Prozess nicht am Leben
+  // Papierkorb samt Ausdrucken, Zuordnungen der Disziplinen und Neulesen: beim Start und danach stündlich; `unref` hält den Prozess nicht am Leben
   emptyExpiredTrash()
   setInterval(emptyExpiredTrash, HOUR_MS).unref()
   refreshDisciplines()
