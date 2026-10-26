@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { buildPdf, type TestText } from "./__fixtures__/buildPdf"
+import { bombContent, buildPdf, type TestText } from "./__fixtures__/buildPdf"
 import { MeytonPdfError, readPrintout } from "./printout"
 
 // Erfundene Ausdrucke ohne Namen, nach dem Muster eines echten Ausdrucks.
@@ -229,6 +229,7 @@ describe("readPrintout: Grenzen (SF-48)", () => {
     const big = new Uint8Array(1024 * 1024 + 1)
     big.set(new TextEncoder().encode("%PDF-1.4\n"))
     await expect(readPrintout(big)).rejects.toThrow(/größer als 1 MB/)
+    await expect(readPrintout(big)).rejects.toMatchObject({ code: "tooLarge" })
   })
 
   it("Kopf: bis Byte 1019 geduldet wie in pdf.js, ab Byte 1020 kein PDF", async () => {
@@ -240,18 +241,21 @@ describe("readPrintout: Grenzen (SF-48)", () => {
       return bytes
     }
     expect((await readPrintout(withJunk(1019))).id).toMatchObject({ kind: "found" })
-    await expect(readPrintout(withJunk(1020))).rejects.toThrow(/keine PDF-Datei/)
+    await expect(readPrintout(withJunk(1020))).rejects.toMatchObject({ code: "notPdf" })
   })
 
   it("kein PDF", async () => {
-    await expect(readPrintout(new TextEncoder().encode("Hallo"))).rejects.toThrow(/keine PDF-Datei/)
+    const hallo = new TextEncoder().encode("Hallo")
+    await expect(readPrintout(hallo)).rejects.toThrow(/keine PDF-Datei/)
+    await expect(readPrintout(hallo)).rejects.toMatchObject({ code: "notPdf" })
   })
 
   it("zu viele Seiten", async () => {
     const pages = Array.from({ length: 11 }, (_, i) => footer("ff914420", i + 1))
-    await expect(readPrintout(await buildPdf({ pages, info: QT_INFO }))).rejects.toThrow(
-      /mehr als 10 Seiten/
-    )
+    await expect(readPrintout(await buildPdf({ pages, info: QT_INFO }))).rejects.toMatchObject({
+      code: "tooManyPages",
+      message: expect.stringMatching(/mehr als 10 Seiten/),
+    })
   })
 
   it("zu viel Text", async () => {
@@ -261,22 +265,27 @@ describe("readPrintout: Grenzen (SF-48)", () => {
       y: 800 - i * 12,
     }))
     const pdf = await buildPdf({ pages: [lines], info: QT_INFO })
-    await expect(readPrintout(pdf, { limits: { maxTextItems: 50 } })).rejects.toThrow(
-      /zu viel Text/
-    )
+    await expect(readPrintout(pdf, { limits: { maxTextItems: 50 } })).rejects.toMatchObject({
+      code: "tooMuchText",
+      message: expect.stringMatching(/zu viel Text/),
+    })
   })
 
   it("Zeitüberschreitung", async () => {
     let clock = 0
     const pdf = await buildPdf({ pages: [card("ff914420")], info: QT_INFO })
-    await expect(readPrintout(pdf, { now: () => (clock += 10_000) })).rejects.toThrow(
-      /Zeitüberschreitung/
-    )
+    await expect(readPrintout(pdf, { now: () => (clock += 10_000) })).rejects.toMatchObject({
+      code: "timeout",
+      message: expect.stringMatching(/Zeitüberschreitung/),
+    })
   })
 
   it("zu viele Zeichen", async () => {
     const pdf = await buildPdf({ pages: [[{ str: "x".repeat(60), x: 40, y: 400 }]], info: QT_INFO })
-    await expect(readPrintout(pdf, { limits: { maxChars: 20 } })).rejects.toThrow(/zu viel Text/)
+    await expect(readPrintout(pdf, { limits: { maxChars: 20 } })).rejects.toMatchObject({
+      code: "tooMuchText",
+      message: expect.stringMatching(/zu viel Text/),
+    })
   })
 
   it("Zeitüberschreitung auch mitten im Lesen der Seiten", async () => {
@@ -285,9 +294,10 @@ describe("readPrintout: Grenzen (SF-48)", () => {
     let clock = -1000
     const pages = Array.from({ length: 4 }, (_, i) => footer("ff914420", i + 1))
     const pdf = await buildPdf({ pages, info: QT_INFO })
-    await expect(readPrintout(pdf, { now: () => (clock += 1000) })).rejects.toThrow(
-      /Zeitüberschreitung/
-    )
+    await expect(readPrintout(pdf, { now: () => (clock += 1000) })).rejects.toMatchObject({
+      code: "timeout",
+      message: expect.stringMatching(/Zeitüberschreitung/),
+    })
   })
 
   it("beschädigt: sauberer Fehler statt pdf.js-Interna", async () => {
@@ -295,6 +305,7 @@ describe("readPrintout: Grenzen (SF-48)", () => {
     const error = await readPrintout(broken).catch((caught: unknown) => caught)
     expect(error).toBeInstanceOf(MeytonPdfError)
     expect((error as Error).message).toMatch(/beschädigt oder nicht lesbar/)
+    expect(error).toMatchObject({ code: "unreadable" })
     // Die Ursache bleibt für das Server-Log erhalten, die Meldung bleibt zeigbar.
     expect((error as Error).cause).toBeInstanceOf(Error)
   })
@@ -304,5 +315,23 @@ describe("readPrintout: Grenzen (SF-48)", () => {
     const before = pdf.slice()
     await readPrintout(pdf)
     expect(pdf).toEqual(before)
+  })
+})
+
+describe("buildPdf: präparierte Inhaltsströme", () => {
+  it("rawPages ersetzt den Text: keine ID", async () => {
+    const pdf = await buildPdf({
+      pages: [[]],
+      rawPages: [new TextEncoder().encode("BT /F1 8 Tf (keine Kennung) Tj ET")],
+      info: QT_INFO,
+    })
+    expect((await readPrintout(pdf)).id).toEqual({ kind: "missing" })
+  })
+
+  it("die Bomben bleiben deflatet unter 1 MiB", async () => {
+    for (const kind of ["memory", "time"] as const) {
+      const pdf = await buildPdf({ pages: [[]], rawPages: [bombContent(kind)], info: QT_INFO })
+      expect(pdf.length).toBeLessThan(1024 * 1024)
+    }
   })
 })

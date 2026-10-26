@@ -4,17 +4,21 @@ Liest Meyton-Ausdrucke (PDF) für Spiegel. Für die Zuordnung per QR zählen nur
 zwei Dinge, beide unabhängig vom Layout (ADR-028, Änderung vom 6. Oktober 2026): die **ID im Fuß**
 (`ID: ff914420`, vermutlich die ScheibenID als vorzeichenbehaftete 32-Bit-Zahl) und die
 **Erstellzeit** aus den Metadaten. Ein vollständiger Parser für fremde Anlagen, in den auch die Parser aus
-Treffsicher und Ringwerk ziehen sollen, ist offen (`vault/spiegel/spiegel-roadmap.md`, SP-2.6). Noch nutzt keine App das Paket.
+Treffsicher und Ringwerk ziehen sollen, ist offen (`vault/spiegel/spiegel-roadmap.md`, SP-2.6). Spiegel nutzt `printout-id` und liest `printout` nur im Kindprozess
+(`apps/spiegel/src/lib/printouts/reader.ts`).
 Fachwissen: `vault/meyton/meyton-printout.md`, Sonderfälle SF-41 bis SF-48 in
 `vault/spiegel/spiegel-edge-cases.md`.
 
 ## Exporte
 
-| Export                                | Datei               | Inhalt                                                       |
-| ------------------------------------- | ------------------- | ------------------------------------------------------------ |
-| `@vereinsheim/meyton-pdf/printout`    | `src/printout.ts`   | `readPrintout` (braucht pdf.js), `MeytonPdfError`, Grenzen   |
-| `@vereinsheim/meyton-pdf/printout-id` | `src/printoutId.ts` | `findPrintoutId`, `decodePrintoutId` (rein, auch im Browser) |
-| `@vereinsheim/meyton-pdf/pdf-date`    | `src/pdfDate.ts`    | `parsePdfDate`, `parseXmpDate` (rein, auch im Browser)       |
+| Export                                | Datei                          | Inhalt                                                                      |
+| ------------------------------------- | ------------------------------ | --------------------------------------------------------------------------- |
+| `@vereinsheim/meyton-pdf/printout`    | `src/printout.ts`              | `readPrintout`, `preloadPdfjs` (brauchen pdf.js), `MeytonPdfError`, Grenzen |
+| `@vereinsheim/meyton-pdf/printout-id` | `src/printoutId.ts`            | `findPrintoutId`, `decodePrintoutId` (rein, auch im Browser)                |
+| `@vereinsheim/meyton-pdf/pdf-date`    | `src/pdfDate.ts`               | `parsePdfDate`, `parseXmpDate` (rein, auch im Browser)                      |
+| `@vereinsheim/meyton-pdf/errors`      | `src/errors.ts`                | `MeytonPdfError` mit festem `code`, `MEYTON_PDF_ERROR_CODES`                |
+| `@vereinsheim/meyton-pdf/header`      | `src/header.ts`                | `hasPdfHeader` (rein, ohne pdf.js)                                          |
+| `@vereinsheim/meyton-pdf/test-pdf`    | `src/__fixtures__/buildPdf.ts` | `buildPdf`, `bombContent`; nur für Tests und Werkzeuge                      |
 
 ## Regeln
 
@@ -33,7 +37,9 @@ Fachwissen: `vault/meyton/meyton-printout.md`, Sonderfälle SF-41 bis SF-48 in
 - Kein `server-only`, kein `"use server"`; Just-in-time wie `packages/shot-core`. Eine Next-App, die das
   Paket nutzt, braucht es in `transpilePackages` (in ihrer `next.config.ts`). `./printout-id`,
   `./pdf-date`, `./limits` und `./errors` laufen ohne pdf.js, auch im Browser.
-- **Fehler nach außen** nur als `MeytonPdfError` mit zeigbarer Meldung, nie pdf.js-Interna.
+- **Fehler nach außen** nur als `MeytonPdfError` mit zeigbarer Meldung, nie pdf.js-Interna. Dazu ein
+  fester `code` (`tooLarge`, `notPdf`, `tooManyPages`, `tooMuchText`, `timeout`, `unreadable`), den ein
+  Kindprozess statt der Meldung weitergibt.
 - **Keine echten Ausdrucke im Paket** (Namen, #Nummer; ADR-029). Tests bauen ihre PDFs mit
   `src/__fixtures__/buildPdf.ts` (Ghostscript-Weg: Type1 mit Literal-Strings; Qt-Weg: Type0/Identity-H
   mit ToUnicode und einem Glyph je `Tj`). Echte PDFs nur lokal in der Validierung.

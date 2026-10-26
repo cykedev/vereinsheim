@@ -6,14 +6,15 @@
 // Aufrufer in einem kurzlebigen Kindprozess lesen (siehe limits.ts). Nach außen gehen nur eigene
 // Meldungen (MeytonPdfError), die Ursache steht in `cause`.
 
-import { getDocumentProxy, getMeta } from "unpdf"
+import { getDocumentProxy, getMeta, getResolvedPDFJS } from "unpdf"
 
 import { MeytonPdfError } from "./errors"
+import { hasPdfHeader } from "./header"
 import { DEFAULT_LIMITS, type PrintoutLimits } from "./limits"
 import { parsePdfDate, parseXmpDate, type PdfDate } from "./pdfDate"
 import { findPrintoutId, type PrintoutIdResult } from "./printoutId"
 
-export { MeytonPdfError } from "./errors"
+export { MEYTON_PDF_ERROR_CODES, MeytonPdfError, type MeytonPdfErrorCode } from "./errors"
 export { DEFAULT_LIMITS, type PrintoutLimits } from "./limits"
 export type { PdfDate } from "./pdfDate"
 export type { PrintoutIdResult } from "./printoutId"
@@ -35,18 +36,7 @@ export interface ReadOptions {
 
 type PdfDocument = Awaited<ReturnType<typeof getDocumentProxy>>
 
-const PDF_HEADER = new TextEncoder().encode("%PDF-")
-/** So weit vorne muss der Kopf stehen; pdf.js duldet davor bis zu 1024 Bytes. */
-const HEADER_WINDOW = 1024
 const UNREADABLE = "Die PDF-Datei ist beschädigt oder nicht lesbar."
-
-function hasPdfHeader(bytes: Uint8Array): boolean {
-  const last = Math.min(bytes.length, HEADER_WINDOW) - PDF_HEADER.length
-  for (let start = 0; start <= last; start++) {
-    if (PDF_HEADER.every((byte, i) => bytes[start + i] === byte)) return true
-  }
-  return false
-}
 
 function sizeLabel(bytes: number): string {
   const mb = bytes / (1024 * 1024)
@@ -80,6 +70,14 @@ function creationDate(info: Record<string, unknown>, metadata: unknown): Printou
   return null
 }
 
+/**
+ * Lädt pdf.js, ohne ein PDF zu lesen. Ein Kindprozess ruft das vor seiner Meldung „bereit“ auf, damit die
+ * Zeitgrenze erst mit dem Lesen beginnt.
+ */
+export async function preloadPdfjs(): Promise<void> {
+  await getResolvedPDFJS()
+}
+
 export async function readPrintout(
   bytes: Uint8Array,
   options: ReadOptions = {}
@@ -89,14 +87,18 @@ export async function readPrintout(
   const startedAt = now()
   const checkTime = () => {
     if (now() - startedAt > limits.maxParseMs) {
-      throw new MeytonPdfError("Zeitüberschreitung beim Lesen der PDF-Datei.")
+      throw new MeytonPdfError("Zeitüberschreitung beim Lesen der PDF-Datei.", { code: "timeout" })
     }
   }
 
   if (bytes.length > limits.maxBytes) {
-    throw new MeytonPdfError(`Die PDF-Datei ist größer als ${sizeLabel(limits.maxBytes)}.`)
+    throw new MeytonPdfError(`Die PDF-Datei ist größer als ${sizeLabel(limits.maxBytes)}.`, {
+      code: "tooLarge",
+    })
   }
-  if (!hasPdfHeader(bytes)) throw new MeytonPdfError("Das ist keine PDF-Datei.")
+  if (!hasPdfHeader(bytes)) {
+    throw new MeytonPdfError("Das ist keine PDF-Datei.", { code: "notPdf" })
+  }
 
   let pdf: PdfDocument
   try {
@@ -116,7 +118,9 @@ export async function readPrintout(
   try {
     checkTime()
     if (pdf.numPages > limits.maxPages) {
-      throw new MeytonPdfError(`Die PDF-Datei hat mehr als ${limits.maxPages} Seiten.`)
+      throw new MeytonPdfError(`Die PDF-Datei hat mehr als ${limits.maxPages} Seiten.`, {
+        code: "tooManyPages",
+      })
     }
 
     const { info, metadata } = await getMeta(pdf)
@@ -141,7 +145,7 @@ export async function readPrintout(
           items++
           chars += item.str.length
           if (items > limits.maxTextItems || chars > limits.maxChars) {
-            throw new MeytonPdfError("Die PDF-Datei enthält zu viel Text.")
+            throw new MeytonPdfError("Die PDF-Datei enthält zu viel Text.", { code: "tooMuchText" })
           }
           parts.push(item.str)
         }

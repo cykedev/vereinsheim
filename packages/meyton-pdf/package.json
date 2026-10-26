@@ -9,7 +9,9 @@
     "./printout-id": "./src/printoutId.ts",
     "./pdf-date": "./src/pdfDate.ts",
     "./limits": "./src/limits.ts",
-    "./errors": "./src/errors.ts"
+    "./errors": "./src/errors.ts",
+    "./header": "./src/header.ts",
+    "./test-pdf": "./src/__fixtures__/buildPdf.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit",

@@ -1,7 +1,8 @@
 // Erzeugt kleine, gültige PDFs für die Tests, nach den zwei Druckwegen von Meyton: Ghostscript mit
 // einer Type1-Schrift und Literal-Strings, Qt mit einer Type0-Schrift (Identity-H), ToUnicode und einem
-// Glyph je `Tj`. Dazu Info-Dict, XMP, mehrere Seiten und frei positionierter Text. Echte Ausdrucke
-// gehören nicht ins Repo (ADR-029); die Fälle hier sind erfunden und ohne Namen.
+// Glyph je `Tj`. Dazu Info-Dict, XMP, mehrere Seiten und frei positionierter Text, für die Grenzen
+// außerdem präparierte Inhaltsströme (`bombContent`). Echte Ausdrucke gehören nicht ins Repo (ADR-029);
+// die Fälle hier sind erfunden und ohne Namen.
 
 export interface TestText {
   str: string
@@ -22,9 +23,35 @@ export interface TestPdf {
   xmpCreateDate?: string
   /** Präfix im XMP; ältere Erzeuger schreiben "xap" */
   xmpPrefix?: "xmp" | "xap"
+  /** fertige Inhaltsströme je Seite statt des Texts aus `pages`; werden ebenso deflatet */
+  rawPages?: Uint8Array[]
 }
 
 const encoder = new TextEncoder()
+
+/**
+ * Ein erfundener Inhaltsstrom, der pdf.js an eine Grenze bringt, deflatet aber klein bleibt:
+ * - "memory": ein String aus 32 MiB · `scale` Zeichen; der Lexer von pdf.js baut ihn als Array
+ *   einzelner Zeichen (rund 8 Byte je Zeichen).
+ * - "time": 10 Millionen · `scale` leere Operatorpaare `q Q`.
+ */
+export function bombContent(kind: "memory" | "time", scale = 1): Uint8Array {
+  if (kind === "memory") {
+    const length = Math.round(32 * 1024 * 1024 * scale)
+    const head = latin1("BT /F1 8 Tf (")
+    const tail = latin1(") Tj ET")
+    const out = new Uint8Array(head.length + length + tail.length)
+    out.set(head)
+    out.fill(0x41, head.length, head.length + length)
+    out.set(tail, head.length + length)
+    return out
+  }
+  const op = latin1("q Q\n")
+  const count = Math.round(10_000_000 * scale)
+  const out = new Uint8Array(op.length * count)
+  for (let i = 0; i < count; i++) out.set(op, i * op.length)
+  return out
+}
 
 /** Latin-1-Bytes; Zeichen außerhalb werden zu "?" */
 function latin1(text: string): Uint8Array {
@@ -152,7 +179,8 @@ export async function buildPdf(spec: TestPdf): Promise<Uint8Array> {
 
   // Seiten
   const pageRefs: number[] = []
-  for (const page of spec.pages) {
+  for (const [index, page] of spec.pages.entries()) {
+    const raw = spec.rawPages?.[index]
     const ops: string[] = []
     for (const item of page) {
       const size = item.size ?? 8
@@ -168,7 +196,8 @@ export async function buildPdf(spec: TestPdf): Promise<Uint8Array> {
       }
       ops.push("ET")
     }
-    const contents = add(stream("/Filter/FlateDecode", await deflate(latin1(ops.join("\n")))))
+    const content = raw ?? latin1(ops.join("\n"))
+    const contents = add(stream("/Filter/FlateDecode", await deflate(content)))
     pageRefs.push(
       add(
         `<</Type/Page/Parent ${pagesTree} 0 R/MediaBox[0 0 595 842]/Resources<</Font<</F1 ${fontRef} 0 R>>>>/Contents ${contents} 0 R>>`
