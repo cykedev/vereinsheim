@@ -11,6 +11,7 @@ import {
   FLAG_OVER_TARGET,
   FLAG_SUSPICIOUS,
   type CardFlag,
+  type CardSums,
   type MetricShot,
 } from "@vereinsheim/shot-core/metrics"
 import { cardMarks, cardProjection, projectionVersion } from "@vereinsheim/shot-core/projection"
@@ -28,9 +29,10 @@ import type { Db } from "../db"
 import {
   baseShotFlags,
   DERIVED_SHOT_FLAGS,
+  detailFlags,
   isComplete,
   MAPPING_FLAGS,
-  mappingFlags,
+  revisionCounts,
   verifyShots,
 } from "../ingest/card-checks"
 import { standScoringOf } from "../scoring"
@@ -570,15 +572,64 @@ async function newRevision(
   }
 }
 
-/** die Projektion einer Revision speichern; sie hängt nur an den Schüssen */
-async function saveProjection(
+/**
+ * die Angaben einer Revision ohne oder neben Einzelschüssen (Serien-Summen, Gesamtergebnis, Trefferlage,
+ * [[adr-033]]); undefined ohne sie, so rechnen Scheiben der Brücke genau wie bisher
+ */
+export async function revisionSums(tx: Tx | Db, revisionId: bigint): Promise<CardSums | undefined> {
+  const revision = await tx.cardRevision.findUnique({
+    where: { id: revisionId },
+    select: {
+      totalRings: true,
+      totalDecimalTenths: true,
+      totalShots: true,
+      centerXUm: true,
+      centerYUm: true,
+      centerShots: true,
+      seriesSums: {
+        orderBy: { series: "asc" },
+        select: { series: true, shots: true, rings: true, decimalTenths: true },
+      },
+    },
+  })
+  if (!revision) return undefined
+  const { seriesSums, totalShots, centerShots, centerXUm, centerYUm } = revision
+  if (!seriesSums.length && totalShots === null && centerShots === null) return undefined
+  return {
+    series: seriesSums,
+    total:
+      totalShots === null
+        ? null
+        : {
+            shots: totalShots,
+            rings: revision.totalRings,
+            decimalTenths: revision.totalDecimalTenths,
+          },
+    // die Datenbank hält Lage und Schusszahl der Trefferlage zusammen (CHECK)
+    center:
+      centerShots === null || centerXUm === null || centerYUm === null
+        ? null
+        : { xUm: centerXUm, yUm: centerYUm, shots: centerShots },
+  }
+}
+
+/** die Projektion einer Revision speichern; sie hängt nur an den Schüssen und den Angaben der Revision */
+export async function saveProjection(
   tx: Tx,
   cardId: string,
   revisionId: bigint,
-  shots: readonly MetricShot[]
+  shots: readonly MetricShot[],
+  sums?: CardSums
 ): Promise<void> {
-  // Merkmale der Scheibe gehen nicht ein (sie stehen in der Zeile der Scheibe); der Fachkern braucht nur die Schüsse
-  const card: PeriodCard = { id: cardId, startedAtMs: 0, kind: "training", complete: true, shots }
+  // Merkmale der Scheibe gehen nicht ein (sie stehen in der Zeile der Scheibe); der Fachkern braucht nur die Angaben
+  const card: PeriodCard = {
+    id: cardId,
+    startedAtMs: 0,
+    kind: "training",
+    complete: true,
+    shots,
+    ...(sums ? { sums } : {}),
+  }
   const projection = cardProjection(card)
   const data = {
     revisionId,
@@ -590,6 +641,7 @@ async function saveProjection(
     records: projection.records as unknown as Prisma.InputJsonObject,
     // die Lagen für die kleinen Scheiben der Übersichten, gelesen nur für die gezeigten Scheiben (`cardMarks` in reads)
     marks: cardMarks(shots) as unknown as Prisma.InputJsonArray,
+    detail: projection.detail as unknown as Prisma.InputJsonObject,
     computedAt: new Date(),
   }
   await tx.cardProjection.upsert({
@@ -610,11 +662,14 @@ export async function refreshProjections(
   {
     limit = 200,
     sourceId,
+    cardIds,
     exclude = [],
     onFailure,
   }: {
     limit?: number
     sourceId?: number
+    /** nur diese Scheiben (eingetragene haben keine Quelle; Tests) */
+    cardIds?: readonly string[]
     /** Scheiben, die hier nicht noch einmal versucht werden (sie sind in diesem Lauf schon gescheitert) */
     exclude?: readonly string[]
     /** mit: eine scheiternde Scheibe wird gemeldet und übergangen; ohne: der Fehler bricht ab */
@@ -622,6 +677,8 @@ export async function refreshProjections(
   } = {}
 ): Promise<number> {
   const version = projectionVersion()
+  const onlyCards =
+    cardIds === undefined ? Prisma.empty : Prisma.sql`AND c.id = ANY(${[...cardIds]})`
   const onlySource =
     sourceId === undefined ? Prisma.empty : Prisma.sql`AND c."sourceId" = ${sourceId}`
   const notExcluded = exclude.length ? Prisma.sql`AND c.id <> ALL(${[...exclude]})` : Prisma.empty
@@ -630,6 +687,7 @@ export async function refreshProjections(
      WHERE c."currentRevisionId" IS NOT NULL
        AND (p."cardId" IS NULL OR p.version <> ${version} OR p."revisionId" <> c."currentRevisionId")
        ${onlySource}
+       ${onlyCards}
        ${notExcluded}
      ORDER BY c.id
      LIMIT ${limit}`
@@ -648,7 +706,8 @@ export async function refreshProjections(
           tx,
           id,
           card.currentRevisionId,
-          shots.map(shotFromRow).map(toMetricShot)
+          shots.map(shotFromRow).map(toMetricShot),
+          await revisionSums(tx, card.currentRevisionId)
         )
       })
       done++
@@ -872,13 +931,15 @@ async function recomputeDisciplineCard(tx: Tx, cardId: string): Promise<void> {
       currentRevisionId: bigint | null
       state: CardState
       flags: string[]
+      origin: CardOrigin
       targetId: string | null
       plannedShots: number | null
       meytonId: number | null
       version: number
     }[]
   >`
-    SELECT c."currentRevisionId", c.state, c.flags, d."targetId", d."plannedShots", d."meytonId", d.version
+    SELECT c."currentRevisionId", c.state, c.flags, c.origin, d."targetId", d."plannedShots", d."meytonId",
+           d.version
       FROM "Card" c JOIN "Discipline" d ON d.id = c."disciplineId"
      WHERE c.id = ${cardId}
        FOR UPDATE OF c`
@@ -919,11 +980,12 @@ async function recomputeDisciplineCard(tx: Tx, cardId: string): Promise<void> {
       data: { contentHash: contentHash(next) },
     })
 
-  const matchShots = shots.filter((shot) => shot.stellung !== 0).length
+  const sums = await revisionSums(tx, revisionId)
+  const counts = revisionCounts(shots, sums)
   const flags = [
-    ...mappingFlags({
-      sighterShots: shots.length - matchShots,
-      matchShots,
+    ...detailFlags({
+      origin: row.origin,
+      ...counts,
       plannedShots: plannedShotsOf(row.meytonId, row.plannedShots),
       targetId,
       targetMismatch,
@@ -932,9 +994,13 @@ async function recomputeDisciplineCard(tx: Tx, cardId: string): Promise<void> {
   ]
   await tx.card.update({
     where: { id: cardId },
-    data: { flags, complete: isComplete(row.state, flags), disciplineVersion: row.version },
+    data: {
+      flags,
+      complete: isComplete(row.state, flags) && counts.valued,
+      disciplineVersion: row.version,
+    },
   })
-  await saveProjection(tx, cardId, revisionId, next.map(toMetricShot))
+  await saveProjection(tx, cardId, revisionId, next.map(toMetricShot), sums)
 }
 
 /**

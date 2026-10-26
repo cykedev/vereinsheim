@@ -2,9 +2,11 @@ import { describe, expect, it } from "vitest"
 
 import {
   baseShotFlags,
+  detailFlags,
   FLAG_TARGET_MISMATCH,
   FLAG_UNKNOWN_DISCIPLINE,
   mappingFlags,
+  revisionCounts,
   verifyShots,
   type CheckableShot,
 } from "./card-checks"
@@ -101,5 +103,36 @@ describe("mappingFlags", () => {
     expect(
       mappingFlags({ ...base, matchShots: 38, plannedShots: 40, targetMismatch: true })
     ).toEqual(["unvollstaendig", FLAG_TARGET_MISMATCH])
+  })
+})
+
+describe("Scheiben mit Angaben ohne Einzelschüsse", () => {
+  const total = { series: [], total: { shots: 40, rings: 371, decimalTenths: null }, center: null }
+
+  it("revisionCounts: Wertungsschüsse aus den Zeilen, ohne sie aus den Summen", () => {
+    const rows = [{ stellung: 0 }, { stellung: 1 }, { stellung: 1 }]
+    expect(revisionCounts(rows, undefined)).toEqual({
+      sighterShots: 1,
+      matchShots: 2,
+      valued: true,
+    })
+    expect(revisionCounts([], total)).toEqual({ sighterShots: 0, matchShots: 40, valued: true })
+    expect(revisionCounts([], undefined)).toEqual({ sighterShots: 0, matchShots: 0, valued: false })
+  })
+
+  it("detailFlags: ohne Werte nicht leer, außer bei Scheiben der Brücke", () => {
+    const empty = {
+      sighterShots: 0,
+      matchShots: 0,
+      plannedShots: 40,
+      targetId: "lg-10m" as const,
+      targetMismatch: false,
+      valued: false,
+    }
+    expect(detailFlags({ ...empty, origin: "pdf" })).toEqual([])
+    expect(detailFlags({ ...empty, origin: "raw" })).toContain("leer")
+    expect(detailFlags({ ...empty, origin: "manual", matchShots: 30, valued: true })).toContain(
+      "unvollstaendig"
+    )
   })
 })

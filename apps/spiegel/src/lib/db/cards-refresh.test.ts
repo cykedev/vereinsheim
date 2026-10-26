@@ -20,7 +20,7 @@ vi.mock("@vereinsheim/shot-core/projection", async (importOriginal) => {
   }
 })
 
-const { refreshStaleProjections, writeRevision } = await import("./cards")
+const { refreshProjections, refreshStaleProjections, writeRevision } = await import("./cards")
 
 const db = createPrismaClient()
 let site: TestSite
@@ -68,5 +68,27 @@ describe("refreshStaleProjections", () => {
     // beim nächsten Start ohne Fehler wird auch sie nachgerechnet
     mocks.failing = null
     expect(await refreshStaleProjections(db, { batch: 2, sourceId: site.sourceId })).toBe(1)
+  })
+})
+
+describe("refreshProjections mit cardIds", () => {
+  it("rechnet nur die genannten Scheiben", async () => {
+    const inputs = generateSeason({
+      seed: 4,
+      cards: 2,
+      firstMs: Date.UTC(2026, 3, 1, 17),
+      everyDays: 2,
+      sourceId: site.sourceId,
+      disciplineId: site.disciplineId,
+      ownerId: site.ownerId,
+      scheibenIdBase: 7100,
+    })
+    const ids: string[] = []
+    for (const input of inputs) ids.push((await writeRevision(db, input)).cardId)
+    await db.cardProjection.updateMany({ where: { cardId: { in: ids } }, data: { version: "alt" } })
+    expect(await refreshProjections(db, { cardIds: [ids[0]] })).toBe(1)
+    const rows = await db.cardProjection.findMany({ where: { cardId: { in: ids } } })
+    expect(rows.find((row) => row.cardId === ids[0])?.version).toBe(projectionVersion())
+    expect(rows.find((row) => row.cardId === ids[1])?.version).toBe("alt")
   })
 })

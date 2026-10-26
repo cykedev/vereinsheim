@@ -6,10 +6,14 @@ import {
   FLAG_MISS,
   FLAG_OVER_TARGET,
   FLAG_SUSPICIOUS,
+  sumsShots,
   type CardFlag,
+  type CardSums,
 } from "@vereinsheim/shot-core/metrics"
 import { TARGETS, type TargetId } from "@vereinsheim/shot-core/targets"
 import { checkShot } from "@vereinsheim/shot-core/verify"
+
+import type { CardOrigin } from "@/generated/prisma/client"
 
 /** ohne Scheibenbild (SF-70) */
 export const FLAG_UNKNOWN_DISCIPLINE = "disziplin-unbekannt" satisfies CardFlag
@@ -31,6 +35,14 @@ export const MAPPING_FLAGS = [
   "ueber-soll",
   FLAG_UNKNOWN_DISCIPLINE,
   FLAG_TARGET_MISMATCH,
+] as const satisfies readonly CardFlag[]
+
+/** Merkmale der Vollständigkeit: nur für Scheiben mit Werten (`detailFlags`) */
+export const COMPLETENESS_FLAGS = [
+  "leer",
+  "nur-probe",
+  "unvollstaendig",
+  "ueber-soll",
 ] as const satisfies readonly CardFlag[]
 
 /** alle Merkmale, die ein Schuss aus seinen Werten und der Gegenprobe bekommt; das Nachrechnen ersetzt genau diese */
@@ -127,4 +139,34 @@ export function mappingFlags(input: {
   if (!input.targetId) flags.push(FLAG_UNKNOWN_DISCIPLINE)
   if (input.targetMismatch) flags.push(FLAG_TARGET_MISMATCH)
   return flags
+}
+
+/**
+ * Schusszahlen einer Revision für die Merkmale ([[adr-033]]): die Wertungsschüsse aus den Zeilen, ohne sie die Schusszahl
+ * der Summen; `valued`, ob die Revision überhaupt Werte hat (Schüsse oder Summen)
+ */
+export function revisionCounts(
+  shots: readonly { stellung: number }[],
+  sums: CardSums | undefined
+): { sighterShots: number; matchShots: number; valued: boolean } {
+  const fromRows = shots.filter((shot) => shot.stellung !== 0).length
+  return {
+    sighterShots: shots.length - fromRows,
+    matchShots: fromRows || sumsShots(sums),
+    valued: shots.length > 0 || sumsShots(sums) > 0,
+  }
+}
+
+/**
+ * die Merkmale der Disziplin (`mappingFlags`) für eine Scheibe jeder Herkunft. Eine Scheibe ohne Werte (vom Ausdruck,
+ * wartet auf die Brücke) ist weder leer noch nur Probe: Ihr fehlen die Merkmale der Vollständigkeit. Scheiben der Brücke
+ * rechnen wie bisher
+ */
+export function detailFlags(
+  input: Parameters<typeof mappingFlags>[0] & { origin: CardOrigin; valued: boolean }
+): CardFlag[] {
+  const flags = mappingFlags(input)
+  if (input.valued || input.origin === "raw") return flags
+  const completeness: readonly string[] = COMPLETENESS_FLAGS
+  return flags.filter((flag) => !completeness.includes(flag))
 }

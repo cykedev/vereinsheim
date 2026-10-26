@@ -151,6 +151,27 @@ describe("refreshDisciplineCards", () => {
     expect(card.flags).toEqual(expect.arrayContaining(["korrigiert", "uhr-abweichung"]))
   })
 
+  it("eine Scheibe der Brücke ohne Schüsse bleibt leer und unvollständig", async () => {
+    const generated = season(5_500)[0]
+    const { version } = await db.discipline.findUniqueOrThrow({ where: { id: disciplineId } })
+    const { cardId } = await writeRevision(db, {
+      ...generated,
+      shots: [],
+      card: {
+        ...generated.card,
+        state: "final",
+        complete: true,
+        flags: [],
+        disciplineVersion: version,
+      },
+    })
+    await setMapping({ targetId: "lp-10m", plannedShots: null })
+    await refresh()
+    const card = await cardOf(cardId)
+    expect(card.flags).toContain("leer")
+    expect(card.complete).toBe(false)
+  })
+
   it("ein Stand, der nach dem Lauf noch mit der alten Version kommt, wird beim nächsten Lauf nachgerechnet", async () => {
     await setMapping({ targetId: null, plannedShots: null })
     const { version: old } = await db.discipline.findUniqueOrThrow({ where: { id: disciplineId } })
