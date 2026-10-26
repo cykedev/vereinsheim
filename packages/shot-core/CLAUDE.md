@@ -91,7 +91,8 @@ Fachwissen: `vault/spiegel/spiegel-target-library.md`, `vault/spiegel/spiegel-me
   verbietet sie an Streuungen und ohne Ebene Scheibe); Werte aus Summen tragen kein `sd`, Zeiträume urteilen dann mit
   dem Rangtest. Die Trefferlage als Summe zählt nur für Versatz und Richtung, nie für Streuung oder Urteile.
   `shotCountOf` zählt Umfang und `printedShots`; „nur Probe“ erst mit einem Schuss, eine Scheibe ohne Werte zählt in
-  keiner Zahl. Rekorde aus Summen: Ergebnis (R1), beste Serie (R2), beste Form (R8).
+  keiner Zahl. Probe neben Summen der Wertung zählt nicht (`cardShots` mit `sums`, `sightersBesideSums`); eine Scheibe
+  nur aus Probe zählt nur mit `includeProbeOnly`, auch nicht über ihre Trefferlage (`probeOnlyCard`). Rekorde aus Summen: Ergebnis (R1), beste Serie (R2), beste Form (R8).
 - **`toBeCloseTo` nimmt null als 0.** Wo eine Kennzahl 0 ergeben soll, erst `not.toBeNull()` prüfen
   (Helfer `expectNear` in `metrics.test.ts`).
 - **Eine Scheibe wie am Ausdruck** ([[adr-027]]): `asOnPrintout` gibt mit Wertung nur die Wertungsschüsse

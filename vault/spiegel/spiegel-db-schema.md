@@ -66,7 +66,10 @@ relates_to: ["[[spiegel-data-model]]", "[[spiegel-ingest-pipeline]]", "[[spiegel
   - Merkmale (Zustand, vollständig, Merkmale, Beginn, Stand, Wertung wie am Stand) setzt jeder Stand neu; Kennung, Besitzer, gewählte Wertung und gewählte Art nicht. Eine gewählte Disziplin bleibt, solange der Stand die Disziplin bringt, gegen die gewählt wurde (`standDisciplineId`); `recomputeDisciplineCard` rechnet die Merkmale dann in derselben Transaktion mit der gewählten neu. Bringt der Stand eine andere, auch die gewählte, gilt wieder seine. Eine Scheibe aus dem PDF bekommt beim ersten Snapshot ihre Quelle (Herkunft dann „raw“); eine andere Kennung ist ein Fehler. `sportpassId`: fehlt heißt nicht anfassen, `null` heißt leeren.
   - Bekommt eine Scheibe vom Ausdruck ihre Rohdaten (Quelle neu), entsteht immer eine neue Revision, ohne „korrigiert“;
     die Angaben des Ausdrucks bleiben in ihrer, der Ort wird geleert. Eingetragene Scheiben (`manual`, `treffsicher`)
-    bekommen nie Rohdaten, und `writeRevision` nimmt keine eingetragene Herkunft an (`RangeError`).
+    bekommen nie Rohdaten, und `writeRevision` nimmt keine eingetragene Herkunft an (`RangeError`). Die Angaben einer
+    vorhandenen Scheibe ohne Quelle schreibt nur `writeEnteredCard`; mit `cardId` sperrt `writeRevision` die Zeile, bevor
+    es Revision und Herkunft liest. Das Nachrechnen hält in der Prüfsumme einer Revision ohne Brücke auch ihre Angaben
+    (`detailsHash`); zwei Übernahmen desselben Schlüssels laufen nacheinander (Advisory-Lock auf den Schlüssel).
   - Schüsse (`shotChange`): gleich → `unchanged`; eine Wertungszeile geändert oder weg → `created`, eine neue Revision (SF-67); sonst → `updated` in derselben Revision (neue Schüsse dazu). Löscht Meyton die Probe (SF-03, SF-72), entscheidet das Einlesen vorher über `startsNewBlock`: neuer Block, neue Scheibe.
 - **Scheiben ohne Brücke** (`writeEnteredCard` / `writeEnteredCardIn` in `src/lib/db/entered.ts`): der einzige Weg für
   Scheiben vom Ausdruck (Scan, Parser), von Hand und aus Treffsicher. Die Angaben prüft und normalisiert die reine

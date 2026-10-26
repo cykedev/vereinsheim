@@ -55,6 +55,8 @@ Gesamtergebnis und eine Trefferlage als Summe tragen (`PeriodCard.sums`, `CardSu
   Versatz und Richtung; Urteile nehmen nur Lagen je Schuss.
 - **Schusszahl:** `shotCountOf` zählt die Schüsse wie am Ausdruck, ohne sie die Schusszahl der Summen (Umfang,
   `printedShots`). „Nur Probe“ ist eine Scheibe erst mit mindestens einem Schuss; eine ohne Werte zählt in keiner Zahl.
+  Probe neben Summen der Wertung (Probe je Schuss, Wertung nur als Summe) zählt nicht; es zählt die Wertung aus den
+  Summen. Eine Scheibe nur aus Probe zählt nur mit „Probe einbeziehen“, auch nicht über eine Trefferlage als Summe.
 
 ## Kennzahlen für den Anfang
 
