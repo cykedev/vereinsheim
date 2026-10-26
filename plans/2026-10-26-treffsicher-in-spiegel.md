@@ -82,6 +82,13 @@ Vorgeschlagener Schnitt, endgültig im jeweiligen `/plan`:
   kurzlebigen Kindprozess, PDF-Volume samt Backup, Auftrag an die Brücke, Vorschau und Bestätigung. Berührt
   Deploy-Vertrag und `scripts/`, interaktiv.
   1b liefert „PDF hängt an, die Brücke holt die Scheibe“; ein Ergebnis aus dem PDF bringt erst 1c.
+  **ID vom Ausdruck an der Scheibe** (Wunsch des Users, 26. Oktober 2026): Die Seite einer Scheibe zeigt leise die ID,
+  wie sie im Fuß des Ausdrucks steht (acht Hex-Zeichen, `printedId`), damit der Schütze Papier und Scheibe zuordnen
+  kann. Bei Scheiben der Brücke steht sie schon in `Card.scheibenId`, gezeigt wird sie heute nur bei den Aufträgen im
+  Profil. Nicht auf der geteilten Seite (`/share`), denn ID und Abend sind der Schlüssel für „Scheibe per ID“. Eine
+  von Hand eingetragene Scheibe hat keine ID, die Zeile fehlt dann. Die ID eines Ausdrucks von einer fremden Anlage
+  (1c) gehört zu deren Nummernkreis: Das Modell (1a) speichert sie so, dass sie nie mit einer ID der eigenen Anlage
+  gleichgesetzt wird.
 - **1c Ergebnis sofort aus dem PDF (SP-2.6), für jede Anlage:** vollständiger Parser in `packages/meyton-pdf`. Jeder
   gescannte Ausdruck ergibt sofort eine Scheibe aus dem PDF, sobald der Parser ihn lesen kann, ob von der eigenen oder
   einer fremden Anlage. Liefert die Brücke die Scheibe, kommen die Rohdaten als neue Revision derselben Scheibe dazu
