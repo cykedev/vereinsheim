@@ -51,6 +51,18 @@ export const item = (card: PeriodCard): PeriodItem => fromProjection(projectCard
 export const marksOf = (cards: readonly PeriodCard[]): Map<string, MarkShot[]> =>
   new Map(cards.map((card) => [card.id, markShots(cardMarks(card.shots))]))
 
+/** jede kleine Scheibe im Markup (`MiniTarget`): wo steht sie, und wie breit ist sie */
+export const miniViews = (html: string) =>
+  [...html.matchAll(/<svg viewBox="([-\d.]+) ([-\d.]+) ([\d.]+) [\d.]+"/g)].map((m) => ({
+    x: Number(m[1]),
+    y: Number(m[2]),
+    w: Number(m[3]),
+  }))
+
+/** die Mitte der Scheibe in der Mitte der Kachel (Ausschnitt auf 1 µm) */
+export const centred = (v: { x: number; y: number; w: number }) =>
+  Math.abs(v.x + v.w / 2) < 0.001 && Math.abs(v.y + v.w / 2) < 0.001
+
 /** feste Folge von Zufallszahlen in [0, 1) (LCG), damit die Saison bei jedem Lauf gleich ist */
 function sequence(seed: number): () => number {
   let state = seed >>> 0

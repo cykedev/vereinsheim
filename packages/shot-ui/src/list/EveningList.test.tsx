@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest"
 
 import { listOnEvening, openCard } from "../nav/navigate"
 import { DEFAULT_LIST, type ListRoute } from "../nav/routes"
-import { marksOf, NOW, periodCard, projected, TZ } from "../period/testSeason"
+import { centred, marksOf, miniViews, NOW, periodCard, projected, TZ } from "../period/testSeason"
 import { cardListModel } from "./evenings"
 import { EveningList } from "./EveningList"
 import { KindMark } from "./KindMark"
@@ -62,17 +62,6 @@ const text = (html: string) =>
     .replace(/<[^>]+>/g, " ")
     .replace(/\s+/g, " ")
     .trim()
-
-/** jede kleine Scheibe im Markup: wo steht sie, und wie breit ist sie */
-const miniViews = (html: string) =>
-  [...html.matchAll(/<svg viewBox="([-\d.]+) ([-\d.]+) ([\d.]+) [\d.]+"/g)].map((m) => ({
-    x: Number(m[1]),
-    y: Number(m[2]),
-    w: Number(m[3]),
-  }))
-/** die Mitte der Scheibe in der Mitte der Kachel (Ausschnitt auf 1 µm) */
-const centred = (v: { x: number; y: number; w: number }) =>
-  Math.abs(v.x + v.w / 2) < 0.001 && Math.abs(v.y + v.w / 2) < 0.001
 
 describe("Scheiben-Liste nach Abend (Form wie die Liste eines Zeitraums)", () => {
   const html = render()

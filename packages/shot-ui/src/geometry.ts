@@ -78,7 +78,7 @@ const reachMm = (target: TargetImage, points: readonly Point[]) =>
   caliberRadius(target)
 
 /**
- * Ein gemeinsamer Ausschnitt um die Mitte für alle kleinen Scheiben, damit Lage und Streuung der Serien
+ * Ein gemeinsamer Ausschnitt um die Mitte für alle Serien einer Scheibe, damit Lage und Streuung der Serien
  * vergleichbar sind: weitester Treffer (in x oder y) plus halbes Kaliber, 12 % Luft, mindestens sechs
  * halbe Kaliber, höchstens Ring 1 plus halbes Kaliber.
  */
@@ -92,7 +92,7 @@ export function seriesTileView(target: TargetImage, points: readonly Point[]): V
 }
 
 /** halbe Breite einer kleinen Scheibe für sich, gemessen am Radius des Spiegels */
-const MINI_SPIEGEL = 1.6
+const MINI_BLACK = 1.6
 
 /**
  * Ausschnitt einer kleinen Scheibe, die für sich steht (Start, Liste, Ablesung, Offen): um die Mitte, und der Spiegel
@@ -101,10 +101,10 @@ const MINI_SPIEGEL = 1.6
  * die Mitte: weitester Treffer (in x oder y) plus halbes Kaliber, 12 % Luft, höchstens Ring 1 plus halbes Kaliber.
  */
 export function miniView(target: TargetImage, points: readonly Point[]): ViewBox {
-  const spiegel = mm(target.ringRadiiUm[target.blackFromRing - 1]) * MINI_SPIEGEL
+  const blackR = mm(target.ringRadiiUm[target.blackFromRing - 1])
   const half = Math.min(
     mm(target.ringRadiiUm[0]) + caliberRadius(target),
-    Math.max(spiegel, reachMm(target, points) * 1.12)
+    Math.max(blackR * MINI_BLACK, reachMm(target, points) * 1.12)
   )
   return { x: -half, y: -half, w: 2 * half }
 }

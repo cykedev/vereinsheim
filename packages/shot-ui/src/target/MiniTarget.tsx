@@ -10,8 +10,9 @@ import type { ViewBox } from "../types"
 const HAIR = { vectorEffect: "non-scaling-stroke" } as const
 const mm = (um: number) => um / 1000
 /**
- * der Ausschnitt auf 1 µm: Server und Browser können ihn in der letzten Stelle verschieden rechnen (etwa `Math.hypot` im
- * Streukreis), und das gezeichnete HTML passte sonst beim Hydrieren nicht (Übersichten auf dem Server)
+ * der Ausschnitt auf 1 µm: Gleitkommareste (24,400000000000002) bleiben nicht im Markup, und ein mitgegebener Ausschnitt
+ * (etwa über `Math.hypot`) kann auf Server und Browser in der letzten Stelle verschieden ausfallen; das gezeichnete HTML
+ * passte sonst beim Hydrieren nicht (Übersichten auf dem Server)
  */
 const fixed = (value: number) => Math.round(value * 1000) / 1000
 

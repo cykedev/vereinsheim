@@ -114,6 +114,8 @@ describe("Serien als kleine Scheiben", () => {
     )
     // LG: Treffer bei 30 mm, (30 + 2,25) · 1,12 = 36,12, höchstens Ring 1 plus halbes Kaliber (25)
     close(seriesTileView(LG_10M, [{ xUm: 30000, yUm: 0 }]), -25, -25, 50)
+    // LP: Treffer bei 20 mm, (20 + 2,25) · 1,12 = 24,92 zwischen sechs halben Kalibern und Ring 1
+    close(seriesTileView(LP_10M, [{ xUm: 20000, yUm: 0 }]), -24.92, -24.92, 49.84)
   })
 
   it("ohne Treffer sechs halbe Kaliber", () => {

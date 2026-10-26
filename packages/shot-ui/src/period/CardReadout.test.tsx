@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest"
 import { RouteLink } from "../nav/RouteLink"
 import { CardLine, CardReadout, cardKindText, deltaText } from "./CardReadout"
 import type { PeriodLinkProps } from "./links"
-import { item, marksOf, periodCard, TZ } from "./testSeason"
+import { centred, item, marksOf, miniViews, periodCard, TZ } from "./testSeason"
 
 const metric = metricByKey("result.decimalMean")!
 const raw = periodCard("k1", 2, [100, 102, 98], { kind: "competition" })
@@ -43,17 +43,6 @@ const render = (props: Partial<Parameters<typeof CardReadout>[0]> = {}) =>
       ...props,
     })
   )
-
-/** jede kleine Scheibe im Markup: wo steht sie, und wie breit ist sie */
-const miniViews = (html: string) =>
-  [...html.matchAll(/<svg viewBox="([-\d.]+) ([-\d.]+) ([\d.]+) [\d.]+"/g)].map((m) => ({
-    x: Number(m[1]),
-    y: Number(m[2]),
-    w: Number(m[3]),
-  }))
-/** die Mitte der Scheibe in der Mitte der Kachel (Ausschnitt auf 1 µm) */
-const centred = (v: { x: number; y: number; w: number }) =>
-  Math.abs(v.x + v.w / 2) < 0.001 && Math.abs(v.y + v.w / 2) < 0.001
 
 describe("Ablesung einer Scheibe", () => {
   it("„?“ am Abstand zum Schnitt davor, nur mit `onHelp`", () => {

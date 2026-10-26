@@ -41,6 +41,22 @@ describe("Offen", () => {
     expect(render([item(0)])).not.toContain("weitere")
   })
 
+  it("die kleine Scheibe steht um die Mitte, der Spiegel so groß wie überall", () => {
+    // Lagen in 10 µm: Treffer auf 0 und 0,1 mm, Luftpistole also 29,75 · 1,6 · 2 = 95,2
+    const html = renderToStaticMarkup(
+      createElement(OpenScreen, {
+        items: [item(0)],
+        marks: {
+          c1: [
+            [0, 0, 10],
+            [10, 0, 9],
+          ],
+        },
+      })
+    )
+    expect(html).toContain('<svg viewBox="-47.6 -47.6 95.2 95.2"')
+  })
+
   it("ohne Wartendes der Satz", () => {
     const html = render([])
     expect(html).toContain("Nichts zu prüfen.")
