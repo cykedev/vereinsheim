@@ -22,7 +22,6 @@ import {
 } from "@/lib/card-requests/actions"
 import { parseCardId } from "@/lib/card-requests/id"
 import type { OwnRequest } from "@/lib/card-requests/queries"
-import { isRemovable } from "@/lib/card-requests/status"
 import type { ActionResult } from "@/lib/types"
 
 /** der Zustand eines Auftrags in Worten */
@@ -218,7 +217,7 @@ export function CardRequests({
                   Zurückziehen
                 </button>
               )}
-              {isRemovable(request.status) && (
+              {request.removable && (
                 <button
                   type="button"
                   disabled={pending}

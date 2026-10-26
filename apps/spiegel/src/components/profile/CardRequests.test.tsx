@@ -19,6 +19,7 @@ const request = (over: Partial<OwnRequest>): OwnRequest => ({
   day: "2026-10-21",
   status: "open",
   cardId: null,
+  removable: false,
   ...over,
 })
 const render = (requests: OwnRequest[]) =>
@@ -57,12 +58,14 @@ describe("Abschnitt Scheibe per ID holen", () => {
     const html = render([
       request({ id: 1, status: "open" }),
       request({ id: 2, status: "done", cardId: "c1" }),
-      request({ id: 3, status: "missing" }),
-      request({ id: 4, status: "mismatch" }),
-      request({ id: 5, status: "expired" }),
-      request({ id: 6, status: "held" }),
-      request({ id: 7, status: "taken" }),
-      request({ id: 8, status: "withdrawn" }),
+      request({ id: 3, status: "missing", removable: true }),
+      request({ id: 4, status: "mismatch", removable: true }),
+      request({ id: 5, status: "expired", removable: true }),
+      request({ id: 6, status: "held", removable: true }),
+      request({ id: 7, status: "taken", removable: true }),
+      request({ id: 8, status: "withdrawn", removable: true }),
+      // zurückgezogen, die Scheibe liegt im Papierkorb: bleibt (der Server rechnet `removable`)
+      request({ id: 9, status: "withdrawn" }),
     ])
     expect(html.match(/Entfernen<\/button>/g)).toHaveLength(6)
     expect(html.match(/Zurückziehen<\/button>/g)).toHaveLength(1)

@@ -10,7 +10,7 @@ import type { CardRequestStatus } from "@/generated/prisma/client"
 
 import type { Db } from "../db"
 import { printedId } from "./id"
-import { REMOVABLE_STATUSES } from "./status"
+import { isRemovable, REMOVABLE_STATUSES } from "./status"
 
 /** so viele offene Aufträge hat ein Konto höchstens */
 export const MAX_OPEN_REQUESTS = 10
@@ -123,6 +123,7 @@ export async function removeRequest(
       id: input.requestId,
       userId: input.userId,
       status: { in: [...REMOVABLE_STATUSES] },
+      cardId: null,
     },
   })
   return count === 1
@@ -169,6 +170,8 @@ export interface OwnRequest {
   status: CardRequestStatus
   /** die geholte Scheibe, solange sie sichtbar beim Schützen liegt; sonst null */
   cardId: string | null
+  /** beendet ohne Scheibe (`isRemovable`); eine Scheibe im Papierkorb oder in „Offen“ zählt mit */
+  removable: boolean
 }
 
 /** die eigenen Aufträge: offene und die der letzten `REQUEST_DAYS` Tage, neueste zuerst */
@@ -201,6 +204,7 @@ export async function ownRequests(
       row.card && row.card.ownerId === userId && !row.card.deletedAt && !row.card.ownerPending
         ? row.card.id
         : null,
+    removable: isRemovable(row.status, row.card !== null),
   }))
 }
 

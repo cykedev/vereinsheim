@@ -178,7 +178,38 @@ describe("removeRequest", () => {
     const withdrawn = await make(82_102, "withdrawn")
     const open = await make(82_103, "open")
     const done = await make(82_104, "done")
+    // zurückgezogen, während die geholte Scheibe im Papierkorb lag: Die Scheibe hängt noch am Auftrag
+    const card = generateSeason({
+      seed: 5,
+      cards: 1,
+      firstMs: Date.UTC(2026, 9, 21, 17, 30),
+      everyDays: 1,
+      sourceId: site.sourceId,
+      disciplineId: site.disciplineId,
+      ownerId: user,
+      scheibenIdBase: 86_000,
+    })[0]
+    const { cardId } = await writeRevision(db, card)
+    await db.card.update({ where: { id: cardId }, data: { deletedAt: new Date() } })
+    const withCard = (
+      await db.cardRequest.create({
+        data: {
+          userId: user,
+          siteId: site.siteId,
+          scheibenId: card.card.scheibenId!,
+          day: "2026-10-21",
+          status: "withdrawn",
+          cardId,
+        },
+      })
+    ).id
     try {
+      const shown = new Map((await ownRequests(db, user)).map((r) => [r.id, r]))
+      expect(shown.get(missing)?.removable).toBe(true)
+      expect(shown.get(open)?.removable).toBe(false)
+      // im Papierkorb: kein Link, und entfernen lässt er sich trotzdem nicht
+      expect(shown.get(withCard)).toMatchObject({ cardId: null, removable: false })
+      expect(await removeRequest(db, { userId: user, requestId: withCard })).toBe(false)
       expect(await removeRequest(db, { userId: other, requestId: missing })).toBe(false)
       expect(await removeRequest(db, { userId: user, requestId: missing })).toBe(true)
       expect(await removeRequest(db, { userId: user, requestId: missing })).toBe(false)
@@ -190,7 +221,7 @@ describe("removeRequest", () => {
         orderBy: { id: "asc" },
         select: { id: true },
       })
-      expect(left.map((row) => row.id)).toEqual([open, done])
+      expect(left.map((row) => row.id)).toEqual([open, done, withCard])
     } finally {
       await db.cardRequest.deleteMany({ where: { userId: user } })
     }
