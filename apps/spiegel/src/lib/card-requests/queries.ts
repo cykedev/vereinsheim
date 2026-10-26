@@ -10,6 +10,7 @@ import type { CardRequestStatus } from "@/generated/prisma/client"
 
 import type { Db } from "../db"
 import { printedId } from "./id"
+import { REMOVABLE_STATUSES } from "./status"
 
 /** so viele offene Aufträge hat ein Konto höchstens */
 export const MAX_OPEN_REQUESTS = 10
@@ -108,6 +109,21 @@ export async function withdrawRequest(
   const { count } = await db.cardRequest.updateMany({
     where: { id: input.requestId, userId: input.userId, status: "open" },
     data: { status: "withdrawn", closedAt: new Date(input.nowMs ?? Date.now()) },
+  })
+  return count === 1
+}
+
+/** einen eigenen, beendeten Auftrag ohne Scheibe entfernen (`isRemovable`); false, wenn es keinen solchen gibt */
+export async function removeRequest(
+  db: Db,
+  input: { userId: string; requestId: number }
+): Promise<boolean> {
+  const { count } = await db.cardRequest.deleteMany({
+    where: {
+      id: input.requestId,
+      userId: input.userId,
+      status: { in: [...REMOVABLE_STATUSES] },
+    },
   })
   return count === 1
 }

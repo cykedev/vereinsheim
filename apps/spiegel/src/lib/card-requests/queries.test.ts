@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 
+import type { CardRequestStatus } from "@/generated/prisma/client"
 import { createPrismaClient } from "@/lib/db"
 import { generateSeason } from "../../../test/generate"
 import { createTestSite, type TestSite } from "../../../test/fixtures"
@@ -9,6 +10,7 @@ import {
   expireRequests,
   MAX_OPEN_REQUESTS,
   ownRequests,
+  removeRequest,
   REQUEST_DAYS,
   requestCard,
   withdrawRequest,
@@ -158,6 +160,37 @@ describe("requestCard", () => {
         expect(await requestCard(db, { ...input, day: "2026-10-21" })).toEqual({ kind: "blocked" })
         expect((await requestCard(db, { ...input, day: "2026-10-22" })).kind).toBe("created")
       }
+    } finally {
+      await db.cardRequest.deleteMany({ where: { userId: user } })
+    }
+  })
+})
+
+describe("removeRequest", () => {
+  it("nur eigene, beendete Aufträge ohne Scheibe lassen sich entfernen", async () => {
+    const make = async (scheibenId: number, status: CardRequestStatus) =>
+      (
+        await db.cardRequest.create({
+          data: { userId: user, siteId: site.siteId, scheibenId, day: "2026-10-21", status },
+        })
+      ).id
+    const missing = await make(82_101, "missing")
+    const withdrawn = await make(82_102, "withdrawn")
+    const open = await make(82_103, "open")
+    const done = await make(82_104, "done")
+    try {
+      expect(await removeRequest(db, { userId: other, requestId: missing })).toBe(false)
+      expect(await removeRequest(db, { userId: user, requestId: missing })).toBe(true)
+      expect(await removeRequest(db, { userId: user, requestId: missing })).toBe(false)
+      expect(await removeRequest(db, { userId: user, requestId: withdrawn })).toBe(true)
+      expect(await removeRequest(db, { userId: user, requestId: open })).toBe(false)
+      expect(await removeRequest(db, { userId: user, requestId: done })).toBe(false)
+      const left = await db.cardRequest.findMany({
+        where: { userId: user },
+        orderBy: { id: "asc" },
+        select: { id: true },
+      })
+      expect(left.map((row) => row.id)).toEqual([open, done])
     } finally {
       await db.cardRequest.deleteMany({ where: { userId: user } })
     }
