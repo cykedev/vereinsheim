@@ -12,6 +12,8 @@ import { cardShare, cardShareStop } from "@/lib/admin/consequences"
 import { sharePath } from "@/lib/share"
 import { shareCard, stopSharingCard, type Share } from "@/lib/share-actions"
 
+import { ActionRow } from "./ActionRow"
+
 const noSubscribe = () => () => {}
 /** die Herkunft der Seite für den ganzen Link; auf dem Server und beim Hydrieren leer (dann nur der Pfad) */
 const useOrigin = () =>
@@ -36,7 +38,7 @@ type Kind = "share" | "stop"
  */
 export function buttonLabels(pending: boolean, kind: Kind): { share: string; stop: string } {
   return {
-    share: pending && kind === "share" ? "Teilen…" : "Scheibe teilen",
+    share: pending && kind === "share" ? "Teilen…" : "Teilen",
     stop: pending && kind === "stop" ? "Beenden…" : "Teilen beenden",
   }
 }
@@ -45,9 +47,9 @@ const BUTTON =
   "inline-flex h-10 items-center gap-2 rounded-full px-3.5 text-[13px] font-semibold focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-60"
 
 /**
- * Teilen am Ende der Seite einer Scheibe, über dem Löschen: erstellt nach der Rückfrage einen Link, zeigt ihn mit
- * Kopieren und Senden und beendet das Teilen wieder. Den Stand hält die Seite (`onChange`, sofort aus dem Ergebnis der
- * Actions), damit auch das Löschen ihn kennt; danach rechnet sie über `router.refresh()` neu.
+ * Teilen als Zeile im Kasten „Diese Scheibe“: sagt, wer die Scheibe sieht, erstellt nach der Rückfrage einen Link, zeigt
+ * ihn mit Kopieren und Senden und beendet das Teilen wieder. Den Stand hält die Seite (`onChange`, sofort aus dem
+ * Ergebnis der Actions), damit auch das Löschen ihn kennt; danach rechnet sie über `router.refresh()` neu.
  */
 export function ShareCard({
   cardId,
@@ -106,12 +108,41 @@ export function ShareCard({
   }
 
   return (
-    <section data-share-card aria-label="Teilen" className="grid justify-items-start gap-2 pt-2">
-      {share ? (
+    <ActionRow
+      data-share-card
+      title="Teilen"
+      state={
+        share
+          ? `Geteilt seit ${formatDateOnly(new Date(share.sharedAtMs), timeZone)}. Wer den Link hat, sieht die Scheibe.`
+          : "Nur du siehst diese Scheibe."
+      }
+      action={
+        share ? (
+          <button
+            type="button"
+            disabled={pending}
+            onClick={() => ask("stop")}
+            className={`${BUTTON} text-destructive hover:bg-destructive-wash`}
+          >
+            <Unlink aria-hidden className="size-4" />
+            {labels.stop}
+          </button>
+        ) : (
+          <button
+            type="button"
+            aria-label="Scheibe teilen"
+            disabled={pending}
+            onClick={() => ask("share")}
+            className={`${BUTTON} text-foreground hover:bg-surface-2`}
+          >
+            <Share2 aria-hidden className="size-4" />
+            {labels.share}
+          </button>
+        )
+      }
+    >
+      {share && (
         <>
-          <p className="px-3.5 text-sm text-muted-foreground">
-            Geteilt seit {formatDateOnly(new Date(share.sharedAtMs), timeZone)}
-          </p>
           <p
             data-share-link
             className="max-w-full rounded-xl bg-surface-2 px-3.5 py-2 font-mono text-xs break-all select-all"
@@ -137,33 +168,14 @@ export function ShareCard({
                 Senden…
               </button>
             )}
-            <button
-              type="button"
-              disabled={pending}
-              onClick={() => ask("stop")}
-              className={`${BUTTON} text-destructive hover:bg-destructive-wash`}
-            >
-              <Unlink aria-hidden className="size-4" />
-              {labels.stop}
-            </button>
           </div>
           <p role="status" className="px-3.5 text-sm text-muted-foreground">
             {copied ? "Link kopiert" : ""}
           </p>
         </>
-      ) : (
-        <button
-          type="button"
-          disabled={pending}
-          onClick={() => ask("share")}
-          className={`${BUTTON} text-foreground hover:bg-surface-2`}
-        >
-          <Share2 aria-hidden className="size-4" />
-          {labels.share}
-        </button>
       )}
       {error && (
-        <p role="alert" className="px-3.5 text-sm text-destructive">
+        <p role="alert" className="text-sm text-destructive">
           {error}
         </p>
       )}
@@ -195,6 +207,6 @@ export function ShareCard({
           })
         }}
       />
-    </section>
+    </ActionRow>
   )
 }

@@ -18,10 +18,14 @@ const render = (share: { shareId: string; sharedAtMs: number } | null) =>
     })
   )
 
-describe("Abschnitt Teilen", () => {
-  it("nicht geteilt: nur der Knopf zum Teilen", () => {
+describe("Zeile Teilen", () => {
+  it("nicht geteilt: wer sie sieht, und der Knopf zum Teilen", () => {
     const html = render(null)
-    expect(html).toContain("Scheibe teilen</button>")
+    expect(html).toMatch(/^<div data-share-card="true"/)
+    expect(html).toMatch(/<h3[^>]*>Teilen<\/h3>/)
+    expect(html).toContain("Nur du siehst diese Scheibe.")
+    // kurz sichtbar, der volle Name für Screenreader und die Skriptprüfung
+    expect(html).toMatch(/<button[^>]*aria-label="Scheibe teilen"[^>]*>[\s\S]*?Teilen<\/button>/)
     expect(html).not.toContain("data-share-link")
     expect(html).not.toContain("Teilen beenden")
   })
@@ -29,22 +33,20 @@ describe("Abschnitt Teilen", () => {
   it("geteilt: seit wann, der Link (auf dem Server als Pfad), Kopieren und Beenden; Senden erst im Browser", () => {
     const html = render({ shareId: ID, sharedAtMs: Date.UTC(2026, 9, 20, 22, 30) })
     // 22:30 UTC ist in Berlin schon der 21.
-    expect(html).toContain("Geteilt seit 21.10.2026")
+    expect(html).toContain("Geteilt seit 21.10.2026. Wer den Link hat, sieht die Scheibe.")
+    expect(html).not.toContain("Nur du siehst")
     expect(html).toMatch(new RegExp(`data-share-link[^>]*>/share/${ID}<`))
     expect(html).toContain("Link kopieren</button>")
     expect(html).toContain("Teilen beenden</button>")
     expect(html).not.toContain("Senden")
-    expect(html).not.toContain("Scheibe teilen</button>")
+    expect(html).not.toContain('aria-label="Scheibe teilen"')
   })
 })
 
 describe("Beschriftung der Knöpfe", () => {
   it("ohne laufende Aktion die Namen der Aktionen", () => {
-    expect(buttonLabels(false, "share")).toEqual({
-      share: "Scheibe teilen",
-      stop: "Teilen beenden",
-    })
-    expect(buttonLabels(false, "stop")).toEqual({ share: "Scheibe teilen", stop: "Teilen beenden" })
+    expect(buttonLabels(false, "share")).toEqual({ share: "Teilen", stop: "Teilen beenden" })
+    expect(buttonLabels(false, "stop")).toEqual({ share: "Teilen", stop: "Teilen beenden" })
   })
 
   it("„…“ nur an der Aktion, die läuft", () => {
@@ -56,6 +58,6 @@ describe("Beschriftung der Knöpfe", () => {
     // Link und Knopf erscheinen zusammen; „Beenden…“ hieße, es werde beendet, obwohl gerade geteilt wurde
     expect(buttonLabels(true, "share").stop).toBe("Teilen beenden")
     // und umgekehrt nach dem Beenden
-    expect(buttonLabels(true, "stop").share).toBe("Scheibe teilen")
+    expect(buttonLabels(true, "stop").share).toBe("Teilen")
   })
 })
