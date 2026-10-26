@@ -38,11 +38,11 @@ vᵢ ist der Zehntelwert, Ringᵢ der ganze Ring, n die Zahl der zählenden Sch�
 
 | ID | Kennzahl | Definition | Ebene | Prio | Wo |
 |---|---|---|---|---|---|
-| E1 | Ergebnis | Σ Ringᵢ bzw. Σ vᵢ der Wertung; Summe nur für vollständige Scheiben (SF-07) | Serie, Scheibe | A | vorhanden |
-| E2 | Ø je Schuss | Σ vᵢ / n, in beiden Wertungen; über einen Zeitraum über alle Schüsse (`pooledValue`, [[adr-034]]) | Serie, Scheibe, Zeitraum | A | vorhanden |
+| E1 | Ergebnis | Σ Ringᵢ bzw. Σ vᵢ der Wertung; Summe nur für vollständige Scheiben (SF-07); auch aus Serien-Summen oder dem Gesamtergebnis, n = gespeicherte Schusszahl ([[adr-033]]) | Serie, Scheibe | A | vorhanden |
+| E2 | Ø je Schuss | Σ vᵢ / n, in beiden Wertungen; über einen Zeitraum über alle Schüsse (`pooledValue`, [[adr-034]]); auch aus Serien-Summen oder dem Gesamtergebnis, n = gespeicherte Schusszahl, dann ohne Streuung der Schusswerte | Serie, Scheibe, Zeitraum | A | vorhanden |
 | E3 | Hochrechnung | Ø je Schuss × Soll-Schusszahl; nie als Rekord (SF-09) | Scheibe | B | SP-1.8 |
 | E4 | Zehner und Zehnerquote | Anzahl Ring 10; Quote mit Wilson-Intervall; über einen Zeitraum Σ Zehner / Σ Schuss | Serie, Scheibe, Zeitraum | A | vorhanden (Anzahl), SP-1.10 (Quote) |
-| E5 | Innenzehner | Anzahl; LG und LP nicht vergleichbar. Eine Quote mit Wilson-Intervall gibt es nicht; die Anzahl steht wie auf dem Ausdruck | Serie, Scheibe, Zeitraum | A | vorhanden |
+| E5 | Innenzehner | Anzahl; LG und LP nicht vergleichbar; unbekannt ohne Angabe (eingetragen ohne Lage), nie 0. Eine Quote mit Wilson-Intervall gibt es nicht; die Anzahl steht wie auf dem Ausdruck | Serie, Scheibe, Zeitraum | A | vorhanden |
 | E6 | Bester und schwächster Schuss | **entfernt:** folgt aus E8, der kleinste Teiler ist der beste Schuss, der größte der schwächste | – | – | entfernt (SP-1.12) |
 | E7 | Teiler-Schnitt und -Median | **entfernt:** läuft mit dem Ø je Schuss (E2) zu r = −0,998, weil der Zehntelwert linear im Abstand ist | – | – | entfernt (SP-1.12) |
 | E8 | Beste und weiteste Teiler | je drei mit Schussnummer, wie auf dem Ausdruck | Serie, Scheibe | B | SP-1.10 |
@@ -70,7 +70,7 @@ vᵢ ist der Zehntelwert, Ringᵢ der ganze Ring, n die Zahl der zählenden Sch�
 | ID | Kennzahl | Definition | Ebene | Prio | Wo |
 |---|---|---|---|---|---|
 | L1 | Schwerpunkt (Meyton: Trefferlage) | m mit Richtung; ohne Trennung nach Visierverstellungen, die Spiegel nicht abfragt (SF-63) | Serie, Scheibe, Zeitraum | A | SP-1.10 |
-| L2 | Schwerpunkt-Abstand | |m|; der Schwerpunkt selbst ist unsicher (aus 10 Schuss ≈ 0,4σ) | Serie, Scheibe, Zeitraum | A | vorhanden |
+| L2 | Schwerpunkt-Abstand | |m|; der Schwerpunkt selbst ist unsicher (aus 10 Schuss ≈ 0,4σ); auch aus der Trefferlage als Summe, nie für P1–P6 | Serie, Scheibe, Zeitraum | A | vorhanden |
 | L3 | Ist die Lage echt? | Hotelling-T² gegen F(2, n−2), 95-%-Ellipse um m | Scheibe, Zeitraum | A | SP-1.10 |
 | L4 | Ringe durch Lage gegen Streuung | jeder Treffer um den Schwerpunkt der übrigen verschoben (Leave-one-out, (pᵢ − m) · n/(n − 1)) und neu gewertet: Lage- und Streuungsverlust, zusammen E9. Schätzt, was die Gruppe in der Mitte auf neuen Schüssen brächte (B5), als Summe über die n Schüsse mit Lage, darum in Texten mit n und je Schuss; in der Stichprobe zentriert zeigte er ohne jeden Versatz im Mittel +0,38 Ringe Scheingewinn (LG σ 1,5 mm). Erst ab 10 Schuss, wenn L3 „echt“ sagt und die Mitte Ringe bringt; nie amtlich | Serie, Scheibe, Zeitraum | A | SP-1.10, SP-1.12 |
 | L5 | Lageanteil am Fehler | **entfernt:** dieselbe Aussage wie der Lage-Verlust aus L4, nur in Prozent vom Quadrat; die Lesehilfe „10 %: kein Thema“ widersprach L3 | – | – | entfernt (SP-1.12) |

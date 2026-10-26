@@ -36,6 +36,26 @@ defineMetric({
 
 `appliesTo`, `minShots`, `nSensitive`, `excludeMisses`, `needs` und `onMissing` kommen aus dem Sonderfall-Katalog: Sie steuern, ob eine Probe-Scheibe einen Wert bekommt, ab wann er gilt, ob ein Vergleich gleich viele Schüsse braucht und was mit Ausreißern und fehlenden Angaben geschieht. `pooling` sagt, wie ein Wert über die Schüsse vieler Scheiben zusammengeht (Mittel mit `perShot`, Streuung einer Richtung, Rayleigh-σ; ohne Angabe bleibt er eine Zahl je Scheibe, [[adr-034]]). Eine neue Kennzahl ist eine Funktion plus Test. Ändert sich eine Formel, steigt die Version, und Spiegel rechnet die gespeicherten Werte neu ([[spiegel-ingest-pipeline]]). Die Funktionen liegen in `packages/shot-core` und laufen auf Server und Client.
 
+**Angaben ohne Einzelschüsse** ([[adr-033]], Nachtrag 27. Oktober 2026): Eine Scheibe kann Serien-Summen, ein
+Gesamtergebnis und eine Trefferlage als Summe tragen (`PeriodCard.sums`, `CardSums`), jede mit ihrer Schusszahl.
+
+- **`summary`** an der Kennzahl gibt den Wert aus diesen Angaben; nur Kennzahlen der Ebene Scheibe, nie eine Streuung
+  (`defineMetric` prüft das). Genau fünf tragen sie: Ergebnis und Ø je Schuss in beiden Wertungen (E1, E2) und der
+  Schwerpunkt-Abstand (L2) aus der Trefferlage. Zehner, Innenzehner, Teiler, Streuung und Tempo fehlen ohne Schüsse.
+- **Kaskade:** erst die Schüsse (`computeMetric`); geben sie keinen Wert, die Serien-Summen, wenn jede den Wert der
+  Wertung trägt, sonst das Gesamtergebnis (`sumsResult`, in Zehnteln), sonst fehlt er (`summaryValue`). So nimmt eine
+  Scheibe mit Schüssen in ganzen Ringen und Serien-Summen mit Zehnteln die Zehntel aus den Summen.
+- **Kein `sd` aus Summen:** Werte aus Summen tragen keine Streuung der Schusswerte; ein Zeitraum mit solchen Scheiben
+  urteilt mit dem Rangtest über die Scheiben (`compareValues`).
+- **Need `innerTen`:** Innenzehner brauchen eine bekannte Angabe und einen Ring; ein unbekannter (eingetragen ohne Lage)
+  gibt keinen Wert, nicht 0 (`result.innerTens` Version 2).
+- **Grundlage in der Projektion** (`CardDetail`, `cardDetail`): woher das Ergebnis je Wertung kommt (Schüsse, Serien,
+  Gesamtergebnis), wie viele Schüsse eine Lage und eine Zeit haben, die Mitte aus Lagen je Schuss oder aus der
+  Trefferlage mit ihrer Schusszahl. `pooledCenter` führt Mitten gewichtet mit ihrer Schusszahl zusammen, nur für
+  Versatz und Richtung; Urteile nehmen nur Lagen je Schuss.
+- **Schusszahl:** `shotCountOf` zählt die Schüsse wie am Ausdruck, ohne sie die Schusszahl der Summen (Umfang,
+  `printedShots`). „Nur Probe“ ist eine Scheibe erst mit mindestens einem Schuss; eine ohne Werte zählt in keiner Zahl.
+
 ## Kennzahlen für den Anfang
 
 | Gruppe | Kennzahlen |

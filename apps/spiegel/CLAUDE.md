@@ -184,6 +184,15 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
   (`HEARTBEAT_CLOCK_MAX_MS`). Dieselbe ScheibenID Wochen später ohne gemeinsamen Schuss ist ein
   `CardIdentityConflictError`: der nächste Zyklus (`cycle`, SF-77). Die Kennung einer Scheibe ändert ein Stand nie,
   außer eine Scheibe aus dem PDF bekommt ihre Rohdaten.
+- **Scheiben mit Angaben** ([[adr-033]], Nachtrag 27. Oktober 2026): Herkunft `raw`, `pdf`, `manual`, `treffsicher`.
+  Scheiben ohne Brücke schreibt nur `writeEnteredCard` / `writeEnteredCardIn` (`src/lib/db/entered.ts`; Scan, Parser,
+  Hand, Übernahme), geprüft über `checkDetails` und `detailsWriter` (`src/lib/entered/details.ts`: Rohdaten nie, vom
+  Ausdruck nur der Ausdruck, eingetragene nur von Hand, aus Treffsicher von Hand oder von der Übernahme). Die Angaben
+  (Serien-Summen `SeriesSum`, Gesamtergebnis, Trefferlage) gehören zur Revision; `revisionSums` liest sie für
+  Projektion und Nachrechnen, `revisionCounts` und `detailFlags` (`card-checks.ts`) rechnen die Merkmale (ohne Werte
+  weder leer noch nur Probe, Scheiben der Brücke wie bisher). Rohdaten an einer Scheibe vom Ausdruck sind eine neue
+  Revision ohne „korrigiert“; eingetragene bekommen nie Rohdaten. Ort als Freitext (`Card.place`), Schlüssel der
+  Übernahme `Card.importKey`.
 - **Familie mitgeführt:** `Card.familyId` kopiert die Familie der Disziplin für den Index; umhängen nur über
   `moveDisciplineFamily` (in der Transaktion des Aufrufers, mit den Scheiben) bzw. `setDisciplineFamily`.
 - **Disziplinen einordnen** (Admin → Disziplinen, [[spiegel-target-library]]): Das Einlesen legt jede neue Disziplin
@@ -191,7 +200,7 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
   Disziplin derselben Nummer (in Meyton umbenannt), sonst mit dem Vorschlag des Fachkerns, ignoriert bei Meytons Spielen
   und Trainingsscheiben (`suggestIgnore`). Eingeordnet erst mit `confirmedAt`. Felder: Scheibe (`targetId`, null = eigene
   Scheibe), Familie (auch eigene, Kennung aus dem Namen und fest, `familySlug`), Wertung
-  (`officialScoring`, Vorgabe für Training und Wettkampf), Schusszahl (`plannedShots`: null aus der ID, 0 keine feste, `plannedShotsOf`), Ignorieren
+  (`officialScoring`, Vorgabe für Training und Wettkampf), Schusszahl (`plannedShots`: null aus der ID, 0 keine feste, `plannedShotsOf`), Serienlänge (`seriesShots`, `seriesShotsOf`), ohne Meyton-ID möglich (`meytonId` null; Anlegen im Admin folgt mit 1d), Ignorieren
   (`ignoredAt`). Ändern sich Scheibe oder Schusszahl, steigt `Discipline.version`; `refreshStaleDisciplineCards` rechnet
   Scheiben mit anderer `Card.disciplineVersion` aus den Schüssen der aktuellen Revision nach (nach dem Speichern über
   `after()`, beim Start, stündlich). Gegenprobe und Merkmale der Disziplin rechnen Adapter und Nachrechnen mit denselben
