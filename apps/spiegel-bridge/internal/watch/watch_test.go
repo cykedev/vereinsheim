@@ -322,7 +322,7 @@ func TestReassignedCardLeavesWhileShooting(t *testing.T) {
 }
 
 // Die neue SportpassID gilt nur für ihren eigenen Stand: Ein späterer wartender Stand derselben Scheibe, die sich in
-// diesem Lauf nie bewegt hat, wartet wieder auf den Leerlauf.
+// diesem Lauf nie bewegt hat, zählt wieder zum Budget des Leerlaufs, hinter den laufenden Scheiben.
 func TestReassignedOnlyForItsOwnStand(t *testing.T) {
 	m, c := newMemory(), start()
 	w := New(Defaults, c.now)
@@ -351,19 +351,25 @@ func TestReassignedOnlyForItsOwnStand(t *testing.T) {
 	m.data[1] = withSportpass(cardData(1, 40, "95"), "12345678")
 	tick(t, w, m)
 	c.advance(time.Second)
-	// Stand 9 schießt wieder: Der wartende Stand von 1 bleibt bis zum Leerlauf liegen
+	// Stand 9 schießt wieder: Der wartende Stand von 1 kommt hinter 9, nicht als Umbuchung vor allen
 	from := len(m.reads)
+	sent = false
 	for range 3 {
 		m.stamps[9] = c.t.Add(2 * time.Hour).Format(stampLayout)
-		tick(t, w, m)
+		for _, id := range ids(tick(t, w, m)) {
+			sent = sent || id == 1
+		}
 		c.advance(time.Second)
 	}
 	for _, read := range m.reads[from:] {
-		for _, id := range read {
-			if id == 1 {
-				t.Fatalf("wartender Stand gelesen, während geschossen wird: %v", m.reads[from:])
+		for i, id := range read {
+			if id == 1 && (i == 0 || read[0] != 9) {
+				t.Fatalf("wartender Stand vor dem laufenden: %v", m.reads[from:])
 			}
 		}
+	}
+	if !sent {
+		t.Fatalf("Korrektur nicht gesendet, während geschossen wird: %v", m.reads[from:])
 	}
 }
 
@@ -455,8 +461,8 @@ func TestReconcileReadsRestingCardsWhenIdle(t *testing.T) {
 	}
 }
 
-// Der Abgleich wartet, solange geschossen wird (SF-52).
-func TestReconcileWaitsWhileShooting(t *testing.T) {
+// Der Abgleich kommt hinter dem laufenden Stand, auch während geschossen wird (SF-52).
+func TestReconcileWhileShootingAfterTheLiveStand(t *testing.T) {
 	m, c := newMemory(), start()
 	w := New(Defaults, c.now)
 	m.put(7, "2026-10-13 18:00:00", 20, "100")
@@ -466,29 +472,21 @@ func TestReconcileWaitsWhileShooting(t *testing.T) {
 	c.advance(2 * time.Hour)
 	m.data[7] = cardData(7, 20, "95")
 	m.put(9, "2026-10-13 20:00:00", 3, "100")
+	from := len(m.reads)
+	sent := map[int32]bool{}
 	for range 3 {
 		m.stamps[9] = c.t.Format(stampLayout)
-		tick(t, w, m)
-		c.advance(time.Second)
-	}
-	for _, read := range m.reads[len(m.reads)-3:] {
-		for _, id := range read {
-			if id != 9 {
-				t.Fatalf("Abgleich, während geschossen wird: %v", m.reads[len(m.reads)-3:])
-			}
-		}
-	}
-	// Stand 9 ruht
-	c.advance(25 * time.Minute)
-	sent := map[int32]bool{}
-	for range 2 {
 		for _, id := range ids(tick(t, w, m)) {
 			sent[id] = true
 		}
 		c.advance(time.Second)
 	}
+	// danach wartet die Korrektur wie jeder neue Stand einer Scheibe, die sich in diesem Lauf bewegt hat
+	if fmt.Sprint(m.reads[from]) != "[9 7]" {
+		t.Fatalf("erst der laufende Stand, dann der Abgleich: %v", m.reads[from:])
+	}
 	if !sent[7] {
-		t.Fatalf("Korrektur nach dem Schießen: %v", sent)
+		t.Fatalf("Korrektur, während geschossen wird: %v", m.reads[from:])
 	}
 }
 
@@ -831,7 +829,9 @@ func TestResendAfterNewConsent(t *testing.T) {
 	}
 }
 
-func TestCatchUpOnlyWhenNobodyShoots(t *testing.T) {
+// Das Nachholen kommt hinter dem laufenden Stand, auch während geschossen wird (SF-52): die Scheiben des vorigen
+// Abends, die vor dem Wasserstand nicht.
+func TestCatchUpWhileShootingAfterTheLiveStand(t *testing.T) {
 	m, c := newMemory(), start()
 	w := New(Defaults, c.now)
 	// der vorige Abend (vor dem Startfenster, nach dem Wasserstand) und heute ein laufender Stand
@@ -840,36 +840,104 @@ func TestCatchUpOnlyWhenNobodyShoots(t *testing.T) {
 	m.put(3, "2026-10-01 20:00:00", 40, "100") // vor dem Wasserstand
 	m.put(9, "2026-10-13 20:00:00", 3, "100")
 	w.SetCatchUpFrom("2026-10-08 22:00:00")
-	if r := tick(t, w, m); fmt.Sprint(m.reads[0]) != "[9]" || !r.Busy {
-		t.Fatalf("erst der laufende Stand: %v", m.reads[0])
+	sent := map[int32]bool{}
+	r := tick(t, w, m)
+	if fmt.Sprint(m.reads[0]) != "[9 2 1]" || !r.Busy {
+		t.Fatalf("erst der laufende Stand, dann das Nachholen, die jüngste zuerst: %v", m.reads[0])
 	}
-	// solange Stand 9 aktiv ist, wartet das Nachholen
+	// Stand 9 schießt weiter
 	for range 3 {
 		c.advance(time.Second)
 		m.stamps[9] = c.t.Add(2 * time.Hour).Format(stampLayout)
-		tick(t, w, m)
-	}
-	for _, read := range m.reads {
-		for _, id := range read {
-			if id != 9 {
-				t.Fatalf("Nachholen während geschossen wird: %v", m.reads)
-			}
+		for _, id := range ids(tick(t, w, m)) {
+			sent[id] = true
 		}
 	}
-	// 25 Minuten später ruht Stand 9: jetzt die Scheiben des vorigen Abends, die vor dem Wasserstand nicht
+	if !sent[1] || !sent[2] || sent[3] {
+		t.Fatalf("nachgeholt, während geschossen wird: %v", sent)
+	}
+	// 25 Minuten später ruht Stand 9, und nichts ist mehr nachzuholen
 	c.advance(25 * time.Minute)
+	if r := tick(t, w, m); r.Busy {
+		t.Fatal("nach dem Nachholen ruhig")
+	}
+}
+
+// history legt `n` alte Scheiben eines Schützen an (vor dem Startfenster, nie gelesen) und einen Auftrag zum
+// Nachladen für ihn.
+func history(w *Watcher, m *memory, first int32, n int) {
+	for i := range int32(n) {
+		id := first + i
+		m.stamps[id] = fmt.Sprintf("2025-05-%02d 19:00:00", 1+i%28)
+		m.data[id] = withSportpass(cardData(id, 40, "100"), "12345678")
+	}
+	w.SetHistory(func(sportpass string) bool { return sportpass == "12345678" })
+}
+
+// Solange geschossen wird, liest jede Runde erst die laufenden Scheiben, dann höchstens `IdleWhileLive` aus dem
+// Leerlauf (SF-52): Die Historie kommt noch am Abend, in kleinen Portionen.
+func TestHistoryWhileShootingAfterTheLiveStand(t *testing.T) {
+	m, c := newMemory(), start()
+	w := New(Defaults, c.now)
+	m.put(9, "2026-10-13 20:00:00", 3, "100")
+	history(w, m, 100, 12)
 	sent := map[int32]bool{}
-	for range 3 {
+	for range 10 {
+		m.stamps[9] = c.t.Add(2 * time.Hour).Format(stampLayout)
 		for _, id := range ids(tick(t, w, m)) {
 			sent[id] = true
 		}
 		c.advance(time.Second)
 	}
-	if !sent[1] || !sent[2] || sent[3] {
-		t.Fatalf("nachgeholt: %v", sent)
+	for _, read := range m.reads {
+		if len(read) == 0 || read[0] != 9 || len(read)-1 > Defaults.IdleWhileLive {
+			t.Fatalf("je Runde erst 9, dann höchstens %d: %v", Defaults.IdleWhileLive, m.reads)
+		}
 	}
-	if r := tick(t, w, m); r.Busy {
-		t.Fatal("nach dem Nachholen ruhig")
+	for id := int32(100); id < 112; id++ {
+		if !sent[id] {
+			t.Fatalf("Scheibe %d nicht während des Schießens: %v", id, m.reads)
+		}
+	}
+}
+
+// Das Budget liegt innerhalb von `MaxCards`: Belegen die laufenden Scheiben alle Plätze, liest die Runde nichts aus
+// dem Leerlauf, auch keine wartende.
+func TestIdleBudgetInsideMaxCards(t *testing.T) {
+	m, c := newMemory(), start()
+	cfg := Defaults
+	cfg.MaxCards = 3
+	w := New(cfg, c.now)
+	m.put(8, "2026-10-13 20:00:00", 3, "100")
+	m.put(9, "2026-10-13 20:00:00", 3, "100")
+	history(w, m, 100, 4)
+	for range 4 {
+		m.stamps[8] = c.t.Add(2 * time.Hour).Format(stampLayout)
+		m.stamps[9] = c.t.Add(2 * time.Hour).Format(stampLayout)
+		tick(t, w, m)
+		c.advance(time.Second)
+	}
+	// zwei laufende, ein Platz für den Leerlauf
+	for _, read := range m.reads {
+		if len(read) != 3 || read[2] < 100 {
+			t.Fatalf("zwei laufende, dann einer aus dem Leerlauf: %v", m.reads)
+		}
+	}
+	m.put(7, "2026-10-13 20:00:00", 3, "100")
+	from := len(m.reads)
+	for range 3 {
+		for _, id := range []int32{7, 8, 9} {
+			m.stamps[id] = c.t.Add(2 * time.Hour).Format(stampLayout)
+		}
+		tick(t, w, m)
+		c.advance(time.Second)
+	}
+	for _, read := range m.reads[from:] {
+		for _, id := range read {
+			if id >= 100 {
+				t.Fatalf("drei laufende, kein Platz: %v", m.reads[from:])
+			}
+		}
 	}
 }
 

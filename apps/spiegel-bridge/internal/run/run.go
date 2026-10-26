@@ -273,7 +273,7 @@ func (r *Runner) refreshState(ctx context.Context, now time.Time) error {
 	return nil
 }
 
-// setHistory übernimmt die offenen Aufträge zum Nachladen: Die Erkennung liest ihre Scheiben, wenn niemand schießt.
+// setHistory übernimmt die offenen Aufträge zum Nachladen: Die Erkennung liest ihre Scheiben nach den laufenden.
 func (r *Runner) setHistory(state api.State) {
 	if len(state.History) != len(r.history) {
 		r.log("history-requests", "open", len(state.History))

@@ -485,7 +485,7 @@ func TestCatchUpFromWatermarkInLocalTime(t *testing.T) {
 	}
 }
 
-func TestCatchUpAfterStart(t *testing.T) {
+func TestCatchUpAfterStartWhileShooting(t *testing.T) {
 	f := setup(t, "12345678")
 	f.ablage.put(1, "12345678", "1", 3) // heute 20:03
 	old := f.ablage.data[1]
@@ -493,17 +493,8 @@ func TestCatchUpAfterStart(t *testing.T) {
 	mark := time.Date(2026, 10, 12, 19, 30, 0, 0, time.UTC)
 	f.sp.state.Watermark = &mark
 	f.sp.state.Site.TimeZone = "Europe/Berlin"
-	// erst der laufende Stand; der Abend davor erst, wenn 20 Minuten nichts mehr läuft (SF-52), dann sofort
-	begin := f.clock
-	for f.clock.Sub(begin) < 19*time.Minute {
-		f.step()
-	}
-	if got := fmt.Sprint(f.sp.sent()); got != "[1]" {
-		t.Fatalf("während der Stand aktiv ist: %s", got)
-	}
-	for f.clock.Sub(begin) < 22*time.Minute {
-		f.step()
-	}
+	// erst der laufende Stand, das Nachholen danach in derselben Runde (SF-52), auch während der Stand aktiv ist
+	f.runFor(time.Minute)
 	sent := fmt.Sprint(f.sp.sent())
 	if !strings.Contains(sent, "1") || !strings.Contains(sent, "2") {
 		t.Fatalf("gesendet %s", sent)
@@ -722,21 +713,15 @@ func (f *fixture) runFor(d time.Duration) {
 	}
 }
 
-func TestHistoryLoadsOlderCardsOnlyWhenIdle(t *testing.T) {
+func TestHistoryLoadsOlderCardsWhileShooting(t *testing.T) {
 	f := setup(t, "12345678")
 	f.sp.state.History = []api.HistoryRequest{{ID: 7, SportpassHash: filter.SportpassHash(salt, "12345678")}}
 	f.ablage.put(1, "12345678", "1", 3)                     // der laufende Abend
 	f.ablage.old(2, "12345678", "1", "2025-05-01 19:00:00") // älter, angefordert
 	f.ablage.old(3, "12345678", "1", "2024-11-20 18:30:00") // älter, angefordert
 	f.ablage.old(4, "87654321", "1", "2025-05-02 19:00:00") // älter, ohne Auftrag und ohne Zustimmung
-	f.runFor(19 * time.Minute)
-	if got := fmt.Sprint(f.sp.sent()); got != "[1]" {
-		t.Fatalf("während der Stand aktiv ist: %s", got)
-	}
-	if f.lastDone() != "[]" {
-		t.Fatalf("schon erledigt: %s", f.lastDone())
-	}
-	f.runFor(4 * time.Minute)
+	// der Stand ist aktiv: Das Nachladen kommt trotzdem, hinter dem laufenden Stand (SF-52)
+	f.runFor(2 * time.Minute)
 	sent := fmt.Sprint(f.sp.sent())
 	if !strings.Contains(sent, "2") || !strings.Contains(sent, "3") || strings.Contains(sent, "4") {
 		t.Fatalf("gesendet %s", sent)
@@ -763,8 +748,8 @@ func TestHistoryHeldBackCardsCountAsDone(t *testing.T) {
 	if f.lastDone() != "[8]" {
 		t.Fatalf("nach der ersten Runde %s", f.lastDone())
 	}
-	// erst wenn der laufende Abend 20 Minuten ruht
-	f.runFor(23 * time.Minute)
+	// auch während der Stand aktiv ist
+	f.runFor(2 * time.Minute)
 	if got := fmt.Sprint(f.sp.sent()); got != "[]" {
 		t.Fatalf("gesendet %s", got)
 	}
@@ -778,11 +763,11 @@ func TestHistoryDoneOnlyAfterSpiegelAnswered(t *testing.T) {
 	f.sp.state.History = []api.HistoryRequest{{ID: 7, SportpassHash: filter.SportpassHash(salt, "12345678")}}
 	f.ablage.put(1, "87654321", "1", 3) // der laufende Abend, ohne Zustimmung
 	f.ablage.old(2, "12345678", "1", "2025-05-01 19:00:00")
-	// Spiegel antwortet erst nicht (Netz), dann schon
+	// Spiegel antwortet erst nicht (Netz), dann schon; die Pausen nach zehn Fehlern dauern zusammen über sieben Minuten
 	for range 10 {
 		f.sp.errs = append(f.sp.errs, errors.New("netz"))
 	}
-	f.runFor(23 * time.Minute)
+	f.runFor(3 * time.Minute)
 	if f.lastDone() != "[]" || len(f.sp.errs) == 10 {
 		t.Fatalf("ohne Antwort erledigt: %s (%d Fehler übrig)", f.lastDone(), len(f.sp.errs))
 	}
@@ -805,8 +790,9 @@ func TestHistoryRequestMidRunTakesEffect(t *testing.T) {
 	if got := fmt.Sprint(f.sp.sent()); got != "[]" {
 		t.Fatalf("ohne Auftrag %s", got)
 	}
+	// mit dem nächsten Zustand, auch während der Stand aktiv ist
 	f.sp.state.History = []api.HistoryRequest{{ID: 9, SportpassHash: filter.SportpassHash(salt, "12345678")}}
-	f.runFor(StateEvery + 20*time.Minute)
+	f.runFor(StateEvery + time.Minute)
 	if got := fmt.Sprint(f.sp.sent()); got != "[2]" {
 		t.Fatalf("nach dem neuen Auftrag %s", got)
 	}
@@ -841,28 +827,36 @@ func TestHistoryReopenedRequestReadsHandledCardsAgain(t *testing.T) {
 	}
 }
 
-func TestHistoryWaitingCardsYieldWhileShooting(t *testing.T) {
+// Nimmt Spiegel nichts an, warten die nachgeladenen Scheiben und werden jede Runde neu gelesen. Solange geschossen
+// wird, belegen sie dabei höchstens das Budget des Leerlaufs (SF-52), der laufende Stand bleibt vorn.
+func TestHistoryWaitingCardsStayInTheBudgetWhileShooting(t *testing.T) {
 	f := setup(t, "12345678")
 	f.ablage.reads = map[int32]int{}
 	f.ablage.put(1, "87654321", "1", 3)
-	f.ablage.old(2, "12345678", "1", "2025-05-01 19:00:00")
+	for id := int32(2); id < 10; id++ {
+		f.ablage.old(id, "12345678", "1", fmt.Sprintf("2025-05-%02d 19:00:00", id))
+	}
 	f.sp.state.History = []api.HistoryRequest{request(7, "12345678", since1)}
-	// Spiegel nimmt nichts an: die nachgeladene Scheibe wartet
 	for range 200 {
 		f.sp.errs = append(f.sp.errs, errors.New("netz"))
 	}
-	f.runFor(23 * time.Minute)
-	if f.ablage.reads[2] == 0 {
-		t.Fatal("im Leerlauf nicht gelesen")
-	}
-	// am Stand wird wieder geschossen: die wartende Scheibe aus dem Nachladen bleibt liegen
-	before := f.ablage.reads[2]
-	for i := range 10 {
+	for i := range 20 {
 		f.ablage.stamps[1] = fmt.Sprintf("2026-10-13 21:%02d:00", i)
+		before := map[int32]int{}
+		for id, n := range f.ablage.reads {
+			before[id] = n
+		}
 		f.step()
+		history := 0
+		for id := int32(2); id < 10; id++ {
+			history += f.ablage.reads[id] - before[id]
+		}
+		if f.ablage.reads[1]-before[1] != 1 || history > watch.Defaults.IdleWhileLive {
+			t.Fatalf("Runde %d: Stand 1 %d-mal, Nachladen %d Scheiben", i, f.ablage.reads[1]-before[1], history)
+		}
 	}
-	if f.ablage.reads[2] != before {
-		t.Fatalf("während geschossen wird %d-mal gelesen", f.ablage.reads[2]-before)
+	if len(f.sp.errs) == 200 {
+		t.Fatal("kein Upload versucht")
 	}
 }
 

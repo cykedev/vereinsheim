@@ -2,9 +2,9 @@
 // im Arbeitsspeicher (ADR-027).
 //
 // Eine Runde liest in einer Transaktion das Lebenszeichen aller Scheiben und dann die Scheiben ganz, die neu sind,
-// deren Lebenszeichen oder SportpassID sich bewegt hat, die noch auf Bestätigung warten oder die aktiv sind; im
-// Leerlauf dazu den Abgleich. Ein Snapshot entsteht, wenn zwei Lesungen hintereinander gleich sind (SF-71) und sich vom
-// zuletzt gemeldeten Stand unterscheiden.
+// deren Lebenszeichen oder SportpassID sich bewegt hat, die noch auf Bestätigung warten oder die aktiv sind; danach
+// Nachholen, Nachladen und Abgleich, solange geschossen wird nur wenige je Runde. Ein Snapshot entsteht, wenn zwei
+// Lesungen hintereinander gleich sind (SF-71) und sich vom zuletzt gemeldeten Stand unterscheiden.
 package watch
 
 import (
@@ -53,11 +53,14 @@ type Config struct {
 	StartWindow time.Duration
 	// höchstens so viele Scheiben je Runde ganz lesen (SF-52)
 	MaxCards int
+	// solange geschossen wird, liest eine Runde nach allen anderen höchstens so viele Scheiben aus Nachholen, Nachladen
+	// und Abgleich (SF-52); im Leerlauf gilt nur `MaxCards`
+	IdleWhileLive int
 	// eine Scheibe, die so lange nicht mehr in der Ablage stand, vergisst die Brücke (Fehlen ist keine Löschung, SF-24)
 	ForgetAfter time.Duration
 	// ein Stand, der sich vom gesendeten nur im Lebenszeichen unterscheidet, höchstens so oft
 	LifesignEvery time.Duration
-	// so weit vor dem jüngsten Lebenszeichen liest der Abgleich im Leerlauf schon gelesene Scheiben neu: späte
+	// so weit vor dem jüngsten Lebenszeichen liest der Abgleich schon gelesene Scheiben neu: späte
 	// Korrekturen und Umbuchen ohne neues Lebenszeichen (SF-21, SF-80)
 	ReconcileWindow time.Duration
 	// so lange nach der letzten Lesung ist eine Scheibe für den Abgleich wieder dran
@@ -66,10 +69,12 @@ type Config struct {
 
 // Defaults sind die voreingestellten Regeln.
 var Defaults = Config{
-	Epoch:         1,
-	ActiveFor:     20 * time.Minute,
-	StartWindow:   12 * time.Hour,
-	MaxCards:      50,
+	Epoch:       1,
+	ActiveFor:   20 * time.Minute,
+	StartWindow: 12 * time.Hour,
+	MaxCards:    50,
+	// fünf mehr kosten eine Runde rund 8 % mehr gelesene Zeilen (Kopie vom 9. Oktober 2026, zehn laufende Scheiben)
+	IdleWhileLive: 5,
 	ForgetAfter:   24 * time.Hour,
 	LifesignEvery: 30 * time.Second,
 	// eine Korrektur bis zwei Wochen später, rund 30 Scheiben: eine Runde
@@ -85,7 +90,7 @@ type card struct {
 	movedAt time.Time // Uhr der Brücke; null: seit dem Start nicht bewegt
 	seenAt  time.Time
 	dirty   bool // neu oder bewegt, seit der letzten Lesung nicht gelesen (das Budget reichte nicht)
-	// beim Start vor dem Startfenster, aber nach dem Wasserstand in Spiegel: einmal lesen, wenn niemand schießt
+	// beim Start vor dem Startfenster, aber nach dem Wasserstand in Spiegel: einmal lesen, nach den laufenden Scheiben
 	backfill bool
 	readAt   time.Time // zuletzt ganz gelesen
 	last     string    // Prüfsumme der vorigen Lesung
@@ -99,7 +104,7 @@ type card struct {
 	sportpass *string
 	// zuletzt ganz gelesen ohne Treffer: geht nie hinaus (SF-13), für einen Auftrag per ID keine Scheibe
 	empty bool
-	// der wartende Stand kommt von einer neuen SportpassID (SF-80): die zweite Lesung wartet nicht auf den Leerlauf
+	// der wartende Stand kommt von einer neuen SportpassID (SF-80): die zweite Lesung zählt nicht zum Budget des Leerlaufs
 	reassigned bool
 }
 
@@ -178,7 +183,8 @@ type Watcher struct {
 func (w *Watcher) SetHold(hold bool) { w.hold = hold }
 
 // SetHistory legt fest, welche Scheiben offene Aufträge zum Nachladen wollen, nach ihrer SportpassID als Text;
-// nil heißt keiner. Gelesen werden sie wie das Nachholen: nur, wenn niemand schießt (SF-52), mit dem Budget je Runde.
+// nil heißt keiner. Gelesen werden sie wie das Nachholen: nach den laufenden Scheiben, solange geschossen wird
+// höchstens `IdleWhileLive` je Runde (SF-52).
 func (w *Watcher) SetHistory(wanted func(sportpass string) bool) { w.history = wanted }
 
 func (w *Watcher) wantsHistory(sportpass *string) bool {
@@ -207,7 +213,7 @@ func (w *Watcher) RequestState(id int32) (seen, open bool) {
 
 // Reopen: Ein Auftrag zum Nachladen ist neu eröffnet (Meldungen aufgehoben, neu bestätigt). Was er will, liest die
 // Erkennung noch einmal und meldet es neu, auch was sie in diesem Lauf schon gemeldet oder zurückgehalten hat; wie das
-// Nachladen nur im Leerlauf.
+// Nachladen nach den laufenden Scheiben.
 func (w *Watcher) Reopen(wanted func(sportpass string) bool) {
 	for _, c := range w.cards {
 		if c.sportpass != nil && wanted(*c.sportpass) {
@@ -230,7 +236,7 @@ func (w *Watcher) HistoryOpen() []string {
 }
 
 // SetCatchUpFrom legt vor der ersten Runde fest, ab welchem Lebenszeichen nachgeholt wird (SF-55): was davor im
-// Startfenster fehlt, liest die Brücke einmal, sobald niemand schießt. Nach der ersten Runde ohne Wirkung.
+// Startfenster fehlt, liest die Brücke einmal, nach den laufenden Scheiben. Nach der ersten Runde ohne Wirkung.
 func (w *Watcher) SetCatchUpFrom(stamp string) {
 	if !w.started {
 		w.catchUpFrom = stamp
@@ -315,19 +321,20 @@ func (w *Watcher) reconcileDue(c *card, l Lifesign, now time.Time, from string) 
 // plan wählt die Scheiben einer Runde, ohne den Speicher zu ändern; erst eine gelungene Runde übernimmt ihn. Reihenfolge:
 // was auf Bestätigung wartet, dann was sich bewegt hat (die jüngsten zuerst), dann die aktiven, die am längsten nicht
 // gelesen wurden. So verhungert keine Scheibe am Budget. Nachzuholende, Nachzuladende und der Abgleich ab
-// `reconcileFrom` kommen nach diesen und nur, wenn gerade niemand schießt (SF-52).
+// `reconcileFrom` kommen nach diesen; solange geschossen wird, höchstens `IdleWhileLive` davon (SF-52).
 func (w *Watcher) plan(now time.Time, lifesigns []Lifesign, from, reconcileFrom string) []int32 {
 	type pick struct {
 		id     int32
 		rank   int
 		stamp  string
 		readAt time.Time
-		// nur im Leerlauf: Nachholen, Nachladen, und was davon noch auf Spiegel wartet
+		// Arbeit des Leerlaufs: Nachholen, Nachladen, Abgleich, und was davon noch auf Spiegel wartet; solange geschossen
+		// wird, nur mit dem kleinen Budget
 		idle bool
 	}
 	var picks []pick
-	// bewegt sich etwas oder ist eine Scheibe aktiv (auch eine, die gerade auf Bestätigung wartet), bleibt das Nachholen
-	// liegen
+	// bewegt sich etwas oder ist eine Scheibe aktiv (auch eine, die gerade auf Bestätigung wartet), bekommt das Nachholen
+	// nur das kleine Budget
 	live := false
 	for _, l := range lifesigns {
 		c := w.cards[l.ID]
@@ -336,23 +343,23 @@ func (w *Watcher) plan(now time.Time, lifesigns []Lifesign, from, reconcileFrom 
 		p := pick{id: l.ID, stamp: l.Stamp, rank: -1}
 		switch {
 		case c != nil && c.waiting:
-			// wartet eine Scheibe, die sich in diesem Lauf nie bewegt hat (Nachholen, Nachladen), bleibt sie liegen, solange
-			// geschossen wird: Scheitert der Upload länger, belegte sie sonst jede Runde das Budget. Eine per ID angefragte
-			// und eine mit neuer SportpassID nicht
+			// wartet eine Scheibe, die sich in diesem Lauf nie bewegt hat (Nachholen, Nachladen), zählt sie zum kleinen
+			// Budget, solange geschossen wird: Scheitert der Upload länger, belegte sie sonst jede Runde das ganze. Eine per
+			// ID angefragte und eine mit neuer SportpassID nicht
 			p.rank, p.idle = 0, c.movedAt.IsZero() && !c.reassigned && !w.wantsRequest(l.ID)
 		case w.dirty(l, from):
 			p.rank = 1
-		// ein Auftrag per ID will sie: gleich, nicht erst im Leerlauf
+		// ein Auftrag per ID will sie: gleich, vor dem Budget des Leerlaufs
 		case w.wantsRequest(l.ID) && (c == nil || !handled(c)):
 			p.rank = 1
 		case active:
 			p.rank, p.readAt = 2, c.readAt
 		case w.backfill(l, from):
 			p.rank, p.idle = 3, true
-		// Abgleich: späte Korrekturen ohne Lebenszeichen (SF-21), wie das Nachholen nur im Leerlauf
+		// Abgleich: späte Korrekturen ohne Lebenszeichen (SF-21), wie das Nachholen
 		case w.reconcileDue(c, l, now, reconcileFrom):
 			p.rank, p.idle = 3, true
-		// ein Auftrag zum Nachladen will sie: wie das Nachholen, nur im Leerlauf
+		// ein Auftrag zum Nachladen will sie: wie das Nachholen
 		case w.wantsHistory(l.Sportpass) && (c == nil || !handled(c)):
 			p.rank, p.idle = 3, true
 		}
@@ -372,13 +379,18 @@ func (w *Watcher) plan(now time.Time, lifesigns []Lifesign, from, reconcileFrom 
 	})
 	w.live = live
 	if live {
-		kept := picks[:0]
+		// was der Lauf ohnehin liest, zuerst; danach höchstens `IdleWhileLive` aus dem Leerlauf, auch die wartenden davon
+		// (Rang 0 vor Rang 3: erst die zweite Lesung, dann neue)
+		var first, idle []pick
 		for _, p := range picks {
-			if !p.idle {
-				kept = append(kept, p)
+			switch {
+			case !p.idle:
+				first = append(first, p)
+			case len(idle) < w.cfg.IdleWhileLive:
+				idle = append(idle, p)
 			}
 		}
-		picks = kept
+		picks = append(first, idle...)
 	}
 	if len(picks) > w.cfg.MaxCards {
 		picks = picks[:w.cfg.MaxCards]
