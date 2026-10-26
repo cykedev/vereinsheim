@@ -8,8 +8,8 @@
 // Aufträge per ID: die Scheibe „--frei--“ aus SF-13 (Schüsse, kein Sportpass) mit dem Tag von heute kommt beim Konto an
 // und hängt am Auftrag; die ohne Treffer und eine ID, die es nicht gibt, meldet die Brücke als nicht gefunden.
 // Dazu ein älterer Abend (SF-02, 40 Tage zurück) schon vor dem Start in der Ablage: Ohne Auftrag zum Nachladen
-// (`historyLoadedAt` gesetzt) kommt er nie. Mit `--historie` ist der Auftrag offen; die Brücke holt ihn, sobald 20 Minuten
-// nichts läuft, und meldet ihn erledigt (`historyLoadedAt`). Das dauert gut 20 Minuten.
+// (`historyLoadedAt` gesetzt) kommt er nie. Mit `--historie` ist der Auftrag offen; die Brücke holt ihn, während die Fälle
+// laufen (hinter den laufenden Scheiben, SF-52), und meldet ihn erledigt (`historyLoadedAt`), binnen weniger Minuten.
 // Nicht im Gate (braucht Docker, Go und den Build).
 // Mit `BASE_URL` gegen einen laufenden Spiegel statt des eigenen Builds, mit `DATABASE_URL` dessen Datenbank (etwa
 // der Stack aus `tools/stack-e2e/run.sh --bridge`, Spiegel hinter Caddy).
@@ -54,7 +54,7 @@ const OLDER_DAYS = 40
 
 /** Anlage und Konto behalten, um nachzusehen; Container und Konfiguration gehen trotzdem */
 const KEEP = process.argv.includes("--keep")
-/** mit offenem Auftrag zum Nachladen; wartet, bis die Brücke ihn erledigt meldet (gut 20 Minuten) */
+/** mit offenem Auftrag zum Nachladen; wartet, bis die Brücke ihn erledigt meldet (höchstens 5 Minuten) */
 const HISTORY = process.argv.includes("--historie")
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -280,10 +280,10 @@ async function main() {
       problems.push("Personenfeld in Heartbeat oder Log")
     out(`Heartbeat: ${heartbeat}`)
     if (HISTORY) {
-      // die Brücke lädt erst nach, wenn 20 Minuten nichts läuft; danach meldet der Heartbeat den Auftrag erledigt
-      out("warte auf das Nachladen (bis 26 min)")
+      // die Brücke lädt nach, auch während geschossen wird (SF-52); danach meldet der Heartbeat den Auftrag erledigt
+      out("warte auf das Nachladen (bis 5 min)")
       let loaded: Date | null = null
-      for (let i = 0; i < 26 * 6 && !loaded; i++) {
+      for (let i = 0; i < 5 * 6 && !loaded; i++) {
         await sleep(10_000)
         loaded = (
           await db.sportpassConsent.findFirstOrThrow({
