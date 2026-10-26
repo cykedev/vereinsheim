@@ -144,7 +144,7 @@ export function EveningList({
                     <th scope="col" className={cn(CELL, "py-1.5 text-left font-medium")}>
                       Datum
                     </th>
-                    <th scope="col" className="w-10 py-1.5">
+                    <th scope="col" className="w-12 py-1.5">
                       <span className="sr-only">Scheibe</span>
                     </th>
                     <th scope="col" className={cn(CELL, WIDE, "py-1.5 text-left font-medium")}>
@@ -201,7 +201,8 @@ export function EveningList({
                               go(cardRoute(row.id))
                             }}
                             className={cn(
-                              "cursor-pointer",
+                              // alle Zellen oben, auf der Höhe der Oberkante der kleinen Scheibe
+                              "cursor-pointer align-top",
                               // wohin man kam, wie die Wahl im Fortschritt;
                               // das Überfahren nimmt die Markierung nicht weg
                               marked ? "bg-accent-wash" : "hover:bg-surface-2"

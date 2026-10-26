@@ -264,4 +264,12 @@ describe("Kleine Scheiben der Liste", () => {
     expect(svgs).toHaveLength(3)
     expect(svgs.every((c) => c.split(" ").includes("size-12"))).toBe(true)
   })
+
+  it("Datum, Werte und Zeichen stehen oben neben der kleinen Scheibe, nicht mittig", () => {
+    const rows = [...render().matchAll(/<tr data-card-row="[^"]+"[^>]*class="([^"]*)"/g)].map(
+      (m) => m[1]
+    )
+    expect(rows).toHaveLength(3)
+    expect(rows.every((c) => c.split(" ").includes("align-top"))).toBe(true)
+  })
 })
