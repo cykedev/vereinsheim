@@ -116,7 +116,8 @@ Stand mit `past` (`MAX_OBSERVED_LAG_MS`, SF-79).
   - Die Regel ist eine reine Funktion (`src/lib/scoring.ts`). Die **Scheibe**: gewählt (`Card.scoringChoice`), sonst
     die Wertung der Disziplin (Admin → Disziplinen, Vorgabe für Training und Wettkampf, `officialScoring`), sonst wie am
     Stand (`Card.standScoring`, die häufigste Anzeigeart der Schüsse wie am Ausdruck, `writeRevision` setzt sie bei jedem
-    Stand), ohne alles Zehntel. Eine Scheibe nur aus Probe hat keine Wertung der Disziplin. Anders als die Projektion
+    Stand), ohne alles Zehntel. Ein Training nur aus Probe hat keine Wertung der Disziplin, ein Wettkampf nur aus Probe
+    schon (`officialOf` in `reads.ts`). Anders als die Projektion
     hat `standScoring` keine Version: Ändert sich die Regel, rechnet erst ein neuer Stand (Brücke, `seed:own`) nach. Die **Familie**: gespeichert
     (`FamilyScoring`), sonst die häufigste ihrer Scheiben, bei Gleichstand Zehntel.
   - Die Zugriffe liefern `OverviewCard.scoring` und `PageCard.scoring`, `familyScorings` die gespeicherten nach Kennung.
@@ -134,14 +135,14 @@ Stand mit `past` (`MAX_OBSERVED_LAG_MS`, SF-79).
 - **Art der Scheibe wie die Wertung:** `Card.kind` ist die Art
   der Quelle (jeder Stand schreibt sie: der Adapter aus `Status`, `seed:own` „training“), `Card.kindChoice` die Wahl des
   Schützen, die kein Stand anfasst. Es gilt `kindChoice ?? ranking.kind ?? kind` (`kindOfRow` in `reads.ts`, der einzige
-  Weg zur Art), in Übersicht und Seite. `Ranking` ist die `Rangliste` der SSMDB2 je Anlage: Das
+  Weg zur Art), in Übersicht und Seite; ohne Wahl ist eine Scheibe nur aus Probe Training. `Ranking` ist die `Rangliste` der SSMDB2 je Anlage: Das
   Einlesen legt sie ohne Art an (`rankingFor`), der Admin ordnet sie zu (`setRankingKind`, Admin → Listen); die
   Zuordnung gilt beim Lesen, keine Scheibe wird umgeschrieben. In der Oberfläche heißt sie „Liste“
   (`OLD_WORDS` hält „Rangliste“ fern): Die Zugriffe liefern sie als `list` (`OverviewCard`, `PageCard`), die Seite einer
-  Scheibe nennt sie im Kopf, Scheiben filtern nach ihr (`list=<id>`). Bei einer Scheibe nur aus Probe zählt die Liste nicht
-  (Training, nicht umstellbar). Umstellen auf der Seite einer Scheibe (`KindToggle`, Pokal im weichen Kreis vor dem der Wertung,
-  `setCardKind` in `src/lib/card-kind-actions.ts`); eine Scheibe nur aus Probe ist Training und hat keinen Kreis der Art. Die Art ändert die
-  Wertung nicht; `ScoringToggle` nennt die Wertung der Disziplin nur im Wettkampf „amtlich“. Ändert der Admin die
+  Scheibe nennt sie im Kopf, Scheiben filtern nach ihr (`list=<id>`). Bei einer Scheibe nur aus Probe ohne Wahl zählt die
+  Liste nicht. Umstellen auf der Seite jeder eigenen Scheibe, auch nur aus Probe (`KindToggle`, Pokal im weichen Kreis vor
+  dem der Wertung, `setCardKind` in `src/lib/card-kind-actions.ts`). Die Art ändert die Wertung nicht, außer bei einer
+  Scheibe nur aus Probe ohne gewählte Wertung (im Wettkampf gilt dann die der Disziplin, SF-01); `ScoringToggle` nennt die Wertung der Disziplin nur im Wettkampf „amtlich“. Ändert der Admin die
   Wertung der Disziplin, folgt die Seite (`seenScoring` in `CardScreen`). `Status` der SSMDB2 ist an der Vereinsanlage leer
   ([[meyton-ssmdb2]]). Sitzung und
   Kennung prüfen die Actions über `src/lib/action-guards.ts`.

@@ -96,7 +96,7 @@ Fachwissen: `vault/spiegel/spiegel-target-library.md`, `vault/spiegel/spiegel-me
 - **`toBeCloseTo` nimmt null als 0.** Wo eine Kennzahl 0 ergeben soll, erst `not.toBeNull()` prüfen
   (Helfer `expectNear` in `metrics.test.ts`).
 - **Eine Scheibe wie am Ausdruck** ([[adr-027]]): `asOnPrintout` gibt mit Wertung nur die Wertungsschüsse
-  (eine Probe zwischen Wertung, SF-04, fällt ebenso weg), nur Probe als Training (`probeOnlyAsMatch`), sonst dieselbe
+  (eine Probe zwischen Wertung, SF-04, fällt ebenso weg), nur Probe wie Wertung (`probeOnlyAsMatch`), sonst dieselbe
   Liste. Die Seite einer Scheibe und `cardShots` rufen nur sie; `cardShots` behält die ganze Karte als Kontext für
   Abstände (SF-04 bleibt robust). Eine Auswertung der Probe neben Wertung gibt es nicht.
 - **Ganze Ringe und Zehntel sind immer umschaltbar.** Jede wertbasierte Kennzahl gibt es in beiden

@@ -445,12 +445,18 @@ automatisch gespeichert.
   die Wahl des Schützen (`Card.kindChoice`); neue Lesungen der Brücke schreiben nur die Quelle.
 - **Es gilt** die Wahl, ohne Wahl die Art der Liste aus Meyton (`Rangliste`), die der Admin zugeordnet hat (Admin →
   Listen), sonst die Quelle. `Status` der SSMDB2 ist an der Vereinsanlage leer ([[meyton-ssmdb2]]); eine
-  Liste ohne Zuordnung gilt als Training.
+  Liste ohne Zuordnung gilt als Training. Ohne Wahl ist eine Scheibe nur aus Probe Training, Liste und Quelle zählen
+  dann nicht.
 - **Was folgt:** Filter „Art“ in Liste und Fortschritt, der Pokal in der Liste, die Metazeile der Scheibe, die Rekorde
   „nur Wettkampf“ und ob der Umschalter die Wertung „amtlich“ nennt. Die Wertung selbst ändert die Art nicht.
-- **Bedienung:** auf der Seite einer Scheibe als Pokal im weichen Kreis (siehe unten), automatisch gespeichert wie die
-  Wertung. Eine Scheibe nur aus Probe ist Training und
-  hat keinen Schalter; bei ihr zählt auch die Liste nicht.
+  Bei einer Scheibe nur aus Probe sagt die Art auch, ob die Wertung der Disziplin gilt: im Wettkampf ja, im Training
+  nicht (dann wie am Stand). Ohne gewählte Wertung wechselt die gezeigte Wertung dort mit der Art (SF-01).
+- **Bedienung:** auf der Seite jeder eigenen Scheibe als Pokal im weichen Kreis (siehe unten), auch nur aus Probe,
+  automatisch gespeichert wie die Wertung.
+- **Nur Probe bleibt ein Merkmal neben der Art:** „Training nur Probe“ und „Wettkampf nur Probe“ in Metazeile, Kachel
+  auf Start, Namen der Links und Ablesung im Fortschritt („40 Schuss (Probe als Wettkampf)“); in der Liste Pokal und
+  „Probe“ nebeneinander. Rekorde und Verläufe zählen eine Scheibe nur aus Probe nur mit „Probe einbeziehen“, egal
+  welche Art.
 - Mehrere Scheiben auf einmal umzustellen braucht die Auswahl (siehe „Was noch fehlt“).
 
 ## Art und Wertung als Symbole
@@ -473,8 +479,8 @@ Neben einer Zahl stehen Art und Wertung als weiche Kreise, in einer Filterzeile 
   Text), Linie 1,75; „1“ und ⅒ in `muted-foreground`, mittelstark. Die „1“ in 13 px statt 16 px, damit sie so ruhig
   wirkt wie die kleinen Ziffern des Bruchs.
 - **Ort:**
-  - Seite einer Scheibe: Pokal und Bruch rechts in der Zeile des Ergebnisses (Platz `actions` von `CardResult`; nur
-    Probe: nur der Bruch), am Telefon im Kopf, ab 768 px in der Box.
+  - Seite einer Scheibe: Pokal und Bruch rechts in der Zeile des Ergebnisses (Platz `actions` von `CardResult`, auch nur
+    aus Probe), am Telefon im Kopf, ab 768 px in der Box.
   - Liste und Fortschritt: kein Kreis, sondern ein Wechsel-Chip direkt nach dem Chip „Filter“ (`ScoringChip` in
     `ListControls`, `PeriodControls`): in Worten mit Bezug und ⇄, neutral umrandet (der blaue Chip öffnet ein Blatt), ein
     Tippen stellt um. In der Liste „Ø in ganzen Ringen“ / „Ø in Zehnteln“ (er ändert Ø und Abstand, nicht die Spalten
@@ -482,7 +488,8 @@ Neben einer Zahl stehen Art und Wertung als weiche Kreise, in einer Filterzeile 
     Chip „Filter“ in der zweiten Zeile; ein Segment-Schalter bräche dort in eine dritte Zeile um.
   - Start: neben dem Ø je Block (der Block ist eine Karte, keine Filter); dort entfällt „in ganzen Ringen“ im Text.
   - Regel: in einer Filterzeile ein Chip in Worten, direkt neben einer Zahl der Kreis.
-- **Liste:** der Pokal in der Spalte „Art“ 16 px in Gold, damit er auffällt.
+- **Liste:** der Pokal in der Spalte „Art“ 16 px in Gold, damit er auffällt; nur aus Probe dahinter das Wort „Probe“
+  (`KindMark`).
 - **Eine Wahl je Seite:** Kopf am Telefon und Box zeigen denselben Zustand; ein Fehler steht im Platz `notice`, auf
   Start gleich unter der Zahl, in Liste und Fortschritt unter den Filtern.
 
