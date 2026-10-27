@@ -5,8 +5,10 @@
 // danach kommen die Schritte der Fälle im Abstand von vier Sekunden; sie liest dann jede Sekunde.
 // Geprüft in der Datenbank: Was ankommt, gehört dem Konto mit Zustimmung, nichts Verdecktes und nichts ohne Zustimmung,
 // der Heartbeat ist vermerkt. Danach ist alles entfernt (Anlage, Konto, Container, Konfiguration mit dem Token).
-// Aufträge per ID: die Scheibe „--frei--“ aus SF-13 (Schüsse, kein Sportpass) mit dem Tag von heute kommt beim Konto an
-// und hängt am Auftrag; die ohne Treffer und eine ID, die es nicht gibt, meldet die Brücke als nicht gefunden.
+// Aufträge per ID, wie „Scheibe holen“ sie anlegt: Die Scheibe „--frei--“ aus SF-13 (Schüsse, kein Sportpass) hat einen
+// Ausdruck mit Druckzeit nach dem Schießen; die Brücke füllt genau diese Scheibe vom Ausdruck, keine zweite entsteht. Eine
+// ID, die es nicht gibt, hängt an einer Scheibe ohne Ausdruck (getippt) und ist nicht gefunden, die Scheibe bleibt ohne
+// Werte. Ein älterer Auftrag ohne Scheibe für die Scheibe ohne Treffer ist ebenfalls nicht gefunden.
 // Dazu ein älterer Abend (SF-02, 40 Tage zurück) schon vor dem Start in der Ablage: Ohne Auftrag zum Nachladen
 // (`historyLoadedAt` gesetzt) kommt er nie. Mit `--historie` ist der Auftrag offen; die Brücke holt ihn, während die Fälle
 // laufen (hinter den laufenden Scheiben, SF-52), und meldet ihn erledigt (`historyLoadedAt`), binnen weniger Minuten.
@@ -18,7 +20,7 @@
 //   BASE_URL=http://localhost:18082 DATABASE_URL=… pnpm --filter spiegel bridge-e2e
 
 import { execFileSync, spawn, spawnSync, type ChildProcess } from "node:child_process"
-import { randomUUID } from "node:crypto"
+import { createHash, randomUUID } from "node:crypto"
 import { mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
@@ -26,8 +28,11 @@ import { join } from "node:path"
 import { zonedWallTimeMs } from "@vereinsheim/lib/format"
 import { eveningDay } from "@vereinsheim/shot-ui/period/calendar"
 
+import { printedId } from "../src/lib/card-requests/id"
 import { createPrismaClient } from "../src/lib/db"
+import { writeEnteredCard } from "../src/lib/db/entered"
 import { createPairing } from "../src/lib/ingest/bridges"
+import { attachPrintout } from "../src/lib/printouts/queries"
 import { DEV_DATABASE_URL } from "../test/dev-database"
 import { appDir, startServer } from "@vereinsheim/pruefen/server"
 
@@ -43,7 +48,10 @@ const STEP_MS = 4000
 /** Scheiben der Fälle, die ankommen dürfen bzw. nie */
 const ARRIVE = [1168956429, 651756429, -1915210867, -1912810867]
 const NEVER = [650556429]
-/** angefragt per ID: „--frei--“ mit Schüssen kommt, ohne Treffer und unbekannt nicht */
+/**
+ * angefragt per ID: „--frei--“ mit Schüssen kommt in die Scheibe vom Ausdruck, ohne Treffer (älterer Auftrag ohne
+ * Scheibe) und unbekannt (getippt) nicht
+ */
 const REQUESTED = 650556430
 const REQUESTED_EMPTY = 650556429
 const REQUESTED_UNKNOWN = 4242
@@ -153,12 +161,51 @@ async function main() {
         historyLoadedAt: HISTORY ? null : new Date(),
       },
     })
-    // die Aufträge stehen schon im ersten Zustand der Brücke; der Tag ist heute, wie die Fälle verschoben werden
+    // die Aufträge stehen schon im ersten Zustand der Brücke; der Tag ist heute, wie die Fälle verschoben werden. Zwei
+    // hängen an Scheiben vom Ausdruck, wie „Scheibe holen“ sie anlegt: gedruckt nach dem Schießen (die Fälle beginnen
+    // jetzt) bzw. getippt ohne Ausdruck
     const today = eveningDay(Date.now(), "Europe/Berlin")
+    const chosen = await db.discipline.create({
+      data: { siteId: site.id, meytonId: 1, name: `E2E ${tag}`, targetId: "lp-10m" },
+    })
+    const printoutCard = async (scheibenId: number, printedAtMs: number | null) => {
+      const saved = await writeEnteredCard(db, {
+        ownerId: user.id,
+        origin: "pdf",
+        disciplineId: chosen.id,
+        startedAtMs: printedAtMs ?? Date.now(),
+        kind: "training",
+        details: {},
+        reason: "printout",
+      })
+      if (saved.kind !== "saved") throw new Error(`Scheibe vom Ausdruck: ${saved.kind}`)
+      if (printedAtMs !== null)
+        await attachPrintout(
+          db,
+          {
+            sha256: createHash("sha256").update(`${tag}-${scheibenId}`).digest("hex"),
+            size: 1,
+            fileName: "ausdruck.pdf",
+            hex: printedId(scheibenId),
+            scheibenId,
+            printedAt: new Date(printedAtMs),
+          },
+          saved.cardId
+        )
+      return saved.cardId
+    }
+    const printoutCardId = await printoutCard(REQUESTED, Date.now() + 30 * 60_000)
+    const typedCardId = await printoutCard(REQUESTED_UNKNOWN, null)
     const [requested, requestedEmpty, requestedUnknown] = await Promise.all(
-      [REQUESTED, REQUESTED_EMPTY, REQUESTED_UNKNOWN].map((scheibenId) =>
+      (
+        [
+          [REQUESTED, printoutCardId],
+          [REQUESTED_EMPTY, null],
+          [REQUESTED_UNKNOWN, typedCardId],
+        ] as const
+      ).map(([scheibenId, cardId]) =>
         db.cardRequest.create({
-          data: { userId: user.id, siteId: site.id, scheibenId, day: today },
+          data: { userId: user.id, siteId: site.id, scheibenId, day: today, cardId },
         })
       )
     )
@@ -256,7 +303,7 @@ async function main() {
       problems.push("Heartbeat ohne zurückgehaltene verdeckte Scheibe")
     const heartbeat = JSON.stringify(registered?.heartbeat ?? null)
     if (!registered?.lastHeartbeatAt) problems.push("kein Heartbeat")
-    // Aufträge per ID: „--frei--“ beim Konto, der Auftrag hängt an der Scheibe und bleibt offen, bis sie endgültig ist
+    // Aufträge per ID: „--frei--“ füllt die Scheibe vom Ausdruck, der Auftrag bleibt offen, bis sie endgültig ist
     // (frühestens nach zwölf Stunden); die anderen nicht gefunden (Heartbeat, einmal je Minute)
     const statusOf = (id: number) =>
       db.cardRequest.findUniqueOrThrow({ where: { id }, select: { status: true, cardId: true } })
@@ -268,14 +315,24 @@ async function main() {
     const [fetched, empty, unknown] = await Promise.all(
       [requested, requestedEmpty, requestedUnknown].map((r) => statusOf(r.id))
     )
-    const fetchedCard = cards.find((c) => c.scheibenId === REQUESTED)
+    const fetchedCards = cards.filter((c) => c.scheibenId === REQUESTED)
+    const typed = await db.card.findUniqueOrThrow({
+      where: { id: typedCardId },
+      select: { sourceId: true },
+    })
     out(`Aufträge per ID: ${fetched.status}, ${empty.status}, ${unknown.status}`)
-    if (!arrived.includes(REQUESTED) || !fetchedCard)
+    if (!arrived.includes(REQUESTED) || !fetchedCards.length)
       problems.push(`die angefragte Scheibe ${REQUESTED} kam nicht`)
-    if (!["open", "done"].includes(fetched.status) || fetched.cardId !== fetchedCard?.id)
-      problems.push(`Auftrag ${REQUESTED}: ${fetched.status} ohne die geholte Scheibe`)
+    if (fetchedCards.length > 1 || (fetchedCards[0] && fetchedCards[0].id !== printoutCardId))
+      problems.push(`Auftrag ${REQUESTED}: nicht in die Scheibe vom Ausdruck, sondern neu`)
+    if (!["open", "done"].includes(fetched.status) || fetched.cardId !== printoutCardId)
+      problems.push(`Auftrag ${REQUESTED}: ${fetched.status} ohne die Scheibe vom Ausdruck`)
     if (empty.status !== "missing") problems.push(`Auftrag ohne Treffer: ${empty.status}`)
-    if (unknown.status !== "missing") problems.push(`Auftrag unbekannte ID: ${unknown.status}`)
+    if (unknown.status !== "missing" || unknown.cardId !== typedCardId)
+      problems.push(
+        `Auftrag unbekannte ID: ${unknown.status} an ${unknown.cardId ?? "keiner Scheibe"}`
+      )
+    if (typed.sourceId !== null) problems.push("die getippte Scheibe hat Werte bekommen")
     if (/Muster|12345678/.test(heartbeat + bridgeLog))
       problems.push("Personenfeld in Heartbeat oder Log")
     out(`Heartbeat: ${heartbeat}`)
@@ -312,6 +369,8 @@ async function main() {
     if (KEEP) out(`behalten: Anlage ${site.id}, Konto ${user.email}`)
     else {
       await db.card.deleteMany({ where: { source: { siteId: site.id } } })
+      // Scheiben vom Ausdruck ohne Werte hängen an keiner Quelle, nur an der Disziplin der Anlage
+      await db.card.deleteMany({ where: { discipline: { siteId: site.id } } })
       await db.site.delete({ where: { id: site.id } })
       await db.user.delete({ where: { id: user.id } })
     }
