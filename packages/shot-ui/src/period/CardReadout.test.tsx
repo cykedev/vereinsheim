@@ -81,16 +81,13 @@ describe("Ablesung einer Scheibe", () => {
     expect(render({ point: { ...point, band: null } })).not.toContain("Formband")
   })
 
-  it("ohne Lage der Platzhalter (mit Trefferlage als Summe das Zeichen der Mitte); während die Lagen laden, ein leerer Platz", () => {
+  it("ohne Lage der Platzhalter ohne Mitte, wie die kleinen Scheiben gemessener Scheiben; während die Lagen laden, ein leerer Platz", () => {
     const placeholder = render({ marks: [] })
     expect(placeholder).toMatch(
       /<svg viewBox="[^"]*" aria-hidden="true" data-mini-placeholder="true"/
     )
     expect(placeholder).not.toContain("<circle cx=")
     expect(placeholder).not.toContain("data-summary-center")
-    expect(render({ marks: [], center: { xUm: 1400, yUm: -900 } })).toContain(
-      'data-summary-center="true"'
-    )
     const loading = render({ marks: null })
     expect(loading).not.toContain("ohne Lage")
     expect(loading).not.toMatch(/<svg viewBox=/)

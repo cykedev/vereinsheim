@@ -429,8 +429,8 @@ describe("Herkunft und Gründe in der Liste", () => {
   })
 })
 
-describe("Mitte für den Platzhalter der kleinen Scheibe", () => {
-  it("nur eine Scheibe ohne Lagen mit Trefferlage als Summe trägt ihre Mitte", () => {
+describe("keine Mitte für den Platzhalter der kleinen Scheibe", () => {
+  it("auch eine Scheibe mit Trefferlage als Summe bringt keine Mitte in die Zeile (was an den Browser geht)", () => {
     const total = {
       series: [],
       total: { shots: 40, rings: 362, decimalTenths: null },
@@ -445,8 +445,7 @@ describe("Mitte für den Platzhalter der kleinen Scheibe", () => {
       },
     ]
     const rows = cardListModel(input, query(), context).evenings.flatMap((e) => e.rows)
-    expect(rows.find((r) => r.id === "t")?.center).toEqual({ xUm: 1400, yUm: -900 })
-    expect(rows.filter((r) => "center" in r).map((r) => r.id)).toEqual(["t"])
+    expect(rows.some((r) => "center" in r)).toBe(false)
   })
 })
 

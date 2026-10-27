@@ -158,12 +158,12 @@ Minimal und scharf, nichts Klobiges, auch stark vergrößert.
 - **Trefferlage als Summe** (eine Scheibe ohne Lage je Schuss, etwa aus Treffsicher): das Zeichen des Schwerpunkts
   (`MpiMark`, geviertelter Kreis) an der Mitte, in derselben Größe wie auf einer gemessenen Scheibe. Es zeigt nur die
   Mitte der Schüsse, keine Streuung; der Kasten daneben sagt das in einer Zeile mit dem kleinen Zeichen. Nur auf der
-  großen Scheibe und im Platzhalter der Übersichten, nie je Serie. Ein eigenes Zeichen (ein goldenes Kreuz) hat der User
+  großen Scheibe, nie in den kleinen Scheiben (Übersichten, Serien). Ein eigenes Zeichen (ein goldenes Kreuz) hat der User
   am 27. Oktober 2026 verworfen: Die Mitte sieht überall gleich aus.
 - **Platzhalter der kleinen Scheibe:** Eine Scheibe ohne Lagen je Schuss zeigt in Liste, Start und Ablesung des
   Fortschritts die Scheibe der Disziplin leise ohne Treffer, gleich groß wie eine echte kleine Scheibe, statt eines
-  leeren Platzes; mit Trefferlage als Summe trägt sie das Zeichen des Schwerpunkts. Keine Symbole je Herkunft: Die Herkunft steht
-  als Wort daneben.
+  leeren Platzes. Ohne Mitte, auch mit Trefferlage als Summe: Die kleinen Scheiben gemessener Scheiben zeigen nur
+  Treffer, keinen Schwerpunkt. Keine Symbole je Herkunft: Die Herkunft steht als Wort daneben.
 - **Serien aus Summen** stehen als Kacheln in derselben Leiste wie die Serien aus Schüssen (`SeriesStrip` mit `sums`),
   die kleine Scheibe als leiser Platzhalter, ohne Wahl, darunter die Schusszahl („10 Schuss“): Ohne Schüsse gibt es nichts zu zeigen und nichts auszuwählen. Serien aus Schüssen ohne Lage zeigen
   denselben Platzhalter, so sieht der Bereich „Serien“ in jeder Detailtiefe gleich aus. Fehlt der Wert in der gewählten Wertung,

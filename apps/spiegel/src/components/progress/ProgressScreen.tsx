@@ -448,7 +448,6 @@ export function ProgressScreen({
                 point={reading.point}
                 delta={model.deltas.get(reading.card.id)}
                 reason={model.reasons[reading.card.id] ?? null}
-                center={model.centers[reading.card.id] ?? null}
                 metric={model.metric}
                 timeZone={timeZone}
                 chosen={reading.chosen}

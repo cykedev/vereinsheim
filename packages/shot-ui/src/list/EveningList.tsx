@@ -239,12 +239,11 @@ export function EveningList({
                                 }}
                                 className="block cursor-pointer rounded-full focus-visible:outline-2 focus-visible:outline-ring"
                               >
-                                {/* ohne Lagen je Schuss die Scheibe leise, mit Trefferlage als Summe das Zeichen der Mitte */}
+                                {/* ohne Lagen je Schuss die Scheibe leise, ohne Mitte wie die kleinen Scheiben gemessener Scheiben */}
                                 <MiniTarget
                                   target={target}
                                   shots={placed}
                                   placeholder={!placed.length}
-                                  center={row.center}
                                   className="size-12"
                                 />
                               </RouteLink>

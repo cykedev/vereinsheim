@@ -92,12 +92,9 @@ describe("Platzhalter einer Scheibe ohne Lagen je Schuss", () => {
     expect(real).not.toContain("data-mini-placeholder")
   })
 
-  it("mit Trefferlage als Summe das Zeichen des Schwerpunkts an der Mitte, ohne keins", () => {
-    const cross = render({ shots: [], placeholder: true, center: { xUm: 1400, yUm: -900 } })
-    expect(cross).toMatch(
-      /<g data-summary-center="true" transform="translate\(1\.4 0\.9\)[^"]*"><title>Schwerpunkt/
-    )
-    expect(cross).not.toContain("var(--gold)")
-    expect(render({ shots: [], placeholder: true })).not.toContain("data-summary-center")
+  it("ohne Mitte: auch der Platzhalter zeigt keinen Schwerpunkt, wie die kleinen Scheiben gemessener Scheiben", () => {
+    const html = render({ shots: [], placeholder: true })
+    expect(html).not.toContain("data-summary-center")
+    expect(html).not.toContain("<title>Schwerpunkt")
   })
 })

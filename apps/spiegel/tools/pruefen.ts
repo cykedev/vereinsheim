@@ -2076,7 +2076,7 @@ async function detailLevels(page: Page, href: string) {
       rows: $$("main tr[data-card-row]").length,
       without: $$("main tr[data-card-row]").filter((tr) => !tr.querySelector("svg")).map((tr) => tr.dataset.cardRow),
       placeholders: $$("main tr[data-card-row] [data-mini-placeholder]").length,
-      crosses: $$("main tr[data-card-row] [data-mini-placeholder] [data-summary-center]").length,
+      crosses: $$("main tr[data-card-row] [data-summary-center]").length,
     })`)
     crossSeen.push(minis.crosses)
     check(
@@ -2099,8 +2099,9 @@ async function detailLevels(page: Page, href: string) {
   }
 
   check(
-    `Liste: der Platzhalter einer Scheibe mit Trefferlage als Summe trägt das Zeichen der Mitte${crossSeen.some((n) => n > 0) ? "" : ` (${NOT_SHOWN})`}`,
-    crossSeen.some((n) => n > 0),
+    // wie die kleinen Scheiben gemessener Scheiben ohne Schwerpunkt: auch eine Trefferlage als Summe zeigt dort keine Mitte
+    `Liste: kein Platzhalter zeigt eine Mitte, auch nicht mit Trefferlage als Summe${crossSeen.length ? "" : ` (${NOT_SHOWN})`}`,
+    crossSeen.length > 0 && crossSeen.every((n) => n === 0),
     crossSeen
   )
 
