@@ -1,7 +1,7 @@
 import { printoutPdf } from "@vereinsheim/meyton-pdf/test-printout"
 import { printoutReading, type PrintoutReading } from "@vereinsheim/meyton-pdf/reading"
 import { readPrintoutValues } from "@vereinsheim/meyton-pdf/values"
-import { LP_10M } from "@vereinsheim/shot-core/targets"
+import { LG_10M, LP_10M } from "@vereinsheim/shot-core/targets"
 import { describe, expect, it } from "vitest"
 
 import {
@@ -10,7 +10,13 @@ import {
   valuedSpec,
   type ValuedPrintoutSpec,
 } from "../../../test/printout"
-import { detailsFromReading, readingOrder, ringDiametersMm, scaleFromRings } from "./values"
+import {
+  detailsFromReading,
+  drawnRingDiametersMm,
+  readingOrder,
+  ringDiametersMm,
+  scaleFromRings,
+} from "./values"
 
 // Erfundene, stimmige Ausdrucke aus `valuedPrintout`, gelesen wie im Kindprozess (hier im Testprozess).
 
@@ -39,6 +45,37 @@ describe("Ringe und Maßstab", () => {
       )
     ).toBeCloseTo(1.8, 9)
     expect(scaleFromRings([1, 2], mm)).toBeNull()
+  })
+})
+
+describe("Luftgewehr: Ring 10 und Innenzehn gleich groß", () => {
+  // Lagen um die Mitte, Streuung wie beim Luftgewehr
+  const lg: ValuedPrintoutSpec = { targetId: "lg-10m", shotsMm: shotsAround(40, 3, 1.5) }
+
+  it("die gezeichneten Ringe: gleiche Durchmesser einmal", () => {
+    expect(ringDiametersMm(LG_10M)).toHaveLength(11)
+    expect(drawnRingDiametersMm(LG_10M)).toHaveLength(10)
+    expect(drawnRingDiametersMm(LG_10M).at(-1)).toBe(0.5)
+    expect(drawnRingDiametersMm(LP_10M)).toEqual(ringDiametersMm(LP_10M))
+  })
+
+  it("als ein Kreis gezeichnet: Werte mit Lagen", async () => {
+    const result = detailsFromReading(await readingOf(lg), "lg-10m")
+    if (!result.ok) throw new Error(result.problem)
+    const hits = valuedHits(lg)
+    expect(result.details.shots).toHaveLength(40)
+    expect(Math.abs(result.details.shots![7].xUm! - hits[7].xMm * 1000)).toBeLessThanOrEqual(10)
+  })
+
+  it("mit einem eigenen, abweichenden Kreis für die Innenzehn: rings", async () => {
+    const reading = await readingOf({
+      ...lg,
+      tamper: (printout) => {
+        for (const picture of printout.pictures!)
+          picture.ringsMm = [...drawnRingDiametersMm(LG_10M), 0.3]
+      },
+    })
+    expect(problemOf(detailsFromReading(reading, "lg-10m"))).toBe("rings")
   })
 })
 

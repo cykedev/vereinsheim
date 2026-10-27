@@ -44,7 +44,7 @@ import {
   type RawShot,
   type Summary,
 } from "./printout-check/compare"
-import { ringDiametersMm, scaleFromRings } from "../src/lib/printouts/values"
+import { drawnRingDiametersMm, scaleFromRings } from "../src/lib/printouts/values"
 
 const REPORT_DIR = resolve(__dirname, "../../../reports/tis-1c0")
 
@@ -375,7 +375,7 @@ async function main() {
           (h) => h.x < frame.left || h.x > frame.right || h.y < frame.bottom || h.y > frame.top
         ).length
       )
-      const ptPerMm = scaleFromRings(picture.ringDiametersPt, ringDiametersMm(LP_10M))
+      const ptPerMm = scaleFromRings(picture.ringDiametersPt, drawnRingDiametersMm(LP_10M))
       if (ptPerMm !== null) frameMm.add(shape, (frame.right - frame.left) / ptPerMm)
     }
     const checks = selfCheck(r.values)
@@ -696,7 +696,7 @@ async function main() {
         return
       }
       const ptPerMm = target
-        ? scaleFromRings(picture.ringDiametersPt, ringDiametersMm(target))
+        ? scaleFromRings(picture.ringDiametersPt, drawnRingDiametersMm(target))
         : null
       const fit = fitDrawn(
         picture.holes,

@@ -25,6 +25,16 @@ export function ringDiametersMm(target: TargetImage): number[] {
   return [...target.ringRadiiUm.map((r) => (2 * r) / MM), target.innerTen.diameterMm]
 }
 
+/**
+ * die Ringe, wie ein Trefferbild sie zeigt: gleiche Durchmesser einmal, wie der Leser sie zusammenfasst. Beim Luftgewehr
+ * sind Ring 10 und Innenzehn beide 0,5 mm, gezeichnet ist ein Kreis
+ */
+export function drawnRingDiametersMm(target: TargetImage): number[] {
+  return ringDiametersMm(target).filter(
+    (mm, i, all) => !all.slice(0, i).some((before) => Math.abs(before - mm) < 1e-9)
+  )
+}
+
 function median(sorted: readonly number[]): number {
   const mid = sorted.length / 2
   return sorted.length % 2 === 1 ? sorted[Math.floor(mid)] : (sorted[mid - 1] + sorted[mid]) / 2
@@ -92,7 +102,7 @@ function positionsOf(
 ): { ok: true; positions: Placed[] | null } | { ok: false; problem: ValuesProblem } {
   if (reading.pictures.length === 0) return { ok: true, positions: null }
   if (target === null) return { ok: false, problem: "rings" }
-  const ringMm = ringDiametersMm(target)
+  const ringMm = drawnRingDiametersMm(target)
   const frames = reading.pictures.map((picture) => frameOf(picture, ringMm))
   if (frames.some((frame) => frame === null)) return { ok: false, problem: "rings" }
 

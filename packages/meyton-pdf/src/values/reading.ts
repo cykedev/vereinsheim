@@ -14,8 +14,11 @@ import type {
   TeilerRef,
 } from "./types"
 
-/** Version des Lesers der Werte; steigt sie, liest Spiegel gespeicherte Ausdrucke neu */
-export const READER_VERSION = "meyton-values@1"
+/**
+ * Version des Lesers der Werte; steigt sie, liest Spiegel gespeicherte Ausdrucke neu. Sie steigt auch, wenn Spiegel
+ * eine Lesung anders annimmt (v2: gleiche Ringdurchmesser des Scheibenbilds als ein Kreis, Luftgewehr)
+ */
+export const READER_VERSION = "meyton-values@2"
 
 export type PrintoutLayout = "ghostscript" | "qt" | "unknown"
 

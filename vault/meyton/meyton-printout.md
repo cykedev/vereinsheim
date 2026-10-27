@@ -102,7 +102,9 @@ gelten ID und Druckzeit trotzdem. Dafür schreibt der Kindprozess ID und Druckze
 baut die Zeichnung eines präparierten PDFs sekundenlang am Stück, ohne dass eine Prüfung der Zeit dazwischenkommt.
 
 - **Leser:** `readPrintoutValues` und die reine Lesung `printoutReading` (`@vereinsheim/meyton-pdf/reading`), Version
-  `meyton-values@1` (`READER_VERSION`). Die Lesung enthält keinen Namen, keine Nummer, keine ID und kein Datum.
+  `meyton-values@2` (`READER_VERSION`; v2 nimmt gleiche Ringdurchmesser des Scheibenbilds als einen Kreis, beim
+  Luftgewehr Ring 10 und Innenzehn mit je 0,5 mm). Die Lesung enthält keinen Namen, keine Nummer, keine ID und kein
+  Datum.
 - **Layout** nur nach dem Erzeuger: `GPL Ghostscript …` → `ghostscript`, `Qt …` → `qt`, sonst `unknown`. Ein
   unbekanntes liest der Leser trotzdem, die Selbstprüfung entscheidet.
 - **Modus:** „Probe“ und „Vorbereitung/Probe“ geben Probeschüsse (ohne Summen), „Wertung“ Wertungsschüsse mit Serien
@@ -113,7 +115,8 @@ baut die Zeichnung eines präparierten PDFs sekundenlang am Stück, ohne dass ei
   `marks` (Marken im Bild der Scheibe = Schüsse, je Serie ein Bild mit ihren Schüssen), `teilerRefs` (Schussnummer der
   Teiler außerhalb). Was nicht gedruckt ist, prüft sie nicht.
 - **Gegen das Scheibenbild der Disziplin** (`detailsFromReading` in Spiegel): Maßstab und Mitte jedes Bilds aus seinen
-  Ringen (jedes Verhältnis höchstens 0,5 % neben dem Median, sonst `rings`, auch ohne Scheibenbild), Lage je Schuss aus
+  Ringen (gleiche Durchmesser des Scheibenbilds als ein Kreis, `drawnRingDiametersMm`; die gezeichneten müssen genau
+  passen) (jedes Verhältnis höchstens 0,5 % neben dem Median, sonst `rings`, auch ohne Scheibenbild), Lage je Schuss aus
   dem Bild seiner Serie auf 10 µm, gegengeprüft am Bild der ganzen Scheibe (0,05 mm, sonst `marks`). Dann Trefferlage
   (Schwerpunkt, je Achse 0,02 mm), Trefferkreis (kleinster Kreis plus Kaliber, 0,02 mm), Streuwert (σ mit n − 1,
   0,02 mm) und Teiler (beste 1,5, weiteste 2,0 · 1/100 mm) gegen die Lagen, gesamt und je Serie. Zuletzt muss jede

@@ -81,7 +81,7 @@ describe("layoutOf", () => {
     expect(layoutOf({ producer: "Microsoft: Print To PDF" })).toBe("unknown")
     expect(layoutOf({ producer: "GPL Ghostscriptx" })).toBe("unknown")
     expect(layoutOf({ producer: null })).toBe("unknown")
-    expect(READER_VERSION).toBe("meyton-values@1")
+    expect(READER_VERSION).toBe("meyton-values@2")
   })
 })
 

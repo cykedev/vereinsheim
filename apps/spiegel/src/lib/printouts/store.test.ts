@@ -3,6 +3,7 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 
 import { bombContent, buildPdf, type TestText } from "@vereinsheim/meyton-pdf/test-pdf"
+import { READER_VERSION } from "@vereinsheim/meyton-pdf/reading"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { valuedPrintout } from "../../../test/printout"
@@ -80,7 +81,7 @@ describe("storePrintout: Werte", () => {
     const result = await storePrintout({ bytes: await valuedPrintout(), timeZone: ZONE })
     if (result.kind !== "stored") throw new Error("nicht gespeichert")
     expect(result.file.values).toMatchObject({
-      readerVersion: "meyton-values@1",
+      readerVersion: READER_VERSION,
       layout: "qt",
       status: "ok",
       discipline: "LP 40",
@@ -97,7 +98,7 @@ describe("storePrintout: Werte", () => {
     const result = await storePrintout({ bytes, timeZone: ZONE })
     if (result.kind !== "stored") throw new Error("nicht gespeichert")
     expect(result.file.values).toEqual({
-      readerVersion: "meyton-values@1",
+      readerVersion: READER_VERSION,
       layout: "ghostscript",
       status: "inconsistent",
       reading: null,
@@ -113,7 +114,7 @@ describe("storePrintout: Werte", () => {
     const result = await storePrintout({ bytes, timeZone: ZONE })
     expect(result.kind === "stored" && result.file.values.status).toBe("empty")
     expect(valuesReadOf({ kind: "failed", code: "timeout" })).toEqual({
-      readerVersion: "meyton-values@1",
+      readerVersion: READER_VERSION,
       layout: null,
       status: "unreadable",
       reading: null,

@@ -3,7 +3,7 @@ import { mkdtemp, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 
-import { printoutReading } from "@vereinsheim/meyton-pdf/reading"
+import { printoutReading, READER_VERSION } from "@vereinsheim/meyton-pdf/reading"
 import { printoutPdf } from "@vereinsheim/meyton-pdf/test-printout"
 import { readPrintoutValues } from "@vereinsheim/meyton-pdf/values"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
@@ -122,7 +122,7 @@ describe("rereadOutdatedPrintouts", () => {
     expect(result).toEqual({ read: 1, taken: 1, failed: 0, missing: 0 })
     expect(calls.n).toBe(1)
     expect(await printoutOf(fresh.printoutId)).toMatchObject({
-      readerVersion: "meyton-values@1",
+      readerVersion: READER_VERSION,
       valuesStatus: "ok",
       layout: "qt",
     })
@@ -139,7 +139,7 @@ describe("rereadOutdatedPrintouts", () => {
   it("ein zweiter Lauf liest nichts mehr von diesen", async () => {
     const { printoutId } = await oldPrintout()
     await run(stub({ n: 0 }))
-    expect((await printoutOf(printoutId)).readerVersion).toBe("meyton-values@1")
+    expect((await printoutOf(printoutId)).readerVersion).toBe(READER_VERSION)
     const calls = { n: 0 }
     expect(await run(stub(calls))).toEqual({ read: 0, taken: 0, failed: 0, missing: 0 })
     expect(calls.n).toBe(0)
