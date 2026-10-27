@@ -26,7 +26,8 @@ const suite = files.length > 0 ? describe : describe.skip
 suite("eigene Ausdrucke (lokal, ohne Ordner übersprungen)", () => {
   const results = new Map<string, ReadingResult>()
 
-  it.each(files)("%s", async (file) => {
+  // nach Nummer, nicht nach Dateiname: Namen eigener Dateien gehören nicht in Ausgaben des Gates
+  it.each(files.map((file, i) => [i + 1, file] as const))("Ausdruck %i", async (_, file) => {
     const bytes = new Uint8Array(readFileSync(join(FOLDER, file)))
     const [values, printout] = await Promise.all([readPrintoutValues(bytes), readPrintout(bytes)])
     const result = printoutReading(values, { producer: printout.producer })

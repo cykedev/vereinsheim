@@ -85,6 +85,10 @@ gedruckten Teiler dienen der Selbstprüfung und werden nicht gespeichert. „ini
 Druckzeit. Die Lage vom Ausdruck zählt voll wie eine gemessene (Herkunft bleibt „vom Ausdruck“, [[adr-033]], Nachtrag
 vom 27. Oktober 2026 zu 1c).
 
+**Nicht belegt seit 1c:** ein Ausdruck im Modus Probe gegen die Brücke. Meyton löscht die Probe beim ersten
+Wertungsschuss (SF-03); liefert die Brücke erst danach, fehlen die Probeschüsse, und der Auftrag endet mit „passt nicht
+zum Ausdruck“. Das ist richtig, wenn die Probe ein eigener Block war, an echten Daten aber nicht gesehen.
+
 **Nicht belegt:** der Teiler je Schuss (nur ein Ausdruck ohne Namen), Zwischenausdrucke (kein Paar zeigte weniger Schüsse
 als die Rohdaten), Trefferkreis nur an 4 Qt-Ausdrucken, „initialisiert“ nur an 4, Probe nur an 3 Paaren, Kreuze nur an 2
 Paaren (80 Marken), Modus Training und die Trainingsscheibe, Luftgewehr, fremde Anlagen und andere Meyton-Versionen,
@@ -112,7 +116,9 @@ baut die Zeichnung eines präparierten PDFs sekundenlang am Stück, ohne dass ei
   Ringen (jedes Verhältnis höchstens 0,5 % neben dem Median, sonst `rings`, auch ohne Scheibenbild), Lage je Schuss aus
   dem Bild seiner Serie auf 10 µm, gegengeprüft am Bild der ganzen Scheibe (0,05 mm, sonst `marks`). Dann Trefferlage
   (Schwerpunkt, je Achse 0,02 mm), Trefferkreis (kleinster Kreis plus Kaliber, 0,02 mm), Streuwert (σ mit n − 1,
-  0,02 mm) und Teiler (beste 1,5, weiteste 2,0 · 1/100 mm) gegen die Lagen, gesamt und je Serie.
+  0,02 mm) und Teiler (beste 1,5, weiteste 2,0 · 1/100 mm) gegen die Lagen, gesamt und je Serie. Zuletzt muss jede
+  Marke den gedruckten Wert ihres Schusses tragen (dieselbe Gegenprobe wie beim Einlesen, `verifyShots`), sonst
+  gehören die Marken anderen Schüssen (`marks`). An den eigenen Ausdrucken: 0 von 1.950 Schüssen verdächtig.
 - **Teiler aus der Lage:** Spiegel speichert keinen Teiler je Schuss vom Ausdruck, sondern rechnet ihn aus der Lage,
   eine Regel für jeden Schuss. Folge: Der beste Teiler auf der Seite kann in der letzten Stelle vom Papier abweichen
   (höchstens 0,01 mm; Meyton schneidet ab, die Marken liegen bis 0,01 mm daneben).
@@ -124,8 +130,10 @@ baut die Zeichnung eines präparierten PDFs sekundenlang am Stück, ohne dass ei
   Scheibenbild, der nächste. Gibt keiner Werte, verliert die Scheibe ihre Werte vom Ausdruck (neue Revision ohne
   Angaben).
 - **Neu lesen:** Beim Start und stündlich liest Spiegel Ausdrucke mit einer anderen oder keiner Version des Lesers neu
-  (höchstens 50 je Lauf, nur Scheiben vom Ausdruck ohne Brücke, nicht wartend, nicht im Papierkorb). Scheitert schon
-  das Lesen (etwa ein zu altes Node), bleibt die Zeile für einen späteren Lauf.
+  (höchstens 50 je Lauf, nur Scheiben vom Ausdruck ohne Brücke, nicht wartend, nicht im Papierkorb). Läuft der Server
+  mit zu altem Node, endet der Lauf und die Zeilen bleiben für später. Ein anderer Fehler beim Lesen (Zeit, Speicher)
+  ist `unreadable` mit dieser Version, überschreibt aber nie eine stimmige Lesung: Auch ein erneutes Holen desselben
+  PDFs mit einem Lesefehler lässt die Werte der Scheibe stehen (`writePrintoutValues`).
 - **Beim Einlesen** prüft Spiegel zusätzlich zur Druckzeit Schuss für Schuss gegen die Rohdaten ([[spiegel-assignment]]);
   passen sie, werden die Rohdaten eine neue Revision derselben Scheibe.
 - **Node:** Der Leser braucht Node 26 (`READER_MIN_NODE`, wie `engines` und `.nvmrc`); auf einem älteren meldet der
@@ -145,9 +153,13 @@ Ausdruck (Training, ohne Ort) mit der Disziplin aus dem Kopf, wenn genau eine w�
 
 - **Dev:** `pnpm --filter spiegel printout-import <ordner> --email <adresse> --dry-run`, dann ohne `--dry-run`. Die
   Dateien landen unter `apps/spiegel/uploads/printouts/` des Checkouts, aus dem der Dev-Server läuft.
-- **Prod** (nach dem Deploy, durch den User): einen SSH-Tunnel auf die Datenbank öffnen, `DATABASE_URL` auf den Tunnel
-  setzen, `UPLOAD_DIR` auf einen leeren Ordner, `printout-import <ordner> --email <adresse> --dry-run`, dann
-  ohne `--dry-run`. Danach die Dateien aus `<UPLOAD_DIR>/printouts/*.pdf` mit `docker cp` in den Container `app-spiegel`
+- **Prod** (nach dem Deploy, durch den User): Postgres hängt nur im Netz `data` und ist nicht veröffentlicht
+  ([[adr-003]]). Den Tunnel deshalb auf die Adresse des Containers `db` im Docker-Netz legen (auf dem VPS mit
+  `docker inspect` nachsehen), etwa `ssh -L 15432:<adresse>:5432 <vps>`. Dann `DATABASE_URL` auf
+  `localhost:15432/spiegel` mit dem Owner von Spiegel setzen, `UPLOAD_DIR` auf einen leeren Ordner,
+  `printout-import <ordner> --email <adresse> --dry-run`, dann ohne `--dry-run`. Die Sperre „nur gegen die lokale
+  Dev-Datenbank“ des Werkzeugs lässt einen Tunnel auf `localhost` durch: Vor dem Lauf ohne `--dry-run` die Adresse
+  prüfen. Danach die Dateien aus `<UPLOAD_DIR>/printouts/*.pdf` mit `docker cp` in den Container `app-spiegel`
   nach `/app/uploads/printouts/` kopieren (Volume `uploads_spiegel`). Ohne die Dateien zeigt die Seite die Werte, aber
   kein PDF, und das Neulesen zählt sie als fehlend.
 

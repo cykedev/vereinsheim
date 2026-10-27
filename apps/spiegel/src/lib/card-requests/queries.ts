@@ -1,8 +1,8 @@
 // Aufträge, eine Scheibe per ID zu holen (die ID im Fuß des Ausdrucks), ohne Zustimmung per Sportpass. Der Schütze legt
 // sie unter „Scheibe holen“ an, zusammen mit einer Scheibe vom Ausdruck (`fetch-card`); die Brücke liest die Scheibe
 // (`GET /state`, `requests`) und schickt sie nur vom genannten Abend, das Einlesen prüft den Abend und die Druckzeit noch
-// einmal (hat die Scheibe Werte vom Ausdruck, auch Schuss für Schuss) und füllt die Scheibe des Auftrags. Erledigt ist er, wenn sie gefüllt und endgültig ist (bis dahin kommen
-// weitere Schüsse nach). Der Heartbeat meldet, was die Brücke nicht holen kann. Ältere Aufträge ohne Scheibe bekommen
+// einmal (hat die Scheibe Werte vom Ausdruck, auch Schuss für Schuss) und füllt die Scheibe des Auftrags. Erledigt ist
+// er, wenn sie gefüllt und endgültig ist (bis dahin kommen weitere Schüsse nach). Der Heartbeat meldet, was die Brücke nicht holen kann. Ältere Aufträge ohne Scheibe bekommen
 // beim Einlesen eine neue Scheibe der Brücke.
 
 import type { RequestOutcome } from "@vereinsheim/ingest-contract/api"

@@ -284,13 +284,15 @@ export async function fetchCard(db: Db, input: FetchInput): Promise<FetchResult>
 
     if (bridgeCards.length) return { kind: "taken" }
     const blockedWhere = { source: { siteId }, scheibenId }
-    const [tombstones, locks] = await Promise.all([
-      tx.tombstone.findMany({ where: blockedWhere, select: { startedAt: true } }),
-      tx.deleteLock.findMany({
-        where: blockedWhere,
-        select: { id: true, userId: true, startedAt: true },
-      }),
-    ])
+    // nacheinander: eine interaktive Transaktion hat eine Verbindung
+    const tombstones = await tx.tombstone.findMany({
+      where: blockedWhere,
+      select: { startedAt: true },
+    })
+    const locks = await tx.deleteLock.findMany({
+      where: blockedWhere,
+      select: { id: true, userId: true, startedAt: true },
+    })
     const eveningLocks = locks.filter((lock) => sameEvening(lock.startedAt))
     if (
       tombstones.some((t) => sameEvening(t.startedAt)) ||

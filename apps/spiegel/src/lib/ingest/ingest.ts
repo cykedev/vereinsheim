@@ -565,8 +565,9 @@ export async function ingestBatch(
       const evening = eveningOfStart(startOf(snapshot))
       for (const r of open) if (r.day !== evening && unfilled(r)) await close(r.id, "mismatch")
       // eine Scheibe vom Ausdruck: Kein Stand dieses Abends begann vor dem Druck (oder keiner hat die Werte des
-      // Ausdrucks), also ist es nicht die Scheibe des Ausdrucks. Spiegel speichert nichts von ihr (SF-29: fünf Minuten Spielraum für die Uhren). Vor der Wahl des
-      // Auftrags, sonst schlösse ein durchgefallener älterer die passenden anderer Konten als vergeben
+      // Ausdrucks), also ist es nicht die Scheibe des Ausdrucks. Spiegel speichert nichts von ihr (SF-29: fünf Minuten
+      // Spielraum für die Uhren). Vor der Wahl des Auftrags, sonst schlösse ein durchgefallener älterer die passenden
+      // anderer Konten als vergeben
       const printFails = (r: Request) => unfilled(r) && printedWall.has(r.id) && !passes.has(r.id)
       for (const r of open)
         if (r.day === evening && printFails(r)) await close(r.id, "printMismatch")

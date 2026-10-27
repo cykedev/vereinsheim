@@ -182,7 +182,6 @@ export function printoutReading(
   if (!probe) {
     const numbers = values.series.map((series) => series.number)
     if (!numbers.every((number, i) => number === i + 1)) return reject("series")
-    if (shots.some((shot) => !numbers.includes(shot.series))) return reject("series")
   }
 
   const all = shots.map((shot) => shot.value)

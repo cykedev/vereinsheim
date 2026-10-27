@@ -47,8 +47,8 @@ function Unreadable() {
 /**
  * Ausdruck als Zeile im Kasten „Diese Scheibe“: die ID wie im Fuß des Ausdrucks, damit Papier und Scheibe
  * zusammenfinden, mit Druckzeit und dem PDF; weitere Ausdrucke darunter. Konnte Spiegel die Werte eines Ausdrucks nicht
- * übernehmen (Scheibe vom Ausdruck ohne Brücke), steht leise „Werte nicht lesbar“ daneben. Ohne PDF (getippte ID, Scheibe der Brücke)
- * sagt die Zeile, wie es an die Scheibe kommt. Nicht auf der geteilten Seite: ID und Abend holen die Scheibe.
+ * übernehmen (Scheibe vom Ausdruck ohne Brücke), steht leise „Werte nicht lesbar“ daneben. Ohne PDF (getippte ID,
+ * Scheibe der Brücke) sagt die Zeile, wie es an die Scheibe kommt. Nicht auf der geteilten Seite: ID und Abend holen die Scheibe.
  */
 export function CardPrintout({
   hex,

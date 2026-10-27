@@ -73,11 +73,6 @@ function WayCard({
 const READING = "Spiegel liest den Ausdruck…"
 const LINK_MISSING = "Füge den Link aus dem QR-Code ein."
 
-/**
- * Seite „Scheibe holen“: Kamera, Link, PDF und ID in dieser Folge, jeder Weg gleich. Liegt die Scheibe schon in Spiegel,
- * öffnet Spiegel sie; sonst fragt das Blatt „Neue Scheibe“ nach Disziplin und Art und schickt dieselbe Quelle noch
- * einmal. Jeder Weg hat sein eigenes „läuft“ und seinen eigenen Fehler. Darunter ältere Aufträge, solange es welche gibt.
- */
 /** Vorbelegung des Blatts „Neue Scheibe“: die Disziplin aus dem Kopf des Ausdrucks vor der der letzten Scheibe */
 export function sheetPreset(
   preset: { disciplineId: number | null; kind: CardKind },
@@ -86,6 +81,11 @@ export function sheetPreset(
   return { ...preset, disciplineId: headerDisciplineId ?? preset.disciplineId }
 }
 
+/**
+ * Seite „Scheibe holen“: Kamera, Link, PDF und ID in dieser Folge, jeder Weg gleich. Liegt die Scheibe schon in Spiegel,
+ * öffnet Spiegel sie; sonst fragt das Blatt „Neue Scheibe“ nach Disziplin und Art und schickt dieselbe Quelle noch
+ * einmal. Jeder Weg hat sein eigenes „läuft“ und seinen eigenen Fehler. Darunter ältere Aufträge, solange es welche gibt.
+ */
 export function ScanScreen({
   options,
   preset,
@@ -111,7 +111,7 @@ export function ScanScreen({
     source: Source
     idLine: string
     relifts: boolean
-    /** die Disziplin aus dem Kopf des Ausdrucks; null: wie bisher die der letzten Scheibe */
+    /** die Disziplin aus dem Kopf des Ausdrucks; null: die der letzten Scheibe */
     disciplineId: number | null
     key: number
   } | null>(null)

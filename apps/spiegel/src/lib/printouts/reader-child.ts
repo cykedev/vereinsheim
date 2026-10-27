@@ -40,8 +40,8 @@ function maxParseMsOf(argv: readonly string[]): number {
 }
 
 /**
- * Werte und Lesung des Ausdrucks in der restlichen Zeit; jeder Fehler wird `failed`. Was die Grenzen des Protokolls
- * sprengt, gilt als zu viel.
+ * Werte und Lesung des Ausdrucks in der restlichen Zeit; jeder Fehler wird `failed`. Was das Protokoll nicht annimmt,
+ * gilt als nicht lesbar, eine zu lange Antwort als zu viel.
  */
 async function readValues(
   bytes: Uint8Array,
@@ -55,7 +55,7 @@ async function readValues(
     const { printoutReading } = await import("@vereinsheim/meyton-pdf/reading")
     const values = await readPrintoutValues(bytes, { limits: { maxParseMs: restMs } })
     const result = valuesSchema.safeParse(printoutReading(values, { producer }))
-    if (!result.success) return { kind: "failed", code: "tooMuchText" }
+    if (!result.success) return { kind: "failed", code: "unreadable" }
     if (JSON.stringify(result.data).length > VALUES_JSON_MAX)
       return { kind: "failed", code: "tooMuchText" }
     return result.data

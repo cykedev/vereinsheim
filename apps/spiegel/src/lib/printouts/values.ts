@@ -16,6 +16,7 @@ import {
 import { TARGETS, type TargetId, type TargetImage } from "@vereinsheim/shot-core/targets"
 
 import { checkDetails, type DetailsInput, type EnteredShot } from "../entered/details"
+import { verifyShots } from "../ingest/card-checks"
 
 const MM = 1000
 
@@ -239,6 +240,23 @@ export function detailsFromReading(
       }
   if (!checkDetails(details, { plannedShots: null, seriesShots: null }).ok)
     return { ok: false, problem: "details" }
+  // jede Marke muss den gedruckten Wert ihres Schusses tragen (Gegenprobe wie beim Einlesen): sonst gehören die Marken
+  // anderen Schüssen, etwa in einer anderen Folge gezeichnet
+  if (positions !== null && targetId !== null) {
+    const { suspicious } = verifyShots(
+      targetId,
+      shots.map((shot) => ({
+        xUm: shot.xUm ?? null,
+        yUm: shot.yUm ?? null,
+        distanceTenthsUm: null,
+        decimalTenths: shot.decimalTenths,
+        ring: shot.ring,
+        innerTen: shot.innerTen ?? null,
+        flags: [],
+      }))
+    )
+    if (suspicious.some(Boolean)) return { ok: false, problem: "marks" }
+  }
   return { ok: true, details, stand: reading.stand }
 }
 

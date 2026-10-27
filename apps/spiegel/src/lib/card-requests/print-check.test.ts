@@ -43,6 +43,12 @@ describe("printedShotsFit", () => {
     expect(printedShotsFit(wertung([null, null], [10, 10]), raw)).toBe(false)
   })
 
+  it("Rohdaten ohne Zehntel: der Ring zählt", () => {
+    const rings = wertung([null, null], [10, 9])
+    expect(printedShotsFit(wertung([101, 97]), rings)).toBe(true)
+    expect(printedShotsFit(wertung([101, 101]), rings)).toBe(false)
+  })
+
   it("Reihenfolge nach Nummer, nicht nach Liste", () => {
     const shuffled = [...raw].reverse()
     expect(printedShotsFit(wertung([101, 97]), shuffled)).toBe(true)

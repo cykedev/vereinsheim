@@ -1,6 +1,6 @@
 // Schuss für Schuss: Passt eine Scheibe der Brücke zu den Werten eines Ausdrucks? Rein ([[spiegel-assignment]]). Der
 // Ausdruck zeigt die ersten Schüsse einer Art (Probe oder Wertung, ein Zwischenausdruck weniger), die Rohdaten müssen
-// mit denselben beginnen: Zehntel gleich, wo der Ausdruck sie hat, sonst der Ring.
+// mit denselben beginnen: Zehntel gleich, wo beide sie haben, sonst der Ring.
 
 export interface PrintedShot {
   /** 0 = Probe */
@@ -28,7 +28,8 @@ export function printedShotsFit(
   if (own.length !== printed.length || theirs.length < own.length) return false
   return own.every((shot, i) => {
     const other = theirs[i]
-    if (shot.decimalTenths !== null) return shot.decimalTenths === other.decimalTenths
+    if (shot.decimalTenths !== null && other.decimalTenths !== null)
+      return shot.decimalTenths === other.decimalTenths
     return shot.ring !== null && shot.ring === other.ring
   })
 }

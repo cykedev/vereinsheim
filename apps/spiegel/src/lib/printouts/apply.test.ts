@@ -56,7 +56,7 @@ async function stored(
   }
 }
 
-/** eine Scheibe vom Ausdruck ohne Werte, wie „Scheibe holen“ sie bisher anlegt */
+/** eine Scheibe vom Ausdruck ohne Lesung */
 async function pdfCard(): Promise<string> {
   const saved = await writeEnteredCard(db, {
     ownerId: site.ownerId,
@@ -174,5 +174,24 @@ describe("applyPrintoutValues", () => {
       await db.card.update({ where: { id: cardId }, data: reset })
     }
     expect(await revisions(cardId)).toBe(before)
+  })
+
+  it("derselbe Ausdruck, beim zweiten Mal nicht lesbar: Werte und Revision bleiben", async () => {
+    const cardId = await pdfCard()
+    const file = await stored({})
+    const printoutId = await attachPrintout(db, file, cardId)
+    expect(await apply(cardId)).toBe("taken")
+    const before = await revisions(cardId)
+    await attachPrintout(
+      db,
+      { ...file, values: valuesReadOf({ kind: "failed", code: "timeout" }) },
+      cardId
+    )
+    expect(await apply(cardId)).toBe("taken")
+    expect(await revisions(cardId)).toBe(before)
+    expect(await db.printout.findUniqueOrThrow({ where: { id: printoutId } })).toMatchObject({
+      valuesStatus: "ok",
+    })
+    expect((await cardOf(cardId)).currentRevision!.shots).toHaveLength(40)
   })
 })

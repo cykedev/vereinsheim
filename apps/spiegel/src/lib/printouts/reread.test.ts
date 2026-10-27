@@ -161,4 +161,31 @@ describe("rereadOutdatedPrintouts", () => {
     expect(result.failed).toBeGreaterThanOrEqual(1)
     expect((await printoutOf(printoutId)).readerVersion).toBeNull()
   })
+
+  it("ein Lesefehler bei einer älteren Version lässt die stimmige Lesung stehen", async () => {
+    const { cardId, printoutId } = await oldPrintout()
+    await run(stub({ n: 0 }))
+    expect(await shotsOf(cardId)).toBe(40)
+    await db.printout.update({
+      where: { id: printoutId },
+      data: { readerVersion: "meyton-values@0" },
+    })
+    const result = await run(
+      stub(
+        { n: 0 },
+        {
+          kind: "read",
+          pages: 1,
+          id: { kind: "found", hex: "ff914420", value: -7257056, pages: [1] },
+          createdAt: null,
+          producer: "Qt 5.12.8",
+          values: { kind: "failed", code: "timeout" },
+          maxRssKb: 1,
+        }
+      )
+    )
+    expect(result).toMatchObject({ read: 1, failed: 1 })
+    expect(await printoutOf(printoutId)).toMatchObject({ valuesStatus: "ok" })
+    expect(await shotsOf(cardId)).toBe(40)
+  })
 })

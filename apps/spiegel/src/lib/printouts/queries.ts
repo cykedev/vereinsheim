@@ -24,14 +24,13 @@ export function valuesColumns(values: PrintoutValuesRead) {
 
 /**
  * hängt einen gespeicherten Ausdruck an eine Scheibe; derselbe Ausdruck an derselben Scheibe bleibt eine Zeile, deren
- * Werte der Leser dabei neu schreibt
+ * Werte der Leser dabei neu schreibt (`writePrintoutValues`)
  */
 export async function attachPrintout(
   tx: Prisma.TransactionClient | Db,
   file: StoredPrintout,
   cardId: string
 ): Promise<string> {
-  const values = valuesColumns(file.values)
   const row = await tx.printout.upsert({
     where: { cardId_sha256: { cardId, sha256: file.sha256 } },
     create: {
@@ -41,12 +40,33 @@ export async function attachPrintout(
       size: file.size,
       footerId: file.hex,
       printedAt: file.printedAt,
-      ...values,
+      ...valuesColumns(file.values),
     },
-    update: values,
+    update: {},
     select: { id: true },
   })
+  await writePrintoutValues(tx, row.id, file.values)
   return row.id
+}
+
+/**
+ * die Werte, wie der Leser sie fand, an die Zeile; ein Lesefehler (`unreadable`, oft vorübergehend: Zeit, Speicher)
+ * überschreibt keine stimmige Lesung, sonst verlöre die Scheibe ihre Werte
+ */
+export async function writePrintoutValues(
+  tx: Prisma.TransactionClient | Db,
+  printoutId: string,
+  values: PrintoutValuesRead
+): Promise<void> {
+  const data = valuesColumns(values)
+  if (values.status !== "unreadable") {
+    await tx.printout.update({ where: { id: printoutId }, data })
+    return
+  }
+  await tx.printout.updateMany({
+    where: { id: printoutId, OR: [{ valuesStatus: null }, { valuesStatus: { not: "ok" } }] },
+    data,
+  })
 }
 
 /** den Status der Werte eines Ausdrucks setzen, etwa `inconsistent` bei einem Widerspruch zum Scheibenbild */

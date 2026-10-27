@@ -143,6 +143,27 @@ describe("detailsFromReading: Widerspruch, keine Werte", () => {
     expect(problemOf(detailsFromReading(reading, "lp-10m"))).toBe("marks")
   })
 
+  it("nur das Bild der Scheibe, Marken zweier Schüsse vertauscht: marks", async () => {
+    const hits = valuedHits()
+    // zwei Schüsse mit verschiedenem Wert, deren Marken die Zeichnung vertauscht
+    const a = hits.findIndex((h) => h.decimalTenths >= 100)
+    const b = hits.findIndex((h) => h.decimalTenths < 90)
+    const reading = await readingOf({
+      wholeOnly: true,
+      omit: ["center", "circle", "best", "widest"],
+      tamper: (printout) => {
+        const holes = printout.pictures![0].holes
+        ;[holes[a], holes[b]] = [holes[b], holes[a]]
+        for (const series of printout.series!) {
+          delete series.center
+          delete series.circle
+          delete series.best
+        }
+      },
+    })
+    expect(problemOf(detailsFromReading(reading, "lp-10m"))).toBe("marks")
+  })
+
   it.each([
     ["Trefferlage gesamt", "center", (s: ValuedPrintoutSpec) => tamperLine(s, "center")],
     ["Trefferlage einer Serie", "center", (s: ValuedPrintoutSpec) => tamperSeries(s, "center")],

@@ -14,7 +14,7 @@ import type { StoredPrintout } from "../printouts/store"
 import { headerDisciplineId, newCardValues, ownCardOfEvening } from "./queries"
 
 export type ImportResult =
-  /** an die eigene Scheibe des Abends gehängt; `values`: sie hat danach Werte von diesem oder einem anderen Ausdruck */
+  /** an die eigene Scheibe des Abends gehängt; `values`: sie hat danach Werte (Rohdaten oder Ausdruck) */
   | { kind: "attached"; cardId: string; values: boolean }
   /** neue Scheibe vom Ausdruck; `values`: mit seinen Werten */
   | { kind: "created"; cardId: string; values: boolean }
@@ -80,10 +80,15 @@ export async function importPrintout(
 
       if (bridgeCards.length) return done({ kind: "taken" })
       const blockedWhere = { source: { siteId }, scheibenId: file.scheibenId }
-      const [tombstones, locks] = await Promise.all([
-        tx.tombstone.findMany({ where: blockedWhere, select: { startedAt: true } }),
-        tx.deleteLock.findMany({ where: blockedWhere, select: { startedAt: true } }),
-      ])
+      // nacheinander: eine interaktive Transaktion hat eine Verbindung
+      const tombstones = await tx.tombstone.findMany({
+        where: blockedWhere,
+        select: { startedAt: true },
+      })
+      const locks = await tx.deleteLock.findMany({
+        where: blockedWhere,
+        select: { startedAt: true },
+      })
       if ([...tombstones, ...locks].some((row) => sameEvening(row.startedAt)))
         return done({ kind: "blocked" })
 
