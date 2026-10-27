@@ -17,7 +17,14 @@ import {
 
 const dayRoute = (day: string): Route => ({
   page: "cards",
-  query: { family: "lg-freihand", kind: "all", flag: null, list: null, range: null },
+  query: {
+    family: "lg-freihand",
+    kind: "all",
+    flag: null,
+    provenance: null,
+    list: null,
+    range: null,
+  },
   evening: day,
 })
 

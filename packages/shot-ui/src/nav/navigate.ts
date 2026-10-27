@@ -83,7 +83,14 @@ export function listFromProgress(progress: ProgressRoute): ListRoute {
   const { family, kind, choice, chosen } = progress.query
   return {
     page: "cards",
-    query: { family, kind, flag: null, list: null, range: choice.type === "all" ? null : choice },
+    query: {
+      family,
+      kind,
+      flag: null,
+      provenance: null,
+      list: null,
+      range: choice.type === "all" ? null : choice,
+    },
     evening: null,
     // die Wahl des Fortschritts ist in der Liste markiert
     ...(chosen ? { pick: chosen } : {}),
@@ -91,13 +98,13 @@ export function listFromProgress(progress: ProgressRoute): ListRoute {
 }
 
 /**
- * Ein Mischabend: die andere Familie an diesem Abend. Der Hinweis zählt ohne Art, Merkmal und Liste, deshalb
+ * Ein Mischabend: die andere Familie an diesem Abend. Der Hinweis zählt ohne Art, Merkmal, Herkunft und Liste, deshalb
  * fallen sie hier weg; der Zeitraum bleibt, der Hinweis zählt nur in ihm. So steht der Abend sicher in der Liste.
  */
 export function listOnEvening(query: ListQuery, family: string, day: string): ListRoute {
   return {
     page: "cards",
-    query: { ...query, family, kind: "all", flag: null, list: null },
+    query: { ...query, family, kind: "all", flag: null, provenance: null, list: null },
     evening: day,
   }
 }

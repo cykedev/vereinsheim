@@ -11,6 +11,7 @@ import {
   type PageAnchor,
   type PeriodSection,
 } from "../layout/sections"
+import { isCardProvenance, type CardProvenance } from "../detail"
 import { DEFAULT_CHOICE, type CompareChoice, type PeriodChoice } from "../period/calendar"
 import type { CardKind, PeriodMetricKey, PeriodShow } from "../period/state"
 import type { SeriesKey } from "../types"
@@ -100,6 +101,8 @@ export interface ListQuery {
   kind: CardKind
   /** Merkmal wie `korrigiert` */
   flag: string | null
+  /** Herkunft; null: alle */
+  provenance: CardProvenance | null
   /** Liste aus Meyton (`Rangliste`) als Kennung, nie als Name; null: alle */
   list: number | null
   /** null: alle Abende; „Alles“ ist dasselbe und hat darum keine eigene Form */
@@ -124,6 +127,7 @@ export const DEFAULT_LIST: ListQuery = {
   family: null,
   kind: "all",
   flag: null,
+  provenance: null,
   list: null,
   range: null,
 }
@@ -175,6 +179,7 @@ export function listQueryToParams(query: ListQuery): Param[] {
     ["family", query.family],
     ["kind", kindParams(query.kind)],
     ["flag", query.flag],
+    ["provenance", query.provenance],
     ["list", query.list === null ? null : String(query.list)],
   ])
 }
@@ -185,6 +190,9 @@ export function listQueryFromParams(params: URLSearchParams): ListQuery {
     family: slugOrNull(params.get("family")),
     kind: kindOf(params.get("kind")),
     flag: slugOrNull(params.get("flag")),
+    provenance: isCardProvenance(params.get("provenance"))
+      ? (params.get("provenance") as CardProvenance)
+      : null,
     list: rowIdOrNull(params.get("list")),
     // „all“ und ohne Angabe heißen dasselbe: alle Abende
     range: range === null || range.type === "all" ? null : range,

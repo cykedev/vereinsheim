@@ -176,6 +176,17 @@ describe("Blättern im Kontext", () => {
     ).toEqual(["w1", "t2", "w2"])
   })
 
+  it("Liste nach Herkunft: Blättern bleibt in ihr", () => {
+    const entered: ListInputCard[] = INPUT.map((c) =>
+      c.card.id === "w2" || c.card.id === "t3" ? { ...c, provenance: "entered" } : c
+    )
+    const input = { ...context, cards: entered }
+    expect(contextCardIds(card("w2", fromList({ provenance: "entered" })), input)).toEqual([
+      "w2",
+      "t3",
+    ])
+  })
+
   it("Fortschritt ohne „nur Probe“: Trainings nur aus Probe bleiben im Kontext, wie in seiner Liste", () => {
     const probe: ListInputCard[] = [
       ...INPUT,

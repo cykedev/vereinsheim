@@ -134,6 +134,7 @@ describe("Wege zwischen den Seiten", () => {
         family: "lg-10m",
         kind: "training",
         flag: null,
+        provenance: null,
         list: null,
         range: { type: "named", id: "neue-munition" },
       },

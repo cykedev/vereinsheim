@@ -12,6 +12,7 @@ import {
 import { pooledValue } from "@vereinsheim/shot-core/analysis"
 import { projectedValues, type ProjectedCard } from "@vereinsheim/shot-core/projection"
 
+import { detailReason, PROVENANCES, REASON_TEXT, type CardProvenance } from "../detail"
 import type { ListQuery } from "../nav/routes"
 import {
   eveningDay,
@@ -41,7 +42,12 @@ export interface ListInputCard {
   family: string
   /** die Liste aus Meyton; fehlt oder null ohne (PDF, eigene Scheiben) */
   list?: ListOption | null
+  /** woher die Scheibe kommt; fehlt: gemessen */
+  provenance?: CardProvenance
 }
+
+/** der Grund je Zahl einer Zeile ohne Wert: Ganze, Zehntel, Ø, Abstand, Schusszahl */
+export type RowReasons = Partial<Record<"rings" | "decimal" | "mean" | "delta" | "shots", string>>
 
 /** der Wert einer Kennzahl der Scheibe in der Wertung aus ihrer Projektion; null ohne Wert */
 const projected = (card: ProjectedCard, metric: Readonly<MetricDefinition>, scoring: Scoring) =>
@@ -68,6 +74,10 @@ export interface ListRow {
   delta: { delta: number; n: number } | null
   /** Wertungsschüsse, bei nur Probe die Probe */
   shots: number
+  /** woher die Scheibe kommt; nur, wenn nicht gemessen (was an den Browser geht, wächst nicht für gemessene) */
+  provenance?: CardProvenance
+  /** warum eine Zahl fehlt; nur, wenn eine fehlt */
+  reasons?: RowReasons
 }
 
 export interface Evening {
@@ -86,6 +96,8 @@ export interface CardListModel {
   evenings: Evening[]
   /** Merkmale der Scheiben dieser Familie, für den Filter */
   flags: string[]
+  /** Herkünfte der Scheiben dieser Familie in fester Folge, die gewählte auch ohne Scheibe */
+  provenances: CardProvenance[]
   /** Listen aus Meyton der Scheiben dieser Familie nach Name, die gewählte auch ohne Scheibe der Familie */
   lists: ListOption[]
   /** die gewählte Liste; null ohne Wahl oder wenn keine Scheibe sie kennt (gilt dann als keine) */
@@ -169,6 +181,7 @@ export function cardListModel(
   // eine gewählte Liste, die keine Scheibe kennt, gilt als keine (Ungültiges ist die Vorgabe, nie ein Fehler)
   const list = input.find((c) => c.list && c.list.id === query.list)?.list ?? null
   const listOf = new Map(input.map((c) => [c.card.id, c.list?.id ?? null]))
+  const provenanceOf = new Map(input.map((c) => [c.card.id, c.provenance ?? "measured"]))
   const ofKind = ofFamily
     .filter((card) => query.kind === "all" || card.kind === query.kind)
     .sort(byStart)
@@ -182,6 +195,7 @@ export function cardListModel(
     (card) =>
       (!query.flag || card.flags.includes(query.flag)) &&
       (!list || listOf.get(card.id) === list.id) &&
+      (!query.provenance || (provenanceOf.get(card.id) ?? "measured") === query.provenance) &&
       (!range || inRange(card.startedAtMs, range))
   )
 
@@ -204,18 +218,42 @@ export function cardListModel(
     const day = eveningDay(card.startedAtMs, context.timeZone)
     const ofCard = card.scoring ?? (isProbeOnly(card) ? undefined : card.official)
     const resultScoring = ofCard ?? context.scoring
+    const provenance = provenanceOf.get(card.id) ?? "measured"
     // Werte wie am Ausdruck (die Wertung, bei nur Probe die Probe): so rechnet die Projektion
+    const result = projected(card, resultMetric(resultScoring), resultScoring)
+    const otherResult = projected(card, resultMetric(other(resultScoring)), other(resultScoring))
+    const mean = projected(card, meanMetric, context.scoring)
+    const delta = deltas.get(card.id) ?? null
+    const reasonFor = (metric: Readonly<MetricDefinition>) =>
+      REASON_TEXT[
+        detailReason(
+          { detail: card.projection.detail, shots: card.projection.printedShots, provenance },
+          metric
+        )
+      ]
+    const value = (scoring: Scoring) => (scoring === resultScoring ? result : otherResult)
+    const reasons: RowReasons = {
+      ...(value("rings") === null ? { rings: reasonFor(resultMetric("rings")) } : {}),
+      ...(value("decimal") === null ? { decimal: reasonFor(resultMetric("decimal")) } : {}),
+      ...(mean === null ? { mean: reasonFor(meanMetric) } : {}),
+      ...(delta === null
+        ? { delta: mean === null ? reasonFor(meanMetric) : "keine Scheibe davor" }
+        : {}),
+      ...(card.projection.printedShots === 0 ? { shots: reasonFor(resultMetric("rings")) } : {}),
+    }
     const row: ListRow = {
       id: card.id,
       startedAtMs: card.startedAtMs,
       kind: cardKind(card),
-      result: projected(card, resultMetric(resultScoring), resultScoring),
+      result,
       resultScoring,
       ofCard: ofCard !== undefined,
-      otherResult: projected(card, resultMetric(other(resultScoring)), other(resultScoring)),
-      mean: projected(card, meanMetric, context.scoring),
-      delta: deltas.get(card.id) ?? null,
+      otherResult,
+      mean,
+      delta,
       shots: card.projection.printedShots,
+      ...(provenance !== "measured" ? { provenance } : {}),
+      ...(Object.keys(reasons).length ? { reasons } : {}),
     }
     const evening = days.get(day) ?? { day, rows: [], shots: 0, others: [] }
     evening.rows.push(row)
@@ -245,6 +283,12 @@ export function cardListModel(
     flags: [
       ...new Set([...ofFamily.flatMap((c) => c.flags), ...(query.flag ? [query.flag] : [])]),
     ].sort(),
+    // eine gewählte Herkunft bleibt wählbar wie ein Merkmal
+    provenances: PROVENANCES.filter(
+      (p) =>
+        p === query.provenance ||
+        ofFamily.some((card) => (provenanceOf.get(card.id) ?? "measured") === p)
+    ),
     // eine gewählte Liste bleibt wählbar, auch ohne Scheibe der Familie, wie ein Merkmal
     lists: listsOf([...ofFamilyInput.map((c) => c.list), list]),
     list: list ? { id: list.id, name: list.name } : null,

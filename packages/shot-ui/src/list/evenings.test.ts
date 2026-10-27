@@ -343,3 +343,88 @@ describe("Scheiben-Liste: weitere Fälle", () => {
     expect(byId("decimal", "p")).toMatchObject({ result: 29, resultScoring: "rings", ofCard: true })
   })
 })
+
+describe("Herkunft und Gründe in der Liste", () => {
+  // Sonntag, 27. September 2026: eine gemessene, dazu eingetragene Serien-Summen in ganzen Ringen und eine Scheibe vom
+  // Ausdruck, die auf die Anlage wartet
+  const SERIES_RINGS = {
+    series: [1, 2, 3, 4].map((series) => ({ series, shots: 10, rings: 90, decimalTenths: null })),
+    total: null,
+    center: null,
+  }
+  const entered: ListInputCard = {
+    card: projected({
+      ...periodCard("s", 3, [], { startedAtMs: at(17, 0, 27) }),
+      sums: SERIES_RINGS,
+    }),
+    family: "lg-freihand",
+    provenance: "entered",
+  }
+  const waiting: ListInputCard = {
+    card: projected(periodCard("w", 3, [], { startedAtMs: at(18, 0, 27) })),
+    family: "lg-freihand",
+    provenance: "printout",
+  }
+  const measured = lg(periodCard("m", 3, [100, 101], { startedAtMs: at(16, 0, 27) }))
+  const input = [...INPUT, measured, entered, waiting]
+  const rows = (patch: Partial<ListQuery> = {}) =>
+    cardListModel(input, query(patch), context).evenings.flatMap((e) => e.rows)
+  const row = (id: string) => rows().find((r) => r.id === id)!
+
+  it("filtert nach Herkunft; die Herkünfte der Familie stehen in fester Folge dabei", () => {
+    expect(rows({ provenance: "entered" }).map((r) => r.id)).toEqual(["s"])
+    expect(rows({ provenance: "printout" }).map((r) => r.id)).toEqual(["w"])
+    expect(rows({ provenance: "measured" }).map((r) => r.id)).not.toContain("s")
+    expect(cardListModel(input, query(), context).provenances).toEqual([
+      "measured",
+      "printout",
+      "entered",
+    ])
+  })
+
+  it("eine gewählte Herkunft bleibt wählbar, auch ohne Scheibe der Familie", () => {
+    const model = cardListModel(INPUT, query({ provenance: "entered" }), context)
+    expect(model.provenances).toEqual(["measured", "entered"])
+    expect(model.cards).toBe(0)
+    expect(cardListModel(INPUT, query(), context).provenances).toEqual(["measured"])
+  })
+
+  it("eine wartende vom Ausdruck: jede fehlende Zahl wartet auf die Anlage", () => {
+    expect(row("w").provenance).toBe("printout")
+    expect(row("w").reasons).toMatchObject({
+      rings: "wartet auf die Anlage",
+      decimal: "wartet auf die Anlage",
+      mean: "wartet auf die Anlage",
+      delta: "wartet auf die Anlage",
+      shots: "wartet auf die Anlage",
+    })
+  })
+
+  it("Serien-Summen in ganzen Ringen: in Zehnteln „ohne Zehntel“, die Ringe haben einen Wert", () => {
+    expect(row("s").provenance).toBe("entered")
+    expect(row("s").reasons?.decimal).toBe("ohne Zehntel")
+    expect(row("s").reasons).not.toHaveProperty("rings")
+    expect(row("s").reasons?.mean).toBe("ohne Zehntel")
+  })
+
+  it("die erste Scheibe hat keine davor", () => {
+    expect(row("m").reasons).toEqual({ delta: "keine Scheibe davor" })
+  })
+
+  it("eine gemessene Zeile mit allen Zahlen trägt weder Herkunft noch Gründe", () => {
+    const b = row("b")
+    expect("provenance" in b).toBe(false)
+    expect("reasons" in b).toBe(false)
+  })
+
+  it("Projektionen ohne Grundlage (vor Version 6): „ohne Wert“", () => {
+    const { detail: _detail, ...old } = waiting.card.projection
+    const model = cardListModel(
+      [...INPUT, { ...waiting, card: { ...waiting.card, projection: old } }],
+      query(),
+      context
+    )
+    const w = model.evenings.flatMap((e) => e.rows).find((r) => r.id === "w")!
+    expect(w.reasons?.rings).toBe("ohne Wert")
+  })
+})
