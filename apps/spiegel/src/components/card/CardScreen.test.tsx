@@ -67,8 +67,10 @@ describe("Seite einer Scheibe: eigene und geteilte", () => {
       share: null,
       previous: null,
       disciplines: [],
+      fetch: { hex: "ff914420", printouts: [], request: null },
     })
     expect(html).toContain("data-result-actions")
+    expect(html).toContain('data-printed-id="ff914420"')
     expect(html).toContain("data-card-actions")
     expect(html).toContain("data-card-discipline")
     expect(html).toContain("data-share-card")
@@ -77,7 +79,7 @@ describe("Seite einer Scheibe: eigene und geteilte", () => {
   })
 
   it("mit einer Scheibe davor der Weg auf die Seite Vergleichen, ohne keiner", () => {
-    const own = { near: null, paging: false, share: null, disciplines: [] }
+    const own = { near: null, paging: false, share: null, disciplines: [], fetch: null }
     const html = render({ ...own, previous: "c0" })
     expect(html).toContain("data-compare-previous")
     expect(html).toContain(`href="/compare?type=cards&amp;a=${card.id}&amp;b=c0"`)
@@ -97,6 +99,8 @@ describe("Seite einer Scheibe: eigene und geteilte", () => {
       "data-share-card",
       "data-delete-card",
       "data-compare-previous",
+      "data-card-printout",
+      "data-card-fetch",
     ])
       expect(html).not.toContain(part)
     const leaving = [...html.matchAll(/<a [^>]*href="([^"]*)"/g)]
@@ -107,7 +111,14 @@ describe("Seite einer Scheibe: eigene und geteilte", () => {
 })
 
 describe("Seite einer Scheibe je Detailtiefe", () => {
-  const OWN = { near: null, paging: false, share: null, previous: null, disciplines: [] }
+  const OWN = {
+    near: null,
+    paging: false,
+    share: null,
+    previous: null,
+    disciplines: [],
+    fetch: null,
+  }
   const meta = (html: string) => {
     const header = html.slice(html.indexOf("data-card-header"))
     return /<p class="text-\[13px\][^"]*">([^<]*)<\/p>/.exec(header)?.[1] ?? ""

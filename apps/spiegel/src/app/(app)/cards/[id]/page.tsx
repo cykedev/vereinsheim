@@ -15,6 +15,7 @@ import {
   ownerCards,
   previousInFamily,
 } from "@/lib/db/reads"
+import { cardFetchInfo } from "@/lib/fetch-card/queries"
 import { pageContext } from "@/lib/page-context"
 import { listable, withFamily } from "@/lib/pages"
 import { searchOf } from "@/lib/search"
@@ -23,7 +24,7 @@ import { targetDisplay } from "@/lib/target-display"
 export const metadata: Metadata = { title: "Scheibe" }
 
 // Seite einer Scheibe: nur die eigene; Rückweg und Blättern im Kontext der Herkunft (Liste, Start, Fortschritt), dazu
-// der Link zum Teilen und die Disziplinen, die der Schütze wählen kann
+// der Link zum Teilen, die Disziplinen, die der Schütze wählen kann, und Ausdruck und Holen
 export default async function CardRoutePage({
   params,
   searchParams,
@@ -74,6 +75,7 @@ export default async function CardRoutePage({
         share: await ownCardShare(db, { cardId: id, ownerId }),
         previous,
         disciplines: await disciplineOptions(db, { cardId: id, ownerId }),
+        fetch: await cardFetchInfo(db, { cardId: id, ownerId }),
       }}
       path={`/cards/${encodeURIComponent(id)}`}
       context={context}

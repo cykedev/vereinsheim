@@ -78,6 +78,7 @@ import { useSavedChoice } from "@/components/shell/useSavedChoice"
 import { useHelp } from "@vereinsheim/ui/design2/help-sheet"
 import { addressScoring, nextCardAddress, ownHash } from "@/lib/card-address"
 import { cardWhen } from "@/lib/open"
+import type { CardFetchInfo } from "@/lib/fetch-card/queries"
 import type { DisciplineOption } from "@/lib/db/cards"
 import type { PageCard } from "@/lib/db/reads"
 import { setCardKind } from "@/lib/card-kind-actions"
@@ -158,6 +159,8 @@ export function CardScreen({
     previous: string | null
     /** die Disziplinen, die der Schütze für die Scheibe wählen kann (`disciplineOptions`) */
     disciplines: readonly DisciplineOption[]
+    /** Ausdruck und Holen (`cardFetchInfo`); null ohne */
+    fetch: CardFetchInfo | null
   } | null
   /** die Adresse dieser Seite, für Anker und Fortschreiben (`/cards/<id>` bzw. `/share/<uuid>`) */
   path: string
@@ -557,6 +560,7 @@ export function CardScreen({
               stand: card.standDiscipline,
               options: own.disciplines,
             }}
+            fetch={own.fetch}
             share={share}
             onShareChange={setShare}
             back={urlFromRoute(backRoute(route))}

@@ -13,26 +13,10 @@ import { setCardDiscipline } from "@/lib/card-discipline-actions"
 import type { DisciplineOption } from "@/lib/db/cards"
 
 import { ActionRow } from "./ActionRow"
+import { DisciplineChoice } from "./DisciplineChoice"
 
 const BUTTON =
   "inline-flex h-10 items-center gap-2 rounded-full px-3.5 text-[13px] font-semibold text-foreground hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-60"
-
-/**
- * eine Wahl im Blatt: ein Knopf je Disziplin, die aktuelle getönt. Knöpfe statt Radios: Pfeiltasten in einer Radiogruppe
- * wählten sofort und öffneten die Rückfrage, die Liste ließe sich mit der Tastatur nicht durchgehen
- */
-const OPTION =
-  "grid w-full cursor-pointer justify-items-start rounded-lg px-2 py-1.5 text-left text-[14px] hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-ring aria-[current=true]:bg-accent-wash"
-
-/** die Möglichkeiten nach Familie, in der Reihenfolge von `disciplineOptions` */
-function byFamily(options: readonly DisciplineOption[]) {
-  const groups = new Map<string, DisciplineOption[]>()
-  for (const option of options) {
-    const key = option.family ?? "Ohne Familie"
-    groups.set(key, [...(groups.get(key) ?? []), option])
-  }
-  return [...groups]
-}
 
 /**
  * Disziplin als Zeile im Kasten „Diese Scheibe“: der Name, nach einer eigenen Wahl leise die vom Stand. „Ändern“ öffnet
@@ -114,33 +98,18 @@ export function CardDiscipline({
           Zur Wahl stehen die Disziplinen mit derselben Scheibe. Die Werte der Schüsse bleiben, wie
           Meyton sie gemessen hat.
         </p>
-        <div data-discipline-options className="grid gap-3">
-          {byFamily(options).map(([name, group]) => (
-            <div key={name} role="group" aria-label={name} className="grid gap-1">
-              <p className="mb-1 text-[13px] font-semibold text-muted-foreground">{name}</p>
-              {group.map((option) => (
-                <button
-                  key={option.id}
-                  type="button"
-                  data-discipline-option
-                  aria-current={option.current}
-                  onClick={() => {
-                    setSheet(false)
-                    if (option.current) return
-                    setChosen(option)
-                    setAsking(true)
-                  }}
-                  className={OPTION}
-                >
-                  <span>{option.name}</span>
-                  {option.stand && (
-                    <span className="text-[12.5px] text-muted-foreground">am Stand gewählt</span>
-                  )}
-                </button>
-              ))}
-            </div>
-          ))}
-        </div>
+        <DisciplineChoice
+          options={options.map((option) => ({
+            ...option,
+            ...(option.stand ? { note: "am Stand gewählt" } : {}),
+          }))}
+          onChoose={(option) => {
+            setSheet(false)
+            if (option.current) return
+            setChosen(option)
+            setAsking(true)
+          }}
+        />
       </Sheet>
       {chosen && (
         <DecisionDialog
