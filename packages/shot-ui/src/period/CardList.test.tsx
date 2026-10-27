@@ -116,5 +116,7 @@ describe("Liste der Scheiben: Grund ohne Wert", () => {
     expect(cells).toMatch(/>–<\/td><td[^>]*>wartet auf die Anlage<\/td>/)
     expect(cells.match(/wartet auf die Anlage/g)).toHaveLength(1)
     expect(cells).not.toContain("ohne Wert")
+    // ohne Schuss „–“ statt 0, wie in der Scheiben-Liste
+    expect(cells).toMatch(/>–<\/td><\/tr>$|>–<\/td>$/)
   })
 })

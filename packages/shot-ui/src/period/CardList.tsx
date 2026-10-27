@@ -148,7 +148,10 @@ export function CardList({
                       : "–"
                     : (reasons[card.id] ?? "ohne Wert")}
                 </td>
-                <td className="px-2 py-1.5 text-right text-muted-foreground">{count}</td>
+                {/* ohne Schuss „–“ wie in der Scheiben-Liste; der Grund steht schon in der Spalte des Abstands */}
+                <td className="px-2 py-1.5 text-right text-muted-foreground">
+                  {count === 0 && reasons[card.id] ? "–" : count}
+                </td>
               </tr>
             )
           })}

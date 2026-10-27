@@ -4,6 +4,7 @@ import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 
+import { miniView } from "../geometry"
 import { asOnPrintout, formatTotal } from "../shots"
 import { initialViewState, type ViewState } from "../view-state"
 import { SeriesStrip } from "./SeriesStrip"
@@ -196,6 +197,9 @@ describe("ein Bau für jede Detailtiefe", () => {
     expect(html).not.toContain("data-summary-center")
     expect(html).toContain(">95,0<")
     expect(html).toContain('<span title="ohne Zehntel">–')
+    // ohne Lage der Ausschnitt der kleinen Scheiben der Übersichten, nicht der enge um eine Gruppe
+    const mini = miniView(LP_10M, [])
+    expect(html).toContain(`viewBox="${mini.x} ${mini.y} ${mini.w} ${mini.w}"`)
     // die Schusszahl immer, wie „n von 10 Schuss“ bei Schüssen
     expect(html.match(/>10 Schuss</g)).toHaveLength(2)
   })

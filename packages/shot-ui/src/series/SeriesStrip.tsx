@@ -9,7 +9,7 @@ import { useMemo } from "react"
 import { Dash } from "../Dash"
 import { REASON_TEXT } from "../detail"
 import { formatValue } from "../format"
-import { seriesTileView, tileColumns } from "../geometry"
+import { miniView, seriesTileView, tileColumns } from "../geometry"
 import { formatTotal, isProbeShot, seriesKeyOf } from "../shots"
 import { MiniTarget } from "../target/MiniTarget"
 import { useElementWidth } from "../target/useAnimatedViewBox"
@@ -103,14 +103,13 @@ export function SeriesStrip({
   }, [shots, state.scoring, sums])
   const fromSums = blocks.length > 0 && !blocks.some((block) => block.indices.length)
 
-  const view = useMemo(
-    () =>
-      seriesTileView(
-        target,
-        shots.filter(isDrawn).map((shot) => ({ xUm: shot.xUm as number, yUm: shot.yUm as number }))
-      ),
-    [target, shots]
-  )
+  // ohne eine Lage wie die kleinen Scheiben der Übersichten (Spiegel und Ringe), sonst um die Gruppe der Scheibe
+  const view = useMemo(() => {
+    const points = shots
+      .filter(isDrawn)
+      .map((shot) => ({ xUm: shot.xUm as number, yUm: shot.yUm as number }))
+    return points.length ? seriesTileView(target, points) : miniView(target, [])
+  }, [target, shots])
 
   if (!blocks.length && !missing) return null
 
