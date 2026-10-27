@@ -70,6 +70,11 @@ export interface OverviewInput {
   usage: { cards: number; recentCards: number; recentAccounts: number }
   /** neue Disziplinen mit Scheiben: deren Scheiben warten (ohne Scheibe oder Familie) oder mit Vorschlag */
   disciplines: { waiting: number; suggested: number }
+  /**
+   * Ausdrucke an Scheiben vom Ausdruck ohne Brücke, deren Werte Spiegel nicht übernehmen konnte; davon in einer Form
+   * (Layout), die der Leser nicht kennt. Zustand, keine Aufgabe: Ein neuer Leser liest sie neu
+   */
+  printouts: { unreadable: number; unknownLayout: number }
 }
 
 /** was die Brücke meldet, in Worten; nur Information, keine Aufgabe */
@@ -85,6 +90,20 @@ const BRIDGE_NOTE: Partial<Record<HeartbeatV1["status"], string>> = {
 }
 
 const count = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
+
+/** Ausdrucke ohne lesbare Werte als Zustand der Station Anlage (Textbuch); ohne keiner */
+export function printoutFacts({ unreadable, unknownLayout }: OverviewInput["printouts"]): string[] {
+  if (unreadable === 0) return []
+  const sentence =
+    unreadable === 1
+      ? "1 Ausdruck ohne lesbare Werte. Spiegel liest ihn noch einmal, sobald eine neue Version es kann."
+      : `${unreadable} Ausdrucke ohne lesbare Werte. Spiegel liest sie noch einmal, sobald eine neue Version es kann.`
+  return [
+    unknownLayout > 0
+      ? `${sentence} Davon ${unknownLayout} in einer Form, die Spiegel noch nicht kennt.`
+      : sentence,
+  ]
+}
 
 export function overviewModel(input: OverviewInput): AdminOverviewModel {
   const tasks: AdminTask[] = []
@@ -167,16 +186,19 @@ export function overviewModel(input: OverviewInput): AdminOverviewModel {
         does: "Hier entstehen alle Scheiben. Spiegel liest sie nur und ändert an der Anlage nie etwas.",
         status: input.site ? "eingerichtet" : "noch nicht eingerichtet",
         tone: input.site && !input.site.foreignSource ? "ok" : "wait",
-        facts: input.site
-          ? [
-              input.site.name,
-              ...(input.site.foreignSource
-                ? [
-                    "Eine Brücke schickt Scheiben von einer Meyton-Anlage, die Spiegel nicht kennt. Spiegel nimmt sie nicht an. Das sollte nie passieren. Bitte melde es.",
-                  ]
-                : []),
-            ]
-          : [],
+        facts: [
+          ...(input.site
+            ? [
+                input.site.name,
+                ...(input.site.foreignSource
+                  ? [
+                      "Eine Brücke schickt Scheiben von einer Meyton-Anlage, die Spiegel nicht kennt. Spiegel nimmt sie nicht an. Das sollte nie passieren. Bitte melde es.",
+                    ]
+                  : []),
+              ]
+            : []),
+          ...printoutFacts(input.printouts),
+        ],
       },
       {
         id: "bridge",
@@ -322,6 +344,15 @@ export async function adminOverview(
     usageOf(nowMs),
     disciplineTaskCounts(),
   ])
+  // Ausdrucke ohne lesbare Werte an Scheiben vom Ausdruck ohne Brücke, nicht im Papierkorb; nur Zahlen
+  const unreadableWhere = {
+    valuesStatus: { in: ["inconsistent", "unreadable"] as ("inconsistent" | "unreadable")[] },
+    card: { is: { origin: "pdf" as const, sourceId: null, deletedAt: null } },
+  }
+  const [unreadable, unknownLayout] = await Promise.all([
+    db.printout.count({ where: unreadableWhere }),
+    db.printout.count({ where: { ...unreadableWhere, layout: "unknown" } }),
+  ])
   const rows = consents.map((c) => ({
     id: c.id,
     userId: c.userId,
@@ -361,5 +392,6 @@ export async function adminOverview(
     historyPending: accountsLoadingHistory(consents),
     usage,
     disciplines,
+    printouts: { unreadable, unknownLayout },
   })
 }

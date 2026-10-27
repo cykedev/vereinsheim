@@ -81,7 +81,7 @@ describe("Kasten „Diese Scheibe“", () => {
   it("Ausdruck und Holen vor Disziplin, Teilen, Löschen", () => {
     const html = render({
       hex: "ff914420",
-      printouts: [{ id: "cp1", printedAtMs: Date.UTC(2026, 9, 13, 17, 52) }],
+      printouts: [{ id: "cp1", printedAtMs: Date.UTC(2026, 9, 13, 17, 52), unreadable: false }],
       request: { id: 7, status: "open", filled: false, hex: "ff914420", day: "2026-10-13" },
     })
     const order = [

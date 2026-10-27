@@ -21,6 +21,7 @@ const base: Input = {
   historyPending: 0,
   usage: { cards: 124, recentCards: 9, recentAccounts: 4 },
   disciplines: { waiting: 0, suggested: 0 },
+  printouts: { unreadable: 0, unknownLayout: 0 },
 }
 const consent = (id: number, status: Input["consents"][number]["status"]) => ({
   id,
@@ -119,6 +120,22 @@ describe("Übersicht des Admins", () => {
     expect(model.stations[0].facts[1]).toContain("nimmt sie nicht an")
   })
 
+  it("Ausdrucke ohne lesbare Werte: Zustand an der Anlage, keine Aufgabe", () => {
+    expect(overviewModel(base).stations[0].facts).toEqual(["Schützenhaus"])
+    const one = overviewModel({ ...base, printouts: { unreadable: 1, unknownLayout: 0 } })
+    expect(one.tasks).toEqual([])
+    expect(one.stations[0].facts).toEqual([
+      "Schützenhaus",
+      "1 Ausdruck ohne lesbare Werte. Spiegel liest ihn noch einmal, sobald eine neue Version es kann.",
+    ])
+    expect(
+      overviewModel({ ...base, printouts: { unreadable: 3, unknownLayout: 2 } }).stations[0]
+        .facts[1]
+    ).toBe(
+      "3 Ausdrucke ohne lesbare Werte. Spiegel liest sie noch einmal, sobald eine neue Version es kann. Davon 2 in einer Form, die Spiegel noch nicht kennt."
+    )
+  })
+
   it("eine Brücke ohne jeden Kontakt ist nicht „aus (nach dem Training normal)“", () => {
     const model = overviewModel({ ...base, bridge: { ...base.bridge!, lastHeartbeatAt: null } })
     expect(model.stations[1]).toMatchObject({ status: "noch kein Kontakt", tone: "wait" })
@@ -208,6 +225,7 @@ describe("Übersicht des Admins", () => {
       consents: [consent(1, "requested"), consent(3, "returned")],
       notMine: 2,
       historyPending: 1,
+      printouts: { unreadable: 3, unknownLayout: 1 },
     })
     // dazu die Aufgaben „Anlage einrichten“ und „Brücke verbinden“
     const setup = overviewModel({ ...base, site: null, bridge: null })

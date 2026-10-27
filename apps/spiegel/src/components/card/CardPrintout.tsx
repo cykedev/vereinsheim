@@ -33,9 +33,21 @@ function PdfLink({ id }: { id: string }) {
   )
 }
 
+/** leiser Grund, wenn Spiegel die Werte eines Ausdrucks nicht übernehmen konnte */
+export const UNREADABLE_VALUES = "Werte nicht lesbar"
+
+function Unreadable() {
+  return (
+    <span data-printout-unreadable className="font-normal text-muted-foreground">
+      {` · ${UNREADABLE_VALUES}`}
+    </span>
+  )
+}
+
 /**
  * Ausdruck als Zeile im Kasten „Diese Scheibe“: die ID wie im Fuß des Ausdrucks, damit Papier und Scheibe
- * zusammenfinden, mit Druckzeit und dem PDF; weitere Ausdrucke darunter. Ohne PDF (getippte ID, Scheibe der Brücke)
+ * zusammenfinden, mit Druckzeit und dem PDF; weitere Ausdrucke darunter. Konnte Spiegel die Werte eines Ausdrucks nicht
+ * übernehmen (Scheibe vom Ausdruck ohne Brücke), steht leise „Werte nicht lesbar“ daneben. Ohne PDF (getippte ID, Scheibe der Brücke)
  * sagt die Zeile, wie es an die Scheibe kommt. Nicht auf der geteilten Seite: ID und Abend holen die Scheibe.
  */
 export function CardPrintout({
@@ -58,6 +70,7 @@ export function CardPrintout({
         <>
           <span className="font-semibold text-foreground">
             {[hex ? `ID ${hex}` : null, firstPrinted].filter(Boolean).join(" · ")}
+            {first?.unreadable && <Unreadable />}
           </span>
           {!first && (
             <span className="block">
@@ -80,6 +93,7 @@ export function CardPrintout({
                 {["Weiterer Ausdruck", printedText(printout.printedAtMs, timeZone)]
                   .filter(Boolean)
                   .join(", ")}
+                {printout.unreadable && <Unreadable />}
               </span>
               <PdfLink id={printout.id} />
             </li>

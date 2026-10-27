@@ -16,7 +16,13 @@ describe("Zeile „Ausdruck“", () => {
   it("die ID klein in acht Zeichen, Druckzeit und das PDF über die eigene Route", () => {
     const html = render({
       hex: "ff914420",
-      printouts: [{ id: "cprint0000000000000000001", printedAtMs: Date.UTC(2026, 9, 27, 18, 52) }],
+      printouts: [
+        {
+          id: "cprint0000000000000000001",
+          printedAtMs: Date.UTC(2026, 9, 27, 18, 52),
+          unreadable: false,
+        },
+      ],
       timeZone: "Europe/Berlin",
     })
     expect(html).toContain('data-printed-id="ff914420"')
@@ -31,8 +37,16 @@ describe("Zeile „Ausdruck“", () => {
     const html = render({
       hex: "ff914420",
       printouts: [
-        { id: "cprint0000000000000000001", printedAtMs: Date.UTC(2026, 9, 27, 18, 52) },
-        { id: "cprint0000000000000000002", printedAtMs: Date.UTC(2026, 9, 27, 19, 31) },
+        {
+          id: "cprint0000000000000000001",
+          printedAtMs: Date.UTC(2026, 9, 27, 18, 52),
+          unreadable: false,
+        },
+        {
+          id: "cprint0000000000000000002",
+          printedAtMs: Date.UTC(2026, 9, 27, 19, 31),
+          unreadable: false,
+        },
       ],
       timeZone: "Europe/Berlin",
     })
@@ -46,5 +60,41 @@ describe("Zeile „Ausdruck“", () => {
     expect(text(html)).toBe(
       "Ausdruck ID 7fff0a02 Das PDF hängt an, wenn du den QR-Code unter „Scheibe holen“ scannst."
     )
+  })
+
+  it("Werte nicht lesbar: leise neben dem Ausdruck, auch beim weiteren", () => {
+    const html = render({
+      hex: "ff914420",
+      printouts: [
+        {
+          id: "cprint0000000000000000001",
+          printedAtMs: Date.UTC(2026, 9, 27, 18, 52),
+          unreadable: true,
+        },
+        {
+          id: "cprint0000000000000000002",
+          printedAtMs: Date.UTC(2026, 9, 27, 19, 31),
+          unreadable: true,
+        },
+      ],
+      timeZone: "Europe/Berlin",
+    })
+    expect(text(html)).toContain(
+      "ID ff914420 · gedruckt Di 27.10.2026 um 19:52 · Werte nicht lesbar"
+    )
+    expect(text(html)).toContain(
+      "Weiterer Ausdruck, gedruckt Di 27.10.2026 um 20:31 · Werte nicht lesbar"
+    )
+    expect(html.match(/data-printout-unreadable/g)).toHaveLength(2)
+  })
+
+  it("lesbar: kein Zusatz", () => {
+    const html = render({
+      hex: "ff914420",
+      printouts: [{ id: "cprint0000000000000000001", printedAtMs: null, unreadable: false }],
+      timeZone: "Europe/Berlin",
+    })
+    expect(html).not.toContain("data-printout-unreadable")
+    expect(text(html)).not.toContain("Werte nicht lesbar")
   })
 })
