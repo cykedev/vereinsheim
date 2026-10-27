@@ -364,7 +364,7 @@ export function periodModel(input: {
     label: weekLabel(key),
   }))
 
-  // die Scheiben, über die die Zahlen rechnen könnten: ein Training nur aus Probe nur mit dem Schalter
+  // die Scheiben, über die die Zahlen rechnen könnten: eine Scheibe nur aus Probe nur mit dem Schalter
   const counted = cards.filter((card) => state.includeProbeOnly || !card.probeOnly)
   const idsOf = (values: readonly CardValue[]) => new Set(values.map((v) => v.id))
 
@@ -529,7 +529,7 @@ const lightCard = (card: PeriodItem): PeriodItem => ({
 })
 
 /**
- * die Scheiben, die das Ergebnis des Zeitraums zählt, als Grundlage des Trefferbilds: ein Training nur aus Probe nur
+ * die Scheiben, die das Ergebnis des Zeitraums zählt, als Grundlage des Trefferbilds: eine Scheibe nur aus Probe nur
  * mit dem Schalter, wie im Ergebnis
  */
 export function patternIds(model: Pick<PeriodModel, "cards">, includeProbeOnly: boolean): string[] {

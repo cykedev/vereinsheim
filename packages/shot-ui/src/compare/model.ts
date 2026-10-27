@@ -118,7 +118,7 @@ function rowOf(key: string, scoring: Scoring): Omit<CompareRow, "a" | "b" | "com
 /**
  * Zwei Gruppen von Scheiben (Zeiträume oder Arten): Werte über alle Schüsse aus den Einträgen (`pooledValue`), Ergebnis,
  * Streuung und Kacheln über `compareValues`, die Lage über alle Schüsse der Scheiben ab 3 Schuss mit Lage
- * (`compareCenterGroups`), das Bild aus allen Lagen. Ein Training nur aus Probe zählt nur mit `includeProbeOnly`, wie im Fortschritt; `positions` sind die Lagen
+ * (`compareCenterGroups`), das Bild aus allen Lagen. Eine Scheibe nur aus Probe zählt nur mit `includeProbeOnly`, wie im Fortschritt; `positions` sind die Lagen
  * je Scheibe (fehlt eine, zählt sie weder im Bild noch als Scheibe ohne Lage).
  */
 export function groupCompareModel(input: {

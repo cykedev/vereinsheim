@@ -58,6 +58,27 @@ describe("Liste der Scheiben", () => {
       html.slice(html.indexOf(`data-card-row="${id}"`)).split("</tr>")[0]
     expect(rowOf("k2")).toContain("lucide-trophy")
     expect(rowOf("k1")).not.toContain("lucide-trophy")
+    // ein Wettkampf nur aus Probe: Pokal und „Probe“ in derselben Zelle
+    const probe = periodCard("p", 3, [100, 101], { probe: true, kind: "competition" })
+    const model = periodModel({
+      items: [item(probe)],
+      state: initialPeriodState({ family: "lg-10m" }),
+      nowMs: NOW,
+      timeZone: TZ,
+      named: [],
+    })
+    const html2 = renderToStaticMarkup(
+      createElement(CardList, {
+        cards: model.cards,
+        values: model.values,
+        deltas: model.deltas,
+        metric,
+        timeZone: TZ,
+        chosen: null,
+        onChoose: () => {},
+      })
+    )
+    expect(html2).toMatch(/data-kind="competition-probe"[^]*lucide-trophy[^]*> Probe</)
     expect(rowOf("k1")).toContain('<span class="sr-only">Training</span>')
     expect(html).not.toMatch(/aria-hidden="true">[TWP]</)
   })

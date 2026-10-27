@@ -135,7 +135,7 @@ Stand mit `past` (`MAX_OBSERVED_LAG_MS`, SF-79).
 - **Art der Scheibe wie die Wertung:** `Card.kind` ist die Art
   der Quelle (jeder Stand schreibt sie: der Adapter aus `Status`, `seed:own` „training“), `Card.kindChoice` die Wahl des
   Schützen, die kein Stand anfasst. Es gilt `kindChoice ?? ranking.kind ?? kind` (`kindOfRow` in `reads.ts`, der einzige
-  Weg zur Art), in Übersicht und Seite; ohne Wahl ist eine Scheibe nur aus Probe Training. `Ranking` ist die `Rangliste` der SSMDB2 je Anlage: Das
+  Weg zur Art), in Übersicht und Seite; ohne Wahl gilt bei einer Scheibe nur aus Probe die Quelle. `Ranking` ist die `Rangliste` der SSMDB2 je Anlage: Das
   Einlesen legt sie ohne Art an (`rankingFor`), der Admin ordnet sie zu (`setRankingKind`, Admin → Listen); die
   Zuordnung gilt beim Lesen, keine Scheibe wird umgeschrieben. In der Oberfläche heißt sie „Liste“
   (`OLD_WORDS` hält „Rangliste“ fern): Die Zugriffe liefern sie als `list` (`OverviewCard`, `PageCard`), die Seite einer

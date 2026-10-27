@@ -59,12 +59,9 @@ beforeAll(async () => {
     })
   for (const input of season(1, 12, FIRST_MS, site.disciplineId, site.ownerId, 9000))
     ids.lp.push((await writeRevision(db, input)).cardId)
-  // die ersten sechs Wettkampf, die übrigen Training, gewählt: Ohne Wahl wäre eine Scheibe nur aus Probe Training
+  // die ersten sechs Wettkampf, die übrigen Training
   for (const [i, id] of ids.lp.entries())
-    await db.card.update({
-      where: { id },
-      data: { kindChoice: i < 6 ? "competition" : "training" },
-    })
+    await db.card.update({ where: { id }, data: { kind: i < 6 ? "competition" : "training" } })
   // Luftgewehr ist älter: Die neueste Scheibe ist Luftpistole
   const [lg] = season(2, 1, FIRST_MS - 10 * DAY_MS, lgDiscipline.id, site.ownerId, 9100)
   ids.lg = (await writeRevision(db, lg)).cardId

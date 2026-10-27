@@ -9,6 +9,7 @@ import { cn } from "@vereinsheim/lib/utils"
 import { useId, useMemo, type ReactNode } from "react"
 
 import { HelpButton } from "../help/HelpButton"
+import { KIND_TEXT } from "../list/KindMark"
 import type { Route } from "../nav/routes"
 import { isProbeShot, seriesKeyOf } from "../shots"
 import type { SeriesKey } from "../types"
@@ -75,7 +76,7 @@ function coverageText(
   const kinds =
     basis === "nur Probe"
       ? [
-          `${counted(probe, "Probeschuss", "Probeschüsse")}, als ${kind === "competition" ? "Wettkampf" : "Training"} wie Wertung gezählt`,
+          `${counted(probe, "Probeschuss", "Probeschüsse")}, als ${KIND_TEXT[kind]} wie Wertung gezählt`,
         ]
       : [counted(shots.length, "Wertungsschuss", "Wertungsschüsse")]
   return [

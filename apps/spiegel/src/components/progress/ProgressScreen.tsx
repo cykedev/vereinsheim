@@ -263,7 +263,7 @@ export function ProgressScreen({
   const target = TARGETS[option?.targetId ?? "lp-10m"]
   const result = <PeriodResult model={model} timeZone={timeZone} onHelp={onHelp} />
   const sentence = periodSentence(model)
-  // Training nur aus Probe zählt nur mit dem Schalter: sonst steht es in der Liste, aber nicht im Ergebnis
+  // eine Scheibe nur aus Probe zählt nur mit dem Schalter: sonst steht es in der Liste, aber nicht im Ergebnis
   const excluded = model.excludedProbeOnly
   const cardsText = `${model.cards.length} Scheiben${excluded ? `, ${excluded} nur Probe nicht gezählt` : ""}`
   const empty = model.cards.length === 0

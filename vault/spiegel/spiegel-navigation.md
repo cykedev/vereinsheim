@@ -445,8 +445,8 @@ automatisch gespeichert.
   die Wahl des Schützen (`Card.kindChoice`); neue Lesungen der Brücke schreiben nur die Quelle.
 - **Es gilt** die Wahl, ohne Wahl die Art der Liste aus Meyton (`Rangliste`), die der Admin zugeordnet hat (Admin →
   Listen), sonst die Quelle. `Status` der SSMDB2 ist an der Vereinsanlage leer ([[meyton-ssmdb2]]); eine
-  Liste ohne Zuordnung gilt als Training. Ohne Wahl ist eine Scheibe nur aus Probe Training, Liste und Quelle zählen
-  dann nicht.
+  Liste ohne Zuordnung gilt als Training. Ohne Wahl gilt bei einer Scheibe nur aus Probe die Quelle, die Liste zählt
+  dann nicht: Der Probeblock vor einem Wettkampf (SF-03) trägt dessen Art.
 - **Was folgt:** Filter „Art“ in Liste und Fortschritt, der Pokal in der Liste, die Metazeile der Scheibe, die Rekorde
   „nur Wettkampf“ und ob der Umschalter die Wertung „amtlich“ nennt. Die Wertung selbst ändert die Art nicht.
   Bei einer Scheibe nur aus Probe sagt die Art auch, ob die Wertung der Disziplin gilt: im Wettkampf ja, im Training

@@ -18,6 +18,7 @@ import {
   unitsPerPixel,
 } from "../geometry"
 import { layerOrder } from "../layers"
+import { KIND_TEXT } from "../list/KindMark"
 import { formatShotValue, groupShots, isProbeShot, seriesKeyOf, shotLabels } from "../shots"
 import type { SeriesKey } from "../types"
 import { isSelected, type ViewState } from "../view-state"
@@ -112,12 +113,10 @@ export function TargetView({
     shots.length === 0 && summaryCenter
       ? `${target.label}: Mitte der Schüsse`
       : `${target.label}: ${shots.length} ${
-          probeOnly
-            ? `Probeschüsse als ${kind === "competition" ? "Wettkampf" : "Training"}`
-            : "Wertungsschüsse"
+          probeOnly ? `Probeschüsse als ${KIND_TEXT[kind]}` : "Wertungsschüsse"
         }${selectionText(state)}${summaryCenter ? ", Mitte der Schüsse" : ""}`
 
-  // die Scheibe zeigt das Probe-Eck, wenn alle Schüsse der Auswahl aus der Probe stammen (Training nur aus Probe)
+  // die Scheibe zeigt das Probe-Eck, wenn alle Schüsse der Auswahl aus der Probe stammen (eine Scheibe nur aus Probe)
   const shown = shots.filter((_, i) => selectedAt(i))
   const showsProbe = shown.length > 0 && shown.every(isProbeShot)
 

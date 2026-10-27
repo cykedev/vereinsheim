@@ -362,7 +362,7 @@ export function CardScreen({
       <KindToggle kind={kindChoice.shown} onChange={kindChoice.change} />
       <ScoringToggle
         scoring={state.scoring}
-        official={toggleOfficial(kindChoice.shown, card.official)}
+        official={toggleOfficial(kindChoice.shown, card.competitionOfficial)}
         onChange={scoringChoice.change}
       />
     </>

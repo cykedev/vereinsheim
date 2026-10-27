@@ -7,7 +7,7 @@ import type { TargetImage } from "@vereinsheim/shot-core/targets"
 
 import { asOnPrintout, isProbeShot } from "../shots"
 
-/** Grundlage der Analyse, für den Kopf: die Scheibe oder ein Training nur aus Probe */
+/** Grundlage der Analyse, für den Kopf: die Scheibe oder eine Scheibe nur aus Probe */
 export type AnalysisBasis = "nur Probe" | "alle"
 
 export interface AnalysisInput {

@@ -342,8 +342,47 @@ describe("cardWithShots", () => {
     expect(withMatch.official).toBe("rings")
     const page = await cardWithShots(db, { cardId: probeOnly.id, ownerId: site.ownerId })
     expect(page).not.toHaveProperty("official")
+    // für den Kreis der Wertung, sobald der Schütze auf Wettkampf stellt
+    expect(page?.competitionOfficial).toBe("rings")
     const all = await ownerCards(db, { ownerId: site.ownerId })
     expect(all.find((c) => c.id === probeOnly.id)).not.toHaveProperty("official")
+  })
+
+  it("der Probeblock eines Wettkampfs von der Brücke bleibt ohne Wahl Wettkampf, auch in einer Trainingsliste", async () => {
+    const ownerId = site.ownerId
+    const block = generateSeason({
+      sourceId: site.sourceId,
+      ownerId,
+      everyDays: 1,
+      seed: 31,
+      cards: 12,
+      firstMs: PENDING_MS + 40 * DAY_MS,
+      disciplineId: site.disciplineId,
+      scheibenIdBase: 5300,
+    }).find((input) => input.shots.every((shot) => shot.stellung === 0))!
+    // erfunden: der Stand vor der Wertung eines Wettkampfs, `Status` sagt Wettkampf
+    const { cardId } = await writeRevision(db, {
+      ...block,
+      card: { ...block.card, kind: "competition" },
+    })
+    const list = await db.ranking.create({
+      data: { siteId: site.siteId, name: "Training reads", kind: "training" },
+    })
+    await db.card.update({ where: { id: cardId }, data: { rankingId: list.id } })
+    try {
+      const card = (await familyCards(db, { ownerId, familyId: site.familyId })).find(
+        (c) => c.id === cardId
+      )!
+      expect(card.projection.probeOnly).toBe(true)
+      expect(card).toMatchObject({ kind: "competition", official: "rings" })
+      expect(await cardWithShots(db, { cardId, ownerId })).toMatchObject({
+        kind: "competition",
+        official: "rings",
+      })
+    } finally {
+      await db.card.delete({ where: { id: cardId } })
+      await db.ranking.delete({ where: { id: list.id } })
+    }
   })
 
   it("ein Wettkampf nur aus Probe hat die Wertung der Disziplin, wie jeder Wettkampf", async () => {
@@ -351,8 +390,17 @@ describe("cardWithShots", () => {
     const overview = await familyCards(db, { ownerId, familyId: site.familyId })
     const probeOnly = overview.find((c) => c.projection.probeOnly)!
     const before = await cardWithShots(db, { cardId: probeOnly.id, ownerId })
-    await db.card.update({ where: { id: probeOnly.id }, data: { kindChoice: "competition" } })
+    const { standScoring } = await db.card.findUniqueOrThrow({ where: { id: probeOnly.id } })
+    // am Stand in Zehnteln, die Disziplin in ganzen Ringen: So zeigt sich, welche Wertung gilt
+    await db.card.update({ where: { id: probeOnly.id }, data: { standScoring: "decimal" } })
     try {
+      expect(await cardWithShots(db, { cardId: probeOnly.id, ownerId })).toMatchObject({
+        kind: "training",
+        scoring: "decimal",
+      })
+      const training = await disciplineOptions(db, { cardId: probeOnly.id, ownerId })
+      expect(training.find((o) => o.current)?.scoring).toBe("decimal")
+      await db.card.update({ where: { id: probeOnly.id }, data: { kindChoice: "competition" } })
       const card = (await familyCards(db, { ownerId, familyId: site.familyId })).find(
         (c) => c.id === probeOnly.id
       )!
@@ -373,7 +421,7 @@ describe("cardWithShots", () => {
     } finally {
       await db.card.update({
         where: { id: probeOnly.id },
-        data: { kindChoice: null, scoringChoice: null },
+        data: { kindChoice: null, scoringChoice: null, standScoring },
       })
     }
     expect(await cardWithShots(db, { cardId: probeOnly.id, ownerId })).toEqual(before)

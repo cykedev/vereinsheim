@@ -21,10 +21,10 @@ import type { SeriesKey, Selection } from "./types"
 import { isSelected } from "./view-state"
 
 /**
- * Eine Scheibe wie am Ausdruck (ADR-027): mit Wertung nur die Wertungsschüsse, eine Karte nur mit Probe ist
- * Training und verhält sich genau wie Wertung, auch optisch. Die Regel kommt aus dem
+ * Eine Scheibe wie am Ausdruck (ADR-027): mit Wertung nur die Wertungsschüsse, eine Karte nur mit Probe verhält
+ * sich genau wie Wertung, auch optisch. Die Regel kommt aus dem
  * Fachkern (`asOnPrintout` in `metrics`, dieselbe wie für Zeiträume): Reihenfolge der Liste und alle übrigen Angaben
- * bleiben. Hier kommt nur `fromProbe` dazu, das sich bei einem Training die Herkunft merkt (für das Probe-Eck, der
+ * bleiben. Hier kommt nur `fromProbe` dazu, das sich bei nur Probe die Herkunft merkt (für das Probe-Eck, der
  * Fachkern kennt das Feld nicht). Die Seite wendet das einmal an, bevor sie die Bausteine füttert.
  */
 export function asOnPrintout(shots: readonly MetricShot[]): readonly MetricShot[] {

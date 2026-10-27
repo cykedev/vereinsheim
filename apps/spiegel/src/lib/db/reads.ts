@@ -169,14 +169,15 @@ function toOverview(rows: readonly OverviewRow[]): OverviewCard[] {
 /**
  * die geltende Art einer Scheibe: gewählt, sonst die Zuordnung ihrer Rangliste durch den Admin, sonst die der Quelle (ein
  * Stand schreibt nur `kind` und die Rangliste). Die Zuordnung gilt beim Lesen: Ändert der Admin sie, folgen alle Scheiben.
- * Ohne Wahl ist eine Scheibe nur aus Probe Training: Rangliste und Quelle zählen dann nicht.
+ * Ohne Wahl gilt bei einer Scheibe nur aus Probe die Art der Quelle, die Rangliste zählt dann nicht: Der Probeblock vor
+ * einem Wettkampf trägt dessen Art, eine Liste aus Meyton meint die Wertung.
  */
 export const kindOfRow = (
   row: Pick<OverviewRow, "kind" | "kindChoice"> & {
     ranking: Pick<NonNullable<OverviewRow["ranking"]>, "kind"> | null
   },
   probeOnly: boolean
-): CardKind => row.kindChoice ?? (probeOnly ? "training" : (row.ranking?.kind ?? row.kind))
+): CardKind => row.kindChoice ?? (probeOnly ? row.kind : (row.ranking?.kind ?? row.kind))
 
 /**
  * die Wertung der Disziplin an einer Scheibe: gilt im Training und im Wettkampf; ein Training nur aus Probe hat keine
@@ -342,6 +343,11 @@ export interface PageCard extends PeriodCard {
   family: { slug: string; name: string } | null
   /** die Wertung der Scheibe: gewählt, sonst die Vorgabe (`cardScoring`); mit ihr öffnet die Seite */
   scoring: Scoring
+  /**
+   * die Wertung der Disziplin, wie sie im Wettkampf gilt, auch bei nur Probe: Der Kreis der Wertung nennt sie „amtlich“,
+   * sobald der Schütze auf Wettkampf stellt, nicht erst nach dem Neuladen. Fehlt ohne Einstellung
+   */
+  competitionOfficial?: Scoring
   /** die Liste aus Meyton; null ohne */
   list: CardList | null
   /** woher die Scheibe kommt (`provenanceOf`) */
@@ -374,6 +380,9 @@ function toPageCard(row: PageCardRow): PageCard | null {
     complete: row.complete,
     flags: row.flags,
     ...(official ? { official } : {}),
+    ...(row.discipline.officialScoring
+      ? { competitionOfficial: row.discipline.officialScoring }
+      : {}),
     revision: row.currentRevision.number,
     disciplineId: row.disciplineId,
     discipline: row.discipline.name,

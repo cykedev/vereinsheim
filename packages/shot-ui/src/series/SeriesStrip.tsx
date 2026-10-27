@@ -50,7 +50,7 @@ interface Block {
  * Serien als kleine Scheiben (spiegel-ui-design): je Serie eine kleine Scheibe, alle im gleichen Ausschnitt um die
  * Mitte, darunter das Serienergebnis in der gewählten Wertung. Jede Kachel ist ein Schalter für die Auswahl; „Alle“
  * setzt zurück. Die Kacheln füllen die Zeilen gleichmäßig. Keine Probe-Kachel: Eine Scheibe ist wie am Ausdruck;
- * ein Training nur aus Probe hat Serien mit dem Probe-Eck. Ein Bau für jede Detailtiefe: Serien ohne Lage zeigen den
+ * eine Scheibe nur aus Probe hat Serien mit dem Probe-Eck. Ein Bau für jede Detailtiefe: Serien ohne Lage zeigen den
  * leisen Platzhalter, Serien-Summen (`sums`) dieselben Kacheln ohne Wahl, ganz ohne Serien steht ein Satz (`missing`)
  * unter derselben Leiste.
  */

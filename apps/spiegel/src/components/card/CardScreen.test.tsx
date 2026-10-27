@@ -251,11 +251,29 @@ describe("Seite einer Scheibe je Detailtiefe", () => {
 
   it("Wettkampf nur aus Probe: Pokal gesetzt, die Wertung der Disziplin heißt amtlich", () => {
     const probe = shots.map((shot) => ({ ...shot, kind: "probe" as const, series: null }))
-    const html = render(OWN, { ...card, shots: probe, kind: "competition", official: "rings" })
+    const html = render(OWN, {
+      ...card,
+      shots: probe,
+      kind: "competition",
+      official: "rings",
+      competitionOfficial: "rings",
+    })
     expect(html).toMatch(/data-kind-toggle="" data-kind="competition"/)
     expect(html).toContain("Wertung: ganze Ringe, amtlich")
     expect(meta(html)).toMatch(/^Wettkampf nur Probe ·/)
     expect(html).toContain("10 Probeschüsse als Wettkampf")
+    // der Kreis der Wertung nennt die amtliche aus der Disziplin, auch bevor die Seite nach dem Umstellen neu lädt
+    const before = render(OWN, {
+      ...card,
+      shots: probe,
+      kind: "competition",
+      competitionOfficial: "rings",
+    })
+    expect(before).toContain("Wertung: ganze Ringe, amtlich")
+    // im Training nie „amtlich“
+    expect(render(OWN, { ...card, shots: probe, competitionOfficial: "rings" })).toContain(
+      "Wertung: ganze Ringe, auf Zehntel umstellen"
+    )
     expect(html).toContain("10 Probeschüsse, als Wettkampf wie Wertung gezählt")
   })
 

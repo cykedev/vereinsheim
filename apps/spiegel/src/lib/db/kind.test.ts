@@ -19,11 +19,14 @@ describe("geltende Art einer Scheibe", () => {
     expect(
       kindOfRow({ kind: "competition", kindChoice: null, ranking: { kind: "training" } }, false)
     ).toBe("training")
-    // nur Probe ohne Wahl ist Training, auch in einer Wettkampf-Rangliste und bei einer Quelle „Wettkampf“
+    // nur Probe ohne Wahl: die Art der Quelle, die Rangliste zählt nicht (der Probeblock eines Wettkampfs bleibt einer)
     expect(kindOfRow(row(null, "competition"), true)).toBe("training")
     expect(kindOfRow({ kind: "competition", kindChoice: null, ranking: null }, true)).toBe(
-      "training"
+      "competition"
     )
+    expect(
+      kindOfRow({ kind: "competition", kindChoice: null, ranking: { kind: "training" } }, true)
+    ).toBe("competition")
   })
 
   it("nur Probe mit Wahl: die Wahl gilt", () => {

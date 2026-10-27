@@ -327,8 +327,22 @@ describe("Scheiben-Liste: weitere Fälle", () => {
       ofCard: false,
     })
     expect(byId("decimal", "u")).toMatchObject({ resultScoring: "decimal", otherResult: 29 })
-    // nur Probe ist nie amtlich, auch wenn die Quelle eine Wertung nennt
+    // ein Training nur aus Probe ist nie amtlich, auch wenn die Quelle eine Wertung nennt; ein Wettkampf nur aus Probe schon
     expect(byId("decimal", "p")).toMatchObject({ resultScoring: "decimal", ofCard: false })
+    const match = cardListModel(
+      [
+        lg(
+          periodCard("w", 0, [100, 102, 98], {
+            probe: true,
+            kind: "competition",
+            official: "rings",
+          })
+        ),
+      ],
+      query(),
+      context
+    ).evenings[0].rows[0]
+    expect(match).toMatchObject({ resultScoring: "rings", ofCard: true, result: 29 })
   })
 
   it("vorn die Wertung der Scheibe, vor der amtlichen, auch bei nur Probe; Ø und Abstand in der Wertung der Liste", () => {

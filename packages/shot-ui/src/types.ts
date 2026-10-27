@@ -2,7 +2,7 @@
 
 /**
  * eine Serie (1, 2, …). Eine Probe neben Wertung gibt es nicht: Eine Scheibe ist wie am Ausdruck
- * (`asOnPrintout`), ein Training nur aus Probe hat Serien wie Wertung
+ * (`asOnPrintout`), eine Scheibe nur aus Probe hat Serien wie Wertung
  */
 export type SeriesKey = number
 
