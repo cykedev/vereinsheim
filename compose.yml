@@ -123,7 +123,7 @@ services:
       AUTH_TRUST_PROXY_HEADERS: "true"
       # Heap unter der Grenze des Containers: Node setzt ihn bei 256m sonst auf rund 260 MiB
       # (vault/incidents/node-heap-above-container-limit.md). Gilt für alle drei Apps;
-      # Treffsicher hat mehr Luft (Uploads bis 10 MB, PDF-Import mit pdf.js im Prozess).
+      # Spiegel hat mehr Luft für den Leser der Ausdrucke (vault/operations/vps-resource-sizing.md).
       NODE_OPTIONS: --max-old-space-size=160
     depends_on:
       db:
@@ -149,7 +149,8 @@ services:
       UPLOAD_DIR: /app/uploads
       DISPLAY_TIME_ZONE: ${DISPLAY_TIME_ZONE:-Europe/Berlin}
       AUTH_TRUST_PROXY_HEADERS: "true"
-      NODE_OPTIONS: --max-old-space-size=192
+      # Uploads bis 10 MB und der PDF-Import mit pdf.js laufen im Prozess; die Spitze lag bisher bei 163 MiB.
+      NODE_OPTIONS: --max-old-space-size=160
     volumes:
       - uploads_treffsicher:/app/uploads
     depends_on:
@@ -157,7 +158,7 @@ services:
         condition: service_healthy
       migrate-treffsicher:
         condition: service_completed_successfully
-    mem_limit: 320m
+    mem_limit: 256m
     logging: *default-logging
     networks:
       - web
@@ -176,7 +177,8 @@ services:
       DISPLAY_TIME_ZONE: ${DISPLAY_TIME_ZONE:-Europe/Berlin}
       AUTH_TRUST_PROXY_HEADERS: "true"
       UPLOAD_DIR: /app/uploads
-      # PDFs liest ein Kindprozess mit eigener Grenze, nicht dieser Heap.
+      # PDFs liest ein Kindprozess mit eigener Grenze, nicht dieser Heap. Er zählt aber zur Grenze
+      # des Containers (bis 96 MiB); die 64 MiB über den anderen Apps sind für ihn, nicht für den Heap.
       NODE_OPTIONS: --max-old-space-size=160
     volumes:
       - uploads_spiegel:/app/uploads
@@ -185,7 +187,7 @@ services:
         condition: service_healthy
       migrate-spiegel:
         condition: service_completed_successfully
-    mem_limit: 256m
+    mem_limit: 320m
     logging: *default-logging
     networks:
       - web
