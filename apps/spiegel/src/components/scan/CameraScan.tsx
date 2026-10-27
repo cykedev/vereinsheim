@@ -33,10 +33,14 @@ export function CameraScan({
   const stream = useRef<MediaStream | null>(null)
   const timer = useRef<number | null>(null)
   const reader = useRef<Promise<QrReader> | null>(null)
+  // während der Browser nach der Kamera fragt: kein zweiter Start, und wer inzwischen beendet, bekommt keinen Strom
+  const starting = useRef(false)
+  const wanted = useRef(false)
   const [running, setRunning] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
 
   const stop = useCallback(() => {
+    wanted.current = false
     if (timer.current !== null) window.clearInterval(timer.current)
     timer.current = null
     for (const track of stream.current?.getTracks() ?? []) track.stop()
@@ -66,16 +70,24 @@ export function CameraScan({
   }
 
   const start = async () => {
+    if (starting.current) return
     setMessage(null)
     if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
       setMessage(NO_CAMERA)
       return
     }
+    starting.current = true
+    wanted.current = true
     try {
       const media = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "environment" },
         audio: false,
       })
+      // beendet, während der Browser fragte (Tab im Hintergrund, Seite verlassen): den Strom gleich wieder zu
+      if (!wanted.current || document.hidden) {
+        for (const track of media.getTracks()) track.stop()
+        return
+      }
       stream.current = media
       const node = video.current
       if (!node) return stop()
@@ -90,6 +102,8 @@ export function CameraScan({
         try {
           const text = await qr.read(node, "video")
           if (text && stream.current) found(text)
+        } catch {
+          // ein Bild, das sich nicht lesen ließ: das nächste versucht es wieder
         } finally {
           busy = false
         }
@@ -97,6 +111,8 @@ export function CameraScan({
     } catch (error) {
       stop()
       setMessage(error instanceof Error && error.name === "NotAllowedError" ? DENIED : NO_CAMERA)
+    } finally {
+      starting.current = false
     }
   }
 
