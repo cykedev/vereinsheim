@@ -139,7 +139,8 @@ Vorgeschlagener Schnitt, endgültig im jeweiligen `/plan`:
     Nach der Durchsicht im Browser (27. Oktober 2026): Wo eine kleine Scheibe steht (Liste, Start, Fortschritt,
     Vergleichen, Serien auf der Seite), steht für eine Scheibe oder Serie ohne Lagen ein leiser Platzhalter, die Scheibe
     der Disziplin ohne Schüsse; auch Serien aus Summen bekommen ihn. Die Trefferlage als Summe zeigt das vorhandene
-    Zeichen der Mitte (`MpiMark`), nur auf der großen Scheibe und im Platzhalter der Übersichten.
+    Zeichen der Mitte (`MpiMark`), nur auf der großen Scheibe der Seite; die Platzhalter in den Übersichten tragen
+    keine Mitte, wie die kleinen Scheiben gemessener Scheiben.
 - **1b QR-Weg (SP-1.7 b):** Scannen (Kamera, Link), PDF von erlaubten Adressen in einem kurzlebigen Kindprozess,
   PDF-Volume samt Backup, Auftrag an die Brücke. Berührt Deploy-Vertrag und `scripts/`, interaktiv.
   1b liefert „PDF hängt an, die Brücke holt die Scheibe“; ein Ergebnis aus dem PDF bringt erst 1c.
