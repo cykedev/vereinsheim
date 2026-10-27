@@ -19,6 +19,14 @@ const measured = [1, 2, 3].map((d) => item(periodCard(`m${d}`, d, [100, 101, 99]
 const waiting = { ...item(periodCard("w", 4, [])), provenance: "printout" as const }
 
 describe("Ergebnis-Box: Grundlage", () => {
+  it("ohne eine Scheibe mit Wert nur die Grundlage, nicht zweimal „keine Scheibe mit Wert“", () => {
+    const html = renderToStaticMarkup(h(PeriodResult, { model: model([waiting]), timeZone: TZ }))
+    expect(html.match(/keine Scheibe mit Wert/g)).toHaveLength(1)
+    expect(html).toMatch(
+      /data-period-basis="true"[^>]*>keine Scheibe mit Wert · 1 wartet auf die Anlage/
+    )
+  })
+
   it("zählen alle, keine Zeile", () => {
     expect(
       renderToStaticMarkup(h(PeriodResult, { model: model(measured), timeZone: TZ }))

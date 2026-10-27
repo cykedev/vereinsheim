@@ -142,9 +142,7 @@ export function startModel(input: StartInput): StartModel {
       tonight
         .filter((c) => c.family === family)
         .map((c) => fromProjection({ ...c.card, provenance: c.provenance })),
-      new Set(
-        projectedValues(evening, meanMetric, scoring, { includeProbeOnly: true }).map((v) => v.id)
-      ),
+      new Set(values.filter((v) => ids.has(v.id)).map((v) => v.id)),
       meanMetric
     )
     // ein Schnitt über mehrere Scheiben rechnet über ihre Schüsse ([[adr-034]])

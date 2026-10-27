@@ -5,7 +5,6 @@ import { formatShortDate } from "@vereinsheim/lib/format"
 import { cn } from "@vereinsheim/lib/utils"
 import { useId, useMemo, useState } from "react"
 
-import { Dash } from "../Dash"
 import { formatSigned, formatValue } from "../format"
 import { KindMark } from "../list/KindMark"
 import type { RenderLink } from "./links"
@@ -137,11 +136,10 @@ export function CardList({
                   <KindMark kind={itemKind(card)} />
                 </td>
                 <td className="px-2 py-1.5 text-right">
-                  {value ? (
-                    formatValue(value.value, metric.decimals)
-                  ) : (
-                    <Dash reason={reasons[card.id]} />
-                  )}
+                  {value
+                    ? formatValue(value.value, metric.decimals)
+                    : // der Grund steht sichtbar in der Spalte daneben
+                      "–"}
                 </td>
                 <td className="px-2 py-1.5 text-right text-foreground-2">
                   {value

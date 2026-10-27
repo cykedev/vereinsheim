@@ -349,7 +349,9 @@ function layer(points: readonly PatternPoint[], middle?: Point): PatternLayer {
       grid: null,
       outside: 0,
     }
-  const core = patternHalf(points)
+  // eine Mitte aus Trefferlagen als Summe kann außerhalb der Schüsse liegen: Das Bild reicht dann bis zu ihr
+  const reach = middle ? Math.hypot(middle.xUm, middle.yUm) * 1.08 + 500 : 0
+  const core = Math.max(patternHalf(points), reach)
   if (points.length > PATTERN_SHOTS_MAX)
     return {
       style: "outlines",

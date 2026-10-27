@@ -43,11 +43,14 @@ export function PeriodResult({ model, timeZone, onHelp, className }: PeriodResul
             </small>
           )}
         </p>
-        <p className="text-[13px] text-muted-foreground">
-          {summary.cards
-            ? `${countOf(summary.cards, words)} · ${formatInteger(summary.shots)} Wertungsschüsse`
-            : `keine ${words.one} mit Wert`}
-        </p>
+        {/* ohne Wert sagt die Grundlage dasselbe mit Grund, dann nur sie */}
+        {(summary.cards > 0 || !basis) && (
+          <p className="text-[13px] text-muted-foreground">
+            {summary.cards
+              ? `${countOf(summary.cards, words)} · ${formatInteger(summary.shots)} Wertungsschüsse`
+              : `keine ${words.one} mit Wert`}
+          </p>
+        )}
         {basis && (
           <p
             data-period-basis

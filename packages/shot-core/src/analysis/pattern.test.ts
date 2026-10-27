@@ -403,6 +403,22 @@ describe("periodPattern", () => {
     expect(pattern.picture.points).toEqual([])
   })
 
+  it("ab 50 Schuss und über 3.000 Schuss reicht das Bild bis zur Mitte aus Trefferlagen als Summe", () => {
+    for (const cards of [cardsOf(2, 40, 1500), cardsOf(80, 40, 1500)]) {
+      const pattern = periodPattern([
+        ...cards,
+        {
+          ...card("lage", [], 999),
+          summaryCenter: { xUm: 60_000, yUm: 0, n: 40 * cards.length * 3 },
+        },
+      ])
+      const middle = pattern.picture.center!
+      expect(pattern.picture.halfUm).toBeGreaterThanOrEqual(Math.hypot(middle.xUm, middle.yUm))
+    }
+    // ohne Trefferlage als Summe bleibt der Ausschnitt, wie er war
+    expect(periodPattern(cardsOf(2, 40, 1500)).picture.halfUm).toBeLessThan(10_000)
+  })
+
   it("geht unverändert durch JSON", () => {
     const pattern = periodPattern(cardsOf(10, 40, 1500, 1200))
     expect(JSON.parse(JSON.stringify(pattern))).toEqual(pattern)

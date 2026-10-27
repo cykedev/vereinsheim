@@ -104,9 +104,13 @@ export function TargetView({
 
   // ein Training nur aus Probe heißt so (eine Probe neben Wertung gibt es nicht)
   const training = shots.length > 0 && shots.every(isProbeShot)
-  const label = `${target.label}: ${shots.length} ${
-    training ? "Probeschüsse als Training" : "Wertungsschüsse"
-  }${selectionText(state)}${summaryCenter ? ", Mitte der Schüsse als Kreuz" : ""}`
+  // ohne Schüsse mit Trefferlage als Summe nur das Kreuz, keine „0 Wertungsschüsse“
+  const label =
+    shots.length === 0 && summaryCenter
+      ? `${target.label}: Mitte der Schüsse als Kreuz`
+      : `${target.label}: ${shots.length} ${
+          training ? "Probeschüsse als Training" : "Wertungsschüsse"
+        }${selectionText(state)}${summaryCenter ? ", Mitte der Schüsse als Kreuz" : ""}`
 
   // die Scheibe zeigt das Probe-Eck, wenn alle Schüsse der Auswahl aus der Probe stammen (Training nur aus Probe)
   const shown = shots.filter((_, i) => selectedAt(i))

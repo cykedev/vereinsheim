@@ -111,9 +111,10 @@ describe("Liste der Scheiben: Grund ohne Wert", () => {
       })
     )
     const row = html.slice(html.indexOf('data-card-row="s"'))
-    expect(row.slice(0, row.indexOf("</tr>"))).toContain(
-      '<span title="wartet auf die Anlage">–<span class="sr-only"> wartet auf die Anlage</span></span>'
-    )
-    expect(row.slice(0, row.indexOf("</tr>"))).not.toContain("ohne Wert")
+    const cells = row.slice(0, row.indexOf("</tr>"))
+    // „–“ in der Spalte des Werts, der Grund sichtbar in der Spalte daneben (einmal, auch für Screenreader)
+    expect(cells).toMatch(/>–<\/td><td[^>]*>wartet auf die Anlage<\/td>/)
+    expect(cells.match(/wartet auf die Anlage/g)).toHaveLength(1)
+    expect(cells).not.toContain("ohne Wert")
   })
 })

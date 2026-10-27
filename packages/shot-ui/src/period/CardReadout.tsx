@@ -6,7 +6,6 @@ import type { TargetImage } from "@vereinsheim/shot-core/targets"
 import { formatDateOnly, formatShortDay } from "@vereinsheim/lib/format"
 import { cn } from "@vereinsheim/lib/utils"
 
-import { Dash } from "../Dash"
 import { formatSigned, formatValue, unitText } from "../format"
 import { HelpButton } from "../help/HelpButton"
 import { MiniTarget } from "../target/MiniTarget"
@@ -104,7 +103,8 @@ export function CardReadout({
       <div className={cn("grid items-start gap-4", target && "grid-cols-[minmax(0,1fr)_96px]")}>
         <div className="grid min-w-0 content-start gap-1 text-[13px]">
           <p className="font-display text-[1.6rem] leading-none font-bold tabular-nums">
-            {value ? formatValue(value.value, metric.decimals) : <Dash reason={reason} />}
+            {/* der Grund steht sichtbar darunter */}
+            {value ? formatValue(value.value, metric.decimals) : "–"}
             {value && unit && (
               <small className="ml-1.5 font-sans text-[13px] font-medium text-muted-foreground">
                 {unit}
