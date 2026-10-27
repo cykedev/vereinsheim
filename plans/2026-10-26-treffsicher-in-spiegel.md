@@ -309,7 +309,7 @@ nach Stufe 3. Wie Treffsicher lesend läuft, solange der Basisbranch nicht auf `
 
 ## Vor dem nächsten Release (Stufe 1)
 
-In `main`, noch nicht gepusht und nicht deployt: 1b-1, 1a-1, 1a-2, ADR-035, 1b-2, 1c-0.
+In `main`, noch nicht gepusht und nicht deployt: 1b-1, 1a-1, 1a-2, ADR-035, 1b-2, 1c-0, 1c (`88ea1140`).
 
 **Zeitpunkt** (entschieden mit dem User am 27. Oktober 2026): direkt nach dem Merge von 1c, vor 1d. Erst mit 1c bringt
 „Scheibe holen“ Werte; 1d folgt mit einem eigenen Release. Nur Spiegel: Ringwerk und Treffsicher haben seit dem letzten
@@ -326,12 +326,21 @@ Deploy keine eigene Änderung (nur `packages/lib/format` kam dazu), ihre Images 
    Bericht von 1c).
 
 - **Migrationen beim Start:** `20261027120000_card_details` (1a-1, additiv; Spiegel rechnet danach alle Projektionen
-  einmal neu, Version 6) und `20261027180000_card_request_print_mismatch` (1b-2, additiv).
+  einmal neu, Version 6), `20261027180000_card_request_print_mismatch` (1b-2, additiv) und
+  `20261027200000_printout_values` (1c, additiv).
+- **Neulesen beim Start** (1c): Spiegel liest alle Ausdrucke mit Leser älter als `meyton-values@2` neu, 50 je Lauf,
+  beim Start und stündlich. In Prod liegen vor dem Release noch keine Ausdrucke, der Lauf ist also leer.
 - **Rückweg auf ein älteres Image** nach 1b-2: vorher `UPDATE "CardRequest" SET status = 'mismatch' WHERE status =
 'printMismatch';` (das alte Image kennt den Wert nicht).
 - **Neues Volume** `uploads_spiegel` (1b-1), legt `vereinsheim deploy` an; Backups enthalten danach die PDFs.
 - **Messung des Lesers auf dem VPS** (amd64) mit dem Einzeiler aus `vault/operations/vps-resource-sizing.md`, bevor
-  das Scannen genutzt wird; über 80 MiB → Grenze oder Speicher von Spiegel anpassen.
+  das Scannen genutzt wird, dazu `printout-sample --values` und ein echter Ausdruck mit großem Trefferbild (im
+  Container arm64 bis 87,5 MiB, die Wache greift bei 96 MiB; greift sie, gelten ID und Druckzeit, nur die Werte fehlen);
+  über 80 MiB → Grenze oder Speicher von Spiegel anpassen.
+- **Echter Luftgewehr-Ausdruck** nach dem Deploy (1c): Werte nur an erfundenen LG-Ausdrucken belegt. Ein beliebiger
+  LG-Ausdruck über „Scheibe holen“ zeigt, ob die Werte kommen.
+- **Eigene Ausdrucke in Prod importieren** (User, nach dem Deploy): Weg in [[meyton-printout]].
+- **Node 26 Pflicht** (1c, `engine-strict`): `pnpm install` und `pnpm dev` brechen unter älterem Node hart ab.
 - **Am echten Telefon über HTTPS prüfen:** Kamera und der Rückfall auf das Foto.
 - **Keine neue Brücke** nötig.
 
@@ -349,7 +358,7 @@ Reiter Lage der Skriptprüfung (`vault/incidents/pruefen-reiter-lage-scroll-jump
 | 1b-1 | `plans/2026-10-26-tis-1b1-printouts.md`      | `feat/tis-1b1-printouts` (von `main`)      | tis-1b1-printouts        | in `main` (`f0213d9a`), noch nicht deployt              |
 | 1b-2 | `plans/2026-10-27-tis-1b2-fetch-card.md`     | `feat/tis-1b2-fetch-card` (von `main`)     | tis-1b2-fetch-card       | in `main` (`053c11b8`), noch nicht deployt              |
 | 1c-0 | `plans/2026-10-27-tis-1c0-printout-check.md` | `feat/tis-1c0-printout-check` (von `main`) | tis-1c0-printout-check   | in `main` (`028234b0`); Ergebnis in [[meyton-printout]] |
-| 1c   | `plans/2026-10-27-tis-1c-printout-values.md` | `feat/tis-1c-printout-values` (von `main`) | `tis-1c-printout-values` | freigegeben, in Arbeit (1c-1 und 1c-2 zusammen)         |
+| 1c   | `plans/2026-10-27-tis-1c-printout-values.md` | `feat/tis-1c-printout-values` (von `main`) | `tis-1c-printout-values` | in `main` (`88ea1140`); Luftgewehr-Fix, Leser v2        |
 | 1d   |                                              |                                            |                          | offen                                                   |
 | 1e   |                                              |                                            |                          | in 1a-2                                                 |
 | 2    |                                              |                                            |                          | offen                                                   |
