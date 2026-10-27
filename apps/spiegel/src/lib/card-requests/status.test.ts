@@ -31,7 +31,7 @@ describe("Zustand in Worten", () => {
     expect(requestStateNote("done", false)).toBeNull()
     expect(requestStateNote("withdrawn", false)).toBeNull()
     expect(requestStateNote("printMismatch", false)).toBe(
-      "Die Scheibe der Anlage begann erst nach dem Druck. Spiegel hat nichts übernommen."
+      "Die Scheibe der Anlage begann nach dem Druck oder hat andere Werte. Spiegel hat nichts übernommen."
     )
   })
 

@@ -258,6 +258,24 @@ function rawShots(table: TableV1): RawShot[] {
   }))
 }
 
+/**
+ * Werte je Rohschuss für den Vergleich mit einem Ausdruck (`printedShotsFit`): Stellung, Nummer, Ring und Zehntel wie in
+ * `adaptSnapshot`. Rein, ohne Deutung des Stands.
+ */
+export function shotValuesOf(snapshot: SnapshotV1): {
+  stellung: number
+  treffer: number
+  ring: number | null
+  decimalTenths: number | null
+}[] {
+  return rawShots(snapshot.data.treffer).map((shot) => ({
+    stellung: shot.stellung,
+    treffer: shot.treffer,
+    ring: shot.ring === null ? null : Math.floor(shot.ring / 10),
+    decimalTenths: shot.ring01,
+  }))
+}
+
 /** der Rohschuss, wie die Gegenprobe ihn braucht (Lage und Abstand in den Einheiten von `Shot`) */
 function checkable(shot: RawShot): CheckableShot {
   const xUm = shot.x === null ? null : shot.x * 10

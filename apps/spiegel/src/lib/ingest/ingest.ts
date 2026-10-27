@@ -3,8 +3,8 @@
 // je Snapshot abgelegt (Zeilenversionen, billig), der Adapter deutet jeden neuen Stand (eine reine Funktion), geschrieben
 // wird je Block der Scheibe nur der letzte (SF-03, SF-72); ändert sich nur das Lebenszeichen, wird es nur vermerkt. Was
 // nicht zugestimmt ist, wird nicht gespeichert ([[spiegel-privacy]]). Ein Auftrag per ID gilt wie eine Zustimmung für
-// genau seine Scheibe; hängt an ihm eine Scheibe vom Ausdruck, prüft das Einlesen die Druckzeit und füllt sie mit den
-// Rohdaten, statt eine zweite anzulegen.
+// genau seine Scheibe; hängt an ihm eine Scheibe vom Ausdruck, prüft das Einlesen die Druckzeit (mit Werten vom Ausdruck
+// auch Schuss für Schuss) und füllt sie mit den Rohdaten, statt eine zweite anzulegen.
 
 import type { DiscardReason, SnapshotOutcome } from "@vereinsheim/ingest-contract/api"
 import type { SnapshotV1 } from "@vereinsheim/ingest-contract/snapshot"
@@ -13,7 +13,13 @@ import type { TargetId } from "@vereinsheim/shot-core/targets"
 import { wallTimeOfMs } from "@vereinsheim/lib/format"
 
 import { eveningOfStart, startsBeforePrint } from "../card-requests/id"
-import { attachRequestCard, closeRequest, openRequestsFor } from "../card-requests/queries"
+import { printedShotsFit } from "../card-requests/print-check"
+import {
+  attachRequestCard,
+  closeRequest,
+  openRequestsFor,
+  printedShotsOf,
+} from "../card-requests/queries"
 import { ACTIVE_CONSENT } from "../consent/status"
 import type { Db } from "../db"
 import {
@@ -33,6 +39,7 @@ import {
   hasHeldShot,
   isComplete,
   schemaProblems,
+  shotValuesOf,
   sportpassIdOf,
 } from "./meyton-ssmdb2"
 import { blockEnds } from "./probe-blocks"
@@ -494,16 +501,26 @@ export async function ingestBatch(
     const latest = printed.filter((ms): ms is number => ms !== null)
     if (latest.length) printedWall.set(r.id, wallTimeOfMs(Math.max(...latest), target.timeZone))
   }
-  /** Aufträge, deren Scheibe ein Stand dieses Stapels sein kann: an ihrem Abend und vor dem Druck begonnen */
+  /** die Schüsse der ungefüllten Scheiben vom Ausdruck: Werte vom Ausdruck prüft das Einlesen Schuss für Schuss */
+  const printed = await printedShotsOf(
+    db,
+    requests.filter((r) => r.cardId !== null && r.card?.sourceId === null).map((r) => r.cardId!)
+  )
+  /**
+   * Aufträge, deren Scheibe ein Stand dieses Stapels sein kann: an ihrem Abend und vor dem Druck begonnen, und seine
+   * Schüsse beginnen mit denen der Scheibe vom Ausdruck
+   */
   const passes = new Set<number>()
   for (const r of requests) {
     const printedWallMs = printedWall.get(r.id)
     if (printedWallMs === undefined) continue
+    const shots = (r.cardId !== null && printed.get(r.cardId)) || []
     const fits = snapshots.some(
       (s) =>
         s.scheibenId === r.scheibenId &&
         eveningOfStart(startOf(s)) === r.day &&
-        startsBeforePrint(startOf(s), printedWallMs)
+        startsBeforePrint(startOf(s), printedWallMs) &&
+        printedShotsFit(shots, shotValuesOf(s))
     )
     if (fits) passes.add(r.id)
   }
@@ -547,8 +564,8 @@ export async function ingestBatch(
     if (open.length) {
       const evening = eveningOfStart(startOf(snapshot))
       for (const r of open) if (r.day !== evening && unfilled(r)) await close(r.id, "mismatch")
-      // eine Scheibe vom Ausdruck: Kein Stand dieses Abends begann vor dem Druck, also ist es nicht die Scheibe des
-      // Ausdrucks. Spiegel speichert nichts von ihr (SF-29: fünf Minuten Spielraum für die Uhren). Vor der Wahl des
+      // eine Scheibe vom Ausdruck: Kein Stand dieses Abends begann vor dem Druck (oder keiner hat die Werte des
+      // Ausdrucks), also ist es nicht die Scheibe des Ausdrucks. Spiegel speichert nichts von ihr (SF-29: fünf Minuten Spielraum für die Uhren). Vor der Wahl des
       // Auftrags, sonst schlösse ein durchgefallener älterer die passenden anderer Konten als vergeben
       const printFails = (r: Request) => unfilled(r) && printedWall.has(r.id) && !passes.has(r.id)
       for (const r of open)

@@ -22,7 +22,7 @@ export const REQUEST_STATUS_NOTE: Readonly<Partial<Record<CardRequestStatus, str
   missing: "Die Anlage hat keine Scheibe mit dieser ID.",
   mismatch: "Die Scheibe mit dieser ID lief an einem anderen Tag.",
   printMismatch:
-    "Die Scheibe der Anlage begann erst nach dem Druck. Spiegel hat nichts übernommen.",
+    "Die Scheibe der Anlage begann nach dem Druck oder hat andere Werte. Spiegel hat nichts übernommen.",
   held: "Die Scheibe bleibt an der Anlage.",
   taken: "Diese Scheibe bekommt ein anderes Konto über die Sportpassnummer.",
   expired: "Die Anlage hat sich 30 Tage nicht gemeldet.",

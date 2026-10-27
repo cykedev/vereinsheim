@@ -118,7 +118,7 @@ describe("Kasten „Diese Scheibe“", () => {
     expect(html).toContain('data-fetch-status="printMismatch"')
     const row = rowText(html, "data-card-fetch")
     expect(row).toContain("passt nicht zum Ausdruck")
-    expect(row).toContain("Die Scheibe der Anlage begann erst nach dem Druck.")
+    expect(row).toContain("Die Scheibe der Anlage begann nach dem Druck oder hat andere Werte.")
     expect(row).toContain("Entfernen")
     expect(row).not.toContain("Nicht mehr holen")
   })

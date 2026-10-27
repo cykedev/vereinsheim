@@ -1,7 +1,7 @@
 // Aufträge, eine Scheibe per ID zu holen (die ID im Fuß des Ausdrucks), ohne Zustimmung per Sportpass. Der Schütze legt
 // sie unter „Scheibe holen“ an, zusammen mit einer Scheibe vom Ausdruck (`fetch-card`); die Brücke liest die Scheibe
 // (`GET /state`, `requests`) und schickt sie nur vom genannten Abend, das Einlesen prüft den Abend und die Druckzeit noch
-// einmal und füllt die Scheibe des Auftrags. Erledigt ist er, wenn sie gefüllt und endgültig ist (bis dahin kommen
+// einmal (hat die Scheibe Werte vom Ausdruck, auch Schuss für Schuss) und füllt die Scheibe des Auftrags. Erledigt ist er, wenn sie gefüllt und endgültig ist (bis dahin kommen
 // weitere Schüsse nach). Der Heartbeat meldet, was die Brücke nicht holen kann. Ältere Aufträge ohne Scheibe bekommen
 // beim Einlesen eine neue Scheibe der Brücke.
 
@@ -9,6 +9,7 @@ import type { RequestOutcome } from "@vereinsheim/ingest-contract/api"
 import type { CardRequestStatus, Prisma } from "@/generated/prisma/client"
 
 import type { Db } from "../db"
+import type { PrintedShot } from "./print-check"
 
 /** so viele offene Aufträge hat ein Konto höchstens */
 export const MAX_OPEN_REQUESTS = 10
@@ -124,6 +125,31 @@ export async function openRequestsFor(db: Db, siteId: number, scheibenIds: reado
       },
     },
   })
+}
+
+/** die Schüsse der aktuellen Revision je Scheibe in Abgabefolge, für den Vergleich mit den Rohdaten (`printedShotsFit`) */
+export async function printedShotsOf(
+  db: Db,
+  cardIds: readonly string[]
+): Promise<Map<string, PrintedShot[]>> {
+  const out = new Map<string, PrintedShot[]>()
+  if (!cardIds.length) return out
+  const cards = await db.card.findMany({
+    where: { id: { in: [...new Set(cardIds)] }, currentRevisionId: { not: null } },
+    select: {
+      id: true,
+      currentRevision: {
+        select: {
+          shots: {
+            orderBy: { seq: "asc" },
+            select: { stellung: true, treffer: true, ring: true, decimalTenths: true },
+          },
+        },
+      },
+    },
+  })
+  for (const card of cards) out.set(card.id, card.currentRevision?.shots ?? [])
+  return out
 }
 
 /** einen offenen Auftrag schließen; ein schon geschlossener bleibt, wie er ist */

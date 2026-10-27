@@ -12,6 +12,7 @@ import { createTestSite, type TestSite } from "../../../test/fixtures"
 import { eveningOfStart, printedId } from "../card-requests/id"
 import { startHintMs } from "../db/blocks"
 import { writeEnteredCard } from "../db/entered"
+import type { EnteredShot } from "../entered/details"
 import { purgeCards } from "../db/purge"
 import { attachPrintout } from "../printouts/queries"
 import { NO_VALUES } from "../printouts/store"
@@ -20,6 +21,7 @@ import { finishRequests, recordRequestOutcomes } from "../card-requests/queries"
 
 import { bridgeState, recordHeartbeat } from "./bridges"
 import { ingestBatch } from "./ingest"
+import { shotValuesOf } from "./meyton-ssmdb2"
 
 // Aufträge per ID beim Einlesen: Ein offener Auftrag gilt wie eine Zustimmung für genau diese Scheibe, wenn ihr Beginn auf
 // den genannten Abend fällt; sonst wird nichts gespeichert.
@@ -392,7 +394,8 @@ describe("Scheibe vom Ausdruck", () => {
     scheibenId: number,
     day: string,
     printedWallMs: number | null,
-    userId = site.ownerId
+    userId = site.ownerId,
+    shots: EnteredShot[] = []
   ) {
     const saved = await writeEnteredCard(db, {
       ownerId: userId,
@@ -403,7 +406,7 @@ describe("Scheibe vom Ausdruck", () => {
           ? zonedDayStartMs(day, ZONE) + 12 * 60 * MINUTE
           : zonedWallTimeMs(printedWallMs, ZONE),
       kind: "training",
-      details: {},
+      details: shots.length ? { shots } : {},
       reason: "printout",
     })
     if (saved.kind !== "saved") throw new Error(saved.kind)
@@ -484,6 +487,99 @@ describe("Scheibe vom Ausdruck", () => {
     )
     await ingest(snapshots)
     expect((await cardById(cardId)).sourceId).toBe(site.sourceId)
+  })
+
+  describe("mit Werten vom Ausdruck: Schuss für Schuss", () => {
+    /** die Schüsse einer Art aus dem letzten Stand, wie ein Ausdruck sie zeigt (Zehntel, ohne Lage) */
+    const printedOf = (snapshot: SnapshotV1, probe = false): EnteredShot[] =>
+      shotValuesOf(snapshot)
+        .filter((shot) => (shot.stellung === 0) === probe)
+        .sort((a, b) => a.treffer - b.treffer)
+        .map((shot) => ({
+          series: null,
+          ring: shot.ring,
+          decimalTenths: shot.decimalTenths,
+          probe,
+        }))
+    const printedAfter = (snapshots: readonly SnapshotV1[]) =>
+      lastShotWall(snapshots.at(-1)!) + 2 * MINUTE
+
+    it("gleiche Werte: gefüllt, neue Revision mit Lagen und Zeiten der Rohdaten", async () => {
+      const snapshots = scoring(71_101)
+      const shots = printedOf(snapshots.at(-1)!)
+      expect(shots.length).toBeGreaterThan(0)
+      const { cardId } = await pdfCard(
+        71_101,
+        eveningOf(snapshots[0]),
+        printedAfter(snapshots),
+        site.ownerId,
+        shots
+      )
+      await ingest(snapshots)
+      const card = await cardById(cardId)
+      expect(card).toMatchObject({ sourceId: site.sourceId, origin: "raw" })
+      expect(await db.cardRevision.count({ where: { cardId } })).toBe(2)
+      const current = await db.shot.findMany({
+        where: { revisionId: card.currentRevisionId! },
+        orderBy: { seq: "asc" },
+      })
+      expect(current.length).toBeGreaterThanOrEqual(shots.length)
+      expect(current.every((shot) => shot.xUm !== null && shot.firedAt !== null)).toBe(true)
+    })
+
+    it("Zwischenausdruck mit den ersten Schüssen: gefüllt", async () => {
+      const snapshots = scoring(71_102)
+      const shots = printedOf(snapshots.at(-1)!)
+      const { cardId } = await pdfCard(
+        71_102,
+        eveningOf(snapshots[0]),
+        printedAfter(snapshots),
+        site.ownerId,
+        shots.slice(0, Math.ceil(shots.length / 2))
+      )
+      await ingest(snapshots)
+      expect((await cardById(cardId)).sourceId).toBe(site.sourceId)
+    })
+
+    it("ein Zehntel anders: nichts gespeichert, „passt nicht zum Ausdruck“, die Werte bleiben", async () => {
+      const snapshots = scoring(71_103)
+      const shots = printedOf(snapshots.at(-1)!)
+      const at = shots.findIndex(
+        (shot) => shot.decimalTenths! % 10 < 9 && shot.decimalTenths! < 100
+      )
+      shots[at] = { ...shots[at], decimalTenths: shots[at].decimalTenths! + 1 }
+      const { cardId, requestId } = await pdfCard(
+        71_103,
+        eveningOf(snapshots[0]),
+        printedAfter(snapshots),
+        site.ownerId,
+        shots
+      )
+      const results = await ingest(snapshots)
+      expect(results.every((x) => x.reason === "no-consent")).toBe(true)
+      expect(await stored(71_103)).toBe(0)
+      expect((await statusOf(requestId)).status).toBe("printMismatch")
+      const card = await cardById(cardId)
+      expect(card).toMatchObject({ origin: "pdf", sourceId: null })
+      expect(await db.shot.count({ where: { revisionId: card.currentRevisionId! } })).toBe(
+        shots.length
+      )
+    })
+
+    it("Ausdruck im Modus Probe gegen eine Wertung: „passt nicht zum Ausdruck“", async () => {
+      const snapshots = scoring(71_104)
+      const shots = printedOf(snapshots.at(-1)!).map((shot) => ({ ...shot, probe: true }))
+      const { requestId } = await pdfCard(
+        71_104,
+        eveningOf(snapshots[0]),
+        printedAfter(snapshots),
+        site.ownerId,
+        shots
+      )
+      await ingest(snapshots)
+      expect(await stored(71_104)).toBe(0)
+      expect((await statusOf(requestId)).status).toBe("printMismatch")
+    })
   })
 
   describe("zwei Blöcke (SF-03, die Probe 20 Minuten früher)", () => {
