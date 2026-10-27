@@ -283,6 +283,24 @@ Erst nur lesend mit Hinweis und Weiterleitung, dann abgeschaltet. Berührt Deplo
 Speicher von Treffsicher (320 MB) bekommt Spiegel mehr als heute 256 MB (gewünscht vom User am 26. Oktober 2026). Teilplan
 nach Stufe 3. Wie Treffsicher lesend läuft, solange der Basisbranch nicht auf `main` ist, klärt dieser Teilplan.
 
+## Vor dem nächsten Release (Stufe 1)
+
+In `main`, noch nicht gepusht und nicht deployt: 1b-1, 1a-1, 1a-2, ADR-035, 1b-2.
+
+- **Migrationen beim Start:** `20261027120000_card_details` (1a-1, additiv; Spiegel rechnet danach alle Projektionen
+  einmal neu, Version 6) und `20261027180000_card_request_print_mismatch` (1b-2, additiv).
+- **Rückweg auf ein älteres Image** nach 1b-2: vorher `UPDATE "CardRequest" SET status = 'mismatch' WHERE status =
+  'printMismatch';` (das alte Image kennt den Wert nicht).
+- **Neues Volume** `uploads_spiegel` (1b-1), legt `vereinsheim deploy` an; Backups enthalten danach die PDFs.
+- **Messung des Lesers auf dem VPS** (amd64) mit dem Einzeiler aus `vault/operations/vps-resource-sizing.md`, bevor
+  das Scannen genutzt wird; über 80 MiB → Grenze oder Speicher von Spiegel anpassen.
+- **Am echten Telefon über HTTPS prüfen:** Kamera und der Rückfall auf das Foto.
+- **Keine neue Brücke** nötig.
+
+Für später festgehalten: Toasts über der unteren Leiste (gemeinsamer Toaster, alle Apps, eigener kleiner Teil); Randfall
+„Wertung endgültig gelöscht, Probe des Abends bleibt“: Holen öffnet die Probe, die Sperre der Wertung bleibt;
+Reiter Lage der Skriptprüfung (`vault/incidents/pruefen-reiter-lage-scroll-jump.md`).
+
 ## Stand
 
 | Teil | Plan | Branch | Session | Stand |
@@ -291,7 +309,7 @@ nach Stufe 3. Wie Treffsicher lesend läuft, solange der Basisbranch nicht auf `
 | 1a-1 | `plans/2026-10-27-tis-1a1-card-details.md` | `feat/tis-1a1-card-details` (von `main`) | tis-1a1-card-details | in `main` (`a7c98a09`), noch nicht deployt |
 | 1a-2 | `plans/2026-10-27-tis-1a2-views.md` | `feat/tis-1a2-views` (von `main`) | tis-1a2-views | in `main` (`38fc63b6`), noch nicht deployt |
 | 1b-1 | `plans/2026-10-26-tis-1b1-printouts.md` | `feat/tis-1b1-printouts` (von `main`) | tis-1b1-printouts | in `main` (`f0213d9a`), noch nicht deployt |
-| 1b-2 | `plans/2026-10-27-tis-1b2-fetch-card.md` | `feat/tis-1b2-fetch-card` (von `main`) | tis-1b2-fetch-card | freigegeben, in Arbeit |
+| 1b-2 | `plans/2026-10-27-tis-1b2-fetch-card.md` | `feat/tis-1b2-fetch-card` (von `main`) | tis-1b2-fetch-card | in `main` (`053c11b8`), noch nicht deployt |
 | 1c | | | | offen |
 | 1d | | | | offen |
 | 1e | | | | in 1a-2 |
