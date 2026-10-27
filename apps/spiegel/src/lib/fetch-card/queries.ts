@@ -9,7 +9,7 @@ import { zonedWallTimeMs } from "@vereinsheim/lib/format"
 import { TARGETS, type TargetId } from "@vereinsheim/shot-core/targets"
 import { eveningDay } from "@vereinsheim/shot-ui/period/calendar"
 
-import type { CardKind, CardRequestStatus, Prisma } from "@/generated/prisma/client"
+import { Prisma, type CardKind, type CardRequestStatus } from "@/generated/prisma/client"
 
 import { printedId } from "../card-requests/id"
 import { expireRequests, MAX_OPEN_REQUESTS, UNFILLED } from "../card-requests/queries"
@@ -387,10 +387,11 @@ export interface CardFetchInfo {
   /** die ID vom Ausdruck: der Brücke, sonst des jüngsten Ausdrucks, sonst des jüngsten Auftrags; null ohne */
   hex: string | null
   /**
-   * die Ausdrucke in der Folge des Anhängens; `unreadable`: an einer Scheibe vom Ausdruck ohne Brücke konnte Spiegel
-   * seine Werte nicht übernehmen (Widerspruch oder nicht lesbar)
+   * die Ausdrucke in der Folge des Anhängens; an einer Scheibe vom Ausdruck ohne Brücke: `unreadable`, wenn Spiegel
+   * seine Werte nicht lesen konnte (Widerspruch in sich, Leser gescheitert), `mismatch`, wenn die Lesung stimmt, aber
+   * nicht zur Disziplin der Scheibe passt
    */
-  printouts: { id: string; printedAtMs: number | null; unreadable: boolean }[]
+  printouts: { id: string; printedAtMs: number | null; unreadable: boolean; mismatch: boolean }[]
   /** der jüngste Auftrag, wenn die Seite ihn zeigt (`requestShown`) */
   request: {
     id: number
@@ -399,6 +400,12 @@ export interface CardFetchInfo {
     hex: string
     day: string
   } | null
+}
+
+/** was die Zeile eines Ausdrucks leise dazu sagt; ohne Status (nicht an einer Scheibe vom Ausdruck ohne Brücke) nichts */
+function valuesNote(status: string | null, hasReading: boolean) {
+  const failed = status === "inconsistent" || status === "unreadable"
+  return { unreadable: failed && !hasReading, mismatch: failed && hasReading }
 }
 
 /** Ausdruck und Holen einer eigenen, sichtbaren Scheibe; null, wenn es sie für das Konto nicht gibt */
@@ -424,6 +431,15 @@ export async function cardFetchInfo(
     },
   })
   if (!card) return null
+  // welche Ausdrucke eine Lesung haben, ohne sie zu laden
+  const withReading = new Set(
+    (
+      await db.printout.findMany({
+        where: { cardId, reading: { not: Prisma.DbNull } },
+        select: { id: true },
+      })
+    ).map((p) => p.id)
+  )
   const filled = card.sourceId !== null
   const latestPrintout = card.printouts
     .filter((p) => p.footerId)
@@ -438,10 +454,10 @@ export async function cardFetchInfo(
     printouts: card.printouts.map((p) => ({
       id: p.id,
       printedAtMs: p.printedAt?.getTime() ?? null,
-      unreadable:
-        card.origin === "pdf" &&
-        card.sourceId === null &&
-        (p.valuesStatus === "inconsistent" || p.valuesStatus === "unreadable"),
+      ...valuesNote(
+        card.origin === "pdf" && card.sourceId === null ? p.valuesStatus : null,
+        withReading.has(p.id)
+      ),
     })),
     request:
       latestRequest && requestShown(latestRequest.status, filled)

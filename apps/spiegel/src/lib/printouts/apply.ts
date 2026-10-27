@@ -1,7 +1,8 @@
 // Die Werte eines Ausdrucks an seine Scheibe ([[meyton-printout]] „Werte lesen“): Unter den Ausdrucken einer Scheibe vom
-// Ausdruck ohne Brücke gibt der zuletzt gedruckte mit stimmiger Lesung die Angaben (`readingOrder`); passt seine Lesung
-// nicht zum Scheibenbild der Disziplin, ist er `inconsistent` und der nächste kommt dran. Geschrieben wird über
-// `writeEnteredCardIn` (Herkunft `pdf`): gleiche Angaben ändern nichts, andere sind eine neue Revision.
+// Ausdruck ohne Brücke gibt der zuletzt gedruckte mit gespeicherter Lesung die Angaben (`readingOrder`); passt seine
+// Lesung nicht zur Disziplin (Scheibenbild, Schusszahl), ist er `inconsistent`, behält die Lesung, und der nächste kommt
+// dran. Geschrieben wird über `writeEnteredCardIn` (Herkunft `pdf`): gleiche Angaben ändern nichts, andere sind eine neue
+// Revision. Ändert sich die Disziplin, ruft `recomputeDisciplineCard` dies erneut.
 
 import type { PrintoutReading } from "@vereinsheim/meyton-pdf/reading"
 import { TARGETS, type TargetId } from "@vereinsheim/shot-core/targets"
@@ -88,11 +89,15 @@ export async function applyPrintoutValues(tx: Tx, cardId: string): Promise<Apply
   for (const printout of readingOrder(card.printouts)) {
     const result = detailsFromReading(printout.reading as unknown as PrintoutReading, targetId)
     if (!result.ok) {
-      await markPrintoutValues(tx, printout.id, "inconsistent")
+      if (printout.valuesStatus !== "inconsistent")
+        await markPrintoutValues(tx, printout.id, "inconsistent")
       continue
     }
     const saved = await write(result.details, result.stand)
-    if (saved.kind === "saved") return "taken"
+    if (saved.kind === "saved") {
+      if (printout.valuesStatus !== "ok") await markPrintoutValues(tx, printout.id, "ok")
+      return "taken"
+    }
     await markPrintoutValues(tx, printout.id, "inconsistent")
   }
 

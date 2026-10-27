@@ -7,7 +7,7 @@ import type { Db } from "@/lib/db"
 
 import { VISIBLE_CARD } from "../db/visible"
 import { readPrintoutBytes } from "./files"
-import type { PrintoutValuesRead, PrintoutValuesStatus, StoredPrintout } from "./store"
+import type { PrintoutValuesRead, StoredPrintout } from "./store"
 
 /** die Werte, wie der Leser sie fand, als Spalten der Zeile; die Lesung nur bei `ok` */
 export function valuesColumns(values: PrintoutValuesRead) {
@@ -69,19 +69,17 @@ export async function writePrintoutValues(
   })
 }
 
-/** den Status der Werte eines Ausdrucks setzen, etwa `inconsistent` bei einem Widerspruch zum Scheibenbild */
+/**
+ * den Status einer gespeicherten Lesung setzen: `inconsistent`, wenn sie nicht zur Disziplin der Scheibe passt
+ * (Scheibenbild, Schusszahl), `ok`, wenn sie passt. Die Lesung bleibt: Ändert sich die Disziplin, gilt sie vielleicht
+ * wieder (`applyPrintoutValues`)
+ */
 export async function markPrintoutValues(
   tx: Prisma.TransactionClient | Db,
   printoutId: string,
-  status: PrintoutValuesStatus
+  status: "ok" | "inconsistent"
 ): Promise<void> {
-  await tx.printout.update({
-    where: { id: printoutId },
-    data: {
-      valuesStatus: status,
-      ...(status === "ok" ? {} : { reading: Prisma.DbNull }),
-    },
-  })
+  await tx.printout.update({ where: { id: printoutId }, data: { valuesStatus: status } })
 }
 
 /**

@@ -995,6 +995,7 @@ async function recomputeDisciplineCard(tx: Tx, cardId: string): Promise<void> {
   const revisionId = row.currentRevisionId
   if (!revisionId) {
     await tx.card.update({ where: { id: cardId }, data: { disciplineVersion: row.version } })
+    await reapplyPrintouts(tx, cardId, row.origin, key?.sourceId ?? null)
     return
   }
   const targetId =
@@ -1050,6 +1051,23 @@ async function recomputeDisciplineCard(tx: Tx, cardId: string): Promise<void> {
     },
   })
   await saveProjection(tx, cardId, revisionId, next.map(toMetricShot), sums)
+  await reapplyPrintouts(tx, cardId, row.origin, key?.sourceId ?? null)
+}
+
+/**
+ * Eine Scheibe vom Ausdruck ohne Brücke nimmt nach einer anderen Disziplin (oder deren Scheibenbild, Schusszahl) die
+ * gespeicherten Lesungen ihrer Ausdrucke neu an: Eine Lesung, die zur alten nicht passte, passt vielleicht jetzt.
+ */
+async function reapplyPrintouts(
+  tx: Tx,
+  cardId: string,
+  origin: CardOrigin,
+  sourceId: number | null
+): Promise<void> {
+  if (origin !== "pdf" || sourceId !== null) return
+  // erst hier geladen: `printouts/apply` schreibt über `entered`, das auf diesem Modul aufbaut
+  const { applyPrintoutValues } = await import("../printouts/apply")
+  await applyPrintoutValues(tx, cardId)
 }
 
 /**

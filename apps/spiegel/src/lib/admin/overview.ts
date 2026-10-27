@@ -1,6 +1,7 @@
 import type { HeartbeatV1 } from "@vereinsheim/ingest-contract/api"
 import { formatDateOnly, formatDateTime } from "@vereinsheim/lib/format"
 
+import { Prisma } from "@/generated/prisma/client"
 import { requireAdmin } from "@/lib/auth-helpers"
 import { consentStatus, type ConsentDecisions, type ConsentStatus } from "@/lib/consent/status"
 import { db } from "@/lib/db"
@@ -344,9 +345,11 @@ export async function adminOverview(
     usageOf(nowMs),
     disciplineTaskCounts(),
   ])
-  // Ausdrucke ohne lesbare Werte an Scheiben vom Ausdruck ohne Brücke, nicht im Papierkorb; nur Zahlen
+  // Ausdrucke ohne lesbare Werte an Scheiben vom Ausdruck ohne Brücke, nicht im Papierkorb; nur Zahlen. Eine stimmige
+  // Lesung, die nur nicht zur Disziplin passt, ist Sache des Schützen und zählt nicht
   const unreadableWhere = {
     valuesStatus: { in: ["inconsistent", "unreadable"] as ("inconsistent" | "unreadable")[] },
+    reading: { equals: Prisma.DbNull },
     card: { is: { origin: "pdf" as const, sourceId: null, deletedAt: null } },
   }
   const [unreadable, unknownLayout] = await Promise.all([

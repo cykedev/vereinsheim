@@ -5,6 +5,7 @@ import { printoutReading } from "@vereinsheim/meyton-pdf/reading"
 import { readPrintoutValues } from "@vereinsheim/meyton-pdf/values"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 
+import { Prisma } from "@/generated/prisma/client"
 import { createPrismaClient } from "@/lib/db"
 import { createTestSite, type TestSite } from "../../../test/fixtures"
 import {
@@ -13,6 +14,7 @@ import {
   valuedSpec,
   type ValuedPrintoutSpec,
 } from "../../../test/printout"
+import { refreshDisciplineCards } from "../db/cards"
 import { writeEnteredCard } from "../db/entered"
 import { applyPrintoutValues } from "./apply"
 import { attachPrintout } from "./queries"
@@ -57,11 +59,11 @@ async function stored(
 }
 
 /** eine Scheibe vom Ausdruck ohne Lesung */
-async function pdfCard(): Promise<string> {
+async function pdfCard(disciplineId = site.disciplineId): Promise<string> {
   const saved = await writeEnteredCard(db, {
     ownerId: site.ownerId,
     origin: "pdf",
-    disciplineId: site.disciplineId,
+    disciplineId,
     startedAtMs: PRINTED.getTime(),
     kind: "training",
     details: {},
@@ -129,10 +131,10 @@ describe("applyPrintoutValues", () => {
     const badId = await attachPrintout(db, bad, cardId)
     expect(await apply(cardId)).toBe("taken")
     expect((await cardOf(cardId)).currentRevision!.shots).toHaveLength(30)
-    expect(await db.printout.findUniqueOrThrow({ where: { id: badId } })).toMatchObject({
-      valuesStatus: "inconsistent",
-      reading: null,
-    })
+    const rejected = await db.printout.findUniqueOrThrow({ where: { id: badId } })
+    expect(rejected.valuesStatus).toBe("inconsistent")
+    // die Lesung bleibt: Sie widerspricht sich nicht selbst, nur der Disziplin
+    expect(rejected.reading).not.toBeNull()
   })
 
   it("derselbe Ausdruck zweimal: keine neue Revision", async () => {
@@ -150,7 +152,11 @@ describe("applyPrintoutValues", () => {
     const cardId = await pdfCard()
     const id = await attachPrintout(db, await stored({}), cardId)
     expect(await apply(cardId)).toBe("taken")
-    await db.printout.update({ where: { id }, data: { valuesStatus: "unreadable" } })
+    // ein neuer Leser fand die Werte nicht mehr: ohne Lesung
+    await db.printout.update({
+      where: { id },
+      data: { valuesStatus: "unreadable", reading: Prisma.DbNull },
+    })
     expect(await apply(cardId)).toBe("none")
     const card = await cardOf(cardId)
     expect(card.currentRevision!.shots).toEqual([])
@@ -193,5 +199,35 @@ describe("applyPrintoutValues", () => {
       valuesStatus: "ok",
     })
     expect((await cardOf(cardId)).currentRevision!.shots).toHaveLength(40)
+  })
+
+  it("passt nicht zum Scheibenbild der Disziplin: Lesung bleibt, nach der Korrektur kommen die Werte", async () => {
+    const discipline = await db.discipline.create({
+      data: {
+        siteId: site.siteId,
+        meytonId: 10_199_777,
+        name: "LP 40 falsch eingeordnet",
+        familyId: site.familyId,
+        targetId: "lg-10m",
+      },
+    })
+    const cardId = await pdfCard(discipline.id)
+    const printoutId = await attachPrintout(db, await stored({}), cardId)
+    expect(await apply(cardId)).toBe("none")
+    expect(await db.printout.findUniqueOrThrow({ where: { id: printoutId } })).toMatchObject({
+      valuesStatus: "inconsistent",
+      reading: expect.anything(),
+    })
+    expect((await cardOf(cardId)).currentRevision!.shots).toEqual([])
+    // der Admin ordnet die Disziplin richtig ein: neues Scheibenbild, neue Version
+    await db.discipline.update({
+      where: { id: discipline.id },
+      data: { targetId: "lp-10m", version: { increment: 1 } },
+    })
+    await refreshDisciplineCards(db, { cardIds: [cardId] })
+    expect((await cardOf(cardId)).currentRevision!.shots).toHaveLength(40)
+    expect(await db.printout.findUniqueOrThrow({ where: { id: printoutId } })).toMatchObject({
+      valuesStatus: "ok",
+    })
   })
 })

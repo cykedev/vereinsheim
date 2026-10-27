@@ -208,35 +208,36 @@ function tamperSeries(spec: ValuedPrintoutSpec, key: "center"): ValuedPrintoutSp
 }
 
 describe("readingOrder", () => {
-  it("nur ok, der zuletzt gedruckte zuerst, bei gleicher Zeit der zuletzt gespeicherte", () => {
+  it("nur mit Lesung (auch eine, die zur Disziplin nicht passte), der zuletzt gedruckte zuerst", () => {
     const at = (iso: string) => new Date(iso)
+    const reading = {}
     const rows = [
       {
         id: "a",
-        valuesStatus: "ok",
+        reading,
         printedAt: at("2026-10-02T17:00:00Z"),
         storedAt: at("2026-10-02T18:00:00Z"),
       },
       {
         id: "b",
-        valuesStatus: "ok",
+        reading,
         printedAt: at("2026-10-02T17:30:00Z"),
         storedAt: at("2026-10-02T18:00:00Z"),
       },
       {
         id: "c",
-        valuesStatus: "inconsistent",
+        reading: null,
         printedAt: at("2026-10-02T17:40:00Z"),
         storedAt: at("2026-10-02T18:00:00Z"),
       },
       {
         id: "d",
-        valuesStatus: "ok",
+        reading,
         printedAt: at("2026-10-02T17:30:00Z"),
         storedAt: at("2026-10-02T19:00:00Z"),
       },
-      { id: "e", valuesStatus: null, printedAt: null, storedAt: at("2026-10-02T19:00:00Z") },
-      { id: "f", valuesStatus: "ok", printedAt: null, storedAt: at("2026-10-02T20:00:00Z") },
+      { id: "e", reading: null, printedAt: null, storedAt: at("2026-10-02T19:00:00Z") },
+      { id: "f", reading, printedAt: null, storedAt: at("2026-10-02T20:00:00Z") },
     ]
     expect(readingOrder(rows).map((r) => r.id)).toEqual(["d", "b", "a", "f"])
   })

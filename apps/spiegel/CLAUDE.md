@@ -365,7 +365,9 @@ Stand mit `past` (`MAX_OBSERVED_LAG_MS`, SF-79).
     Ringen, Lagen, Prüfung von Trefferlage, Trefferkreis, Streuwert und Teilern; `readingOrder`), `apply.ts`
     (`applyPrintoutValues` unter der Sperre der Scheibe, Herkunft `pdf`, Standnummer), `reread.ts` (neu lesen bei neuer
     `READER_VERSION`, beim Start und stündlich, höchstens 50, in Tests mit `siteId`: die Dev-Datenbank ist eine
-    Prod-Kopie). `attachPrintout` schreibt die Spalten der Werte auch beim erneuten Anhängen.
+    Prod-Kopie). `attachPrintout` schreibt die Spalten der Werte auch beim erneuten Anhängen (`writePrintoutValues`: ein
+    Lesefehler überschreibt nie `ok`). Eine Lesung, die nur nicht zur Disziplin passt, bleibt (`inconsistent` mit
+    Lesung); `recomputeDisciplineCard` wendet sie nach einer anderen Disziplin neu an.
   - `attachPrintout(tx, file, cardId)` legt die Zeile in der Transaktion des Aufrufers an: Ein Ausdruck hängt immer an
     einer Scheibe. `printoutFile` liest die Datei nur für den Besitzer und nur wie die Seite der Scheibe (`VISIBLE_CARD`:
     nicht wartend, nicht im Papierkorb, nicht bei ignorierter Disziplin); die Route `/api/printouts/<id>`

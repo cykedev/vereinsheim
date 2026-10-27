@@ -61,8 +61,8 @@ enum CardRequestStatus {
   printMismatch
 }
 
-// Werte eines Ausdrucks: gelesen und in sich stimmig, keine Werte darauf, Widerspruch (auch zum Scheibenbild der
-// Disziplin), nicht lesbar
+// Werte eines Ausdrucks: gelesen und in sich stimmig, keine Werte darauf, Widerspruch (in sich: ohne Lesung; nur zur
+// Disziplin der Scheibe, etwa Scheibenbild oder Schusszahl: mit Lesung), nicht lesbar
 enum PrintoutValuesStatus {
   ok
   empty
@@ -670,7 +670,8 @@ model Printout {
   readerVersion String?
   // ghostscript, qt oder unknown, nach dem Producer
   layout        String?
-  // die Lesung ohne Name, Nummer, ID und Datum; nur bei ok
+  // die Lesung ohne Name, Nummer, ID und Datum; da, wenn sie sich selbst nicht widerspricht (ok, oder inconsistent nur
+  // gegen die Disziplin der Scheibe: Ändert sich die Disziplin, gilt sie vielleicht wieder)
   reading       Json?
   valuesStatus  PrintoutValuesStatus?
 

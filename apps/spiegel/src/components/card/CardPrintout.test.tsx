@@ -21,6 +21,7 @@ describe("Zeile „Ausdruck“", () => {
           id: "cprint0000000000000000001",
           printedAtMs: Date.UTC(2026, 9, 27, 18, 52),
           unreadable: false,
+          mismatch: false,
         },
       ],
       timeZone: "Europe/Berlin",
@@ -41,11 +42,13 @@ describe("Zeile „Ausdruck“", () => {
           id: "cprint0000000000000000001",
           printedAtMs: Date.UTC(2026, 9, 27, 18, 52),
           unreadable: false,
+          mismatch: false,
         },
         {
           id: "cprint0000000000000000002",
           printedAtMs: Date.UTC(2026, 9, 27, 19, 31),
           unreadable: false,
+          mismatch: false,
         },
       ],
       timeZone: "Europe/Berlin",
@@ -70,11 +73,13 @@ describe("Zeile „Ausdruck“", () => {
           id: "cprint0000000000000000001",
           printedAtMs: Date.UTC(2026, 9, 27, 18, 52),
           unreadable: true,
+          mismatch: false,
         },
         {
           id: "cprint0000000000000000002",
           printedAtMs: Date.UTC(2026, 9, 27, 19, 31),
           unreadable: true,
+          mismatch: false,
         },
       ],
       timeZone: "Europe/Berlin",
@@ -91,7 +96,9 @@ describe("Zeile „Ausdruck“", () => {
   it("lesbar: kein Zusatz", () => {
     const html = render({
       hex: "ff914420",
-      printouts: [{ id: "cprint0000000000000000001", printedAtMs: null, unreadable: false }],
+      printouts: [
+        { id: "cprint0000000000000000001", printedAtMs: null, unreadable: false, mismatch: false },
+      ],
       timeZone: "Europe/Berlin",
     })
     expect(html).not.toContain("data-printout-unreadable")

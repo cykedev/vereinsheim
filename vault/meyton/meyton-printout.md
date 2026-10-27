@@ -122,13 +122,16 @@ baut die Zeichnung eines präparierten PDFs sekundenlang am Stück, ohne dass ei
 - **Teiler aus der Lage:** Spiegel speichert keinen Teiler je Schuss vom Ausdruck, sondern rechnet ihn aus der Lage,
   eine Regel für jeden Schuss. Folge: Der beste Teiler auf der Seite kann in der letzten Stelle vom Papier abweichen
   (höchstens 0,01 mm; Meyton schneidet ab, die Marken liegen bis 0,01 mm daneben).
-- **Status je Ausdruck** (`Printout.valuesStatus`): `ok` (Lesung gespeichert), `empty` (keine Werte darauf),
-  `inconsistent` (Widerspruch, auch zum Scheibenbild), `unreadable` (Leser scheiterte). Die Seite einer Scheibe vom
-  Ausdruck ohne Brücke nennt `inconsistent` und `unreadable` leise „Werte nicht lesbar“; der Admin sieht die Zahl nur
-  als Zustand an der Anlage.
-- **Welcher Ausdruck:** an einer Scheibe vom Ausdruck ohne Brücke der zuletzt gedruckte mit `ok`; passt er nicht zum
-  Scheibenbild, der nächste. Gibt keiner Werte, verliert die Scheibe ihre Werte vom Ausdruck (neue Revision ohne
-  Angaben).
+- **Status je Ausdruck** (`Printout.valuesStatus`): `ok` (Lesung gespeichert, passt), `empty` (keine Werte darauf),
+  `inconsistent` (Widerspruch), `unreadable` (Leser scheiterte). Ein Widerspruch in sich verwirft die Lesung. Passt
+  eine stimmige Lesung nur nicht zur Disziplin der Scheibe (Scheibenbild, Schusszahl), bleibt sie gespeichert
+  (Grundsatz „Immer das Maximum an Daten speichern“, entschieden mit dem User am 27. Oktober 2026). Die Seite einer
+  Scheibe vom Ausdruck ohne Brücke sagt es leise an der Zeile des Ausdrucks. Der Admin zählt nur Ausdrucke ohne
+  Lesung, als Zustand an der Anlage.
+- **Welcher Ausdruck:** an einer Scheibe vom Ausdruck ohne Brücke der zuletzt gedruckte mit gespeicherter Lesung;
+  passt er nicht zur Disziplin, der nächste. Gibt keiner Werte, verliert die Scheibe ihre Werte vom Ausdruck (neue
+  Revision ohne Angaben). Ändert der Schütze die Disziplin oder der Admin deren Scheibenbild oder Schusszahl, wendet
+  Spiegel die gespeicherten Lesungen neu an (`recomputeDisciplineCard`).
 - **Neu lesen:** Beim Start und stündlich liest Spiegel Ausdrucke mit einer anderen oder keiner Version des Lesers neu
   (höchstens 50 je Lauf, nur Scheiben vom Ausdruck ohne Brücke, nicht wartend, nicht im Papierkorb). Läuft der Server
   mit zu altem Node, endet der Lauf und die Zeilen bleiben für später. Ein anderer Fehler beim Lesen (Zeit, Speicher)

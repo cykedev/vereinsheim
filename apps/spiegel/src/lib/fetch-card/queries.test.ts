@@ -444,7 +444,7 @@ describe("cardFetchInfo", () => {
     const info = await cardFetchInfo(db, { cardId: viaPdf.cardId, ownerId: site.ownerId })
     expect(info).toMatchObject({
       hex: file(printed).hex,
-      printouts: [{ printedAtMs: PRINTED.getTime(), unreadable: false }],
+      printouts: [{ printedAtMs: PRINTED.getTime(), unreadable: false, mismatch: false }],
       request: { status: "open", filled: false, hex: file(printed).hex, day: DAY },
     })
 
@@ -505,9 +505,12 @@ describe("fetchCard mit Werten vom Ausdruck", () => {
     expect(result.values).toBe(false)
     expect((await shotsOf(result.cardId)).shots).toEqual([])
     const [printout] = await db.printout.findMany({ where: { cardId: result.cardId } })
-    expect(printout).toMatchObject({ valuesStatus: "inconsistent", reading: null })
+    expect(printout.valuesStatus).toBe("inconsistent")
+    expect(printout.reading).not.toBeNull()
     const info = await cardFetchInfo(db, { cardId: result.cardId, ownerId: site.ownerId })
-    expect(info?.printouts).toEqual([expect.objectContaining({ unreadable: true })])
+    expect(info?.printouts).toEqual([
+      expect.objectContaining({ unreadable: false, mismatch: true }),
+    ])
   })
 
   it("eine Scheibe vom Ausdruck ohne Werte bekommt sie beim zweiten Holen", async () => {

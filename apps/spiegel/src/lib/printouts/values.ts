@@ -261,15 +261,16 @@ export function detailsFromReading(
 }
 
 /**
- * Welche Ausdrucke einer Scheibe Werte geben können, der beste zuerst: mit Status `ok`, der zuletzt gedruckte vorn (ein
- * späterer Ausdruck derselben Scheibe hat mindestens so viele Schüsse), bei gleicher Druckzeit der zuletzt gespeicherte.
+ * Welche Ausdrucke einer Scheibe Werte geben können, der beste zuerst: mit gespeicherter Lesung (in sich stimmig, auch
+ * wenn sie zur bisherigen Disziplin nicht passte), der zuletzt gedruckte vorn (ein späterer Ausdruck derselben Scheibe
+ * hat mindestens so viele Schüsse), bei gleicher Druckzeit der zuletzt gespeicherte.
  */
 export function readingOrder<
-  T extends { valuesStatus: string | null; printedAt: Date | null; storedAt: Date },
+  T extends { reading: unknown; printedAt: Date | null; storedAt: Date },
 >(printouts: readonly T[]): T[] {
   const time = (date: Date | null) => date?.getTime() ?? -Infinity
   return printouts
-    .filter((p) => p.valuesStatus === "ok")
+    .filter((p) => p.reading !== null && p.reading !== undefined)
     .sort(
       (a, b) => time(b.printedAt) - time(a.printedAt) || b.storedAt.getTime() - a.storedAt.getTime()
     )
