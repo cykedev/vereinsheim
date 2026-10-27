@@ -10,6 +10,7 @@
     "./layers": "./src/layers.ts",
     "./view-state": "./src/view-state.ts",
     "./shots": "./src/shots.ts",
+    "./detail": "./src/detail.ts",
     "./target/TargetView": "./src/target/TargetView.tsx",
     "./target/TargetControls": "./src/target/TargetControls.tsx",
     "./target/useAnimatedViewBox": "./src/target/useAnimatedViewBox.ts",

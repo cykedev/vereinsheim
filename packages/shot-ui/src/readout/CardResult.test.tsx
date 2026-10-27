@@ -83,4 +83,12 @@ describe("Ergebnis der Scheibe", () => {
     )
     expect(render({ shots: [] })).not.toContain("Kennzahlen der Scheibe")
   })
+
+  it("in Zehnteln: Schüsse nur mit Ring heißen „ohne Zehntel“, fehlen sie einem Teil, bleibt der Rat", () => {
+    const match = CARD.filter((s) => s.kind === "match").slice(0, 10)
+    const plain = (shots: typeof match) => text(render({ shots, actions: undefined }))
+    expect(plain(match.map((s) => ({ ...s, decimalTenths: null })))).toContain("– ohne Zehntel")
+    const half = match.map((s, i) => (i < 5 ? { ...s, decimalTenths: null } : s))
+    expect(plain(half)).toContain("– nicht jeder Schuss mit Zehntel · auf ganze Ringe schalten")
+  })
 })

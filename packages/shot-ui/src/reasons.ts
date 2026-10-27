@@ -12,11 +12,14 @@ import {
 
 /**
  * Warum es kein Ergebnis gibt: ohne Wertungsschuss die Mindestzahl; fehlen nur Zehntel, gibt es das Ergebnis
- * in ganzen Ringen (SF-18), darum der Rat zum Umschalten statt „ohne Wert“.
+ * in ganzen Ringen (SF-18). Hat kein Wertungsschuss Zehntel, heißt das „ohne Zehntel“; fehlen sie nur einem Teil, der
+ * Rat zum Umschalten statt „ohne Wert“.
  */
 export function noResultReason(shots: readonly MetricShot[], scoring: Scoring): string {
   if (!shots.some((shot) => shot.kind === "match")) return "ab 1 Schuss"
   if (scoring === "decimal" && computeMetric(metricByKey("result.rings")!, shots) !== null) {
+    const match = shots.filter((shot) => shot.kind === "match")
+    if (!match.some((shot) => shot.decimalTenths !== null)) return "ohne Zehntel"
     return "nicht jeder Schuss mit Zehntel · auf ganze Ringe schalten"
   }
   return "nicht jeder Schuss mit Wert"
