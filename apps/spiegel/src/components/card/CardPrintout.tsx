@@ -33,22 +33,35 @@ function PdfLink({ id }: { id: string }) {
   )
 }
 
-/** leiser Grund, wenn Spiegel die Werte eines Ausdrucks nicht übernehmen konnte */
+/** leiser Grund, wenn Spiegel die Werte eines Ausdrucks nicht lesen konnte */
 export const UNREADABLE_VALUES = "Werte nicht lesbar"
+/** leiser Grund, wenn eine stimmige Lesung nicht zur Disziplin der Scheibe passt */
+export const MISMATCHED_VALUES =
+  "Werte passen nicht zur Disziplin. Mit der passenden Disziplin übernimmt Spiegel sie."
 
-function Unreadable() {
-  return (
-    <span data-printout-unreadable className="font-normal text-muted-foreground">
-      {` · ${UNREADABLE_VALUES}`}
-    </span>
-  )
+/** der leise Zusatz an einem Ausdruck; ohne Grund nichts */
+function ValuesNote({ printout }: { printout: { unreadable: boolean; mismatch: boolean } }) {
+  if (printout.unreadable)
+    return (
+      <span data-printout-unreadable className="font-normal text-muted-foreground">
+        {` · ${UNREADABLE_VALUES}`}
+      </span>
+    )
+  if (printout.mismatch)
+    return (
+      <span data-printout-mismatch className="font-normal text-muted-foreground">
+        {` · ${MISMATCHED_VALUES}`}
+      </span>
+    )
+  return null
 }
 
 /**
  * Ausdruck als Zeile im Kasten „Diese Scheibe“: die ID wie im Fuß des Ausdrucks, damit Papier und Scheibe
  * zusammenfinden, mit Druckzeit und dem PDF; weitere Ausdrucke darunter. Konnte Spiegel die Werte eines Ausdrucks nicht
- * übernehmen (Scheibe vom Ausdruck ohne Brücke), steht leise „Werte nicht lesbar“ daneben. Ohne PDF (getippte ID,
- * Scheibe der Brücke) sagt die Zeile, wie es an die Scheibe kommt. Nicht auf der geteilten Seite: ID und Abend holen die Scheibe.
+ * lesen oder passen sie nicht zur Disziplin (Scheibe vom Ausdruck ohne Brücke), steht der Grund leise daneben. Ohne PDF
+ * (getippte ID, Scheibe der Brücke) sagt die Zeile, wie es an die Scheibe kommt. Nicht auf der geteilten Seite: ID und
+ * Abend holen die Scheibe.
  */
 export function CardPrintout({
   hex,
@@ -70,7 +83,7 @@ export function CardPrintout({
         <>
           <span className="font-semibold text-foreground">
             {[hex ? `ID ${hex}` : null, firstPrinted].filter(Boolean).join(" · ")}
-            {first?.unreadable && <Unreadable />}
+            {first && <ValuesNote printout={first} />}
           </span>
           {!first && (
             <span className="block">
@@ -93,7 +106,7 @@ export function CardPrintout({
                 {["Weiterer Ausdruck", printedText(printout.printedAtMs, timeZone)]
                   .filter(Boolean)
                   .join(", ")}
-                {printout.unreadable && <Unreadable />}
+                <ValuesNote printout={printout} />
               </span>
               <PdfLink id={printout.id} />
             </li>

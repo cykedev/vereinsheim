@@ -35,9 +35,9 @@ export function CardFetch({
   const [open, setOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
-  const { status, filled } = request
+  const { status, filled, printoutValues } = request
   const text = requestStateText(status, filled)
-  const note = requestStateNote(status, filled)
+  const note = requestStateNote(status, filled, printoutValues)
   const removable = requestRemovable(status, filled)
   const waiting = status === "open"
 

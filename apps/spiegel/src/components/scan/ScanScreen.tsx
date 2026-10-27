@@ -113,6 +113,8 @@ export function ScanScreen({
     relifts: boolean
     /** die Disziplin aus dem Kopf des Ausdrucks; null: die der letzten Scheibe */
     disciplineId: number | null
+    /** der Ausdruck ist stimmig gelesen */
+    values: boolean
     key: number
   } | null>(null)
   const [cameraPending, startCamera] = useTransition()
@@ -182,6 +184,7 @@ export function ScanScreen({
           idLine: `ID ${outcome.hex} vom ${dayText(outcome.day)}`,
           relifts: outcome.relifts,
           disciplineId: outcome.disciplineId,
+          values: outcome.values,
           key: Date.now(),
         })
         return
@@ -372,6 +375,7 @@ export function ScanScreen({
           onClose={() => setSheet(null)}
           idLine={sheet.idLine}
           relifts={sheet.relifts}
+          withValues={sheet.values}
           options={options}
           preset={sheetPreset(preset, sheet.disciplineId)}
           pending={pendingOf[sheet.source.way]}

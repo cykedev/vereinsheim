@@ -6,6 +6,7 @@ import { CardRequestStatus } from "@/generated/prisma/enums"
 import { OLD_WORDS } from "@/lib/admin/consequences"
 
 import {
+  OPEN_WITH_PRINTOUT_VALUES,
   REQUEST_STATUS_NOTE,
   REQUEST_STATUS_TEXT,
   requestRemovable,
@@ -27,6 +28,13 @@ describe("Zustand in Worten", () => {
 
   it("Sätze: offen und gefüllt, geholt und zurückgezogen ohne", () => {
     expect(requestStateNote("open", false)).toBe("Spiegel holt die Werte, sobald die Anlage läuft.")
+    expect(requestStateNote("open", false, true)).toBe(
+      "Die Werte sind vom Ausdruck. Spiegel holt die Messwerte und Zeiten, sobald die Anlage läuft."
+    )
+    expect(requestStateNote("open", true, true)).toBeNull()
+    expect(requestStateNote("printMismatch", false, true)).toBe(
+      "Die Scheibe der Anlage begann nach dem Druck oder hat andere Werte. Spiegel hat nichts übernommen."
+    )
     expect(requestStateNote("open", true)).toBeNull()
     expect(requestStateNote("done", false)).toBeNull()
     expect(requestStateNote("withdrawn", false)).toBeNull()
@@ -36,7 +44,11 @@ describe("Zustand in Worten", () => {
   })
 
   it("keine Semikolons, keine alten Wörter", () => {
-    const texts = [...Object.values(REQUEST_STATUS_TEXT), ...Object.values(REQUEST_STATUS_NOTE)]
+    const texts = [
+      ...Object.values(REQUEST_STATUS_TEXT),
+      ...Object.values(REQUEST_STATUS_NOTE),
+      OPEN_WITH_PRINTOUT_VALUES,
+    ]
     expect(forbiddenIn(texts)).toEqual([])
     for (const text of texts) expect(text).not.toMatch(OLD_WORDS)
   })

@@ -89,7 +89,14 @@ describe("Kasten „Diese Scheibe“", () => {
           mismatch: false,
         },
       ],
-      request: { id: 7, status: "open", filled: false, hex: "ff914420", day: "2026-10-13" },
+      request: {
+        id: 7,
+        status: "open",
+        filled: false,
+        printoutValues: false,
+        hex: "ff914420",
+        day: "2026-10-13",
+      },
     })
     const order = [
       "data-card-printout",
@@ -102,6 +109,27 @@ describe("Kasten „Diese Scheibe“", () => {
     expect(order).toEqual([...order].sort((a, b) => a - b))
     expect(rowText(html, "data-card-fetch")).toContain("wartet auf die Anlage")
     expect(rowText(html, "data-card-fetch")).toContain("Nicht mehr holen")
+    expect(rowText(html, "data-card-fetch")).toContain(
+      "Spiegel holt die Werte, sobald die Anlage läuft."
+    )
+  })
+
+  it("wartet mit Werten vom Ausdruck: die Anlage bringt Messwerte und Zeiten", () => {
+    const html = render({
+      hex: "ff914420",
+      printouts: [],
+      request: {
+        id: 7,
+        status: "open",
+        filled: false,
+        printoutValues: true,
+        hex: "ff914420",
+        day: "2026-10-13",
+      },
+    })
+    expect(rowText(html, "data-card-fetch")).toContain(
+      "Die Werte sind vom Ausdruck. Spiegel holt die Messwerte und Zeiten, sobald die Anlage läuft."
+    )
   })
 
   it("ohne ID und ohne Ausdruck keine Zeile „Ausdruck“, ohne Auftrag keine „Von der Anlage“", () => {
@@ -118,6 +146,7 @@ describe("Kasten „Diese Scheibe“", () => {
         id: 7,
         status: "printMismatch",
         filled: false,
+        printoutValues: false,
         hex: "ff914420",
         day: "2026-10-13",
       },
@@ -134,7 +163,14 @@ describe("Kasten „Diese Scheibe“", () => {
     const html = render({
       hex: "ff914420",
       printouts: [],
-      request: { id: 7, status: "open", filled: true, hex: "ff914420", day: "2026-10-13" },
+      request: {
+        id: 7,
+        status: "open",
+        filled: true,
+        printoutValues: false,
+        hex: "ff914420",
+        day: "2026-10-13",
+      },
     })
     const row = rowText(html, "data-card-fetch")
     expect(row).toBe("Von der Anlage geholt, wird noch ergänzt")

@@ -32,9 +32,23 @@ export const REQUEST_STATUS_NOTE: Readonly<Partial<Record<CardRequestStatus, str
 export const requestStateText = (status: CardRequestStatus, filled: boolean): string =>
   status === "open" && filled ? "geholt, wird noch ergänzt" : REQUEST_STATUS_TEXT[status]
 
-/** der Satz unter dem Zustand; offen und gefüllt ohne Satz */
-export const requestStateNote = (status: CardRequestStatus, filled: boolean): string | null =>
-  filled ? null : (REQUEST_STATUS_NOTE[status] ?? null)
+/** der Satz unter „wartet auf die Anlage“, wenn die Scheibe schon Werte vom Ausdruck hat */
+export const OPEN_WITH_PRINTOUT_VALUES =
+  "Die Werte sind vom Ausdruck. Spiegel holt die Messwerte und Zeiten, sobald die Anlage läuft."
+
+/**
+ * der Satz unter dem Zustand; offen und gefüllt ohne Satz. `printoutValues`: Die Scheibe hat schon Werte vom Ausdruck,
+ * die Anlage bringt nur noch Messwerte und Zeiten
+ */
+export const requestStateNote = (
+  status: CardRequestStatus,
+  filled: boolean,
+  printoutValues = false
+): string | null => {
+  if (filled) return null
+  if (status === "open" && printoutValues) return OPEN_WITH_PRINTOUT_VALUES
+  return REQUEST_STATUS_NOTE[status] ?? null
+}
 
 /**
  * ob die Seite der Scheibe den Auftrag zeigt: ungefüllt, solange er nicht zurückgezogen oder geholt ist, gefüllt nur,

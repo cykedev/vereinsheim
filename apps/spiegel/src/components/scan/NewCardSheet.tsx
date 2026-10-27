@@ -10,6 +10,7 @@ import { Sheet } from "@vereinsheim/ui/design2/sheet"
 
 import type { CardKind } from "@/generated/prisma/enums"
 import type { NewCardChoice, NewCardOption } from "@/lib/fetch-card/queries"
+import { newCardIntro } from "@/lib/fetch-card/texts"
 
 import { DisciplineChoice } from "../card/DisciplineChoice"
 
@@ -28,6 +29,7 @@ export function NewCardSheet({
   onClose,
   idLine,
   relifts,
+  withValues = false,
   options,
   preset,
   pending,
@@ -39,6 +41,8 @@ export function NewCardSheet({
   idLine: string
   /** der Schütze hatte die Scheibe gelöscht; Holen hebt die Sperre auf */
   relifts: boolean
+  /** der Ausdruck ist stimmig gelesen: Spiegel legt die Scheibe mit seinen Werten an */
+  withValues?: boolean
   options: readonly NewCardOption[]
   preset: { disciplineId: number | null; kind: CardKind }
   pending: boolean
@@ -51,9 +55,8 @@ export function NewCardSheet({
   return (
     <Sheet open={open} onClose={onClose} title="Neue Scheibe">
       <div data-new-card className="grid gap-4">
-        <p className="text-sm text-foreground-2">
-          Diese Scheibe liegt noch nicht in Spiegel. Spiegel legt sie an und holt die Werte von der
-          Anlage. Wähle Disziplin und Art. Liefert die Anlage die Scheibe, gilt ihre Disziplin.
+        <p data-new-card-intro className="text-sm text-foreground-2">
+          {newCardIntro(withValues)}
         </p>
         <p data-new-card-id className="text-sm font-semibold">
           {idLine}

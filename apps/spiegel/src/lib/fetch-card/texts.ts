@@ -53,7 +53,15 @@ export type FetchOutcome =
    * neu: erst Disziplin und Art wählen; `relifts`: Der Schütze hatte die Scheibe gelöscht; `disciplineId`: die Disziplin
    * aus dem Kopf des Ausdrucks, wenn genau eine wählbare so heißt
    */
-  | { kind: "choose"; hex: string; day: string; relifts: boolean; disciplineId: number | null }
+  | {
+      kind: "choose"
+      hex: string
+      day: string
+      relifts: boolean
+      disciplineId: number | null
+      /** der Ausdruck ist stimmig gelesen: Die Scheibe entsteht mit seinen Werten, wenn sie zur Disziplin passen */
+      values: boolean
+    }
   /** `values`: mit den Werten vom Ausdruck */
   | { kind: "created"; cardId: string; values: boolean }
   /** die eigene Scheibe; `attached`: mit einem Ausdruck */
@@ -79,6 +87,13 @@ export function fetchToast(outcome: FetchOutcome): string | null {
     case "pending":
       return "Die Scheibe wartet in „Offen“."
   }
+}
+
+/** der Satz oben im Blatt „Neue Scheibe“; `withValues`: Der Ausdruck ist stimmig gelesen */
+export function newCardIntro(withValues: boolean): string {
+  return withValues
+    ? "Diese Scheibe liegt noch nicht in Spiegel. Spiegel legt sie mit den Werten vom Ausdruck an. Liefert die Anlage die Scheibe, kommen ihre Messwerte und die Zeiten der Schüsse dazu, und ihre Disziplin gilt. Wähle Disziplin und Art."
+    : "Diese Scheibe liegt noch nicht in Spiegel. Spiegel legt sie an und holt die Werte von der Anlage. Wähle Disziplin und Art. Liefert die Anlage die Scheibe, gilt ihre Disziplin."
 }
 
 /** alle Fehlertexte, für die Tests der Schreibregeln */

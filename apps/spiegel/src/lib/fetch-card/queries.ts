@@ -397,6 +397,8 @@ export interface CardFetchInfo {
     id: number
     status: CardRequestStatus
     filled: boolean
+    /** die Scheibe hat schon Werte vom Ausdruck (Scheibe vom Ausdruck ohne Brücke, mit Schüssen) */
+    printoutValues: boolean
     hex: string
     day: string
   } | null
@@ -419,6 +421,7 @@ export async function cardFetchInfo(
       sourceId: true,
       scheibenId: true,
       origin: true,
+      currentRevision: { select: { _count: { select: { shots: true } } } },
       printouts: {
         orderBy: [{ storedAt: "asc" }, { id: "asc" }],
         select: { id: true, printedAt: true, footerId: true, valuesStatus: true },
@@ -465,6 +468,10 @@ export async function cardFetchInfo(
             id: latestRequest.id,
             status: latestRequest.status,
             filled,
+            printoutValues:
+              card.origin === "pdf" &&
+              card.sourceId === null &&
+              (card.currentRevision?._count.shots ?? 0) > 0,
             hex: printedId(latestRequest.scheibenId),
             day: latestRequest.day,
           }

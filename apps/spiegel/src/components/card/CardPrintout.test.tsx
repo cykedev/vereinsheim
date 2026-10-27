@@ -2,7 +2,11 @@ import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 
-import { CardPrintout } from "./CardPrintout"
+import { forbiddenIn } from "@vereinsheim/lib/wording"
+
+import { OLD_WORDS } from "@/lib/admin/consequences"
+
+import { CardPrintout, MISMATCHED_VALUES, UNREADABLE_VALUES } from "./CardPrintout"
 
 const render = (props: Parameters<typeof CardPrintout>[0]) =>
   renderToStaticMarkup(createElement(CardPrintout, props))
@@ -93,6 +97,26 @@ describe("Zeile „Ausdruck“", () => {
     expect(html.match(/data-printout-unreadable/g)).toHaveLength(2)
   })
 
+  it("passt nicht zur Disziplin: der andere leise Grund", () => {
+    const html = render({
+      hex: "ff914420",
+      printouts: [
+        {
+          id: "cprint0000000000000000001",
+          printedAtMs: Date.UTC(2026, 9, 27, 18, 52),
+          unreadable: false,
+          mismatch: true,
+        },
+      ],
+      timeZone: "Europe/Berlin",
+    })
+    expect(text(html)).toContain(
+      "gedruckt Di 27.10.2026 um 19:52 · Werte passen nicht zur Disziplin. Mit der passenden Disziplin übernimmt Spiegel sie."
+    )
+    expect(html).toContain("data-printout-mismatch")
+    expect(html).not.toContain("data-printout-unreadable")
+  })
+
   it("lesbar: kein Zusatz", () => {
     const html = render({
       hex: "ff914420",
@@ -102,6 +126,12 @@ describe("Zeile „Ausdruck“", () => {
       timeZone: "Europe/Berlin",
     })
     expect(html).not.toContain("data-printout-unreadable")
+    expect(html).not.toContain("data-printout-mismatch")
     expect(text(html)).not.toContain("Werte nicht lesbar")
+  })
+
+  it("keine Semikolons, keine alten Wörter", () => {
+    expect(forbiddenIn([UNREADABLE_VALUES, MISMATCHED_VALUES])).toEqual([])
+    for (const text of [UNREADABLE_VALUES, MISMATCHED_VALUES]) expect(text).not.toMatch(OLD_WORDS)
   })
 })

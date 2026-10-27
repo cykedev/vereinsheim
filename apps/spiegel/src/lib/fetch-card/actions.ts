@@ -103,6 +103,7 @@ async function fetchFrom(
             disciplineId: got.file
               ? await headerDisciplineId(db, { siteId, name: got.file.values.discipline })
               : null,
+            values: got.file?.values.status === "ok",
           },
         }
       case "taken":
