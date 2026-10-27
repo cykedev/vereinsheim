@@ -5,6 +5,7 @@ import type { CardOrigin } from "@/generated/prisma/client"
 import {
   checkDetails,
   checkImportKey,
+  checkStand,
   detailsWriter,
   enteredScoring,
   normalizePlace,
@@ -100,6 +101,16 @@ describe("checkDetails: je Problem ein Fall", () => {
     expect(checkImportKey("treffsicher", "treffsicher:a/b")).toBe("importKey")
     expect(checkImportKey("treffsicher", "treffsicher:abc_1-2")).toBeNull()
     expect(checkImportKey("manual", undefined)).toBeNull()
+  })
+
+  it("Standnummer nur vom Ausdruck, höchstens acht Ziffern und Buchstaben", () => {
+    expect(checkStand("pdf", "12")).toBeNull()
+    expect(checkStand("pdf", "A7")).toBeNull()
+    expect(checkStand("pdf", undefined)).toBeNull()
+    expect(checkStand("pdf", null)).toBeNull()
+    expect(checkStand("pdf", "123456789")).toBe("stand")
+    expect(checkStand("pdf", "1 2")).toBe("stand")
+    expect(checkStand("manual", "12")).toBe("stand")
   })
 })
 

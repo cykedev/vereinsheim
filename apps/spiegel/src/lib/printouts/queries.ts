@@ -2,19 +2,36 @@
 // liegt nach sha256 im Upload-Verzeichnis (`files.ts`) und verschwindet über `removeOrphanPrintoutFiles`, sobald keine
 // Zeile mehr auf sie zeigt.
 
-import type { Prisma } from "@/generated/prisma/client"
+import { Prisma } from "@/generated/prisma/client"
 import type { Db } from "@/lib/db"
 
 import { VISIBLE_CARD } from "../db/visible"
 import { readPrintoutBytes } from "./files"
-import type { StoredPrintout } from "./store"
+import type { PrintoutValuesRead, PrintoutValuesStatus, StoredPrintout } from "./store"
 
-/** hängt einen gespeicherten Ausdruck an eine Scheibe; derselbe Ausdruck an derselben Scheibe bleibt eine Zeile */
+/** die Werte, wie der Leser sie fand, als Spalten der Zeile; die Lesung nur bei `ok` */
+export function valuesColumns(values: PrintoutValuesRead) {
+  return {
+    readerVersion: values.readerVersion,
+    layout: values.layout,
+    reading:
+      values.status === "ok" && values.reading !== null
+        ? (values.reading as unknown as Prisma.InputJsonValue)
+        : Prisma.DbNull,
+    valuesStatus: values.status,
+  }
+}
+
+/**
+ * hängt einen gespeicherten Ausdruck an eine Scheibe; derselbe Ausdruck an derselben Scheibe bleibt eine Zeile, deren
+ * Werte der Leser dabei neu schreibt
+ */
 export async function attachPrintout(
   tx: Prisma.TransactionClient | Db,
   file: StoredPrintout,
   cardId: string
 ): Promise<string> {
+  const values = valuesColumns(file.values)
   const row = await tx.printout.upsert({
     where: { cardId_sha256: { cardId, sha256: file.sha256 } },
     create: {
@@ -24,11 +41,27 @@ export async function attachPrintout(
       size: file.size,
       footerId: file.hex,
       printedAt: file.printedAt,
+      ...values,
     },
-    update: {},
+    update: values,
     select: { id: true },
   })
   return row.id
+}
+
+/** den Status der Werte eines Ausdrucks setzen, etwa `inconsistent` bei einem Widerspruch zum Scheibenbild */
+export async function markPrintoutValues(
+  tx: Prisma.TransactionClient | Db,
+  printoutId: string,
+  status: PrintoutValuesStatus
+): Promise<void> {
+  await tx.printout.update({
+    where: { id: printoutId },
+    data: {
+      valuesStatus: status,
+      ...(status === "ok" ? {} : { reading: Prisma.DbNull }),
+    },
+  })
 }
 
 /**

@@ -61,6 +61,7 @@ export type DetailsProblem =
   | "place"
   | "importKey"
   | "startedAt"
+  | "stand"
 
 export const PLACE_MAX = 80
 /** so weit von der Mitte liegt kein Treffer und keine Trefferlage einer Scheibe (100 mm) */
@@ -92,6 +93,18 @@ export function normalizePlace(
   const place = (raw ?? "").trim().replace(/\s+/g, " ")
   if (place.length > PLACE_MAX) return fail("place")
   return { ok: true, place: place || null }
+}
+
+/** Standnummer vom Ausdruck: höchstens acht Ziffern und Buchstaben */
+export const STAND = /^[0-9A-Za-z]{1,8}$/
+
+/** eine Standnummer nur vom Ausdruck und in ihrer Form; fehlt (`undefined`) oder leer (`null`): kein Problem */
+export function checkStand(
+  origin: EnteredOrigin,
+  stand: string | null | undefined
+): DetailsProblem | null {
+  if (stand === undefined || stand === null) return null
+  return origin === "pdf" && STAND.test(stand) ? null : "stand"
 }
 
 /** ein Schlüssel der Übernahme nur aus Treffsicher und in seiner Form */

@@ -13,6 +13,7 @@ import type { Db } from "../db"
 import {
   checkDetails,
   checkImportKey,
+  checkStand,
   detailsWriter,
   enteredScoring,
   isTimeMs,
@@ -42,6 +43,8 @@ export interface EnteredCardInput {
   place?: string | null
   /** nur beim Anlegen, nur aus Treffsicher */
   importKey?: string | null
+  /** Standnummer, nur vom Ausdruck; fehlt: nicht anfassen */
+  stand?: string | null
   details: DetailsInput
   reason: string
 }
@@ -128,6 +131,9 @@ export async function writeEnteredCardIn(tx: Tx, input: EnteredCardInput): Promi
       ? "importKey"
       : checkImportKey(input.origin, importKey)
   if (keyProblem) return { kind: "invalid", problem: keyProblem }
+  const standProblem = checkStand(input.origin, input.stand)
+  if (standProblem) return { kind: "invalid", problem: standProblem }
+  const stand = input.stand === undefined ? {} : { stand: input.stand }
 
   // die Gegenprobe wie beim Nachrechnen: Merkmale aus den Werten hat `checkDetails` gesetzt
   const targetId =
@@ -183,6 +189,7 @@ export async function writeEnteredCardIn(tx: Tx, input: EnteredCardInput): Promi
         state: "final",
         place: place.place ?? null,
         importKey,
+        ...stand,
         ...(input.kindChoice ? { kindChoice: input.kindChoice } : {}),
       },
       select: { id: true },
@@ -206,7 +213,11 @@ export async function writeEnteredCardIn(tx: Tx, input: EnteredCardInput): Promi
   if (next === null) return { kind: "notEditable" }
   await tx.card.update({
     where: { id: cardId },
-    data: { ...features(next), ...(place.place === undefined ? {} : { place: place.place }) },
+    data: {
+      ...features(next),
+      ...stand,
+      ...(place.place === undefined ? {} : { place: place.place }),
+    },
   })
   const current = card.currentRevision
   if (current && current.contentHash === hash)
