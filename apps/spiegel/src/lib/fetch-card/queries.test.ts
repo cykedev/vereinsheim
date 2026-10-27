@@ -178,6 +178,18 @@ describe("fetchCard", () => {
     expect(await fetchCard(db, input(id))).toEqual({ kind: "restored", cardId })
     expect((await db.card.findUniqueOrThrow({ where: { id: cardId } })).deletedAt).toBeNull()
 
+    // eine Scheibe vom Ausdruck, deren Auftrag schon endete: wiederhergestellt wartet sie wieder auf die Anlage
+    const typed = nextId++
+    const created = await fetchCard(db, withChoice(typed))
+    if (created.kind !== "created") throw new Error(created.kind)
+    await db.cardRequest.updateMany({
+      where: { cardId: created.cardId },
+      data: { status: "missing" },
+    })
+    await db.card.update({ where: { id: created.cardId }, data: { deletedAt: new Date() } })
+    expect(await fetchCard(db, input(typed))).toEqual({ kind: "restored", cardId: created.cardId })
+    expect((await requestsOf(typed)).map((r) => r.status)).toEqual(["missing", "open"])
+
     await db.card.update({
       where: { id: cardId },
       data: { deletedAt: new Date(Date.now() - 31 * DAY_MS) },
@@ -406,6 +418,11 @@ describe("newCardChoices", () => {
 
 describe("cardFetchInfo", () => {
   it("ID der Brücke, des Ausdrucks oder des Auftrags; zurückgezogen nicht gezeigt; fremd null", async () => {
+    // die Fälle davor ließen offene Aufträge stehen; die Grenze von zehn gilt hier nicht
+    await db.cardRequest.updateMany({
+      where: { userId: site.ownerId, status: "open" },
+      data: { status: "withdrawn" },
+    })
     const bridge = nextId++
     const bridgeId = await bridgeCard(bridge)
     expect(await cardFetchInfo(db, { cardId: bridgeId, ownerId: site.ownerId })).toEqual({

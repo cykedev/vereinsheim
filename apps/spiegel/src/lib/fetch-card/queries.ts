@@ -124,6 +124,7 @@ function noonOf(day: string, timeZone: string): number {
 
 const OWN_SELECT = {
   id: true,
+  origin: true,
   sourceId: true,
   deletedAt: true,
   ownerPending: true,
@@ -132,7 +133,8 @@ const OWN_SELECT = {
 
 /**
  * Eine Scheibe holen, in einer Transaktion unter der Sperre der Kontozeile (zwei gleichzeitige Holen derselben Scheibe
- * ergeben eine). Die eigene Scheibe des Abends findet Spiegel zuerst als Scheibe der Brücke (Quelle, ScheibenID), dann als
+ * ergeben eine; `FOR NO KEY UPDATE`, damit das Einlesen beim Anlegen einer Scheibe des Kontos über den Fremdschlüssel
+ * nicht über Kreuz wartet). Die eigene Scheibe des Abends findet Spiegel zuerst als Scheibe der Brücke (Quelle, ScheibenID), dann als
  * eigene Scheibe vom Ausdruck mit einem Auftrag dieser ID und dieses Tags, dann über einen Ausdruck dieser ID. Ohne Wahl
  * schreibt eine neue Scheibe nichts (`choose`); die Seite fragt und ruft noch einmal.
  */
@@ -140,7 +142,7 @@ export async function fetchCard(db: Db, input: FetchInput): Promise<FetchResult>
   const { userId, siteId, scheibenId, day, file, choice } = input
   const nowMs = input.nowMs ?? Date.now()
   return db.$transaction(async (tx) => {
-    await tx.$queryRaw`SELECT id FROM "User" WHERE id = ${userId} FOR UPDATE`
+    await tx.$queryRaw`SELECT id FROM "User" WHERE id = ${userId} FOR NO KEY UPDATE`
     const { timeZone } = await tx.site.findUniqueOrThrow({
       where: { id: siteId },
       select: { timeZone: true },
@@ -183,31 +185,34 @@ export async function fetchCard(db: Db, input: FetchInput): Promise<FetchResult>
     const attach = (cardId: string) => (file ? attachPrintout(tx, file, cardId) : null)
 
     if (own) {
-      await lockCard(tx, own.id)
-      if (own.deletedAt) {
-        if (trashEndsAt(own.deletedAt).getTime() <= nowMs) return { kind: "trashExpired" }
-        // die Bedingung im Befehl: Ein gleichzeitiges Löschen oder Wiederherstellen ändert sonst still (§9)
-        const { count } = await tx.card.updateMany({
-          where: { id: own.id, ownerId: userId, deletedAt: own.deletedAt },
-          data: { deletedAt: null },
+      // Löschen, Wiederherstellen und „Nicht meine“ ändern die Scheibe unter ihrer Sperre: den Zustand erst danach lesen
+      const card = (await lockCard(tx, own.id))
+        ? await tx.card.findFirst({ where: { id: own.id, ownerId: userId }, select: OWN_SELECT })
+        : null
+      if (!card) throw new Error("Scheibe während des Holens entfernt")
+      // eine eigene Scheibe vom Ausdruck ohne Werte und ohne offenen Auftrag (zurückgezogen, nicht gefunden): ein neuer
+      const needsRequest =
+        card.sourceId === null && card.origin === "pdf" && !(await openRequestOf(card.id))
+      const request = () =>
+        tx.cardRequest.create({
+          data: { userId, siteId, scheibenId, day, cardId: card.id, createdAt: new Date(nowMs) },
         })
-        if (count !== 1) return { kind: "trashExpired" }
-        await attach(own.id)
-        return { kind: "restored", cardId: own.id }
+      if (card.deletedAt) {
+        if (trashEndsAt(card.deletedAt).getTime() <= nowMs) return { kind: "trashExpired" }
+        if (needsRequest && (await overLimit())) return { kind: "tooMany" }
+        await tx.card.update({ where: { id: card.id }, data: { deletedAt: null } })
+        await attach(card.id)
+        if (needsRequest) await request()
+        return { kind: "restored", cardId: card.id }
       }
-      if (own.ownerPending) {
-        await attach(own.id)
+      if (card.ownerPending) {
+        await attach(card.id)
         return { kind: "pending" }
       }
-      // eine eigene Scheibe ohne Werte und ohne offenen Auftrag (zurückgezogen, nicht gefunden): ein neuer Auftrag
-      const needsRequest = own.sourceId === null && !(await openRequestOf(own.id))
       if (needsRequest && (await overLimit())) return { kind: "tooMany" }
-      await attach(own.id)
-      if (needsRequest)
-        await tx.cardRequest.create({
-          data: { userId, siteId, scheibenId, day, cardId: own.id, createdAt: new Date(nowMs) },
-        })
-      return { kind: "opened", cardId: own.id, attached: file !== null }
+      await attach(card.id)
+      if (needsRequest) await request()
+      return { kind: "opened", cardId: card.id, attached: file !== null }
     }
 
     if (bridgeCards.length) return { kind: "taken" }
@@ -256,9 +261,14 @@ export async function fetchCard(db: Db, input: FetchInput): Promise<FetchResult>
     })
     if (saved.kind !== "saved") throw new Error(`Scheibe vom Ausdruck: ${saved.kind}`)
     await attach(saved.cardId)
-    if (legacy)
-      await tx.cardRequest.update({ where: { id: legacy.id }, data: { cardId: saved.cardId } })
-    else
+    // die Bedingung im Befehl: Einlesen und „Nicht mehr holen“ nehmen die Sperre der Kontozeile nicht (§9)
+    const adopted = legacy
+      ? await tx.cardRequest.updateMany({
+          where: { id: legacy.id, status: "open", cardId: null },
+          data: { cardId: saved.cardId },
+        })
+      : { count: 0 }
+    if (adopted.count !== 1)
       await tx.cardRequest.create({
         data: { userId, siteId, scheibenId, day, cardId: saved.cardId, createdAt: new Date(nowMs) },
       })

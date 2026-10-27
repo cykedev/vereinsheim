@@ -72,8 +72,10 @@ Spiegel hängt dabei nicht vom Layout des Meyton-PDFs ab ([[adr-028]], Änderung
    gefunden, an diesem Tag nicht gefunden, passt nicht zum Ausdruck, lässt sich nicht holen, gehört zu einem anderen
    Konto, keine Antwort). „Nicht mehr holen“ und „Entfernen“ setzen den Auftrag auf zurückgezogen; Scheibe und PDF
    bleiben, die Scheibe heißt dann „ohne Werte“. Erneutes Holen legt einen neuen Auftrag an.
-6. **Rückweg:** Eine falsche Scheibe löscht man (Papierkorb). Eine Scheibe vom Ausdruck hinterlässt beim endgültigen
-   Löschen keine Sperre; ihr offener Auftrag ist dann zurückgezogen.
+6. **Rückweg:** Eine falsche Scheibe löscht man (Papierkorb). Im Papierkorb bleibt ihr offener Auftrag (er zählt zur
+   Grenze von zehn, die Brücke füllt die Scheibe weiter); holt man sie zurück und endete ihr Auftrag schon, wartet sie
+   mit einem neuen wieder auf die Anlage. Eine Scheibe vom Ausdruck hinterlässt beim endgültigen Löschen keine Sperre;
+   ihr offener Auftrag ist dann zurückgezogen.
 
 Stand: gebaut (1b-1 Holen, Lesen, Speichern; 1b-2 die Seite, die Scheibe vom Ausdruck und die Prüfung beim Einlesen,
 `apps/spiegel/src/lib/fetch-card/`). Keine neue Brücke.
