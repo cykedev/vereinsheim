@@ -170,6 +170,7 @@ export async function comparePageData(
               scoring,
               names,
               provenance: { a: a.provenance, b: b.provenance },
+              waiting: { a: a.waiting, b: b.waiting },
             }),
       problem: problem && problemText(problem),
       query: { type: "cards", family, a: aId, b: bId },

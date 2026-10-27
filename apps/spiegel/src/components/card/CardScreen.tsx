@@ -387,7 +387,7 @@ export function CardScreen({
   // Ein Gerüst für jede Detailtiefe: ohne Einzelschüsse stehen Ergebnis, Serien, Schüsse und Analyse an denselben
   // Stellen, nur mit anderem Inhalt (Werte aus Summen oder „–“ mit Grund, ein Satz statt der Tabelle)
   const withShots = level === "shots"
-  const reasons = withShots ? [] : levelReasons(detail, level, card.provenance)
+  const reasons = withShots ? [] : levelReasons(detail, level, card.provenance, card.waiting)
   const summary = withShots ? null : (
     <SummaryResult
       card={card}
@@ -478,7 +478,7 @@ export function CardScreen({
               onSelect={(series) => dispatch({ type: "select", series })}
               onSelectWhole={(whole) => dispatch({ type: "selectWhole", whole })}
               sums={withShots ? undefined : card.sums?.series}
-              missing={seriesMissingText(level, card.provenance)}
+              missing={seriesMissingText(level, card.provenance, card.waiting)}
             />
           </div>
         }

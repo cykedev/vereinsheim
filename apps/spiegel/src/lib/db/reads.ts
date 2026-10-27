@@ -17,6 +17,7 @@ import type { NamedPeriod } from "@vereinsheim/shot-ui/period/calendar"
 
 import type { CardOrigin, CardState, Prisma } from "@/generated/prisma/client"
 
+import { UNFILLED } from "../card-requests/queries"
 import type { Db } from "../db"
 import { cardScoring } from "../scoring"
 import {
@@ -48,6 +49,8 @@ export interface OverviewCard extends ProjectedCard {
   list: CardList | null
   /** woher die Scheibe kommt, in den Wörtern der Ansichten (`provenanceOf`) */
   provenance: CardProvenance
+  /** vom Ausdruck: `false`, wenn Spiegel die Werte nicht mehr von der Anlage holt (`withWaiting`); fehlt: wartet */
+  waiting?: false
 }
 
 /**
@@ -177,6 +180,31 @@ function startedAt({ fromMs, toMs }: MsRange) {
   }
 }
 
+/** die Scheiben unter `ids` mit einem offenen, ungefüllten Auftrag an die Brücke */
+export async function openRequestCardIds(db: Db, ids: readonly string[]): Promise<Set<string>> {
+  if (!ids.length) return new Set()
+  const rows = await db.cardRequest.findMany({
+    where: { cardId: { in: [...ids] }, status: "open", ...UNFILLED },
+    select: { cardId: true },
+  })
+  return new Set(rows.flatMap((row) => (row.cardId ? [row.cardId] : [])))
+}
+
+/**
+ * Scheiben vom Ausdruck ohne offenen Auftrag tragen `waiting: false`: Spiegel holt ihre Werte nicht mehr (zurückgezogen,
+ * nicht gefunden), der Grund heißt dann „ohne Werte“ statt „wartet auf die Anlage“. Andere bleiben, wie sie sind.
+ */
+async function withWaiting<T extends { id: string; provenance: CardProvenance }>(
+  db: Db,
+  cards: readonly T[]
+): Promise<(T & { waiting?: false })[]> {
+  const printouts = cards.filter((card) => card.provenance === "printout").map((card) => card.id)
+  const open = await openRequestCardIds(db, printouts)
+  return cards.map((card) =>
+    card.provenance === "printout" && !open.has(card.id) ? { ...card, waiting: false } : card
+  )
+}
+
 /** Liste und Fortschritt: die Scheiben eines Schützen in einer Familie, nach Beginn */
 export async function familyCards(
   db: Db,
@@ -192,7 +220,7 @@ export async function familyCards(
     orderBy: [{ startedAt: "asc" }, { id: "asc" }],
     select: OVERVIEW_SELECT,
   })
-  return toOverview(rows)
+  return withWaiting(db, toOverview(rows))
 }
 
 /** Start: die Scheiben eines Schützen über alle Familien in einem Zeitraum (der letzte Abend) */
@@ -205,7 +233,7 @@ export async function ownerCards(
     orderBy: [{ startedAt: "asc" }, { id: "asc" }],
     select: OVERVIEW_SELECT,
   })
-  return toOverview(rows)
+  return withWaiting(db, toOverview(rows))
 }
 
 /**
@@ -291,6 +319,8 @@ export interface PageCard extends PeriodCard {
   provenance: CardProvenance
   /** Ort, wie eingetragen; null ohne (Scheiben der Brücke tragen ihn über die Anlage) */
   place: string | null
+  /** vom Ausdruck: `false`, wenn Spiegel die Werte nicht mehr von der Anlage holt; fehlt: wartet */
+  waiting?: false
 }
 
 function toPageCard(row: PageCardRow): PageCard | null {
@@ -342,7 +372,8 @@ export async function cardWithShots(
     where: { id: query.cardId, ownerId: query.ownerId, ...VISIBLE_CARD },
     select: PAGE_CARD_SELECT,
   })
-  return row ? toPageCard(row) : null
+  const card = row ? toPageCard(row) : null
+  return card && (await withWaiting(db, [card]))[0]
 }
 
 /**
@@ -356,7 +387,8 @@ export async function sharedCard(db: Db, shareId: string): Promise<PageCard | nu
     select: PAGE_CARD_SELECT,
   })
   const card = row ? toPageCard(row) : null
-  return card && { ...card, standDiscipline: null, place: null }
+  // derselbe Grund wie auf der eigenen Seite
+  return card && { ...(await withWaiting(db, [card]))[0], standDiscipline: null, place: null }
 }
 
 /**

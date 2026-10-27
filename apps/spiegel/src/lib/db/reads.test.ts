@@ -10,6 +10,7 @@ import { FLAG_SUSPICIOUS, metricByKey, type MetricDefinition } from "@vereinshei
 import { cardMarks, projectedRecords, projectedValues } from "@vereinsheim/shot-core/projection"
 
 import { createPrismaClient } from "@/lib/db"
+import { dismissRequest } from "../card-requests/queries"
 import { generateSeason } from "../../../test/generate"
 import { createTestSite, type TestSite } from "../../../test/fixtures"
 
@@ -673,6 +674,50 @@ describe("Herkunft, Ort und Grundlage für die Ansichten", () => {
       expect(centers[series]).toBeNull()
     } finally {
       await db.card.deleteMany({ where: { id: { in: ids } } })
+    }
+  })
+})
+
+describe("wartet eine Scheibe vom Ausdruck noch auf die Anlage?", () => {
+  it("mit offenem Auftrag ohne Angabe, nach dem Zurückziehen `waiting: false`; gemessene ohne Feld", async () => {
+    const saved = await writeEnteredCard(db, {
+      ownerId: site.ownerId,
+      origin: "pdf",
+      disciplineId: site.disciplineId,
+      startedAtMs: FIRST_MS - 3 * DAY_MS,
+      kind: "training",
+      details: {},
+      reason: "printout",
+    })
+    if (saved.kind !== "saved") throw new Error(saved.kind)
+    const request = await db.cardRequest.create({
+      data: {
+        userId: site.ownerId,
+        siteId: site.siteId,
+        scheibenId: 4242,
+        day: "2026-03-29",
+        cardId: saved.cardId,
+      },
+    })
+    try {
+      const overview = async () =>
+        new Map((await ownerCards(db, { ownerId: site.ownerId })).map((c) => [c.id, c]))
+      expect((await overview()).get(saved.cardId)).not.toHaveProperty("waiting")
+      expect(
+        await cardWithShots(db, { cardId: saved.cardId, ownerId: site.ownerId })
+      ).not.toHaveProperty("waiting")
+
+      expect(await dismissRequest(db, { userId: site.ownerId, requestId: request.id })).toBe(true)
+      const after = await overview()
+      expect(after.get(saved.cardId)?.waiting).toBe(false)
+      expect(
+        (await cardWithShots(db, { cardId: saved.cardId, ownerId: site.ownerId }))?.waiting
+      ).toBe(false)
+      const measured = [...after.values()].filter((c) => c.provenance === "measured")
+      expect(measured.length).toBeGreaterThan(0)
+      for (const card of measured) expect(card).not.toHaveProperty("waiting")
+    } finally {
+      await db.card.delete({ where: { id: saved.cardId } })
     }
   })
 })

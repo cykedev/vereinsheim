@@ -7,14 +7,19 @@
 //   pnpm --filter spiegel seed:own --email <adresse>  einem anderen, vorhandenen Konto
 //   pnpm --filter spiegel seed:own --demo             dem Demo-Konto (für die Prüfung im Browser, siehe unten), dazu
 //                                                     erfundene Scheiben ohne Brücke in jeder Detailtiefe
-//                                                     (`demoEnteredSeeds`, über `writeEnteredCard`)
+//                                                     (`demoEnteredSeeds`, über `writeEnteredCard`); die ohne Werte
+//                                                     wartet auf die Anlage (offener Auftrag), und eine eigene Sperre
+//                                                     wartet darauf, dass „Scheibe holen“ sie aufhebt
 
 import "dotenv/config"
 
 import bcrypt from "bcryptjs"
 
 import { normalizeLoginEmail } from "@vereinsheim/lib/auth/validation"
+import { decodePrintoutId } from "@vereinsheim/meyton-pdf/printout-id"
+import { eveningDay } from "@vereinsheim/shot-ui/period/calendar"
 
+import { requestSiteId } from "../src/lib/card-requests/queries"
 import { createPrismaClient } from "../src/lib/db"
 import { writeRevision, type RevisionChange } from "../src/lib/db/cards"
 import { disciplineFor } from "../src/lib/db/disciplines"
@@ -26,6 +31,9 @@ import { assertDevDatabase } from "./dev-guard"
 import { demoCardSeeds, demoEnteredSeeds, loadOwnCards, ownCardSeeds } from "./own-cards"
 
 const DEV_SITE = "Dev-Anlage"
+/** erfundene IDs vom Ausdruck: der Auftrag der Demo-Scheibe ohne Werte, die eigene Sperre für die Skriptprüfung */
+const DEMO_REQUEST_HEX = "7fff0a00"
+const DEMO_LOCK_HEX = "7fff0a03"
 
 const out = (text = "") => process.stdout.write(`${text}\n`)
 
@@ -131,6 +139,7 @@ async function main() {
         select: { startedAt: true },
       })
       const entered = { created: 0, revised: 0, unchanged: 0 }
+      let waiting: { cardId: string; startedAtMs: number } | null = null
       const seeds = demoEnteredSeeds({
         newestMs,
         eveningStartMs: first?.startedAt.getTime() ?? newestMs,
@@ -183,9 +192,61 @@ async function main() {
         if (result.kind !== "saved")
           throw new Error(`Demo-Scheibe ${seed.level} nicht geschrieben: ${result.kind}`)
         entered[result.change]++
+        if (seed.level === "none")
+          waiting = { cardId: result.cardId, startedAtMs: seed.startedAtMs }
       }
       out(
         `Demo-Scheiben in jeder Detailtiefe: neu ${entered.created}, geändert ${entered.revised}, unverändert ${entered.unchanged}, entfernt ${removed}`
+      )
+
+      // an der Anlage, an der „Scheibe holen“ holt (die erste, `requestSiteId`): Die Scheibe ohne Werte wartet auf die
+      // Anlage, und eine eigene Sperre vom 1. Oktober wartet darauf, dass ausdrückliches Holen sie aufhebt
+      const fetchSiteId = (await requestSiteId(db)) ?? site.id
+      const fetchSite = await db.site.findUniqueOrThrow({
+        where: { id: fetchSiteId },
+        select: {
+          timeZone: true,
+          sources: {
+            where: { confirmedAt: { not: null } },
+            orderBy: { epoch: "desc" },
+            take: 1,
+            select: { id: true },
+          },
+        },
+      })
+      const requestId = decodePrintoutId(DEMO_REQUEST_HEX)
+      await db.cardRequest.deleteMany({ where: { userId: owner.id, scheibenId: requestId } })
+      if (waiting)
+        await db.cardRequest.create({
+          data: {
+            userId: owner.id,
+            siteId: fetchSiteId,
+            scheibenId: requestId,
+            day: eveningDay(waiting.startedAtMs, fetchSite.timeZone),
+            cardId: waiting.cardId,
+          },
+        })
+      const lockSource = fetchSite.sources[0]?.id ?? source.id
+      await db.deleteLock.upsert({
+        where: {
+          userId_sourceId_scheibenId_cycle: {
+            userId: owner.id,
+            sourceId: lockSource,
+            scheibenId: decodePrintoutId(DEMO_LOCK_HEX),
+            cycle: 0,
+          },
+        },
+        create: {
+          userId: owner.id,
+          sourceId: lockSource,
+          scheibenId: decodePrintoutId(DEMO_LOCK_HEX),
+          cycle: 0,
+          startedAt: new Date("2026-10-01T17:00:00Z"),
+        },
+        update: {},
+      })
+      out(
+        `Demo-Auftrag ${DEMO_REQUEST_HEX}: ${waiting ? "offen" : "ohne Scheibe, nicht angelegt"}, eigene Sperre ${DEMO_LOCK_HEX} vom 01.10.2026`
       )
     }
   } finally {

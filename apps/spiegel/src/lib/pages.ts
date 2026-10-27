@@ -37,4 +37,5 @@ export const withFamily = (cards: readonly OverviewCard[]) =>
     family: card.family!.slug,
     list: card.list,
     provenance: card.provenance,
+    ...(card.waiting === false ? { waiting: false as const } : {}),
   }))
