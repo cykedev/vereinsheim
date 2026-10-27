@@ -2037,6 +2037,7 @@ async function detailLevels(page: Page, href: string) {
   )
 
   const hrefs: string[] = []
+  const crossSeen: number[] = []
   for (const provenance of ["entered", "printout"]) {
     await page.viewport(1280, 900)
     await page.goto(`${BASE}/cards?provenance=${provenance}`)
@@ -2050,6 +2051,23 @@ async function detailLevels(page: Page, href: string) {
       }
     })()`)
     hrefs.push(...dashes.links)
+    const minis = await page.ev<{
+      rows: number
+      without: string[]
+      placeholders: number
+      crosses: number
+    }>(`({
+      rows: $$("main tr[data-card-row]").length,
+      without: $$("main tr[data-card-row]").filter((tr) => !tr.querySelector("svg")).map((tr) => tr.dataset.cardRow),
+      placeholders: $$("main tr[data-card-row] [data-mini-placeholder]").length,
+      crosses: $$("main tr[data-card-row] [data-mini-placeholder] [data-summary-center]").length,
+    })`)
+    crossSeen.push(minis.crosses)
+    check(
+      `Liste ${provenance}: jede Zeile hat eine kleine Scheibe, ohne Lagen der Platzhalter${minis.placeholders ? "" : ` (${NOT_SHOWN})`}`,
+      minis.rows > 0 && minis.without.length === 0 && minis.placeholders > 0,
+      minis
+    )
     check(
       `Liste ${provenance}: jede „–“ mit Grund als Tooltip und für Screenreader${dashes.cells ? "" : ` (${NOT_SHOWN})`}`,
       dashes.cells > 0 && dashes.bad.length === 0,
@@ -2063,6 +2081,12 @@ async function detailLevels(page: Page, href: string) {
       })
     )
   }
+
+  check(
+    `Liste: der Platzhalter einer Scheibe mit Trefferlage als Summe trägt das Kreuz${crossSeen.some((n) => n > 0) ? "" : ` (${NOT_SHOWN})`}`,
+    crossSeen.some((n) => n > 0),
+    crossSeen
+  )
 
   // das Blatt „Filter“: die Gruppe „Herkunft“, „Eingetragen“ schreibt die Adresse
   await page.viewport(1280, 900)

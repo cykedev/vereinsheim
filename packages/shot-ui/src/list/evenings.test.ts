@@ -428,3 +428,24 @@ describe("Herkunft und Gründe in der Liste", () => {
     expect(w.reasons?.rings).toBe("ohne Wert")
   })
 })
+
+describe("Mitte für den Platzhalter der kleinen Scheibe", () => {
+  it("nur eine Scheibe ohne Lagen mit Trefferlage als Summe trägt ihre Mitte", () => {
+    const total = {
+      series: [],
+      total: { shots: 40, rings: 362, decimalTenths: null },
+      center: { xUm: 1400, yUm: -900, shots: 40 },
+    }
+    const input = [
+      ...INPUT,
+      {
+        card: projected({ ...periodCard("t", 3, [], { startedAtMs: at(17, 0, 27) }), sums: total }),
+        family: "lg-freihand",
+        provenance: "entered" as const,
+      },
+    ]
+    const rows = cardListModel(input, query(), context).evenings.flatMap((e) => e.rows)
+    expect(rows.find((r) => r.id === "t")?.center).toEqual({ xUm: 1400, yUm: -900 })
+    expect(rows.filter((r) => "center" in r).map((r) => r.id)).toEqual(["t"])
+  })
+})

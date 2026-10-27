@@ -41,6 +41,8 @@ export interface CardReadoutProps {
   onHelp?: (id: string) => void
   /** warum die Scheibe keinen Wert der Kennzahl hat (`PeriodModel.reasons`); ohne „ohne Wert“ */
   reason?: string | null
+  /** Trefferlage als Summe einer Scheibe ohne Lagen je Schuss (`PeriodModel.centers`): Kreuz im Platzhalter */
+  center?: { xUm: number; yUm: number } | null
   className?: string
 }
 
@@ -82,6 +84,7 @@ export function CardReadout({
   renderLink,
   onHelp,
   reason = null,
+  center = null,
   className,
 }: CardReadoutProps) {
   const words = usePeriodWords()
@@ -140,10 +143,9 @@ export function CardReadout({
             data-marks-loading="true"
             className="block aspect-square w-full"
           />
-        ) : marks.length > 0 ? (
-          <MiniTarget target={target} shots={marks} />
         ) : (
-          <p className="text-[13px] text-muted-foreground">ohne Lage</p>
+          // ohne Lagen je Schuss die Scheibe leise, mit Trefferlage als Summe das Kreuz
+          <MiniTarget target={target} shots={marks} placeholder={!marks.length} center={center} />
         )}
       </div>
       {renderLink(card.id, {

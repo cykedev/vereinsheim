@@ -140,6 +140,14 @@ export function summaryReasons(detail: CardDetail, level: "series" | "total"): s
   ]
 }
 
+/** die Trefferlage als Summe einer Scheibe ohne Lagen je Schuss, nur Mitte (für das Kreuz); sonst null */
+export function summaryCenterOf(
+  detail: CardDetail | undefined
+): { xUm: number; yUm: number } | null {
+  const center = detail?.center
+  return center?.from === "summary" ? { xUm: center.xUm, yUm: center.yUm } : null
+}
+
 /** neben dem goldenen Kreuz: die Trefferlage als Summe zeigt die Mitte, nicht wie die Schüsse lagen */
 export const CENTER_ONLY_NOTE = "nur die Mitte der Schüsse, keine Streuung"
 

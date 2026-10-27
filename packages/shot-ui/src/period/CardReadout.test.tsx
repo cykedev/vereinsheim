@@ -81,9 +81,16 @@ describe("Ablesung einer Scheibe", () => {
     expect(render({ point: { ...point, band: null } })).not.toContain("Formband")
   })
 
-  it("ohne Lage keine kleine Scheibe; während die Lagen laden, ein leerer Platz", () => {
-    expect(render({ marks: [] })).toContain("ohne Lage")
-    expect(render({ marks: [] })).not.toMatch(/<svg viewBox=/)
+  it("ohne Lage der Platzhalter (mit Trefferlage als Summe das Kreuz); während die Lagen laden, ein leerer Platz", () => {
+    const placeholder = render({ marks: [] })
+    expect(placeholder).toMatch(
+      /<svg viewBox="[^"]*" aria-hidden="true" data-mini-placeholder="true"/
+    )
+    expect(placeholder).not.toContain("<circle cx=")
+    expect(placeholder).not.toContain("data-summary-center")
+    expect(render({ marks: [], center: { xUm: 1400, yUm: -900 } })).toContain(
+      'data-summary-center="true"'
+    )
     const loading = render({ marks: null })
     expect(loading).not.toContain("ohne Lage")
     expect(loading).not.toMatch(/<svg viewBox=/)

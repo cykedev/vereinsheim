@@ -12,7 +12,13 @@ import {
 import { pooledValue } from "@vereinsheim/shot-core/analysis"
 import { projectedValues, type ProjectedCard } from "@vereinsheim/shot-core/projection"
 
-import { detailReason, PROVENANCES, REASON_TEXT, type CardProvenance } from "../detail"
+import {
+  detailReason,
+  PROVENANCES,
+  REASON_TEXT,
+  summaryCenterOf,
+  type CardProvenance,
+} from "../detail"
 import type { ListQuery } from "../nav/routes"
 import {
   eveningDay,
@@ -78,6 +84,11 @@ export interface ListRow {
   provenance?: CardProvenance
   /** warum eine Zahl fehlt; nur, wenn eine fehlt */
   reasons?: RowReasons
+  /**
+   * Trefferlage als Summe einer Scheibe ohne Lagen je Schuss (Kreuz im Platzhalter der kleinen Scheibe); nur dann, sonst
+   * fehlt das Feld
+   */
+  center?: { xUm: number; yUm: number }
 }
 
 export interface Evening {
@@ -232,6 +243,7 @@ export function cardListModel(
         )
       ]
     const value = (scoring: Scoring) => (scoring === resultScoring ? result : otherResult)
+    const center = summaryCenterOf(card.projection.detail)
     const reasons: RowReasons = {
       ...(value("rings") === null ? { rings: reasonFor(resultMetric("rings")) } : {}),
       ...(value("decimal") === null ? { decimal: reasonFor(resultMetric("decimal")) } : {}),
@@ -254,6 +266,7 @@ export function cardListModel(
       shots: card.projection.printedShots,
       ...(provenance !== "measured" ? { provenance } : {}),
       ...(Object.keys(reasons).length ? { reasons } : {}),
+      ...(center ? { center } : {}),
     }
     const evening = days.get(day) ?? { day, rows: [], shots: 0, others: [] }
     evening.rows.push(row)

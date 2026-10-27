@@ -239,11 +239,14 @@ export function EveningList({
                                 }}
                                 className="block cursor-pointer rounded-full focus-visible:outline-2 focus-visible:outline-ring"
                               >
-                                {placed.length ? (
-                                  <MiniTarget target={target} shots={placed} className="size-12" />
-                                ) : (
-                                  <span className="block size-12" aria-hidden="true" />
-                                )}
+                                {/* ohne Lagen je Schuss die Scheibe leise, mit Trefferlage als Summe das Kreuz */}
+                                <MiniTarget
+                                  target={target}
+                                  shots={placed}
+                                  placeholder={!placed.length}
+                                  center={row.center}
+                                  className="size-12"
+                                />
                               </RouteLink>
                             </td>
                             <td className={cn(CELL, WIDE, "text-foreground-2")}>{time}</td>

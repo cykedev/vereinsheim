@@ -32,12 +32,20 @@ export interface MiniTargetProps {
   probeCorner?: boolean
   /** blass: nur das Bild tritt zurück */
   dim?: boolean
+  /**
+   * Platzhalter einer Scheibe ohne Lagen je Schuss: die Scheibe der Disziplin leise, ohne Treffer, gleich groß wie eine
+   * echte kleine Scheibe
+   */
+  placeholder?: boolean
+  /** Trefferlage als Summe: goldenes Kreuz an der Mitte, wie auf der Seite der Scheibe; nur die Mitte, keine Streuung */
+  center?: { xUm: number; yUm: number } | null
   className?: string
 }
 
 /**
  * Kleine Scheibe (Serien, Liste, Start, Ablesung einer Scheibe, Offen): Papier, Spiegel, Ringe als Haarlinien, Treffer
- * in Kalibergröße und Ringwert-Farbe, ohne Wert gestrichelt. Nur Bild (`aria-hidden`), die Worte stehen daneben.
+ * in Kalibergröße und Ringwert-Farbe, ohne Wert gestrichelt. Nur Bild (`aria-hidden`), die Worte stehen daneben. Als
+ * Platzhalter (`placeholder`) die Scheibe leise ohne Treffer, mit einer Trefferlage als Summe das goldene Kreuz.
  */
 export function MiniTarget({
   target,
@@ -45,32 +53,38 @@ export function MiniTarget({
   shots,
   probeCorner: corner = false,
   dim = false,
+  placeholder = false,
+  center = null,
   className,
 }: MiniTargetProps) {
-  const drawn = shots.filter(hasPosition)
+  const drawn = placeholder ? [] : shots.filter(hasPosition)
   const computed =
     given ??
-    miniView(
-      target,
-      drawn.map((shot) => ({ xUm: shot.xUm as number, yUm: shot.yUm as number }))
-    )
+    miniView(target, [
+      ...drawn.map((shot) => ({ xUm: shot.xUm as number, yUm: shot.yUm as number })),
+      ...(center ? [center] : []),
+    ])
   const view = { x: fixed(computed.x), y: fixed(computed.y), w: fixed(computed.w) }
   const calR = caliberRadius(target)
   return (
     <svg
       viewBox={`${view.x} ${view.y} ${view.w} ${view.w}`}
       aria-hidden="true"
+      data-mini-placeholder={placeholder || undefined}
       className={cn(
         "block aspect-square h-auto w-full rounded-lg border border-border",
         dim && "opacity-55",
         className
       )}
     >
-      <TargetFace target={target} view={view}>
-        {corner && (
-          <polygon data-probe-corner="true" points={probeCorner(view)} fill="var(--spiegel)" />
-        )}
-      </TargetFace>
+      {/* der Platzhalter tritt zurück, das Kreuz der Mitte nicht */}
+      <g opacity={placeholder ? 0.35 : undefined}>
+        <TargetFace target={target} view={view}>
+          {corner && (
+            <polygon data-probe-corner="true" points={probeCorner(view)} fill="var(--spiegel)" />
+          )}
+        </TargetFace>
+      </g>
       {drawn.map((shot, i) => {
         const x = mm(shot.xUm as number)
         const y = -mm(shot.yUm as number)
@@ -90,6 +104,25 @@ export function MiniTarget({
           />
         )
       })}
+      {center && (
+        <g data-summary-center="true">
+          {[
+            `M${mm(center.xUm) - view.w * 0.09} ${-mm(center.yUm)}h${view.w * 0.18}`,
+            `M${mm(center.xUm)} ${-mm(center.yUm) - view.w * 0.09}v${view.w * 0.18}`,
+          ].map((d) => (
+            <g key={d}>
+              <path
+                d={d}
+                stroke="var(--overlay-halo)"
+                strokeWidth={4}
+                strokeLinecap="round"
+                {...HAIR}
+              />
+              <path d={d} stroke="var(--gold)" strokeWidth={2} strokeLinecap="round" {...HAIR} />
+            </g>
+          ))}
+        </g>
+      )}
     </svg>
   )
 }

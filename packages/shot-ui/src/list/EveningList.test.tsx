@@ -343,6 +343,15 @@ describe("Herkunft und Gründe in den Zeilen", () => {
     expect(row.match(/title="wartet auf die Anlage"/g)?.length).toBe(5)
   })
 
+  it("jede Zeile hat eine kleine Scheibe: ohne Lagen der Platzhalter, gleich groß", () => {
+    for (const id of ["s", "w"]) {
+      expect(rowOf(id)).toMatch(
+        /<svg viewBox="[^"]*" aria-hidden="true" data-mini-placeholder="true" class="[^"]*size-12/
+      )
+      expect(rowOf(id)).not.toContain("data-summary-center")
+    }
+  })
+
   it("der Name der Zeile nennt Herkunft und Grund", () => {
     expect(rowOf("w")).toMatch(
       /aria-label="[^"]*Training, vom Ausdruck, ohne Ergebnis \(wartet auf die Anlage\)/

@@ -25,7 +25,7 @@ import {
 } from "@vereinsheim/shot-core/metrics"
 import { formatIsoDate, formatMonthYear, zonedDayStartMs } from "@vereinsheim/lib/format"
 
-import { detailReason, REASON_TEXT, type CardProvenance } from "../detail"
+import { detailReason, REASON_TEXT, summaryCenterOf, type CardProvenance } from "../detail"
 import { metricLabel } from "../labels"
 import { periodBasis, type Basis } from "./basis"
 import {
@@ -166,6 +166,8 @@ export interface PeriodModel {
   reasons: Record<string, string>
   /** Herkunft der Scheiben, die einen Rekord halten, nur wenn sie nicht gemessen sind */
   recordProvenance: Record<string, CardProvenance>
+  /** Trefferlage als Summe der Scheiben im Zeitraum ohne Lagen je Schuss (Kreuz im Platzhalter der Ablesung) */
+  centers: Record<string, { xUm: number; yUm: number }>
   /**
    * gewählte oder, ohne Wahl, die neueste Scheibe mit Ø je Schuss (`newest`), mit ihrem Punkt im Verlauf; null ohne
    * Scheiben
@@ -494,6 +496,12 @@ export function periodModel(input: {
     basis: periodBasis(counted, idsOf(perShot), inScoring(summaryMetric, scoring)),
     reasons,
     recordProvenance,
+    centers: Object.fromEntries(
+      cards.flatMap((card) => {
+        const center = summaryCenterOf(card.detail)
+        return center ? [[card.id, center]] : []
+      })
+    ),
   }
   return { ...model, reading: periodReading(model, state.chosen) }
 }

@@ -75,3 +75,27 @@ describe("Ausschnitt auf 1 µm", () => {
     expect(server).toContain('viewBox="-40.617 -53.323 109.345 109.345"')
   })
 })
+
+describe("Platzhalter einer Scheibe ohne Lagen je Schuss", () => {
+  it("die Scheibe leise, ohne Treffer, gleich groß wie eine echte kleine Scheibe", () => {
+    const real = render({ className: "size-12" })
+    const empty = render({ shots: [], placeholder: true, className: "size-12" })
+    expect(empty).toMatch(/^<svg viewBox="[^"]*" aria-hidden="true" data-mini-placeholder="true"/)
+    expect(empty).not.toContain("<circle cx=")
+    expect(empty).toContain('<g opacity="0.35">')
+    // gleiche Klassen (Größe) und derselbe Ausschnitt wie eine Scheibe mit Treffern um die Mitte
+    const classes = (html: string) => /class="([^"]*)"/.exec(html)?.[1]
+    expect(classes(empty)).toBe(classes(real))
+    expect(/viewBox="([^"]*)"/.exec(empty)?.[1]).toBe(
+      /viewBox="([^"]*)"/.exec(render({ shots: [shot("match", 0, 105)] }))?.[1]
+    )
+    expect(real).not.toContain("data-mini-placeholder")
+  })
+
+  it("mit Trefferlage als Summe das goldene Kreuz an der Mitte, ohne keins", () => {
+    const cross = render({ shots: [], placeholder: true, center: { xUm: 1400, yUm: -900 } })
+    expect(cross).toContain('<g data-summary-center="true">')
+    expect(cross).toMatch(/stroke="var\(--gold\)"/)
+    expect(render({ shots: [], placeholder: true })).not.toContain("data-summary-center")
+  })
+})

@@ -154,6 +154,10 @@ Minimal und scharf, nichts Klobiges, auch stark vergrößert.
 - **Trefferlage als Summe** (eine Scheibe ohne Lage je Schuss, etwa aus Treffsicher): ein goldenes Kreuz (Token `gold`,
   heller Saum), so groß wie der Schwerpunkt auf dem Schirm. Es zeigt nur die Mitte der Schüsse, keine Streuung; der
   Kasten daneben sagt das in einer Zeile mit kleinem Kreuz. Kein Schwerpunkt-Zeichen: Das gehört zu Schüssen mit Lage.
+- **Platzhalter der kleinen Scheibe:** Eine Scheibe ohne Lagen je Schuss zeigt in Liste, Start und Ablesung des
+  Fortschritts die Scheibe der Disziplin leise ohne Treffer, gleich groß wie eine echte kleine Scheibe, statt eines
+  leeren Platzes; mit Trefferlage als Summe trägt sie das goldene Kreuz. Keine Symbole je Herkunft: Die Herkunft steht
+  als Wort daneben.
 - **Serien aus Summen** stehen als Kacheln im Raster der kleinen Scheiben, aber ohne Scheibe und ohne Wahl
   (`SumSeries`): Ohne Schüsse gibt es nichts zu zeigen und nichts auszuwählen. Fehlt der Wert in der gewählten Wertung,
   steht „–“ mit Grund.

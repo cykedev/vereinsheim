@@ -288,7 +288,7 @@ describe("Grundlage, Grund und Herkunft auf Start", () => {
       h(EveningBlock, {
         block,
         familyLabel: "Luftpistole",
-        marks: new Map(),
+        marks: marksOf([periodCard("m", 0, [101, 99], { startedAtMs: at(29, 18) })]),
         target: LP_10M,
         timeZone: TZ,
         cardRoute: (id: string) => openCard({ page: "start" }, id),
@@ -322,6 +322,12 @@ describe("Grundlage, Grund und Herkunft auf Start", () => {
     expect(tile("w")).toMatch(/aria-label="[^"]*vom Ausdruck, Ergebnis – \(wartet auf die Anlage\)/)
     expect(tile("s")).toMatch(/ · eingetragen</)
     expect(tile("m")).not.toMatch(/gemessen/)
+  })
+
+  it("die Kacheln ohne Lagen tragen den Platzhalter in der Größe der kleinen Scheibe", () => {
+    for (const id of ["s", "w"])
+      expect(tile(id)).toMatch(/data-mini-placeholder="true" class="[^"]*size-14/)
+    expect(tile("m")).not.toContain("data-mini-placeholder")
   })
 
   it("ein neuer Rekord einer eingetragenen Scheibe nennt die Herkunft leise", () => {
