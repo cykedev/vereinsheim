@@ -4,6 +4,7 @@ import { purgeExpiredTrash } from "@/lib/db/trash"
 import { rereadOutdatedKeys } from "@/lib/ingest/reread"
 import { sweepPrintoutsSoon } from "@/lib/printouts/files"
 import { readerBundleMissing } from "@/lib/printouts/reader"
+import { rereadOutdatedPrintouts } from "@/lib/printouts/reread"
 import { ensureSeedAdmin } from "@/lib/startup"
 
 const HOUR_MS = 3_600_000
@@ -54,6 +55,22 @@ function rereadKeys() {
     )
 }
 
+/** gespeicherte Ausdrucke mit einer älteren Version des Lesers neu lesen; ins Log nur Zahlen und den Namen */
+function rereadPrintouts() {
+  void rereadOutdatedPrintouts(db)
+    .then(({ read, taken, failed, missing }) => {
+      if (read) console.warn(`${read} Ausdrucke neu gelesen, ${taken} mit Werten`)
+      if (failed || missing)
+        console.error(`${failed} Ausdrucke nicht neu gelesen, ${missing} ohne Datei`)
+    })
+    .catch((error: unknown) =>
+      console.error(
+        "Ausdrucke nicht neu gelesen:",
+        error instanceof Error ? error.name : "unbekannter Fehler"
+      )
+    )
+}
+
 /**
  * Beim Start: das erste Admin-Konto anlegen, falls es keines gibt, den Papierkorb leeren und veraltete Projektionen im
  * Hintergrund nachrechnen (ADR-031: nach einer neuen `projectionVersion`; die Übersichten lesen bis dahin die alte).
@@ -76,6 +93,9 @@ export async function registerNode() {
   // neue Version des Adapters: ruhende ScheibenIDs neu lesen ([[adr-027]], jeder Probe-Block eine Scheibe)
   rereadKeys()
   setInterval(rereadKeys, HOUR_MS).unref()
+  // neue Version des Lesers: Ausdrucke an Scheiben vom Ausdruck neu lesen ([[meyton-printout]])
+  rereadPrintouts()
+  setInterval(rereadPrintouts, HOUR_MS).unref()
   try {
     const result = await ensureSeedAdmin(db, {
       email: process.env.SEED_ADMIN_EMAIL,
