@@ -3,7 +3,7 @@ id: spiegel-vergleichen
 type: concept
 title: "Spiegel — Vergleichen: A gegen B auf einer eigenen Seite"
 aliases: [vergleich-seite, a-gegen-b, scheibe-gegen-scheibe]
-keywords: [vergleichen, vergleich, a gegen b, scheibe gegen scheibe, zeitraum gegen zeitraum, wettkampf gegen training, wettkampf und training, daheim auswärts, ort, merkmal, c2, c3, c5, c6, w1, w2, w3, w4, einflüsse, eigene seite, navigation, einstieg, umrisse, zwei farben, compare, sp-2.2, sp-2.7]
+keywords: [vergleichen, vergleich, a gegen b, scheibe gegen scheibe, zeitraum gegen zeitraum, wettkampf gegen training, wettkampf und training, daheim auswärts, ort, merkmal, c2, c3, c5, c6, w1, w2, w3, w4, einflüsse, eigene seite, navigation, einstieg, umrisse, zwei farben, compare, sp-2.2, sp-2.7, ohne einzelschüsse, serien-summen, ohne werte]
 part_of: ["[[spiegel]]"]
 governed_by: ["[[adr-030]]", "[[adr-033]]"]
 relates_to: ["[[spiegel-langzeit]]", "[[spiegel-durchsicht]]", "[[spiegel-statistics]]", "[[spiegel-navigation]]", "[[spiegel-roadmap]]"]
@@ -77,6 +77,11 @@ Fortschritt und am Desktop über einen Untereintrag. Der Vergleich aus dem Forts
    Lage einen Test; die übrigen Zahlen stehen ohne Gold. Fachbegriffe nur im Blatt „?“.
    Die beiden Spalten sind gleich breit und tragen nur Zahlen, die Einheit steht leise beim Namen der Zeile; die Lage
    ist eine Zahl für beide Seiten und steht als eigene Zeile darunter.
+   **Scheiben ohne Einzelschüsse** brechen nichts: Bei zwei Scheiben stehen ihre Werte aus Summen da, ohne Vergleich
+   Schuss für Schuss; der Satz oben sagt „Ein Vergleich Schuss für Schuss braucht Einzelschüsse auf beiden Scheiben.“,
+   die Grundlage „A: nur Serien-Summen. Schuss für Schuss vergleicht Spiegel nur Einzelschüsse.“, eine „–“ in der
+   Tabelle „Nur Serien-Summen.“. Bei Gruppen nennt die Grundlage sie: „A: 12 Scheiben, 480 Schuss, 3 ohne Lage je
+   Schuss, 1 ohne Werte.“
 3. **Raster wie Scheibe und Fortschritt:** linksbündig, nicht zentriert; ab 768 px links das Bild, rechts Tabelle und
    Grundlage (`PAGE_COLUMNS`).
 4. **Verworfen nach dem ersten Bau:** drei Zeilen mit einem Urteilssatz je Zeile und „Alle Kennzahlen“ eingeklappt. Der

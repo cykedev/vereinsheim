@@ -3,7 +3,7 @@ id: spiegel-navigation
 type: concept
 title: "Spiegel — Navigation, Einstieg und Auswahl"
 aliases: [navigation-spiegel, einstieg, scheiben-liste-konzept, app-rahmen]
-keywords: [art der scheibe, wettkampf, training, kindchoice, navigation, einstieg, startseite, start, scheiben-liste, übersicht, auswahl, auswahlmodus, abend, trainingsabend, einheit, mischabend, familie, blättern, vorige, nächste, zurück, adresse, url, query, deep link, routen, seitenleiste, untere leiste, bottom navigation, scan, offen, bestätigen, eingang, löschen, papierkorb, rückgängig, weiche sperre, löschsperre, grabstein, wiederherstellen, admin, profil, fortschritt, schnitt davor, wertung, zehntel, ganze ringe, wertung der scheibe, wertung der familie, wie am stand, amtliche wertung, liste aus meyton, rangliste, filter liste, zeitraum merken, gemerkter zeitraum, kalender blättern, früher, später, darstellung, cookie, teilen, link teilen, geteilte scheibe, share, uuid, ohne anmeldung]
+keywords: [art der scheibe, wettkampf, training, kindchoice, navigation, einstieg, startseite, start, scheiben-liste, übersicht, auswahl, auswahlmodus, abend, trainingsabend, einheit, mischabend, familie, blättern, vorige, nächste, zurück, adresse, url, query, deep link, routen, seitenleiste, untere leiste, bottom navigation, scan, offen, bestätigen, eingang, löschen, papierkorb, rückgängig, weiche sperre, löschsperre, grabstein, wiederherstellen, admin, profil, fortschritt, schnitt davor, wertung, zehntel, ganze ringe, wertung der scheibe, wertung der familie, wie am stand, amtliche wertung, liste aus meyton, rangliste, filter liste, zeitraum merken, gemerkter zeitraum, kalender blättern, früher, später, darstellung, cookie, teilen, link teilen, geteilte scheibe, share, uuid, ohne anmeldung, herkunft, gemessen, vom ausdruck, eingetragen, detailtiefe, serien-summen, gesamtergebnis, ohne werte, wartet auf die anlage, grund, ort]
 part_of: ["[[spiegel]]"]
 governed_by: ["[[adr-030]]"]
 relates_to: ["[[spiegel-ui-design]]", "[[spiegel-langzeit]]", "[[spiegel-assignment]]", "[[spiegel-mobile]]", "[[spiegel-roadmap]]", "[[spiegel-privacy]]", "[[spiegel-edge-cases]]", "[[spiegel-durchsicht]]", "[[navigation-pattern]]"]
@@ -212,6 +212,10 @@ Form; auf dem Telefon Offen, Abend, Form untereinander.
   wirkt bei jeder Wahl sofort und bleibt offen, man sieht die Liste dahinter wechseln. Darin Art, Liste aus Meyton,
   Merkmal, der Zeitraum (mit „entfernen“) und „Im Fortschritt zeigen“.
   - Ein gewähltes Merkmal bleibt wählbar, auch wenn die Familie es nicht hat; sonst ließe es sich nicht lösen.
+  - **Herkunft** (`provenance=measured|printout|entered`, Knöpfe „Gemessen“, „Vom Ausdruck“, „Eingetragen“, mit „?“ zu
+    „Grundlage und Herkunft“): steht im Blatt, sobald die Familie mehr als eine Herkunft hat oder eine gewählt ist; am
+    Chip mit Namen. Ersetzt das Merkmal „Nur PDF“, das kein Code setzte. Der Sprung an einen Abend einer anderen Familie
+    lässt sie fallen.
   - **Liste aus Meyton:** `ListQuery.list` als Kennung (`list=<id>`), am Chip „Liste RWK_LP“. Eine gewählte Liste bleibt
     wählbar, auch ohne Scheibe der Familie; eine unbekannte Kennung gilt als keine. Der Sprung an einen Abend einer
     anderen Familie und „Alle in Scheiben zeigen“ lassen sie fallen, das Blättern in einer Scheibe behält sie
@@ -220,6 +224,10 @@ Form; auf dem Telefon Offen, Abend, Form untereinander.
   Erklärung, Seite einer Scheibe, Filter); `OLD_WORDS` hält „Rangliste“ fern. Scheiben aus dem PDF oder aus `seed:own`
   haben keine.
 - **Familie in der App:** ohne Angabe die der neuesten Scheibe; die Navigation hängt die zuletzt gewählte an.
+- **Herkunft und Gründe in der Zeile:** Unter der Art steht leise „eingetragen“ oder „vom Ausdruck“, nie „gemessen“.
+  Jede „–“ trägt ihren Grund als Tooltip und für Screenreader („wartet auf die Anlage“, „ohne Zehntel“, „keine Scheibe
+  davor“); der Name des Links sagt „ohne Ergebnis (wartet auf die Anlage)“. Gründe und Herkunft stehen im Modell nur,
+  wenn sie etwas sagen.
 - **Barrierefrei:** Jede Zeile nennt ihre Werte mit Bedeutung als Namen des Links für Screenreader. Den Kopf der Seite
   zeichnet `ListHeader`, die Abende sind Überschriften zweiter Ebene.
 
@@ -260,8 +268,15 @@ Die Liste markiert, wohin man kommt, wie der Fortschritt seine Wahl (`bg-accent-
 
 - `/cards/<id>`: Wertung, Serie und Schuss aus der Adresse und dorthin zurück, Reiter im Anker, Rückweg und Blättern im
   Kontext der Herkunft vom Server.
-- **Metazeile** unter dem Titel mit der Liste aus Meyton („Wettkampf · Liste RWK_LP · Sa 26.09.2026 · 10:30“,
-  `cardMeta`).
+- **Metazeile** unter dem Titel mit der Liste aus Meyton, der Herkunft und dem Ort („Wettkampf · Liste RWK_LP · gemessen ·
+  Sa 26.09.2026 · 10:30“, „Training · eingetragen · Vereinsheim Nord · …“, `cardMeta`). Die geteilte Seite nennt die
+  Herkunft, nie den Ort.
+- **Je Detailtiefe ein Gerüst** (`detailLevel`): Mit Schüssen die volle Seite. Nur Serien-Summen: große Zahl, Schusszahl
+  und Ø je Schuss, Grund („nur Serien-Summen“, „ohne Zehntel“), Serien als Kacheln ohne kleine Scheiben, ein Satz, was
+  fehlt. Nur Gesamtergebnis: große Zahl mit Grund, eine Trefferlage als Summe als goldenes Kreuz („nur die Mitte der
+  Schüsse, keine Streuung“). Ohne Werte: „–“ mit „wartet auf die Anlage“ (vom Ausdruck) oder „ohne Werte“, Platz für
+  den Ausdruck. Eine Scheibe der Brücke ohne Schuss zeigt weiter „Noch kein Schuss“. Probe neben Summen der Wertung
+  zählt nicht: Die Seite zeigt die Summen, die Art bleibt Training mit Kreis.
 - **Reiterwechsel an den Anfang:** Ein anderer Reiter der Analyse beginnt oben, die Karten unter den klebenden Leisten
   (56 px am Telefon, 112 px ab 768 px), gemessen an der Reiterleiste. „Alle Beobachtungen“ springt weiter zu seiner
   Karte.

@@ -335,6 +335,11 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
   heraus, läuft der Kindprozess nach dem roten Test weiter (eine Endlosschleife braucht dann einen ganzen Kern). Nach so
   einer Probe mit `pgrep -fl <skript>` nachsehen und beenden.
 
+- **Neue Felder ändern eine Charakterisierung, die jedes Feld festschreibt**: `period/season.test.ts` hält jedes Feld von
+  `PeriodModel` fest. Kommt ein Feld dazu oder ändert sich eine Kennung, wird der Schnappschuss rot, ohne dass eine Zahl
+  sich ändert. Vor `vitest -u` die alten Zeilen gegen die neuen halten (kleines Skript): nur neue Felder, alte Werte
+  gleich, bei umbenannter Kennung nur die Folge nach Kennung. Aufgefallen im Oktober 2026 bei der Grundlage der Zahlen.
+
 - **Was nebeneinander steht, steht auf einer Linie**: Kacheln oder Zeilen mit einem Bild und Text, der umbrechen kann,
   richten ihren Text oben am Bild aus (`align-top` in Tabellen) und teilen sich die Zeilen über Kacheln hinweg
   (`grid-rows-subgrid`, Beispiel: `EveningBlock` auf Start). Sonst rutscht der Wert einer Kachel tiefer, sobald in ihr

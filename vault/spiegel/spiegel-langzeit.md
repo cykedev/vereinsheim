@@ -3,7 +3,7 @@ id: spiegel-langzeit
 type: concept
 title: "Spiegel über viele Scheiben — Langzeit-Konzept"
 aliases: [spiegel-zeitraum, langzeit-konzept, fortschritt-konzept]
-keywords: [analyse über den zeitraum, erkenntnisse, trefferbild als hauptbild, langzeit, zeitraum, saison, fortschritt, verlauf, formband, gleitender schnitt, rekorde, kalender, vergleich, zeitraum gegen zeitraum, besser werden, form, langzeit-trefferbild, dichte, umrisse, heatmap, filter, disziplin-familie, training, wettkampf, benannter zeitraum, auswahl, navigation, drill-down, ablesung, scheiben-liste, erkenntnisse, mindestzahl, nicht nachweisbar]
+keywords: [analyse über den zeitraum, erkenntnisse, trefferbild als hauptbild, langzeit, zeitraum, saison, fortschritt, verlauf, formband, gleitender schnitt, rekorde, kalender, vergleich, zeitraum gegen zeitraum, besser werden, form, langzeit-trefferbild, dichte, umrisse, heatmap, filter, disziplin-familie, training, wettkampf, benannter zeitraum, auswahl, navigation, drill-down, ablesung, scheiben-liste, erkenntnisse, mindestzahl, nicht nachweisbar, grundlage, herkunft, trefferlage als summe, versatz, ohne lage je schuss]
 part_of: ["[[spiegel]]"]
 governed_by: ["[[adr-030]]"]
 relates_to: ["[[spiegel-vergleichen]]", "[[spiegel-ui-design]]", "[[spiegel-roadmap]]", "[[spiegel-statistics]]", "[[spiegel-metrics]]", "[[spiegel-mobile]]", "[[spiegel-data-model]]", "[[statistics-visualization]]"]
@@ -282,6 +282,20 @@ Wie auf der Scheibe:
 - Die Liste der Scheiben zeigt zehn und „Alle zeigen“, danach folgen Zahlen und Analyse.
 - Das Blatt „Filter“ öffnet sich von unten.
 - Gemessen am 9. Oktober 2026 bei 390 × 844: 3,97 Bildschirme.
+
+### Grundlage der Zahlen
+
+Nicht jede Scheibe bringt alles mit ([[adr-033]]): Scheiben aus Serien-Summen oder nur mit Gesamtergebnis zählen im
+Ergebnis und im Ø je Schuss, nicht bei Streuung, Tempo und Urteilen über die Lage. Zählen nicht alle Scheiben, steht
+unter der Zahl die Grundlage, sonst nichts: „über 12 von 20 Scheiben · 6 ohne Lage je Schuss“ (`periodBasis`,
+`basisLine`; unter dem Ergebnis, in jeder Kachel, auf Start unter dem Abend, mit „?“ zu „Grundlage und Herkunft“). Dieselbe
+Regel gilt für gemessene Scheiben (etwa zu wenige Schüsse mit Lage für die Streuung). Eine Scheibe ohne Wert der Kennzahl
+des Verlaufs trägt ihren Grund in Liste und Ablesung, ein Rekord nennt die Herkunft leise („· eingetragen“). Ohne
+Grundlage an den Einträgen (Treffsicher) zeigt die Seite nichts davon.
+
+**Versatz mit Trefferlage als Summe:** Im Trefferbild zählt eine Scheibe ohne Lage je Schuss mit ihrer Trefferlage als
+Summe in der Mitte aller Schüsse, gewichtet mit ihrer Schusszahl (`pooledCenter`). Der Satz unter dem Bild sagt, wie viele
+das sind („4 Scheiben zählen darin nur mit ihrer Mitte“). Form, Lage über Zeit und Ausreißer bleiben bei Lagen je Schuss.
 
 ### Rechnen
 

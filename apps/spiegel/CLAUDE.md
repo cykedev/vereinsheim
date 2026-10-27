@@ -11,19 +11,19 @@ Stack Ende zu Ende.
 
 ## Befehle
 
-| Befehl                                                         | Zweck                                                                                                                                                                       |
-| -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pnpm dev --filter spiegel`                                    | Dev-Server auf :3002                                                                                                                                                        |
-| `pnpm --filter spiegel exec prisma migrate dev --name <x>`     | Schema ändern (braucht `.env` mit `DATABASE_URL`)                                                                                                                           |
-| `pnpm --filter spiegel test`                                   | Tests, die Zugriffe gegen die Dev-Datenbank `spiegel`                                                                                                                       |
-| `pnpm --filter spiegel measure`                                | Messung „sehr aktiv, 5 Jahre“ mit `EXPLAIN ANALYZE`, nicht im Gate                                                                                                          |
-| `pnpm --filter spiegel seed:own`                               | eigene Scheiben aus `tools/private/own-cards.json` (gitignored) in die Dev-Datenbank, ohne sie erfundene; dem Konto aus `SEED_ADMIN_EMAIL` (`--email`, `--demo`)            |
-| `pnpm --filter spiegel projection-check dump\|compare <datei>` | Projektionen der Brücke vor und nach einer neuen `PROJECTION_VERSION` vergleichen; Datei nach `reports/`                                                                    |
-| `pnpm --filter spiegel pruefen`                                | Skriptprüfung der Bedienung in Chrome gegen :3002 (`--start`: eigener Build auf :3012, `--alle`, `--nur`)                                                                   |
-| `pnpm --filter spiegel ingest-load`                            | Lastskript der Ingest-API: ein Abend mit belegten Ständen wie eine Brücke (`--start`, `--docker <name>`)                                                                    |
-| `pnpm --filter spiegel stack-probe`                            | Grenzen hinter Caddy gegen einen laufenden Stack (`BASE_URL`, `DATABASE_URL`; aus `tools/stack-e2e/run.sh`)                                                                 |
-| `pnpm --filter spiegel bridge-e2e`                             | die echte Brücke (Go) Ende zu Ende gegen den eigenen Build auf :3012 mit MariaDB, drei Fällen und Aufträgen per ID (`--keep`), mit `BASE_URL` gegen einen laufenden Spiegel |
-| `pnpm --filter spiegel exec tsx tools/printout-sample.ts`      | erfundener Meyton-Ausdruck (ID `ff914420`) als PDF nach stdout, für den Stack-Test und zum Messen des Lesers (`--kind memory\|time`: präparierte Bomben)                    |
+| Befehl                                                         | Zweck                                                                                                                                                                                                                                          |
+| -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm dev --filter spiegel`                                    | Dev-Server auf :3002                                                                                                                                                                                                                           |
+| `pnpm --filter spiegel exec prisma migrate dev --name <x>`     | Schema ändern (braucht `.env` mit `DATABASE_URL`)                                                                                                                                                                                              |
+| `pnpm --filter spiegel test`                                   | Tests, die Zugriffe gegen die Dev-Datenbank `spiegel`                                                                                                                                                                                          |
+| `pnpm --filter spiegel measure`                                | Messung „sehr aktiv, 5 Jahre“ mit `EXPLAIN ANALYZE`, nicht im Gate                                                                                                                                                                             |
+| `pnpm --filter spiegel seed:own`                               | eigene Scheiben aus `tools/private/own-cards.json` (gitignored) in die Dev-Datenbank, ohne sie erfundene; dem Konto aus `SEED_ADMIN_EMAIL` (`--email`, `--demo`: dazu erfundene Scheiben ohne Brücke in jeder Detailtiefe, `demoEnteredSeeds`) |
+| `pnpm --filter spiegel projection-check dump\|compare <datei>` | Projektionen der Brücke vor und nach einer neuen `PROJECTION_VERSION` vergleichen; Datei nach `reports/`                                                                                                                                       |
+| `pnpm --filter spiegel pruefen`                                | Skriptprüfung der Bedienung in Chrome gegen :3002 (`--start`: eigener Build auf :3012, `--alle`, `--nur`)                                                                                                                                      |
+| `pnpm --filter spiegel ingest-load`                            | Lastskript der Ingest-API: ein Abend mit belegten Ständen wie eine Brücke (`--start`, `--docker <name>`)                                                                                                                                       |
+| `pnpm --filter spiegel stack-probe`                            | Grenzen hinter Caddy gegen einen laufenden Stack (`BASE_URL`, `DATABASE_URL`; aus `tools/stack-e2e/run.sh`)                                                                                                                                    |
+| `pnpm --filter spiegel bridge-e2e`                             | die echte Brücke (Go) Ende zu Ende gegen den eigenen Build auf :3012 mit MariaDB, drei Fällen und Aufträgen per ID (`--keep`), mit `BASE_URL` gegen einen laufenden Spiegel                                                                    |
+| `pnpm --filter spiegel exec tsx tools/printout-sample.ts`      | erfundener Meyton-Ausdruck (ID `ff914420`) als PDF nach stdout, für den Stack-Test und zum Messen des Lesers (`--kind memory\|time`: präparierte Bomben)                                                                                       |
 
 Die Dev-Datenbank legt `dev/db-init` beim ersten Start an, `scripts/bootstrap-dev.sh` zieht sie für bestehende Volumes
 nach. Ohne `.env` nehmen Tests und Messung die Dev-Datenbank aus `.env.example` (`test/dev-database.ts`), NextAuth den
@@ -192,7 +192,12 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
   Projektion und Nachrechnen, `revisionCounts` und `detailFlags` (`card-checks.ts`) rechnen die Merkmale (ohne Werte
   weder leer noch nur Probe, Scheiben der Brücke behalten alle Merkmale). Rohdaten an einer Scheibe vom Ausdruck sind eine neue
   Revision ohne „korrigiert“; eingetragene bekommen nie Rohdaten. Ort als Freitext (`Card.place`), Schlüssel der
-  Übernahme `Card.importKey`.
+  Übernahme `Card.importKey`. Die Ansichten lesen dafür (`reads.ts`): `provenanceOf` bildet die Herkunft an einer Stelle
+  auf die Wörter der Ansichten ab (`raw` gemessen, `pdf` vom Ausdruck, `manual` und `treffsicher` eingetragen; ein `switch`
+  ohne `default`), die Übersichten lesen `origin` und `projection.detail`, die Seite einer Scheibe dazu `place` und die
+  Summen (`SUMS_SELECT`/`toCardSums` aus `cards.ts`, dieselben wie `revisionSums`), `patternCardsOf` die Trefferlage als
+  Summe (`summaryCenter`). `CardScreen` wählt das Gerüst nach `detailLevel`. Die geteilte Seite zeigt die Herkunft, nie
+  den Ort (`sharedCard`).
 - **Familie mitgeführt:** `Card.familyId` kopiert die Familie der Disziplin für den Index; umhängen nur über
   `moveDisciplineFamily` (in der Transaktion des Aufrufers, mit den Scheiben) bzw. `setDisciplineFamily`.
 - **Disziplinen einordnen** (Admin → Disziplinen, [[spiegel-target-library]]): Das Einlesen legt jede neue Disziplin
@@ -240,7 +245,9 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
   (echte Daten): Sprungleiste, Kleben, Rücksprung mit Pille, „Alle Beobachtungen“, Blatt der Hilfe, Lineal mit Zeiger
   und Tastatur, Platz der Scheibe bei mehreren Fenstergrößen, kein seitliches Scrollen am Telefon, Anker beim Laden,
   Blättern, Rückwege, Rekorde, Blatt „Filter“, Fachbegriffe auf den ersten Ebenen, ein „?“ je Thema des Fortschritts,
-  keine Skriptfehler. Nicht im Gate (braucht Chrome, Server, Daten). Nach Änderungen an Bedienung oder Bausteinen:
+  keine Skriptfehler; „Detailtiefen“ (Herkunft in Liste und Kopf, „–“ mit Grund, Filter nach Herkunft, Seiten aus Summen,
+  Grundlage in Fortschritt, Trefferbild und Start, Vergleichen) mit den Demo-Scheiben aus `seed:own --demo`; `pickCard`
+  nimmt nur gemessene Scheiben (`/cards?provenance=measured`). Nicht im Gate (braucht Chrome, Server, Daten). Nach Änderungen an Bedienung oder Bausteinen:
   `pnpm build` (oder `pnpm check`), dann `pruefen --start`, damit die Prüfung den eigenen Stand sieht und nicht einen
   Dev-Server aus einem anderen Checkout. Neue Bedienung bekommt eine Prüfung dort. Eine Taste, die die Seite nicht nimmt,
   meldet `window.__keys` (Lauscher ganz außen; Alt+Pfeil wird dort abgefangen, sonst ginge der Browser zurück).

@@ -20,6 +20,7 @@ MOC-Hub der REMEMBER-Tier-Notes ([[adr-017]]). Normale Notes, live editiert (kei
 - [[compose-up-restarts-one-shot-containers]] — `compose up` ohne Dienstliste startet beendete Migratoren neu (`--no-deps`)
 - [[spiegel-dialog-texts-not-understood]] — Spiegel-Dialoge in der Sprache des Codes, für den Admin unverständlich (Schreibregeln, Textbuch)
 - [[data-url-preview-blocks-anchors]] — Vorschau als data:-Seite blockt Anker und Speicher
+- [[pruefen-reiter-lage-scroll-jump]] — Reiter Lage: Die Wahl einer Scheibe außerhalb der ersten zehn Zeilen verschiebt die Seite (offen)
 - [[best-of-standings-direct-comparison-tiebreak]] — best-of-standings-direct-comparison-tiebreak
 - [[deadline-wipe-on-hidden-form-fields]] — deadline-wipe-on-hidden-form-fields
 - [[dependency-pin-alignment]] — dependency-pin-alignment
