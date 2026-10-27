@@ -28,3 +28,16 @@ export function printedId(scheibenId: number): string {
  * Beginn als UTC trägt; vor 4 Uhr zählt der Vortag wie in Liste und Kalender (`eveningDay`).
  */
 export const eveningOfStart = (startHintMs: number) => eveningDay(startHintMs, "UTC")
+
+/**
+ * Spielraum, um den der erste Schuss nach der Druckzeit liegen darf: Druck und Stand können an verschiedenen Rechnern der
+ * Anlage hängen, deren Uhren auseinanderlaufen (SF-29). Gegen Zufallstreffer reicht das.
+ */
+export const PRINT_GRACE_MS = 5 * 60_000
+
+/**
+ * ob eine Scheibe der Anlage zu einem Ausdruck passen kann: Sie begann vor dem Druck (mit `PRINT_GRACE_MS`). Beide Zeiten
+ * als Wanduhr der Anlage (`startHintMs`, `wallTimeOfMs` der Druckzeit).
+ */
+export const startsBeforePrint = (startWallMs: number, printedWallMs: number): boolean =>
+  startWallMs <= printedWallMs + PRINT_GRACE_MS

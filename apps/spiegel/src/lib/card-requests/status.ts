@@ -1,6 +1,54 @@
 import type { CardRequestStatus } from "@/generated/prisma/client"
 
-// Welche Aufträge per ID der Schütze im Profil entfernen kann: eine reine Regel für Liste und Abfrage.
+// Zustände eines Auftrags per ID, wie die Seite einer Scheibe sie zeigt: reine Regeln für Text, Sichtbarkeit und
+// Entfernen. „Gefüllt“ heißt, die Scheibe des Auftrags hat eine Quelle (die Brücke hat Rohdaten geliefert).
+
+/** der Zustand eines Auftrags in Worten (Zeile „Von der Anlage“ im Kasten „Diese Scheibe“) */
+export const REQUEST_STATUS_TEXT: Readonly<Record<CardRequestStatus, string>> = {
+  open: "wartet auf die Anlage",
+  done: "geholt",
+  missing: "nicht gefunden",
+  held: "lässt sich nicht holen",
+  mismatch: "an diesem Tag nicht gefunden",
+  taken: "gehört zu einem anderen Konto",
+  withdrawn: "zurückgezogen",
+  expired: "keine Antwort von der Anlage",
+  printMismatch: "passt nicht zum Ausdruck",
+}
+
+/** ein Satz unter dem Zustand; ohne Eintrag kein Satz */
+export const REQUEST_STATUS_NOTE: Readonly<Partial<Record<CardRequestStatus, string>>> = {
+  open: "Spiegel holt die Werte, sobald die Anlage läuft.",
+  missing: "Die Anlage hat keine Scheibe mit dieser ID.",
+  mismatch: "Die Scheibe mit dieser ID lief an einem anderen Tag.",
+  printMismatch:
+    "Die Scheibe der Anlage begann erst nach dem Druck. Spiegel hat nichts übernommen.",
+  held: "Die Scheibe bleibt an der Anlage.",
+  taken: "Diese Scheibe bekommt ein anderes Konto über die Sportpassnummer.",
+  expired: "Die Anlage hat sich 30 Tage nicht gemeldet.",
+}
+
+/** der Zustand in Worten; offen und gefüllt: Die Scheibe ist geholt, weitere Schüsse kommen noch nach */
+export const requestStateText = (status: CardRequestStatus, filled: boolean): string =>
+  status === "open" && filled ? "geholt, wird noch ergänzt" : REQUEST_STATUS_TEXT[status]
+
+/** der Satz unter dem Zustand; offen und gefüllt ohne Satz */
+export const requestStateNote = (status: CardRequestStatus, filled: boolean): string | null =>
+  filled ? null : (REQUEST_STATUS_NOTE[status] ?? null)
+
+/**
+ * ob die Seite der Scheibe den Auftrag zeigt: ungefüllt, solange er nicht zurückgezogen oder geholt ist, gefüllt nur,
+ * solange er offen ist (die Scheibe wird noch ergänzt)
+ */
+export const requestShown = (status: CardRequestStatus, filled: boolean): boolean =>
+  filled ? status === "open" : status !== "withdrawn" && status !== "done"
+
+/**
+ * ob der Schütze den Auftrag entfernen kann: ungefüllt und nicht zurückgezogen oder geholt. Offen heißt das „Nicht mehr
+ * holen“, beendet „Entfernen“; beides setzt ihn auf zurückgezogen, Scheibe und Ausdruck bleiben.
+ */
+export const requestRemovable = (status: CardRequestStatus, filled: boolean): boolean =>
+  !filled && status !== "withdrawn" && status !== "done"
 
 /** Zustände, in denen ein Auftrag ohne Erfolg endete */
 export const REMOVABLE_STATUSES = [
@@ -12,10 +60,6 @@ export const REMOVABLE_STATUSES = [
   "withdrawn",
 ] as const satisfies readonly CardRequestStatus[]
 
-/**
- * beendet und ohne Scheibe: Der Schütze kann den Auftrag aus der Liste entfernen. Hängt eine Scheibe daran, bleibt er,
- * auch wenn er ohne Erfolg endete (etwa zurückgezogen, während die geholte Scheibe im Papierkorb lag, oder gehalten,
- * nachdem schon Stände kamen); `closeRequest` lässt die Scheibe stehen.
- */
+/** beendet und ohne Scheibe: Der Schütze kann den Auftrag aus der Liste im Profil entfernen */
 export const isRemovable = (status: CardRequestStatus, hasCard: boolean): boolean =>
   !hasCard && (REMOVABLE_STATUSES as readonly CardRequestStatus[]).includes(status)

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { eveningOfStart, parseCardId, printedId } from "./id"
+import { eveningOfStart, parseCardId, PRINT_GRACE_MS, printedId, startsBeforePrint } from "./id"
 
 describe("parseCardId", () => {
   it("liest die ID wie im Fuß des Ausdrucks, mit und ohne „ID:“, groß und klein, mit Leerzeichen", () => {
@@ -47,5 +47,15 @@ describe("eveningOfStart", () => {
     expect(eveningOfStart(Date.UTC(2026, 9, 22, 3, 59))).toBe("2026-10-21")
     expect(eveningOfStart(Date.UTC(2026, 9, 22, 4, 0))).toBe("2026-10-22")
     expect(eveningOfStart(Date.UTC(2026, 0, 1, 1, 0))).toBe("2025-12-31")
+  })
+})
+
+describe("startsBeforePrint", () => {
+  it("bis genau fünf Minuten nach dem Druck passt, eine ms darüber nicht", () => {
+    const printed = Date.UTC(2026, 9, 27, 19, 52)
+    expect(PRINT_GRACE_MS).toBe(300_000)
+    expect(startsBeforePrint(printed - 3_600_000, printed)).toBe(true)
+    expect(startsBeforePrint(printed + 300_000, printed)).toBe(true)
+    expect(startsBeforePrint(printed + 300_001, printed)).toBe(false)
   })
 })
