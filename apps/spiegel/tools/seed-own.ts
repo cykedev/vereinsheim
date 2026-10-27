@@ -31,9 +31,13 @@ import { assertDevDatabase } from "./dev-guard"
 import { demoCardSeeds, demoEnteredSeeds, loadOwnCards, ownCardSeeds } from "./own-cards"
 
 const DEV_SITE = "Dev-Anlage"
-/** erfundene IDs vom Ausdruck: der Auftrag der Demo-Scheibe ohne Werte, die eigene Sperre für die Skriptprüfung */
+/**
+ * erfundene IDs vom Ausdruck, alle aus `7fff0a00` bis `7fff0aff` (Demo und Skriptprüfung): der Auftrag der Demo-Scheibe
+ * ohne Werte, die eigene Sperre für die Skriptprüfung
+ */
 const DEMO_REQUEST_HEX = "7fff0a00"
 const DEMO_LOCK_HEX = "7fff0a03"
+const DEMO_IDS = { gte: decodePrintoutId("7fff0a00"), lte: decodePrintoutId("7fff0aff") }
 
 const out = (text = "") => process.stdout.write(`${text}\n`)
 
@@ -214,8 +218,11 @@ async function main() {
           },
         },
       })
+      // jeder Lauf räumt Aufträge und Sperren des Demo-Kontos mit erfundenen IDs ab und legt sie neu an; Zeilen anderer
+      // Konten fasst er nie an
       const requestId = decodePrintoutId(DEMO_REQUEST_HEX)
-      await db.cardRequest.deleteMany({ where: { userId: owner.id, scheibenId: requestId } })
+      await db.cardRequest.deleteMany({ where: { userId: owner.id, scheibenId: DEMO_IDS } })
+      await db.deleteLock.deleteMany({ where: { userId: owner.id, scheibenId: DEMO_IDS } })
       if (waiting)
         await db.cardRequest.create({
           data: {
@@ -227,23 +234,14 @@ async function main() {
           },
         })
       const lockSource = fetchSite.sources[0]?.id ?? source.id
-      await db.deleteLock.upsert({
-        where: {
-          userId_sourceId_scheibenId_cycle: {
-            userId: owner.id,
-            sourceId: lockSource,
-            scheibenId: decodePrintoutId(DEMO_LOCK_HEX),
-            cycle: 0,
-          },
-        },
-        create: {
+      await db.deleteLock.create({
+        data: {
           userId: owner.id,
           sourceId: lockSource,
           scheibenId: decodePrintoutId(DEMO_LOCK_HEX),
           cycle: 0,
           startedAt: new Date("2026-10-01T17:00:00Z"),
         },
-        update: {},
       })
       out(
         `Demo-Auftrag ${DEMO_REQUEST_HEX}: ${waiting ? "offen" : "ohne Scheibe, nicht angelegt"}, eigene Sperre ${DEMO_LOCK_HEX} vom 01.10.2026`
