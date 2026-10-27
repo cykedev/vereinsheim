@@ -20,11 +20,16 @@ import {
   type AnalysisTab,
 } from "@vereinsheim/shot-ui/analysis/AnalysisPanel"
 import { analysisInput } from "@vereinsheim/shot-ui/analysis/input"
-import { detailLevel } from "@vereinsheim/shot-ui/detail"
+import {
+  detailLevel,
+  levelReasons,
+  missingSentence,
+  seriesMissingText,
+  shotsMissingText,
+} from "@vereinsheim/shot-ui/detail"
 import { keyObservations, observations } from "@vereinsheim/shot-ui/analysis/observations"
 import { HelpIcon } from "@vereinsheim/shot-ui/help/HelpButton"
 import { CardPage } from "@vereinsheim/shot-ui/layout/CardPage"
-import { NoShots } from "@vereinsheim/shot-ui/layout/NoShots"
 import { ReturnPill } from "@vereinsheim/shot-ui/layout/ReturnPill"
 import { SectionNav } from "@vereinsheim/shot-ui/layout/SectionNav"
 import { hashFor, parseHash } from "@vereinsheim/shot-ui/layout/sections"
@@ -44,7 +49,7 @@ import { ScoringToggle } from "@vereinsheim/shot-ui/controls/ScoringToggle"
 import { cardMeta } from "@vereinsheim/shot-ui/readout/cardMeta"
 import { CardHeader } from "@vereinsheim/shot-ui/readout/CardHeader"
 import { CardResult } from "@vereinsheim/shot-ui/readout/CardResult"
-import { CardSummary, SummaryResult } from "@vereinsheim/shot-ui/readout/CardSummary"
+import { SummaryResult } from "@vereinsheim/shot-ui/readout/CardSummary"
 import { ShotLine } from "@vereinsheim/shot-ui/readout/ShotLine"
 import { ShotReadout } from "@vereinsheim/shot-ui/readout/ShotReadout"
 import { SeriesStrip } from "@vereinsheim/shot-ui/series/SeriesStrip"
@@ -379,35 +384,21 @@ export function CardScreen({
     />
   )
 
-  // ohne Einzelschüsse: eine Scheibe der Brücke ohne Schuss wartet auf ihren ersten, jede andere zeigt, was sie
-  // mitbringt (Summen, Gesamtergebnis) oder warum sie nichts hat
-  const noShots = level === "none" && card.provenance === "measured"
-  const summary =
-    level === "shots" || noShots ? null : (
-      <SummaryResult
-        card={card}
-        detail={detail}
-        level={level}
-        scoring={state.scoring}
-        actions={own ? actions : undefined}
-        notice={notice}
-        onHelp={onHelp}
-      />
-    )
-  const empty =
-    level === "shots" ? undefined : noShots ? (
-      <NoShots />
-    ) : (
-      <CardSummary
-        target={target}
-        result={summary}
-        level={level}
-        card={card}
-        detail={detail}
-        scoring={state.scoring}
-      />
-    )
-
+  // Ein Gerüst für jede Detailtiefe: ohne Einzelschüsse stehen Ergebnis, Serien, Schüsse und Analyse an denselben
+  // Stellen, nur mit anderem Inhalt (Werte aus Summen oder „–“ mit Grund, ein Satz statt der Tabelle)
+  const withShots = level === "shots"
+  const reasons = withShots ? [] : levelReasons(detail, level, card.provenance)
+  const summary = withShots ? null : (
+    <SummaryResult
+      card={card}
+      detail={detail}
+      level={level}
+      scoring={state.scoring}
+      actions={own ? actions : undefined}
+      notice={notice}
+      onHelp={onHelp}
+    />
+  )
   return (
     <Page>
       {own && (
@@ -428,7 +419,7 @@ export function CardScreen({
               provenance: card.provenance,
               place: card.place,
             })}
-            result={level === "shots" ? result : summary}
+            result={withShots ? result : summary}
             observations={headObservations}
             onMore={() => {
               // „Alle Beobachtungen“: der Überblick der Analyse, an der Karte „Beobachtungen“ (nicht an seinem Anfang)
@@ -447,8 +438,7 @@ export function CardScreen({
           />
         }
         nav={<SectionNav active={active} />}
-        result={result}
-        empty={empty}
+        result={withShots ? result : summary}
         target={
           <div className="grid gap-3 rounded-2xl border border-border bg-card p-3.5">
             <div
@@ -476,7 +466,7 @@ export function CardScreen({
                 onHelp={() => onHelp("trefferbild")}
               />
             </div>
-            <ShotLine className="md:hidden" shots={shots} state={state} />
+            {withShots && <ShotLine className="md:hidden" shots={shots} state={state} />}
           </div>
         }
         under={
@@ -487,18 +477,29 @@ export function CardScreen({
               state={state}
               onSelect={(series) => dispatch({ type: "select", series })}
               onSelectWhole={(whole) => dispatch({ type: "selectWhole", whole })}
+              sums={withShots ? undefined : card.sums?.series}
+              missing={seriesMissingText(level, card.provenance)}
             />
           </div>
         }
         aside={
-          <div id="readout" className="rounded-2xl border border-border bg-card p-4 max-md:hidden">
-            <ShotReadout shots={shots} state={state} />
-          </div>
+          withShots ? (
+            <div
+              id="readout"
+              className="rounded-2xl border border-border bg-card p-4 max-md:hidden"
+            >
+              <ShotReadout shots={shots} state={state} />
+            </div>
+          ) : null
         }
         beside={[
           {
             id: "shots",
-            node: (
+            node: !withShots ? (
+              <div data-shots-missing className="rounded-2xl border border-border bg-card p-4">
+                <p className="text-[13px] text-muted-foreground">{shotsMissingText(reasons)}</p>
+              </div>
+            ) : (
               <div
                 id="shot-table"
                 className="rounded-2xl border border-border bg-card p-2 md:flex md:max-h-full md:flex-col"
@@ -519,6 +520,7 @@ export function CardScreen({
             id: "analysis",
             node: (
               <AnalysisPanel
+                missing={withShots ? null : missingSentence(detail)}
                 shots={shots}
                 context={context}
                 state={state}

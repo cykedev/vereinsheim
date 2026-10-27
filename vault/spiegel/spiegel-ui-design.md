@@ -126,9 +126,13 @@ unter `@vereinsheim/shot-ui/layout/*` und `readout/*`.
   bleibt, was zu ihr gehört, unten steht, was mehr Platz braucht. Die Kacheln des Überblicks stehen zu vier, die
   Karten der Analyse zu zweit; ihre Spalten richten sich nach der Breite des Bereichs, nicht des Fensters. Auch im
   Querformat am Telefon passt die Scheibe in die Höhe.
-- **Ohne Schüsse** (`NoShots`): nur Kopf, Scheibe und daneben „Noch kein Schuss“ mit einem Satz, was hier
-  erscheint; keine Sprungleiste, keine leeren Kästen, keine Kacheln voller Striche. Mit dem ersten Schuss erscheint
-  die ganze Seite.
+- **Ein Gerüst für jede Detailtiefe** (Grundsatz des Users, 27. Oktober 2026: Konsistenz, wo sie möglich und sinnvoll
+  ist): Ob Schüsse mit Lage, Schüsse ohne Lage, nur Serien-Summen, nur ein Gesamtergebnis, eine Scheibe, die auf die
+  Anlage wartet, oder eine der Brücke ohne Schuss, die Seite hat dieselbe Sprungleiste, dieselbe Ergebnis-Box rechts,
+  die Serien unter der Scheibe und dieselben Reiter der Analyse. Was fehlt, steht als „–“ mit Grund oder als Satz an
+  seiner Stelle („Ohne Einzelschüsse: nur Serien-Summen.“, „Nur das Gesamtergebnis, keine Serien.“). Nur die Ablesung
+  einzelner Schüsse fehlt ohne Schüsse. Bis zum 27. Oktober 2026 stand ohne Schüsse nur ein Kasten neben der Scheibe;
+  der User fand das uneinheitlich.
 - **Sprung zur Scheibe mit Rücksprung:** Schaltet der Knopf „Vertrauensellipse“ in der Analyse oder eine Zeile der
   Schusstabelle die Scheibe und ist sie außer Sicht, springt die Seite zu ihr und zeigt die Pille
   „Zurück zu „Lage““. Gesprungen wird sofort wie bei Ankern, nicht gleitend.
@@ -160,8 +164,8 @@ Minimal und scharf, nichts Klobiges, auch stark vergrößert.
   Fortschritts die Scheibe der Disziplin leise ohne Treffer, gleich groß wie eine echte kleine Scheibe, statt eines
   leeren Platzes; mit Trefferlage als Summe trägt sie das Zeichen des Schwerpunkts. Keine Symbole je Herkunft: Die Herkunft steht
   als Wort daneben.
-- **Serien aus Summen** stehen als Kacheln wie die Serien aus Schüssen, die kleine Scheibe als leiser Platzhalter, ohne
-  Wahl (`SumSeries`): Ohne Schüsse gibt es nichts zu zeigen und nichts auszuwählen. Serien aus Schüssen ohne Lage zeigen
+- **Serien aus Summen** stehen als Kacheln in derselben Leiste wie die Serien aus Schüssen (`SeriesStrip` mit `sums`),
+  die kleine Scheibe als leiser Platzhalter, ohne Wahl, darunter die Schusszahl („10 Schuss“): Ohne Schüsse gibt es nichts zu zeigen und nichts auszuwählen. Serien aus Schüssen ohne Lage zeigen
   denselben Platzhalter, so sieht der Bereich „Serien“ in jeder Detailtiefe gleich aus. Fehlt der Wert in der gewählten Wertung,
   steht „–“ mit Grund.
 - **„–“ mit Grund in der Liste:** Jede fehlende Zahl der Scheiben-Liste trägt ihren Grund als Tooltip und für

@@ -3,7 +3,6 @@ import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 
 import { CardPage } from "./CardPage"
-import { NoShots } from "./NoShots"
 import { MIN_TARGET_PX, targetRoom } from "./useTargetFit"
 
 const html = renderToStaticMarkup(
@@ -77,29 +76,6 @@ describe("Rahmen der Seite", () => {
     expect(html).not.toMatch(/id="analysis"[^>]*md:flex-1/)
     // der letzte Abschnitt ist mindestens fensterhoch, sonst erreicht die Sprungleiste ihn nie
     expect(html).toMatch(/id="analysis"[^>]*min-h-\[calc\(100svh-3\.5rem\)\]/)
-  })
-})
-
-describe("ohne Schüsse (empty)", () => {
-  const blank = renderToStaticMarkup(
-    h(CardPage, {
-      header: h("p", null, "KOPF"),
-      nav: h("nav", null, "LEISTE"),
-      target: h("p", null, "SCHEIBE"),
-      result: h("p", null, "ERGEBNIS"),
-      under: h("p", null, "SERIEN"),
-      aside: h("p", null, "SEITE"),
-      beside: [{ id: "shots", node: h("p", null, "SCHÜSSE") }],
-      below: [{ id: "analysis", node: h("p", null, "ANALYSE") }],
-      empty: h(NoShots),
-    })
-  )
-
-  it("nur Kopf, Scheibe und der Hinweis: keine Leiste, keine leeren Kästen", () => {
-    for (const part of ["KOPF", "SCHEIBE", "Noch kein Schuss"]) expect(blank).toContain(part)
-    for (const part of ["LEISTE", "ERGEBNIS", "SERIEN", "SEITE", "SCHÜSSE", "ANALYSE"])
-      expect(blank).not.toContain(part)
-    expect(blank).toMatch(/data-section="target"/)
   })
 })
 

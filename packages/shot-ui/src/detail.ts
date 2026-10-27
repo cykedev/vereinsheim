@@ -171,8 +171,38 @@ export const missingSentence = (detail: CardDetail): string =>
     ? "Für Streuung und Tempo braucht es Einzelschüsse."
     : "Für Streuung, Lage und Tempo braucht es Einzelschüsse."
 
-/** ein Satz für eine Scheibe ohne Werte: vom Ausdruck wartet sie auf die Anlage, eingetragen fehlt die Eingabe */
+/**
+ * ein Satz für eine Scheibe ohne Werte: vom Ausdruck wartet sie auf die Anlage, eingetragen fehlt die Eingabe, gemessen
+ * fehlt der erste Schuss
+ */
 export const emptyText = (provenance?: CardProvenance | null): string =>
   provenance === "printout"
     ? "Sobald die Anlage die Scheibe liefert, stehen hier Ergebnis, Serien und Schüsse."
-    : "Für diese Scheibe sind keine Werte eingetragen."
+    : provenance === "entered"
+      ? "Für diese Scheibe sind keine Werte eingetragen."
+      : "Sobald Schüsse da sind, stehen hier Ergebnis, Serien und Schüsse."
+
+/** der Grund unter der großen Zahl je Detailtiefe ohne Einzelschüsse; ohne Werte nach der Herkunft */
+export function levelReasons(
+  detail: CardDetail,
+  level: Exclude<DetailLevel, "shots">,
+  provenance?: CardProvenance | null
+): string[] {
+  if (level !== "none") return summaryReasons(detail, level)
+  if (provenance === "printout") return [REASON_TEXT.waiting]
+  return [provenance === "entered" ? REASON_TEXT.noValues : REASON_TEXT.noShot]
+}
+
+/** im Abschnitt „Schüsse“ einer Scheibe ohne Einzelschüsse: warum er leer ist */
+export const shotsMissingText = (reasons: readonly string[]): string =>
+  `Ohne Einzelschüsse: ${reasons.join(" · ")}.`
+
+/**
+ * an der Stelle der Serien, wenn es keine gibt: ohne Werte, wann sie kommen; mit Gesamtergebnis, dass es keine Serien
+ * gibt; mit Schüssen ohne Serie, dass die Schüsse keine tragen
+ */
+export function seriesMissingText(level: DetailLevel, provenance?: CardProvenance | null): string {
+  if (level === "none") return emptyText(provenance)
+  if (level === "total") return "Nur das Gesamtergebnis, keine Serien."
+  return "Die Schüsse tragen keine Serie."
+}

@@ -28,11 +28,6 @@ export interface CardPageProps {
   beside: readonly Section[]
   /** Abschnitte darunter in voller Breite (die Analyse) */
   below: readonly Section[]
-  /**
-   * ohne Einzelschüsse: statt Ergebnis, Serien, Ablesung, Abschnitten und Sprungleiste nur dieser Kasten neben der
-   * Scheibe (`NoShots`, `CardSummary`), keine leeren Gerüste
-   */
-  empty?: ReactNode
   className?: string
 }
 
@@ -55,28 +50,9 @@ export function CardPage({
   aside,
   beside,
   below,
-  empty,
   className,
 }: CardPageProps) {
   const { ref: fitTarget, style: fitStyle } = useTargetFit()
-  if (empty) {
-    return (
-      <div className={cn("grid gap-5", className)}>
-        {header}
-        <div id="target" className={cn("grid", JUMP_BAR.scrollMargin, "gap-7", PAGE_COLUMNS)}>
-          <div
-            ref={fitTarget}
-            style={fitStyle}
-            data-section="target"
-            className={cn("grid min-w-0", JUMP_BAR.scrollMargin, "content-start gap-7")}
-          >
-            {target}
-          </div>
-          <div className="min-w-0">{empty}</div>
-        </div>
-      </div>
-    )
-  }
   return (
     <div className={cn("grid gap-5", className)}>
       {header}

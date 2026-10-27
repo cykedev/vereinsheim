@@ -108,6 +108,11 @@ export interface AnalysisPanelProps {
   sigmaRoute?: Route
   /** Fortschritt mit dem Trefferbild der Familie; ohne ihn kein Link an Form und Richtungsuhr */
   patternRoute?: Route
+  /**
+   * eine Scheibe ohne Einzelschüsse: Kopf und Reiter bleiben, in jedem Reiter steht statt der Karten dieser Satz mit dem
+   * Grund (ein Gerüst für jede Detailtiefe)
+   */
+  missing?: string | null
   className?: string
 }
 
@@ -130,6 +135,7 @@ export function AnalysisPanel({
   sigmaRoute,
   patternRoute,
   action,
+  missing = null,
   className,
 }: AnalysisPanelProps) {
   const regionId = useId()
@@ -200,7 +206,9 @@ export function AnalysisPanel({
       <div data-analysis-head className="flex flex-wrap items-start justify-between gap-3">
         <div className="grid min-w-0 gap-1">
           <h2 className="font-display text-xl font-bold tracking-tight">Was diese Scheibe zeigt</h2>
-          <p className="text-[13px] text-muted-foreground">{`Analyse ${BASIS_TEXT[input.basis]}`}</p>
+          {!missing && (
+            <p className="text-[13px] text-muted-foreground">{`Analyse ${BASIS_TEXT[input.basis]}`}</p>
+          )}
         </div>
         {action && <div data-analysis-action>{action}</div>}
       </div>
@@ -211,7 +219,13 @@ export function AnalysisPanel({
         aria-label={`Thema ${tabLabel}`}
         className="@container grid gap-4"
       >
-        {layoutCards(cards)}
+        {missing ? (
+          <div data-summary-missing className="rounded-2xl border border-border bg-card p-4">
+            <p className="text-[13px] text-muted-foreground">{missing}</p>
+          </div>
+        ) : (
+          layoutCards(cards)
+        )}
       </div>
       {/* ohne Schüsse keine Datenlage: sie behauptete sonst „alle mit Lage, Zeit und Wert“ */}
       {shots.length > 0 && (

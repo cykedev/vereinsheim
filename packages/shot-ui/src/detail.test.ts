@@ -12,6 +12,9 @@ import {
   detailLevel,
   detailReason,
   emptyText,
+  levelReasons,
+  seriesMissingText,
+  shotsMissingText,
   isCardProvenance,
   missingSentence,
   quietProvenance,
@@ -107,6 +110,31 @@ describe("Detailtiefe", () => {
   })
 })
 
+describe("ein Gerüst für jede Detailtiefe: die Sätze an den Stellen ohne Einzelschüsse", () => {
+  it("der Grund unter der großen Zahl, ohne Werte nach der Herkunft", () => {
+    expect(levelReasons(SERIES_RINGS, "series", "entered")).toEqual([
+      "nur Serien-Summen",
+      "ohne Zehntel",
+    ])
+    expect(levelReasons(NONE, "none", "printout")).toEqual(["wartet auf die Anlage"])
+    expect(levelReasons(NONE, "none", "entered")).toEqual(["ohne Werte"])
+    expect(levelReasons(NONE, "none", "measured")).toEqual(["noch kein Schuss"])
+    expect(levelReasons(NONE, "none")).toEqual(["noch kein Schuss"])
+  })
+
+  it("Schüsse und Serien sagen, warum sie leer sind", () => {
+    expect(shotsMissingText(["nur Serien-Summen", "ohne Zehntel"])).toBe(
+      "Ohne Einzelschüsse: nur Serien-Summen · ohne Zehntel."
+    )
+    expect(seriesMissingText("total")).toBe("Nur das Gesamtergebnis, keine Serien.")
+    expect(seriesMissingText("none", "printout")).toBe(emptyText("printout"))
+    expect(seriesMissingText("shots")).toBe("Die Schüsse tragen keine Serie.")
+    expect(emptyText("measured")).toBe(
+      "Sobald Schüsse da sind, stehen hier Ergebnis, Serien und Schüsse."
+    )
+  })
+})
+
 describe("Herkunft", () => {
   it("leise nur, wenn nicht gemessen", () => {
     expect(quietProvenance("measured")).toBeNull()
@@ -133,6 +161,10 @@ it("alle Texte nach den Schreibregeln", () => {
     missingSentence({ ...SERIES, center: { xUm: 0, yUm: 0, n: 1, from: "summary" } }),
     emptyText("printout"),
     emptyText("entered"),
+    emptyText("measured"),
+    shotsMissingText(["nur Serien-Summen"]),
+    seriesMissingText("total"),
+    seriesMissingText("shots"),
   ]
   expect(forbiddenIn(texts)).toEqual([])
 })

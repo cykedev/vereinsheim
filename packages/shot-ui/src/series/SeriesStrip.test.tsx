@@ -174,3 +174,40 @@ describe("Serien aus Schüssen ohne Lage", () => {
     expect(tile(1)).toContain("<circle cx=")
   })
 })
+
+describe("ein Bau für jede Detailtiefe", () => {
+  const SUMS = [
+    { series: 1, shots: 10, rings: 90, decimalTenths: 950 },
+    { series: 2, shots: 10, rings: 88, decimalTenths: null },
+  ]
+  const strip = (props: Partial<Parameters<typeof SeriesStrip>[0]>) =>
+    renderToStaticMarkup(
+      createElement(SeriesStrip, { target: LP_10M, shots: [], state: initialViewState(), ...props })
+    )
+
+  it("Serien-Summen: dieselbe Leiste und dieselben Kacheln, die kleine Scheibe als Platzhalter, ohne Wahl", () => {
+    const html = strip({ sums: SUMS, state: initialViewState({ scoring: "decimal" }) })
+    expect(html).toMatch(/^<div data-sum-series="true" class="grid gap-2\.5">/)
+    expect(html).toContain(">Serien<")
+    expect(html).toContain(">Alle<")
+    expect(html).not.toContain("<button")
+    expect(html.match(/data-series="/g)).toHaveLength(2)
+    expect(html.match(/data-mini-placeholder="true"/g)).toHaveLength(2)
+    expect(html).not.toContain("data-summary-center")
+    expect(html).toContain(">95,0<")
+    expect(html).toContain('<span title="ohne Zehntel">–')
+    // die Schusszahl immer, wie „n von 10 Schuss“ bei Schüssen
+    expect(html.match(/>10 Schuss</g)).toHaveLength(2)
+  })
+
+  it("Schüsse mit Serien gehen vor Summen; ganz ohne Serien der Satz unter derselben Leiste", () => {
+    expect(strip({ shots: CARD, sums: SUMS })).not.toContain("data-sum-series")
+    const none = strip({ missing: "Nur das Gesamtergebnis, keine Serien." })
+    expect(none).toContain(">Serien<")
+    expect(none).toMatch(
+      /<p data-series-missing="true"[^>]*>Nur das Gesamtergebnis, keine Serien\.<\/p>/
+    )
+    expect(none).not.toContain(">Alle<")
+    expect(strip({})).toBe("")
+  })
+})

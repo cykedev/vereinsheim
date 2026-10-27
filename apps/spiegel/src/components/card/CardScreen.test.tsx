@@ -130,11 +130,39 @@ describe("Seite einer Scheibe je Detailtiefe", () => {
     place: "Vereinsheim Nord",
   }
 
-  it("Serien-Summen eingetragen: Kasten mit Serien statt Schüssen, Herkunft und Ort im Kopf", () => {
+  /** das Gerüst einer Seite: Abschnitte in ihrer Folge, Box des Ergebnisses, Serien, Leiste, Reiter der Analyse */
+  const frame = (html: string) => ({
+    sections: [...html.matchAll(/data-section="([^"]+)"/g)].map((m) => m[1]),
+    resultBox: html.includes("data-result-box"),
+    series: html.includes('id="series"'),
+    nav: html.includes('aria-label="Abschnitte"'),
+    tabs: [...html.matchAll(/role="radio"[^>]*>([^<]+)</g)]
+      .map((m) => m[1])
+      .filter((t) => t === "Lage"),
+  })
+
+  it("ein Gerüst für jede Detailtiefe: dieselben Abschnitte an denselben Stellen", () => {
+    const measured = frame(render(OWN))
+    for (const other of [
+      entered,
+      {
+        ...entered,
+        sums: { series: [], total: { shots: 40, rings: 362, decimalTenths: null }, center: null },
+      },
+      { ...card, shots: [], provenance: "printout" as const },
+      { ...card, shots: [] },
+    ])
+      expect(frame(render(OWN, other))).toEqual(measured)
+    expect(measured.sections.length).toBeGreaterThan(2)
+  })
+
+  it("Serien-Summen eingetragen: Serien unter der Scheibe, Schüsse und Analyse mit Grund, Herkunft und Ort im Kopf", () => {
     const html = render(OWN, entered)
     expect(html).toContain('data-card-summary="series"')
-    expect(html).not.toContain("data-no-shots")
     expect(html).not.toContain('id="shot-table"')
+    expect(html).toMatch(/id="series"[\s\S]*data-sum-series="true"/)
+    expect(html).toContain("Ohne Einzelschüsse: nur Serien-Summen.")
+    expect(html).toContain("Für Streuung, Lage und Tempo braucht es Einzelschüsse.")
     expect(meta(html)).toContain("eingetragen")
     expect(meta(html)).toContain("Vereinsheim Nord")
   })
@@ -151,6 +179,7 @@ describe("Seite einer Scheibe je Detailtiefe", () => {
     })
     expect(html).toContain('data-card-summary="total"')
     expect(html).toContain("data-summary-center")
+    expect(html).toContain("Nur das Gesamtergebnis, keine Serien.")
     expect(meta(html)).toContain("eingetragen")
   })
 
@@ -161,10 +190,11 @@ describe("Seite einer Scheibe je Detailtiefe", () => {
     expect(meta(html)).toContain("vom Ausdruck")
   })
 
-  it("gemessen ohne Schuss: wie bisher „Noch kein Schuss“", () => {
+  it("gemessen ohne Schuss: dasselbe Gerüst, „noch kein Schuss“ als Grund", () => {
     const html = render(OWN, { ...card, shots: [] })
-    expect(html).toContain("data-no-shots")
-    expect(html).not.toContain("data-card-summary")
+    expect(html).toContain('data-card-summary="none"')
+    expect(html).toContain("noch kein Schuss")
+    expect(html).toContain("Sobald Schüsse da sind, stehen hier Ergebnis, Serien und Schüsse.")
   })
 
   it("Probe neben Serien-Summen: die Summen, und die Art ist Training mit Kreis", () => {

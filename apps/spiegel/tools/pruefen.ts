@@ -2016,7 +2016,20 @@ interface LevelState {
   meta: string
   shotTable: boolean
   compare: boolean
+  /** der Satz an der Stelle der Serien, wenn es keine gibt */
+  seriesMissing: string
+  /** das Gerüst: Abschnitte in Folge, Leiste, Box des Ergebnisses, Serien unter der Scheibe, Reiter der Analyse */
+  frame: string
 }
+
+/** das Gerüst der Seite einer Scheibe als Text, zum Vergleich zwischen den Detailtiefen */
+const FRAME = `[
+  $$("[data-section]").map((el) => el.dataset.section).join(","),
+  !!$('nav[aria-label="Abschnitte"]'),
+  !!$("[data-result-box]"),
+  !!$('[data-section="target"] #series'),
+  $$('section[aria-label="Analyse"] [role="radiogroup"] [role="radio"]').map(txt).join(","),
+].join(" | ")`
 
 /**
  * Detailtiefen: Herkunft leise in Liste und Kopf, „–“ mit Grund, Filter nach Herkunft, die Seite einer Scheibe aus
@@ -2130,6 +2143,8 @@ async function detailLevels(page: Page, href: string) {
         meta: txt($("[data-card-header] p")),
         shotTable: !!$("#shot-table"),
         compare: !!link("Mit der Scheibe davor vergleichen"),
+        seriesMissing: txt($("[data-series-missing]")),
+        frame: ${FRAME},
       })`)),
       href: link,
     })
@@ -2180,7 +2195,7 @@ async function detailLevels(page: Page, href: string) {
     !!waiting &&
       waiting.result === "–" &&
       waiting.reason.startsWith("wartet auf die Anlage") &&
-      waiting.missing.startsWith("Sobald die Anlage"),
+      waiting.seriesMissing.startsWith("Sobald die Anlage"),
     waiting ?? states.map((s) => s.level)
   )
   check(
@@ -2214,6 +2229,29 @@ async function detailLevels(page: Page, href: string) {
   // eine gemessene Scheibe nennt ihre Herkunft im Kopf
   await page.goto(`${BASE}${href}`)
   const measuredMeta = await page.ev<string>(`txt($("[data-card-header] p"))`)
+  // ein Gerüst für jede Detailtiefe: dieselben Abschnitte, Leiste, Box und Reiter wie bei einer gemessenen Scheibe, an
+  // Telefon und Desktop
+  for (const [width, height] of [
+    [1280, 900],
+    [375, 812],
+  ] as const) {
+    await page.viewport(width, height)
+    await page.goto(`${BASE}${href}`)
+    const measuredFrame = await page.ev<string>(FRAME)
+    const frames: { href: string; frame: string }[] = []
+    for (const state of states.filter((s) => s.level)) {
+      await page.goto(`${BASE}${state.href}`)
+      frames.push({ href: state.href, frame: await page.ev<string>(FRAME) })
+    }
+    const off = frames.filter((f) => f.frame !== measuredFrame)
+    check(
+      `${width} px: jede Detailtiefe im Gerüst einer gemessenen Scheibe (Abschnitte, Leiste, Box, Serien unter der Scheibe, Reiter)${frames.length ? "" : ` (${NOT_SHOWN})`}`,
+      frames.length > 0 && off.length === 0,
+      off.length ? { measured: measuredFrame, off } : measuredFrame
+    )
+  }
+  await page.viewport(1280, 900)
+  await page.goto(`${BASE}${href}`)
   check(
     "Kopf einer gemessenen Scheibe: „gemessen“",
     /· gemessen ·/.test(measuredMeta),

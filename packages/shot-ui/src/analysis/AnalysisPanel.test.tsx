@@ -194,3 +194,16 @@ describe("Lineal und Scheibe", () => {
     expect(renderTab("time", { chosen })).not.toContain(">Auf der Scheibe<")
   })
 })
+
+describe("ohne Einzelschüsse: derselbe Aufbau, im Reiter ein Satz", () => {
+  it("Kopf und Reiter bleiben, statt der Karten der Satz mit Grund", () => {
+    const html = render([], { missing: "Für Streuung, Lage und Tempo braucht es Einzelschüsse." })
+    expect(html).toContain("Was diese Scheibe zeigt")
+    for (const tab of ANALYSIS_TABS) expect(html).toContain(`>${tab.label}<`)
+    expect(html).toMatch(
+      /<div data-summary-missing="true"[^>]*><p[^>]*>Für Streuung, Lage und Tempo braucht es Einzelschüsse\.<\/p><\/div>/
+    )
+    expect(html).not.toContain('data-card="')
+    expect(render(CARD)).not.toContain("data-summary-missing")
+  })
+})

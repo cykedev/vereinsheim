@@ -271,11 +271,12 @@ Die Liste markiert, wohin man kommt, wie der Fortschritt seine Wahl (`bg-accent-
 - **Metazeile** unter dem Titel mit der Liste aus Meyton, der Herkunft und dem Ort („Wettkampf · Liste RWK_LP · gemessen ·
   Sa 26.09.2026 · 10:30“, „Training · eingetragen · Vereinsheim Nord · …“, `cardMeta`). Die geteilte Seite nennt die
   Herkunft, nie den Ort.
-- **Je Detailtiefe ein Gerüst** (`detailLevel`): Mit Schüssen die volle Seite. Nur Serien-Summen: große Zahl, Schusszahl
-  und Ø je Schuss, Grund („nur Serien-Summen“, „ohne Zehntel“), Serien als Kacheln mit dem leisen Platzhalter als kleiner Scheibe, ein Satz, was
-  fehlt. Nur Gesamtergebnis: große Zahl mit Grund, eine Trefferlage als Summe als Zeichen des Schwerpunkts („nur die Mitte der
-  Schüsse, keine Streuung“). Ohne Werte: „–“ mit „wartet auf die Anlage“ (vom Ausdruck) oder „ohne Werte“, Platz für
-  den Ausdruck. Eine Scheibe der Brücke ohne Schuss zeigt weiter „Noch kein Schuss“. Probe neben Summen der Wertung
+- **Ein Gerüst für jede Detailtiefe** (`detailLevel` wählt nur den Inhalt): dieselben Abschnitte, Leiste, Ergebnis-Box
+  und Reiter wie mit Schüssen. Nur Serien-Summen: große Zahl, Schusszahl und Ø je Schuss, Grund („nur Serien-Summen“,
+  „ohne Zehntel“), die Serien unter der Scheibe in derselben Leiste mit dem leisen Platzhalter, in Schüssen und Analyse
+  ein Satz mit Grund. Nur Gesamtergebnis: große Zahl mit Grund, eine Trefferlage als Summe als Zeichen des Schwerpunkts
+  („nur die Mitte der Schüsse, keine Streuung“), an der Stelle der Serien „Nur das Gesamtergebnis, keine Serien.“. Ohne
+  Werte: „–“ mit „wartet auf die Anlage“ (vom Ausdruck), „ohne Werte“ (eingetragen) oder „noch kein Schuss“ (Brücke). Probe neben Summen der Wertung
   zählt nicht: Die Seite zeigt die Summen, die Art bleibt Training mit Kreis.
 - **Reiterwechsel an den Anfang:** Ein anderer Reiter der Analyse beginnt oben, die Karten unter den klebenden Leisten
   (56 px am Telefon, 112 px ab 768 px), gemessen an der Reiterleiste. „Alle Beobachtungen“ springt weiter zu seiner

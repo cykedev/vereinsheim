@@ -10,23 +10,21 @@ import {
   type Scoring,
 } from "@vereinsheim/shot-core/metrics"
 import type { CardDetail } from "@vereinsheim/shot-core/projection"
-import type { TargetImage } from "@vereinsheim/shot-core/targets"
 import { cn } from "@vereinsheim/lib/utils"
 import type { ReactNode } from "react"
 
+import { Dash } from "../Dash"
 import {
   CENTER_ONLY_NOTE,
-  emptyText,
-  missingSentence,
+  levelReasons,
   REASON_TEXT,
-  summaryReasons,
   type CardProvenance,
   type DetailLevel,
 } from "../detail"
 import { formatValue } from "../format"
 import { HelpButton } from "../help/HelpButton"
-import { SumSeries } from "../series/SumSeries"
 import { MpiMark } from "../target/MpiMark"
+import { RESULT_FACTS } from "./CardResult"
 
 /** was die Seite ohne Einzelschüsse von der Scheibe braucht: ihre Summen und ihre Herkunft */
 type SummaryCard = Pick<PeriodCard, "sums"> & { provenance?: CardProvenance }
@@ -47,9 +45,11 @@ export interface SummaryResultProps {
 }
 
 /**
- * Ergebnis einer Scheibe ohne Einzelschüsse, aufgebaut wie `CardResult`: groß aus den Summen in der Wertung, darunter
- * Schusszahl und Ø je Schuss, dann der Grund („nur Serien-Summen“, „ohne Zehntel“). Ohne Werte ein Strich mit „wartet
- * auf die Anlage“ bzw. „ohne Werte“. Auf dem Telefon im Kopf, ab 768 px oben in `CardSummary`.
+ * Ergebnis einer Scheibe ohne Einzelschüsse, an derselben Stelle und gebaut wie `CardResult`: groß aus den Summen in der
+ * Wertung, darunter Schusszahl und Ø je Schuss, der Grund („nur Serien-Summen“, „ohne Zehntel“), bei einer Trefferlage
+ * als Summe der Hinweis zum Zeichen der Mitte, dann dieselben Kennzahlen wie bei Schüssen, hier „–“ mit Grund. Ohne
+ * Werte ein Strich mit „wartet auf die Anlage“, „ohne Werte“ bzw. „noch kein Schuss“ und, wie bei null Schüssen, ohne
+ * Kennzahlen. Auf dem Telefon im Kopf, ab 768 px als Box (`CardPage`).
  */
 export function SummaryResult({
   card,
@@ -63,12 +63,9 @@ export function SummaryResult({
 }: SummaryResultProps) {
   const result = level === "none" ? null : sumsResult(card.sums, scoring)
   const mean = summaryValue(inScoring(metricByKey("result.decimalMean")!, scoring), card.sums)
-  const reasons =
-    level === "none"
-      ? [card.provenance === "printout" ? REASON_TEXT.waiting : REASON_TEXT.noValues]
-      : summaryReasons(detail, level)
+  const reasons = levelReasons(detail, level, card.provenance)
   return (
-    <div className={cn("grid content-start gap-3", className)}>
+    <div data-card-summary={level} className={cn("grid content-start gap-3", className)}>
       <div className="grid gap-1">
         <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
           <p data-result className="font-display text-[2.6rem] leading-none font-bold tabular-nums">
@@ -108,6 +105,30 @@ export function SummaryResult({
             />
           )}
         </p>
+        {level !== "none" && detail.center?.from === "summary" && (
+          <p
+            data-center-note
+            className="flex items-center gap-1.5 text-[13px] text-muted-foreground"
+          >
+            <CenterMark />
+            {CENTER_ONLY_NOTE}
+          </p>
+        )}
+        {level !== "none" && (
+          <dl
+            aria-label="Kennzahlen der Scheibe"
+            className="flex flex-wrap gap-x-4 gap-y-1 text-[13px]"
+          >
+            {RESULT_FACTS.map(([term, key]) => (
+              <div key={key} className="flex gap-1.5">
+                <dt className="text-muted-foreground">{term}</dt>
+                <dd className="font-semibold tabular-nums">
+                  <Dash reason={REASON_TEXT.sumsOnly} />
+                </dd>
+              </div>
+            ))}
+          </dl>
+        )}
       </div>
       {notice}
     </div>
@@ -120,65 +141,5 @@ function CenterMark() {
     <svg viewBox="-1.4 -1.4 2.8 2.8" aria-hidden="true" className="size-3.5 shrink-0">
       <MpiMark x={0} y={0} radius={1} decorative />
     </svg>
-  )
-}
-
-export interface CardSummaryProps {
-  /** das Scheibenbild der Disziplin (Platzhalter der Serien) */
-  target: TargetImage
-  /** das Ergebnis (`SummaryResult`): ab 768 px oben in der Box, auf dem Telefon steht es im Kopf */
-  result: ReactNode
-  level: Exclude<DetailLevel, "shots">
-  card: SummaryCard
-  detail: CardDetail
-  scoring: Scoring
-  /** Platz für den Ausdruck (PDF und ID vom Ausdruck), am Ende der Box */
-  printout?: ReactNode
-  className?: string
-}
-
-/**
- * Die Box neben der Scheibe ohne Einzelschüsse (`CardPage` mit `empty`): oben das Ergebnis, bei Serien-Summen die
- * Serien als Kacheln, dann ein Satz, was fehlt, bei einer Trefferlage als Summe der Hinweis zum Zeichen der Mitte. Ohne
- * Werte statt dessen ein Satz, wann sie kommen.
- */
-export function CardSummary({
-  target,
-  result,
-  level,
-  card,
-  detail,
-  scoring,
-  printout,
-  className,
-}: CardSummaryProps) {
-  return (
-    <div
-      data-card-summary={level}
-      className={cn(
-        "grid content-start gap-4 rounded-2xl border border-border bg-card p-5",
-        className
-      )}
-    >
-      <div className="max-md:hidden">{result}</div>
-      {level === "series" && card.sums && (
-        <SumSeries target={target} series={card.sums.series} scoring={scoring} />
-      )}
-      <div className="grid gap-1.5">
-        <p data-summary-missing className="text-[13px] text-muted-foreground">
-          {level === "none" ? emptyText(card.provenance) : missingSentence(detail)}
-        </p>
-        {level !== "none" && detail.center?.from === "summary" && (
-          <p
-            data-center-note
-            className="flex items-center gap-1.5 text-[13px] text-muted-foreground"
-          >
-            <CenterMark />
-            {CENTER_ONLY_NOTE}
-          </p>
-        )}
-      </div>
-      {printout}
-    </div>
   )
 }
