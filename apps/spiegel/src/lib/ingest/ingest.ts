@@ -351,7 +351,7 @@ interface AdaptItem {
  * verloren. Liefert die Indizes der Stände, die in Quarantäne gingen.
  *
  * Mit `fill` und ohne Scheibe in diesem Zyklus füllt ein Block die Scheibe vom Ausdruck: der jüngste, der vor dem Druck
- * begann, ohne Druckzeit der jüngste überhaupt. Frühere Blöcke werden eigene Scheiben, wie ohne Ausdruck.
+ * begann, ohne Druckzeit der jüngste überhaupt; mit Druckzeit und ohne solchen Block keiner. Frühere Blöcke werden eigene Scheiben, wie ohne Ausdruck.
  */
 async function adaptKey(
   db: Db,
@@ -413,7 +413,9 @@ async function adaptKey(
           printedWallMs !== null &&
           startsBeforePrint(startOf(adapted[end.index].item.snapshot), printedWallMs)
       )
-      fillAt = (before.at(-1) ?? ends.at(-1))?.index
+      // ohne Block vor dem Druck (der passende Stand ging in Quarantäne) füllt keiner: ein späterer wäre nicht der des
+      // Ausdrucks
+      fillAt = (printedWallMs === null ? ends.at(-1) : before.at(-1))?.index
     }
   }
   let block = latest?.block ?? 0
@@ -545,7 +547,13 @@ export async function ingestBatch(
     if (open.length) {
       const evening = eveningOfStart(startOf(snapshot))
       for (const r of open) if (r.day !== evening && unfilled(r)) await close(r.id, "mismatch")
-      const matching = open.filter((r) => r.day === evening)
+      // eine Scheibe vom Ausdruck: Kein Stand dieses Abends begann vor dem Druck, also ist es nicht die Scheibe des
+      // Ausdrucks. Spiegel speichert nichts von ihr (SF-29: fünf Minuten Spielraum für die Uhren). Vor der Wahl des
+      // Auftrags, sonst schlösse ein durchgefallener älterer die passenden anderer Konten als vergeben
+      const printFails = (r: Request) => unfilled(r) && printedWall.has(r.id) && !passes.has(r.id)
+      for (const r of open)
+        if (r.day === evening && printFails(r)) await close(r.id, "printMismatch")
+      const matching = open.filter((r) => r.day === evening && !printFails(r))
       claim = owner ? matching.find((r) => r.userId === owner!.userId) : matching[0]
       for (const r of matching) if (r !== claim && unfilled(r)) await close(r.id, "taken")
       // eine Sportpassnummer, die ein anderes Konto eingetragen hat (auch wartend oder abgelehnt): Die Scheibe gehört
@@ -559,12 +567,6 @@ export async function ingestBatch(
           if (unfilled(claim)) await close(claim.id, "taken")
           claim = undefined
         }
-      }
-      // eine Scheibe vom Ausdruck: Kein Stand dieses Abends begann vor dem Druck, also ist es nicht die Scheibe des
-      // Ausdrucks. Spiegel speichert nichts von ihr (SF-29: fünf Minuten Spielraum für die Uhren)
-      if (claim && unfilled(claim) && printedWall.has(claim.id) && !passes.has(claim.id)) {
-        await close(claim.id, "printMismatch")
-        claim = undefined
       }
       if (!owner && claim) owner = { userId: claim.userId, pending: false }
     }

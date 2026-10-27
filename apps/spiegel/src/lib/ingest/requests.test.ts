@@ -387,9 +387,14 @@ describe("Scheibe vom Ausdruck", () => {
    * eine Scheibe vom Ausdruck des Schützen mit Auftrag, wie „Scheibe holen“ sie anlegt: mit einer Druckzeit (Wanduhr der
    * Anlage) ein erfundener Ausdruck daran, ohne (getippte ID) 12 Uhr des Tags
    */
-  async function pdfCard(scheibenId: number, day: string, printedWallMs: number | null) {
+  async function pdfCard(
+    scheibenId: number,
+    day: string,
+    printedWallMs: number | null,
+    userId = site.ownerId
+  ) {
     const saved = await writeEnteredCard(db, {
-      ownerId: site.ownerId,
+      ownerId: userId,
       origin: "pdf",
       disciplineId: site.disciplineId,
       startedAtMs:
@@ -415,7 +420,7 @@ describe("Scheibe vom Ausdruck", () => {
         saved.cardId
       )
     const r = await db.cardRequest.create({
-      data: { userId: site.ownerId, siteId: site.siteId, scheibenId, day, cardId: saved.cardId },
+      data: { userId, siteId: site.siteId, scheibenId, day, cardId: saved.cardId },
     })
     return { cardId: saved.cardId, requestId: r.id }
   }
@@ -519,6 +524,42 @@ describe("Scheibe vom Ausdruck", () => {
         [1, false],
       ])
     })
+  })
+
+  it("zwei Konten, der ältere Ausdruck passt nicht: er endet so, der passende bekommt die Scheibe", async () => {
+    const snapshots = scoring(71_013)
+    const day = eveningOf(snapshots[0])
+    const early = await pdfCard(71_013, day, wallStart(snapshots[0]) - 30 * MINUTE, other)
+    const fits = await pdfCard(71_013, day, lastShotWall(snapshots.at(-1)!) + 2 * MINUTE)
+    await ingest(snapshots)
+    expect((await statusOf(early.requestId)).status).toBe("printMismatch")
+    expect(await statusOf(fits.requestId)).toEqual({ status: "open", cardId: fits.cardId })
+    expect((await cardById(fits.cardId)).sourceId).toBe(site.sourceId)
+    expect((await cardById(early.cardId)).sourceId).toBeNull()
+  })
+
+  it("passt nur ein Stand, der nicht zu deuten ist, füllt ein späterer Block die Scheibe vom Ausdruck nicht", async () => {
+    // die Probe (vor dem Druck) ohne DisziplinID geht in Quarantäne, die Wertung begann erst nach dem Druck
+    const [probe, ...rest] = as(sent("SF-03"), "87654321", 71_014)
+    const data = {
+      ...probe.data,
+      scheiben: {
+        ...probe.data.scheiben,
+        rows: probe.data.scheiben.rows.map((row) => ({ ...row, DisziplinID: "" })),
+      },
+    }
+    const broken = shifted({ ...probe, data, checksum: computeChecksum(data) }, -20 * MINUTE, true)
+    const snapshots = [broken, ...rest]
+    const { cardId, requestId } = await pdfCard(
+      71_014,
+      eveningOf(snapshots[0]),
+      wallStart(snapshots[0]) + 10 * MINUTE
+    )
+    await ingestBatch(db, target(), snapshots, {
+      nowMs: Date.parse(snapshots[0].observedAt) + 10 * MINUTE,
+    })
+    expect(await cardById(cardId)).toMatchObject({ origin: "pdf", sourceId: null })
+    expect((await statusOf(requestId)).status).toBe("open")
   })
 
   it("getippte ID ohne Ausdruck: gefüllt; ein Stand eines anderen Abends schließt den gefüllten Auftrag nicht", async () => {
