@@ -34,6 +34,7 @@ export const REQUEST_STATUS_TEXT: Readonly<Record<CardRequestStatus, string>> = 
   taken: "gehört zu einem anderen Konto",
   withdrawn: "zurückgezogen",
   expired: "keine Antwort von der Anlage",
+  printMismatch: "passt nicht zum Ausdruck",
 }
 
 /** der Zustand eines Auftrags in Worten; offen mit Scheibe: Sie ist geholt, weitere Schüsse kommen noch nach */

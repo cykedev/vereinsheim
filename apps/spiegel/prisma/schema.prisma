@@ -47,7 +47,8 @@ enum UserRole {
 }
 
 // Auftrag per ID (`CardRequest`): offen, geholt, nicht in der Ablage, verdeckt oder gesperrt, an dem Abend nicht
-// gefunden, gehört einem anderen Konto, zurückgezogen, ohne Antwort der Anlage in der Frist
+// gefunden, gehört einem anderen Konto, zurückgezogen, ohne Antwort der Anlage in der Frist, passt nicht zum Ausdruck
+// (begann nach dem Druck)
 enum CardRequestStatus {
   open
   done
@@ -57,6 +58,7 @@ enum CardRequestStatus {
   taken
   withdrawn
   expired
+  printMismatch
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -193,7 +195,8 @@ model CardRequest {
   // der Abend der Scheibe, wie der Schütze ihn nennt (`YYYY-MM-DD`, vor 4 Uhr der Vortag)
   day        String
   status     CardRequestStatus @default(open)
-  // die geholte Scheibe; null, solange keine da ist. Offen mit Scheibe: Sie wird noch ergänzt, bis sie endgültig ist
+  // die Scheibe des Auftrags: beim Holen angelegt (vom Ausdruck, bis die Brücke sie füllt) oder bei älteren Aufträgen
+  // die geholte; null, solange keine da ist. Offen und gefüllt: Sie wird noch ergänzt, bis sie endgültig ist
   cardId     String?
   card       Card?             @relation(fields: [cardId], references: [id], onDelete: SetNull)
   createdAt  DateTime          @default(now()) @db.Timestamptz(3)
@@ -201,8 +204,10 @@ model CardRequest {
 
   // Zustand der Brücke und Einlesen: offene der Anlage je ScheibenID
   @@index([siteId, status, scheibenId])
-  // Profil: die eigenen der letzten Wochen
+  // Holen: die eigenen Aufträge eines Kontos (Grenze der offenen, ältere Aufträge auf „Scheibe holen“)
   @@index([userId, createdAt])
+  // Seite einer Scheibe und Übersichten: der Auftrag an einer Scheibe, `SET NULL` beim Löschen
+  @@index([cardId])
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
