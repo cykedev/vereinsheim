@@ -2171,7 +2171,7 @@ async function detailLevels(page: Page, href: string) {
     `Nur Gesamtergebnis: Zeichen der Mitte mit „nur die Mitte der Schüsse, keine Streuung“${total ? "" : ` (${NOT_SHOWN})`}`,
     !!total &&
       total.reason.startsWith("nur Gesamtergebnis") &&
-      total.centerNote === "nur die Mitte der Schüsse, keine Streuung",
+      total.centerNote.endsWith("nur die Mitte der Schüsse, keine Streuung"),
     total ?? states.map((s) => s.level)
   )
   const waiting = states.find((s) => s.level === "none")
