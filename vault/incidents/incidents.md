@@ -33,3 +33,4 @@ MOC-Hub der REMEMBER-Tier-Notes ([[adr-017]]). Normale Notes, live editiert (kei
 - [[ruleset-lock-granularity]] — ruleset-lock-granularity
 - [[stechschuss-modell-flip]] — stechschuss-modell-flip
 - [[loading-boundary-hidden-copy]] — mit `loading.tsx` bleibt im Hintergrund-Tab eine versteckte Kopie der Seite (doppelte Ids)
+- [[symlink-loop-hangs-turbopack-build]] — ein Symlink auf den eigenen Ordner lässt `next build` von Spiegel endlos rechnen
