@@ -157,3 +157,20 @@ describe("SeriesStrip", () => {
     expect(html).toMatch(/<circle[^>]*fill="none"[^>]*stroke-dasharray="2 2"/)
   })
 })
+
+describe("Serien aus Schüssen ohne Lage", () => {
+  it("je Serie der leise Platzhalter, wie bei Serien aus Summen; Serien mit Lage zeichnen ihre Treffer", () => {
+    const blind = CARD.map((s) => (s.series === 2 ? { ...s, xUm: null, yUm: null } : s))
+    const html = renderToStaticMarkup(
+      createElement(SeriesStrip, { target: LP_10M, shots: blind, state: initialViewState() })
+    )
+    const tile = (n: number) => {
+      const start = html.indexOf(`data-series="${n}"`)
+      return html.slice(start, html.indexOf("</button>", start))
+    }
+    expect(tile(2)).toContain('data-mini-placeholder="true"')
+    expect(tile(2)).not.toContain("<circle cx=")
+    expect(tile(1)).not.toContain("data-mini-placeholder")
+    expect(tile(1)).toContain("<circle cx=")
+  })
+})

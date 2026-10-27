@@ -166,7 +166,7 @@ export interface PeriodModel {
   reasons: Record<string, string>
   /** Herkunft der Scheiben, die einen Rekord halten, nur wenn sie nicht gemessen sind */
   recordProvenance: Record<string, CardProvenance>
-  /** Trefferlage als Summe der Scheiben im Zeitraum ohne Lagen je Schuss (Kreuz im Platzhalter der Ablesung) */
+  /** Trefferlage als Summe der Scheiben im Zeitraum ohne Lagen je Schuss (Zeichen der Mitte im Platzhalter der Ablesung) */
   centers: Record<string, { xUm: number; yUm: number }>
   /**
    * gewählte oder, ohne Wahl, die neueste Scheibe mit Ø je Schuss (`newest`), mit ihrem Punkt im Verlauf; null ohne

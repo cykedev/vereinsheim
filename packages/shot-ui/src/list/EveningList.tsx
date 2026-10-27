@@ -239,7 +239,7 @@ export function EveningList({
                                 }}
                                 className="block cursor-pointer rounded-full focus-visible:outline-2 focus-visible:outline-ring"
                               >
-                                {/* ohne Lagen je Schuss die Scheibe leise, mit Trefferlage als Summe das Kreuz */}
+                                {/* ohne Lagen je Schuss die Scheibe leise, mit Trefferlage als Summe das Zeichen der Mitte */}
                                 <MiniTarget
                                   target={target}
                                   shots={placed}

@@ -1,5 +1,6 @@
 import type { CardSums } from "@vereinsheim/shot-core/metrics"
 import type { CardDetail } from "@vereinsheim/shot-core/projection"
+import { LP_10M } from "@vereinsheim/shot-core/targets"
 import { createElement as h } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
@@ -53,7 +54,9 @@ const both = (
   const result = h(SummaryResult, { card, detail: d, level, scoring, onHelp: () => {} })
   return {
     result: renderToStaticMarkup(result),
-    box: renderToStaticMarkup(h(CardSummary, { result, level, card, detail: d, scoring })),
+    box: renderToStaticMarkup(
+      h(CardSummary, { target: LP_10M, result, level, card, detail: d, scoring })
+    ),
   }
 }
 
@@ -76,7 +79,7 @@ describe("Seite einer Scheibe ohne Einzelschüsse", () => {
     expect(text(result)).toContain("nur Serien-Summen · ohne Zehntel")
   })
 
-  it("Gesamtergebnis mit Trefferlage: Grund, ein Satz ohne Lage und der Hinweis zum Kreuz", () => {
+  it("Gesamtergebnis mit Trefferlage: Grund, ein Satz ohne Lage und der Hinweis zum Zeichen der Mitte", () => {
     const d = detail({
       rings: "total",
       tenths: null,
@@ -103,6 +106,7 @@ describe("Seite einer Scheibe ohne Einzelschüsse", () => {
     const card = { sums: undefined, provenance: "printout" as const }
     const box = renderToStaticMarkup(
       h(CardSummary, {
+        target: LP_10M,
         result: null,
         level: "none",
         card,

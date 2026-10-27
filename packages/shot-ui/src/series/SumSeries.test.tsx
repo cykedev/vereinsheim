@@ -1,3 +1,4 @@
+import { LP_10M } from "@vereinsheim/shot-core/targets"
 import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
@@ -11,14 +12,16 @@ const SERIES = [
   { series: 4, shots: 8, rings: 70, decimalTenths: 760 },
 ]
 const render = (scoring: "decimal" | "rings") =>
-  renderToStaticMarkup(createElement(SumSeries, { series: SERIES, scoring }))
+  renderToStaticMarkup(createElement(SumSeries, { target: LP_10M, series: SERIES, scoring }))
 
 describe("Serien aus Summen", () => {
-  it("je Serie eine Kachel ohne kleine Scheibe und ohne Schalter", () => {
+  it("je Serie eine Kachel mit dem leisen Platzhalter als kleiner Scheibe, ohne Schalter und ohne Mitte", () => {
     const html = render("decimal")
     expect(html).toMatch(/^<div data-sum-series="true"/)
     expect(html.match(/data-series="/g)).toHaveLength(4)
-    expect(html).not.toContain("<svg")
+    expect(html.match(/<svg [^>]*data-mini-placeholder="true"/g)).toHaveLength(4)
+    expect(html).not.toContain("<circle cx=")
+    expect(html).not.toContain("data-summary-center")
     expect(html).not.toContain("<button")
   })
 

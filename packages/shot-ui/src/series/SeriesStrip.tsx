@@ -122,10 +122,12 @@ export function SeriesStrip({
               )}
             >
               {/* blass tritt nur das Bild zurück; die Schrift behält ihren Kontrast */}
+              {/* ohne Lage der Serie der leise Platzhalter, wie bei Serien aus Summen */}
               <MiniTarget
                 target={target}
                 view={view}
                 shots={block.indices.map((i) => shots[i]).filter(isDrawn)}
+                placeholder={!block.indices.some((i) => isDrawn(shots[i]))}
                 probeCorner={
                   block.indices.length > 0 && block.indices.every((i) => isProbeShot(shots[i]))
                 }

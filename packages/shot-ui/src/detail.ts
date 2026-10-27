@@ -37,6 +37,7 @@ export const quietProvenance = (provenance?: CardProvenance | null): string | nu
 export type DetailReason =
   | "waiting"
   | "noValues"
+  | "noShot"
   | "missingValue"
   | "noPositions"
   | "fewPositions"
@@ -50,6 +51,7 @@ export type DetailReason =
 export const DETAIL_REASONS: readonly DetailReason[] = [
   "waiting",
   "noValues",
+  "noShot",
   "missingValue",
   "noPositions",
   "fewPositions",
@@ -64,6 +66,7 @@ export const DETAIL_REASONS: readonly DetailReason[] = [
 export const REASON_TEXT: Readonly<Record<DetailReason, string>> = {
   waiting: "wartet auf die Anlage",
   noValues: "ohne Werte",
+  noShot: "noch kein Schuss",
   missingValue: "nicht jeder Schuss mit Wert",
   noPositions: "ohne Lage je Schuss",
   fewPositions: "zu wenige Schüsse mit Lage",
@@ -75,7 +78,10 @@ export const REASON_TEXT: Readonly<Record<DetailReason, string>> = {
   noValue: "ohne Wert",
 }
 
-/** was eine Scheibe für den Grund mitbringt: ihre Grundlage, die Schüsse wie am Ausdruck und ihre Herkunft */
+/**
+ * was eine Scheibe für den Grund mitbringt: ihre Grundlage, die Schüsse wie am Ausdruck und ihre Herkunft (ohne
+ * Angabe gemessen)
+ */
 export interface DetailInput {
   detail?: CardDetail
   shots: number
@@ -86,8 +92,9 @@ const fromSums = (source: CardDetail["rings"]) => source === "series" || source 
 
 /**
  * der Grund, warum eine Scheibe für eine Kennzahl ohne Wert ist, nach dem, was die Kennzahl braucht (`needs`,
- * `minShots`): ohne Grundlage (Treffsicher, alte Projektion) „ohne Wert“, ohne jedes Ergebnis die Werte, sonst die
- * fehlende Angabe; ein Ergebnis aus Summen trägt keine Kennzahl über Einzelschüsse
+ * `minShots`): ohne Grundlage (Treffsicher, alte Projektion) „ohne Wert“, ohne jedes Ergebnis die Werte (vom Ausdruck
+ * wartet sie auf die Anlage, eingetragen fehlt die Eingabe, gemessen fehlt der erste Schuss wie auf ihrer Seite), sonst
+ * die fehlende Angabe; ein Ergebnis aus Summen trägt keine Kennzahl über Einzelschüsse
  */
 export function detailReason(
   input: DetailInput,
@@ -97,7 +104,8 @@ export function detailReason(
   if (!detail) return "noValue"
   if (detail.rings === null && detail.tenths === null) {
     if (input.shots > 0) return "missingValue"
-    return input.provenance === "printout" ? "waiting" : "noValues"
+    if (input.provenance === "printout") return "waiting"
+    return input.provenance === "entered" ? "noValues" : "noShot"
   }
   if (metric.needs === "position" || metric.needs === "distance") {
     if (detail.positions === 0) return "noPositions"
@@ -146,7 +154,7 @@ export function summaryReasons(detail: CardDetail, level: "series" | "total"): s
   ]
 }
 
-/** die Trefferlage als Summe einer Scheibe ohne Lagen je Schuss, nur Mitte (für das Kreuz); sonst null */
+/** die Trefferlage als Summe einer Scheibe ohne Lagen je Schuss, nur Mitte (für das Zeichen der Mitte, `MpiMark`); sonst null */
 export function summaryCenterOf(
   detail: CardDetail | undefined
 ): { xUm: number; yUm: number } | null {
@@ -154,7 +162,7 @@ export function summaryCenterOf(
   return center?.from === "summary" ? { xUm: center.xUm, yUm: center.yUm } : null
 }
 
-/** neben dem goldenen Kreuz: die Trefferlage als Summe zeigt die Mitte, nicht wie die Schüsse lagen */
+/** neben dem Zeichen der Mitte: die Trefferlage als Summe zeigt die Mitte, nicht wie die Schüsse lagen */
 export const CENTER_ONLY_NOTE = "nur die Mitte der Schüsse, keine Streuung"
 
 /** ein Satz, was einer Scheibe ohne Einzelschüsse fehlt; mit Trefferlage als Summe fehlt die Lage nicht */

@@ -10,6 +10,7 @@ import {
   type Scoring,
 } from "@vereinsheim/shot-core/metrics"
 import type { CardDetail } from "@vereinsheim/shot-core/projection"
+import type { TargetImage } from "@vereinsheim/shot-core/targets"
 import { cn } from "@vereinsheim/lib/utils"
 import type { ReactNode } from "react"
 
@@ -25,6 +26,7 @@ import {
 import { formatValue } from "../format"
 import { HelpButton } from "../help/HelpButton"
 import { SumSeries } from "../series/SumSeries"
+import { MpiMark } from "../target/MpiMark"
 
 /** was die Seite ohne Einzelschüsse von der Scheibe braucht: ihre Summen und ihre Herkunft */
 type SummaryCard = Pick<PeriodCard, "sums"> & { provenance?: CardProvenance }
@@ -112,16 +114,18 @@ export function SummaryResult({
   )
 }
 
-/** kleines goldenes Kreuz wie auf der Scheibe, für die Zeile neben der Trefferlage als Summe */
-function GoldCross() {
+/** das Zeichen des Schwerpunkts klein, für die Zeile neben der Trefferlage als Summe (wie auf der Scheibe) */
+function CenterMark() {
   return (
-    <svg viewBox="-6 -6 12 12" aria-hidden="true" className="size-3 shrink-0">
-      <path d="M-5 0H5M0-5V5" stroke="var(--gold)" strokeWidth={2} strokeLinecap="round" />
+    <svg viewBox="-1.4 -1.4 2.8 2.8" aria-hidden="true" className="size-3.5 shrink-0">
+      <MpiMark x={0} y={0} radius={1} />
     </svg>
   )
 }
 
 export interface CardSummaryProps {
+  /** das Scheibenbild der Disziplin (Platzhalter der Serien) */
+  target: TargetImage
   /** das Ergebnis (`SummaryResult`): ab 768 px oben in der Box, auf dem Telefon steht es im Kopf */
   result: ReactNode
   level: Exclude<DetailLevel, "shots">
@@ -135,10 +139,11 @@ export interface CardSummaryProps {
 
 /**
  * Die Box neben der Scheibe ohne Einzelschüsse (`CardPage` mit `empty`): oben das Ergebnis, bei Serien-Summen die
- * Serien als Kacheln, dann ein Satz, was fehlt, bei einer Trefferlage als Summe der Hinweis zum goldenen Kreuz. Ohne
+ * Serien als Kacheln, dann ein Satz, was fehlt, bei einer Trefferlage als Summe der Hinweis zum Zeichen der Mitte. Ohne
  * Werte statt dessen ein Satz, wann sie kommen.
  */
 export function CardSummary({
+  target,
   result,
   level,
   card,
@@ -156,7 +161,9 @@ export function CardSummary({
       )}
     >
       <div className="max-md:hidden">{result}</div>
-      {level === "series" && card.sums && <SumSeries series={card.sums.series} scoring={scoring} />}
+      {level === "series" && card.sums && (
+        <SumSeries target={target} series={card.sums.series} scoring={scoring} />
+      )}
       <div className="grid gap-1.5">
         <p data-summary-missing className="text-[13px] text-muted-foreground">
           {level === "none" ? emptyText(card.provenance) : missingSentence(detail)}
@@ -166,7 +173,7 @@ export function CardSummary({
             data-center-note
             className="flex items-center gap-1.5 text-[13px] text-muted-foreground"
           >
-            <GoldCross />
+            <CenterMark />
             {CENTER_ONLY_NOTE}
           </p>
         )}

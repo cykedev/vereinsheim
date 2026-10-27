@@ -44,7 +44,7 @@ export interface TargetViewProps {
    * vom alten herüberzugleiten. Ohne Angabe gilt das Scheibenbild als Karte.
    */
   viewKey?: string
-  /** Trefferlage als Summe: goldenes Kreuz, nur die Mitte, keine Streuung */
+  /** Trefferlage als Summe: das Zeichen des Schwerpunkts an der Mitte (`MpiMark`), nur die Mitte, keine Streuung */
   summaryCenter?: { xUm: number; yUm: number } | null
   className?: string
 }
@@ -104,13 +104,13 @@ export function TargetView({
 
   // ein Training nur aus Probe heißt so (eine Probe neben Wertung gibt es nicht)
   const training = shots.length > 0 && shots.every(isProbeShot)
-  // ohne Schüsse mit Trefferlage als Summe nur das Kreuz, keine „0 Wertungsschüsse“
+  // ohne Schüsse mit Trefferlage als Summe nur die Mitte, keine „0 Wertungsschüsse“
   const label =
     shots.length === 0 && summaryCenter
-      ? `${target.label}: Mitte der Schüsse als Kreuz`
+      ? `${target.label}: Mitte der Schüsse`
       : `${target.label}: ${shots.length} ${
           training ? "Probeschüsse als Training" : "Wertungsschüsse"
-        }${selectionText(state)}${summaryCenter ? ", Mitte der Schüsse als Kreuz" : ""}`
+        }${selectionText(state)}${summaryCenter ? ", Mitte der Schüsse" : ""}`
 
   // die Scheibe zeigt das Probe-Eck, wenn alle Schüsse der Auswahl aus der Probe stammen (Training nur aus Probe)
   const shown = shots.filter((_, i) => selectedAt(i))
@@ -291,30 +291,13 @@ export function TargetView({
           </g>
         )}
         {summaryCenter && (
-          // Trefferlage als Summe: ein goldenes Kreuz mit hellem Saum, so groß wie der Schwerpunkt auf dem Bildschirm
-          <g data-summary-center aria-hidden="true">
-            {[
-              `M${mm(summaryCenter.xUm) - sizes.mpiRadius * 1.5} ${-mm(summaryCenter.yUm)}h${sizes.mpiRadius * 3}`,
-              `M${mm(summaryCenter.xUm)} ${-mm(summaryCenter.yUm) - sizes.mpiRadius * 1.5}v${sizes.mpiRadius * 3}`,
-            ].map((d) => (
-              <g key={d}>
-                <path
-                  d={d}
-                  stroke="var(--overlay-halo)"
-                  strokeWidth={5}
-                  strokeLinecap="round"
-                  {...HAIR}
-                />
-                <path
-                  d={d}
-                  stroke="var(--gold)"
-                  strokeWidth={2.5}
-                  strokeLinecap="round"
-                  {...HAIR}
-                />
-              </g>
-            ))}
-          </g>
+          // Trefferlage als Summe: das Zeichen des Schwerpunkts an der Mitte, wie auf einer gemessenen Scheibe
+          <MpiMark
+            data-summary-center="true"
+            x={mm(summaryCenter.xUm)}
+            y={-mm(summaryCenter.yUm)}
+            radius={sizes.mpiRadius}
+          />
         )}
         {center && (
           // Schwerpunkt ganz oben: weiße Scheibe, zwei schwarze Viertel, Kontur mit hellem Saum

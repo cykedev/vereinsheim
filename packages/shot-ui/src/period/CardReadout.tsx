@@ -40,7 +40,7 @@ export interface CardReadoutProps {
   onHelp?: (id: string) => void
   /** warum die Scheibe keinen Wert der Kennzahl hat (`PeriodModel.reasons`); ohne „ohne Wert“ */
   reason?: string | null
-  /** Trefferlage als Summe einer Scheibe ohne Lagen je Schuss (`PeriodModel.centers`): Kreuz im Platzhalter */
+  /** Trefferlage als Summe einer Scheibe ohne Lagen je Schuss (`PeriodModel.centers`): Zeichen der Mitte im Platzhalter */
   center?: { xUm: number; yUm: number } | null
   className?: string
 }
@@ -144,7 +144,7 @@ export function CardReadout({
             className="block aspect-square w-full"
           />
         ) : (
-          // ohne Lagen je Schuss die Scheibe leise, mit Trefferlage als Summe das Kreuz
+          // ohne Lagen je Schuss die Scheibe leise, mit Trefferlage als Summe das Zeichen der Mitte
           <MiniTarget target={target} shots={marks} placeholder={!marks.length} center={center} />
         )}
       </div>

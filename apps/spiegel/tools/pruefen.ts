@@ -2008,7 +2008,10 @@ interface LevelState {
   center: boolean
   centerNote: string
   sumSeries: boolean
-  sumSeriesSvg: number
+  /** Kacheln der Serien (aus Summen oder Schüssen), davon mit Platzhalter, davon mit Zeichen der Mitte */
+  seriesTiles: number
+  seriesPlaceholders: number
+  seriesCenters: number
   result: string
   meta: string
   shotTable: boolean
@@ -2083,7 +2086,7 @@ async function detailLevels(page: Page, href: string) {
   }
 
   check(
-    `Liste: der Platzhalter einer Scheibe mit Trefferlage als Summe trägt das Kreuz${crossSeen.some((n) => n > 0) ? "" : ` (${NOT_SHOWN})`}`,
+    `Liste: der Platzhalter einer Scheibe mit Trefferlage als Summe trägt das Zeichen der Mitte${crossSeen.some((n) => n > 0) ? "" : ` (${NOT_SHOWN})`}`,
     crossSeen.some((n) => n > 0),
     crossSeen
   )
@@ -2120,7 +2123,9 @@ async function detailLevels(page: Page, href: string) {
         center: !!$("[data-summary-center]"),
         centerNote: txt($("[data-center-note]")),
         sumSeries: !!$("[data-sum-series]"),
-        sumSeriesSvg: $$("[data-sum-series] svg").length,
+        seriesTiles: $$("[data-series]").length,
+        seriesPlaceholders: $$("[data-series] [data-mini-placeholder]").length,
+        seriesCenters: $$("[data-series] [data-summary-center]").length,
         result: txt($$("[data-result]").find((el) => visible(el))),
         meta: txt($("[data-card-header] p")),
         shotTable: !!$("#shot-table"),
@@ -2131,12 +2136,29 @@ async function detailLevels(page: Page, href: string) {
   }
   const series = states.filter((s) => s.level === "series")
   check(
-    `Seite aus Serien-Summen: Kacheln ohne kleine Scheiben, ein Satz, was fehlt${series.length ? "" : ` (${NOT_SHOWN})`}`,
+    `Seite aus Serien-Summen: je Serie der leise Platzhalter ohne Mitte, ein Satz, was fehlt${series.length ? "" : ` (${NOT_SHOWN})`}`,
     series.length > 0 &&
       series.every(
-        (s) => s.sumSeries && s.sumSeriesSvg === 0 && s.missing.endsWith("Einzelschüsse.")
+        (s) =>
+          s.sumSeries &&
+          s.seriesTiles > 0 &&
+          s.seriesPlaceholders === s.seriesTiles &&
+          s.seriesCenters === 0 &&
+          s.missing.endsWith("Einzelschüsse.")
       ),
-    series.map(({ reason, missing, sumSeriesSvg }) => ({ reason, missing, sumSeriesSvg }))
+    series.map(({ reason, missing, seriesTiles, seriesPlaceholders }) => ({
+      reason,
+      missing,
+      seriesTiles,
+      seriesPlaceholders,
+    }))
+  )
+  // Schüsse vom Ausdruck ohne Lage: die Serien zeigen denselben Platzhalter
+  const blind = states.find((s) => s.shotTable && /· vom Ausdruck ·/.test(s.meta))
+  check(
+    `Serien aus Schüssen ohne Lage: je Serie der Platzhalter${blind ? "" : ` (${NOT_SHOWN})`}`,
+    !!blind && blind.seriesTiles > 0 && blind.seriesPlaceholders === blind.seriesTiles,
+    blind ?? states.map((s) => s.meta)
   )
   const tenthless = series.find((s) => s.reason.includes("ohne Zehntel"))
   check(
@@ -2146,7 +2168,7 @@ async function detailLevels(page: Page, href: string) {
   )
   const total = states.find((s) => s.level === "total" && s.center)
   check(
-    `Nur Gesamtergebnis: goldenes Kreuz mit „nur die Mitte der Schüsse, keine Streuung“${total ? "" : ` (${NOT_SHOWN})`}`,
+    `Nur Gesamtergebnis: Zeichen der Mitte mit „nur die Mitte der Schüsse, keine Streuung“${total ? "" : ` (${NOT_SHOWN})`}`,
     !!total &&
       total.reason.startsWith("nur Gesamtergebnis") &&
       total.centerNote === "nur die Mitte der Schüsse, keine Streuung",

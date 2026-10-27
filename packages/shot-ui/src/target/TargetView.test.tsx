@@ -299,14 +299,17 @@ describe("TargetView: Trefferlage als Summe", () => {
       })
     )
 
-  it("ein goldenes Kreuz an der Mitte, im Namen der Scheibe genannt", () => {
+  it("das Zeichen des Schwerpunkts an der Mitte, im Namen der Scheibe genannt", () => {
     const html = empty({ xUm: 1400, yUm: -900 })
     expect(html).toContain('data-summary-center="true"')
-    expect(html).toMatch(/stroke="var\(--gold\)"/)
-    expect(html).toMatch(/aria-label="[^"]*Mitte der Schüsse als Kreuz"/)
+    expect(html).toMatch(
+      /<g data-summary-center="true" transform="translate\(1\.4 0\.9\) scale\([\d.]+\)"><title>Schwerpunkt<\/title>/
+    )
+    expect(html).not.toContain("var(--gold)")
+    expect(html).toMatch(/aria-label="[^"]*: Mitte der Schüsse"/)
   })
 
-  it("ohne Trefferlage kein Kreuz", () => {
+  it("ohne Trefferlage kein Zeichen der Mitte", () => {
     expect(empty()).not.toContain("data-summary-center")
     expect(render()).not.toContain("data-summary-center")
   })

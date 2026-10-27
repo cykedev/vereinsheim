@@ -139,7 +139,7 @@ describe("Seite einer Scheibe je Detailtiefe", () => {
     expect(meta(html)).toContain("Vereinsheim Nord")
   })
 
-  it("Gesamtergebnis mit Trefferlage aus Treffsicher: goldenes Kreuz, eingetragen", () => {
+  it("Gesamtergebnis mit Trefferlage aus Treffsicher: Zeichen der Mitte, eingetragen", () => {
     const html = render(OWN, {
       ...entered,
       sums: {

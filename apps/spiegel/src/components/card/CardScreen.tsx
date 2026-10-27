@@ -399,6 +399,7 @@ export function CardScreen({
       <NoShots />
     ) : (
       <CardSummary
+        target={target}
         result={summary}
         level={level}
         card={card}

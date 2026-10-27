@@ -226,7 +226,7 @@ Form; auf dem Telefon Offen, Abend, Form untereinander.
 - **Familie in der App:** ohne Angabe die der neuesten Scheibe; die Navigation hängt die zuletzt gewählte an.
 - **Herkunft und Gründe in der Zeile:** Unter der Art steht leise „eingetragen“ oder „vom Ausdruck“, nie „gemessen“.
   Jede „–“ trägt ihren Grund als Tooltip und für Screenreader („wartet auf die Anlage“, „ohne Zehntel“, „keine Scheibe
-  davor“); der Name des Links sagt „ohne Ergebnis (wartet auf die Anlage)“. Gründe und Herkunft stehen im Modell nur,
+  davor“, bei einer Scheibe der Brücke ohne Schuss „noch kein Schuss“ wie auf ihrer Seite); der Name des Links sagt „ohne Ergebnis (wartet auf die Anlage)“. Gründe und Herkunft stehen im Modell nur,
   wenn sie etwas sagen.
 - **Barrierefrei:** Jede Zeile nennt ihre Werte mit Bedeutung als Namen des Links für Screenreader. Den Kopf der Seite
   zeichnet `ListHeader`, die Abende sind Überschriften zweiter Ebene.
@@ -272,8 +272,8 @@ Die Liste markiert, wohin man kommt, wie der Fortschritt seine Wahl (`bg-accent-
   Sa 26.09.2026 · 10:30“, „Training · eingetragen · Vereinsheim Nord · …“, `cardMeta`). Die geteilte Seite nennt die
   Herkunft, nie den Ort.
 - **Je Detailtiefe ein Gerüst** (`detailLevel`): Mit Schüssen die volle Seite. Nur Serien-Summen: große Zahl, Schusszahl
-  und Ø je Schuss, Grund („nur Serien-Summen“, „ohne Zehntel“), Serien als Kacheln ohne kleine Scheiben, ein Satz, was
-  fehlt. Nur Gesamtergebnis: große Zahl mit Grund, eine Trefferlage als Summe als goldenes Kreuz („nur die Mitte der
+  und Ø je Schuss, Grund („nur Serien-Summen“, „ohne Zehntel“), Serien als Kacheln mit dem leisen Platzhalter als kleiner Scheibe, ein Satz, was
+  fehlt. Nur Gesamtergebnis: große Zahl mit Grund, eine Trefferlage als Summe als Zeichen des Schwerpunkts („nur die Mitte der
   Schüsse, keine Streuung“). Ohne Werte: „–“ mit „wartet auf die Anlage“ (vom Ausdruck) oder „ohne Werte“, Platz für
   den Ausdruck. Eine Scheibe der Brücke ohne Schuss zeigt weiter „Noch kein Schuss“. Probe neben Summen der Wertung
   zählt nicht: Die Seite zeigt die Summen, die Art bleibt Training mit Kreis.

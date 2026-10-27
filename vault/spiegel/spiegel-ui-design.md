@@ -151,15 +151,18 @@ Minimal und scharf, nichts Klobiges, auch stark vergrößert.
 - **Serien als kleine Scheiben** bei den Treffern, über der Schusstabelle: je Serie eine kleine Scheibe, alle im **gleichen Ausschnitt um die Mitte**, damit Lage und Streuung der Serien vergleichbar sind. Darunter das Serienergebnis in der gewählten Wertung (I1), bei der laufenden Serie „7 von 10 Schuss“. Die Kacheln (60–104 px) verteilen sich gleichmäßig auf die Zeilen, keine steht allein.
 - **Kleine Scheiben für sich** (Start, Liste, Ablesung im Fortschritt, Offen): Die Mitte der Scheibe steht in der Mitte der Kachel, und der Spiegel ist überall gleich groß: Die halbe Breite ist der Radius des Spiegels mal 1,6, bei der Luftpistole bis Ring 5, beim Luftgewehr fast die ganze Scheibe. Nur ein Treffer weiter außen vergrößert den Ausschnitt, weiter um die Mitte (weitester Treffer in x oder y plus halbes Kaliber, 12 % Luft, höchstens Ring 1 plus halbes Kaliber). So stehen die Spiegel nebeneinander auf einer Linie, und eine Scheibe sieht auf Start, in der Liste und im Fortschritt gleich aus. Ein Ausschnitt um die Gruppe je Kachel ließe den Spiegel von Kachel zu Kachel springen und eine enge Gruppe ganz schwarz erscheinen. `MiniTarget` rechnet ihn ohne `view` selbst (`miniView`); nur die Serien geben ihren gemeinsamen Ausschnitt mit.
 - **Ablesung:** kompakt in einer Zeile, der Wert groß in Schriftfarbe, davor ein Punkt in der Ringwert-Farbe, daneben die andere Wertung, Teiler und Abstand zur Mitte; kein x/y, Abstand und Teiler sagen es lesbarer. Gold und Türkis hätten als Schrift auf hellem Grund zu wenig Kontrast. Teiler und Abstand wie im Fachkern: gemessen vor der Lage, auch ohne Lage; ein verdächtiger Platzhalter ohne beides (SF-15).
-- **Trefferlage als Summe** (eine Scheibe ohne Lage je Schuss, etwa aus Treffsicher): ein goldenes Kreuz (Token `gold`,
-  heller Saum), so groß wie der Schwerpunkt auf dem Schirm. Es zeigt nur die Mitte der Schüsse, keine Streuung; der
-  Kasten daneben sagt das in einer Zeile mit kleinem Kreuz. Kein Schwerpunkt-Zeichen: Das gehört zu Schüssen mit Lage.
+- **Trefferlage als Summe** (eine Scheibe ohne Lage je Schuss, etwa aus Treffsicher): das Zeichen des Schwerpunkts
+  (`MpiMark`, geviertelter Kreis) an der Mitte, in derselben Größe wie auf einer gemessenen Scheibe. Es zeigt nur die
+  Mitte der Schüsse, keine Streuung; der Kasten daneben sagt das in einer Zeile mit dem kleinen Zeichen. Nur auf der
+  großen Scheibe und im Platzhalter der Übersichten, nie je Serie. Ein eigenes Zeichen (ein goldenes Kreuz) hat der User
+  am 27. Oktober 2026 verworfen: Die Mitte sieht überall gleich aus.
 - **Platzhalter der kleinen Scheibe:** Eine Scheibe ohne Lagen je Schuss zeigt in Liste, Start und Ablesung des
   Fortschritts die Scheibe der Disziplin leise ohne Treffer, gleich groß wie eine echte kleine Scheibe, statt eines
-  leeren Platzes; mit Trefferlage als Summe trägt sie das goldene Kreuz. Keine Symbole je Herkunft: Die Herkunft steht
+  leeren Platzes; mit Trefferlage als Summe trägt sie das Zeichen des Schwerpunkts. Keine Symbole je Herkunft: Die Herkunft steht
   als Wort daneben.
-- **Serien aus Summen** stehen als Kacheln im Raster der kleinen Scheiben, aber ohne Scheibe und ohne Wahl
-  (`SumSeries`): Ohne Schüsse gibt es nichts zu zeigen und nichts auszuwählen. Fehlt der Wert in der gewählten Wertung,
+- **Serien aus Summen** stehen als Kacheln wie die Serien aus Schüssen, die kleine Scheibe als leiser Platzhalter, ohne
+  Wahl (`SumSeries`): Ohne Schüsse gibt es nichts zu zeigen und nichts auszuwählen. Serien aus Schüssen ohne Lage zeigen
+  denselben Platzhalter, so sieht der Bereich „Serien“ in jeder Detailtiefe gleich aus. Fehlt der Wert in der gewählten Wertung,
   steht „–“ mit Grund.
 - **„–“ mit Grund in der Liste:** Jede fehlende Zahl der Scheiben-Liste trägt ihren Grund als Tooltip und für
   Screenreader (`Dash`), ebenso in der Liste des Fortschritts und in der Ablesung.

@@ -85,7 +85,7 @@ export interface ListRow {
   /** warum eine Zahl fehlt; nur, wenn eine fehlt */
   reasons?: RowReasons
   /**
-   * Trefferlage als Summe einer Scheibe ohne Lagen je Schuss (Kreuz im Platzhalter der kleinen Scheibe); nur dann, sonst
+   * Trefferlage als Summe einer Scheibe ohne Lagen je Schuss (Zeichen der Mitte im Platzhalter der kleinen Scheibe); nur dann, sonst
    * fehlt das Feld
    */
   center?: { xUm: number; yUm: number }

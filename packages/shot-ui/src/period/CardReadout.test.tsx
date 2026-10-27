@@ -81,7 +81,7 @@ describe("Ablesung einer Scheibe", () => {
     expect(render({ point: { ...point, band: null } })).not.toContain("Formband")
   })
 
-  it("ohne Lage der Platzhalter (mit Trefferlage als Summe das Kreuz); während die Lagen laden, ein leerer Platz", () => {
+  it("ohne Lage der Platzhalter (mit Trefferlage als Summe das Zeichen der Mitte); während die Lagen laden, ein leerer Platz", () => {
     const placeholder = render({ marks: [] })
     expect(placeholder).toMatch(
       /<svg viewBox="[^"]*" aria-hidden="true" data-mini-placeholder="true"/

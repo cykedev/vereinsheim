@@ -196,7 +196,7 @@ export function EveningBlock({
                 aria-label={`Scheibe um ${time}, ${KIND[row.kind]}${provenance ? `, ${provenance}` : ""}, Ergebnis ${result}${row.result === null ? (reason ? ` (${reason})` : "") : ` ${name(row.resultScoring)}`}${second ? `, ${second}` : ""}`}
                 className="row-span-2 grid grid-cols-[auto_minmax(0,1fr)] grid-rows-subgrid gap-x-3 gap-y-0.5 rounded-xl border border-line-strong p-2 hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-ring"
               >
-                {/* ohne Lagen je Schuss die Scheibe leise, mit Trefferlage als Summe das Kreuz */}
+                {/* ohne Lagen je Schuss die Scheibe leise, mit Trefferlage als Summe das Zeichen der Mitte */}
                 <MiniTarget
                   target={target}
                   shots={placed}

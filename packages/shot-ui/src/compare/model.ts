@@ -237,7 +237,9 @@ export function cardCompareModel(input: {
           : level === "none"
             ? provenance === "printout"
               ? REASON_TEXT.waiting
-              : REASON_TEXT.noValues
+              : provenance === "entered"
+                ? REASON_TEXT.noValues
+                : REASON_TEXT.noShot
             : null,
     }
   }

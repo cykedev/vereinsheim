@@ -38,6 +38,9 @@ describe("detailReason: warum eine Scheibe ohne Wert ist", () => {
   it("ohne Werte: vom Ausdruck wartet sie auf die Anlage, eingetragen fehlt die Eingabe", () => {
     expect(detailReason({ detail: NONE, shots: 0, provenance: "printout" }, sigma)).toBe("waiting")
     expect(detailReason({ detail: NONE, shots: 0, provenance: "entered" }, sigma)).toBe("noValues")
+    // gemessen (auch ohne Angabe) fehlt der erste Schuss, wie auf der Seite „Noch kein Schuss“
+    expect(detailReason({ detail: NONE, shots: 0, provenance: "measured" }, sigma)).toBe("noShot")
+    expect(detailReason({ detail: NONE, shots: 0 }, sigma)).toBe("noShot")
   })
 
   it("Schüsse, aber kein Ergebnis: nicht jeder Schuss mit Wert", () => {

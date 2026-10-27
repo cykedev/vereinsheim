@@ -449,3 +449,14 @@ describe("Mitte für den Platzhalter der kleinen Scheibe", () => {
     expect(rows.filter((r) => "center" in r).map((r) => r.id)).toEqual(["t"])
   })
 })
+
+describe("eine Scheibe der Brücke ohne Schuss", () => {
+  it("heißt in der Liste „noch kein Schuss“, wie auf ihrer Seite", () => {
+    const input = [...INPUT, lg(periodCard("leer", 1, [], { startedAtMs: at(19) }))]
+    const row = cardListModel(input, query(), context)
+      .evenings.flatMap((e) => e.rows)
+      .find((r) => r.id === "leer")!
+    expect(row.reasons).toMatchObject({ rings: "noch kein Schuss", shots: "noch kein Schuss" })
+    expect("provenance" in row).toBe(false)
+  })
+})
