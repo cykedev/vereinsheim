@@ -78,9 +78,8 @@ describe("Rahmen der App", () => {
 
   it("Querformat: die schmale Leiste und der Inhalt halten den sicheren Rand frei", () => {
     expect(html).toMatch(/data-app-rail="true" class="[^"]*pl-\[env\(safe-area-inset-left\)\]/)
-    expect(html).toContain(
-      "max-lg:[@media(max-height:499px)]:pl-[calc(4rem+env(safe-area-inset-left))]"
-    )
+    expect(html).toMatch(/data-app-rail="true" class="[^"]*w-\(--app-rail\)/)
+    expect(html).toContain("max-lg:[@media(max-height:499px)]:pl-(--app-rail)")
   })
 
   it("keine Schrift unter text-xs (conventions §3)", () => {
@@ -150,10 +149,9 @@ describe("Rahmen der App", () => {
     expect(html).toContain('href="/progress?family=lp-freihand"')
   })
 
-  it("Platz für die Leiste als --app-bar, die Seite darin mit Abstand; nur Tokens", () => {
-    expect(html).toMatch(
-      /data-app-frame="true" class="[^"]*\[--app-bar:72px\][^"]*lg:\[--app-bar:0px\]/
-    )
+  it("Platz für die Leiste aus --app-bar (design2.css), die Seite darin mit Abstand; nur Tokens", () => {
+    expect(html).toMatch(/<div data-app-frame="true">/)
+    expect(html).not.toContain("[--app-bar:")
     expect(html).toMatch(
       /<main data-app-content="true" class="[^"]*lg:pl-56[^"]*pb-\[calc\(var\(--app-bar\)\+env\(safe-area-inset-bottom\)\)\][^"]*"><div data-page="true">Seite<\/div><\/main>/
     )

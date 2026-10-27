@@ -252,6 +252,28 @@
   --chart-1: #4acaad;
 }
 
+/* Platz, den der Rahmen der App (`AppFrame`, `data-app-frame`) am Rand einnimmt; nur auf Seiten mit Rahmen. Auf
+   `:root`, damit auch, was neben dem Rahmen steht (Toasts), danach rückt. Grenzen wie die Leisten in `app-frame.tsx`:
+   untere Leiste unter 1024 px, schmale Leiste links unter 1024 px und unter 500 px hoch. */
+:root:has([data-app-frame]) {
+  /* untere Leiste 56 px (`h-14`) und die Aktion, die 16 px darüber ragt (`-mt-4`) */
+  --app-bar: 72px;
+  --app-rail: 0px;
+}
+
+@media (width >= 64rem) {
+  :root:has([data-app-frame]) {
+    --app-bar: 0px;
+  }
+}
+
+@media (width < 64rem) and (max-height: 499px) {
+  :root:has([data-app-frame]) {
+    --app-bar: 0px;
+    --app-rail: calc(4rem + env(safe-area-inset-left));
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

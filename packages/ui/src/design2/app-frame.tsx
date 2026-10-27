@@ -58,8 +58,9 @@ export interface AppFrameProps {
 
 /**
  * Rahmen der App: ab 1024 px eine Seitenleiste, darunter eine untere Leiste mit der Aktion in der
- * Mitte, im Querformat des Telefons eine schmale Leiste links. Die Wurzel setzt `--app-bar`, den Platz, den die
- * untere Leiste samt Aktion unten einnimmt; Seite, Pille und Inhalt richten sich danach.
+ * Mitte, im Querformat des Telefons eine schmale Leiste links. Die Wurzel trägt `data-app-frame`; daran setzt
+ * `design2.css` auf `:root` `--app-bar` (Platz der unteren Leiste samt Aktion) und `--app-rail` (Breite der schmalen
+ * Leiste). Inhalt, Pille, „Rückgängig“ und die Toasts richten sich danach.
  */
 export function AppFrame({
   brand,
@@ -141,13 +142,7 @@ export function AppFrame({
   }
 
   return (
-    <div
-      data-app-frame
-      className={cn(
-        "[--app-bar:72px] lg:[--app-bar:0px]",
-        "max-lg:[@media(max-height:499px)]:[--app-bar:0px]"
-      )}
-    >
+    <div data-app-frame>
       <div
         data-app-sidebar
         className="fixed inset-y-0 left-0 z-30 hidden w-56 flex-col overflow-y-auto border-r border-border bg-card px-3 py-5 lg:flex"
@@ -179,7 +174,7 @@ export function AppFrame({
         aria-label="Bereiche"
         data-app-rail
         className={cn(
-          "fixed inset-y-0 left-0 z-30 hidden w-[calc(4rem+env(safe-area-inset-left))] flex-col items-center gap-2 border-r border-border bg-card py-3 pl-[env(safe-area-inset-left)]",
+          "fixed inset-y-0 left-0 z-30 hidden w-(--app-rail) flex-col items-center gap-2 border-r border-border bg-card py-3 pl-[env(safe-area-inset-left)]",
           "max-lg:[@media(max-height:499px)]:flex"
         )}
       >
@@ -205,7 +200,7 @@ export function AppFrame({
         data-app-content
         className={cn(
           "lg:pl-56",
-          "max-lg:[@media(max-height:499px)]:pl-[calc(4rem+env(safe-area-inset-left))]",
+          "max-lg:[@media(max-height:499px)]:pl-(--app-rail)",
           "max-lg:[@media(max-height:499px)]:pr-[env(safe-area-inset-right)]",
           "pb-[calc(var(--app-bar)+env(safe-area-inset-bottom))]"
         )}

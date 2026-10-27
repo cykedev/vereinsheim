@@ -131,6 +131,15 @@ describe("AppFrame", () => {
     expect(none).not.toContain("3 offen")
   })
 
+  it("der Platz der Leisten kommt aus design2.css (--app-bar, --app-rail), nicht aus der Wurzel", () => {
+    expect(html).toContain('<div data-app-frame="true">')
+    expect(html).not.toContain("[--app-bar:")
+    expect(html).toMatch(/data-app-rail="true" class="[^"]*w-\(--app-rail\)/)
+    expect(html).toMatch(
+      /<main data-app-content="true" class="[^"]*max-lg:\[@media\(max-height:499px\)\]:pl-\(--app-rail\)[^"]*pb-\[calc\(var\(--app-bar\)\+env\(safe-area-inset-bottom\)\)\]/
+    )
+  })
+
   it("die Fußzeile der Seitenleiste nur, wenn es eine gibt", () => {
     expect(html).not.toContain("data-sidebar-footer")
     expect(render({ sidebarFooter: h("span", null, "Darstellung") })).toContain(
