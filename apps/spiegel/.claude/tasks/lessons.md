@@ -17,3 +17,9 @@ Geschichte in `vault/incidents/`.
 - **Erfundene Scheiben aus `generateSeason` haben eine zufällige Form:** Ein Seed mit einer Scheibe liefert 30, 40
   oder keine Wertungsschüsse. Wer eine bestimmte Schusszahl braucht, nimmt die erste passende aus mehreren
   (`demoEnteredSeeds`). → ARCHIVE (im Code gelöst)
+- **`NOT` über eine Spalte, die NULL sein kann, lässt diese Zeilen aus:** `deleteMany({ where: { NOT: [{ importKey: … }] } })`
+  löschte keine Scheibe mit `importKey` NULL, denn in SQL ist `NOT (NULL = x)` NULL, nicht wahr. Aufgefallen beim
+  Aufräumen der Demo-Scheiben, weil „entfernt 0“ blieb. → DOCUMENT (conventions §9)
+- **Ein `<title>` im SVG steht im Textinhalt:** `MpiMark` trägt `<title>Schwerpunkt</title>`. Die Zeile daneben las
+  `textContent` als „Schwerpunktnur die Mitte …“, die Skriptprüfung verglich auf Gleichheit. Sichtbar ist der Titel
+  nicht. Prüfungen auf Text neben einem Zeichen vergleichen das Satzende. → ARCHIVE (in `pruefen` gelöst)

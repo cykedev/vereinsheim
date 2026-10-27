@@ -335,6 +335,11 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
   heraus, läuft der Kindprozess nach dem roten Test weiter (eine Endlosschleife braucht dann einen ganzen Kern). Nach so
   einer Probe mit `pgrep -fl <skript>` nachsehen und beenden.
 
+- **`NOT` über eine Spalte, die NULL sein kann, lässt diese Zeilen aus**: In SQL ist `NOT (NULL = x)` NULL, nicht wahr.
+  Ein Prisma-`where` wie `NOT: [{ importKey: k }]` trifft deshalb keine Zeile mit `importKey` NULL. Wer „alle außer …“
+  sucht, wählt die Zeilen und filtert in JS, oder nimmt `OR: [{ importKey: null }, { NOT: … }]` dazu. Aufgefallen im
+  Oktober 2026 beim Aufräumen der Demo-Scheiben (`seed:own --demo`).
+
 - **Neue Felder ändern eine Charakterisierung, die jedes Feld festschreibt**: `period/season.test.ts` hält jedes Feld von
   `PeriodModel` fest. Kommt ein Feld dazu oder ändert sich eine Kennung, wird der Schnappschuss rot, ohne dass eine Zahl
   sich ändert. Vor `vitest -u` die alten Zeilen gegen die neuen halten (kleines Skript): nur neue Felder, alte Werte
