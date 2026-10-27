@@ -67,6 +67,9 @@ Entschieden mit dem User am 26. Oktober 2026, gelten für alle Teile:
   `Shot.ring` und `Shot.decimalTenths` heute). Eingaben von Hand und der Parser (1c) nehmen Zehntel, wo es sie gibt. Nur
   die Übernahme aus Treffsicher bringt bei Disziplinen in ganzen Ringen nur ganze Ringe, weil Treffsicher die Zehntel
   beim Import abgeschnitten hat.
+- **Konsistenz, wo immer sie möglich und sinnvoll ist** (User, 27. Oktober 2026): Gleiches sieht gleich aus und steht an
+  derselben Stelle, unabhängig von Herkunft oder Detailtiefe. Ein Zustand unterscheidet sich im Inhalt (Wert oder „–“
+  mit Grund), nicht im Aufbau der Seite. Abweichen nur mit Grund, der im Plan steht.
 - **An dem orientieren, was es schon gibt.** Bedienung und Modell knüpfen an Spiegel und Treffsicher an (etwa: erst
   Disziplin und Art wählen wie in Treffsicher), statt Neues zu erfinden.
 
