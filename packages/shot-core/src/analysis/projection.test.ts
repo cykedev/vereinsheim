@@ -461,10 +461,12 @@ describe("Projektion von Scheiben mit Angaben ohne Einzelschüsse ([[adr-033]])"
         },
       },
     }
-    const pooled = pooledCenter([projectCard(CENTER_TOTAL), shots])
+    const pooled = pooledCenter(
+      [projectCard(CENTER_TOTAL), shots].map((c) => c.projection.detail?.center)
+    )
     expect(pooled).toMatchObject({ xUm: 760, n: 50, summaryShots: 40 })
     expect(pooled?.yUm ?? null).not.toBeNull()
     expect(pooled?.yUm).toBe(0)
-    expect(pooledCenter([projectCard(EMPTY)])).toBeNull()
+    expect(pooledCenter([projectCard(EMPTY).projection.detail?.center])).toBeNull()
   })
 })

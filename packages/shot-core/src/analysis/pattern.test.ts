@@ -352,6 +352,57 @@ describe("periodPattern", () => {
     expect(pattern.overTime.points).toHaveLength(5)
   })
 
+  it("ohne Trefferlage als Summe: die Mitte aller Punkte wie bisher", () => {
+    const pattern = periodPattern([
+      card("a", [
+        { xUm: 1000, yUm: 0 },
+        { xUm: -1000, yUm: 0 },
+        { xUm: 0, yUm: 500 },
+      ]),
+      card("b", [
+        { xUm: 0, yUm: -200 },
+        { xUm: 300, yUm: 0 },
+      ]),
+    ])
+    expect(pattern.picture.center).toEqual({ xUm: 60, yUm: 60 })
+    expect(pattern.summaryCards).toBe(0)
+  })
+
+  it("eine Trefferlage als Summe zählt gewichtet in der Mitte, nicht in Form und Lage über Zeit", () => {
+    const around = card(
+      "punkte",
+      [500, -500, 300, -300, 100, -100, 700, -700, 900, -900].map((xUm, i) => ({
+        xUm,
+        yUm: i % 2 ? -200 : 200,
+      }))
+    )
+    const alone = periodPattern([around])
+    const pattern = periodPattern([
+      around,
+      card("summe", [], 1),
+      { ...card("lage", [], 2), summaryCenter: { xUm: 3000, yUm: 0, n: 30 } },
+    ])
+    expect(pattern.picture.center).toEqual({ xUm: 2250, yUm: 0 })
+    expect(pattern.summaryCards).toBe(1)
+    expect(pattern.cardsWithoutPosition).toBe(2)
+    expect(pattern.shots).toBe(10)
+    expect(pattern.overTime).toEqual(alone.overTime)
+    expect(pattern.shape).toEqual(alone.shape)
+    expect(pattern.outliers).toEqual(alone.outliers)
+  })
+
+  it("nur Trefferlagen als Summe: die gewichtete Mitte, das Bild reicht bis zu ihr", () => {
+    const pattern = periodPattern([
+      { ...card("a", []), summaryCenter: { xUm: 4000, yUm: 0, n: 10 } },
+      { ...card("b", [], 1), summaryCenter: { xUm: 0, yUm: 800, n: 30 } },
+    ])
+    expect(pattern.shots).toBe(0)
+    expect(pattern.summaryCards).toBe(2)
+    expect(pattern.picture.center).toEqual({ xUm: 1000, yUm: 600 })
+    expect(pattern.picture.halfUm).toBeGreaterThanOrEqual(Math.hypot(1000, 600))
+    expect(pattern.picture.points).toEqual([])
+  })
+
   it("geht unverändert durch JSON", () => {
     const pattern = periodPattern(cardsOf(10, 40, 1500, 1200))
     expect(JSON.parse(JSON.stringify(pattern))).toEqual(pattern)

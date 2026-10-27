@@ -7,6 +7,7 @@ import type { Point } from "../geometry"
 import { cellValue, densityGrid, patternHalf, type DensityGrid } from "./density"
 import { c4 } from "../stats"
 import { levelTestZeroByAxis } from "./levels"
+import { pooledCenter } from "./center"
 
 /** ein Schuss im Trefferbild: Lage und, wenn bekannt, der Ring (für die Farbe der Punkte) */
 export interface PatternPoint extends Point {
@@ -18,6 +19,11 @@ export interface PatternCard {
   id: string
   atMs: number
   points: readonly PatternPoint[]
+  /**
+   * Trefferlage als Summe einer Scheibe ohne Lage je Schuss: zählt nur für die Mitte des Bilds, nie für Form, Lage über
+   * Zeit und Ausreißer
+   */
+  summaryCenter?: { xUm: number; yUm: number; n: number } | null
 }
 
 /** so viele Punkte braucht eine Scheibe für eine Mitte */
@@ -295,6 +301,8 @@ export interface PeriodPattern {
   /** alle Scheiben, auch ohne Lage */
   cards: number
   cardsWithoutPosition: number
+  /** Scheiben ohne Lage je Schuss, die mit ihrer Trefferlage als Summe in der Mitte des Bilds zählen */
+  summaryCards: number
   /** die Schüsse, wo sie lagen */
   picture: PatternLayer
   shape: PeriodShape | null
@@ -325,10 +333,11 @@ const bandAt = (grid: DensityGrid, value: number) =>
     grid.levels.findLastIndex((level) => value >= level)
   )
 
-function layer(points: readonly PatternPoint[]): PatternLayer {
-  const center = points.length ? roundPoint(mean(points)) : null
+/** `middle`: die Mitte aller Schüsse, wenn sie nicht aus den Punkten allein kommt; das Bild reicht dann bis zu ihr */
+function layer(points: readonly PatternPoint[], middle?: Point): PatternLayer {
+  const center = middle ? roundPoint(middle) : points.length ? roundPoint(mean(points)) : null
   // als Schleife: Zehntausende Argumente für `Math.max(...)` sprengten den Stapel
-  let farthest = 0
+  let farthest = middle ? Math.hypot(middle.xUm, middle.yUm) : 0
   for (const p of points) farthest = Math.max(farthest, Math.hypot(p.xUm, p.yUm))
   if (points.length < PATTERN_DENSITY_FROM)
     // jeder Treffer im Bild, mit Rand für das Kaliber
@@ -366,15 +375,29 @@ function layer(points: readonly PatternPoint[]): PatternLayer {
  * Das Trefferbild eines Zeitraums (L9) mit den Urteilen über Form (L9), Lage (L10) und Ausreißerrichtung (L7), für
  * den Browser gerechnet: Er bekommt bis 3.000 Schuss jeden Treffer mit seinem Band der Dichte (unter 50 mit seinem
  * Ring), ab 50 Schuss die Dichte als Raster von 64 × 64 (für die Umrisse, über 3.000 Schuss nur noch das Raster), dazu
- * die Schwerpunkte je Scheibe auf ganze µm.
+ * die Schwerpunkte je Scheibe auf ganze µm. Scheiben ohne Lage je Schuss mit Trefferlage als Summe zählen nur in der
+ * Mitte des Bilds, gewichtet mit ihrer Schusszahl (`pooledCenter`).
  */
 export function periodPattern(cards: readonly PatternCard[]): PeriodPattern {
   const all = cards.flatMap((card) => card.points)
+  const summaryCards = cards.filter((card) => !card.points.length && card.summaryCenter).length
+  const middle = summaryCards
+    ? pooledCenter(
+        cards.map((card) =>
+          card.points.length
+            ? { ...mean(card.points), n: card.points.length, from: "shots" as const }
+            : card.summaryCenter
+              ? { ...card.summaryCenter, from: "summary" as const }
+              : null
+        )
+      )
+    : null
   return {
     shots: all.length,
     cards: cards.length,
     cardsWithoutPosition: cards.filter((card) => card.points.length === 0).length,
-    picture: layer(all),
+    summaryCards,
+    picture: layer(all, middle ?? undefined),
     shape: periodShape(cards),
     overTime: positionOverTime(
       positionPoints(cards).map((p) => ({ ...p, center: roundPoint(p.center) }))

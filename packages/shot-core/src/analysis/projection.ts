@@ -64,6 +64,12 @@ export interface CardDetail {
   center: { xUm: number; yUm: number; n: number; from: "shots" | "summary" } | null
 }
 
+/** die Mitte der Schüsse einer Scheibe mit ihrer Schusszahl */
+export type CardCenter = NonNullable<CardDetail["center"]>
+
+export { pooledCenter } from "./center"
+export { probeOnlyCard, sightersBesideSums } from "./card-shots"
+
 export interface CardProjection {
   /** `projectionVersion(METRICS)` beim Rechnen; weicht sie ab, ist die Projektion veraltet */
   version: string
@@ -223,27 +229,6 @@ export function cardMarks(shots: readonly MetricShot[]): CardMark[] {
 /** die Lagen zurück in µm, wie `MiniTarget` sie zeichnet */
 export function markShots(marks: readonly CardMark[]): MarkShot[] {
   return marks.map(([x, y, ring]) => ({ xUm: x * MARK_UM, yUm: y * MARK_UM, ring }))
-}
-
-/**
- * Mitte der Schüsse mehrerer Scheiben, gewichtet mit der Schusszahl jeder Mitte (Σ nᵢ·cᵢ / Σ nᵢ), aus Lagen je Schuss
- * und der Trefferlage als Summe; `summaryShots` zählt die Schüsse aus Summen. Nur Versatz und Richtung ([[adr-034]]):
- * Streuung und Urteile nehmen nur Lagen je Schuss. Null ohne Mitte.
- */
-export function pooledCenter(
-  cards: readonly Pick<ProjectedCard, "projection">[]
-): { xUm: number; yUm: number; n: number; summaryShots: number } | null {
-  const centers = cards.flatMap((card) =>
-    card.projection.detail?.center ? [card.projection.detail.center] : []
-  )
-  const n = centers.reduce((sum, c) => sum + c.n, 0)
-  if (!n) return null
-  return {
-    xUm: centers.reduce((sum, c) => sum + c.n * c.xUm, 0) / n,
-    yUm: centers.reduce((sum, c) => sum + c.n * c.yUm, 0) / n,
-    n,
-    summaryShots: centers.reduce((sum, c) => sum + (c.from === "summary" ? c.n : 0), 0),
-  }
 }
 
 /** wie `trainingVolume`, aus den Projektionen: Schüsse wie am Ausdruck sind `printedShots` */
