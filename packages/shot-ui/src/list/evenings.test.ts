@@ -80,6 +80,18 @@ describe("Abende der Scheiben-Liste", () => {
     expect(probe.kind).toBe("probe")
     expect(probe.result).toBeCloseTo(20.4, 9)
     expect(probe.shots).toBe(2)
+    // ein Wettkampf nur aus Probe behält „nur Probe“ neben der Art
+    const competition = cardListModel(
+      [
+        lg(
+          periodCard("w", 1, [100, 104], { startedAtMs: at(10), probe: true, kind: "competition" })
+        ),
+      ],
+      query(),
+      context
+    ).evenings[0].rows[0]
+    expect(competition.kind).toBe("competition-probe")
+    expect(competition.result).toBeCloseTo(20.4, 9)
   })
 
   it("Abstand zum Schnitt der bis zu fünf Scheiben davor, auch vor dem Zeitraum", () => {

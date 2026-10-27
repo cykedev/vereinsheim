@@ -34,4 +34,15 @@ describe("Art in den Listen", () => {
     expect(html).toContain('<span aria-hidden="true" title="Training nur Probe">Probe</span>')
     expect(html).toContain('<span class="sr-only">Training nur Probe</span>')
   })
+
+  it("Wettkampf nur aus Probe: Pokal und dahinter „Probe“, der Name einmal", () => {
+    const html = renderToStaticMarkup(h(KindMark, { kind: "competition-probe" }))
+    expect(html).toContain('data-kind="competition-probe"')
+    expect(html).toMatch(
+      /<span aria-hidden="true" title="Wettkampf nur Probe"><svg[^]*lucide-trophy[^]*<\/svg> Probe<\/span>/
+    )
+    expect(visible(html)).toBe("Probe")
+    expect(html.match(/Wettkampf nur Probe/g)).toHaveLength(2)
+    expect(html).toContain('<span class="sr-only">Wettkampf nur Probe</span>')
+  })
 })

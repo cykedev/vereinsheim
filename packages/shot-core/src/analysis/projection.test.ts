@@ -33,6 +33,7 @@ import {
   projectedValues,
   projectedVolume,
   projectionVersion,
+  recordsInView,
   type ProjectedCard,
 } from "./projection"
 import { FLAG_COUNTED_AS_MATCH, periodRecords } from "./records"
@@ -172,6 +173,33 @@ describe("Projektion je Scheibe (ADR-031)", () => {
         }
     }
   )
+
+  it("ein Wettkampf nur aus Probe zählt für Rekorde nur mit „Probe einbeziehen“, wie ein Training nur aus Probe", () => {
+    // zehn Zehner: hielte jeden Rekord der Ergebnisse, wenn er zählte
+    const probeMatch = card(
+      "probe-match",
+      107,
+      Array.from({ length: 10 }, () => 109),
+      {
+        probe: true,
+        kind: "competition",
+      }
+    )
+    const cards = [...CARDS, probeMatch]
+    const projected = cards.map(projectCard)
+    const holders = (records: ReturnType<typeof projectedRecords>) =>
+      Object.values(records.bestCard).map((ref) => ref.cardId)
+    for (const kind of [undefined, "competition"] as const) {
+      expect(holders(projectedRecords(projected, "decimal", { kind }))).not.toContain("probe-match")
+      const included = projectedRecords(projected, "decimal", { kind, includeProbeOnly: true })
+      expect(holders(included)).toContain("probe-match")
+      expect(included).toEqual(periodRecords(cards, "decimal", { kind, includeProbeOnly: true }))
+    }
+    const view = { kind: "competition" as const, flags: [], probeOnly: true }
+    expect(recordsInView(view, { kind: "competition" })).toBe(false)
+    expect(recordsInView(view, { kind: "competition", includeProbeOnly: true })).toBe(true)
+    expect(recordsInView(view, { kind: "training", includeProbeOnly: true })).toBe(false)
+  })
 
   it("die Version ändert sich mit jeder Kennzahl-Version", () => {
     const base = projectionVersion(METRICS)

@@ -34,6 +34,11 @@ describe("Metazeile im Kopf einer Scheibe", () => {
       "Training nur Probe"
     )
   })
+
+  it("Wettkampf nur aus Probe heißt so", () => {
+    const card = periodCard("w", 0, [100], { probe: true, kind: "competition", startedAtMs: AT })
+    expect(cardMeta(card, TZ)[0]).toBe("Wettkampf nur Probe")
+  })
   it("Probe neben Serien-Summen der Wertung ist Training, nicht nur Probe", () => {
     const card = {
       ...periodCard("p", 0, [100], { probe: true, startedAtMs: AT }),

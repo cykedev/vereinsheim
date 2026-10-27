@@ -111,7 +111,7 @@ export function CardReadout({
           <p className="text-muted-foreground">
             {value ? metric.label : `${metric.label}: ${reason ?? "ohne Wert"}`}
           </p>
-          <p>{`${card.shots} Schuss${card.probeOnly ? " (Probe als Training)" : ""}`}</p>
+          <p>{`${card.shots} Schuss${card.probeOnly ? ` (Probe als ${KIND_TEXT[card.kind]})` : ""}`}</p>
           {value && (
             <div className="flex items-start justify-between gap-2">
               <p data-delta className="tabular-nums">

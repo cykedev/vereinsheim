@@ -180,23 +180,32 @@ export interface PeriodReading {
 }
 
 /**
- * eine Scheibe nur aus Probe (Training): eine Regel für Modell und Bausteine. Mit mindestens einem Schuss: eine Scheibe
- * ohne Schuss ist keine Probe
+ * eine Scheibe nur aus Probe: eine Regel für Modell und Bausteine. Mit mindestens einem Schuss: eine Scheibe ohne Schuss
+ * ist keine Probe
  */
 export const isProbeOnly = (card: ProjectedCard) =>
   card.projection.probeOnly && card.projection.printedShots > 0
 
-/** Art einer Scheibe in den Listen: Wettkampf, Training, Training nur aus Probe */
-export type CardKind = "training" | "competition" | "probe"
+/** Art einer Scheibe in den Listen: Wettkampf, Training, Training oder Wettkampf nur aus Probe */
+export type CardKind = "training" | "competition" | "probe" | "competition-probe"
 
 export const cardKind = (card: ProjectedCard): CardKind => kindOf(card.kind, isProbeOnly(card))
 
 /** Art eines Eintrags der Seite eines Zeitraums, wie `cardKind` */
 export const itemKind = (item: PeriodItem): CardKind => kindOf(item.kind, item.probeOnly)
 
-/** die Art aus Wettkampf oder Training und „nur Probe“: eine Regel für die Übersichten und die Seite einer Scheibe */
+/**
+ * die Art aus Wettkampf oder Training und „nur Probe“: eine Regel für die Übersichten und die Seite einer Scheibe. „Nur
+ * Probe“ bleibt neben der Art stehen, auch beim Wettkampf
+ */
 export const kindOf = (kind: PeriodItem["kind"], probeOnly: boolean): CardKind =>
-  kind === "competition" ? "competition" : probeOnly ? "probe" : "training"
+  kind === "competition"
+    ? probeOnly
+      ? "competition-probe"
+      : "competition"
+    : probeOnly
+      ? "probe"
+      : "training"
 
 /**
  * Die Ablesung zu einer Wahl: die gewählte Scheibe, wenn sie im Zeitraum liegt, sonst die neueste mit Ø je Schuss,

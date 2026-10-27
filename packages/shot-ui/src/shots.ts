@@ -45,7 +45,7 @@ export function shownShots(card: Pick<PeriodCard, "shots" | "sums">): readonly M
 export const matchShots = (shots: readonly MetricShot[]): readonly MetricShot[] =>
   asOnPrintout(shots)
 
-/** ein Probeschuss, auch einer, den `asOnPrintout` als Training wie Wertung zeigt (für das Probe-Eck) */
+/** ein Probeschuss, auch einer, den `asOnPrintout` bei nur Probe wie Wertung zeigt (für das Probe-Eck) */
 export const isProbeShot = (shot: MetricShot) =>
   shot.kind === "probe" || (shot as { fromProbe?: boolean }).fromProbe === true
 

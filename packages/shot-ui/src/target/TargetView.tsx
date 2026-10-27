@@ -46,6 +46,8 @@ export interface TargetViewProps {
   viewKey?: string
   /** Trefferlage als Summe: das Zeichen des Schwerpunkts an der Mitte (`MpiMark`), nur die Mitte, keine Streuung */
   summaryCenter?: { xUm: number; yUm: number } | null
+  /** Art der Scheibe für den Namen einer Scheibe nur aus Probe („Probeschüsse als Wettkampf“); Vorgabe Training */
+  kind?: "training" | "competition"
   className?: string
 }
 
@@ -78,6 +80,7 @@ export function TargetView({
   popIndex = null,
   viewKey,
   summaryCenter = null,
+  kind = "training",
   className,
 }: TargetViewProps) {
   const [width, measure] = useElementWidth()
@@ -102,14 +105,16 @@ export function TargetView({
   const confidence = state.layers.ellipse ? mpiConfidence(group) : null
   const center = state.layers.mpi && group.length >= 2 ? centroid(groupPoints) : null
 
-  // ein Training nur aus Probe heißt so (eine Probe neben Wertung gibt es nicht)
-  const training = shots.length > 0 && shots.every(isProbeShot)
+  // eine Scheibe nur aus Probe heißt so, mit ihrer Art (eine Probe neben Wertung gibt es nicht)
+  const probeOnly = shots.length > 0 && shots.every(isProbeShot)
   // ohne Schüsse mit Trefferlage als Summe nur die Mitte, keine „0 Wertungsschüsse“
   const label =
     shots.length === 0 && summaryCenter
       ? `${target.label}: Mitte der Schüsse`
       : `${target.label}: ${shots.length} ${
-          training ? "Probeschüsse als Training" : "Wertungsschüsse"
+          probeOnly
+            ? `Probeschüsse als ${kind === "competition" ? "Wettkampf" : "Training"}`
+            : "Wertungsschüsse"
         }${selectionText(state)}${summaryCenter ? ", Mitte der Schüsse" : ""}`
 
   // die Scheibe zeigt das Probe-Eck, wenn alle Schüsse der Auswahl aus der Probe stammen (Training nur aus Probe)

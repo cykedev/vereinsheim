@@ -385,7 +385,7 @@ export function shotNumbers(shots: readonly MetricShot[]): Map<MetricShot, numbe
 const PROBE_SERIES_SIZE = 10
 
 /**
- * Eine Karte nur mit Probe als Wertung (SF-01, Training): jeder Schuss wird
+ * Eine Karte nur mit Probe als Wertung (SF-01): jeder Schuss wird
  * Wertungsschuss, in Serien zu zehn nach der Abgabefolge (`inShotOrder`); Reihenfolge der Liste und alle
  * übrigen Angaben bleiben. Hat die Karte einen Wertungsschuss oder keinen Schuss, bleibt sie, wie sie ist.
  * Die eine Regel für die Seite einer Scheibe (shot-ui `probeOnlyAsMatch`) und für Zeiträume (`analysis`).
@@ -403,7 +403,7 @@ export function probeOnlyAsMatch<T extends MetricShot>(shots: readonly T[]): rea
 /**
  * Eine Scheibe wie am Ausdruck (ADR-027, Leitregel 3 in `spiegel-edge-cases`): Meyton löscht die Probe mit dem
  * ersten Wertungsschuss, also hat eine Scheibe mit Wertung nur die Wertungsschüsse; eine Probe zwischen Wertung (SF-04)
- * fällt ebenso weg. Eine Karte nur mit Probe ist Training (`probeOnlyAsMatch`). Reihenfolge der Liste und alle Angaben
+ * fällt ebenso weg. Eine Karte nur mit Probe zählt wie Wertung (`probeOnlyAsMatch`). Reihenfolge der Liste und alle Angaben
  * bleiben; ohne Probe neben Wertung ist es dieselbe Liste. Die eine Regel für die Seite einer Scheibe und für Zeiträume.
  */
 export function asOnPrintout<T extends MetricShot>(shots: readonly T[]): readonly T[] {

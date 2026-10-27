@@ -17,8 +17,7 @@ export interface KindToggleProps {
 
 /**
  * Art der Scheibe als Pokal im weichen Kreis: Training durchgestrichen und
- * leise, Wettkampf in Gold; ein Tippen stellt auf die andere. Eine Scheibe nur aus Probe ist Training; dort zeigt die
- * Seite keinen Kreis.
+ * leise, Wettkampf in Gold; ein Tippen stellt auf die andere. Auf jeder eigenen Scheibe, auch nur aus Probe.
  */
 export function KindToggle({ kind, onChange, className }: KindToggleProps) {
   const next: Kind = kind === "competition" ? "training" : "competition"

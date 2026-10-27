@@ -47,16 +47,17 @@ const counted = (n: number, one: string, many: string) => `${n} ${n === 1 ? one 
 
 /**
  * „Datenlage: 40 Wertungsschüsse · alle mit Lage, Zeit und Wert · Wertung in Zehnteln“ (Q1). In Zehnteln zählt ein
- * Schuss ohne Zehntel mit, auch wenn er einen Ring hat; ein Training nur aus Probe heißt so. Neben Wertung zählt sie
- * keine Probe, wie am Ausdruck.
+ * Schuss ohne Zehntel mit, auch wenn er einen Ring hat; eine Scheibe nur aus Probe heißt so, mit ihrer Art. Neben
+ * Wertung zählt sie keine Probe, wie am Ausdruck.
  */
 function coverageText(
   shots: readonly MetricShot[],
   scoring: ViewState["scoring"],
-  basis: AnalysisBasis
+  basis: AnalysisBasis,
+  kind: "training" | "competition"
 ): string {
   const coverage = dataCoverage(shots)
-  // eine Trainingskarte zeigt die Probe wie Wertung, die Datenlage zählt sie als Probe
+  // eine Karte nur aus Probe zeigt die Probe wie Wertung, die Datenlage zählt sie als Probe
   const probe = shots.filter(isProbeShot).length
   const withoutTenths =
     scoring === "decimal"
@@ -73,7 +74,9 @@ function coverageText(
   ].filter(Boolean)
   const kinds =
     basis === "nur Probe"
-      ? [`${counted(probe, "Probeschuss", "Probeschüsse")}, als Training wie Wertung gezählt`]
+      ? [
+          `${counted(probe, "Probeschuss", "Probeschüsse")}, als ${kind === "competition" ? "Wettkampf" : "Training"} wie Wertung gezählt`,
+        ]
       : [counted(shots.length, "Wertungsschuss", "Wertungsschüsse")]
   return [
     `Datenlage: ${kinds.join(" · ")}`,
@@ -113,6 +116,8 @@ export interface AnalysisPanelProps {
    * Grund (ein Gerüst für jede Detailtiefe)
    */
   missing?: string | null
+  /** Art der Scheibe für die Datenlage einer Scheibe nur aus Probe; Vorgabe Training */
+  kind?: "training" | "competition"
   className?: string
 }
 
@@ -136,6 +141,7 @@ export function AnalysisPanel({
   patternRoute,
   action,
   missing = null,
+  kind = "training",
   className,
 }: AnalysisPanelProps) {
   const regionId = useId()
@@ -231,7 +237,7 @@ export function AnalysisPanel({
       {shots.length > 0 && (
         <div data-coverage="true" className="flex items-start justify-between gap-2">
           <p className="text-[13px] text-muted-foreground">
-            {coverageText(input.all, state.scoring, input.basis)}
+            {coverageText(input.all, state.scoring, input.basis, kind)}
           </p>
           {onHelp && (
             <HelpButton label="Datenlage" helpId="datenlage" onClick={() => onHelp("datenlage")} />

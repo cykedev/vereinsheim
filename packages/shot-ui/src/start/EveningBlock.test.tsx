@@ -181,6 +181,18 @@ describe("Block des letzten Abends auf Start", () => {
     expect(text(html)).toContain("18:00 · Training 18,8 Zehntel · 18 ganze Ringe")
   })
 
+  it("die Art einer Kachel wie in der Liste, auch Wettkampf und Training nur aus Probe", () => {
+    const tiles = render([
+      lp(
+        periodCard("w", 0, [94, 94], { startedAtMs: at(25, 18), probe: true, kind: "competition" })
+      ),
+      lp(periodCard("t", 0, [88], { startedAtMs: at(25, 19), probe: true })),
+    ])
+    expect(text(tiles)).toContain("18:00 · Wettkampf nur Probe")
+    expect(text(tiles)).toContain("19:00 · Training nur Probe")
+    expect(tiles).toMatch(/aria-label="Scheibe um 18:00, Wettkampf nur Probe,/)
+  })
+
   it("Kacheln einer Zeile teilen zwei Zeilen: Uhrzeit und Art, darunter das Ergebnis auf einer Linie, auch wenn ein Text umbricht", () => {
     for (const id of ["a", "b"]) {
       const start = html.indexOf(`data-start-card="${id}"`)

@@ -224,7 +224,9 @@ export function cardListModel(
   const days = new Map<string, Evening>()
   for (const card of shown) {
     const day = eveningDay(card.startedAtMs, context.timeZone)
-    const ofCard = card.scoring ?? (isProbeOnly(card) ? undefined : card.official)
+    // ein Training nur aus Probe hat keine Wertung der Disziplin, ein Wettkampf nur aus Probe schon
+    const ofCard =
+      card.scoring ?? (isProbeOnly(card) && card.kind !== "competition" ? undefined : card.official)
     const resultScoring = ofCard ?? context.scoring
     const provenance = provenanceOf.get(card.id) ?? "measured"
     // Werte wie am Ausdruck (die Wertung, bei nur Probe die Probe): so rechnet die Projektion

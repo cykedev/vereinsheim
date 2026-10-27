@@ -157,6 +157,15 @@ describe("AnalysisPanel", () => {
     expect(text).toContain("Datenlage: 2 Probeschüsse, als Training wie Wertung gezählt")
   })
 
+  it("auf einer Wettkampfkarte nur aus Probe sagt die Datenlage Wettkampf", () => {
+    const text = render(asOnPrintout(CARD.slice(0, 2)), { kind: "competition" })
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
+    expect(text).toContain("Datenlage: 2 Probeschüsse, als Wettkampf wie Wertung gezählt")
+    // mit Wertung bleibt es bei den Wertungsschüssen, egal welche Art
+    expect(render(CARD.slice(2), { kind: "competition" })).not.toContain("als Wettkampf")
+  })
+
   it("Glossar und typische Fehlschlüsse aus dem Paket, aufklappbar, auch mit „Erklärungen“ zu", () => {
     const html = render(CARD)
     expect([...html.matchAll(/<dt[^>]*data-term="true"[^>]*>/g)]).toHaveLength(GLOSSARY.length)

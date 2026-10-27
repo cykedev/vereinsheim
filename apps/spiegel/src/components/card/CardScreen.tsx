@@ -12,7 +12,7 @@ import {
 } from "react"
 
 import type { MetricShot, Scoring } from "@vereinsheim/shot-core/metrics"
-import { cardDetail, probeOnlyCard } from "@vereinsheim/shot-core/projection"
+import { cardDetail } from "@vereinsheim/shot-core/projection"
 import { TARGETS } from "@vereinsheim/shot-core/targets"
 import {
   AnalysisPanel,
@@ -355,13 +355,11 @@ export function CardScreen({
     save: (kind) => setCardKind(card.id, kind),
     notSaved: "Die Art ließ sich nicht speichern.",
   })
-  // Art und Wertung als Kreise neben der Zahl: gezeigt sofort, gespeichert an der Scheibe. Eine Scheibe nur aus Probe
-  // ist Training und hat keinen Kreis der Art
+  // Art und Wertung als Kreise neben der Zahl, auch bei einer Scheibe nur aus Probe: gezeigt sofort, gespeichert an der
+  // Scheibe
   const actions = (
     <>
-      {!probeOnlyCard(card.shots, card.sums) && (
-        <KindToggle kind={kindChoice.shown} onChange={kindChoice.change} />
-      )}
+      <KindToggle kind={kindChoice.shown} onChange={kindChoice.change} />
       <ScoringToggle
         scoring={state.scoring}
         official={toggleOfficial(kindChoice.shown, card.official)}
@@ -454,6 +452,7 @@ export function CardScreen({
                 target={target}
                 shots={shots}
                 state={state}
+                kind={kindChoice.shown}
                 others={others}
                 popIndex={null}
                 viewKey={card.id}
@@ -525,6 +524,7 @@ export function CardScreen({
             id: "analysis",
             node: (
               <AnalysisPanel
+                kind={kindChoice.shown}
                 missing={
                   withShots
                     ? null

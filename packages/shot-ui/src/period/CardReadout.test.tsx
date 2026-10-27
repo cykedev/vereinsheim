@@ -107,7 +107,20 @@ describe("Ablesung einer Scheibe", () => {
     expect(cardKindText(item(periodCard("p", 1, [100], { probe: true })))).toBe(
       "Training nur Probe"
     )
+    expect(
+      cardKindText(item(periodCard("w", 1, [100], { probe: true, kind: "competition" })))
+    ).toBe("Wettkampf nur Probe")
     expect(deltaText({ delta: -0.05, n: 1 }, 2)).toBe("−0,05 zum Schnitt der Scheibe davor")
+  })
+})
+
+describe("Ablesung einer Scheibe nur aus Probe", () => {
+  it("die Schusszahl sagt, als was die Probe zählt: Training oder Wettkampf", () => {
+    const probe = (kind: "training" | "competition") =>
+      render({ card: item(periodCard("k1", 2, [100, 102, 98], { probe: true, kind })) })
+    expect(probe("training")).toContain("3 Schuss (Probe als Training)")
+    expect(probe("competition")).toContain("3 Schuss (Probe als Wettkampf)")
+    expect(render()).toContain(">3 Schuss<")
   })
 })
 

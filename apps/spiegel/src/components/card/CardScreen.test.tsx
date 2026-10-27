@@ -239,6 +239,26 @@ describe("Seite einer Scheibe je Detailtiefe", () => {
     expect(meta(html)).not.toContain("nur Probe")
   })
 
+  it("nur aus Probe: der Kreis der Art wie bei jeder eigenen Scheibe, Training ohne Wahl", () => {
+    const probe = shots.map((shot) => ({ ...shot, kind: "probe" as const, series: null }))
+    const html = render(OWN, { ...card, shots: probe })
+    expect(html).toContain('data-kind-toggle=""')
+    expect(html).toMatch(/data-kind-toggle="" data-kind="training"/)
+    expect(meta(html)).toMatch(/^Training nur Probe ·/)
+    // die geteilte zeigt keinen
+    expect(render(null, { ...card, shots: probe })).not.toContain("data-kind-toggle")
+  })
+
+  it("Wettkampf nur aus Probe: Pokal gesetzt, die Wertung der Disziplin heißt amtlich", () => {
+    const probe = shots.map((shot) => ({ ...shot, kind: "probe" as const, series: null }))
+    const html = render(OWN, { ...card, shots: probe, kind: "competition", official: "rings" })
+    expect(html).toMatch(/data-kind-toggle="" data-kind="competition"/)
+    expect(html).toContain("Wertung: ganze Ringe, amtlich")
+    expect(meta(html)).toMatch(/^Wettkampf nur Probe ·/)
+    expect(html).toContain("10 Probeschüsse als Wettkampf")
+    expect(html).toContain("10 Probeschüsse, als Wettkampf wie Wertung gezählt")
+  })
+
   it("gemessen mit Schüssen: „gemessen“ im Kopf", () => {
     const html = render(OWN)
     expect(meta(html)).toContain("gemessen")

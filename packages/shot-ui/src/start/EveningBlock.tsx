@@ -12,7 +12,7 @@ import { quietProvenance } from "../detail"
 import { formatValue } from "../format"
 import { cardTime } from "../readout/cardMeta"
 import { HelpButton } from "../help/HelpButton"
-import type { ListRow } from "../list/evenings"
+import { KIND_TEXT } from "../list/KindMark"
 import { RouteLink } from "../nav/RouteLink"
 import type { CardRoute, ListRoute } from "../nav/routes"
 import { MiniTarget } from "../target/MiniTarget"
@@ -20,12 +20,6 @@ import { basisLine } from "../period/basis"
 import { FormStrip } from "./FormStrip"
 import type { EveningBlock as EveningBlockModel } from "./model"
 import { eveningReferenceText, eveningSentence, formLegend } from "./sentence"
-
-const KIND: Readonly<Record<ListRow["kind"], string>> = {
-  training: "Training",
-  competition: "Wettkampf",
-  probe: "Training nur Probe",
-}
 
 /** Stellen des Ergebnisses in einer Wertung, aus der Kennzahl */
 const digits = (scoring: Scoring) => inScoring(metricByKey("result.decimal")!, scoring).decimals
@@ -194,7 +188,7 @@ export function EveningBlock({
               <RouteLink
                 route={cardRoute(row.id)}
                 data-start-card={row.id}
-                aria-label={`Scheibe${time ? ` um ${time}` : ""}, ${KIND[row.kind]}${provenance ? `, ${provenance}` : ""}, Ergebnis ${result}${row.result === null ? (reason ? ` (${reason})` : "") : ` ${name(row.resultScoring)}`}${second ? `, ${second}` : ""}`}
+                aria-label={`Scheibe${time ? ` um ${time}` : ""}, ${KIND_TEXT[row.kind]}${provenance ? `, ${provenance}` : ""}, Ergebnis ${result}${row.result === null ? (reason ? ` (${reason})` : "") : ` ${name(row.resultScoring)}`}${second ? `, ${second}` : ""}`}
                 className="row-span-2 grid grid-cols-[auto_minmax(0,1fr)] grid-rows-subgrid gap-x-3 gap-y-0.5 rounded-xl border border-line-strong p-2 hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-ring"
               >
                 {/* ohne Lagen je Schuss die Scheibe leise, ohne Mitte wie die kleinen Scheiben gemessener Scheiben */}
@@ -205,7 +199,7 @@ export function EveningBlock({
                   className="row-span-2 size-14 self-start"
                 />
                 <span data-start-meta className="text-[13px] text-muted-foreground">
-                  {[time, KIND[row.kind], provenance].filter(Boolean).join(" · ")}
+                  {[time, KIND_TEXT[row.kind], provenance].filter(Boolean).join(" · ")}
                 </span>
                 {/* umbrechen nur zwischen den Wertungen, jede bleibt beisammen (kein „ganze / Ringe“) */}
                 <span

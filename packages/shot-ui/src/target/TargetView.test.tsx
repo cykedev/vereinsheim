@@ -277,6 +277,15 @@ describe("TargetView: Probe und Scheibe", () => {
       })
     )
     expect(training).toContain('aria-label="Luftpistole 10 m: 2 Probeschüsse als Training"')
+    const competition = renderToStaticMarkup(
+      createElement(TargetView, {
+        target: LP_10M,
+        shots: asOnPrintout(PROBES),
+        state: initialViewState(),
+        kind: "competition",
+      })
+    )
+    expect(competition).toContain('aria-label="Luftpistole 10 m: 2 Probeschüsse als Wettkampf"')
   })
 
   it("Luftgewehr: die Zehn ist ein weißer Punkt, LP: der Innenzehner gestrichelt", () => {
