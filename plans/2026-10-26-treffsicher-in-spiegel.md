@@ -199,6 +199,20 @@ Vorgeschlagener Schnitt, endgültig im jeweiligen `/plan`:
     PDF.
   - **Dubletten:** Liefert die Brücke dieselbe Scheibe ohnehin (Zustimmung per Sportpass), landet der Scan an ihr,
     abgeglichen über ID und Abend, wie bei „Scheibe per ID“.
+  - **Was der Ausdruck außerdem hergibt** (entschieden mit dem User am 27. Oktober 2026, am Beispiel eines eigenen
+    Ausdrucks): Wert je Schuss mit Zehnteln und Innenzehner (`*`), Zähler, Innenzehner, beste drei Teiler mit
+    Schussnummer (gesamt und je Serie), die drei weitesten Teiler, Trefferlage und Trefferkreis (gesamt und je Serie)
+    und das Trefferbild mit jeder Schussnummer an ihrer Stelle. Genutzt nur für Scheiben ohne Brücke; gemessene haben
+    alles in den Rohdaten. Reihenfolge in 1c:
+    1. **Gegenprobe zuerst** (nur lesend, lokal, an den eigenen Ausdrucken mit gemessener Scheibe dazu): Rechnet Meyton
+       den Trefferkreis wie `group.enclosingDiameter`? Stimmt die Trefferlage mit der Mitte der Schüsse? Stimmen die
+       Teiler? Wie weit liegen die gezeichneten Schussnummern von der gemessenen Lage? Ergebnis nur als Zahlen.
+    2. **Parser und Modell:** Werte je Schuss mit Zehnteln und Innenzehnern; die genannten Teiler am jeweiligen Schuss
+       (kein Mittel über diese Teilmenge, heute braucht nur „bester Teiler“ den Teiler); Trefferlage je Serie und
+       Trefferkreis gesamt und je Serie als kleine Erweiterung des Modells aus 1a-1; der Trefferkreis zählt, wenn die
+       Gegenprobe es trägt, beim Streukreis, nie bei R50, σ oder einem Urteil.
+    3. **1c-2 Lagen aus dem Trefferbild**, eigener Teil, nur wenn die Gegenprobe zeigt, dass die gezeichneten Lagen genau
+       genug sind; dann als eigene Angabe (aus dem Bild), nie gleichgesetzt mit gemessener Lage.
 - **1d Handeingabe (SP-4.4):** „Ergebnis eintragen“ je Serie und je Schuss, Trefferlage als Summe, Beleg an der Scheibe,
   eigene Einträge ändern und löschen. Braucht 1a, für den Beleg den Datei-Speicher aus 1b.
 - **1e Grundlage sichtbar:** geht in 1a-2 auf (entschieden mit dem User am 26. Oktober 2026).
