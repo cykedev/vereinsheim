@@ -174,6 +174,13 @@ Vorgeschlagener Schnitt, endgültig im jeweiligen `/plan`:
   - **Vor 1b-2 live geht:** den Speicher des Lesers im echten Image auf dem VPS messen (amd64; auf dem Mac nur arm64
     nativ, 74 MiB mit `--lite-mode`, oder unter Rosetta verfälscht). Der User führt den Einzeiler aus der Doku von 1b-1
     nach dem Deploy aus. Liegt `maxRssKb` über 80 MiB, Grenze oder Speicher von Spiegel vor 1b-2 anpassen.
+  - **Eine Seite „Scheibe holen“** (entschieden mit dem User am 27. Oktober 2026, Konsistenz): Kamera, Link, PDF
+    hochladen und ID eintippen auf einer Seite (`/scan`), jeder Weg gleich: Liegt die Scheibe des Abends schon in
+    Spiegel, öffnet Spiegel sie (ein PDF hängt nur an); sonst Disziplin und Art wählen (vorbelegt mit der letzten),
+    die Scheibe entsteht sofort („wartet auf die Anlage“) und öffnet sich. Was mit dem Auftrag passiert, steht an der
+    Scheibe („wartet auf die Anlage“, „nicht gefunden“, „passt nicht zum Ausdruck“); „Scheibe per ID holen“ und die
+    Liste der Aufträge im Profil entfallen. Bei getippter ID ohne PDF prüft Spiegel nur den Abend. Ein Tippfehler
+    ergibt eine Scheibe ohne Werte, die man löscht.
   - **Aus 1b-1 für 1b-2:** Die Sperre des Aufräumens bei leerer Tabelle hängt an `printout.count()`, dadurch bleibt die
     letzte verwaiste Datei liegen; an „keine Scheibe“ knüpfen. `printoutFile` liefert auch für eine Scheibe im
     Papierkorb; mit der Seite der Scheibe entscheiden. Next kopiert `src/lib/printouts/` samt Tests ins
