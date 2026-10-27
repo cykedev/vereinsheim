@@ -14,6 +14,7 @@ import { startHintMs } from "../db/blocks"
 import { writeEnteredCard } from "../db/entered"
 import { purgeCards } from "../db/purge"
 import { attachPrintout } from "../printouts/queries"
+import { NO_VALUES } from "../printouts/store"
 
 import { finishRequests, recordRequestOutcomes } from "../card-requests/queries"
 
@@ -416,6 +417,7 @@ describe("Scheibe vom Ausdruck", () => {
           hex: printedId(scheibenId),
           scheibenId,
           printedAt: new Date(zonedWallTimeMs(printedWallMs, ZONE)),
+          values: NO_VALUES,
         },
         saved.cardId
       )

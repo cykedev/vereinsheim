@@ -21,7 +21,13 @@ import { DEFAULT_LIMITS } from "@vereinsheim/meyton-pdf/limits"
 import type { PdfDate } from "@vereinsheim/meyton-pdf/pdf-date"
 import type { PrintoutIdResult } from "@vereinsheim/meyton-pdf/printout-id"
 
-import { childResultSchema, READY_LINE } from "./protocol"
+import {
+  childResultSchema,
+  READY_LINE,
+  valuesLineSchema,
+  valuesSchema,
+  type ValuesRead,
+} from "./protocol"
 
 const CHILD_HEAP_MB = 48
 /** unter tsx liegt der Lader selbst im Heap */
@@ -49,6 +55,10 @@ export type IsolatedRead =
       pages: number
       id: PrintoutIdResult
       createdAt: (PdfDate & { source: "info" | "xmp" }) | null
+      /** Erzeuger im Info-Dict, gekürzt */
+      producer: string | null
+      /** Werte und Lesung; scheitern sie, gelten ID und Druckzeit trotzdem */
+      values: ValuesRead
       maxRssKb: number
     }
   | { kind: "failed"; reason: ReadFailure }
@@ -206,27 +216,51 @@ function runChild(bytes: Uint8Array, options: IsolatedReadOptions): Promise<Isol
       finish(failed(reason ?? "crashed"))
     })
     child.on("close", (code, signal) => {
-      if (reason) return finish(failed(reason))
+      const lines = ready ? Buffer.concat(stdout).toString("utf8").split("\n") : []
       // SIGKILL, ohne dass die App ihn schickte: der OOM-Killer (`oom_score_adj` im Kindprozess)
-      if (signal === "SIGKILL") return finish(failed("memory"))
-      const line = ready ? Buffer.concat(stdout).toString("utf8").split("\n")[1] : undefined
-      const result = code === 0 ? parseResult(line) : null
-      if (result) return finish(result)
+      const killed: ReadFailure | null = reason ?? (signal === "SIGKILL" ? "memory" : null)
+      const result = parseResult(lines[1])
+      // ID und Druckzeit kamen vor den Werten: Sie gelten, auch wenn der Kindprozess danach scheiterte
+      if (result?.kind === "read") {
+        const values = killed === null && code === 0 ? parseValues(lines[2]) : null
+        if (values) {
+          return finish({
+            ...result,
+            values: values.values,
+            maxRssKb: Math.max(result.maxRssKb, values.maxRssKb),
+          })
+        }
+        if (killed) console.warn(`Werte im Kindprozess: ${killed}`)
+        return finish({
+          ...result,
+          values: { kind: "failed", code: killed === "timeout" ? "timeout" : "unreadable" },
+        })
+      }
+      if (killed) return finish(failed(killed))
+      if (code === 0 && result) return finish(result)
       const message = Buffer.concat(stderr).toString("utf8")
       finish(failed(/heap limit|out of memory/i.test(message) ? "memory" : "crashed"))
     })
   })
 }
 
-function parseResult(line: string | undefined): IsolatedRead | null {
-  if (!line) return null
-  let json: unknown
+function parseJson(line: string | undefined): unknown {
+  if (!line) return undefined
   try {
-    json = JSON.parse(line)
+    return JSON.parse(line)
   } catch {
-    return null
+    return undefined
   }
-  const parsed = childResultSchema.safeParse(json)
+}
+
+/** die erste Zeile: ID und Druckzeit, die Werte noch offen */
+function parseResult(
+  line: string | undefined
+):
+  | (Omit<Extract<IsolatedRead, { kind: "read" }>, "values"> & { kind: "read" })
+  | IsolatedRead
+  | null {
+  const parsed = childResultSchema.safeParse(parseJson(line))
   if (!parsed.success) return null
   const result = parsed.data
   if (!result.ok) return failed(result.code)
@@ -235,12 +269,24 @@ function parseResult(line: string | undefined): IsolatedRead | null {
     pages: result.pages,
     id: result.id,
     createdAt: result.createdAt,
+    producer: result.producer,
     maxRssKb: result.maxRssKb,
   }
 }
 
+/** die zweite Zeile; ungültige Werte gelten als nicht lesbar */
+function parseValues(line: string | undefined): { values: ValuesRead; maxRssKb: number } | null {
+  const parsed = valuesLineSchema.safeParse(parseJson(line))
+  if (!parsed.success) return null
+  const values = valuesSchema.safeParse(parsed.data.values)
+  return {
+    values: values.success ? values.data : { kind: "failed", code: "unreadable" },
+    maxRssKb: parsed.data.maxRssKb,
+  }
+}
+
 /**
- * Liest ID und Erstellzeit eines Ausdrucks im Kindprozess. Einer zur Zeit, höchstens drei warten, sonst sofort `busy`.
+ * Liest ID, Erstellzeit und Werte eines Ausdrucks im Kindprozess. Einer zur Zeit, höchstens drei warten, sonst sofort `busy`.
  * Die Zeitgrenze `maxParseMs` beginnt erst, wenn der Kindprozess pdf.js geladen hat; den Start begrenzen eigene 5 s.
  * Ins Log gehen nur feste Gründe.
  */

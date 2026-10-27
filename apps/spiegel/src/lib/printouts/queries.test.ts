@@ -9,7 +9,7 @@ import { createPrismaClient } from "@/lib/db"
 import { createTestSite, type TestSite } from "../../../test/fixtures"
 import { writePrintoutFile } from "./files"
 import { attachPrintout, printoutFile } from "./queries"
-import type { StoredPrintout } from "./store"
+import { NO_VALUES, type StoredPrintout } from "./store"
 
 const db = createPrismaClient()
 
@@ -23,6 +23,7 @@ const stored = (text: string, hex = "ff914420"): StoredPrintout => ({
   hex,
   scheibenId: -7257056,
   printedAt: new Date("2026-10-02T17:52:12Z"),
+  values: NO_VALUES,
 })
 
 let site: TestSite

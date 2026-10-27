@@ -5,8 +5,9 @@ import { join } from "node:path"
 import { bombContent, buildPdf, type TestText } from "@vereinsheim/meyton-pdf/test-pdf"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
+import { valuedPrintout } from "../../../test/printout"
 import { printoutDir } from "./files"
-import { storePrintout } from "./store"
+import { storePrintout, valuesReadOf } from "./store"
 
 // Erfundene Ausdrucke aus `buildPdf`; die Datei landet in einem eigenen Verzeichnis je Test.
 
@@ -72,6 +73,62 @@ describe("storePrintout: gespeichert", () => {
     expect(second).toMatchObject({ kind: "stored" })
     expect(await storedFiles()).toHaveLength(1)
   })
+})
+
+describe("storePrintout: Werte", () => {
+  it("stimmig: Status ok mit Lesung, Version und Layout", async () => {
+    const result = await storePrintout({ bytes: await valuedPrintout(), timeZone: ZONE })
+    if (result.kind !== "stored") throw new Error("nicht gespeichert")
+    expect(result.file.values).toMatchObject({
+      readerVersion: "meyton-values@1",
+      layout: "qt",
+      status: "ok",
+      discipline: "LP 40",
+    })
+    expect(result.file.values.reading?.shots).toHaveLength(40)
+    expect(result.maxRssKb).toBeGreaterThan(0)
+  }, 15_000)
+
+  it("Widerspruch: inconsistent, ohne Lesung, die Disziplin bleibt", async () => {
+    const bytes = await valuedPrintout({
+      layout: "ghostscript",
+      tamper: (spec) => (spec.result = "1 (0.1)"),
+    })
+    const result = await storePrintout({ bytes, timeZone: ZONE })
+    if (result.kind !== "stored") throw new Error("nicht gespeichert")
+    expect(result.file.values).toEqual({
+      readerVersion: "meyton-values@1",
+      layout: "ghostscript",
+      status: "inconsistent",
+      reading: null,
+      discipline: "LP 40",
+    })
+  }, 15_000)
+
+  it("ohne Werte: empty; nicht lesbar: unreadable", async () => {
+    const bytes = await buildPdf({
+      pages: [footer("ff914420")],
+      info: { CreationDate: "D:20261002195212+02'00'" },
+    })
+    const result = await storePrintout({ bytes, timeZone: ZONE })
+    expect(result.kind === "stored" && result.file.values.status).toBe("empty")
+    expect(valuesReadOf({ kind: "failed", code: "timeout" })).toEqual({
+      readerVersion: "meyton-values@1",
+      layout: null,
+      status: "unreadable",
+      reading: null,
+      discipline: null,
+    })
+  })
+
+  it("write: false liest nur und legt keine Datei an", async () => {
+    const result = await storePrintout(
+      { bytes: await valuedPrintout(), timeZone: ZONE },
+      { write: false }
+    )
+    expect(result).toMatchObject({ kind: "stored", file: { values: { status: "ok" } } })
+    expect(await storedFiles()).toEqual([])
+  }, 15_000)
 })
 
 describe("storePrintout: abgelehnt, ohne Datei", () => {

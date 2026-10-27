@@ -10,7 +10,7 @@ import { createTestSite, type TestSite } from "../../../test/fixtures"
 import { writePrintoutFile } from "./files"
 import { printoutResponse } from "./http"
 import { attachPrintout } from "./queries"
-import type { StoredPrintout } from "./store"
+import { NO_VALUES, type StoredPrintout } from "./store"
 
 const db = createPrismaClient()
 const BYTES = new TextEncoder().encode("%PDF-1.4 erfundener Ausdruck")
@@ -46,6 +46,7 @@ async function printout(card: { ownerPending?: boolean; deletedAt?: Date } = {},
     hex: "ff914420",
     scheibenId: -7257056,
     printedAt: new Date("2026-10-02T17:52:12Z"),
+    values: NO_VALUES,
   }
   if (withFile) await writePrintoutFile(file.sha256, BYTES)
   const row = await db.card.create({

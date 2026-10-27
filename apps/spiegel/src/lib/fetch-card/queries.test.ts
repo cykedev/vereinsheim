@@ -8,7 +8,7 @@ import { createTestSite, type TestSite } from "../../../test/fixtures"
 import { dismissRequest, MAX_OPEN_REQUESTS } from "../card-requests/queries"
 import { writeRevision } from "../db/cards"
 import { kindOfRow } from "../db/reads"
-import type { StoredPrintout } from "../printouts/store"
+import { NO_VALUES, type StoredPrintout } from "../printouts/store"
 
 import {
   cardFetchInfo,
@@ -57,6 +57,7 @@ const file = (scheibenId: number, text = "a", printedAt = PRINTED): StoredPrinto
   hex: (scheibenId >>> 0).toString(16).padStart(8, "0"),
   scheibenId,
   printedAt,
+  values: NO_VALUES,
 })
 const choice = { disciplineId: 0, kind: "competition" as const }
 const input = (scheibenId: number, over: Partial<FetchInput> = {}): FetchInput => ({

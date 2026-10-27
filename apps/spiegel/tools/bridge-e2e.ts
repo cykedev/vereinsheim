@@ -33,6 +33,7 @@ import { createPrismaClient } from "../src/lib/db"
 import { writeEnteredCard } from "../src/lib/db/entered"
 import { createPairing } from "../src/lib/ingest/bridges"
 import { attachPrintout } from "../src/lib/printouts/queries"
+import { NO_VALUES } from "../src/lib/printouts/store"
 import { DEV_DATABASE_URL } from "../test/dev-database"
 import { appDir, startServer } from "@vereinsheim/pruefen/server"
 
@@ -189,6 +190,7 @@ async function main() {
             hex: printedId(scheibenId),
             scheibenId,
             printedAt: new Date(printedAtMs),
+            values: NO_VALUES,
           },
           saved.cardId
         )
