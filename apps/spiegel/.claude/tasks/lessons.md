@@ -22,4 +22,5 @@ Geschichte in `vault/incidents/`.
   Aufräumen der Demo-Scheiben, weil „entfernt 0“ blieb. → DOCUMENT (conventions §9)
 - **Ein `<title>` im SVG steht im Textinhalt:** `MpiMark` trägt `<title>Schwerpunkt</title>`. Die Zeile daneben las
   `textContent` als „Schwerpunktnur die Mitte …“, die Skriptprüfung verglich auf Gleichheit. Sichtbar ist der Titel
-  nicht. Prüfungen auf Text neben einem Zeichen vergleichen das Satzende. → ARCHIVE (in `pruefen` gelöst)
+  nicht. Ein Zeichen, das nur schmückt, bekommt keinen Titel (`MpiMark decorative`), dann liest der Screenreader nur den
+  Satz und die Prüfung vergleicht ihn ganz. → ARCHIVE (im Code gelöst)

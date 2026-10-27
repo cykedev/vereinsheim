@@ -118,7 +118,7 @@ export function SummaryResult({
 function CenterMark() {
   return (
     <svg viewBox="-1.4 -1.4 2.8 2.8" aria-hidden="true" className="size-3.5 shrink-0">
-      <MpiMark x={0} y={0} radius={1} />
+      <MpiMark x={0} y={0} radius={1} decorative />
     </svg>
   )
 }

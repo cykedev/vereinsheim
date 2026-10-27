@@ -90,6 +90,10 @@ describe("Seite einer Scheibe ohne Einzelschüsse", () => {
     expect(result).toMatch(/data-summary-reason="true"[^>]*>nur Gesamtergebnis · ohne Zehntel</)
     expect(text(box)).toContain("Für Streuung und Tempo braucht es Einzelschüsse.")
     expect(text(box)).toContain(CENTER_ONLY_NOTE)
+    // das Zeichen davor ist Schmuck: ohne Titel, die Zeile liest nur den Satz
+    const note = /<p data-center-note[^>]*>([\s\S]*?)<\/p>/.exec(box)?.[1] ?? ""
+    expect(note).not.toContain("<title>")
+    expect(text(note)).toBe(CENTER_ONLY_NOTE)
     expect(box).not.toContain("data-sum-series")
   })
 
