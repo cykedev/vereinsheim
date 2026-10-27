@@ -74,19 +74,20 @@ export interface SweepFile {
 
 /**
  * Welche Dateien weg dürfen: `<sha256>.pdf` ohne Zeile und liegengebliebene `.tmp-*`, beide älter als `graceMs`; andere
- * Namen nie. Ist die Tabelle ganz leer und liegen Ausdrucke da, nichts: Dann zeigt die App womöglich auf eine falsche
- * oder leere Datenbank.
+ * Namen nie. Gibt es gar keine Scheibe und liegen Ausdrucke da, nichts: Dann zeigt die App womöglich auf eine falsche
+ * oder leere Datenbank. Eine leere Tabelle der Ausdrucke allein reicht dafür nicht, sonst bliebe die letzte verwaiste
+ * Datei für immer liegen.
  */
 export function filesToRemove(input: {
   files: readonly SweepFile[]
   referenced: ReadonlySet<string>
-  totalRows: number
+  anyCard: boolean
   nowMs: number
   graceMs: number
 }): string[] {
-  const { files, referenced, totalRows, nowMs, graceMs } = input
+  const { files, referenced, anyCard, nowMs, graceMs } = input
   const old = (file: SweepFile) => nowMs - file.mtimeMs > graceMs
-  if (totalRows === 0 && files.some((file) => PDF_FILE.test(file.name))) return []
+  if (!anyCard && files.some((file) => PDF_FILE.test(file.name))) return []
   return files
     .filter((file) => {
       if (file.name.startsWith(TMP_PREFIX)) return old(file)
@@ -96,7 +97,7 @@ export function filesToRemove(input: {
     .map((file) => file.name)
 }
 
-/** löscht die Dateien, auf die keine Zeile mehr zeigt (`filesToRemove`); `skipped`, wenn die Sperre der leeren Tabelle griff */
+/** löscht die Dateien, auf die keine Zeile mehr zeigt (`filesToRemove`); `skipped`, wenn die Sperre ohne Scheibe griff */
 export async function removeOrphanPrintoutFiles(
   db: Db,
   { nowMs = Date.now(), graceMs = SWEEP_GRACE_MS }: { nowMs?: number; graceMs?: number } = {}
@@ -120,7 +121,7 @@ export async function removeOrphanPrintoutFiles(
     }
   }
 
-  const totalRows = await db.printout.count()
+  const anyCard = (await db.card.findFirst({ select: { id: true } })) !== null
   const shas = files.flatMap((file) => PDF_FILE.exec(file.name)?.[1] ?? [])
   const referenced = new Set<string>()
   for (let start = 0; start < shas.length; start += SWEEP_BATCH) {
@@ -132,7 +133,7 @@ export async function removeOrphanPrintoutFiles(
     for (const row of rows) referenced.add(row.sha256)
   }
 
-  const remove = filesToRemove({ files, referenced, totalRows, nowMs, graceMs })
+  const remove = filesToRemove({ files, referenced, anyCard, nowMs, graceMs })
   let removed = 0
   for (const name of remove) {
     // Dieselben Bytes können inzwischen neu geschrieben sein (`rename` auf denselben Namen); dann bleibt die Datei.
@@ -146,7 +147,7 @@ export async function removeOrphanPrintoutFiles(
       if (!isMissing(error)) throw error
     }
   }
-  const skipped = totalRows === 0 && files.some((file) => PDF_FILE.test(file.name))
+  const skipped = !anyCard && files.some((file) => PDF_FILE.test(file.name))
   return { removed, skipped }
 }
 
@@ -155,7 +156,7 @@ export function sweepPrintoutsSoon(db: Db): void {
   void removeOrphanPrintoutFiles(db)
     .then(({ removed, skipped }) => {
       if (removed) console.warn(`${removed} Ausdrucke ohne Scheibe gelöscht`)
-      if (skipped) console.warn("Ausdrucke: Tabelle leer, Dateien bleiben")
+      if (skipped) console.warn("Ausdrucke: keine Scheibe, Dateien bleiben")
     })
     .catch((error: unknown) =>
       console.error(

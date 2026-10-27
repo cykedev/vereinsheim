@@ -45,7 +45,7 @@ afterEach(async () => {
 describe("filesToRemove", () => {
   const old = NOW - HOUR
   const young = NOW - 60_000
-  const base = { referenced: new Set([B]), totalRows: 5, nowMs: NOW, graceMs: GRACE }
+  const base = { referenced: new Set([B]), anyCard: true, nowMs: NOW, graceMs: GRACE }
 
   it("alt ohne Zeile weg; jung, mit Zeile und fremde Namen bleiben; alte .tmp- weg", () => {
     expect(
@@ -63,11 +63,17 @@ describe("filesToRemove", () => {
     ).toEqual([`${A}.pdf`, `.tmp-${A}-1`])
   })
 
-  it("leere Tabelle: keine Datei, solange Ausdrucke da sind; sonst nur .tmp-", () => {
+  it("keine Tabelle der Ausdrucke, aber Scheiben: die letzte verwaiste Datei geht", () => {
+    expect(
+      filesToRemove({ ...base, referenced: new Set(), files: [{ name: `${A}.pdf`, mtimeMs: old }] })
+    ).toEqual([`${A}.pdf`])
+  })
+
+  it("keine Scheibe: keine Datei, solange Ausdrucke da sind; sonst nur .tmp-", () => {
     expect(
       filesToRemove({
         ...base,
-        totalRows: 0,
+        anyCard: false,
         files: [
           { name: `${A}.pdf`, mtimeMs: old },
           { name: `.tmp-${A}-1`, mtimeMs: old },
@@ -75,7 +81,7 @@ describe("filesToRemove", () => {
       })
     ).toEqual([])
     expect(
-      filesToRemove({ ...base, totalRows: 0, files: [{ name: `.tmp-${A}-1`, mtimeMs: old }] })
+      filesToRemove({ ...base, anyCard: false, files: [{ name: `.tmp-${A}-1`, mtimeMs: old }] })
     ).toEqual([`.tmp-${A}-1`])
   })
 })
@@ -132,11 +138,8 @@ describe("removeOrphanPrintoutFiles mit Datenbank", () => {
   it("eine Datei bleibt, solange eine Zeile auf sie zeigt", async () => {
     const first = await pdfCard()
     const second = await pdfCard()
-    // eine dritte Zeile hält die Tabelle nicht leer, sonst griffe die Sperre
-    const other = await pdfCard()
     await attach(first.id, A)
     await attach(second.id, A)
-    await attach(other.id, B)
     await writePrintoutFile(A, new TextEncoder().encode("%PDF-1.4 Test"))
     const hourAgo = new Date(Date.now() - HOUR)
     await utimes(printoutPath(A), hourAgo, hourAgo)

@@ -5,6 +5,7 @@
 import type { Prisma } from "@/generated/prisma/client"
 import type { Db } from "@/lib/db"
 
+import { VISIBLE_CARD } from "../db/visible"
 import { readPrintoutBytes } from "./files"
 import type { StoredPrintout } from "./store"
 
@@ -30,15 +31,18 @@ export async function attachPrintout(
   return row.id
 }
 
-/** die Datei eines Ausdrucks, nur für den Besitzer der Scheibe und nicht, solange sie wartet; sonst null */
+/**
+ * die Datei eines Ausdrucks, nur für den Besitzer der Scheibe und nur, wo die Seite der Scheibe sie zeigt: nicht wartend,
+ * nicht im Papierkorb, nicht bei ignorierter Disziplin; sonst null
+ */
 export async function printoutFile(
   db: Db,
   printoutId: string,
   ownerId: string
-): Promise<{ bytes: Buffer; fileName: string } | null> {
+): Promise<{ bytes: Buffer; fileName: string; hex: string | null } | null> {
   const row = await db.printout.findFirst({
-    where: { id: printoutId, card: { is: { ownerId, ownerPending: false } } },
-    select: { sha256: true, fileName: true },
+    where: { id: printoutId, card: { is: { ownerId, ...VISIBLE_CARD } } },
+    select: { sha256: true, fileName: true, footerId: true },
   })
   if (!row) return null
   const bytes = await readPrintoutBytes(row.sha256)
@@ -46,5 +50,5 @@ export async function printoutFile(
     console.error("Ausdruck ohne Datei")
     return null
   }
-  return { bytes, fileName: row.fileName }
+  return { bytes, fileName: row.fileName, hex: row.footerId }
 }

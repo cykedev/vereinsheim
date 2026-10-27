@@ -107,6 +107,29 @@ describe("printoutFile", () => {
     expect(await printoutFile(db, waitingId, site.ownerId)).toBeNull()
   })
 
+  it("nicht im Papierkorb und nicht bei ignorierter Disziplin", async () => {
+    const file = { ...stored("f"), size: BYTES.length }
+    await writePrintoutFile(file.sha256, BYTES)
+    const card = await pdfCard()
+    const id = await attachPrintout(db, file, card.id)
+    expect((await printoutFile(db, id, site.ownerId))?.hex).toBe("ff914420")
+
+    await db.card.update({ where: { id: card.id }, data: { deletedAt: new Date() } })
+    expect(await printoutFile(db, id, site.ownerId)).toBeNull()
+    await db.card.update({ where: { id: card.id }, data: { deletedAt: null } })
+
+    await db.discipline.update({
+      where: { id: site.disciplineId },
+      data: { ignoredAt: new Date() },
+    })
+    try {
+      expect(await printoutFile(db, id, site.ownerId)).toBeNull()
+    } finally {
+      await db.discipline.update({ where: { id: site.disciplineId }, data: { ignoredAt: null } })
+    }
+    expect(await printoutFile(db, id, site.ownerId)).not.toBeNull()
+  })
+
   it("Zeile ohne Datei: null", async () => {
     const card = await pdfCard()
     const id = await attachPrintout(db, stored("ohne Datei"), card.id)
