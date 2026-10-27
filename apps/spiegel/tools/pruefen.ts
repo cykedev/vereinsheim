@@ -513,15 +513,17 @@ async function phoneCard(page: Page, href: string) {
   )
   // Kasten „Diese Scheibe“: die Aktion steht neben ihrem Text, nicht darunter (der Knopf im Kopf der Zeile, nicht im Blatt)
   const actionRows = await page.ev<string[]>(`$$("[data-card-actions] h3").map((h) => {
-    const row = h.closest("[data-card-discipline], [data-share-card], [data-delete-card]")
-    const b = row && row.firstElementChild.querySelector("button")
+    const row = h.closest("[data-card-printout], [data-card-fetch], [data-card-discipline], [data-share-card], [data-delete-card]")
+    const b = row && row.firstElementChild.querySelector("button, a")
     if (!b) return txt(h) + ": ohne Knopf"
     const beside = Math.abs(b.getBoundingClientRect().top - h.getBoundingClientRect().top) < 30
     return txt(h) + (beside ? ": daneben" : ": darunter")
   })`)
   check(
     "Telefon 375 px: im Kasten „Diese Scheibe“ steht jede Aktion neben ihrem Text",
-    actionRows.length === 3 && actionRows.every((r) => !r.endsWith(": darunter")),
+    ["Disziplin", "Teilen", "Löschen"].every((t) =>
+      actionRows.some((r) => r.startsWith(`${t}:`))
+    ) && actionRows.every((r) => !r.endsWith(": darunter")),
     actionRows.join(" · ")
   )
   const tabs = await page.ev<string[]>(
@@ -914,7 +916,7 @@ const printedIdOf = (page: Page) =>
 
 /**
  * im Blatt „Neue Scheibe“: Ist eine Disziplin vorbelegt, ist es genau eine (die der jüngsten Scheibe, wenn sie an dieser
- * Anlage zur Wahl steht); sonst ist „Scheibe anlegen“ gesperrt, bis die Prüfung die erste wählt. Dann anlegen und auf
+ * Anlage zur Wahl steht); sonst sagt „Scheibe anlegen“ ohne Wahl „Wähle eine Disziplin.“, dann wählt die Prüfung die erste. Dann anlegen und auf
  * die Seite der neuen Scheibe warten. Liefert den Text des Blatts, die Zahl der markierten und die Adresse der Scheibe.
  */
 async function createInSheet(page: Page) {
@@ -926,9 +928,15 @@ async function createInSheet(page: Page) {
   const marked = await page.ev<number>(
     `$$('[data-discipline-option][aria-current="true"]', sheet()).length`
   )
-  const lockedWithout =
-    marked === 0 ? await page.ev<boolean>(`!!$("[data-new-card-create]", sheet())?.disabled`) : true
-  if (marked === 0) await page.click(`$("[data-discipline-option]", sheet())`)
+  let lockedWithout = true
+  if (marked === 0) {
+    // ohne Wahl legt der Knopf nichts an, sondern sagt, was fehlt
+    await page.click(`$("[data-new-card-create]", sheet())`)
+    lockedWithout =
+      (await page.waitFor(`txt(sheet()).includes("Wähle eine Disziplin.")`)) &&
+      (await page.ev<boolean>(`location.pathname === "/scan"`))
+    await page.click(`$("[data-discipline-option]", sheet())`)
+  }
   await page.click(`$("[data-new-card-create]", sheet())`)
   await page.waitFor(`location.pathname.startsWith("/cards/c")`, 15_000)
   await page.waitFor(`!!$("[data-card-actions]")`, 10_000)
@@ -997,7 +1005,7 @@ async function fetchCards(page: Page) {
     const viaLink = await createInSheet(page)
     created.push(viaLink.path)
     check(
-      "Link: Blatt „Neue Scheibe“, höchstens eine Disziplin vorbelegt, ohne Vorbelegung gesperrt",
+      "Link: Blatt „Neue Scheibe“, höchstens eine Disziplin vorbelegt, ohne Wahl „Wähle eine Disziplin.“",
       viaLink.text.includes("Diese Scheibe liegt noch nicht in Spiegel") &&
         viaLink.text.includes(`ID ${PROBE_LINK}`) &&
         viaLink.marked <= 1 &&

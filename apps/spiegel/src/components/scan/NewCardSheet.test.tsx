@@ -41,11 +41,14 @@ describe("Blatt „Neue Scheibe“ (Markup)", () => {
     expect(html).not.toContain("hattest du gelöscht")
   })
 
-  it("ohne Vorbelegung gesperrt mit Hinweis; nach aufgehobener Sperre der Satz dazu", () => {
+  it("ohne Vorbelegung aktiv, ohne Hinweis vor dem Tippen; nach aufgehobener Sperre der Satz dazu", () => {
     const html = render({ disciplineId: null, kind: "training" }, true)
     expect(html).not.toContain('aria-current="true"')
-    expect(html).toMatch(/<button[^>]*data-new-card-create="true"[^>]*disabled=""/)
-    expect(html).toContain("Wähle eine Disziplin.")
+    // aktiv: ohne Wahl sagt der Knopf beim Tippen „Wähle eine Disziplin.“ (Skriptprüfung)
+    expect(html).toMatch(
+      /<button[^>]*data-new-card-create="true"(?![^>]*disabled)[^>]*>Scheibe anlegen/
+    )
+    expect(html).not.toContain("Wähle eine Disziplin.")
     expect(html).toContain("Diese Scheibe hattest du gelöscht. Spiegel holt sie wieder.")
   })
 })

@@ -4,6 +4,7 @@ import { useState } from "react"
 
 import { KIND_TEXT } from "@vereinsheim/shot-ui/list/KindMark"
 import { Button } from "@vereinsheim/ui/button"
+import { FieldError } from "@vereinsheim/ui/field-error"
 import { Segmented } from "@vereinsheim/ui/design2/segmented"
 import { Sheet } from "@vereinsheim/ui/design2/sheet"
 
@@ -19,7 +20,7 @@ const KINDS = (["training", "competition"] as const).map((value) => ({
 
 /**
  * Blatt „Neue Scheibe“: Die Scheibe liegt noch nicht in Spiegel. Der Schütze wählt Disziplin und Art, vorbelegt mit
- * seiner letzten Scheibe; ohne Disziplin bleibt der Knopf gesperrt. Ohne Rückfrage: Holen ist der ausdrückliche Wunsch,
+ * seiner letzten Scheibe; ohne Disziplin sagt der Knopf „Wähle eine Disziplin.“ statt anzulegen. Ohne Rückfrage: Holen ist der ausdrückliche Wunsch,
  * der Rückweg ist Löschen.
  */
 export function NewCardSheet({
@@ -45,6 +46,7 @@ export function NewCardSheet({
 }) {
   const [disciplineId, setDisciplineId] = useState(preset.disciplineId)
   const [kind, setKind] = useState<CardKind>(preset.kind)
+  const [missing, setMissing] = useState(false)
 
   return (
     <Sheet open={open} onClose={onClose} title="Neue Scheibe">
@@ -63,7 +65,10 @@ export function NewCardSheet({
         )}
         <DisciplineChoice
           options={options.map((option) => ({ ...option, current: option.id === disciplineId }))}
-          onChoose={(option) => setDisciplineId(option.id)}
+          onChoose={(option) => {
+            setDisciplineId(option.id)
+            setMissing(false)
+          }}
         />
         <div data-kind-option className="grid gap-2">
           <p className="text-[13px] font-semibold text-muted-foreground">Art</p>
@@ -74,16 +79,19 @@ export function NewCardSheet({
             type="button"
             data-new-card-create
             className="h-10"
-            disabled={pending || disciplineId === null}
-            onClick={() => disciplineId !== null && onCreate({ disciplineId, kind })}
+            disabled={pending}
+            {...(missing ? { "aria-describedby": "new-card-missing" } : {})}
+            onClick={() => {
+              if (disciplineId === null) setMissing(true)
+              else onCreate({ disciplineId, kind })
+            }}
           >
             {pending ? "Anlegen…" : "Scheibe anlegen"}
           </Button>
-          {disciplineId === null && (
-            <p data-new-card-missing className="text-sm text-muted-foreground">
-              Wähle eine Disziplin.
-            </p>
-          )}
+          <FieldError
+            id="new-card-missing"
+            message={missing ? "Wähle eine Disziplin." : undefined}
+          />
         </div>
       </div>
     </Sheet>
