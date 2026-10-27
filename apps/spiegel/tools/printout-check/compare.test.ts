@@ -52,6 +52,7 @@ function values(overrides: Partial<PrintoutValues>): PrintoutValues {
   return {
     discipline: null,
     mode: null,
+    shooter: null,
     result: null,
     seriesRings: null,
     counts: null,

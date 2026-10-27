@@ -19,6 +19,7 @@
     "measure": "tsx tools/measure.ts",
     "seed:own": "tsx tools/seed-own.ts",
     "projection-check": "tsx tools/projection-check.ts",
+    "printout-check": "tsx tools/printout-check.ts",
     "pruefen": "tsx tools/pruefen.ts",
     "ingest-load": "tsx tools/ingest-load.ts",
     "stack-probe": "tsx tools/stack-probe.ts",
