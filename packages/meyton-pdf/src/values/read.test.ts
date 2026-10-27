@@ -108,6 +108,8 @@ const qtHead = [
   text("StandNr: 4", 57, 766, 13),
   text("Probe", 280, 766, 13),
   text("02.10.2026 19:52", 436, 766, 13),
+  text("Muster, Max", 58, 749, 13),
+  text("#12345678", 153, 749, 9),
   text("Ergebnis:", 57, 702, 12),
   text("97", 157, 701, 12),
   text("(101.3)", 181, 701, 12),
@@ -128,7 +130,10 @@ const qtHead = [
   text("Serie 1:", 155, 571),
   text("97", 190, 571),
   text("(101.3)", 206, 571),
-  ...["10.5*", "9.8", "10.1", "9.4", "8.9"].map((v, i) => text(v, 205 + i * 77, 557)),
+  // der erste Wert einer Zeile steht wie bei Ghostscript einen Hauch tiefer als die übrigen
+  ...["10.5*", "9.8", "10.1", "9.4", "8.9"].map((v, i) =>
+    text(v, 205 + i * 77, i === 0 ? 556.99 : 557)
+  ),
   ...["10.6*", "10.2", "9.9", "8.2", "9.0"].map((v, i) => text(v, 205 + i * 77, 543)),
   text("beste Teiler:", 154, 529),
   text("88.1 (1.), 201.7 (6.), 255.0 (3.)", 250, 529),
@@ -203,6 +208,7 @@ describe("readPrintoutValues", () => {
     const values = await readPrintoutValues(await printout(qtHead))
     expect(values.discipline).toBe("LP 40")
     expect(values.mode).toBe("Probe")
+    expect(values.shooter).toBe("Muster, Max")
     expect(values.result).toEqual({ rings: 97, tenths: 1013 })
     expect(values.seriesRings).toEqual([97])
     expect(values.counts).toEqual([4, 4, 1, 1, 0, 0, 0, 0, 0, 0, 0])
@@ -258,6 +264,7 @@ describe("readPrintoutValues", () => {
     )
     expect(values.result).toBeNull()
     expect(values.mode).toBeNull()
+    expect(values.shooter).toBeNull()
     expect(values.counts).toBeNull()
     expect(values.bestTeiler).toBeNull()
     expect(values.centerMm).toBeNull()

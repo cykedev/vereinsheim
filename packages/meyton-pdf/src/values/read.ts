@@ -62,6 +62,11 @@ function tenthsOf(text: string): number | null {
 }
 
 const sameLine = (a: TextPiece, b: TextPiece) => Math.abs(a.y - b.y) < 0.3 * b.size
+/**
+ * Zeile für Zeile von oben, in der Zeile von links. Nicht nach y allein: Ghostscript setzt Werte derselben Zeile um
+ * Bruchteile eines Punkts versetzt, und der erste Wert einer Serie rutschte so ans Zeilenende.
+ */
+const readingOrder = (a: TextPiece, b: TextPiece) => (sameLine(a, b) ? a.x - b.x : b.y - a.y)
 
 const LABELS = [
   "Ergebnis:",
@@ -151,6 +156,7 @@ const inside = (box: BoxPt, x: number, y: number, margin = 0) =>
 interface TextValues {
   discipline: string | null
   mode: string | null
+  shooter: string | null
   head: Partial<Record<Label, string>>
   series: SeriesValues[]
   layout: string[]
@@ -200,7 +206,7 @@ export function readText(pieces: readonly TextPiece[], frames: readonly BoxPt[] 
   // Werte des Kopfs stehen links der Bilder; rechts davon beginnt die Zeichnung.
   const left = Math.min(Infinity, ...frames.filter((f) => f.left > 200).map((f) => f.left))
 
-  const top = [...outside].sort((a, b) => b.y - a.y || a.x - b.x)
+  const top = [...outside].sort(readingOrder)
   const discipline = top[0]?.str.trim() ?? null
   const stand = outside.find((p) => /^StandNr:/.test(p.str.trim()))
   const mode = stand
@@ -209,6 +215,15 @@ export function readText(pieces: readonly TextPiece[], frames: readonly BoxPt[] 
         .sort((a, b) => a.x - b.x)
         .map((p) => p.str.trim())
         .find((s) => !/\d/.test(s)) ?? null)
+    : null
+  // die Zeile mit „#Nummer“: davor der Name
+  const number = outside.find((p) => /^#\d+$/.test(p.str.trim()))
+  const shooter = number
+    ? outside
+        .filter((p) => p !== number && sameLine(p, number) && p.x < number.x)
+        .sort((a, b) => a.x - b.x)
+        .map((p) => p.str.trim())
+        .join(" ") || null
     : null
 
   // Zeilen der Serien: der Kopf „Serie n:“ (bei Ghostscript samt Summe in einem Stück), darunter die Werte, dann die
@@ -238,14 +253,14 @@ export function readText(pieces: readonly TextPiece[], frames: readonly BoxPt[] 
       -Infinity,
       ...block.filter((p) => p.str.trim().endsWith(":")).map((p) => p.y)
     )
-    const rows = block.filter((p) => p.y > firstLabel + 1).sort((a, b) => b.y - a.y || a.x - b.x)
+    const rows = block.filter((p) => p.y > firstLabel + 1).sort(readingOrder)
     const below = block.filter((p) => p.y <= firstLabel + 1)
     const sumText = SERIES_HEAD.test(h.piece.str.trim()) ? lineText(outside, h.piece) : h.rest
     layout.push(`Serie ${h.number}:`)
     return seriesValues(h.number, sumText, rows, below, outside)
   })
 
-  return { discipline, mode, head, series, layout }
+  return { discipline, mode, shooter, head, series, layout }
 }
 
 // ── Zeichnung ───────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -382,6 +397,7 @@ export function valuesOf(
   return {
     discipline: text.discipline,
     mode: text.mode,
+    shooter: text.shooter,
     result: parsed("Ergebnis:", parseSum),
     seriesRings: parsed("Serien:", parseInts),
     counts: parsed("Zähler:", parseInts),

@@ -88,6 +88,11 @@ export interface PrintoutValues {
   discipline: string | null
   /** Modus beim Druck, etwa „Probe“, „Wertung“, „Training“ */
   mode: string | null
+  /**
+   * Name vor der #Nummer im Kopf; nur zum Erkennen, welche Ausdrucke einer Sammlung zum selben Schützen gehören. Nie
+   * speichern oder ausgeben (ADR-029).
+   */
+  shooter: string | null
   result: SumValue | null
   /** Zeile „Serien:“ in ganzen Ringen */
   seriesRings: number[] | null
