@@ -291,7 +291,7 @@ nach Stufe 3. Wie Treffsicher lesend läuft, solange der Basisbranch nicht auf `
 | 1a-1 | `plans/2026-10-27-tis-1a1-card-details.md` | `feat/tis-1a1-card-details` (von `main`) | tis-1a1-card-details | in `main` (`a7c98a09`), noch nicht deployt |
 | 1a-2 | `plans/2026-10-27-tis-1a2-views.md` | `feat/tis-1a2-views` (von `main`) | tis-1a2-views | in `main` (`38fc63b6`), noch nicht deployt |
 | 1b-1 | `plans/2026-10-26-tis-1b1-printouts.md` | `feat/tis-1b1-printouts` (von `main`) | tis-1b1-printouts | in `main` (`f0213d9a`), noch nicht deployt |
-| 1b-2 | | | | in Planung |
+| 1b-2 | `plans/2026-10-27-tis-1b2-fetch-card.md` | `feat/tis-1b2-fetch-card` (von `main`) | | geplant |
 | 1c | | | | offen |
 | 1d | | | | offen |
 | 1e | | | | in 1a-2 |
