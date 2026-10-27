@@ -170,7 +170,7 @@ export function CardScreen({
   )
   // die Grundlage der Werte, daraus das Gerüst der Seite: Schüsse, Serien-Summen, Gesamtergebnis oder nichts
   const detail = useMemo(() => cardDetail(card), [card])
-  const level = detailLevel(detail, shots.length)
+  const level = detailLevel(detail, shots.length, card.sums)
   // die ganze Karte als Kontext für Abstände: eine Probe zwischen Wertung reißt keine Lücke (SF-04)
   const context = card.shots
 
@@ -370,7 +370,13 @@ export function CardScreen({
   )
   // auf dem Telefon im Kopf, ab 768 px als Box über der Ablesung; beide zeigen dieselbe Wahl
   const result = (
-    <CardResult shots={shots} state={state} actions={own ? actions : undefined} notice={notice} />
+    <CardResult
+      shots={shots}
+      state={state}
+      sums={card.sums}
+      actions={own ? actions : undefined}
+      notice={notice}
+    />
   )
 
   // ohne Einzelschüsse: eine Scheibe der Brücke ohne Schuss wartet auf ihren ersten, jede andere zeigt, was sie

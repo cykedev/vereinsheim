@@ -77,6 +77,15 @@ describe("Detailtiefe", () => {
     expect(detailLevel(SERIES, 0)).toBe("series")
     expect(detailLevel(TOTAL_TENTHS, 0)).toBe("total")
     expect(detailLevel(NONE, 0)).toBe("none")
+    // Serien gemischt (eine nur in Ringen, eine nur in Zehnteln): kein Ergebnis, aber Serien
+    const mixed = {
+      series: [
+        { series: 1, shots: 10, rings: 90, decimalTenths: null },
+        { series: 2, shots: 10, rings: null, decimalTenths: 950 },
+      ],
+    }
+    expect(detailLevel(NONE, 0, mixed)).toBe("series")
+    expect(detailLevel(NONE, 0, { series: [] })).toBe("none")
   })
 
   it("der Grund unter der großen Zahl nennt die fehlende Wertung", () => {

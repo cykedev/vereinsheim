@@ -84,6 +84,19 @@ describe("Ergebnis der Scheibe", () => {
     expect(render({ shots: [] })).not.toContain("Kennzahlen der Scheibe")
   })
 
+  it("Schüsse nur mit Ring neben Serien mit Zehnteln: das Ergebnis in Zehnteln aus den Summen", () => {
+    const match = CARD.filter((s) => s.kind === "match").slice(0, 10)
+    const rings = match.map((s) => ({ ...s, decimalTenths: null }))
+    const sums = {
+      series: [{ series: 1, shots: 10, rings: 0, decimalTenths: 975 }],
+      total: null,
+      center: null,
+    }
+    const html = text(render({ shots: rings, sums, actions: undefined }))
+    expect(html).toContain("97,5 Ringe")
+    expect(html).not.toContain("ohne Zehntel")
+  })
+
   it("in Zehnteln: Schüsse nur mit Ring heißen „ohne Zehntel“, fehlen sie einem Teil, bleibt der Rat", () => {
     const match = CARD.filter((s) => s.kind === "match").slice(0, 10)
     const plain = (shots: typeof match) => text(render({ shots, actions: undefined }))

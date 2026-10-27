@@ -224,7 +224,7 @@ export function cardCompareModel(input: {
     provenance: CardProvenance | undefined
   ): CompareSide => {
     const detail = cardDetail(card)
-    const level = detailLevel(detail, shownShots(card).length)
+    const level = detailLevel(detail, shownShots(card).length, card.sums)
     return {
       ...name,
       cards: 1,
@@ -233,7 +233,7 @@ export function cardCompareModel(input: {
       withoutValues: level === "none" ? 1 : 0,
       reason:
         level === "series" || level === "total"
-          ? summaryReasons(detail, level)[0]
+          ? summaryReasons(detail, level).join(" · ")
           : level === "none"
             ? provenance === "printout"
               ? REASON_TEXT.waiting

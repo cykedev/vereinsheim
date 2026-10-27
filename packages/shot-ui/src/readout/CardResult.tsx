@@ -2,6 +2,8 @@ import {
   computeMetric,
   inScoring,
   metricByKey,
+  sumsResult,
+  type CardSums,
   type MetricShot,
 } from "@vereinsheim/shot-core/metrics"
 import { cn } from "@vereinsheim/lib/utils"
@@ -23,6 +25,11 @@ export const RESULT_FACTS = [
 export interface CardResultProps {
   shots: readonly MetricShot[]
   state: ViewState
+  /**
+   * die Summen der Scheibe neben den Schüssen: Geben die Schüsse in der Wertung kein Ergebnis (etwa Schüsse nur in
+   * ganzen Ringen, Serien mit Zehnteln), kommt es aus den Summen, wie in Liste und Fortschritt (`cardValues`)
+   */
+  sums?: CardSums
   /** Kreise (Art, Wertung) rechts in der Zeile der großen Zahl */
   actions?: ReactNode
   /** ein Hinweis unten, etwa ein Fehler beim Speichern */
@@ -36,8 +43,11 @@ export interface CardResultProps {
  * Auf dem Telefon im Kopf, ab 768 px als Box über der Ablesung (`CardPage`). Ohne Wert ein
  * Strich mit Grund wie die Kachel.
  */
-export function CardResult({ shots, state, actions, notice, className }: CardResultProps) {
-  const total = computeMetric(inScoring(metricByKey("result.decimal")!, state.scoring), shots)
+export function CardResult({ shots, state, sums, actions, notice, className }: CardResultProps) {
+  const fromSums = sumsResult(sums, state.scoring)
+  const total =
+    computeMetric(inScoring(metricByKey("result.decimal")!, state.scoring), shots) ??
+    (fromSums ? fromSums.tenths / 10 : null)
   const count = shots.filter((s) => s.kind === "match").length
   return (
     <div className={cn("grid content-start gap-3", className)}>

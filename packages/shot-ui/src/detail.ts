@@ -1,7 +1,7 @@
 // Herkunft und Grundlage einer Scheibe in Worten (Textbuch): eine Stelle für Seite, Liste, Start, Fortschritt und
 // Vergleichen. Die Grundlage selbst (`CardDetail`) rechnet der Fachkern; hier steht nur, wie sie heißt.
 
-import type { MetricDefinition } from "@vereinsheim/shot-core/metrics"
+import type { CardSums, MetricDefinition } from "@vereinsheim/shot-core/metrics"
 import type { CardDetail } from "@vereinsheim/shot-core/projection"
 
 /**
@@ -115,13 +115,19 @@ export function detailReason(
 
 /**
  * wie viel eine Scheibe mitbringt: Schüsse auf der Seite, sonst Serien-Summen, sonst ein Gesamtergebnis, sonst
- * nichts
+ * nichts. Serien-Summen, die in keiner Wertung alle einen Wert tragen (eine Serie nur in Ringen, eine nur in Zehnteln),
+ * sind trotzdem Serien: Die Seite zeigt sie, auch wenn sie kein Ergebnis ergeben.
  */
 export type DetailLevel = "shots" | "series" | "total" | "none"
 
-export function detailLevel(detail: CardDetail, shown: number): DetailLevel {
+export function detailLevel(
+  detail: CardDetail,
+  shown: number,
+  sums?: Pick<CardSums, "series">
+): DetailLevel {
   if (shown > 0) return "shots"
-  if (detail.rings === "series" || detail.tenths === "series") return "series"
+  if (detail.rings === "series" || detail.tenths === "series" || sums?.series.length)
+    return "series"
   if (detail.rings === "total" || detail.tenths === "total") return "total"
   return "none"
 }

@@ -173,6 +173,21 @@ describe("Vergleichen ohne Einzelschüsse", () => {
     expect(model.b.reason).toBeNull()
   })
 
+  it("Serien nur in ganzen Ringen, verglichen in Zehnteln: der Grund nennt beides", () => {
+    const rings = {
+      ...SERIES,
+      series: SERIES.series.map((s) => ({ ...s, decimalTenths: null })),
+    }
+    const model = cardCompareModel({
+      a: { ...periodCard("r", 1, []), sums: rings },
+      b: measured,
+      scoring: "decimal",
+      names,
+      provenance: { a: "entered" },
+    })
+    expect(model.a.reason).toBe("nur Serien-Summen · ohne Zehntel")
+  })
+
   it("A wartet auf die Anlage: ohne Werte, nicht ohne Lage", () => {
     const model = cardCompareModel({
       a: periodCard("w", 1, []),
