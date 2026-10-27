@@ -36,7 +36,7 @@ export interface PeriodPickerProps {
   compare: CompareChoice
   /** Art der Scheiben (Alle, Training, Wettkampf) */
   kind: CardKind
-  /** Trainings nur aus Probe mitzählen (Vorgabe ja) */
+  /** Scheiben nur aus Probe mitzählen (Vorgabe ja) */
   includeProbeOnly: boolean
   /** Name des gewählten Vergleichs für den Chip; null ohne Vergleich */
   compareLabel?: string | null
@@ -45,7 +45,7 @@ export interface PeriodPickerProps {
   named: readonly NamedPeriod[]
   timeZone: string
   onApply: (filters: PeriodFilters) => void
-  /** der Schalter „Trainings nur aus Probe mitzählen“ (Vorgabe ja); ohne bleibt `includeProbeOnly` wie gegeben */
+  /** der Schalter „Scheiben nur aus Probe mitzählen“ (Vorgabe ja); ohne bleibt `includeProbeOnly` wie gegeben */
   probeOnlySwitch?: boolean
   /** „Vergleichen mit“ im Blatt (Vorgabe ja); ohne gibt das Blatt immer „ohne Vergleich“ zurück (Spiegel vergleicht auf eigener Seite) */
   withCompare?: boolean
@@ -68,7 +68,7 @@ export function filterSummary(
     label,
     kind === "all" ? null : (KIND_OPTIONS.find((o) => o.value === kind)?.label ?? null),
     compareLabel ? `mit ${compareLabel}` : null,
-    includeProbeOnly ? null : "ohne Probe-Training",
+    includeProbeOnly ? null : "ohne Probe-Scheiben",
   ]
     .filter(Boolean)
     .join(" · ")
@@ -216,7 +216,7 @@ export function PeriodPicker({
                 onChange={(event) => setDraftProbe(event.target.checked)}
                 className="size-4 accent-[var(--primary)]"
               />
-              <span>Trainings nur aus Probe mitzählen</span>
+              <span>Scheiben nur aus Probe mitzählen</span>
             </label>
           )}
           <button

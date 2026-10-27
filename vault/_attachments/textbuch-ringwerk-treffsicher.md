@@ -301,7 +301,7 @@ Abweichend von Spiegel:
   weder die Lage jedes Schusses noch die Zeit.
 - **Kacheln:** Ø je Schuss · Zehnerquote · Schwerpunkt-Abstand (aus der Trefferlage des Ausdrucks, in mm).
 - **Wertung:** Nur bei Disziplinen in Zehnteln steht der Umschalter „In Zehnteln“ / „In ganzen Ringen“.
-- **Blatt „Filter“:** ohne „Trainings nur aus Probe mitzählen“. In Treffsicher zählt Probe nie.
+- **Blatt „Filter“:** ohne „Scheiben nur aus Probe mitzählen“. In Treffsicher zählt Probe nie.
 - **Umfang:** nur „Umfang je Woche“, ohne Kalender. Im Kalender führt in Spiegel jeder Tag zur Liste an diesem Abend.
   Das Tagebuch kennt diesen Filter nicht.
 

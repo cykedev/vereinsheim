@@ -22,11 +22,11 @@ export const READING_GUIDE: readonly GuideItem[] = [
   },
   {
     title: "Wie am Ausdruck",
-    text: "Eine Scheibe in Spiegel ist, was der Ausdruck zeigt: Mit dem ersten Wertungsschuss löscht die Anlage die Probe, also rechnet Spiegel über die Wertung. Eine Scheibe nur mit Probe ist Training: Spiegel zeigt sie wie Wertung, mit Schüssen 1, 2, 3 …, Serien zu zehn und Ergebnis; das schwarze Eck oben rechts an der Scheibe und an den kleinen Scheiben der Serien erinnert daran, dass es Probe ist.",
+    text: "Eine Scheibe in Spiegel ist, was der Ausdruck zeigt: Mit dem ersten Wertungsschuss löscht die Anlage die Probe, also rechnet Spiegel über die Wertung. Eine Scheibe nur mit Probe zeigt Spiegel wie Wertung, mit Schüssen 1, 2, 3 …, Serien zu zehn und Ergebnis; das schwarze Eck oben rechts an der Scheibe und an den kleinen Scheiben der Serien erinnert daran, dass es Probe ist.",
   },
   {
     title: "Nummern",
-    text: "Schüsse heißen 1, 2, 3 … in der Reihenfolge der Abgabe, ein Training nur aus Probe ebenso. Fehlt einem Schuss eine Angabe, behält er trotzdem seine Nummer.",
+    text: "Schüsse heißen 1, 2, 3 … in der Reihenfolge der Abgabe, eine Scheibe nur aus Probe ebenso. Fehlt einem Schuss eine Angabe, behält er trotzdem seine Nummer.",
   },
   {
     title: "Median statt Durchschnitt",
@@ -43,7 +43,7 @@ export const VIEW_HELP: readonly ViewHelp[] = [
   {
     id: "trefferbild",
     title: "Trefferbild",
-    what: "Jeder Treffer in Kalibergröße, gefärbt nach seinem Ring: 10 rot, 9 gold, 8 türkis, 7 und weniger violett. Ein Training nur aus Probe trägt oben rechts ein schwarzes Eck. Die Treffer sind leicht durchscheinend, damit du siehst, wo sie sich überlagern.",
+    what: "Jeder Treffer in Kalibergröße, gefärbt nach seinem Ring: 10 rot, 9 gold, 8 türkis, 7 und weniger violett. Eine Scheibe nur aus Probe trägt oben rechts ein schwarzes Eck. Die Treffer sind leicht durchscheinend, damit du siehst, wo sie sich überlagern.",
     read: "Die Knöpfe in den Ecken blenden ein: unten links den Schwerpunkt (kleiner schwarz-weiß geviertelter Kreis, der Mittelpunkt deiner Treffer) und den Streukreis (blauer Ring um alle Treffer; seine Zahl misst Mitte zu Mitte), unten rechts die Vertrauensellipse (gestrichelt: wo dein wahrer Schwerpunkt mit großer Sicherheit liegt; liegt die Mitte darin, ist ein Versatz nicht belegt) und die Schussnummern. Oben links zoomt die Lupe auf deine Treffer und wieder zurück; daneben zeigt der Knopf mit den Punkten die übrigen Schüsse blass oder blendet sie aus.",
   },
   {

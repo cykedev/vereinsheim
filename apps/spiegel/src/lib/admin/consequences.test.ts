@@ -219,7 +219,7 @@ describe("Folgen an Brücke und Listen", () => {
       ],
       notHappening: [
         "Hat ein Schütze eine Scheibe selbst umgestellt, bleibt es dabei.",
-        "Eine Scheibe nur mit Probeschüssen bleibt Training.",
+        "Eine Scheibe nur mit Probeschüssen behält ihre Art.",
         "An den Schüssen ändert sich nichts.",
       ],
       undo: "Jederzeit hier wieder umstellen.",

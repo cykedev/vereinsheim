@@ -65,7 +65,7 @@ describe("Wortwahl wie auf der Seite", () => {
       expect(text).not.toMatch(/P1, P2|Probeschüsse sind hohl|Wertungs- und Probeschüsse/)
     }
     expect(READING_GUIDE.find((i) => i.title === "Nummern")?.text).toContain(
-      "ein Training nur aus Probe ebenso"
+      "eine Scheibe nur aus Probe ebenso"
     )
   })
 

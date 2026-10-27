@@ -47,7 +47,7 @@ describe("Blatt „Filter“", () => {
       "Vergleichen mit",
       "Zeitraum davor",
       "Übernehmen",
-      "Trainings nur aus Probe mitzählen",
+      "Scheiben nur aus Probe mitzählen",
     ]) {
       expect(html, label).toContain(label)
     }
@@ -117,7 +117,7 @@ describe("Blatt „Filter“", () => {
     )
     expect(
       filterSummary("Alles", { kind: "competition", compareLabel: null, includeProbeOnly: false })
-    ).toBe("Alles · Wettkampf · ohne Probe-Training")
+    ).toBe("Alles · Wettkampf · ohne Probe-Scheiben")
   })
 
   it("Frei nur mit zwei Tagen, von nicht nach bis", () => {

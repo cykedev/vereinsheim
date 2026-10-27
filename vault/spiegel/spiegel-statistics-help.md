@@ -44,10 +44,10 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   seltener „klar“. Gleich bleiben Zehner, Innenzehner und Zehnerquote.
 - **Wie am Ausdruck.** Eine Scheibe in Spiegel ist, was der Ausdruck zeigt: Mit dem ersten
   Wertungsschuss löscht die Anlage die Probe, also rechnet Spiegel über die Wertung. Eine Scheibe
-  nur mit Probe ist Training: Spiegel zeigt sie wie Wertung, mit Schüssen 1, 2, 3 …, Serien zu zehn
-  und Ergebnis; das schwarze Eck oben rechts an der Scheibe und an den kleinen Scheiben der Serien
-  erinnert daran, dass es Probe ist.
-- **Nummern.** Schüsse heißen 1, 2, 3 … in der Reihenfolge der Abgabe, ein Training nur aus Probe
+  nur mit Probe zeigt Spiegel wie Wertung, mit Schüssen 1, 2, 3 …, Serien zu zehn und Ergebnis; das
+  schwarze Eck oben rechts an der Scheibe und an den kleinen Scheiben der Serien erinnert daran,
+  dass es Probe ist.
+- **Nummern.** Schüsse heißen 1, 2, 3 … in der Reihenfolge der Abgabe, eine Scheibe nur aus Probe
   ebenso. Fehlt einem Schuss eine Angabe, behält er trotzdem seine Nummer.
 - **Median statt Durchschnitt.** Wo „Median“ steht, zählt der mittlere Wert: Die Hälfte liegt
   darüber, die Hälfte darunter. Ein einzelner Ausreißer verschiebt ihn kaum, den Durchschnitt (Ø)
@@ -59,7 +59,7 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 
 **Trefferbild**
 - *Was:* Jeder Treffer in Kalibergröße, gefärbt nach seinem Ring: 10 rot, 9 gold, 8 türkis, 7 und
-  weniger violett. Ein Training nur aus Probe trägt oben rechts ein schwarzes Eck. Die Treffer sind
+  weniger violett. Eine Scheibe nur aus Probe trägt oben rechts ein schwarzes Eck. Die Treffer sind
   leicht durchscheinend, damit du siehst, wo sie sich überlagern.
 - *So liest du es:* Die Knöpfe in den Ecken blenden ein: unten links den Schwerpunkt (kleiner
   schwarz-weiß geviertelter Kreis, der Mittelpunkt deiner Treffer) und den Streukreis (blauer Ring
@@ -432,7 +432,7 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 **Datenlage (Q1)**
 - *Was:* Wie viele Wertungsschüsse die Scheibe hat, wie vielen davon Lage, Zeit oder Wert fehlen und
   welche Schüsse markiert sind (Fehlschuss, verdächtig). Eine Scheibe nur mit Probe steht als
-  Training da, ihre Probeschüsse wie Wertung gezählt.
+  Training oder Wettkampf da, ihre Probeschüsse wie Wertung gezählt.
 - *So liest du es:* Je mehr fehlt, desto weniger tragen die Zahlen. Ein Schuss ohne Lage fehlt bei
   Streuung und Lage, ohne Zeit bei Tempo und Rhythmus. Fehlt einem Wertungsschuss der Wert, gibt es
   kein Ergebnis, keine Zahl der Zehner und Innenzehner und keine Summe seiner Serie; Ø und Quoten
@@ -466,7 +466,7 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   Median („Mitte“); Abstand zum Schnitt = Wert − Schnitt der bis zu 5 Scheiben davor`
 
 **Trainingsumfang (T6, T7)**
-- *Was:* Je Woche die Zahl deiner Schüsse (wie am Ausdruck, Trainings nur aus Probe zählen mit),
+- *Was:* Je Woche die Zahl deiner Schüsse (wie am Ausdruck, Scheiben nur aus Probe zählen mit),
   deiner Scheiben und der Tage, an denen du geschossen hast, auch Wochen ohne Training. Der Kalender
   zeigt jeden Tag des Zeitraums: getönt nach deinen Schüssen an dem Abend, mit goldenem Rand, wenn
   ein Wettkampf dabei war. Ein Tippen führt zu dem Abend in deinen Scheiben.
@@ -538,7 +538,7 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 **Abstand zum Schnitt davor (C4)**
 - *Was:* Der Unterschied zwischen dem Ø je Schuss einer Scheibe und dem Schnitt deiner bis zu fünf
   Scheiben davor in derselben Disziplin; im Fortschritt zählen dazu nur Scheiben der gewählten Art,
-  und Trainings nur aus Probe nur, wenn sie mitzählen. Die Scheibe selbst zählt nicht mit. Gezählt
+  und Scheiben nur aus Probe nur, wenn sie mitzählen. Die Scheibe selbst zählt nicht mit. Gezählt
   werden alle deine Scheiben davor, nicht nur die im gewählten Zeitraum.
 - *So liest du es:* +0,12 heißt: 0,12 Ringe je Schuss über dem Schnitt der Scheiben davor. In der
   Grundeinstellung steht dieselbe Zahl unter Scheiben, auf Start und in der Ablesung im Fortschritt;
@@ -564,9 +564,9 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   Wettkampf; sie gelten über alle deine Scheiben, nicht nur über den gewählten Zeitraum.
 - *Vorsicht:* Es zählen nur abgeschlossene, vollständige Scheiben. Nicht zählen Scheiben nur aus dem
   Ausdruck, neu gewertete, von dir ausgenommene und jede mit einem verdächtigen Schuss in der
-  Wertung. Eine Trainingsscheibe nur mit Probe zählt mit, solange „Trainings nur aus Probe
-  mitzählen“ im Blatt „Filter“ an ist (die Vorgabe); dann gilt ihre Probe wie Wertung, in Serien zu
-  zehn. Ebenso eine Scheibe, deren Probe du als Wertung zählst.
+  Wertung. Eine Scheibe nur aus Probe zählt mit, solange „Scheiben nur aus Probe mitzählen“ im Blatt
+  „Filter“ an ist (die Vorgabe); dann gilt ihre Probe wie Wertung, in Serien zu zehn. Ebenso eine
+  Scheibe, deren Probe du als Wertung zählst.
 - *Mindestzahl:* Ab 1 Scheibe, die beste Form ab 5 Scheiben.
 
 ## Vergleichen

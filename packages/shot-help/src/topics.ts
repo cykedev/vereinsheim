@@ -314,7 +314,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     catalog: ["Q1"],
     metrics: [],
     short: "Auf welcher Grundlage die Zahlen stehen.",
-    what: "Wie viele Wertungsschüsse die Scheibe hat, wie vielen davon Lage, Zeit oder Wert fehlen und welche Schüsse markiert sind (Fehlschuss, verdächtig). Eine Scheibe nur mit Probe steht als Training da, ihre Probeschüsse wie Wertung gezählt.",
+    what: "Wie viele Wertungsschüsse die Scheibe hat, wie vielen davon Lage, Zeit oder Wert fehlen und welche Schüsse markiert sind (Fehlschuss, verdächtig). Eine Scheibe nur mit Probe steht als Training oder Wettkampf da, ihre Probeschüsse wie Wertung gezählt.",
     read: "Je mehr fehlt, desto weniger tragen die Zahlen. Ein Schuss ohne Lage fehlt bei Streuung und Lage, ohne Zeit bei Tempo und Rhythmus. Fehlt einem Wertungsschuss der Wert, gibt es kein Ergebnis, keine Zahl der Zehner und Innenzehner und keine Summe seiner Serie; Ø und Quoten rechnen ohne ihn. Ein verdächtiger Schuss zählt nur mit seinem Wert, auch wenn er eine Lage oder Zeit hat.",
     caution:
       "In Zehnteln fehlt beim Ergebnis auch ein Schuss, der nur einen ganzen Ring hat; die Datenlage nennt ihn „ohne Zehntel“.",
@@ -342,7 +342,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     metrics: [],
     short:
       "Wie viel du trainierst: Schüsse, Scheiben und Tage je Woche, im Kalender jeder Trainingstag.",
-    what: "Je Woche die Zahl deiner Schüsse (wie am Ausdruck, Trainings nur aus Probe zählen mit), deiner Scheiben und der Tage, an denen du geschossen hast, auch Wochen ohne Training. Der Kalender zeigt jeden Tag des Zeitraums: getönt nach deinen Schüssen an dem Abend, mit goldenem Rand, wenn ein Wettkampf dabei war. Ein Tippen führt zu dem Abend in deinen Scheiben.",
+    what: "Je Woche die Zahl deiner Schüsse (wie am Ausdruck, Scheiben nur aus Probe zählen mit), deiner Scheiben und der Tage, an denen du geschossen hast, auch Wochen ohne Training. Der Kalender zeigt jeden Tag des Zeitraums: getönt nach deinen Schüssen an dem Abend, mit goldenem Rand, wenn ein Wettkampf dabei war. Ein Tippen führt zu dem Abend in deinen Scheiben.",
     read: "Der Umfang sagt nichts über die Güte. Leg ihn neben den Verlauf: Liegen deine Scheiben in Wochen mit sehr vielen Schüssen öfter unter dem Formband, kann das Ermüdung sein.",
     caution:
       "Hier zählt die Probe mit, das Ergebnis oben zählt nur Wertungsschüsse. Eine Netto-Zeit zeigt Spiegel nicht: Sie folgt aus den Abständen zwischen den Schüssen, die du auf jeder Scheibe siehst.",
@@ -400,7 +400,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     catalog: ["C4"],
     metrics: [],
     short: "Wie deine Scheibe zum Schnitt deiner fünf Scheiben davor passt.",
-    what: "Der Unterschied zwischen dem Ø je Schuss einer Scheibe und dem Schnitt deiner bis zu fünf Scheiben davor in derselben Disziplin; im Fortschritt zählen dazu nur Scheiben der gewählten Art, und Trainings nur aus Probe nur, wenn sie mitzählen. Die Scheibe selbst zählt nicht mit. Gezählt werden alle deine Scheiben davor, nicht nur die im gewählten Zeitraum.",
+    what: "Der Unterschied zwischen dem Ø je Schuss einer Scheibe und dem Schnitt deiner bis zu fünf Scheiben davor in derselben Disziplin; im Fortschritt zählen dazu nur Scheiben der gewählten Art, und Scheiben nur aus Probe nur, wenn sie mitzählen. Die Scheibe selbst zählt nicht mit. Gezählt werden alle deine Scheiben davor, nicht nur die im gewählten Zeitraum.",
     read: "+0,12 heißt: 0,12 Ringe je Schuss über dem Schnitt der Scheiben davor. In der Grundeinstellung steht dieselbe Zahl unter Scheiben, auf Start und in der Ablesung im Fortschritt; ein Bezug für eine Scheibe überall.",
     caution:
       "Eine Scheibe ist eine Scheibe: Ein Abstand zum Schnitt, der in deinem Formband bleibt, ist normal.",
@@ -418,7 +418,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     what: "Bestes Ergebnis, beste Serie, bester Teiler, engste Serie zu zehn und engste Scheibe, meiste 10,9 (nur in Zehnteln), meiste Zehner und Innenzehner auf einer Scheibe und in einer Serie, längste Folge von Zehnern, längste Folge ohne Schuss unter 9, dein bester schwächster Schuss, die kleinste Spanne zwischen bester und schwächster Serie und deine beste Form: der höchste Schnitt je Schuss über fünf Scheiben in Folge, über ihre Schüsse gerechnet. Ergebnis, engste Scheibe, die Zahl der 10,9, Zehner und Innenzehner auf einer Scheibe, der schwächste Schuss und die Spanne der Serien gelten je Schusszahl der Scheibe („Scheibe zu 40 Schuss“), denn 40 und 60 Schuss sind nicht vergleichbar. Die beste Serie und die Zehner einer Serie gelten je Serienlänge („Serie zu 10 Schuss“).",
     read: "Bei Gleichstand bleibt der frühere Rekord, denn er hat ihn zuerst gesetzt. Rekorde gibt es je Wertung (Zehntel oder ganze Ringe) und wahlweise nur für Training oder nur für Wettkampf; sie gelten über alle deine Scheiben, nicht nur über den gewählten Zeitraum.",
     caution:
-      "Es zählen nur abgeschlossene, vollständige Scheiben. Nicht zählen Scheiben nur aus dem Ausdruck, neu gewertete, von dir ausgenommene und jede mit einem verdächtigen Schuss in der Wertung. Eine Trainingsscheibe nur mit Probe zählt mit, solange „Trainings nur aus Probe mitzählen“ im Blatt „Filter“ an ist (die Vorgabe); dann gilt ihre Probe wie Wertung, in Serien zu zehn. Ebenso eine Scheibe, deren Probe du als Wertung zählst.",
+      "Es zählen nur abgeschlossene, vollständige Scheiben. Nicht zählen Scheiben nur aus dem Ausdruck, neu gewertete, von dir ausgenommene und jede mit einem verdächtigen Schuss in der Wertung. Eine Scheibe nur aus Probe zählt mit, solange „Scheiben nur aus Probe mitzählen“ im Blatt „Filter“ an ist (die Vorgabe); dann gilt ihre Probe wie Wertung, in Serien zu zehn. Ebenso eine Scheibe, deren Probe du als Wertung zählst.",
     minimum: "Ab 1 Scheibe, die beste Form ab 5 Scheiben.",
   },
   {

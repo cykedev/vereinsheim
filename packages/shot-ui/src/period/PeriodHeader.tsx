@@ -23,7 +23,7 @@ export interface PeriodControlsProps {
    * als Wechsel-Chip)
    */
   actions?: ReactNode
-  /** der Schalter „Trainings nur aus Probe mitzählen“ im Blatt „Filter“ (Vorgabe ja) */
+  /** der Schalter „Scheiben nur aus Probe mitzählen“ im Blatt „Filter“ (Vorgabe ja) */
   probeOnlySwitch?: boolean
   /** „Vergleichen mit“ im Blatt „Filter“ (Vorgabe ja); Spiegel vergleicht auf eigener Seite */
   withCompare?: boolean
@@ -31,7 +31,7 @@ export interface PeriodControlsProps {
 
 /**
  * Filter im Kopf der Seite eines Zeitraums in einer Zeile: die Familie als Segment, sie wechselt man am
- * häufigsten, dann der Chip, der das Blatt „Filter“ öffnet (Zeitraum, Vergleich, Art, Trainings nur aus Probe).
+ * häufigsten, dann der Chip, der das Blatt „Filter“ öffnet (Zeitraum, Vergleich, Art, Scheiben nur aus Probe).
  */
 export function PeriodControls({
   state,

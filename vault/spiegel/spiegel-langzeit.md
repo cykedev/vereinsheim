@@ -100,7 +100,7 @@ bleibt der eingebaute Vergleich.
   - frei von … bis
   - „Vergleichen mit“: ohne, der gleich lange Zeitraum davor, ein benannter Zeitraum (später ein Merkmal); Scheiben,
     die in beiden Zeiträumen liegen, zählen nur im gewählten
-  - Art (alle, Training, Wettkampf), „Trainings nur aus Probe mitzählen“
+  - Art (alle, Training, Wettkampf), „Scheiben nur aus Probe mitzählen“
   - „Als Zeitraum speichern“ fehlt noch.
 - **Ergebnis-Box** wie `CardResult`: Ø je Schuss über alle Wertungsschüsse groß ([[adr-034]]), darunter Scheiben und
   Wertungsschüsse, die beste Scheibe unter der häufigsten Schusszahl (eine kurze Scheibe hätte es sonst leichter).
@@ -320,7 +320,7 @@ Eingabe ist `PeriodItem`; was Spiegel anders braucht als Treffsicher, sind Param
 - **Kennzahlen:** `periodModel({ tileKeys })` für die Kacheln (die erste trägt den Vergleich), `PeriodChartBar.metrics`
   für den Verlauf. Treffsicher: Ø je Schuss, Zehner, Lage (`group.mpiDistance` aus der Trefferlage des Ausdrucks,
   in der Adresse `metric=location`).
-- **Blatt „Filter“:** `probeOnlySwitch={false}` blendet „Trainings nur aus Probe mitzählen“ aus.
+- **Blatt „Filter“:** `probeOnlySwitch={false}` blendet „Scheiben nur aus Probe mitzählen“ aus.
 - **Ablesung:** `CardReadout` mit `target: null` zeichnet keine kleine Scheibe.
 
 ## Vorgaben
