@@ -326,27 +326,34 @@ Erledigt:
 
 Offen:
 
-- **Speicher von Spiegel:** Der Leser zählt zur Grenze des Containers. Spiegel lag nach dem Import bei 137 MiB Programm,
-  ein Leser kommt mit bis zu 79 MiB dazu, Rest rund 40 MiB. Entscheidung des Users ausstehend (Vorschlag: Treffsicher
-  320 → 256 MB, Spiegel 256 → 320 MB, Summe gleich; Treffsicher lag zuletzt bei 59 MiB, früher höchstens 163).
+- **Speicher von Spiegel** (entschieden mit dem User am 27. Oktober 2026): Spiegel 256 → 320 MB, Treffsicher 320 →
+  256 MB, Summe gleich. Der Leser zählt zur Grenze des Containers (Spiegel 137 MiB Programm, Leser bis 79 MiB). In
+  Arbeit: `feat/memory-limits` (Kindsession `memory-limits`); danach `git pull` und Neustart der beiden Container auf
+  dem VPS durch den User.
 - **Am echten Telefon über HTTPS prüfen:** Kamera und der Rückfall auf das Foto.
 - **Rückweg auf ein älteres Image:** vorher `UPDATE "CardRequest" SET status = 'mismatch' WHERE status =
 'printMismatch';` (das alte Image kennt den Wert nicht).
 - **Node 26 Pflicht** (`engine-strict`): `pnpm install` und `pnpm dev` brechen unter älterem Node hart ab.
-- **Build hängt im Haupt-Checkout:** `next build` von Spiegel hängt dort (600 % CPU, ohne Ende), in einem frischen
-  Worktree baut derselbe Stand in Sekunden. Debug-Session vorgeschlagen; bis dahin Gates im Worktree.
+
+Seit dem Release in `main` (`02d977c5`, nicht deployt): Art auch für Scheiben nur aus Probe (ohne Wahl die Art der
+Quelle, die Liste zählt bei nur Probe nicht; „Wettkampf nur Probe“, Texte „Scheibe nur aus Probe“), Toasts über der
+unteren Leiste (alle Apps, nur `packages/ui`), Messung vom VPS und die Lesson zum hängenden Build (ein Symlink in
+`apps/spiegel/tools/private` auf seinen eigenen Ordner; entfernt, `vault/incidents/symlink-loop-hangs-turbopack-build.md`).
+Beim nächsten Release gehen alle drei Apps raus, weil sich `packages/ui` geändert hat (nur die Lage der Toasts, auch in
+Ringwerk).
 
 ## Wie es weitergeht
 
 1. **1d Handeingabe** planen (mit dem User), eigenes Release auf `main`; dazu das Admin-Formular für Disziplinen ohne
    Meyton-ID (3 eigene Ausdrucke blieben beim Import ohne passende Disziplin).
-2. Daneben ohne den User: der hängende Build im Haupt-Checkout; der kleine Teil für die Toasts über der unteren Leiste.
-3. **Stufe 2 Tagebuch:** Entwurf der Oberfläche mit dem User, während 1d gebaut wird; Teilpläne auf dem Basisbranch.
-4. **Stufe 3 Übernahme**, dann **Stufe 4 Ruhestand**.
+2. **Stufe 2 Tagebuch:** Entwurf der Oberfläche mit dem User, während 1d gebaut wird; Teilpläne auf dem Basisbranch.
+3. **Stufe 3 Übernahme**, dann **Stufe 4 Ruhestand**.
 
-Für später festgehalten: Toasts über der unteren Leiste (gemeinsamer Toaster, alle Apps, eigener kleiner Teil); Randfall
-„Wertung endgültig gelöscht, Probe des Abends bleibt“: Holen öffnet die Probe, die Sperre der Wertung bleibt;
-Reiter Lage der Skriptprüfung (`vault/incidents/pruefen-reiter-lage-scroll-jump.md`).
+Für später festgehalten: Randfall „Wertung endgültig gelöscht, Probe des Abends bleibt“: Holen öffnet die Probe, die
+Sperre der Wertung bleibt; Reiter Lage der Skriptprüfung (`vault/incidents/pruefen-reiter-lage-scroll-jump.md`, auf
+`main` 177/178); Lage des Toasts in die Skriptprüfung aufnehmen; das Tracing aus `apps/spiegel/src/lib/printouts/files.ts`
+eingrenzen (zieht lokal `uploads/` nach `.next/standalone`, conventions §9); „Als Wertung zählen“ (SF-05) für Probe,
+die eigentlich die Wertung war.
 
 ## Stand
 
