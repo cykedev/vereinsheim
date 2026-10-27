@@ -51,7 +51,42 @@ Gemessen ist bisher nur direkt nach dem Neustart beim Deploy. Ringwerk läuft mi
 Treffsicher. Nach einigen Tagen Betrieb, einem Ringwerk-PDF und einem Treffsicher-Import den Messbefehl unten erneut
 laufen lassen.
 
-## Offen: Leser der Ausdrucke von Spiegel auf amd64
+## Messung nach dem Release von Stufe 1 (27. Oktober 2026)
+
+Nach dem Deploy von Spiegel mit „Scheibe holen“ und den Werten vom Ausdruck (1c) und nach dem Import von 38 eigenen
+Ausdrucken. Der Leser lief auf dem VPS (amd64) mit den Flags aus `reader.ts` gegen jeden gespeicherten Ausdruck (Befehl
+unten): alle 38 mit ID, Druckzeit und Werten (`found`, `ok`), `maxRssKb` 72 bis 79 MiB, 32 davon bei 72 bis 73 MiB. Das
+liegt unter der Schwelle von 80 MiB und klar unter der Wache von 96 MiB. amd64 liegt damit nicht höher als arm64.
+
+| Dienst | jetzt (Programm, Cache) | Spitze seit Start | Grenze |
+| --- | ---: | ---: | ---: |
+| Ringwerk | 53 MiB (40, 7) | 57 MiB | 256 MB |
+| Treffsicher | 50 MiB (39, 6) | 59 MiB | 320 MB |
+| Spiegel | 165 MiB (137, 19) | 201 MiB | 256 MB |
+| Caddy | 40 MiB (21, 15) | 75 MiB | 96 MB |
+| Postgres | 81 MiB (4, 72) | 148 MiB | 384 MB |
+
+Der Leser läuft als Kindprozess in der cgroup von `app-spiegel` und zählt zu ihrer Grenze. Die Spitze von 201 MiB
+enthält den Import und die Messung: Spiegel selbst lag danach bei 137 MiB Programm, ein Leser kommt mit bis zu 79 MiB
+dazu. Bis zur Grenze von 256 MB bleiben dann rund 40 MiB. Wächst Spiegel selbst unter Last, kann ein Lesevorgang den
+ganzen Container an die Grenze bringen.
+
+Gegen jeden gespeicherten Ausdruck messen (im Repo-Verzeichnis auf dem VPS, nur lesend; gibt keine Dateinamen aus):
+
+```bash
+docker compose exec -T app-spiegel sh -s <<'SH'
+for f in $(find /app/uploads -name '*.pdf'); do
+  out=$(node --max-old-space-size=48 --max-semi-space-size=2 --lite-mode apps/spiegel/printout-reader.mjs < "$f" 2>&1)
+  kb=$(echo "$out" | grep -o '"maxRssKb":[0-9]*' | cut -d: -f2 | sort -n | tail -1)
+  kinds=$(echo "$out" | grep -o '"kind":"[a-zA-Z]*"' | cut -d'"' -f4 | tr '\n' ',')
+  echo "$((${kb:-0} / 1024)) MiB  $kinds"
+done | sort -n | uniq -c | tail -15
+SH
+```
+
+Der Befehl gibt erst am Ende etwas aus, je Ausdruck dauert es ein bis zwei Sekunden.
+
+## Leser der Ausdrucke von Spiegel auf amd64
 
 Spiegel liest fremde PDFs in einem kurzlebigen Kindprozess im Container `app-spiegel` (SP-1.7 b,
 `apps/spiegel/src/lib/printouts/reader.ts`): 48 MB Heap, `--lite-mode`, Abbruch über 96 MiB RSS. Gemessen ist
