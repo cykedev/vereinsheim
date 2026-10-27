@@ -209,6 +209,9 @@ model CardRequest {
   cardId     String?
   card       Card?             @relation(fields: [cardId], references: [id], onDelete: SetNull)
   createdAt  DateTime          @default(now()) @db.Timestamptz(3)
+  // wann der Zustand der Brücke den Auftrag zum ersten Mal genannt hat (je Konto nur zehn ungefüllte zugleich); ab
+  // hier zählt die Frist von 30 Tagen, null: noch nie genannt, läuft nicht ab
+  windowAt   DateTime?         @db.Timestamptz(3)
   closedAt   DateTime?         @db.Timestamptz(3)
 
   // Zustand der Brücke und Einlesen: offene der Anlage je ScheibenID

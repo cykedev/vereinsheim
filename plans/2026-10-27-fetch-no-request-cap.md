@@ -61,6 +61,37 @@ Fest (Auftrag der koordinierenden Session):
   Schütze eine Zustimmung per Sportpass, kommt die Scheibe ohnehin über sie; sonst ein paar Minuten Verzug. Bewusst so
   gelassen (eine Regel, wie heute).
 
+## Freigabe der koordinierenden Session (27. Oktober 2026)
+
+(b) freigegeben, mit drei Änderungen; sie gehen den Tasks unten vor:
+
+1. **Reihenfolge neueste zuerst.** Gebaut nach dem Abend absteigend, dann nach der Kennung absteigend (`day desc, id
+   desc`): Eine heute gescannte Scheibe bleibt im Fenster, auch wenn danach viele alte Ausdrucke hochgeladen werden. Die
+   Reihenfolge steht nur in `openRequestsOf`.
+2. **Frist ab `windowAt`.** Neue Spalte `CardRequest.windowAt DateTime? @db.Timestamptz(3)` (Migration
+   `20261027220000_card_request_window_at`: Spalte und `UPDATE … SET "windowAt" = "createdAt" WHERE status = 'open'`).
+   `openRequestsOf` setzt `windowAt = now` für jeden genannten Auftrag mit `windowAt` null (`updateMany`, Bedingung
+   im Befehl). `expireRequests` zählt die 30 Tage ab `windowAt`; ohne `windowAt` läuft nichts ab. Migration nur nach
+   OK zu Diff und SQL, angewandt mit `migrate deploy`, außerhalb des Autopiloten (geschützter Pfad).
+3. **Text `tooMany`:** „Es warten schon zehn oder mehr Scheiben auf die Anlage. Mit dem Ausdruck geht es trotzdem. Ohne
+   Ausdruck geht es erst, wenn die Anlage einige geliefert hat.“ Erst ins Textbuch, dann Code und Tests.
+
+Damit gilt in Task 1 `orderBy: [{ day: "desc" }, { id: "desc" }]` statt `id asc`, Task 3 entfällt als „nur mit OK“
+(der Text ist freigegeben), und es kommt Task 1b dazu:
+
+### Task 1b — Frist ab `windowAt`
+
+- `expireRequests`: `old = { status: "open", windowAt: { lt: cutoff } }` (null erfüllt `lt` nicht, läuft also nicht
+  ab). Kommentar: „offene Aufträge `REQUEST_DAYS` Tage, nachdem der Zustand sie der Brücke zum ersten Mal genannt hat“.
+- `openRequestsOf`: nach `requestWindow` `db.cardRequest.updateMany({ where: { id: { in: ids }, windowAt: null },
+  data: { windowAt: new Date(nowMs) } })`.
+- Tests (`card-requests/queries.test.ts` bzw. `ingest/requests.test.ts`, gegen die Dev-Datenbank mit eigener Anlage):
+  ein Auftrag mit `createdAt` vor 40 Tagen und `windowAt` null bleibt offen; mit `windowAt` vor 31 Tagen läuft er ab
+  (ungefüllt `expired`, gefüllt `done`); `bridgeState` setzt `windowAt` für genannte, nicht für die außerhalb des
+  Fensters, und überschreibt ein gesetztes nicht. Bestehende Tests, die `createdAt` alt setzen, um den Ablauf zu
+  prüfen, setzen `windowAt` mit.
+- Typen: `CardRequest`-Fixtures in Tests, die das volle Objekt bauen, um `windowAt` ergänzen (tsc zeigt sie).
+
 ## Approach
 
 1. **`fetchCard`:** Die Grenze gilt nur noch ohne Ausdruck (`file === null`). Mit Ausdruck entsteht der Auftrag immer,
