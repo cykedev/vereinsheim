@@ -39,7 +39,7 @@ je Anfrage nur CPU), je Anlage, widerrufbar unter Admin → Anlage und Brücken.
 diese Anlage einliefern und den Zustand lesen (gehashte SportpassIDs, ScheibenIDs der Sperren, keine Namen). `proxy.ts`
 lässt `api/ingest` ohne Sitzung durch; jeder Endpunkt außer `pair` verlangt den Token.
 
-**Last** (der VPS hat 2 GB, Spiegel ein Ziel von 256 MB; [[adr-026]]): Grenzen, bevor gerechnet wird.
+**Last** (der VPS hat 2 GB, Spiegel eine Grenze von 320 MB; [[adr-026]], [[vps-resource-sizing]]): Grenzen, bevor gerechnet wird.
 - Bytegrenze vor dem Parsen, auch beim Lesen des Stroms (4 MiB für Stapel, 16 KiB sonst), nur `application/json`.
 - Token-Bucket je Brücke (Snapshots 20 in 10 s, Heartbeat und Zustand je 6 in der Minute), Kopplung je Adresse 5 und
   insgesamt 30 in 15 Minuten; Antwort 429 mit `Retry-After`.

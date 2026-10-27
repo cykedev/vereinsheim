@@ -9,7 +9,7 @@ part_of: ["[[operations]]"]
 documented_in: ["[[overview#VPS-Sizing]]"]
 ---
 
-**TL;DR** RAM ist Engpass, der VPS bleibt bei 2 GB (IONOS VPS S). Grenzen für drei Apps: Ringwerk und Spiegel 256 MB mit Heap-Grenze 160, Treffsicher 320 MB mit Heap 192 (Uploads, PDF-Import), Migratoren 192 MB, Caddy 96 MB, Postgres 384 MB; die Summe (1.312 MiB) passt neben System und Docker. Gemessen am 14. Oktober 2026 nach neun Tagen Betrieb (vor Spiegel): Spitzen Ringwerk 188, Treffsicher 163, Caddy 44, Postgres 96 MiB, 980 MiB verfügbar, kein Swap, keine OOM-Kills. Nach dem ersten Deploy mit Spiegel: 905 MiB verfügbar, alle Apps klar unter ihrer Grenze.
+**TL;DR** RAM ist Engpass, der VPS bleibt bei 2 GB (IONOS VPS S). Grenzen für drei Apps seit dem 27. Oktober 2026: Ringwerk und Treffsicher 256 MB, Spiegel 320 MB (der Leser der Ausdrucke zählt als Kindprozess dazu), alle mit Heap-Grenze 160, Migratoren 192 MB, Caddy 96 MB, Postgres 384 MB; die Summe (1.312 MiB) passt neben System und Docker. Gemessen am 14. Oktober 2026 nach neun Tagen Betrieb (vor Spiegel): Spitzen Ringwerk 188, Treffsicher 163, Caddy 44, Postgres 96 MiB, 980 MiB verfügbar, kein Swap, keine OOM-Kills. Nach dem ersten Deploy mit Spiegel: 905 MiB verfügbar, alle Apps klar unter ihrer Grenze.
 
 ## Messung 14. Oktober 2026
 
@@ -47,9 +47,9 @@ allem das Binary); deshalb 96 MB, die Summe der Grenzen steigt auf 1.312 MiB.
 ## Offen: Messung unter Last
 
 Gemessen ist bisher nur direkt nach dem Neustart beim Deploy. Ringwerk läuft mit 256 MB, die PDF-Erzeugung
-(`@react-pdf/renderer`) läuft im Prozess und ist unter dieser Grenze nicht gemessen, ebenso der PDF-Import in
-Treffsicher. Nach einigen Tagen Betrieb, einem Ringwerk-PDF und einem Treffsicher-Import den Messbefehl unten erneut
-laufen lassen.
+(`@react-pdf/renderer`) läuft im Prozess und ist unter dieser Grenze nicht gemessen. Den PDF-Import in Treffsicher
+misst seit dem 27. Oktober 2026 der Abschnitt „Grenzen getauscht“ außerhalb des Servers. Nach einigen Tagen Betrieb,
+einem Ringwerk-PDF und einem Treffsicher-Import den Messbefehl unten erneut laufen lassen.
 
 ## Messung nach dem Release von Stufe 1 (27. Oktober 2026)
 
@@ -70,6 +70,40 @@ Der Leser läuft als Kindprozess in der cgroup von `app-spiegel` und zählt zu i
 enthält den Import und die Messung: Spiegel selbst lag danach bei 137 MiB Programm, ein Leser kommt mit bis zu 79 MiB
 dazu. Bis zur Grenze von 256 MB bleiben dann rund 40 MiB. Wächst Spiegel selbst unter Last, kann ein Lesevorgang den
 ganzen Container an die Grenze bringen.
+
+## Grenzen getauscht (27. Oktober 2026)
+
+Treffsicher nutzt seine 320 MB nicht (Spitze 59 MiB, früher höchstens 163), Spiegel bleiben beim Lesen eines Ausdrucks
+nur rund 40 MiB. Deshalb Spiegel 320 MB und Treffsicher 256 MB; die Summe der Grenzen bleibt 1.312 MiB. [[adr-026]]
+nennt 256 MB als Ziel für Spiegel und kleinere Grenzen der anderen Apps als Ausweg, falls das nicht reicht; der Tausch
+ist dieser Ausweg.
+
+- **Spiegel behält Heap 160.** Die 64 MiB mehr sind für den Leser der Ausdrucke, nicht für den Heap: 160 MiB Heap, rund
+  60 MiB außerhalb des Heaps und ein Leser bis zur Wache von 96 MiB ergeben rund 316 MiB. Ein größerer Heap nähme dem
+  Leser die neue Luft wieder.
+- **Treffsicher bekommt Heap 160** wie Ringwerk; 192 passt nicht sicher in 256 ([[node-heap-above-container-limit]]).
+  Der Meyton-Import liest im Prozess. Gemessen im Container `app-treffsicher` des Stack-Tests (Grenze 256 MB) mit dem
+  Ablauf aus `pdfText.ts` und Heap 160, als eigener Prozess neben dem Server, gegen die 74 eigenen Ausdrucke (16 bis
+  43 KB): der größte hob den Container von 82 auf höchstens 106 MiB (Heap-Spitze 13 MiB), alle 74 hintereinander auf
+  höchstens 125 MiB (Heap 30 MiB). Mit der Spitze von Treffsicher im Stack-Test (137 bis 139 MiB) bleibt das klar unter
+  256 MB. Nicht gemessen ist eine PDF nahe der Uploadgrenze von 10 MB.
+- **Stack-Test** (`tools/stack-e2e/run.sh --ops` und `--load 3`): in Ordnung. Spitzen Ringwerk 63, Spiegel 141 (unter
+  Last 118 bis 125), Treffsicher 137, Caddy 68, Postgres 201 MiB; die Grenzen stehen dort mit 256, 320 und 256.
+
+Auf den VPS kommt die neue `compose.yml` nur über `git pull` im Repo-Verzeichnis; `vereinsheim release` zieht kein Git,
+es ruft dort nur `vereinsheim deploy` auf. Liegt sie da, übernimmt der nächste Deploy die Grenzen von selbst, weil
+`deploy.sh` jede App mit `docker compose up -d app-<app>` neu anlegt. Ohne Release reicht ein Befehl, Treffsicher
+zuerst, damit die Summe nie über 1.312 MiB steigt. `vereinsheim restart` reicht nicht, denn `docker compose restart`
+startet den alten Container mit der alten Grenze. `--no-deps` lässt den Migrator aus, `--pull never` nimmt das Image,
+das schon da ist:
+
+```bash
+docker compose up -d --no-deps --pull never app-treffsicher && docker compose up -d --no-deps --pull never app-spiegel
+```
+
+Im Stack-Test belegt: Beide Container wurden mit demselben Image neu angelegt, `memory.max` stand danach bei 256 und
+320 MiB, `NODE_OPTIONS` bei 160, die Migratoren und Ringwerk blieben unberührt, beide Apps antworteten. Auf dem VPS
+danach mit dem Messbefehl unten prüfen: Treffsicher Grenze 256, Spiegel 320.
 
 Gegen jeden gespeicherten Ausdruck messen (im Repo-Verzeichnis auf dem VPS, nur lesend; gibt keine Dateinamen aus):
 

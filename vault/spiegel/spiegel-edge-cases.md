@@ -144,7 +144,7 @@ Die Spalte „Prüfen“ nennt, wo der Fall belegt wird: SQL-Checkliste (SP-0.1)
 | SF-55 | Gerät getauscht oder Brücke neu installiert | Brücke weiß nicht, was schon oben ist | Spiegel kennt den letzten bestätigten Stand je Quelle | Test |
 | SF-56 | Brücke still defekt, während „aus“ der Normalfall ist | Niemand merkt es | Warnung, wenn QR-Scans von einem Abend ohne Brücken-Kontakt kommen | Test |
 | SF-57 | Schützen im Gäste-LAN, Geräte im Gerätenetz; Gerätenetz womöglich ohne Internet | Keine Verbindung zu Spiegel | Nur ausgehend DNS, HTTPS und NTP; sonst LTE oder Client im Gäste-WLAN; Kopplung per Code bei der Installation | SQL-Checkliste (Netzfrage) |
-| SF-58 | Großer Rückstau nach langer Pause | Ratenbegrenzung und 256 MB Speicher | Kleine Stapel; warten, so lange Spiegel vorgibt | Test |
+| SF-58 | Großer Rückstau nach langer Pause | Ratenbegrenzung und 320 MB Speicher | Kleine Stapel; warten, so lange Spiegel vorgibt | Test |
 | SF-59 | Diagnose oder Fehlermeldung enthält Namen | Personenbezogene Daten in Logs | Diagnose als feste Liste ohne Personenfelder; Logs ohne Inhalt; Test auf `Nachname` | Test: Vertragsfehler ohne Inhalt in `packages/ingest-contract`; Antworten und Logs der API ohne Namen (`apps/spiegel/src/lib/ingest/http.test.ts`, 13. Oktober 2026) |
 
 ### Kennzahlen und Verläufe

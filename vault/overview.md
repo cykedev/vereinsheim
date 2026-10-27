@@ -135,8 +135,8 @@ keinen Build-Puffer.
 | Caddy                   |         64 MB |      96 M | —           |
 | Postgres 15 (shared)    |  ~120 MB[^pg] |     384 M | 1–2 GB Data |
 | Ringwerk (Next.js)      |        188 MB |     256 M | —           |
-| Treffsicher (Next.js)   |        163 MB |     320 M | —           |
-| Spiegel (Next.js)       |        152 MB |     256 M | —           |
+| Treffsicher (Next.js)   |        163 MB |     256 M | —           |
+| Spiegel (Next.js)       |        201 MB |     320 M | —           |
 | Migratoren (one-shot)   | ~130 MB je    |  192 M je | —           |
 | Uploads                 |             — |         — | 10–20 GB    |
 | Backups (14 Tage)       |             — |         — | 5–10 GB     |
@@ -146,8 +146,9 @@ Connections: 250–350 MB.
 
 **Steady-State: ~0,9 GB RAM, ~25–40 GB Disk.** Die Grenzen der Dauerdienste summieren sich auf 1.312 MiB; neben
 System und Docker (~500 MiB) bleibt Luft. Die Migratoren laufen beim Deploy nacheinander. Die Apps laufen mit
-Heap-Grenze (Ringwerk und Spiegel 160, Treffsicher 192, [[node-heap-above-container-limit]]). Messungen und eine
-Swap-Datei als Sicherheitsnetz: [[vps-resource-sizing]].
+Heap-Grenze 160 ([[node-heap-above-container-limit]]); Spiegel hat 64 MiB mehr für den Leser der Ausdrucke, der als
+Kindprozess zur Grenze seines Containers zählt. Messungen und eine Swap-Datei als Sicherheitsnetz:
+[[vps-resource-sizing]].
 
 ## Was NICHT im Scope
 

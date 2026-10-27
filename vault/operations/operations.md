@@ -175,7 +175,10 @@ SKIP_BACKUP=1 ./scripts/deploy.sh
   Postgres einmal neu, alle Apps verlieren kurz die Verbindung.
 - `migrate-<app>` — laufen JEDES Mal one-shot, weil `restart: "no"` und Container nach `up -d` neu erstellt
   werden; nacheinander, nie gleichzeitig.
-- `app-<app>` — neu, sobald `migrate-<app>` mit Code 0 durch ist.
+- `app-<app>` — neu, sobald `migrate-<app>` mit Code 0 durch ist. Eine geänderte Grenze in `compose.yml` (`mem_limit`,
+  `NODE_OPTIONS`) kommt nur über `git pull` auf den VPS; der Deploy übernimmt sie dann. Ohne Deploy legt
+  `docker compose up -d --no-deps --pull never app-<app>` die App mit demselben Image neu an. `vereinsheim restart`
+  behält die alte Grenze ([[vps-resource-sizing]]).
 
 Wenn `migrate-<app>` fehlschlägt, startet die zugehörige App **nicht**, und der Deploy hört dort auf. Andere Apps
 sind davon nicht betroffen (eigener migrate-Container, eigene DB).
