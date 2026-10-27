@@ -5,7 +5,9 @@
 //
 //   pnpm --filter spiegel seed:own                    dem Konto aus SEED_ADMIN_EMAIL (legt die App beim Start an)
 //   pnpm --filter spiegel seed:own --email <adresse>  einem anderen, vorhandenen Konto
-//   pnpm --filter spiegel seed:own --demo             dem Demo-Konto (für die Prüfung im Browser, siehe unten)
+//   pnpm --filter spiegel seed:own --demo             dem Demo-Konto (für die Prüfung im Browser, siehe unten), dazu
+//                                                     erfundene Scheiben ohne Brücke in jeder Detailtiefe
+//                                                     (`demoEnteredSeeds`, über `writeEnteredCard`)
 
 import "dotenv/config"
 
@@ -16,11 +18,12 @@ import { normalizeLoginEmail } from "@vereinsheim/lib/auth/validation"
 import { createPrismaClient } from "../src/lib/db"
 import { writeRevision, type RevisionChange } from "../src/lib/db/cards"
 import { disciplineFor } from "../src/lib/db/disciplines"
+import { writeEnteredCard } from "../src/lib/db/entered"
 import { BCRYPT_COST } from "../src/lib/startup"
 import { DEV_DATABASE_URL } from "../test/dev-database"
 import { DEMO_EMAIL, DEMO_PASSWORD } from "./demo-account"
 import { assertDevDatabase } from "./dev-guard"
-import { demoCardSeeds, loadOwnCards, ownCardSeeds } from "./own-cards"
+import { demoCardSeeds, demoEnteredSeeds, loadOwnCards, ownCardSeeds } from "./own-cards"
 
 const DEV_SITE = "Dev-Anlage"
 
@@ -108,6 +111,65 @@ async function main() {
       `  neu ${changes.created}, geändert ${changes.updated}, unverändert ${changes.unchanged}, veraltet ${changes.stale}`
     )
     for (const { n, reason } of omitted) out(`  weggelassen: Scheibe ${n} (${reason})`)
+
+    if (demo) {
+      // die neueste Scheibe der Dev-Quelle des Kontos und der Beginn ihres Abends (acht Stunden davor)
+      const newest = await db.card.findFirst({
+        where: { sourceId: source.id, ownerId: owner.id },
+        orderBy: { startedAt: "desc" },
+        select: { startedAt: true, disciplineId: true },
+      })
+      if (!newest) throw new Error("Keine Scheibe der Dev-Quelle für die Demo-Scheiben")
+      const newestMs = newest.startedAt.getTime()
+      const first = await db.card.findFirst({
+        where: {
+          sourceId: source.id,
+          ownerId: owner.id,
+          startedAt: { gte: new Date(newestMs - 8 * 3_600_000) },
+        },
+        orderBy: { startedAt: "asc" },
+        select: { startedAt: true },
+      })
+      const entered = { created: 0, revised: 0, unchanged: 0 }
+      for (const seed of demoEnteredSeeds({
+        newestMs,
+        eveningStartMs: first?.startedAt.getTime() ?? newestMs,
+      })) {
+        // aus Treffsicher findet der Schlüssel die Scheibe, sonst Herkunft und Beginn
+        const existing =
+          seed.origin === "treffsicher"
+            ? null
+            : await db.card.findFirst({
+                where: {
+                  ownerId: owner.id,
+                  sourceId: null,
+                  origin: seed.origin,
+                  startedAt: new Date(seed.startedAtMs),
+                },
+                select: { id: true },
+              })
+        const result = await writeEnteredCard(db, {
+          ...(existing ? { cardId: existing.id } : {}),
+          ownerId: owner.id,
+          origin: seed.origin,
+          disciplineId: newest.disciplineId,
+          startedAtMs: seed.startedAtMs,
+          kind: seed.kind,
+          place: seed.place,
+          importKey: seed.importKey,
+          details: seed.details,
+          reason: "seed",
+        })
+        if (result.kind === "invalid")
+          throw new Error(`Demo-Scheibe ${seed.level} ungültig: ${result.problem}`)
+        if (result.kind !== "saved")
+          throw new Error(`Demo-Scheibe ${seed.level} nicht geschrieben: ${result.kind}`)
+        entered[result.change]++
+      }
+      out(
+        `Demo-Scheiben in jeder Detailtiefe: neu ${entered.created}, geändert ${entered.revised}, unverändert ${entered.unchanged}`
+      )
+    }
   } finally {
     await db.$disconnect()
   }

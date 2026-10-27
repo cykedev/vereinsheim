@@ -3,8 +3,10 @@ import { describe, expect, it } from "vitest"
 import { scoreFromCoordinates } from "@vereinsheim/shot-core/scoring"
 import { TARGETS } from "@vereinsheim/shot-core/targets"
 
+import { checkDetails } from "../src/lib/entered/details"
 import {
   demoCardSeeds,
+  demoEnteredSeeds,
   loadOwnCards,
   ownCardSeeds,
   type OwnCard,
@@ -94,5 +96,40 @@ describe("demoCardSeeds", () => {
 describe.skipIf(!loadOwnCards())("eigene Scheiben aus tools/private/own-cards.json", () => {
   it("jeder Wert gleich der Wertung aus der Lage, keine echte ScheibenID", () => {
     expectConsistent(ownCardSeeds(loadOwnCards() ?? []).seeds)
+  })
+})
+
+describe("Demo-Scheiben in jeder Detailtiefe", () => {
+  const newestMs = Date.UTC(2026, 9, 20, 18, 30)
+  const eveningStartMs = Date.UTC(2026, 9, 20, 16, 30)
+  const seeds = demoEnteredSeeds({ newestMs, eveningStartMs })
+
+  it("jede besteht die Prüfung der Angaben für LP 40", () => {
+    for (const seed of seeds) {
+      const checked = checkDetails(seed.details, { plannedShots: 40, seriesShots: 10 })
+      expect(checked.ok, `${seed.origin} ${seed.level}`).toBe(true)
+    }
+  })
+
+  it("alle Stufen: zweimal Serien, zweimal Gesamtergebnis (eins mit Trefferlage), Schüsse, ohne Werte", () => {
+    const levels = seeds.map((seed) => seed.level).sort()
+    expect(levels).toEqual(["none", "series", "series", "shots", "shots", "total", "total"])
+    expect(seeds.filter((seed) => seed.level === "total" && seed.details.center)).toHaveLength(1)
+    const tenthless = seeds.find((seed) => seed.origin === "manual" && seed.level === "shots")
+    expect(tenthless?.details.shots).toHaveLength(40)
+    expect(tenthless?.details.shots?.every((shot) => shot.decimalTenths === null)).toBe(true)
+  })
+
+  it("die wartende kurz vor dem letzten Abend, die übrigen auf einem Abend 13 Tage vor der neuesten", () => {
+    const lastEvening = seeds.filter(
+      (seed) => seed.startedAtMs < eveningStartMs && seed.startedAtMs > eveningStartMs - 3_600_000
+    )
+    expect(lastEvening.map((seed) => [seed.origin, seed.level])).toEqual([["pdf", "none"]])
+    const rest = seeds.filter((seed) => !lastEvening.includes(seed))
+    expect(rest).toHaveLength(6)
+    for (const seed of rest) {
+      expect(seed.startedAtMs - (newestMs - 13 * 86_400_000)).toBeGreaterThanOrEqual(0)
+      expect(seed.startedAtMs - (newestMs - 13 * 86_400_000)).toBeLessThan(3_600_000)
+    }
   })
 })

@@ -1,7 +1,8 @@
 // Eigene Scheiben für die Dev-Datenbank (`seed-own.ts`), nie in Produktion: in Produktion kommen Scheiben über die
 // Brücke. Die echten Daten liegen nur lokal in `tools/private/own-cards.json` (gitignored, ADR-029), ohne Name,
 // Sportpass und ScheibenID; fehlt die Datei, nimmt `seed:own` erfundene Scheiben (`demoCardSeeds`). Weggelassen: ohne
-// Scheibenbild (Zimmerstutzen, „LP Schach“) und verdeckt (Anzeigeart 5 oder 10, SF-19).
+// Scheibenbild (Zimmerstutzen, „LP Schach“) und verdeckt (Anzeigeart 5 oder 10, SF-19). Mit `--demo` kommen erfundene
+// Scheiben ohne Brücke in jeder Detailtiefe dazu (`demoEnteredSeeds`), nie an echte Daten.
 import { existsSync, readFileSync } from "node:fs"
 
 import {
@@ -16,6 +17,7 @@ import { scoreFromCoordinates } from "@vereinsheim/shot-core/scoring"
 import { TARGETS, type TargetId, type Weapon } from "@vereinsheim/shot-core/targets"
 
 import type { CardInput, ShotInput } from "../src/lib/db/cards"
+import type { DetailsInput, EnteredOrigin } from "../src/lib/entered/details"
 import { generateSeason } from "../test/generate"
 
 export interface OwnSeedShot {
@@ -187,4 +189,130 @@ export function demoCardSeeds(): OwnCardSeed[] {
       shots: [...shots],
     }
   })
+}
+
+/** eine erfundene Scheibe ohne Brücke für `seed:own --demo`: eine Detailtiefe, wie Scan, Hand und Übernahme sie bringen */
+export interface DemoEnteredSeed {
+  origin: EnteredOrigin
+  startedAtMs: number
+  kind: "training" | "competition"
+  place: string | null
+  /** nur aus Treffsicher: der Schlüssel der Übernahme findet die Scheibe wieder */
+  importKey?: string
+  details: DetailsInput
+  level: "none" | "series" | "total" | "shots"
+}
+
+const MINUTE_MS = 60_000
+const DAY_MS = 86_400_000
+
+/**
+ * Erfundene Scheiben in jeder Detailtiefe (nur mit `--demo`, für die Skriptprüfung): eine vom Ausdruck, die auf die Anlage
+ * wartet, kurz vor dem letzten Abend (also auf Start), dazu auf einem eigenen Abend 13 Tage vor der neuesten Scheibe
+ * Serien-Summen mit und ohne Zehntel, ein Gesamtergebnis mit Trefferlage aus Treffsicher, eins nur in Zehnteln, Schüsse
+ * ohne Zehntel und Schüsse vom Ausdruck ohne Lage und Zeit. Für die Disziplin des Aufrufers (LP 40: 40 Schuss, Serie
+ * 10). Die Schüsse kommen aus `generateSeason` (fester Seed), nur die Wertung.
+ */
+export function demoEnteredSeeds(anchor: {
+  newestMs: number
+  eveningStartMs: number
+}): DemoEnteredSeed[] {
+  const generated = generateSeason({
+    seed: 2027,
+    cards: 12,
+    firstMs: anchor.newestMs,
+    everyDays: 7,
+    sourceId: 0,
+    disciplineId: 0,
+    ownerId: "",
+    scheibenIdBase: 1,
+  })
+  const match = (
+    generated.find((g) => g.shots.filter((s) => s.stellung !== 0).length === 40)?.shots ?? []
+  ).filter((shot) => shot.stellung !== 0)
+  const evening = anchor.newestMs - 13 * DAY_MS
+  const at = (i: number) => evening + i * 10 * MINUTE_MS
+  const north = "Vereinsheim Nord"
+  return [
+    {
+      origin: "pdf",
+      startedAtMs: anchor.eveningStartMs - 20 * MINUTE_MS,
+      kind: "training",
+      place: null,
+      details: {},
+      level: "none",
+    },
+    {
+      origin: "manual",
+      startedAtMs: at(0),
+      kind: "training",
+      place: north,
+      details: {
+        series: [
+          [88, 921],
+          [86, 905],
+          [90, 934],
+          [87, 912],
+        ].map(([rings, decimalTenths], i) => ({ series: i + 1, shots: 10, rings, decimalTenths })),
+      },
+      level: "series",
+    },
+    {
+      origin: "manual",
+      startedAtMs: at(1),
+      kind: "training",
+      place: north,
+      details: {
+        series: [89, 91, 87, 90].map((rings, i) => ({ series: i + 1, shots: 10, rings })),
+      },
+      level: "series",
+    },
+    {
+      origin: "treffsicher",
+      startedAtMs: at(2),
+      kind: "competition",
+      place: "Schützenhaus Süd",
+      importKey: "treffsicher:demo-total-center",
+      details: { total: { rings: 362 }, center: { xUm: 1400, yUm: -900 } },
+      level: "total",
+    },
+    {
+      origin: "manual",
+      startedAtMs: at(3),
+      kind: "training",
+      place: north,
+      details: { total: { decimalTenths: 3658 } },
+      level: "total",
+    },
+    {
+      origin: "manual",
+      startedAtMs: at(4),
+      kind: "training",
+      place: north,
+      details: {
+        shots: match.map((shot) => ({
+          series: shot.series,
+          ring: shot.ring,
+          decimalTenths: null,
+          xUm: shot.xUm,
+          yUm: shot.yUm,
+        })),
+      },
+      level: "shots",
+    },
+    {
+      origin: "pdf",
+      startedAtMs: at(5),
+      kind: "training",
+      place: null,
+      details: {
+        shots: match.map((shot) => ({
+          series: shot.series,
+          ring: shot.ring,
+          decimalTenths: shot.decimalTenths,
+        })),
+      },
+      level: "shots",
+    },
+  ]
 }
