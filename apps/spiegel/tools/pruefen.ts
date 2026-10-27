@@ -1,7 +1,8 @@
 // Skriptprüfung der App: Bedienung, die kein Test im Node sieht (echte Klicks und Tasten, Fokus, Blätter, Kleben und
 // Springen, Geometrie bei mehreren Fenstergrößen, Anker, Rückwege), gegen die laufende App mit dem Demo-Konto. Nicht im
 // Gate: braucht Chrome, einen laufenden Server und Daten. Ohne feste Zahlen, denn die App zeigt echte Scheiben; geprüft
-// werden Struktur, Lage und Gleichheiten.
+// werden Struktur, Lage und Gleichheiten. Der Abschnitt „Detailtiefen“ braucht die Demo-Scheiben ohne Brücke in jeder
+// Detailtiefe, die `seed:own --demo` mit anlegt.
 //
 //   pnpm --filter spiegel seed:own --demo      einmal: die Scheiben dem Demo-Konto
 //   pnpm --filter spiegel pruefen              gegen http://localhost:3002 (BASE_URL), `--alle` zeigt jede Prüfung
@@ -75,10 +76,10 @@ async function login(page: Page) {
 
 /**
  * eine Scheibe aus der Liste mit mindestens 30 Wertungsschüssen, die vorige und nächste hat (Blättern), und die
- * Adresse ihrer Herkunft
+ * Adresse ihrer Herkunft; nur gemessene, damit Blättern und Reiter auf Scheiben mit Schüssen bleiben
  */
 async function pickCard(page: Page): Promise<string> {
-  await page.goto(`${BASE}/cards`)
+  await page.goto(`${BASE}/cards?provenance=measured`)
   const hrefs = await page.ev<string[]>(
     `[...new Set($$('a[href^="/cards/c"]').map((a) => a.getAttribute("href")))].slice(0, 12)`
   )
@@ -1995,6 +1996,247 @@ async function compare(page: Page, href: string) {
   check("Vergleichen: jedes Thema der Hilfe hat ein „?“", missing.length === 0, missing.join(", "))
 }
 
+/** fehlt ein Zustand in den Daten, ist das ein FAIL: Die Demo-Scheiben in jeder Detailtiefe bringt `seed:own --demo` */
+const NOT_SHOWN = "nicht belegt: vorher seed:own --demo"
+
+/** was die Seite einer Scheibe ohne Einzelschüsse zeigt */
+interface LevelState {
+  href: string
+  level: string | null
+  reason: string
+  missing: string
+  center: boolean
+  centerNote: string
+  sumSeries: boolean
+  sumSeriesSvg: number
+  result: string
+  meta: string
+  shotTable: boolean
+  compare: boolean
+}
+
+/**
+ * Detailtiefen: Herkunft leise in Liste und Kopf, „–“ mit Grund, Filter nach Herkunft, die Seite einer Scheibe aus
+ * Serien-Summen, aus einem Gesamtergebnis mit Trefferlage und einer wartenden vom Ausdruck, Schüsse ohne Zehntel, die
+ * Grundlage im Fortschritt, im Trefferbild und auf Start, Vergleichen mit einer Scheibe aus Summen. Ohne feste Zahlen;
+ * die Demo-Scheiben legt `seed:own --demo` an (`demoEnteredSeeds`).
+ */
+async function detailLevels(page: Page, href: string) {
+  await page.viewport(1280, 900)
+  await page.goto(`${BASE}/cards`)
+  const words = await page.ev<{ words: string[]; measured: boolean }>(`({
+    words: $$("[data-provenance-word]").map(txt),
+    measured: /gemessen/.test(txt($("main"))),
+  })`)
+  check(
+    `Liste: Herkunft leise nur bei eingetragen und vom Ausdruck, nie gemessen${words.words.length ? "" : ` (${NOT_SHOWN})`}`,
+    words.words.length > 0 &&
+      words.words.every((w) => w === "eingetragen" || w === "vom Ausdruck") &&
+      !words.measured,
+    words
+  )
+
+  const hrefs: string[] = []
+  for (const provenance of ["entered", "printout"]) {
+    await page.viewport(1280, 900)
+    await page.goto(`${BASE}/cards?provenance=${provenance}`)
+    const dashes = await page.ev<{ cells: number; bad: string[]; links: string[] }>(`(() => {
+      const cells = $$("main td").filter((td) => txt(td).startsWith("–"))
+      return {
+        cells: cells.length,
+        bad: cells.filter((td) => !td.querySelector("[title]")?.getAttribute("title") || !td.querySelector(".sr-only"))
+          .map((td) => td.closest("tr")?.dataset.cardRow ?? "?"),
+        links: [...new Set($$('a[href^="/cards/c"]').map((a) => a.getAttribute("href")))],
+      }
+    })()`)
+    hrefs.push(...dashes.links)
+    check(
+      `Liste ${provenance}: jede „–“ mit Grund als Tooltip und für Screenreader${dashes.cells ? "" : ` (${NOT_SHOWN})`}`,
+      dashes.cells > 0 && dashes.bad.length === 0,
+      dashes
+    )
+    record(
+      await noSideScroll(page, {
+        base: BASE,
+        paths: [`/cards?provenance=${provenance}`],
+        widths: [375],
+      })
+    )
+  }
+
+  // das Blatt „Filter“: die Gruppe „Herkunft“, „Eingetragen“ schreibt die Adresse
+  await page.viewport(1280, 900)
+  await page.goto(`${BASE}/cards`)
+  await page.click(`$("[data-list-chip]")`, { settle: 400 })
+  const group = await page.ev<boolean>(
+    `!!$('dialog[open] [role="radiogroup"][aria-label="Herkunft"]')`
+  )
+  if (group)
+    await page.click(
+      `$$('dialog[open] [role="radiogroup"][aria-label="Herkunft"] button').find((b) => txt(b) === "Eingetragen")`,
+      { settle: 400 }
+    )
+  const filtered = group && (await page.waitFor(`location.search.includes("provenance=entered")`))
+  check(
+    `Blatt „Filter“: Gruppe „Herkunft“, „Eingetragen“ schreibt provenance=entered${group ? "" : ` (${NOT_SHOWN})`}`,
+    filtered,
+    await page.ev(`location.search`)
+  )
+  await page.key("Escape")
+
+  // jede Scheibe aus beiden Listen: was die Seite ohne Einzelschüsse zeigt
+  const states: LevelState[] = []
+  for (const link of [...new Set(hrefs)]) {
+    await page.goto(`${BASE}${link}`)
+    states.push({
+      ...(await page.ev<Omit<LevelState, "href">>(`({
+        level: $("[data-card-summary]")?.dataset.cardSummary ?? null,
+        reason: txt($$("[data-summary-reason]").find((el) => visible(el))),
+        missing: txt($("[data-summary-missing]")),
+        center: !!$("[data-summary-center]"),
+        centerNote: txt($("[data-center-note]")),
+        sumSeries: !!$("[data-sum-series]"),
+        sumSeriesSvg: $$("[data-sum-series] svg").length,
+        result: txt($$("[data-result]").find((el) => visible(el))),
+        meta: txt($("[data-card-header] p")),
+        shotTable: !!$("#shot-table"),
+        compare: !!link("Mit der Scheibe davor vergleichen"),
+      })`)),
+      href: link,
+    })
+  }
+  const series = states.filter((s) => s.level === "series")
+  check(
+    `Seite aus Serien-Summen: Kacheln ohne kleine Scheiben, ein Satz, was fehlt${series.length ? "" : ` (${NOT_SHOWN})`}`,
+    series.length > 0 &&
+      series.every(
+        (s) => s.sumSeries && s.sumSeriesSvg === 0 && s.missing.endsWith("Einzelschüsse.")
+      ),
+    series.map(({ reason, missing, sumSeriesSvg }) => ({ reason, missing, sumSeriesSvg }))
+  )
+  const tenthless = series.find((s) => s.reason.includes("ohne Zehntel"))
+  check(
+    `Serien-Summen ohne Zehntel nennen den Grund${tenthless ? "" : ` (${NOT_SHOWN})`}`,
+    !!tenthless && tenthless.reason.startsWith("nur Serien-Summen"),
+    series.map((s) => s.reason)
+  )
+  const total = states.find((s) => s.level === "total" && s.center)
+  check(
+    `Nur Gesamtergebnis: goldenes Kreuz mit „nur die Mitte der Schüsse, keine Streuung“${total ? "" : ` (${NOT_SHOWN})`}`,
+    !!total &&
+      total.reason.startsWith("nur Gesamtergebnis") &&
+      total.centerNote === "nur die Mitte der Schüsse, keine Streuung",
+    total ?? states.map((s) => s.level)
+  )
+  const waiting = states.find((s) => s.level === "none")
+  check(
+    `Wartet auf die Anlage: „–“ mit Grund${waiting ? "" : ` (${NOT_SHOWN})`}`,
+    !!waiting &&
+      waiting.result === "–" &&
+      waiting.reason.startsWith("wartet auf die Anlage") &&
+      waiting.missing.startsWith("Sobald die Anlage"),
+    waiting ?? states.map((s) => s.level)
+  )
+  check(
+    `Kopf: Herkunft leise (eingetragen bzw. vom Ausdruck)${states.length ? "" : ` (${NOT_SHOWN})`}`,
+    states.length > 0 && states.every((s) => /· (eingetragen|vom Ausdruck) ·/.test(s.meta)),
+    states.map((s) => s.meta)
+  )
+  if (series[0]) {
+    record(await noSideScroll(page, { base: BASE, paths: [series[0].href], widths: [375] }))
+    await page.viewport(1280, 900)
+  }
+
+  // Schüsse ohne Zehntel, in Zehnteln gezeigt (nur die Adresse, nichts gespeichert)
+  const tenthsShots = states.find((s) => s.shotTable && /· eingetragen ·/.test(s.meta))
+  if (tenthsShots) {
+    const url = `${tenthsShots.href}${tenthsShots.href.includes("?") ? "&" : "?"}scoring=decimal`
+    await page.goto(`${BASE}${url}`)
+  }
+  const decimal = tenthsShots
+    ? await page.ev<{ result: string; text: string }>(`(() => {
+        const result = $$("[data-result]").find((el) => visible(el))
+        return { result: txt(result), text: txt(result?.closest(".grid")) }
+      })()`)
+    : null
+  check(
+    `Schüsse ohne Zehntel in Zehnteln: „–“ und „ohne Zehntel“${decimal ? "" : ` (${NOT_SHOWN})`}`,
+    !!decimal && decimal.result === "–" && decimal.text.includes("ohne Zehntel"),
+    decimal
+  )
+
+  // eine gemessene Scheibe nennt ihre Herkunft im Kopf
+  await page.goto(`${BASE}${href}`)
+  const measuredMeta = await page.ev<string>(`txt($("[data-card-header] p"))`)
+  check(
+    "Kopf einer gemessenen Scheibe: „gemessen“",
+    /· gemessen ·/.test(measuredMeta),
+    measuredMeta
+  )
+
+  // Fortschritt: die Grundlage, wenn nicht alle zählen, mit „?“
+  await page.goto(`${BASE}/progress?range=all`)
+  const basis = await page.ev<{ result: string; sigma: string }>(`({
+    result: txt($$("[data-period-basis]").find((el) => visible(el))),
+    sigma: txt($('[data-period-tile="group.sigma"] [data-basis]')),
+  })`)
+  check(
+    "Fortschritt: Grundlage unter dem Ergebnis",
+    /^über \d+ von \d+ Scheiben( · \d+ [^·]+)+/.test(basis.result),
+    basis
+  )
+  check(
+    "Fortschritt: Streuung ohne Lage je Schuss",
+    basis.sigma.includes("ohne Lage je Schuss"),
+    basis
+  )
+  const help = await page.ev<boolean>(`!!$$("[data-period-basis] button").find((b) => visible(b))`)
+  if (help)
+    await page.click(`$$("[data-period-basis] button").find((b) => visible(b))`, { settle: 400 })
+  const sheet = help ? await page.ev<string>(`txt($("dialog[open] h2"))`) : ""
+  check(
+    "Fortschritt: „?“ an der Grundlage öffnet „Grundlage und Herkunft“",
+    sheet === "Grundlage und Herkunft",
+    sheet
+  )
+  if (help) await page.key("Escape")
+
+  // Trefferbild: Scheiben nur mit ihrer Trefferlage als Summe zählen in der Mitte
+  await page.viewport(1440, 1400)
+  await page.goto(`${BASE}/progress?range=all&show=target`)
+  await page.waitFor(`$("[data-pattern-target]")`, 15_000)
+  const patternBasis = await page.ev<string>(`txt($("[data-pattern-basis]"))`)
+  check(
+    "Trefferbild: der Satz nennt Scheiben nur mit ihrer Mitte",
+    patternBasis.includes("nur mit ihrer Mitte"),
+    patternBasis
+  )
+  await page.viewport(1280, 900)
+
+  // Start: die Grundlage des Abends
+  await page.goto(`${BASE}/`)
+  const evening = await page.ev<string>(`$$("[data-evening-basis]").map(txt).join(" | ")`)
+  check(
+    `Start: die Grundlage des Abends nennt die wartende Scheibe${evening ? "" : ` (${NOT_SHOWN})`}`,
+    evening.includes("wartet auf die Anlage"),
+    evening
+  )
+
+  // Vergleichen mit der Scheibe davor: Die Grundlage nennt die Summen
+  const withPrevious = series.find((s) => s.compare)
+  if (withPrevious) {
+    await page.goto(`${BASE}${withPrevious.href}`)
+    await page.click(`link("Mit der Scheibe davor vergleichen")`, { settle: 300 })
+    await page.waitFor(`$("[data-compare-basis]")`, 15_000)
+    const compareBasis = await page.ev<string>(`txt($("[data-compare-basis]"))`)
+    check(
+      "Vergleichen: die Grundlage nennt „nur Serien-Summen“",
+      compareBasis.includes("nur Serien-Summen"),
+      compareBasis
+    )
+  } else check(`Vergleichen mit einer Scheibe aus Summen (nicht belegt: kein Knopf)`, true)
+}
+
 async function main() {
   let server: ChildProcess | null = null
   let browser: Browser | null = null
@@ -2026,6 +2268,7 @@ async function main() {
     await section("Fortschritt", () => progress(page))
     await section("Trefferbild über den Zeitraum", () => periodPattern(page))
     await section("Vergleichen", () => compare(page, href))
+    await section("Detailtiefen", () => detailLevels(page, href))
     await section("Eine Scheibe sagt, was sie zeigt", () => singleCardHints(page, href))
     await section("Sprache und Hilfe", () => language(page))
     await section("Offen und Leiste", () => openAndBar(page))
