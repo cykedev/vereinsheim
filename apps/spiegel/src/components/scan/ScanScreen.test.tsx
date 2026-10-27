@@ -48,6 +48,14 @@ describe("Seite „Scheibe holen“ (Markup)", () => {
     expect(html).toMatch(/<input[^>]*id="fetch-day"[^>]*max="2026-10-27"[^>]*value="2026-10-27"/)
   })
 
+  it("„Holen“ ist ohne Eingabe nicht gesperrt (der Grund kommt beim Tippen am Feld)", () => {
+    const html = render()
+    for (const way of ["link", "id"]) {
+      const card = html.slice(html.indexOf(`data-fetch-way="${way}"`))
+      expect(card).toMatch(/<button(?![^>]*disabled="")[^>]*type="submit">Holen<\/button>/)
+    }
+  })
+
   it("ältere Aufträge nur mit Einträgen", () => {
     expect(render()).not.toContain("data-legacy-requests")
     const html = render([{ id: 3, hex: "ff914420", day: "2026-10-21" }])

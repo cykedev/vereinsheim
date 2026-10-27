@@ -71,6 +71,7 @@ function WayCard({
 }
 
 const READING = "Spiegel liest den Ausdruck…"
+const LINK_MISSING = "Füge den Link aus dem QR-Code ein."
 
 /**
  * Seite „Scheibe holen“: Kamera, Link, PDF und ID in dieser Folge, jeder Weg gleich. Liegt die Scheibe schon in Spiegel,
@@ -93,6 +94,7 @@ export function ScanScreen({
 }) {
   const router = useRouter()
   const [link, setLink] = useState("")
+  const [linkError, setLinkError] = useState<string | null>(null)
   const [id, setId] = useState("")
   const [day, setDay] = useState(today)
   const [errors, setErrors] = useState<Partial<Record<Way, string>>>({})
@@ -217,6 +219,12 @@ export function ScanScreen({
             className="flex flex-wrap items-end gap-3"
             onSubmit={(event) => {
               event.preventDefault()
+              // ohne Link sagt der Knopf am Feld, was fehlt, statt gesperrt zu sein
+              if (!link.trim()) {
+                setLinkError(LINK_MISSING)
+                return
+              }
+              setLinkError(null)
               submit({ way: "link", url: link }, null)
             }}
           >
@@ -233,12 +241,16 @@ export function ScanScreen({
                 value={link}
                 onChange={(event) => setLink(event.target.value)}
                 disabled={linkPending}
+                {...(linkError
+                  ? { "aria-invalid": true, "aria-describedby": "fetch-link-error" }
+                  : {})}
               />
             </div>
-            <Button type="submit" className="h-10" disabled={linkPending || !link.trim()}>
+            <Button type="submit" className="h-10" disabled={linkPending}>
               {linkPending ? "Holen…" : "Holen"}
             </Button>
           </form>
+          <FieldError id="fetch-link-error" message={linkError ?? undefined} />
           {linkPending && (
             <p role="status" className="text-sm text-foreground-2">
               {READING}
@@ -332,7 +344,7 @@ export function ScanScreen({
             <FieldError id="fetch-id-error" message={idError} />
             <FieldError id="fetch-day-error" message={dayError} />
             <div>
-              <Button type="submit" className="h-10" disabled={idPending || !id.trim() || !day}>
+              <Button type="submit" className="h-10" disabled={idPending}>
                 {idPending ? "Holen…" : "Holen"}
               </Button>
             </div>
