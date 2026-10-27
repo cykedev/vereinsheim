@@ -39,7 +39,7 @@ Nur wenn du Code änderst:
   `scripts/lib/apps.sh`
 - [`compose.yml`](compose.yml), [`Caddyfile`](Caddyfile), [`db-init/01-users-and-dbs.sh`](db-init/01-users-and-dbs.sh)
 
-## Harness, Skills & Knowledge (ADR-016/017/018/023/025)
+## Harness, Skills & Knowledge (ADR-016/017/018/023/025/035)
 
 Eine geteilte Agent-Harness am Root — **ein Satz für alle Apps**:
 
@@ -49,7 +49,9 @@ Eine geteilte Agent-Harness am Root — **ein Satz für alle Apps**:
   Quellen → zitierte Vault-Notes) sowie der PIV-Workflow `plan → implement → validate → review` + `debug` (Root-Cause;
   Handoff über `plans/` + `reports/`). **`/implement` läuft autonom-by-default** über den freigegebenen Plan
   (task-by-task, Circuit-Breaker, Ledger; **ADR-023**) — die Plan-Freigabe ist die einzige Opt-in-Grenze, Merge bleibt
-  user-gated.
+  user-gated. **`coordinate`** ist die Ebene darüber (**ADR-035**): eine koordinierende Session im Haupt-Checkout
+  plant die Teile eines Vorhabens, führt den Koordinationsplan als Ledger und übernimmt die Branches der
+  Kindsessions, die je einen Teilplan in einem eigenen Worktree umsetzen.
 - **`plans/`** enthält nur offene Pläne. Ist ein Plan umgesetzt, wird er gelöscht; was davon dauerhaft gilt, steht im
   Vault. `reports/` ist lokal (gitignored).
 - **Hooks** (`.claude/settings.json` + `.claude/hooks/`, Composite-Dispatcher `pretool.mjs`/`stop.mjs`): **Stop-Gate**
@@ -96,8 +98,9 @@ Diese gelten zusätzlich zu denen aus `/Users/christian/.claude/CLAUDE.md`:
 7. **PIV ist der Default-Workflow** (nicht pro Prompt mitzugeben): jede nicht-triviale Änderung läuft
    `/plan → /implement → /validate → /review` (Handoff über `plans/` + `reports/`); den Plan vor der ersten Code-Zeile
    dem User vorlegen. Nach der Freigabe läuft `/implement` **autonom** durch (ADR-023) und holt den User nur an
-   Circuit-Breakern + am Merge zurück. Bugs zuerst über `/debug` (Root-Cause). Triviale/mechanische Fixes (Typo,
-   One-Liner, reine Doku) dürfen direkt erfolgen.
+   Circuit-Breakern + am Merge zurück. Ein Vorhaben aus mehreren Teilplänen läuft koordiniert: eine koordinierende
+   Session, je Teilplan eine Kindsession im eigenen Worktree (`/coordinate`, ADR-035). Bugs zuerst über `/debug`
+   (Root-Cause). Triviale/mechanische Fixes (Typo, One-Liner, reine Doku) dürfen direkt erfolgen.
 8. **Kommentare beschreiben den Code, nicht seine Geschichte**: was er tut und warum. Keine Verweise auf Pläne, Tasks,
    Reviews oder Feedback-Runden, kein „früher …, jetzt …“. ADR-Verweise, `[[vault-links]]`, Sonderfall-IDs (`SF-NN`)
    und Kennzahl-IDs aus dem Statistik-Katalog sind erlaubt.

@@ -6,7 +6,7 @@ keywords: [adr, decisions, entscheidungen, architektur-entscheidungen, begründu
 part_of: ["[[overview]]"]
 ---
 
-**TL;DR** Der ADR-Kanon von vereinsheim — 33 Entscheidungen mit Begründung. Vor architektur-berührenden Vorschlägen die betroffene ADR prüfen.
+**TL;DR** Der ADR-Kanon von vereinsheim — 35 Entscheidungen mit Begründung. Vor architektur-berührenden Vorschlägen die betroffene ADR prüfen.
 
 Kanonische Entscheidungshistorie. `supersedes`/`refines`-Kanten verbinden abgelöste und verfeinerte ADRs.
 
@@ -46,3 +46,4 @@ Kanonische Entscheidungshistorie. `supersedes`/`refines`-Kanten verbinden abgel�
 - [[adr-032]] — ADR-032 — Design 2 für alle Apps: Spiegel führt, Ringwerk zieht zuletzt um _(Accepted)_
 - [[adr-033]] — ADR-033 — Spiegel und Treffsicher zusammenführen: eine App mit zwei getrennten Teilen, eine Statistik, Scheiben mit ihren Angaben
 - [[adr-034]] — ADR-034 — Zahlen über einen Zeitraum: Werte über die Schüsse, Urteile über Schüsse und Abende _(Accepted)_
+- [[adr-035]] — ADR-035 — Koordinierte Vorhaben: eine koordinierende Session, Kindsessions je Teilplan (Ebene über PIV) _(Accepted)_
