@@ -5,7 +5,6 @@ import type { MarkShot } from "@vereinsheim/shot-core/projection"
 import type { TargetImage } from "@vereinsheim/shot-core/targets"
 import {
   formatMonthYear,
-  formatTimeOfDay,
   formatWeekdayDate,
   formatWeekdayDay,
   zonedDayStartMs,
@@ -13,6 +12,7 @@ import {
 import { cn } from "@vereinsheim/lib/utils"
 
 import { Dash } from "../Dash"
+import { cardTime, TIME_UNKNOWN } from "../readout/cardMeta"
 import { quietProvenance } from "../detail"
 import { formatSigned, formatValue } from "../format"
 import { JUMP_BAR } from "@vereinsheim/ui/design2/bar"
@@ -99,7 +99,7 @@ export function EveningList({
   const resultText = (value: number | null, scoring: Scoring) =>
     value === null ? "–" : formatValue(value, digits.result[scoring])
   const resultReason = (row: ListRow) => row.reasons?.[row.resultScoring]
-  const rowName = (row: ListRow, day: string, time: string) =>
+  const rowName = (row: ListRow, day: string, time: string | null) =>
     [
       formatWeekdayDate(noonOf(day, timeZone), timeZone),
       time,
@@ -191,7 +191,7 @@ export function EveningList({
                       {evening.rows.map((row, i) => {
                         const placed = marks.get(row.id) ?? []
                         const marked = evening.day === markedEvening || row.id === pick
-                        const time = formatTimeOfDay(new Date(row.startedAtMs), timeZone)
+                        const time = cardTime(row.startedAtMs, timeZone, row.timeUnknown)
                         return (
                           <tr
                             key={row.id}
@@ -248,7 +248,9 @@ export function EveningList({
                                 />
                               </RouteLink>
                             </td>
-                            <td className={cn(CELL, WIDE, "text-foreground-2")}>{time}</td>
+                            <td className={cn(CELL, WIDE, "text-foreground-2")}>
+                              {time ?? <Dash reason={TIME_UNKNOWN} />}
+                            </td>
                             <td className={cn(CELL, "text-muted-foreground")}>
                               <KindMark kind={row.kind} />
                               {row.provenance && (

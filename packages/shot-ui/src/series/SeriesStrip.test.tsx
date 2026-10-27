@@ -206,11 +206,9 @@ describe("ein Bau für jede Detailtiefe", () => {
 
   it("Schüsse mit Serien gehen vor Summen; ganz ohne Serien der Satz unter derselben Leiste", () => {
     expect(strip({ shots: CARD, sums: SUMS })).not.toContain("data-sum-series")
-    const none = strip({ missing: "Nur das Gesamtergebnis, keine Serien." })
+    const none = strip({ missing: "Keine Serien." })
     expect(none).toContain(">Serien<")
-    expect(none).toMatch(
-      /<p data-series-missing="true"[^>]*>Nur das Gesamtergebnis, keine Serien\.<\/p>/
-    )
+    expect(none).toMatch(/<p data-series-missing="true"[^>]*>Keine Serien\.<\/p>/)
     expect(none).not.toContain(">Alle<")
     expect(strip({})).toBe("")
   })

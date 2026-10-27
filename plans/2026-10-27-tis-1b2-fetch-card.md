@@ -292,6 +292,20 @@ Knöpfe der Zeile: „Nicht mehr holen“ (offen, ungefüllt), „Entfernen“ (
 - „ohne Werte“ (`noValues`, vorhanden) für eine Scheibe vom Ausdruck ohne offenen Auftrag.
 - Satz im Gerüst (`emptyText`): „Für diese Scheibe gibt es nur den Ausdruck, noch keine Werte.“
 
+**Nach der Durchsicht mit dem User (27. Oktober 2026)**
+
+| Ort | Text |
+| --- | --- |
+| Link ohne Eingabe (Feldfehler) | Füge den Link aus dem QR-Code ein. |
+| Blatt „Neue Scheibe“ ohne Wahl (Feldfehler, Knopf aktiv) | Wähle eine Disziplin. |
+| Uhrzeit nicht bekannt (Liste, „–“ mit Grund) | ohne Uhrzeit |
+| Serien ohne Werte / mit Gesamtergebnis | Noch keine Serien. / Keine Serien. |
+| Schüsse ohne Werte / mit Summen | Noch keine Schüsse. / Keine Einzelschüsse. |
+| Analyse ohne Werte | Noch keine Werte. |
+| ohne „noch“, wenn keine Werte mehr kommen (eingetragen, kein offener Auftrag) | Keine Serien. / Keine Schüsse. / Keine Werte. |
+
+Der Grund steht einmal deutlich in der Ergebnis-Box (und in „Von der Anlage“), die übrigen Stellen wiederholen ihn nicht.
+
 **Dialoge** (`consequences.ts`)
 
 `cardFetchStop({ id, when, card })`:

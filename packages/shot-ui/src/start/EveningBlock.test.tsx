@@ -324,6 +324,43 @@ describe("Grundlage, Grund und Herkunft auf Start", () => {
     expect(tile("m")).not.toMatch(/gemessen/)
   })
 
+  it("ohne bekannte Uhrzeit (getippte ID) nennt die Kachel keine Zeit", () => {
+    const unknown = startModel({
+      cards: [
+        {
+          card: projected(periodCard("w", 0, [], { startedAtMs: at(29, 20) })),
+          family: "lp-freihand",
+          provenance: "printout",
+          timeUnknown: true,
+        },
+      ],
+      timeZone: TZ,
+      nowMs: NOW,
+      named: [],
+      scoringOf: () => "decimal",
+      family: null,
+    }).blocks[0]
+    const page = renderToStaticMarkup(
+      h(EveningBlock, {
+        block: unknown,
+        familyLabel: "Luftpistole",
+        marks: new Map(),
+        target: LP_10M,
+        timeZone: TZ,
+        cardRoute: (id: string) => openCard({ page: "start" }, id),
+        recordRoute: (id: string, scoring: "decimal" | "rings") =>
+          openCard({ page: "start" }, id, scoring),
+        listRoute: {
+          page: "cards",
+          query: { ...DEFAULT_LIST, family: unknown.family },
+          evening: unknown.day,
+        },
+      })
+    )
+    expect(page).toMatch(/data-start-meta="true"[^>]*>Training · vom Ausdruck</)
+    expect(page).toMatch(/aria-label="Scheibe, Training, vom Ausdruck/)
+  })
+
   it("die Kacheln ohne Lagen tragen den Platzhalter in der Größe der kleinen Scheibe", () => {
     for (const id of ["s", "w"])
       expect(tile(id)).toMatch(/data-mini-placeholder="true" class="[^"]*size-14/)

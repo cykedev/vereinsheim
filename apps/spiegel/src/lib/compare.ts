@@ -88,6 +88,7 @@ function choicesOf(cards: readonly OverviewCard[], scoring: Scoring): CardChoice
       startedAtMs: card.startedAtMs,
       total: totalOf(card, scoring),
       shots: card.projection.printedShots,
+      ...(card.timeUnknown ? { timeUnknown: true as const } : {}),
     }))
 }
 
@@ -156,8 +157,16 @@ export async function comparePageData(
             : null
     const card = (page: PageCard | null) => (page ? shown.find((c) => c.id === page.id) : undefined)
     const names = cardSideNames(
-      { startedAtMs: a?.startedAtMs ?? 0, total: (card(a) && totalOf(card(a)!, scoring)) ?? null },
-      { startedAtMs: b?.startedAtMs ?? 0, total: (card(b) && totalOf(card(b)!, scoring)) ?? null },
+      {
+        startedAtMs: a?.startedAtMs ?? 0,
+        total: (card(a) && totalOf(card(a)!, scoring)) ?? null,
+        timeUnknown: a?.timeUnknown,
+      },
+      {
+        startedAtMs: b?.startedAtMs ?? 0,
+        total: (card(b) && totalOf(card(b)!, scoring)) ?? null,
+        timeUnknown: b?.timeUnknown,
+      },
       context.timeZone
     )
     return {

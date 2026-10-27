@@ -13,6 +13,15 @@ describe("Metazeile im Kopf einer Scheibe", () => {
     ).toEqual(["Wettkampf", "Sa 26.09.2026", "10:30"])
   })
 
+  it("ohne bekannte Uhrzeit (getippte ID) nur der Tag", () => {
+    expect(
+      cardMeta(periodCard("p", 0, [], { startedAtMs: AT }), TZ, null, {
+        provenance: "printout",
+        timeUnknown: true,
+      })
+    ).toEqual(["Training", "vom Ausdruck", "Sa 26.09.2026"])
+  })
+
   it("nach Mitternacht das Datum des Kalendertags, nicht des Abends", () => {
     // 00:30 MESZ am 27. September: in der Liste unter dem Abend des 26., hier der echte Tag
     expect(

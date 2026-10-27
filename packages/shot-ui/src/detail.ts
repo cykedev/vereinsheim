@@ -176,21 +176,6 @@ export const missingSentence = (detail: CardDetail): string =>
     ? "Für Streuung und Tempo braucht es Einzelschüsse."
     : "Für Streuung, Lage und Tempo braucht es Einzelschüsse."
 
-/**
- * ein Satz für eine Scheibe ohne Werte (`noValuesReason`): vom Ausdruck wartet sie auf die Anlage oder hat nur den
- * Ausdruck, eingetragen fehlt die Eingabe, gemessen fehlt der erste Schuss
- */
-export function emptyText(provenance?: CardProvenance | null, waiting?: boolean): string {
-  const reason = noValuesReason(provenance, waiting)
-  if (reason === "waiting")
-    return "Sobald die Anlage die Scheibe liefert, stehen hier Ergebnis, Serien und Schüsse."
-  if (reason === "noShot")
-    return "Sobald Schüsse da sind, stehen hier Ergebnis, Serien und Schüsse."
-  return provenance === "printout"
-    ? "Für diese Scheibe gibt es nur den Ausdruck, noch keine Werte."
-    : "Für diese Scheibe sind keine Werte eingetragen."
-}
-
 /** der Grund unter der großen Zahl je Detailtiefe ohne Einzelschüsse; ohne Werte nach der Herkunft */
 export function levelReasons(
   detail: CardDetail,
@@ -202,20 +187,45 @@ export function levelReasons(
   return [REASON_TEXT[noValuesReason(provenance, waiting)]]
 }
 
-/** im Abschnitt „Schüsse“ einer Scheibe ohne Einzelschüsse: warum er leer ist */
-export const shotsMissingText = (reasons: readonly string[]): string =>
-  `Ohne Einzelschüsse: ${reasons.join(" · ")}.`
-
-/**
- * an der Stelle der Serien, wenn es keine gibt: ohne Werte, wann sie kommen; mit Gesamtergebnis, dass es keine Serien
- * gibt; mit Schüssen ohne Serie, dass die Schüsse keine tragen
+/*
+ * Der Grund steht einmal deutlich: in der Ergebnis-Box (`levelReasons`) und bei einer Scheibe vom Ausdruck in der Zeile
+ * „Von der Anlage“. Die übrigen Stellen des Gerüsts (Serien, Schüsse, Analyse) sagen nur kurz und leise, dass dort nichts
+ * steht, ohne den Grund zu wiederholen. „Noch“, wenn Werte kommen können (wartet, noch kein Schuss), sonst ohne.
  */
+
+/** ob für eine Scheibe ohne jedes Ergebnis noch Werte kommen können: vom Ausdruck wartend oder gemessen ohne Schuss */
+const stillComing = (provenance?: CardProvenance | null, waiting?: boolean) =>
+  noValuesReason(provenance, waiting) !== "noValues"
+
+/** im Abschnitt „Schüsse“ einer Scheibe ohne Einzelschüsse */
+export function shotsMissingText(
+  level: Exclude<DetailLevel, "shots">,
+  provenance?: CardProvenance | null,
+  waiting?: boolean
+): string {
+  if (level !== "none") return "Keine Einzelschüsse."
+  return stillComing(provenance, waiting) ? "Noch keine Schüsse." : "Keine Schüsse."
+}
+
+/** an der Stelle der Serien, wenn es keine gibt; mit Schüssen ohne Serie, dass die Schüsse keine tragen */
 export function seriesMissingText(
   level: DetailLevel,
   provenance?: CardProvenance | null,
   waiting?: boolean
 ): string {
-  if (level === "none") return emptyText(provenance, waiting)
-  if (level === "total") return "Nur das Gesamtergebnis, keine Serien."
-  return "Die Schüsse tragen keine Serie."
+  if (level === "shots") return "Die Schüsse tragen keine Serie."
+  if (level === "none")
+    return stillComing(provenance, waiting) ? "Noch keine Serien." : "Keine Serien."
+  return "Keine Serien."
+}
+
+/** in der Analyse einer Scheibe ohne Einzelschüsse: ohne Werte kurz, sonst was ihr fehlt (`missingSentence`) */
+export function analysisMissingText(
+  detail: CardDetail,
+  level: Exclude<DetailLevel, "shots">,
+  provenance?: CardProvenance | null,
+  waiting?: boolean
+): string {
+  if (level !== "none") return missingSentence(detail)
+  return stillComing(provenance, waiting) ? "Noch keine Werte." : "Keine Werte."
 }

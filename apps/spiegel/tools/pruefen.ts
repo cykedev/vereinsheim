@@ -998,7 +998,23 @@ async function fetchCards(page: Page) {
       await page.ev<boolean>(`!!$("[data-camera-start]") && !!$("[data-camera-photo]")`)
     )
 
+    // ohne Eingabe: „Holen“ ist nicht gesperrt, sondern sagt am Feld, was fehlt
+    await page.click(`button("Holen", $('[data-fetch-way="link"]'))`)
+    const linkEmpty =
+      (await page.waitFor(
+        `txt($('[data-fetch-way="link"]')).includes("Füge den Link aus dem QR-Code ein.")`
+      )) &&
+      (await page.ev<string | null>(`$("#fetch-link").getAttribute("aria-invalid")`)) === "true"
+    await page.ev(setValue("#fetch-id", ""))
+    await page.click(`button("Holen", $('[data-fetch-way="id"]'))`)
+    const idEmpty = await page.waitFor(`txt($('[data-fetch-way="id"]')).includes("acht Zeichen")`)
+    check(
+      "Ohne Eingabe: „Holen“ nicht gesperrt, der Grund steht am Feld (Link, ID)",
+      linkEmpty && idEmpty && !(await page.ev<boolean>(`!!sheet()`))
+    )
+
     // Link: Blatt, anlegen, Seite der neuen Scheibe
+    await page.goto(`${BASE}/scan`)
     await page.click(`$("#fetch-link")`)
     await page.type(link)
     await page.click(`button("Holen", $('[data-fetch-way="link"]'))`)
@@ -2178,6 +2194,7 @@ interface LevelState {
   compare: boolean
   /** der Satz an der Stelle der Serien, wenn es keine gibt */
   seriesMissing: string
+  shotsMissing: string
   /** das Gerüst: Abschnitte in Folge, Leiste, Box des Ergebnisses, Serien unter der Scheibe, Reiter der Analyse */
   frame: string
 }
@@ -2305,6 +2322,7 @@ async function detailLevels(page: Page, href: string) {
         shotTable: !!$("#shot-table"),
         compare: !!link("Mit der Scheibe davor vergleichen"),
         seriesMissing: txt($("[data-series-missing]")),
+        shotsMissing: txt($("[data-shots-missing]")),
         frame: ${FRAME},
       })`)),
       href: link,
@@ -2352,11 +2370,13 @@ async function detailLevels(page: Page, href: string) {
   )
   const waiting = states.find((s) => s.level === "none")
   check(
-    `Wartet auf die Anlage: „–“ mit Grund${waiting ? "" : ` (${NOT_SHOWN})`}`,
+    `Wartet auf die Anlage: „–“ mit Grund in der Ergebnis-Box, Serien, Schüsse und Analyse kurz ohne ihn${waiting ? "" : ` (${NOT_SHOWN})`}`,
     !!waiting &&
       waiting.result === "–" &&
       waiting.reason.startsWith("wartet auf die Anlage") &&
-      waiting.seriesMissing.startsWith("Sobald die Anlage"),
+      waiting.seriesMissing === "Noch keine Serien." &&
+      waiting.shotsMissing === "Noch keine Schüsse." &&
+      waiting.missing === "Noch keine Werte.",
     waiting ?? states.map((s) => s.level)
   )
   check(

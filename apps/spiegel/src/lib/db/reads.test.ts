@@ -17,6 +17,7 @@ import { createTestSite, type TestSite } from "../../../test/fixtures"
 import { chooseCardKind, chooseCardScoring, refreshProjections, writeRevision } from "./cards"
 import { writeEnteredCard } from "./entered"
 import {
+  timeKnown,
   cardWithShots,
   familyCards,
   familyScorings,
@@ -716,8 +717,23 @@ describe("wartet eine Scheibe vom Ausdruck noch auf die Anlage?", () => {
       const measured = [...after.values()].filter((c) => c.provenance === "measured")
       expect(measured.length).toBeGreaterThan(0)
       for (const card of measured) expect(card).not.toHaveProperty("waiting")
+      // ohne Ausdruck (getippte ID) ist die Uhrzeit nicht bekannt; gemessene tragen kein Merkmal
+      expect(after.get(saved.cardId)?.timeUnknown).toBe(true)
+      expect(
+        (await cardWithShots(db, { cardId: saved.cardId, ownerId: site.ownerId }))?.timeUnknown
+      ).toBe(true)
+      for (const card of measured) expect(card).not.toHaveProperty("timeUnknown")
     } finally {
       await db.card.delete({ where: { id: saved.cardId } })
     }
+  })
+})
+
+describe("timeKnown", () => {
+  it("nur eine Scheibe vom Ausdruck ohne Ausdruck hat keine bekannte Uhrzeit", () => {
+    expect(timeKnown({ origin: "pdf", printouts: 0 })).toBe(false)
+    expect(timeKnown({ origin: "pdf", printouts: 1 })).toBe(true)
+    expect(timeKnown({ origin: "raw", printouts: 0 })).toBe(true)
+    expect(timeKnown({ origin: "manual", printouts: 0 })).toBe(true)
   })
 })

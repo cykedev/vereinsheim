@@ -13,6 +13,8 @@ export interface CardChoice {
   startedAtMs: number
   total: string | null
   shots: number
+  /** die Uhrzeit ist nicht bekannt; nur dann gesetzt */
+  timeUnknown?: true
 }
 
 /** so viele Scheiben zeigt das Blatt auf einmal, „Mehr zeigen“ die nächsten */
@@ -46,7 +48,9 @@ function CardChoiceList({
     <div data-card-choices className="grid gap-1">
       {choices.slice(0, shown).map((choice) => {
         const at = new Date(choice.startedAtMs)
-        const label = `${formatWeekdayDay(at, timeZone)} ${formatTimeOfDay(at, timeZone)}`
+        const label = choice.timeUnknown
+          ? formatWeekdayDay(at, timeZone)
+          : `${formatWeekdayDay(at, timeZone)} ${formatTimeOfDay(at, timeZone)}`
         const sub =
           choice.id === other
             ? "auf der anderen Seite"

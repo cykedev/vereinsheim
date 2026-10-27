@@ -51,7 +51,22 @@ export interface OverviewCard extends ProjectedCard {
   provenance: CardProvenance
   /** vom Ausdruck: `false`, wenn Spiegel die Werte nicht mehr von der Anlage holt (`withWaiting`); fehlt: wartet */
   waiting?: false
+  /** die Uhrzeit ist nicht bekannt (`timeKnown`); nur dann gesetzt */
+  timeUnknown?: true
 }
+
+/**
+ * ob die Uhrzeit einer Scheibe bekannt ist: nicht bei einer Scheibe vom Ausdruck ohne Ausdruck, also aus einer getippten
+ * ID, solange die Anlage sie nicht geliefert hat (ihr Beginn ist 12 Uhr des Tags als Platzhalter). Mit Ausdruck gilt die
+ * Druckzeit, mit Rohdaten der Beginn der Anlage.
+ */
+export const timeKnown = (row: { origin: CardOrigin; printouts: number }): boolean =>
+  !(row.origin === "pdf" && row.printouts === 0)
+
+const timeUnknownOf = (row: { origin: CardOrigin; _count: { printouts: number } }) =>
+  timeKnown({ origin: row.origin, printouts: row._count.printouts })
+    ? {}
+    : { timeUnknown: true as const }
 
 /**
  * die gespeicherte Herkunft in den Wörtern der Ansichten: von der Brücke gemessen, vom Ausdruck, eingetragen (von Hand
@@ -81,6 +96,7 @@ const listOf = (ranking: { id: number; name: string } | null): CardList | null =
 const OVERVIEW_SELECT = {
   id: true,
   origin: true,
+  _count: { select: { printouts: true } },
   startedAt: true,
   kind: true,
   kindChoice: true,
@@ -142,6 +158,7 @@ function toOverview(rows: readonly OverviewRow[]): OverviewCard[] {
         targetId: isTargetId(row.discipline.targetId) ? row.discipline.targetId : null,
         list: listOf(row.ranking),
         provenance: provenanceOf(row.origin),
+        ...timeUnknownOf(row),
         projection,
       },
     ]
@@ -273,6 +290,7 @@ export async function latestCardStart(db: Db, ownerId: string): Promise<number |
 const PAGE_CARD_SELECT = {
   id: true,
   origin: true,
+  _count: { select: { printouts: true } },
   place: true,
   startedAt: true,
   kind: true,
@@ -321,6 +339,8 @@ export interface PageCard extends PeriodCard {
   place: string | null
   /** vom Ausdruck: `false`, wenn Spiegel die Werte nicht mehr von der Anlage holt; fehlt: wartet */
   waiting?: false
+  /** die Uhrzeit ist nicht bekannt (`timeKnown`); nur dann gesetzt */
+  timeUnknown?: true
 }
 
 function toPageCard(row: PageCardRow): PageCard | null {
@@ -351,6 +371,7 @@ function toPageCard(row: PageCardRow): PageCard | null {
     scoring: scoringOfRow(row, official),
     list: listOf(row.ranking),
     provenance: provenanceOf(row.origin),
+    ...timeUnknownOf(row),
     place: row.place,
     shots: row.currentRevision.shots.map(shotFromRow).map(toMetricShot),
     ...(sums ? { sums } : {}),

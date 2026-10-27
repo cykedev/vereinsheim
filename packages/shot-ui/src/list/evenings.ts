@@ -46,6 +46,8 @@ export interface ListInputCard {
   provenance?: CardProvenance
   /** vom Ausdruck: `false`, wenn Spiegel die Werte nicht mehr von der Anlage holt; fehlt: wartet */
   waiting?: false
+  /** die Uhrzeit ist nicht bekannt (getippte ID ohne Ausdruck); fehlt: bekannt */
+  timeUnknown?: true
 }
 
 /** der Grund je Zahl einer Zeile ohne Wert: Ganze, Zehntel, Ø, Abstand, Schusszahl */
@@ -78,6 +80,8 @@ export interface ListRow {
   shots: number
   /** woher die Scheibe kommt; nur, wenn nicht gemessen (was an den Browser geht, wächst nicht für gemessene) */
   provenance?: CardProvenance
+  /** die Uhrzeit ist nicht bekannt; nur dann gesetzt */
+  timeUnknown?: true
   /** warum eine Zahl fehlt; nur, wenn eine fehlt */
   reasons?: RowReasons
 }
@@ -185,6 +189,7 @@ export function cardListModel(
   const listOf = new Map(input.map((c) => [c.card.id, c.list?.id ?? null]))
   const provenanceOf = new Map(input.map((c) => [c.card.id, c.provenance ?? "measured"]))
   const notWaiting = new Set(input.filter((c) => c.waiting === false).map((c) => c.card.id))
+  const timeUnknown = new Set(input.filter((c) => c.timeUnknown).map((c) => c.card.id))
   const ofKind = ofFamily
     .filter((card) => query.kind === "all" || card.kind === query.kind)
     .sort(byStart)
@@ -261,6 +266,7 @@ export function cardListModel(
       delta,
       shots: card.projection.printedShots,
       ...(provenance !== "measured" ? { provenance } : {}),
+      ...(timeUnknown.has(card.id) ? { timeUnknown: true as const } : {}),
       ...(Object.keys(reasons).length ? { reasons } : {}),
     }
     const evening = days.get(day) ?? { day, rows: [], shots: 0, others: [] }

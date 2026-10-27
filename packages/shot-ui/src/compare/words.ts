@@ -72,8 +72,8 @@ export function periodSideName(choice: PeriodChoice | "previous", range: DateRan
  * an demselben Tag mit Uhrzeit
  */
 export function cardSideNames(
-  a: { startedAtMs: number; total: string | null },
-  b: { startedAtMs: number; total: string | null },
+  a: { startedAtMs: number; total: string | null; timeUnknown?: boolean },
+  b: { startedAtMs: number; total: string | null; timeUnknown?: boolean },
   timeZone: string
 ): { a: SideName; b: SideName } {
   const day = (ms: number) => formatShortDay(new Date(ms), timeZone)
@@ -81,11 +81,12 @@ export function cardSideNames(
   const name = (card: typeof a): SideName => {
     const at = new Date(card.startedAtMs)
     const when = formatWeekdayDay(at, timeZone)
-    const time = formatTimeOfDay(at, timeZone)
+    const time = card.timeUnknown ? null : formatTimeOfDay(at, timeZone)
     return {
       name: card.total === null ? when : `${when}, ${card.total}`,
-      at: sameDay ? `am ${day(card.startedAtMs)} um ${time}` : `am ${day(card.startedAtMs)}`,
-      short: sameDay ? time : day(card.startedAtMs),
+      at:
+        sameDay && time ? `am ${day(card.startedAtMs)} um ${time}` : `am ${day(card.startedAtMs)}`,
+      short: sameDay && time ? time : day(card.startedAtMs),
     }
   }
   return { a: name(a), b: name(b) }

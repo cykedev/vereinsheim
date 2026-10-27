@@ -411,6 +411,16 @@ describe("Herkunft und Gründe in der Liste", () => {
     })
   })
 
+  it("ohne bekannte Uhrzeit trägt die Zeile das Merkmal, die übrigen nicht", () => {
+    const rows = cardListModel(
+      [...INPUT, { ...waiting, timeUnknown: true }],
+      query(),
+      context
+    ).evenings.flatMap((e) => e.rows)
+    expect(rows.find((r) => r.id === "w")?.timeUnknown).toBe(true)
+    expect(rows.filter((r) => r.timeUnknown).map((r) => r.id)).toEqual(["w"])
+  })
+
   it("Serien-Summen in ganzen Ringen: in Zehnteln „ohne Zehntel“, die Ringe haben einen Wert", () => {
     expect(row("s").provenance).toBe("entered")
     expect(row("s").reasons?.decimal).toBe("ohne Zehntel")

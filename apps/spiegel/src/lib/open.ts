@@ -25,10 +25,14 @@ export interface PendingItem {
   targetId: TargetId | null
 }
 
-/** Tag und Uhrzeit einer Scheibe in Worten, „Di 14.10.2026 · 19:12“: in „Offen“, im Papierkorb und in den Dialogen */
-export const cardWhen = (startedAtMs: number, timeZone: string) => {
+/**
+ * Tag und Uhrzeit einer Scheibe in Worten, „Di 14.10.2026 · 19:12“: in „Offen“, im Papierkorb und in den Dialogen; ohne
+ * bekannte Uhrzeit (`timeUnknown`) nur der Tag
+ */
+export const cardWhen = (startedAtMs: number, timeZone: string, timeUnknown?: boolean) => {
   const started = new Date(startedAtMs)
-  return `${formatWeekdayDate(started, timeZone)} · ${formatTimeOfDay(started, timeZone)}`
+  const day = formatWeekdayDate(started, timeZone)
+  return timeUnknown ? day : `${day} · ${formatTimeOfDay(started, timeZone)}`
 }
 
 const SCORING_UNIT: Readonly<Record<Scoring, string>> = { rings: " Ringe", decimal: "" }

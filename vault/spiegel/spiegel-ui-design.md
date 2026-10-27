@@ -130,7 +130,10 @@ unter `@vereinsheim/shot-ui/layout/*` und `readout/*`.
   ist): Ob Schüsse mit Lage, Schüsse ohne Lage, nur Serien-Summen, nur ein Gesamtergebnis, eine Scheibe, die auf die
   Anlage wartet, oder eine der Brücke ohne Schuss, die Seite hat dieselbe Sprungleiste, dieselbe Ergebnis-Box rechts,
   die Serien unter der Scheibe und dieselben Reiter der Analyse. Was fehlt, steht als „–“ mit Grund oder als Satz an
-  seiner Stelle („Ohne Einzelschüsse: nur Serien-Summen.“, „Nur das Gesamtergebnis, keine Serien.“). Nur die Ablesung
+  seiner Stelle. Den Grund nennt die Seite einmal deutlich, in der Ergebnis-Box (bei einer Scheibe vom Ausdruck dazu in
+  der Zeile „Von der Anlage“); Serien, Schüsse und Analyse sagen nur kurz und leise, dass dort nichts steht („Keine
+  Serien.“, „Keine Einzelschüsse.“, ohne Werte „Noch keine Serien.“, „Noch keine Schüsse.“, „Noch keine Werte.“), User,
+  27. Oktober 2026. Nur die Ablesung
   einzelner Schüsse fehlt ohne Schüsse. Bis zum 27. Oktober 2026 stand ohne Schüsse nur ein Kasten neben der Scheibe;
   der User fand das uneinheitlich.
 - **Sprung zur Scheibe mit Rücksprung:** Schaltet der Knopf „Vertrauensellipse“ in der Analyse oder eine Zeile der

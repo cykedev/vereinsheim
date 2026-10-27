@@ -167,12 +167,12 @@ describe("Seite einer Scheibe je Detailtiefe", () => {
     expect(measured.sections.length).toBeGreaterThan(2)
   })
 
-  it("Serien-Summen eingetragen: Serien unter der Scheibe, Schüsse und Analyse mit Grund, Herkunft und Ort im Kopf", () => {
+  it("Serien-Summen eingetragen: Serien unter der Scheibe, Schüsse und Analyse mit kurzem Satz, Herkunft und Ort im Kopf", () => {
     const html = render(OWN, entered)
     expect(html).toContain('data-card-summary="series"')
     expect(html).not.toContain('id="shot-table"')
     expect(html).toMatch(/id="series"[\s\S]*data-sum-series="true"/)
-    expect(html).toContain("Ohne Einzelschüsse: nur Serien-Summen.")
+    expect(html).toMatch(/data-shots-missing[^>]*><p[^>]*>Keine Einzelschüsse\.</)
     expect(html).toContain("Für Streuung, Lage und Tempo braucht es Einzelschüsse.")
     expect(meta(html)).toContain("eingetragen")
     expect(meta(html)).toContain("Vereinsheim Nord")
@@ -190,22 +190,42 @@ describe("Seite einer Scheibe je Detailtiefe", () => {
     })
     expect(html).toContain('data-card-summary="total"')
     expect(html).toContain("data-summary-center")
-    expect(html).toContain("Nur das Gesamtergebnis, keine Serien.")
+    expect(html).toMatch(/data-series-missing="true"[^>]*>Keine Serien\.</)
     expect(meta(html)).toContain("eingetragen")
   })
 
-  it("vom Ausdruck ohne Werte: wartet auf die Anlage", () => {
+  it("vom Ausdruck ohne Werte: der Grund in der Ergebnis-Box, an den übrigen Stellen ein kurzer Satz ohne ihn", () => {
     const html = render(OWN, { ...card, shots: [], provenance: "printout" })
     expect(html).toContain('data-card-summary="none"')
-    expect(html).toContain("wartet auf die Anlage")
+    expect(html).toMatch(/data-summary-reason="true"[^>]*>wartet auf die Anlage</)
+    expect(html).toMatch(/data-series-missing="true"[^>]*>Noch keine Serien\.</)
+    expect(html).toMatch(/data-shots-missing[^>]*><p[^>]*>Noch keine Schüsse\.</)
+    expect(html).toMatch(/data-summary-missing="true"[^>]*><p[^>]*>Noch keine Werte\.</)
+    // außerhalb der Ergebnis-Box steht der Grund nicht noch einmal
+    const outside = html.replace(/<div data-card-summary="none"[\s\S]*?<\/div><\/div><\/div>/g, "")
+    expect(outside).not.toMatch(
+      /data-(series|shots|summary)-missing[^>]*>[^<]*wartet auf die Anlage/
+    )
     expect(meta(html)).toContain("vom Ausdruck")
+  })
+
+  it("vom Ausdruck ohne offenen Auftrag: ohne „noch“", () => {
+    const html = render(OWN, { ...card, shots: [], provenance: "printout", waiting: false })
+    expect(html).toMatch(/data-summary-reason="true"[^>]*>ohne Werte</)
+    expect(html).toMatch(/data-series-missing="true"[^>]*>Keine Serien\.</)
+    expect(html).toMatch(/data-shots-missing[^>]*><p[^>]*>Keine Schüsse\.</)
+  })
+
+  it("ohne bekannte Uhrzeit nennt der Kopf nur den Tag", () => {
+    const html = render(OWN, { ...card, shots: [], provenance: "printout", timeUnknown: true })
+    expect(meta(html)).not.toMatch(/\d\d:\d\d/)
   })
 
   it("gemessen ohne Schuss: dasselbe Gerüst, „noch kein Schuss“ als Grund", () => {
     const html = render(OWN, { ...card, shots: [] })
     expect(html).toContain('data-card-summary="none"')
     expect(html).toContain("noch kein Schuss")
-    expect(html).toContain("Sobald Schüsse da sind, stehen hier Ergebnis, Serien und Schüsse.")
+    expect(html).toMatch(/data-series-missing="true"[^>]*>Noch keine Serien\.</)
   })
 
   it("Probe neben Serien-Summen: die Summen, und die Art ist Training mit Kreis", () => {

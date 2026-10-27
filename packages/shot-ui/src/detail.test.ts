@@ -4,6 +4,7 @@ import type { CardDetail } from "@vereinsheim/shot-core/projection"
 import { describe, expect, it } from "vitest"
 
 import {
+  analysisMissingText,
   CENTER_ONLY_NOTE,
   LEVEL_TEXT,
   PROVENANCE_LABELS,
@@ -11,7 +12,6 @@ import {
   REASON_TEXT,
   detailLevel,
   detailReason,
-  emptyText,
   levelReasons,
   seriesMissingText,
   shotsMissingText,
@@ -115,8 +115,6 @@ describe("Detailtiefe", () => {
     expect(
       missingSentence({ ...TOTAL_TENTHS, center: { xUm: 1, yUm: 2, n: 40, from: "summary" } })
     ).toBe("Für Streuung und Tempo braucht es Einzelschüsse.")
-    expect(emptyText("printout")).toContain("Sobald die Anlage")
-    expect(emptyText("entered")).toBe("Für diese Scheibe sind keine Werte eingetragen.")
   })
 })
 
@@ -134,23 +132,39 @@ describe("ein Gerüst für jede Detailtiefe: die Sätze an den Stellen ohne Einz
     expect(levelReasons(NONE, "none", "printout", false)).toEqual(["ohne Werte"])
   })
 
-  it("Schüsse und Serien sagen, warum sie leer sind", () => {
-    expect(shotsMissingText(["nur Serien-Summen", "ohne Zehntel"])).toBe(
-      "Ohne Einzelschüsse: nur Serien-Summen · ohne Zehntel."
-    )
-    expect(seriesMissingText("total")).toBe("Nur das Gesamtergebnis, keine Serien.")
-    expect(seriesMissingText("none", "printout")).toBe(emptyText("printout"))
+  it("Serien, Schüsse und Analyse sagen kurz, dass dort nichts steht, ohne den Grund noch einmal", () => {
+    // mit Summen
+    expect(shotsMissingText("series")).toBe("Keine Einzelschüsse.")
+    expect(shotsMissingText("total")).toBe("Keine Einzelschüsse.")
+    expect(seriesMissingText("total")).toBe("Keine Serien.")
     expect(seriesMissingText("shots")).toBe("Die Schüsse tragen keine Serie.")
-    expect(seriesMissingText("none", "printout", false)).toBe(
-      "Für diese Scheibe gibt es nur den Ausdruck, noch keine Werte."
-    )
-    expect(emptyText("printout", true)).toBe(emptyText("printout"))
-    expect(emptyText("printout", false)).toBe(
-      "Für diese Scheibe gibt es nur den Ausdruck, noch keine Werte."
-    )
-    expect(emptyText("measured")).toBe(
-      "Sobald Schüsse da sind, stehen hier Ergebnis, Serien und Schüsse."
-    )
+    expect(analysisMissingText(SERIES, "series")).toBe(missingSentence(SERIES))
+    // ohne Werte: „noch“, solange Werte kommen können
+    for (const [provenance, waiting] of [
+      ["printout", undefined],
+      ["printout", true],
+      ["measured", undefined],
+      [undefined, undefined],
+    ] as const) {
+      expect(seriesMissingText("none", provenance, waiting)).toBe("Noch keine Serien.")
+      expect(shotsMissingText("none", provenance, waiting)).toBe("Noch keine Schüsse.")
+      expect(analysisMissingText(NONE, "none", provenance, waiting)).toBe("Noch keine Werte.")
+    }
+    for (const [provenance, waiting] of [
+      ["printout", false],
+      ["entered", undefined],
+    ] as const) {
+      expect(seriesMissingText("none", provenance, waiting)).toBe("Keine Serien.")
+      expect(shotsMissingText("none", provenance, waiting)).toBe("Keine Schüsse.")
+      expect(analysisMissingText(NONE, "none", provenance, waiting)).toBe("Keine Werte.")
+    }
+    // kein Satz nennt einen Grund aus der Ergebnis-Box
+    const sentences = (["series", "total", "none"] as const).flatMap((level) => [
+      seriesMissingText(level, "printout"),
+      shotsMissingText(level, "printout"),
+    ])
+    for (const reason of Object.values(REASON_TEXT))
+      for (const text of sentences) expect(text).not.toContain(reason)
   })
 })
 
@@ -178,13 +192,15 @@ it("alle Texte nach den Schreibregeln", () => {
     CENTER_ONLY_NOTE,
     missingSentence(SERIES),
     missingSentence({ ...SERIES, center: { xUm: 0, yUm: 0, n: 1, from: "summary" } }),
-    emptyText("printout"),
-    emptyText("printout", false),
-    emptyText("entered"),
-    emptyText("measured"),
-    shotsMissingText(["nur Serien-Summen"]),
+    shotsMissingText("none"),
+    shotsMissingText("none", "entered"),
+    shotsMissingText("series"),
+    seriesMissingText("none"),
+    seriesMissingText("none", "entered"),
     seriesMissingText("total"),
     seriesMissingText("shots"),
+    analysisMissingText(NONE, "none"),
+    analysisMissingText(NONE, "none", "entered"),
   ]
   expect(forbiddenIn(texts)).toEqual([])
 })

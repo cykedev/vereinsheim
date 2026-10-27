@@ -37,7 +37,7 @@ export function trashItems(
     const days = daysLeft(endsAtMs, nowMs)
     return {
       cardId: card.id,
-      when: cardWhen(card.startedAtMs, timeZone),
+      when: cardWhen(card.startedAtMs, timeZone, card.timeUnknown),
       family: card.family?.name ?? null,
       result: cardResultText(card),
       left: days === 1 ? "noch 1 Tag" : days === 0 ? "wird gleich gelöscht" : `noch ${days} Tage`,

@@ -22,8 +22,7 @@ import {
 import { analysisInput } from "@vereinsheim/shot-ui/analysis/input"
 import {
   detailLevel,
-  levelReasons,
-  missingSentence,
+  analysisMissingText,
   seriesMissingText,
   shotsMissingText,
 } from "@vereinsheim/shot-ui/detail"
@@ -388,9 +387,9 @@ export function CardScreen({
   )
 
   // Ein Gerüst für jede Detailtiefe: ohne Einzelschüsse stehen Ergebnis, Serien, Schüsse und Analyse an denselben
-  // Stellen, nur mit anderem Inhalt (Werte aus Summen oder „–“ mit Grund, ein Satz statt der Tabelle)
+  // Stellen, nur mit anderem Inhalt (Werte aus Summen oder „–“ mit Grund in der Ergebnis-Box, an den übrigen Stellen ein
+  // kurzer Satz ohne den Grund noch einmal)
   const withShots = level === "shots"
-  const reasons = withShots ? [] : levelReasons(detail, level, card.provenance, card.waiting)
   const summary = withShots ? null : (
     <SummaryResult
       card={card}
@@ -421,6 +420,7 @@ export function CardScreen({
             meta={cardMeta(card, pageContext.timeZone, card.list, {
               provenance: card.provenance,
               place: card.place,
+              timeUnknown: card.timeUnknown,
             })}
             result={withShots ? result : summary}
             observations={headObservations}
@@ -500,7 +500,9 @@ export function CardScreen({
             id: "shots",
             node: !withShots ? (
               <div data-shots-missing className="rounded-2xl border border-border bg-card p-4">
-                <p className="text-[13px] text-muted-foreground">{shotsMissingText(reasons)}</p>
+                <p className="text-[13px] text-muted-foreground">
+                  {shotsMissingText(level, card.provenance, card.waiting)}
+                </p>
               </div>
             ) : (
               <div
@@ -523,7 +525,11 @@ export function CardScreen({
             id: "analysis",
             node: (
               <AnalysisPanel
-                missing={withShots ? null : missingSentence(detail)}
+                missing={
+                  withShots
+                    ? null
+                    : analysisMissingText(detail, level, card.provenance, card.waiting)
+                }
                 shots={shots}
                 context={context}
                 state={state}
@@ -551,7 +557,7 @@ export function CardScreen({
           {own.previous && <CompareWithPrevious cardId={card.id} previous={own.previous} />}
           <CardActions
             cardId={card.id}
-            when={cardWhen(card.startedAtMs, pageContext.timeZone)}
+            when={cardWhen(card.startedAtMs, pageContext.timeZone, card.timeUnknown)}
             timeZone={pageContext.timeZone}
             discipline={{
               current: card.discipline,

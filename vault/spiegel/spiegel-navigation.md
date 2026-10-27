@@ -273,10 +273,13 @@ Die Liste markiert, wohin man kommt, wie der Fortschritt seine Wahl (`bg-accent-
   Herkunft, nie den Ort.
 - **Ein Gerüst für jede Detailtiefe** (`detailLevel` wählt nur den Inhalt): dieselben Abschnitte, Leiste, Ergebnis-Box
   und Reiter wie mit Schüssen. Nur Serien-Summen: große Zahl, Schusszahl und Ø je Schuss, Grund („nur Serien-Summen“,
-  „ohne Zehntel“), die Serien unter der Scheibe in derselben Leiste mit dem leisen Platzhalter, in Schüssen und Analyse
-  ein Satz mit Grund. Nur Gesamtergebnis: große Zahl mit Grund, eine Trefferlage als Summe als Zeichen des Schwerpunkts
-  („nur die Mitte der Schüsse, keine Streuung“), an der Stelle der Serien „Nur das Gesamtergebnis, keine Serien.“. Ohne
-  Werte: „–“ mit „wartet auf die Anlage“ (vom Ausdruck), „ohne Werte“ (eingetragen) oder „noch kein Schuss“ (Brücke). Probe neben Summen der Wertung
+  „ohne Zehntel“), die Serien unter der Scheibe in derselben Leiste mit dem leisen Platzhalter, in Schüssen „Keine
+  Einzelschüsse.“ und in der Analyse, was fehlt. Nur Gesamtergebnis: große Zahl mit Grund, eine Trefferlage als Summe als Zeichen des Schwerpunkts
+  („nur die Mitte der Schüsse, keine Streuung“), an der Stelle der Serien „Keine Serien.“. Ohne
+  Werte: „–“ mit „wartet auf die Anlage“ (vom Ausdruck), „ohne Werte“ (eingetragen) oder „noch kein Schuss“ (Brücke),
+  sonst nur „Noch keine Serien.“, „Noch keine Schüsse.“, „Noch keine Werte.“ (ohne „noch“, wenn keine Werte mehr kommen).
+  Der Grund steht einmal, in der Ergebnis-Box. Ohne bekannte Uhrzeit (getippte ID ohne Ausdruck, `timeKnown`) nennen Kopf,
+  Liste, Start und Vergleichen nur den Tag; die Liste zeigt „–“ mit „ohne Uhrzeit“. Probe neben Summen der Wertung
   zählt nicht: Die Seite zeigt die Summen, die Art bleibt Training mit Kreis.
 - **Reiterwechsel an den Anfang:** Ein anderer Reiter der Analyse beginnt oben, die Karten unter den klebenden Leisten
   (56 px am Telefon, 112 px ab 768 px), gemessen an der Reiterleiste. „Alle Beobachtungen“ springt weiter zu seiner

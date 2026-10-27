@@ -3,13 +3,14 @@
 import { inScoring, metricByKey, type Scoring } from "@vereinsheim/shot-core/metrics"
 import type { MarkShot } from "@vereinsheim/shot-core/projection"
 import type { TargetImage } from "@vereinsheim/shot-core/targets"
-import { formatTimeOfDay, formatWeekdayDay, zonedDayStartMs } from "@vereinsheim/lib/format"
+import { formatWeekdayDay, zonedDayStartMs } from "@vereinsheim/lib/format"
 import { cn } from "@vereinsheim/lib/utils"
 import { Target } from "lucide-react"
 import type { ReactNode } from "react"
 
 import { quietProvenance } from "../detail"
 import { formatValue } from "../format"
+import { cardTime } from "../readout/cardMeta"
 import { HelpButton } from "../help/HelpButton"
 import type { ListRow } from "../list/evenings"
 import { RouteLink } from "../nav/RouteLink"
@@ -174,7 +175,7 @@ export function EveningBlock({
       <ul className="grid grid-cols-[repeat(auto-fill,minmax(12.5rem,1fr))] gap-2">
         {block.rows.map((row) => {
           const placed = marks.get(row.id) ?? []
-          const time = formatTimeOfDay(new Date(row.startedAtMs), timeZone)
+          const time = cardTime(row.startedAtMs, timeZone, row.timeUnknown)
           // die Wertung beim Namen: vorn die der Scheibe (ohne sie die amtliche), daneben die andere
           const name = (scoring: typeof row.resultScoring) =>
             scoring === "rings" ? "ganze Ringe" : "Zehntel"
@@ -193,7 +194,7 @@ export function EveningBlock({
               <RouteLink
                 route={cardRoute(row.id)}
                 data-start-card={row.id}
-                aria-label={`Scheibe um ${time}, ${KIND[row.kind]}${provenance ? `, ${provenance}` : ""}, Ergebnis ${result}${row.result === null ? (reason ? ` (${reason})` : "") : ` ${name(row.resultScoring)}`}${second ? `, ${second}` : ""}`}
+                aria-label={`Scheibe${time ? ` um ${time}` : ""}, ${KIND[row.kind]}${provenance ? `, ${provenance}` : ""}, Ergebnis ${result}${row.result === null ? (reason ? ` (${reason})` : "") : ` ${name(row.resultScoring)}`}${second ? `, ${second}` : ""}`}
                 className="row-span-2 grid grid-cols-[auto_minmax(0,1fr)] grid-rows-subgrid gap-x-3 gap-y-0.5 rounded-xl border border-line-strong p-2 hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-ring"
               >
                 {/* ohne Lagen je Schuss die Scheibe leise, ohne Mitte wie die kleinen Scheiben gemessener Scheiben */}
@@ -204,7 +205,7 @@ export function EveningBlock({
                   className="row-span-2 size-14 self-start"
                 />
                 <span data-start-meta className="text-[13px] text-muted-foreground">
-                  {`${time} · ${KIND[row.kind]}${provenance ? ` · ${provenance}` : ""}`}
+                  {[time, KIND[row.kind], provenance].filter(Boolean).join(" · ")}
                 </span>
                 {/* umbrechen nur zwischen den Wertungen, jede bleibt beisammen (kein „ganze / Ringe“) */}
                 <span
