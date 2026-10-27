@@ -273,9 +273,14 @@ function drawingOf(values: PrintoutValues): string {
 async function main() {
   const args = process.argv.slice(2)
   const folder = args.find((a) => !a.startsWith("--") && args[args.indexOf(a) - 1] !== "--email")
-  if (!folder) throw new Error("Ordner mit PDFs angeben")
+  const call = "Aufruf: pnpm --filter spiegel printout-check <ordner> --email <adresse>"
+  if (!folder) throw new Error(`Ordner mit PDFs angeben.\n${call}`)
   const emailAt = args.indexOf("--email")
   const email = emailAt === -1 ? (process.env.SEED_ADMIN_EMAIL ?? "") : (args[emailAt + 1] ?? "")
+  if (email === "" || email.startsWith("--"))
+    throw new Error(
+      `printout-check braucht ein Konto: --email <adresse> oder SEED_ADMIN_EMAIL in apps/spiegel/.env.\n${call}`
+    )
   const url = process.env.DATABASE_URL ?? DEV_DATABASE_URL
   assertDevDatabase(url, args.includes("--force"))
 
