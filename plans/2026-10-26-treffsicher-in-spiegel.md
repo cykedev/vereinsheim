@@ -309,7 +309,21 @@ nach Stufe 3. Wie Treffsicher lesend läuft, solange der Basisbranch nicht auf `
 
 ## Vor dem nächsten Release (Stufe 1)
 
-In `main`, noch nicht gepusht und nicht deployt: 1b-1, 1a-1, 1a-2, ADR-035, 1b-2.
+In `main`, noch nicht gepusht und nicht deployt: 1b-1, 1a-1, 1a-2, ADR-035, 1b-2, 1c-0.
+
+**Zeitpunkt** (entschieden mit dem User am 27. Oktober 2026): direkt nach dem Merge von 1c, vor 1d. Erst mit 1c bringt
+„Scheibe holen“ Werte; 1d folgt mit einem eigenen Release. Nur Spiegel: Ringwerk und Treffsicher haben seit dem letzten
+Deploy keine eigene Änderung (nur `packages/lib/format` kam dazu), ihre Images bleiben.
+
+**Ablauf:**
+
+1. 1c in `main`, dann auf `main` den ganzen Stack mit den echten Images prüfen: `tools/stack-e2e/run.sh` (gewünscht vom
+   User). Die Koordination startet ihn und berichtet.
+2. Der User pusht `main` und holt ihn auf dem VPS (`git pull`: `compose.yml` mit dem neuen Volume, Backup und Restore).
+3. Release nur für Spiegel: `APPS=spiegel ./scripts/vereinsheim release`. Sind in der `.env` des VPS Tags gepinnt, nur
+   `SPIEGEL_TAG` und `SPIEGEL_MIGRATOR_TAG` auf den neuen Stand setzen.
+4. Danach die Punkte unten: Leser auf dem VPS messen, Kamera am Telefon, eigene Ausdrucke importieren (Anleitung im
+   Bericht von 1c).
 
 - **Migrationen beim Start:** `20261027120000_card_details` (1a-1, additiv; Spiegel rechnet danach alle Projektionen
   einmal neu, Version 6) und `20261027180000_card_request_print_mismatch` (1b-2, additiv).
