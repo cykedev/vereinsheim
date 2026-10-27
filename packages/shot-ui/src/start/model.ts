@@ -16,6 +16,7 @@ import { pooledMean, projectedRecords, projectedValues } from "@vereinsheim/shot
 import { cardListModel, lastEvening, type ListInputCard, type ListRow } from "../list/evenings"
 import { compareFromProgress, progressRoute } from "../nav/navigate"
 import { DEFAULT_LIST, type ProgressRoute, type Route } from "../nav/routes"
+import { periodBasis, type Basis } from "../period/basis"
 import type { NamedPeriod } from "../period/calendar"
 import { fromProjection } from "../period/fromProjection"
 import { byStart, periodModel } from "../period/model"
@@ -42,6 +43,8 @@ export interface EveningBlock {
   shots: number
   /** Ø je Schuss über alle Wertungsschüsse des Abends, in der Wertung */
   mean: number | null
+  /** wie viele Scheiben des Abends im Ø zählen und warum die übrigen nicht; null, wenn alle zählen */
+  basis: Basis | null
   /** Scheiben der Familie vor dem Abend, auch ohne Wert (für „Dein erster Abend“) */
   cardsBefore: number
   /** Schnitt der bis zu fünf Scheiben vor dem Abend; null ohne Werte davor */
@@ -135,6 +138,15 @@ export function startModel(input: StartInput): StartModel {
     // Werte je Scheibe in der Wertung, nur Probe dabei (wie im Fortschritt mit seiner Grundeinstellung)
     const meanMetric = inScoring(metricByKey("result.decimalMean")!, scoring)
     const values = projectedValues(ofFamily, meanMetric, scoring, { includeProbeOnly: true })
+    const basis = periodBasis(
+      tonight
+        .filter((c) => c.family === family)
+        .map((c) => fromProjection({ ...c.card, provenance: c.provenance })),
+      new Set(
+        projectedValues(evening, meanMetric, scoring, { includeProbeOnly: true }).map((v) => v.id)
+      ),
+      meanMetric
+    )
     // ein Schnitt über mehrere Scheiben rechnet über ihre Schüsse ([[adr-034]])
     const overShots = (window: readonly CardValue[]) => pooledValue(window, meanMetric) as number
     // der Abend ist der neueste Tag: davor liegt alles, was vor seiner ersten Scheibe beginnt
@@ -172,6 +184,7 @@ export function startModel(input: StartInput): StartModel {
       rows,
       shots,
       mean,
+      basis,
       cardsBefore: ofFamily.filter((c) => c.startedAtMs < firstMs).length,
       average,
       band,

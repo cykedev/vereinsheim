@@ -11,6 +11,7 @@ const block = (patch: Partial<EveningBlock>): EveningBlock => ({
   rows: [],
   shots: 60,
   mean: 9.04,
+  basis: null,
   cardsBefore: 12,
   average: { value: 8.95, n: 5 },
   band: { low: 8.7, high: 9.2 },

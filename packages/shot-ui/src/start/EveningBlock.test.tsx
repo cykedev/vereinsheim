@@ -252,3 +252,80 @@ describe("Kleine Scheiben auf Start", () => {
     expect(tiles.every((v) => Math.abs(v.w - 95.2) < 0.001)).toBe(true)
   })
 })
+
+describe("Grundlage, Grund und Herkunft auf Start", () => {
+  const SERIES = {
+    series: [1, 2, 3, 4].map((series) => ({ series, shots: 10, rings: 96, decimalTenths: 1000 })),
+    total: null,
+    center: null,
+  }
+  const model = startModel({
+    cards: [
+      {
+        card: projected(periodCard("m", 0, [101, 99], { startedAtMs: at(29, 18) })),
+        family: "lp-freihand",
+      },
+      {
+        card: projected({ ...periodCard("s", 0, [], { startedAtMs: at(29, 19) }), sums: SERIES }),
+        family: "lp-freihand",
+        provenance: "entered",
+      },
+      {
+        card: projected(periodCard("w", 0, [], { startedAtMs: at(29, 20) })),
+        family: "lp-freihand",
+        provenance: "printout",
+      },
+    ],
+    timeZone: TZ,
+    nowMs: NOW,
+    named: [],
+    scoringOf: () => "decimal",
+    family: null,
+  })
+  const block = model.blocks[0]
+  const html = (onHelp?: (id: string) => void) =>
+    renderToStaticMarkup(
+      h(EveningBlock, {
+        block,
+        familyLabel: "Luftpistole",
+        marks: new Map(),
+        target: LP_10M,
+        timeZone: TZ,
+        cardRoute: (id: string) => openCard({ page: "start" }, id),
+        recordRoute: (id: string, scoring: "decimal" | "rings") =>
+          openCard({ page: "start" }, id, scoring),
+        listRoute: {
+          page: "cards",
+          query: { ...DEFAULT_LIST, family: block.family },
+          evening: block.day,
+        },
+        onHelp,
+      })
+    )
+  const tile = (id: string) => {
+    const page = html()
+    const start = page.indexOf(`data-start-card="${id}"`)
+    return page.slice(start, page.indexOf("</a>", start))
+  }
+
+  it("unter der Zahl die Grundlage, mit „?“ nur mit `onHelp`", () => {
+    expect(html()).toMatch(
+      /data-evening-basis="true"[^>]*>über 2 von 3 Scheiben · 1 wartet auf die Anlage/
+    )
+    expect(html()).not.toContain('data-help="grundlage"')
+    expect(html(() => {})).toContain('data-help="grundlage"')
+  })
+
+  it("die Kachel einer wartenden: „–“ mit Grund, die Herkunft in der Zeile", () => {
+    expect(tile("w")).toMatch(/data-start-meta="true"[^>]*>[^<]* · Training · vom Ausdruck</)
+    expect(tile("w")).toContain("wartet auf die Anlage")
+    expect(tile("w")).toMatch(/aria-label="[^"]*vom Ausdruck, Ergebnis – \(wartet auf die Anlage\)/)
+    expect(tile("s")).toMatch(/ · eingetragen</)
+    expect(tile("m")).not.toMatch(/gemessen/)
+  })
+
+  it("ein neuer Rekord einer eingetragenen Scheibe nennt die Herkunft leise", () => {
+    const records = html().slice(html().indexOf("data-new-records"))
+    expect(records).toMatch(/Bestes Ergebnis, Scheibe zu 40 Schuss: [^·]*· eingetragen/)
+  })
+})

@@ -8,11 +8,14 @@ import { cn } from "@vereinsheim/lib/utils"
 import { Target } from "lucide-react"
 import type { ReactNode } from "react"
 
+import { quietProvenance } from "../detail"
 import { formatValue } from "../format"
+import { HelpButton } from "../help/HelpButton"
 import type { ListRow } from "../list/evenings"
 import { RouteLink } from "../nav/RouteLink"
 import type { CardRoute, ListRoute } from "../nav/routes"
 import { MiniTarget } from "../target/MiniTarget"
+import { basisLine } from "../period/basis"
 import { FormStrip } from "./FormStrip"
 import type { EveningBlock as EveningBlockModel } from "./model"
 import { eveningReferenceText, eveningSentence, formLegend } from "./sentence"
@@ -50,6 +53,8 @@ export interface EveningBlockProps {
   actions?: ReactNode
   /** ein Hinweis unten, etwa ein Fehler beim Speichern */
   notice?: ReactNode
+  /** öffnet die Erklärung „Grundlage und Herkunft“ an der Grundlage des Abends; ohne kein „?“ */
+  onHelp?: (id: string) => void
   className?: string
 }
 
@@ -70,6 +75,7 @@ export function EveningBlock({
   listRoute,
   actions,
   notice,
+  onHelp,
   className,
 }: EveningBlockProps) {
   const titleId = `evening-${block.family}`
@@ -81,6 +87,9 @@ export function EveningBlock({
   const count = block.rows.length
   const sentence = eveningSentence(block, familyLabel)
   const reference = eveningReferenceText(block)
+  // die Herkunft einer Scheibe des Abends leise, wie in der Liste
+  const provenanceOf = (id: string) =>
+    quietProvenance(block.rows.find((row) => row.id === id)?.provenance)
   const legend = formLegend(block)
   return (
     <section
@@ -135,6 +144,21 @@ export function EveningBlock({
             {reference}
           </p>
         )}
+        {block.basis && (
+          <p
+            data-evening-basis
+            className="flex items-center gap-1.5 text-[13px] text-muted-foreground"
+          >
+            {basisLine(block.basis)}
+            {onHelp && (
+              <HelpButton
+                label="Grundlage und Herkunft"
+                helpId="grundlage"
+                onClick={() => onHelp("grundlage")}
+              />
+            )}
+          </p>
+        )}
         {/* der Hinweis zum Kreis gleich darunter, nicht am Ende des Blocks */}
         {notice}
       </div>
@@ -160,6 +184,8 @@ export function EveningBlock({
             row.otherResult === null
               ? null
               : `${formatValue(row.otherResult, digits(other(row.resultScoring)))} ${name(other(row.resultScoring))}`
+          const reason = row.result === null ? (row.reasons?.[row.resultScoring] ?? null) : null
+          const provenance = quietProvenance(row.provenance)
           return (
             // zwei Zeilen, die alle Kacheln einer Reihe teilen (Subgrid): Uhrzeit und Art, darunter das Ergebnis. Bricht
             // in einer Kachel ein Text um, rücken die Zeilen der anderen mit, die Ergebnisse stehen auf einer Linie
@@ -167,7 +193,7 @@ export function EveningBlock({
               <RouteLink
                 route={cardRoute(row.id)}
                 data-start-card={row.id}
-                aria-label={`Scheibe um ${time}, ${KIND[row.kind]}, Ergebnis ${result}${row.result === null ? "" : ` ${name(row.resultScoring)}`}${second ? `, ${second}` : ""}`}
+                aria-label={`Scheibe um ${time}, ${KIND[row.kind]}${provenance ? `, ${provenance}` : ""}, Ergebnis ${result}${row.result === null ? (reason ? ` (${reason})` : "") : ` ${name(row.resultScoring)}`}${second ? `, ${second}` : ""}`}
                 className="row-span-2 grid grid-cols-[auto_minmax(0,1fr)] grid-rows-subgrid gap-x-3 gap-y-0.5 rounded-xl border border-line-strong p-2 hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-ring"
               >
                 {placed.length ? (
@@ -180,7 +206,7 @@ export function EveningBlock({
                   <span aria-hidden="true" className="row-span-2 block size-14 self-start" />
                 )}
                 <span data-start-meta className="text-[13px] text-muted-foreground">
-                  {`${time} · ${KIND[row.kind]}`}
+                  {`${time} · ${KIND[row.kind]}${provenance ? ` · ${provenance}` : ""}`}
                 </span>
                 {/* umbrechen nur zwischen den Wertungen, jede bleibt beisammen (kein „ganze / Ringe“) */}
                 <span
@@ -195,6 +221,9 @@ export function EveningBlock({
                       <span className="text-[13px] text-muted-foreground">
                         {` ${name(row.resultScoring)}`}
                       </span>
+                    )}
+                    {reason && (
+                      <span className="text-[13px] text-muted-foreground">{` ${reason}`}</span>
                     )}
                   </span>
                   {second && (
@@ -220,6 +249,9 @@ export function EveningBlock({
                 <span className="min-w-0 text-foreground-2">
                   {`${row.label}: `}
                   <span className="font-semibold text-foreground tabular-nums">{row.value}</span>
+                  {provenanceOf(row.record.cardId) && (
+                    <span className="text-muted-foreground">{` · ${provenanceOf(row.record.cardId)}`}</span>
+                  )}
                 </span>
                 <RouteLink
                   route={recordRoute(row.record.cardId, block.scoring)}

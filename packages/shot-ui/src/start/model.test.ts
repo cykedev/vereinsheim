@@ -259,3 +259,22 @@ describe("Start: der letzte Abend", () => {
     expect(model([])).toEqual({ day: null, blocks: [], form: null })
   })
 })
+
+describe("Start: Grundlage des Abends", () => {
+  it("eine Scheibe vom Ausdruck wartet: die Grundlage nennt sie; ohne sie keine", () => {
+    const tonight = [
+      lg(periodCard("g1", 0, [101, 99], { startedAtMs: at(29, 18) })),
+      lg(periodCard("g2", 0, [100], { startedAtMs: at(29, 19) })),
+    ]
+    expect(model(tonight).blocks[0].basis).toBeNull()
+    const waiting: ListInputCard = {
+      ...lg(periodCard("w", 0, [], { startedAtMs: at(29, 20) })),
+      provenance: "printout",
+    }
+    expect(model([...tonight, waiting]).blocks[0].basis).toEqual({
+      counted: 2,
+      of: 3,
+      missing: [{ reason: "waiting", count: 1 }],
+    })
+  })
+})

@@ -15,6 +15,7 @@ import { FormLine } from "@vereinsheim/shot-ui/start/FormLine"
 import type { StartModel } from "@vereinsheim/shot-ui/start/model"
 
 import { NoCards } from "@/components/shell/NoCards"
+import { useHelp } from "@vereinsheim/ui/design2/help-sheet"
 import { Page } from "@vereinsheim/ui/design2/page"
 import { useSavedChoice } from "@/components/shell/useSavedChoice"
 import { marksById } from "@/lib/marks"
@@ -87,6 +88,7 @@ export function StartScreen({
   waiting?: number
 }) {
   const { timeZone } = context
+  const onHelp = useHelp()
   const marks = useMemo(() => marksById(compact), [compact])
   const familyOf = useMemo(() => new Map(families.map((f) => [f.value, f])), [families])
   // eine Kachel öffnet die Scheibe in ihrer Wertung, ein Rekord in der, in der er steht (der seines Blocks)
@@ -122,6 +124,7 @@ export function StartScreen({
                   timeZone={timeZone}
                   cardRoute={cardRoute}
                   recordRoute={recordRoute}
+                  onHelp={onHelp}
                   listRoute={{
                     page: "cards",
                     query: { ...DEFAULT_LIST, family: block.family },
