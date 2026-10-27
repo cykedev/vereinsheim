@@ -3,12 +3,12 @@ id: meyton-printout
 type: concept
 title: "Meyton-Ergebnisausdruck und QR-Code"
 aliases: [meyton-ausdruck, meyton-qr, print-pdf, qrcode-meyton]
-keywords: [ausdruck, ergebnisausdruck, pdf, qr-code, meyton-pdf, readprintout, creationdate, erstellzeit, druckzeit, xmp, pdf.js, unpdf, identity-h, ghostscript, qrcode.meyton.eu, 195.201.88.185, http, lighttpd, uuid, id im fuß, scheibenid, hex, vorzeichenbehaftet, qt 5.12.8, trefferkreis, trefferlage, zähler, innenzehner, beste teiler, weiteste, startnr, standnr]
+keywords: [ausdruck, ergebnisausdruck, pdf, qr-code, meyton-pdf, readprintout, creationdate, erstellzeit, druckzeit, xmp, pdf.js, unpdf, identity-h, ghostscript, qrcode.meyton.eu, 195.201.88.185, http, lighttpd, uuid, id im fuß, scheibenid, hex, vorzeichenbehaftet, qt 5.12.8, trefferkreis, trefferlage, streuwert, trefferbild, gegenprobe, printout-check, readprintoutvalues, zähler, innenzehner, beste teiler, weiteste, startnr, standnr]
 part_of: ["[[meyton]]"]
 relates_to: ["[[treffsicher-meyton-import]]", "[[meyton-pdf-format-change]]", "[[spiegel-assignment]]"]
 ---
 
-**TL;DR** Der QR-Code am Meyton-Stand führt per HTTP auf ein PDF bei Meyton (`http://195.201.88.185/print_<UUID>.pdf`, eine Woche abrufbar). Das PDF enthält Stand, Zeiten, Name mit #Nummer, alle Werte, Teiler, Trefferkreis und Trefferlage, aber keine Koordinaten. Im Fuß steht eine Hex-ID, die ScheibenID (am 9. Oktober 2026 an der eigenen Anlage belegt), die Spiegel für die exakte Zuordnung nutzt. Für die Zuordnung liest Spiegel nur diese ID und die Erstellzeit aus den Metadaten, unabhängig vom Layout ([[adr-028]]).
+**TL;DR** Der QR-Code am Meyton-Stand führt per HTTP auf ein PDF bei Meyton (`http://195.201.88.185/print_<UUID>.pdf`, eine Woche abrufbar). Das PDF enthält Stand, Zeiten, Name mit #Nummer, alle Werte, Teiler, Trefferkreis bzw. Streuwert und Trefferlage; Koordinaten nicht als Zahl, aber im Trefferbild als Vektorgrafik auf 0,01 mm genau (gemessen am 27. Oktober 2026). Im Fuß steht eine Hex-ID, die ScheibenID (am 9. Oktober 2026 an der eigenen Anlage belegt), die Spiegel für die exakte Zuordnung nutzt. Für die Zuordnung liest Spiegel nur diese ID und die Erstellzeit aus den Metadaten, unabhängig vom Layout ([[adr-028]]).
 
 ## Link
 
@@ -30,13 +30,62 @@ Beobachtet am Beispiel vom 2. Oktober 2026 (abgerufen am 5. Oktober):
 | Teiler | die drei besten und die drei weitesten mit Schussnummer | Gegenprobe der Formel ([[spiegel-target-library]]) |
 | Streuung | Trefferkreis in mm, Trefferlage in mm (links/rechts, hoch/tief); dasselbe je Serie | Meytons eigene Streumaße |
 | Je Schuss | Zehntelwert, Stern für Innenzehner, Richtungspfeil | Gegenprobe Schuss für Schuss |
-| Grafik | kleine Scheiben mit nummerierten Treffern (Vektorgrafik) | später für fremde Anlagen in Koordinaten zurückrechenbar |
+| Grafik | kleine Scheiben mit nummerierten Treffern (Vektorgrafik) | Lage je Schuss auf 0,01 mm zurückrechenbar (siehe unten) |
 | Metadaten | Qt 5.12.8, „Meyton Elektronik GmbH“, Erstellzeit mit Zeitzone | Druckpfad wie im Treffsicher-Fixture `meyton-qt-identity-h.pdf` |
-| Fehlt | x/y-Koordinaten, Zeit je Schuss | nur aus der SSMDB2 |
+| Fehlt | x/y-Koordinaten als Zahl, Zeit je Schuss | Zeit nur aus der SSMDB2 |
 
 Der Trefferkreis einer Serie kann so groß sein wie der der ganzen Scheibe, wenn zwei Treffer dieser Serie ihn bestimmen.
 
 **Gegen die Rohdaten geprüft** (Ausdruck und Ablage vom 9. Oktober 2026, [[src-ssmdb2-abend-2026-10-09]]): Alle 40 Zehntel, Innenzehner, Serien, Ergebnis, beste Teiler und der Kopf stimmen. Der **Trefferkreis** ist der kleinste Kreis um die Schussmitten plus Kaliber (4,5 mm), auf 1/100 mm gerundet; der größte Abstand zweier Treffer passt nicht, sobald drei Schüsse den Kreis bestimmen. Die **Trefferlage** ist der Schwerpunkt, auf 1/100 mm **abgeschnitten** (5,756 mm steht als 5,75). „Weiteste“ sind die Teiler, auf ganze Zahlen abgeschnitten. „initialisiert“ ist der Wechsel auf Wertung, nicht der erste Probeschuss; die Zeit im Kopf ist der letzte Schuss. Spiegel rundet wie Meyton, wo es dieselbe Zahl zeigt (SF-76).
+
+## Werte auf dem Ausdruck, gemessen (27. Oktober 2026)
+
+Gegenprobe 1c-0 mit dem Prototyp `@vereinsheim/meyton-pdf/values` und dem Werkzeug
+`pnpm --filter spiegel printout-check <ordner>` an den Ausdrucken eines Schützen, verglichen mit den Rohdaten derselben
+Scheibe in der Dev-Datenbank (Prod-Kopie). Nur Zahlen und Definitionen, der Bericht liegt lokal unter `reports/tis-1c0/`.
+
+**Grundlage:** 73 PDFs, alle lesbar; 67 eigene, 6 ohne Namen mit #Nummer (nur gezählt). Die 67 tragen 63 IDs, davon
+haben 12 eine Scheibe des Kontos in der Dev-Datenbank: **12 Paare** (9 im Modus Wertung, 3 in Probe), 480 Schüsse, 48
+Serien. Die private Kopie der SSMDB2 vom 9. Oktober bringt kein Paar dazu (11 der 12 IDs, sonst keine); die übrigen
+Ausdrucke stammen von Scheiben, die die Ablage nicht mehr hat.
+
+**Zwei Layouts:** Ghostscript (62 eigene) mit „Streuwert“, Qt (5, die jüngsten) mit „Trefferkreis“. Beide drucken
+Ergebnis, Serien, Zähler, Innenzehner, Weiteste, beste Teiler und Trefferlage, gesamt und je Serie, dazu die Werte je
+Schuss zeilenweise in Schussfolge (fünf je Zeile). Ein Ausdruck ohne Namen druckt zusätzlich den Teiler je Schuss
+(„10.0 766T“). Das Trefferbild ist Vektorgrafik: eine Scheibe für alle Schüsse, eine je Serie, jede mit eigenem
+Maßstab (bis 1,2 mm je Punkt). Ringe sind Kreise um eine gemeinsame Mitte, jeder Treffer eine Marke in der
+Folge der Schüsse: ein Kreis im Kaliber mit der Nummer genau in seiner Mitte, in älteren Ausdrucken (14) ein Kreuz ohne
+Nummer. 2 Ausdrucke (Trainingsscheibe) haben kein Trefferbild.
+
+| Frage | Ergebnis über die 12 Paare |
+|---|---|
+| 1 Werte je Schuss | Zehntel und Innenzehner 480 von 480 gleich, Folge = Schussnummer; Ergebnis, Serien (Ringe und Zehntel), Zähler, Innenzehner 100 % gleich |
+| 2 Teiler | Einheit 1/100 mm (`Teiler001` / 100). Beste Teiler auf eine Nachkommastelle **abgeschnitten** (180 von 180), Weiteste auf ganze Zahlen abgeschnitten (36 von 36), Schussnummer und Rang immer richtig |
+| 3 Trefferlage | Schwerpunkt der gezeigten Schüsse (Probe im Modus Probe), je Achse auf 1/100 mm **abgeschnitten** (60 von 60, gesamt und je Serie), höchstens 0,012 mm daneben; rechts und hoch positiv wie in Spiegel |
+| 4 Trefferkreis | **kleinster Kreis um die Trefferzentren plus Kaliber** (4,5 mm), auf 1/100 mm gerundet: höchstens 0,005 mm daneben (4 Scheiben, 16 Serien, nur Qt). Ohne Kaliber 4,5 mm daneben, größter Abstand zweier Treffer bis 5,7 mm, doppelter größter Abstand zur Mitte bis 19 mm |
+| 4 Streuwert | Standardabweichung je Achse mit **n − 1**, gesamt √((σx² + σy²) / 2), auf 1/100 mm gerundet: höchstens 0,005 mm daneben (8 Scheiben, 32 Serien, nur Ghostscript); mit n bis 1,1 mm daneben |
+| 5 Trefferbild | Mitte und Maßstab aus den Ringen: jede Marke höchstens **0,01 mm** neben der Lage der Rohdaten (960 Marken, Kreise wie Kreuze), so genau wie die Rohdaten selbst (1/100 mm). Die Nummern sitzen höchstens 0,26 mm neben ihrer Marke, keine fehlt; 266 von 400 Marken der ganzen Scheibe überdecken eine andere, die Nummern sind dann nicht lesbar, die Marken schon |
+| 6 Abdeckung | siehe Grundlage; es fehlten im eigenen Ausdruck: Trefferkreis (62, Ghostscript), Streuwert (6, davon 5 Qt), Innenzehner (3), Ergebnis und Serien (2), Trefferbild (2), Teiler je Schuss (alle) |
+
+**Empfehlung für 1c-1 (Parser und Modell):**
+
+- Übernehmen: Werte je Schuss mit Zehntel und Innenzehner in Schussfolge, Serien-Summen und Ergebnis (Zähler und
+  Innenzehner nur als Prüfung, sie folgen aus den Werten). Die genannten Teiler am jeweiligen Schuss mit dem Vermerk,
+  dass sie abgeschnitten sind (bester Teiler auf 0,1, also bis knapp 0,1 · 1/100 mm zu klein). Trefferlage gesamt und
+  je Serie als Summe: abgeschnitten auf 1/100 mm, für Versatz und Richtung genau genug.
+- Trefferkreis: zählt beim Streukreis, als Durchmesser des kleinsten Kreises um die Zentren = Trefferkreis − Kaliber
+  (Spiegels Definition `enclosingDiameter` ohne Kaliber prüfen, bevor er einfließt). Belegt nur am Qt-Layout.
+- Streuwert (Ghostscript): eine eigene Angabe, die σ je Achse genau trägt (n − 1); ob er in Spiegels σ eingeht, ist eine
+  Frage an 1c-1, solange σ dort anders definiert ist.
+- Nicht übernehmen: die Nummern im Trefferbild (verdeckt, wo Treffer dicht liegen).
+
+**1c-2 (Lagen aus dem Trefferbild) lohnt sich:** Die Schwelle (95 % der Schüsse unter 0,5 mm, ein Bruchteil eines
+Zehntels der Luftpistole mit 0,8 mm) ist weit unterschritten, jede Marke liegt höchstens 0,01 mm daneben. Die Lagen
+kommen aus den Kreisen und Kreuzen, nicht aus den Nummern; die Folge der Marken ist die Schussfolge.
+
+**Nicht belegt:** der Teiler je Schuss (nur ein Ausdruck ohne Namen), Zwischenausdrucke (kein Paar zeigte weniger Schüsse
+als die Rohdaten), Trefferkreis nur an 4 Qt-Ausdrucken, Probe nur an 3 Paaren, Modus Training und die Trainingsscheibe,
+Luftgewehr, fremde Anlagen und andere Meyton-Versionen, Disziplinen ohne eigene Ausdrucke.
 
 ## ID im Fuß
 
