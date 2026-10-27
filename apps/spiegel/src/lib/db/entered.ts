@@ -36,6 +36,8 @@ export interface EnteredCardInput {
   disciplineId: number
   startedAtMs: number
   kind: CardKind
+  /** nur beim Anlegen: die Art als Wahl des Schützen (`kindChoice`), damit sie bleibt, wenn die Brücke die Scheibe füllt */
+  kindChoice?: CardKind
   /** fehlt: beim Ändern nicht anfassen; null leeren */
   place?: string | null
   /** nur beim Anlegen, nur aus Treffsicher */
@@ -181,6 +183,7 @@ export async function writeEnteredCardIn(tx: Tx, input: EnteredCardInput): Promi
         state: "final",
         place: place.place ?? null,
         importKey,
+        ...(input.kindChoice ? { kindChoice: input.kindChoice } : {}),
       },
       select: { id: true },
     })
