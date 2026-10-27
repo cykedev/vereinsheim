@@ -105,7 +105,8 @@ Hause, steht die Scheibe sofort mit ihrem PDF in Spiegel; die Rohdaten kommen be
 
 **Auswärts,** ohne Brücke, bleibt die Scheibe beim Ausdruck: mit seinen Werten und Lagen, wenn der Leser das Layout
 kennt und die Selbstprüfung besteht; sonst bleibt das PDF ohne Werte angehängt, leise mit „Werte nicht lesbar“, und
-ein späterer Leser liest es neu (SP-2.6). Fremde Anlagen sind an echten Ausdrucken noch nicht belegt.
+ein späterer Leser liest es neu (SP-2.6). Passt eine stimmige Lesung nur nicht zur gewählten Disziplin, sagt die Zeile
+„Werte passen nicht zur Disziplin“, und mit der passenden Disziplin übernimmt Spiegel sie. Fremde Anlagen sind an echten Ausdrucken noch nicht belegt.
 
 ## Getippte ID
 

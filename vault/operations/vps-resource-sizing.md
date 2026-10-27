@@ -60,19 +60,26 @@ den Speicher hoch (schon ein leeres Node 69 statt 50 MiB, der Leser rund 100 MiB
 dem Deploy von 1b-1 auf dem VPS, bevor das Scannen (1b-2) live geht. Liegt er über 80 MiB, wird die Grenze vor 1b-2
 neu entschieden.
 
+Seit 1c liest derselbe Kindprozess nach ID und Druckzeit auch die Werte und das Trefferbild. Gemessen im Container des
+Stack-Tests (arm64, 27. Oktober 2026): ID und Druckzeit 73 MiB, mit den Werten des erfundenen Ausdrucks 74 MiB, mit
+echten Ausdrucken 75 bis 87,5 MiB (die mit großem Trefferbild am höchsten). Auf amd64 liegt das höher und damit nah an der
+Wache von 96 MiB. Greift sie, gelten ID und Druckzeit trotzdem (eigene Zeile vor den Werten), nur die Werte fehlen
+(„Werte nicht lesbar“). Deshalb auf dem VPS mit `--values` messen und mit einem echten Ausdruck mit großem Trefferbild.
+
 Lokal den erfundenen Ausdruck bauen und auf den VPS legen (nach `~/migration/`):
 
 ```bash
-pnpm --filter spiegel exec tsx tools/printout-sample.ts > ausdruck-beispiel.pdf && ./scripts/vereinsheim upload ausdruck-beispiel.pdf
+pnpm --filter spiegel exec tsx tools/printout-sample.ts --values > ausdruck-beispiel.pdf && ./scripts/vereinsheim upload ausdruck-beispiel.pdf
 ```
 
 Dann auf dem VPS im Repo-Verzeichnis (`vereinsheim ssh`), mit den Flags aus `reader.ts`:
 
 ```bash
-docker compose exec -T app-spiegel node --max-old-space-size=48 --max-semi-space-size=2 --lite-mode apps/spiegel/printout-reader.mjs < ~/migration/ausdruck-beispiel.pdf | grep -o '"kind":"found"\|"maxRssKb":[0-9]*'
+docker compose exec -T app-spiegel node --max-old-space-size=48 --max-semi-space-size=2 --lite-mode apps/spiegel/printout-reader.mjs < ~/migration/ausdruck-beispiel.pdf | grep -o '"kind":"found"\|"kind":"ok"\|"maxRssKb":[0-9]*'
 ```
 
-Erwartet: `"kind":"found"` und `"maxRssKb":<kB>`.
+Erwartet: `"kind":"found"` und `"maxRssKb":<kB>`, danach in der zweiten Zeile die Werte mit `"kind":"ok"` und
+ihrem `"maxRssKb"` (der höhere zählt).
 
 ## Swap als Sicherheitsnetz
 
