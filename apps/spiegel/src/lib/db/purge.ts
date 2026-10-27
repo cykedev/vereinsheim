@@ -78,15 +78,24 @@ export async function purgeCards(
   for (const card of cards) {
     if ("lock" in block && card.ownerId === null)
       throw new RangeError(`Scheibe ${card.id} ohne Besitzer: keine Sperre möglich`)
+    // ein offener Auftrag an der Scheibe ist danach zurückgezogen: Eine Scheibe vom Ausdruck hinterlässt keine Sperre,
+    // und der Auftrag holte sie sonst auf dem Weg älterer Aufträge als neue Scheibe zurück
+    const withdrawRequests = () =>
+      tx.cardRequest.updateMany({
+        where: { cardId: card.id, status: "open" },
+        data: { status: "withdrawn", closedAt: new Date() },
+      })
     if (card.sourceId === null || card.scheibenId === null) {
       if ("tombstone" in block)
         throw new RangeError(`Scheibe ${card.id} ohne Quelle: nichts zu entfernen`)
+      await withdrawRequests()
       await tx.card.deleteMany({ where: { id: card.id } })
       continue
     }
     const { sourceId, scheibenId, cycle, block: cardBlock, lastSequence, startedAt } = card
     const key = { sourceId, scheibenId }
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(${sourceId}::int, ${scheibenId}::int)`
+    await withdrawRequests()
     const { count } = await tx.card.deleteMany({ where: { id: card.id } })
     if (count === 0) continue
     const siblings = await tx.card.findMany({

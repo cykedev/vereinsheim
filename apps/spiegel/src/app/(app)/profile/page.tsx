@@ -1,10 +1,8 @@
 import type { Metadata } from "next"
 
 import { getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
-import { formatIsoDate } from "@vereinsheim/lib/format"
 
 import { ProfileScreen } from "@/components/profile/ProfileScreen"
-import { ownRequests } from "@/lib/card-requests/queries"
 import { consentRows } from "@/lib/consent/queries"
 import { db } from "@/lib/db"
 import { trashCount } from "@/lib/db/reads"
@@ -21,9 +19,6 @@ export default async function ProfileRoute() {
       email={session.user.email ?? ""}
       isAdmin={isAdmin(session.user.role)}
       sportpass={await consentRows(session.user.id, timeZone)}
-      requests={await ownRequests(db, session.user.id)}
-      today={formatIsoDate(new Date(), timeZone)}
-      timeZone={timeZone}
       trashCount={await trashCount(db, session.user.id)}
     />
   )

@@ -14,18 +14,15 @@ import { PAGE_SINGLE } from "@vereinsheim/shot-ui/layout/columns"
 import { cn } from "@vereinsheim/lib/utils"
 import { ADMIN_SECTIONS } from "@/lib/admin/sections"
 import type { ConsentRow } from "@/lib/consent/queries"
-import type { OwnRequest } from "@/lib/card-requests/queries"
 import { CURRENT_CONSENT_VERSION } from "@/lib/consent/texts"
 
-import { CardRequests } from "./CardRequests"
 import { SportpassConsents } from "./SportpassConsents"
 
 const PILL =
   "inline-flex h-10 items-center rounded-full border border-line-strong px-3.5 text-[13px] font-semibold text-primary hover:bg-accent-wash focus-visible:outline-2 focus-visible:outline-ring"
 
 /**
- * Profil: Konto, für Admins am Telefon oben die Bereiche des Admins, Zustimmung per Sportpass, Scheibe per ID holen,
- * Einstellung des Geräts (Darstellung), Abmelden. Die Wertung hat jede Scheibe und jede Familie selbst (Seite der
+ * Profil: Konto, für Admins am Telefon oben die Bereiche des Admins, Zustimmung per Sportpass, Einstellung des Geräts (Darstellung), Abmelden. Die Wertung hat jede Scheibe und jede Familie selbst (Seite der
  * Scheibe, Liste, Fortschritt). Dazu der Papierkorb.
  */
 export function ProfileScreen({
@@ -33,9 +30,6 @@ export function ProfileScreen({
   email,
   isAdmin,
   sportpass,
-  requests,
-  today,
-  timeZone,
   trashCount,
 }: {
   name: string | null
@@ -43,11 +37,6 @@ export function ProfileScreen({
   isAdmin: boolean
   /** die eigenen Zustimmungen per Sportpass; nur aktive bringen Scheiben von der Brücke */
   sportpass: ConsentRow[]
-  /** die eigenen Aufträge per ID der letzten Wochen */
-  requests: OwnRequest[]
-  /** heute in der Anzeige-Zone (`YYYY-MM-DD`) */
-  today: string
-  timeZone: string
   /** Scheiben im Papierkorb */
   trashCount: number
 }) {
@@ -82,8 +71,6 @@ export function ProfileScreen({
         )}
 
         <SportpassConsents consents={sportpass} version={CURRENT_CONSENT_VERSION} />
-
-        <CardRequests requests={requests} today={today} timeZone={timeZone} />
 
         <div className="grid gap-4 rounded-2xl border border-border bg-card p-4">
           <h2 className="text-[15px] font-semibold">Dieses Gerät</h2>

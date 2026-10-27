@@ -49,17 +49,3 @@ export const requestShown = (status: CardRequestStatus, filled: boolean): boolea
  */
 export const requestRemovable = (status: CardRequestStatus, filled: boolean): boolean =>
   !filled && status !== "withdrawn" && status !== "done"
-
-/** Zustände, in denen ein Auftrag ohne Erfolg endete */
-export const REMOVABLE_STATUSES = [
-  "missing",
-  "mismatch",
-  "expired",
-  "held",
-  "taken",
-  "withdrawn",
-] as const satisfies readonly CardRequestStatus[]
-
-/** beendet und ohne Scheibe: Der Schütze kann den Auftrag aus der Liste im Profil entfernen */
-export const isRemovable = (status: CardRequestStatus, hasCard: boolean): boolean =>
-  !hasCard && (REMOVABLE_STATUSES as readonly CardRequestStatus[]).includes(status)

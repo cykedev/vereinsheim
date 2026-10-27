@@ -285,6 +285,45 @@ describe("purgeCards mit weicher Sperre (Papierkorb)", () => {
   })
 })
 
+describe("purgeCards und Aufträge", () => {
+  it("ein offener Auftrag an der Scheibe ist danach zurückgezogen, ein beendeter bleibt", async () => {
+    const pdf = await db.card.create({
+      data: {
+        disciplineId: site.disciplineId,
+        ownerId: site.ownerId,
+        startedAt: new Date(),
+        kind: "training",
+        state: "final",
+        complete: true,
+        origin: "pdf",
+      },
+    })
+    const request = (status: "open" | "missing") =>
+      db.cardRequest.create({
+        data: {
+          userId: site.ownerId,
+          siteId: site.siteId,
+          scheibenId: nextId++,
+          day: "2026-10-27",
+          status,
+          cardId: pdf.id,
+        },
+      })
+    const open = await request("open")
+    const missing = await request("missing")
+    await purgeLocked([pdf.id])
+    const rows = await db.cardRequest.findMany({
+      where: { id: { in: [open.id, missing.id] } },
+      orderBy: { id: "asc" },
+    })
+    expect(rows.map((r) => [r.status, r.cardId])).toEqual([
+      ["withdrawn", null],
+      ["missing", null],
+    ])
+    expect(rows[0].closedAt).not.toBeNull()
+  })
+})
+
 /** die gesendeten Stände von SF-72 (acht Probe, Neustart, fünf Probe) unter einer eigenen ScheibenID: zwei Blöcke */
 function restarted(scheibenId = nextId++): SnapshotV1[] {
   const expected = frozenExpected("SF-72").cards[0]

@@ -16,9 +16,6 @@ const render = (isAdmin: boolean) =>
       email: "schuetze@example.com",
       isAdmin,
       sportpass: [],
-      requests: [],
-      today: "2026-10-26",
-      timeZone: "Europe/Berlin",
       trashCount: 0,
     })
   )
