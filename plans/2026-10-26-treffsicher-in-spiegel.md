@@ -133,6 +133,10 @@ Vorgeschlagener Schnitt, endgültig im jeweiligen `/plan`:
     vom Ausdruck). Herkunft und Ort leise im Kopf. In der Liste die Herkunft nur bei „eingetragen“ und „vom Ausdruck“,
     nie „gemessen“; „–“ immer mit Grund. Im Fortschritt und auf Start die Grundlage nur, wenn nicht alle Scheiben
     zählen („über 12 von 20 Scheiben · 6 ohne Lage je Schuss“); der Versatz nennt Scheiben nur mit Trefferlage.
+    Nach der Durchsicht im Browser (27. Oktober 2026): Wo eine kleine Scheibe steht (Liste, Start, Fortschritt,
+    Vergleichen, Serien auf der Seite), steht für eine Scheibe oder Serie ohne Lagen ein leiser Platzhalter, die Scheibe
+    der Disziplin ohne Schüsse; auch Serien aus Summen bekommen ihn. Die Trefferlage als Summe zeigt das vorhandene
+    Zeichen der Mitte (`MpiMark`), nur auf der großen Scheibe und im Platzhalter der Übersichten.
 - **1b QR-Weg (SP-1.7 b):** Scannen (Kamera, Link), PDF von erlaubten Adressen in einem kurzlebigen Kindprozess,
   PDF-Volume samt Backup, Auftrag an die Brücke. Berührt Deploy-Vertrag und `scripts/`, interaktiv.
   1b liefert „PDF hängt an, die Brücke holt die Scheibe“; ein Ergebnis aus dem PDF bringt erst 1c.
