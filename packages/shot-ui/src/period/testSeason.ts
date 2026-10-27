@@ -75,7 +75,7 @@ function sequence(seed: number): () => number {
 /**
  * Eine Saison über gut ein Jahr für Charakterisierungen des ganzen Modells: Trainings zu 20 und 40 Schuss mit
  * steigender Form, Wettkämpfe, Trainings nur aus Probe, dazu Scheiben, die für Rekorde nicht zählen (unvollständig,
- * „nur-pdf“, verdächtiger Schuss, als Wertung gezählte Probe), und eine Scheibe mit amtlicher Wertung in ganzen Ringen.
+ * ausgenommen, verdächtiger Schuss, als Wertung gezählte Probe), und eine Scheibe mit amtlicher Wertung in ganzen Ringen.
  * Zehntel und ganze Ringe gehen auseinander, damit eine vertauschte Wertung auffällt; die Rekorde reichen bis R10/R11.
  */
 export function seasonCards(): PeriodCard[] {
@@ -101,7 +101,7 @@ export function seasonCards(): PeriodCard[] {
     cards.push(periodCard(`p${i}`, 120 - i * 50 + next(), shots(10, 96), { probe: true }))
   }
   cards.push(periodCard("unvollstaendig", 15.5, shots(20, 104), { complete: false }))
-  cards.push(periodCard("nurpdf", 25.5, shots(40, 104), { flags: ["nur-pdf"] }))
+  cards.push(periodCard("ausgenommen", 25.5, shots(40, 104), { flags: ["ausgenommen"] }))
   const odd = periodCard("verdaechtig", 35.5, shots(20, 104))
   cards.push({
     ...odd,

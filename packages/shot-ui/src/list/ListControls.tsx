@@ -15,7 +15,6 @@ import type { ListOption } from "./evenings"
  * Unbekanntes mit seiner Id
  */
 const FLAG_NAMES: Readonly<Record<CardFlag, string>> = {
-  "nur-pdf": "Nur PDF",
   unvollstaendig: "Unvollständig",
   ausgenommen: "Ausgenommen",
   "nur-probe": "Nur Probe",

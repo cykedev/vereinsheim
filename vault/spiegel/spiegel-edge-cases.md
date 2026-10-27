@@ -29,7 +29,7 @@ documented_in: ["[[src-ssmdb2-abend-2026-10-09]]", "[[src-ssmdb2-kopie-2026-10-0
 
 ## Merkmale und Zustand
 
-Statt stiller Annahmen trägt jede Scheibe sichtbare **Merkmale**: `nur-probe`, `unvollstaendig`, `ueber-soll`, `korrigiert`, `an-der-quelle-entfernt`, `nur-pdf`, `pdf-zwischenstand`, `neu-gewertet`, `als-wertung-gezaehlt`, `disziplin-unbekannt`, `uhr-abweichung`, `automatisch-zugeordnet`, `ausgenommen`. Je Schuss gibt es `fehlschuss` und `verdaechtig`. Verläufe, Rekorde und Vergleiche filtern darüber; die Oberfläche zeigt sie als ruhige Hinweise ([[spiegel-ui-design]]).
+Statt stiller Annahmen trägt jede Scheibe sichtbare **Merkmale**: `nur-probe`, `unvollstaendig`, `ueber-soll`, `korrigiert`, `an-der-quelle-entfernt`, `pdf-zwischenstand`, `neu-gewertet`, `als-wertung-gezaehlt`, `disziplin-unbekannt`, `uhr-abweichung`, `automatisch-zugeordnet`, `ausgenommen`. Je Schuss gibt es `fehlschuss` und `verdaechtig`. Verläufe, Rekorde und Vergleiche filtern darüber; die Oberfläche zeigt sie als ruhige Hinweise ([[spiegel-ui-design]]).
 
 Der **Zustand** einer Scheibe ist offen (ihr Lebenszeichen läuft, der Stand ist belegt), ruhend (fünf Minuten ohne Lebenszeichen, gemessen an der Beobachtungszeit und nicht an der Uhr des Stands; ein neues Lebenszeichen öffnet sie wieder) oder endgültig (die Anlage war dazwischen aus, oder zwölf Stunden ohne Änderung). Rekorde und Mitteilungen entstehen erst bei endgültig. Das Lebenszeichen ist `Scheiben.Zeitstempel`: Es steigt alle 5 bis 10 s, solange der Stand belegt ist, und steht ab dem Freigeben, 16 s bis 17,5 min nach dem letzten Schuss (9. Oktober 2026).
 

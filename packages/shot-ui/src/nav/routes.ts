@@ -98,7 +98,7 @@ export interface ListQuery {
   /** Familie; null: die zuletzt benutzte, die Seite setzt sie ein */
   family: string | null
   kind: CardKind
-  /** Merkmal wie `nur-pdf` */
+  /** Merkmal wie `korrigiert` */
   flag: string | null
   /** Liste aus Meyton (`Rangliste`) als Kennung, nie als Name; null: alle */
   list: number | null

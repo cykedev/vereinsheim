@@ -851,7 +851,6 @@ describe("Merkmale einer Scheibe an einer Stelle", () => {
       "korrigiert",
       "leer",
       "neu-gewertet",
-      "nur-pdf",
       "nur-probe",
       "scheibe-passt-nicht",
       "ueber-soll",

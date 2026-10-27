@@ -57,7 +57,6 @@ export const FLAG_OVER_TARGET = "ueber-soll"
  * `shot-ui`).
  */
 export const CARD_FLAGS = [
-  "nur-pdf",
   "unvollstaendig",
   "ausgenommen",
   "nur-probe",

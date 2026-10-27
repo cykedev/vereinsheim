@@ -30,7 +30,6 @@ import { valueNeed, valueTenths } from "./values"
 
 /** Merkmale, mit denen eine Scheibe für Rekorde nicht zählt (SF-66) */
 export const RECORD_EXCLUDING_FLAGS = [
-  "nur-pdf",
   "neu-gewertet",
   "ausgenommen",
 ] as const satisfies readonly CardFlag[]
@@ -56,8 +55,8 @@ const INNER_TENS = metric("result.innerTens")
 const ENCLOSING = metric("group.enclosingDiameter")
 
 /**
- * Zählt die Scheibe für Rekorde? Nur endgültig und vollständig, ohne `nur-pdf`, `neu-gewertet` und
- * `ausgenommen` und ohne einen verdächtigen Schuss unter denen, die zählen (SF-15, SF-66): bei Wertung die
+ * Zählt die Scheibe für Rekorde? Nur endgültig und vollständig, ohne `neu-gewertet` und `ausgenommen`
+ * und ohne einen verdächtigen Schuss unter denen, die zählen (SF-15, SF-66): bei Wertung die
  * Wertungsschüsse, bei einer Scheibe nur mit Probe die Probe. Ein verdächtiger Probeschuss vor der Wertung
  * schließt die Scheibe nicht aus, er geht in keinen Rekord ein.
  */

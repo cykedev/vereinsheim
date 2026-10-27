@@ -160,11 +160,14 @@ describe("Blättern im Kontext", () => {
   it("Liste mit Zeitraum und Merkmal: genau ihre Zeilen", () => {
     const flagged: ListInputCard[] = INPUT.map((c) =>
       c.card.id === "w2" || c.card.id === "t3"
-        ? { ...c, card: { ...c.card, flags: ["nur-pdf"] } }
+        ? { ...c, card: { ...c.card, flags: ["korrigiert"] } }
         : c
     )
     const input = { ...context, cards: flagged }
-    expect(contextCardIds(card("w2", fromList({ flag: "nur-pdf" })), input)).toEqual(["w2", "t3"])
+    expect(contextCardIds(card("w2", fromList({ flag: "korrigiert" })), input)).toEqual([
+      "w2",
+      "t3",
+    ])
     expect(
       contextCardIds(
         card("t2", fromList({ range: { type: "free", from: "2026-09-23", to: "2026-09-25" } })),

@@ -106,7 +106,7 @@ describe("das ganze Modell über eine Saison", () => {
       expect(keys.some((k) => k.startsWith(id))).toBe(true)
     // nicht zählende Scheiben stehen in keinem Rekord, obwohl sie die höchsten Werte tragen
     const holders = new Set(recordRows(all.records, "decimal").map((r) => r.record.cardId))
-    for (const id of ["unvollstaendig", "nurpdf", "verdaechtig"])
+    for (const id of ["unvollstaendig", "ausgenommen", "verdaechtig"])
       expect(holders.has(id)).toBe(false)
     // als Wertung gezählte Probe nur mit dem Schalter
     expect(holders.has("gezaehlt")).toBe(true)

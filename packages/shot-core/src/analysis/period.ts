@@ -52,7 +52,7 @@ export interface PeriodCard {
    * vollständig, wenn das Training abgeschlossen ist; ihre Schusszahl ist die der Probe, nicht die der Wertung.
    */
   complete: boolean
-  /** Merkmale der Scheibe, etwa "nur-pdf", "neu-gewertet", "ausgenommen" */
+  /** Merkmale der Scheibe, etwa "korrigiert", "neu-gewertet", "ausgenommen" */
   flags?: readonly string[]
   /**
    * Wertung der Disziplin (Admin), Vorgabe der Scheibe, im Wettkampf die amtliche (Meyton druckt nach ihr); nie aus

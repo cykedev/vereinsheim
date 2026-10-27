@@ -131,28 +131,28 @@ describe("Liste und Fortschritt als Query", () => {
 
   it("die Liste: ohne Zeitraum alle Abende, „all“ ebenso; Familie und Merkmal nur als Id", () => {
     const list = listQueryFromParams(
-      new URLSearchParams("range=all&family=lg-10m&kind=competition&flag=nur-pdf")
+      new URLSearchParams("range=all&family=lg-10m&kind=competition&flag=korrigiert")
     )
     expect(list).toEqual({
       range: null,
       family: "lg-10m",
       kind: "competition",
-      flag: "nur-pdf",
+      flag: "korrigiert",
       list: null,
     })
-    expect(query(listQueryToParams(list))).toBe("family=lg-10m&kind=competition&flag=nur-pdf")
+    expect(query(listQueryToParams(list))).toBe("family=lg-10m&kind=competition&flag=korrigiert")
     expect(query(listQueryToParams({ ...list, range: { type: "rolling", days: 30 } }))).toBe(
-      "range=30d&family=lg-10m&kind=competition&flag=nur-pdf"
+      "range=30d&family=lg-10m&kind=competition&flag=korrigiert"
     )
     expect(listQueryFromParams(new URLSearchParams("family=LG 10m&flag=")).family).toBeNull()
   })
 
   it("die Liste aus Meyton als Kennung nach dem Merkmal; anderes gilt als keine", () => {
-    const text = "family=lp-10m&flag=nur-pdf&list=12"
+    const text = "family=lp-10m&flag=korrigiert&list=12"
     expect(listQueryFromParams(new URLSearchParams(text))).toEqual({
       ...DEFAULT_LIST,
       family: "lp-10m",
-      flag: "nur-pdf",
+      flag: "korrigiert",
       list: 12,
     })
     expect(query(listQueryToParams({ ...DEFAULT_LIST, family: "lp-10m", list: 12 }))).toBe(
@@ -231,14 +231,14 @@ describe("die Scheibe: Herkunft, Auswahl, Schuss, Anker", () => {
   it("aus der Liste, von Start und als direkter Link", () => {
     const list = cardFromParts(
       "c7",
-      new URLSearchParams("from=list&family=lp-10m&flag=nur-pdf"),
+      new URLSearchParams("from=list&family=lp-10m&flag=korrigiert"),
       ""
     )
     expect(list.origin).toEqual({
       from: "list",
-      query: { family: "lp-10m", kind: "all", flag: "nur-pdf", list: null, range: null },
+      query: { family: "lp-10m", kind: "all", flag: "korrigiert", list: null, range: null },
     })
-    expect(query(cardToParams(list))).toBe("from=list&family=lp-10m&flag=nur-pdf")
+    expect(query(cardToParams(list))).toBe("from=list&family=lp-10m&flag=korrigiert")
     expect(cardFromParts("c7", new URLSearchParams("from=start"), "").origin).toEqual({
       from: "start",
     })
@@ -397,7 +397,7 @@ describe("die ganze Adresse", () => {
     const lists: ListQuery[] = []
     for (const family of [null, "lg-10m"])
       for (const kind of ["all", "training"] as const)
-        for (const flag of [null, "nur-pdf"])
+        for (const flag of [null, "korrigiert"])
           for (const list of [null, 7])
             for (const range of [
               null,

@@ -40,7 +40,7 @@ const PROGRESS: ProgressRoute = {
 }
 const LIST: ListRoute = {
   page: "cards",
-  query: { ...DEFAULT_LIST, family: "lp-10m", flag: "nur-pdf", list: 12 },
+  query: { ...DEFAULT_LIST, family: "lp-10m", flag: "korrigiert", list: 12 },
   evening: "2026-09-25",
 }
 

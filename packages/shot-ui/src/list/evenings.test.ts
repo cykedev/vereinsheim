@@ -105,7 +105,7 @@ describe("Abende der Scheiben-Liste", () => {
   it("Art und Merkmal filtern; die Merkmale der Familie stehen dabei", () => {
     const cards = [
       lg(periodCard("t", 2, [100], { kind: "training" })),
-      lg(periodCard("w", 1, [101], { kind: "competition", flags: ["nur-pdf"] })),
+      lg(periodCard("w", 1, [101], { kind: "competition", flags: ["korrigiert"] })),
     ]
     expect(
       cardListModel(cards, query({ kind: "competition" }), context).evenings.flatMap((e) =>
@@ -113,11 +113,11 @@ describe("Abende der Scheiben-Liste", () => {
       )
     ).toEqual(["w"])
     expect(
-      cardListModel(cards, query({ flag: "nur-pdf" }), context).evenings.flatMap((e) =>
+      cardListModel(cards, query({ flag: "korrigiert" }), context).evenings.flatMap((e) =>
         e.rows.map((r) => r.id)
       )
     ).toEqual(["w"])
-    expect(cardListModel(cards, query(), context).flags).toEqual(["nur-pdf"])
+    expect(cardListModel(cards, query(), context).flags).toEqual(["korrigiert"])
   })
 
   it("ohne Familie die erste vorhandene; ohne Scheiben keine Abende", () => {
@@ -194,9 +194,13 @@ describe("Scheiben-Liste: weitere Fälle", () => {
   })
 
   it("ein Merkmal, das die Familie nicht hat, bleibt wählbar, damit man es wieder lösen kann", () => {
-    const model = cardListModel(INPUT, query({ family: "lp-freihand", flag: "nur-pdf" }), context)
+    const model = cardListModel(
+      INPUT,
+      query({ family: "lp-freihand", flag: "korrigiert" }),
+      context
+    )
     expect(model.cards).toBe(0)
-    expect(model.flags).toEqual(["nur-pdf"])
+    expect(model.flags).toEqual(["korrigiert"])
   })
 
   it("Abstand über Familie und Art, Trainings nur aus Probe gehören dazu", () => {
@@ -220,7 +224,7 @@ describe("Scheiben-Liste: weitere Fälle", () => {
     // Samstag, 26. September: Wettkampf Luftgewehr, Training Luftpistole (nur PDF), eine Luftpistole um 03:00 MESZ
     const cards = [
       lg(periodCard("lw", 4, [100], { kind: "competition", startedAtMs: at(16, 0, 26) })),
-      lp(periodCard("pt", 4, [95], { startedAtMs: at(18, 0, 26), flags: ["nur-pdf"] })),
+      lp(periodCard("pt", 4, [95], { startedAtMs: at(18, 0, 26), flags: ["korrigiert"] })),
       lp(periodCard("pn", 3, [96], { startedAtMs: at(1, 0, 27) })),
     ]
     const competition = query({ kind: "competition", flag: null })

@@ -47,7 +47,7 @@ Reiter einer App; das Rückgrat ist die Liste der Scheiben. Die Seiten einer Sch
 | Bereich | Telefon | Desktop | Adresse |
 |---|---|---|---|
 | Start | untere Leiste, Zähler für Offen | Seitenleiste, Zähler für Offen | `/` |
-| Scheiben | untere Leiste | Seitenleiste | `/cards?family=lp-auflage&kind=training&flag=nur-pdf#2026-09-25` |
+| Scheiben | untere Leiste | Seitenleiste | `/cards?family=lp-auflage&kind=training&provenance=entered#2026-09-25` |
 | Fortschritt | untere Leiste | Seitenleiste | `/progress?range=12m&compare=previous&family=lg-freihand&sighters=0&pick=<id>#history` |
 | Profil | untere Leiste, für Admins oben die Bereiche des Admins | Seitenleiste | `/profile` |
 | Admin | in Profil oben (Abschnitt „Admin“ mit allen Bereichen), nur für Admins | letzter Eintrag der Seitenleiste, nur für Admins | `/admin{/users,/disciplines,/lists,/site}` |

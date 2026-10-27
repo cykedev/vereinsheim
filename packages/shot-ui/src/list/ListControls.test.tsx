@@ -18,7 +18,7 @@ const QUERY: ListQuery = {
   ...DEFAULT_LIST,
   family: "lg-freihand",
   kind: "training",
-  flag: "nur-pdf",
+  flag: "korrigiert",
   range: { type: "named", id: "p9q3x7d5" },
 }
 const props = (patch: Partial<ListControlsProps> = {}): ListControlsProps => ({
@@ -28,7 +28,7 @@ const props = (patch: Partial<ListControlsProps> = {}): ListControlsProps => ({
     { value: "lg-freihand", label: "Luftgewehr" },
     { value: "lp-freihand", label: "Luftpistole" },
   ],
-  flags: ["nur-pdf"],
+  flags: ["korrigiert"],
   lists: [],
   rangeLabel: "Neue Munition",
   onQuery: () => {},
@@ -82,7 +82,7 @@ describe("Filter der Scheiben-Liste in einer Zeile (wie der Fortschritt)", () =>
     expect(row).not.toContain('aria-label="Art"')
     expect(row).not.toContain('aria-label="Merkmal"')
     expect(row).toMatch(
-      /<button[^>]*data-list-chip="true"[^>]*>Training · Nur PDF · Neue Munition<svg/
+      /<button[^>]*data-list-chip="true"[^>]*>Training · Korrigiert · Neue Munition<svg/
     )
     // im Blatt: Art, Merkmal, Zeitraum mit „entfernen“, der Weg in den Fortschritt
     const sheet = html.slice(html.indexOf("<dialog"))
@@ -103,8 +103,13 @@ describe("Filter der Scheiben-Liste in einer Zeile (wie der Fortschritt)", () =>
       listFilterSummary({ kind: "competition", flag: null, list: null, rangeLabel: null })
     ).toBe("Wettkampf")
     expect(
-      listFilterSummary({ kind: "all", flag: "nur-pdf", list: null, rangeLabel: "Letzte 90 Tage" })
-    ).toBe("Nur PDF · Letzte 90 Tage")
+      listFilterSummary({
+        kind: "all",
+        flag: "korrigiert",
+        list: null,
+        rangeLabel: "Letzte 90 Tage",
+      })
+    ).toBe("Korrigiert · Letzte 90 Tage")
     expect(
       listFilterSummary({ kind: "competition", flag: null, list: "RWK_LP", rangeLabel: null })
     ).toBe("Wettkampf · Liste RWK_LP")
@@ -119,7 +124,7 @@ describe("Filter der Scheiben-Liste in einer Zeile (wie der Fortschritt)", () =>
       h(ListControls, props({ lists, query: { ...QUERY, list: 3 } }))
     )
     expect(html).toMatch(
-      /data-list-chip="true"[^>]*>Training · Liste RWK_LP · Nur PDF · Neue Munition<svg/
+      /data-list-chip="true"[^>]*>Training · Liste RWK_LP · Korrigiert · Neue Munition<svg/
     )
     const sheet = html.slice(html.indexOf("<dialog"))
     expect(sheet.indexOf('aria-label="Art"')).toBeLessThan(sheet.indexOf('aria-label="Liste"'))
@@ -161,7 +166,6 @@ describe("Filter der Scheiben-Liste in einer Zeile (wie der Fortschritt)", () =>
   it("jedes Merkmal mit Namen statt Kennung (dort stand „nur-probe“)", () => {
     expect(
       [
-        "nur-pdf",
         "unvollstaendig",
         "ausgenommen",
         "nur-probe",
@@ -173,7 +177,6 @@ describe("Filter der Scheiben-Liste in einer Zeile (wie der Fortschritt)", () =>
         "als-wertung-gezaehlt",
       ].map(flagName)
     ).toEqual([
-      "Nur PDF",
       "Unvollständig",
       "Ausgenommen",
       "Nur Probe",
