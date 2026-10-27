@@ -53,6 +53,19 @@ afterAll(async () => {
 })
 
 describe("sharedCard", () => {
+  it("ohne Ort: der ist eine persönliche Angabe, die Herkunft bleibt", async () => {
+    await db.card.update({ where: { id: ids.shared }, data: { place: "Vereinsheim Nord" } })
+    try {
+      const own = await cardWithShots(db, { cardId: ids.shared, ownerId: site.ownerId })
+      expect(own?.place).toBe("Vereinsheim Nord")
+      const shared = await sharedCard(db, links.shared)
+      expect(shared?.place).toBeNull()
+      expect(shared?.provenance).toBe("measured")
+    } finally {
+      await db.card.update({ where: { id: ids.shared }, data: { place: null } })
+    }
+  })
+
   it("liest die geteilte Scheibe mit Schüssen, genau wie die Seite einer Scheibe, ohne Angaben zum Besitzer", async () => {
     const shared = await sharedCard(db, links.shared)
     const own = await cardWithShots(db, { cardId: ids.shared, ownerId: site.ownerId })

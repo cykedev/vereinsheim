@@ -15,6 +15,7 @@ const card = {
   startedAtMs: Date.UTC(2026, 9, 13, 17, 12),
   family: { slug: "lp-freihand", name: "Luftpistole" },
   scoring: "rings",
+  provenance: "measured",
   projection: {
     values: { [inScoring(metricByKey("result.decimal")!, "rings").key]: { value: 376 } },
   },

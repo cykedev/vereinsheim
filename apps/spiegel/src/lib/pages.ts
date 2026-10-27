@@ -32,4 +32,9 @@ export const listable = (cards: readonly OverviewCard[]) =>
 
 /** die Scheiben der Übersichten mit Familie und Liste, wie die Modelle in `shot-ui` sie nehmen (nur aus `listable`) */
 export const withFamily = (cards: readonly OverviewCard[]) =>
-  cards.map((card) => ({ card, family: card.family!.slug, list: card.list }))
+  cards.map((card) => ({
+    card,
+    family: card.family!.slug,
+    list: card.list,
+    provenance: card.provenance,
+  }))

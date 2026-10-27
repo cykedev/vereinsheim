@@ -42,6 +42,8 @@ const card: PageCard = {
   family: { slug: "lp", name: "Luftpistole" },
   scoring: "rings",
   list: null,
+  provenance: "measured",
+  place: null,
   shots,
 }
 const route = routeFromUrl(`/cards/${card.id}`, "?from=cards", "") as CardRoute

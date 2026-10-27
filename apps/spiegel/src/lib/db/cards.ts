@@ -612,20 +612,29 @@ async function newRevision(
 export async function revisionSums(tx: Tx | Db, revisionId: bigint): Promise<CardSums | undefined> {
   const revision = await tx.cardRevision.findUnique({
     where: { id: revisionId },
-    select: {
-      totalRings: true,
-      totalDecimalTenths: true,
-      totalShots: true,
-      centerXUm: true,
-      centerYUm: true,
-      centerShots: true,
-      seriesSums: {
-        orderBy: { series: "asc" },
-        select: { series: true, shots: true, rings: true, decimalTenths: true },
-      },
-    },
+    select: SUMS_SELECT,
   })
-  if (!revision) return undefined
+  return revision ? toCardSums(revision) : undefined
+}
+
+/** was eine Revision an Angaben ohne Einzelschüsse trägt; für `toCardSums` */
+export const SUMS_SELECT = {
+  totalRings: true,
+  totalDecimalTenths: true,
+  totalShots: true,
+  centerXUm: true,
+  centerYUm: true,
+  centerShots: true,
+  seriesSums: {
+    orderBy: { series: "asc" },
+    select: { series: true, shots: true, rings: true, decimalTenths: true },
+  },
+} satisfies Prisma.CardRevisionSelect
+
+/** die Angaben einer gelesenen Revision (`SUMS_SELECT`) als `CardSums`; undefined ohne sie */
+export function toCardSums(
+  revision: Prisma.CardRevisionGetPayload<{ select: typeof SUMS_SELECT }>
+): CardSums | undefined {
   const { seriesSums, totalShots, centerShots, centerXUm, centerYUm } = revision
   if (!seriesSums.length && totalShots === null && centerShots === null) return undefined
   return {

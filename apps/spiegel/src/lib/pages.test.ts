@@ -23,6 +23,7 @@ const card = (
   targetId,
   family: family ? { slug: family, name: family.toUpperCase() } : null,
   list: null,
+  provenance: "measured",
   projection: {
     version: "p",
     probeOnly: false,
@@ -53,11 +54,21 @@ describe("familiesOf", () => {
 })
 
 describe("withFamily", () => {
-  it("gibt Familie und Liste an die Modelle weiter", () => {
+  it("gibt Familie, Liste und Herkunft an die Modelle weiter", () => {
     const listed = { ...card("a", 1, "lp-freihand", "lp-10m"), list: { id: 7, name: "RWK_LP" } }
     expect(withFamily([listed, card("b", 2, "lp-freihand", "lp-10m")])).toEqual([
-      { card: listed, family: "lp-freihand", list: { id: 7, name: "RWK_LP" } },
-      { card: expect.objectContaining({ id: "b" }), family: "lp-freihand", list: null },
+      {
+        card: listed,
+        family: "lp-freihand",
+        list: { id: 7, name: "RWK_LP" },
+        provenance: "measured",
+      },
+      {
+        card: expect.objectContaining({ id: "b" }),
+        family: "lp-freihand",
+        list: null,
+        provenance: "measured",
+      },
     ])
   })
 })

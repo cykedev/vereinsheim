@@ -7,20 +7,24 @@ import type { Scoring } from "@vereinsheim/shot-core/metrics"
 import { TARGETS, type TargetId } from "@vereinsheim/shot-core/targets"
 import {
   markShots,
+  type CardDetail,
   type CardMark,
   type CardProjection,
   type ProjectedCard,
 } from "@vereinsheim/shot-core/projection"
+import type { CardProvenance } from "@vereinsheim/shot-ui/detail"
 import type { NamedPeriod } from "@vereinsheim/shot-ui/period/calendar"
 
-import type { CardState, Prisma } from "@/generated/prisma/client"
+import type { CardOrigin, CardState, Prisma } from "@/generated/prisma/client"
 
 import type { Db } from "../db"
 import { cardScoring } from "../scoring"
 import {
   CHOICE_SELECT,
+  SUMS_SELECT,
   choiceWhere,
   shotFromRow,
+  toCardSums,
   toMetricShot,
   type DisciplineOption,
 } from "./cards"
@@ -42,6 +46,24 @@ export interface OverviewCard extends ProjectedCard {
   scoring: Scoring
   /** die Liste aus Meyton (die `Rangliste`); null ohne (PDF, `seed:own`) */
   list: CardList | null
+  /** woher die Scheibe kommt, in den Wörtern der Ansichten (`provenanceOf`) */
+  provenance: CardProvenance
+}
+
+/**
+ * die gespeicherte Herkunft in den Wörtern der Ansichten: von der Brücke gemessen, vom Ausdruck, eingetragen (von Hand
+ * und aus Treffsicher). Ohne `default`: Eine neue Herkunft scheitert an `tsc`.
+ */
+export function provenanceOf(origin: CardOrigin): CardProvenance {
+  switch (origin) {
+    case "raw":
+      return "measured"
+    case "pdf":
+      return "printout"
+    case "manual":
+    case "treffsicher":
+      return "entered"
+  }
 }
 
 /** die Liste einer Scheibe, wie Meyton sie nennt; die Kennung ist die der Zeile `Ranking` */
@@ -55,6 +77,7 @@ const listOf = (ranking: { id: number; name: string } | null): CardList | null =
 
 const OVERVIEW_SELECT = {
   id: true,
+  origin: true,
   startedAt: true,
   kind: true,
   kindChoice: true,
@@ -77,6 +100,7 @@ const OVERVIEW_SELECT = {
       printedShots: true,
       values: true,
       records: true,
+      detail: true,
     },
   },
 } satisfies Prisma.CardSelect
@@ -94,6 +118,7 @@ function toOverview(rows: readonly OverviewRow[]): OverviewCard[] {
       printedShots: row.projection.printedShots,
       values: row.projection.values as CardProjection["values"],
       records: row.projection.records as unknown as CardProjection["records"],
+      ...(row.projection.detail ? { detail: row.projection.detail as unknown as CardDetail } : {}),
     }
     // Wertung der Disziplin (Admin), wenn gesetzt; nur Probe hat keine
     const official = projection.probeOnly ? null : row.discipline.officialScoring
@@ -113,6 +138,7 @@ function toOverview(rows: readonly OverviewRow[]): OverviewCard[] {
         family: row.family,
         targetId: isTargetId(row.discipline.targetId) ? row.discipline.targetId : null,
         list: listOf(row.ranking),
+        provenance: provenanceOf(row.origin),
         projection,
       },
     ]
@@ -218,6 +244,8 @@ export async function latestCardStart(db: Db, ownerId: string): Promise<number |
 
 const PAGE_CARD_SELECT = {
   id: true,
+  origin: true,
+  place: true,
   startedAt: true,
   kind: true,
   kindChoice: true,
@@ -235,8 +263,7 @@ const PAGE_CARD_SELECT = {
       number: true,
       shots: { orderBy: { seq: "asc" } },
       // Summen der Wertung: Probe neben ihnen macht keine Scheibe nur aus Probe
-      totalShots: true,
-      seriesSums: { select: { shots: true } },
+      ...SUMS_SELECT,
     },
   },
 } satisfies Prisma.CardSelect
@@ -260,6 +287,10 @@ export interface PageCard extends PeriodCard {
   scoring: Scoring
   /** die Liste aus Meyton; null ohne */
   list: CardList | null
+  /** woher die Scheibe kommt (`provenanceOf`) */
+  provenance: CardProvenance
+  /** Ort, wie eingetragen; null ohne (Scheiben der Brücke tragen ihn über die Anlage) */
+  place: string | null
 }
 
 function toPageCard(row: PageCardRow): PageCard | null {
@@ -273,6 +304,7 @@ function toPageCard(row: PageCardRow): PageCard | null {
     totalShots === null &&
     seriesSums.length === 0
   const official = probeOnly ? null : row.discipline.officialScoring
+  const sums = toCardSums(row.currentRevision)
   return {
     id: row.id,
     startedAtMs: row.startedAt.getTime(),
@@ -288,7 +320,10 @@ function toPageCard(row: PageCardRow): PageCard | null {
     family: row.family,
     scoring: scoringOfRow(row, official),
     list: listOf(row.ranking),
+    provenance: provenanceOf(row.origin),
+    place: row.place,
     shots: row.currentRevision.shots.map(shotFromRow).map(toMetricShot),
+    ...(sums ? { sums } : {}),
   }
 }
 
@@ -313,7 +348,7 @@ export async function cardWithShots(
 /**
  * Geteilte Scheibe (`/share/<uuid>`): wie `cardWithShots`, aber über den Link statt über den Besitzer; null, wenn das
  * Teilen beendet ist, die Scheibe gelöscht ist, wartet, ihre Disziplin ignoriert ist oder das Konto aus ist. Ob der
- * Besitzer die Disziplin gewählt hat, steht nicht darin.
+ * Besitzer die Disziplin gewählt hat, steht nicht darin, auch nicht der Ort.
  */
 export async function sharedCard(db: Db, shareId: string): Promise<PageCard | null> {
   const row = await db.card.findFirst({
@@ -321,7 +356,7 @@ export async function sharedCard(db: Db, shareId: string): Promise<PageCard | nu
     select: PAGE_CARD_SELECT,
   })
   const card = row ? toPageCard(row) : null
-  return card && { ...card, standDiscipline: null }
+  return card && { ...card, standDiscipline: null, place: null }
 }
 
 /**
@@ -400,7 +435,8 @@ export async function marksOfCards(
 /**
  * Die Scheiben des Trefferbilds im Fortschritt (`periodPattern`): je verlangter, eigener, sichtbarer Scheibe die Lagen
  * aus der Projektion und der Beginn, mit denselben Bedingungen wie `marksOfCards`. Ohne Schüsse aus der Datenbank:
- * Die Lagen der Projektion sind die gezeichneten (wie am Ausdruck, ohne verdächtige).
+ * Die Lagen der Projektion sind die gezeichneten (wie am Ausdruck, ohne verdächtige). Eine Scheibe ohne Lage je Schuss
+ * bringt ihre Trefferlage als Summe mit (`summaryCenter`, aus der Grundlage der Projektion).
  */
 export async function patternCardsOf(
   db: Db,
@@ -412,13 +448,23 @@ export async function patternCardsOf(
       cardId: { in: [...query.ids] },
       card: { ownerId: query.ownerId, deletedAt: null, ownerPending: false },
     },
-    select: { cardId: true, marks: true, card: { select: { startedAt: true } } },
+    select: {
+      cardId: true,
+      marks: true,
+      detail: true,
+      card: { select: { startedAt: true } },
+    },
   })
-  return rows.map((row) => ({
-    id: row.cardId,
-    atMs: row.card.startedAt.getTime(),
-    points: markShots(row.marks as unknown as CardMark[]),
-  }))
+  return rows.map((row) => {
+    const center = (row.detail as unknown as CardDetail | null)?.center
+    return {
+      id: row.cardId,
+      atMs: row.card.startedAt.getTime(),
+      points: markShots(row.marks as unknown as CardMark[]),
+      summaryCenter:
+        center?.from === "summary" ? { xUm: center.xUm, yUm: center.yUm, n: center.n } : null,
+    }
+  })
 }
 
 /** die gespeicherten Wertungen der Familien eines Schützen (`FamilyScoring`) nach Kennung; ohne Zeile fehlt die Familie */

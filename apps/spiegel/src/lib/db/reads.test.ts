@@ -602,3 +602,77 @@ describe("ignorierte Disziplinen und wartende Einordnung", () => {
     await db.discipline.delete({ where: { id: discipline.id } })
   })
 })
+
+describe("Herkunft, Ort und Grundlage für die Ansichten", () => {
+  it("Übersicht und Seite nennen Herkunft, Grundlage, Ort und Summen; das Trefferbild die Trefferlage als Summe", async () => {
+    const ids: string[] = []
+    const entered = async (
+      origin: "manual" | "pdf" | "treffsicher",
+      details: Parameters<typeof writeEnteredCard>[1]["details"],
+      extra: { place?: string; importKey?: string } = {}
+    ) => {
+      const result = await writeEnteredCard(db, {
+        ownerId: site.ownerId,
+        origin,
+        disciplineId: site.disciplineId,
+        startedAtMs: FIRST_MS - 2 * DAY_MS - ids.length * 60_000,
+        kind: "training",
+        details,
+        reason: "eingetragen",
+        ...extra,
+      })
+      if (result.kind !== "saved") throw new Error(result.kind)
+      ids.push(result.cardId)
+      return result.cardId
+    }
+    try {
+      const series = await entered(
+        "manual",
+        {
+          series: [921, 905, 934, 912].map((decimalTenths, i) => ({
+            series: i + 1,
+            shots: 10,
+            rings: 88,
+            decimalTenths,
+          })),
+        },
+        { place: "Vereinsheim Nord" }
+      )
+      const waiting = await entered("pdf", {})
+      const total = await entered(
+        "treffsicher",
+        { total: { shots: 40, rings: 362 }, center: { xUm: 1400, yUm: -900 } },
+        { importKey: `treffsicher:reads-${site.siteId}` }
+      )
+
+      const overview = await ownerCards(db, { ownerId: site.ownerId })
+      const byId = new Map(overview.map((card) => [card.id, card]))
+      expect(byId.get(series)?.provenance).toBe("entered")
+      expect(byId.get(series)?.projection.detail).toMatchObject({
+        rings: "series",
+        tenths: "series",
+      })
+      expect(byId.get(waiting)?.provenance).toBe("printout")
+      expect(byId.get(waiting)?.projection.detail).toMatchObject({ rings: null, tenths: null })
+      expect(byId.get(total)?.provenance).toBe("entered")
+      expect(
+        new Set(overview.filter((card) => !ids.includes(card.id)).map((c) => c.provenance))
+      ).toEqual(new Set(["measured"]))
+
+      const page = await cardWithShots(db, { cardId: series, ownerId: site.ownerId })
+      expect(page).toMatchObject({ provenance: "entered", place: "Vereinsheim Nord" })
+      expect(page?.sums?.series.map((s) => s.decimalTenths)).toEqual([921, 905, 934, 912])
+      expect(page?.shots).toEqual([])
+      expect(
+        (await cardWithShots(db, { cardId: waiting, ownerId: site.ownerId }))?.place
+      ).toBeNull()
+
+      const pattern = await patternCardsOf(db, { ownerId: site.ownerId, ids: [series, total] })
+      const centers = Object.fromEntries(pattern.map((card) => [card.id, card.summaryCenter]))
+      expect(centers[total]).toEqual({ xUm: 1400, yUm: -900, n: 40 })
+      expect(centers[series]).toBeNull()
+    } finally {
+      await db.card.deleteMany({ where: { id: { in: ids } } })
+    }
+  })
+})

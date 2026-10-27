@@ -18,6 +18,7 @@ function pending(scoring: Scoring, value: number | null, more = 0): PendingFirst
     family: { slug: "lp-freihand", name: "Luftpistole" },
     targetId: "lp-10m",
     scoring,
+    provenance: "measured",
     projection: {
       printedShots: 40,
       values: value === null ? {} : { [key(scoring)]: { value } },
