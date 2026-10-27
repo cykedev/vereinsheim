@@ -326,21 +326,17 @@ Erledigt:
 
 Offen:
 
-- **Speicher von Spiegel** (entschieden mit dem User am 27. Oktober 2026): Spiegel 256 → 320 MB, Treffsicher 320 →
-  256 MB, Summe gleich. Der Leser zählt zur Grenze des Containers (Spiegel 137 MiB Programm, Leser bis 79 MiB). In
-  Arbeit: `feat/memory-limits` (Kindsession `memory-limits`); danach `git pull` und Neustart der beiden Container auf
-  dem VPS durch den User.
+- **Speicher:** Spiegel 320 MB, Treffsicher 256 MB (Heap je 160), deployt am 27. Oktober 2026 abends.
 - **Am echten Telefon über HTTPS prüfen:** Kamera und der Rückfall auf das Foto.
 - **Rückweg auf ein älteres Image:** vorher `UPDATE "CardRequest" SET status = 'mismatch' WHERE status =
 'printMismatch';` (das alte Image kennt den Wert nicht).
 - **Node 26 Pflicht** (`engine-strict`): `pnpm install` und `pnpm dev` brechen unter älterem Node hart ab.
 
-Seit dem Release in `main` (`02d977c5`, nicht deployt): Art auch für Scheiben nur aus Probe (ohne Wahl die Art der
-Quelle, die Liste zählt bei nur Probe nicht; „Wettkampf nur Probe“, Texte „Scheibe nur aus Probe“), Toasts über der
-unteren Leiste (alle Apps, nur `packages/ui`), Messung vom VPS und die Lesson zum hängenden Build (ein Symlink in
-`apps/spiegel/tools/private` auf seinen eigenen Ordner; entfernt, `vault/incidents/symlink-loop-hangs-turbopack-build.md`).
-Beim nächsten Release gehen alle drei Apps raus, weil sich `packages/ui` geändert hat (nur die Lage der Toasts, auch in
-Ringwerk).
+**Zweites Release am 27. Oktober 2026 abends** (alle drei Apps, `main` `bc47bbd1`): Art auch für Scheiben nur aus
+Probe, Toasts über der unteren Leiste, Speichergrenzen, Holen mit Ausdruck ohne Sperre bei zehn Aufträgen (Migration
+`20261027220000_card_request_window_at`, additiv; die Brücke bekommt je Konto die zehn neuesten Aufträge). Vorher auf
+`main` der Stack mit Brücke grün. Offen danach: `memory.max` auf dem VPS ansehen; den Text „Grenze der Aufträge beim
+Holen“ ins Textbuch Spiegel (steht in `reports/2026-10-27-fetch-no-request-cap.md`).
 
 ## Wie es weitergeht
 
@@ -352,7 +348,8 @@ Ringwerk).
 Für später festgehalten: Randfall „Wertung endgültig gelöscht, Probe des Abends bleibt“: Holen öffnet die Probe, die
 Sperre der Wertung bleibt; Reiter Lage der Skriptprüfung (`vault/incidents/pruefen-reiter-lage-scroll-jump.md`, auf
 `main` 177/178); Lage des Toasts in die Skriptprüfung aufnehmen; das Tracing aus `apps/spiegel/src/lib/printouts/files.ts`
-eingrenzen (zieht lokal `uploads/` nach `.next/standalone`, conventions §9); „Als Wertung zählen“ (SF-05) für Probe,
+eingrenzen (zieht lokal `uploads/` nach `.next/standalone`, conventions §9); `printout-import` legt Aufträge an die
+Anlage an (mit dem Fenster gefahrlos); „Als Wertung zählen“ (SF-05) für Probe,
 die eigentlich die Wertung war.
 
 ## Stand
