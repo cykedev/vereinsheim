@@ -68,3 +68,21 @@ Geschichte in `vault/incidents/`.
   `textContent` als „Schwerpunktnur die Mitte …“, die Skriptprüfung verglich auf Gleichheit. Sichtbar ist der Titel
   nicht. Ein Zeichen, das nur schmückt, bekommt keinen Titel (`MpiMark decorative`), dann liest der Screenreader nur den
   Satz und die Prüfung vergleicht ihn ganz. → ARCHIVE (im Code gelöst)
+
+## 2026-10-27 · Werte und Lagen vom Ausdruck (1c)
+
+- **pdf.js gibt beim Bauen der Operatoren die Ereignisschleife nicht ab:** Bei einer präparierten Zeichnung (zwei
+  Millionen Linien) lief `getOperatorList` 6 s am Stück, ein Zeitgeber kam erst danach dran; `checkTime` zwischen den
+  Schritten und ein `Promise.race` mit Zeitgeber helfen nicht. Gemessen mit einem `setInterval`, dessen Ticks nach
+  0,8 s aufhörten. Was zur Grenze gelten soll (ID und Druckzeit), schreibt der Kindprozess deshalb vor dem riskanten
+  Schritt als eigene Zeile; die App behält es, wenn sie ihn danach beendet. → ARCHIVE (im Code gelöst, `protocol.ts`)
+- **Ein Test mit Stub gegen die Dev-Datenbank darf nur eigene Zeilen anfassen:** `rereadOutdatedPrintouts` liest alle
+  veralteten Ausdrucke; im Test mit einem Stub als Leser hätte er die echten Ausdrucke der Prod-Kopie mit erfundenen
+  Werten überschrieben. Jede Funktion, die über alle Zeilen läuft, bekommt für Tests eine Grenze auf die eigene Anlage
+  (`siteId`). → DOCUMENT (conventions §9)
+- **`vitest` prüft keine Typen, `tsc -p .` schon:** Ein Test las `shot.firedAtMs` statt `firedAt`; `undefined !== null`
+  war wahr und der Test grün, erst `next build` im Gate fiel. Vor dem Commit läuft das Gate, nicht nur die Tests der
+  Datei. → ARCHIVE (Gate deckt es)
+- **Ein Dev-Server aus dem Haupt-Checkout belegt :3002:** Die Vorschau `spiegel` hat einen festen Port; im Worktree
+  lief der eigene Server deshalb über `next dev --port 3022`. Dabei schreibt Next ein `AGENTS.md` in `apps/spiegel`
+  (untracked), das am Ende wieder weg muss. → REMEMBER (Auto-Memory, maschinenlokal)

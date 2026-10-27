@@ -253,6 +253,11 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
   blieb unbemerkt, dass Ringwerk die offenen Paarungen eines Zurückgezogenen mitzählte und den Playoff-Start sperrte
   (Beispiel: `byWhere` in `apps/ringwerk/src/lib/playoffs/actions/seeding.test.ts`).
 
+- **Tests gegen die Dev-Datenbank fassen nur eigene Zeilen an**: Die Dev-Datenbank ist eine Prod-Kopie. Eine Funktion,
+  die über alle Zeilen läuft (etwa `rereadOutdatedPrintouts`), bekommt für Tests eine Grenze auf die eigene Anlage
+  (`siteId`); mit einem Stub als Leser hätte der Test sonst echte Ausdrucke mit erfundenen Werten überschrieben
+  (aufgefallen beim Schreiben des Tests, Oktober 2026).
+
 - **Datenlage vor der Sichtprüfung abgleichen**: Bevor eine Änderung im Browser als geprüft gilt,
   die vorhandenen Dev-Daten gegen die zu prüfenden Zustände halten (z.B. „abgeschlossener
   Wettbewerb", „Liga mit Ergebnissen", „mehr Zeilen als die Vorschau"). Was die Daten nicht
