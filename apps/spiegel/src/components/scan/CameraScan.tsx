@@ -9,17 +9,20 @@ import { createQrReader, qrLink, type QrReader } from "@/lib/scan/qr"
 /** so oft liest Spiegel ein Bild aus dem Video */
 const SCAN_EVERY_MS = 200
 
+/** warum es über ein Foto weitergeht, wenn das Kamerabild nicht geht */
 const DENIED =
-  "Spiegel darf die Kamera nicht nutzen. Erlaube sie in den Einstellungen des Browsers oder nimm ein Foto auf."
+  "Spiegel darf die Kamera nicht nutzen, darum geht es mit einem Foto vom QR-Code weiter."
 const NO_CAMERA =
-  "Dieses Gerät bietet hier keine Kamera an. Nimm ein Foto auf oder füge den Link ein."
+  "Dieses Gerät bietet hier kein Kamerabild an, darum geht es mit einem Foto vom QR-Code weiter."
 const NO_CODE = "Auf dem Foto ist kein QR-Code zu erkennen. Versuche es näher und gerade von vorn."
 const NO_LINK = "Dieser QR-Code führt nicht auf einen Ausdruck."
 
 /**
- * QR-Code scannen: die Kamera (hinten) liest etwa alle 200 ms ein Bild, bis ein Code erkannt ist; dann geht sie aus und
- * der Link geht an `onLink`. Aus geht sie auch über „Kamera beenden“, beim Verlassen der Seite und wenn der Tab in den
- * Hintergrund geht. „Foto aufnehmen“ geht immer, auch ohne Kamera im Browser (ohne HTTPS gibt es keine).
+ * QR-Code scannen, ein Knopf: Er startet das Kamerabild (hinten), das etwa alle 200 ms gelesen wird, bis ein Code
+ * erkannt ist; dann geht es aus und der Link geht an `onLink`. Aus geht es auch über „Kamera beenden“, beim Verlassen der
+ * Seite und wenn der Tab in den Hintergrund geht. Gibt es kein Kamerabild (verweigert, keine Kamera, ohne HTTPS), öffnet
+ * derselbe Knopf von selbst den Weg über ein Foto (am Telefon die Kamera, am Desktop die Dateiauswahl) und sagt warum;
+ * danach öffnet er gleich das Foto.
  */
 export function CameraScan({
   onLink,
@@ -36,8 +39,16 @@ export function CameraScan({
   // während der Browser nach der Kamera fragt: kein zweiter Start, und wer inzwischen beendet, bekommt keinen Strom
   const starting = useRef(false)
   const wanted = useRef(false)
+  const photo = useRef<HTMLInputElement>(null)
   const [running, setRunning] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
+  /** warum es über das Foto geht; gesetzt, sobald das Kamerabild nicht ging */
+  const [fallback, setFallback] = useState<string | null>(null)
+
+  const toPhoto = (why: string) => {
+    setFallback(why)
+    photo.current?.click()
+  }
 
   const stop = useCallback(() => {
     wanted.current = false
@@ -72,8 +83,12 @@ export function CameraScan({
   const start = async () => {
     if (starting.current) return
     setMessage(null)
+    if (fallback) {
+      photo.current?.click()
+      return
+    }
     if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
-      setMessage(NO_CAMERA)
+      toPhoto(NO_CAMERA)
       return
     }
     starting.current = true
@@ -110,7 +125,7 @@ export function CameraScan({
       }, SCAN_EVERY_MS)
     } catch (error) {
       stop()
-      setMessage(error instanceof Error && error.name === "NotAllowedError" ? DENIED : NO_CAMERA)
+      toPhoto(error instanceof Error && error.name === "NotAllowedError" ? DENIED : NO_CAMERA)
     } finally {
       starting.current = false
     }
@@ -155,32 +170,32 @@ export function CameraScan({
             disabled={disabled}
             onClick={() => void start()}
           >
-            Kamera starten
+            QR-Code scannen
           </Button>
         )}
-        <div>
-          <input
-            id="fetch-photo"
-            type="file"
-            accept="image/*"
-            capture="environment"
-            className="peer sr-only"
-            disabled={disabled}
-            onChange={(event) => {
-              const file = event.target.files?.[0]
-              event.target.value = ""
-              if (file) void readPhoto(file)
-            }}
-          />
-          <label
-            htmlFor="fetch-photo"
-            data-camera-photo
-            className="inline-flex h-10 cursor-pointer items-center rounded-full border border-line-strong px-4 text-sm font-semibold text-primary peer-focus-visible:outline-2 peer-focus-visible:outline-ring peer-disabled:cursor-default peer-disabled:opacity-60 hover:bg-accent-wash"
-          >
-            Foto aufnehmen
-          </label>
-        </div>
+        {/* der Weg über ein Foto, nur über den Knopf geöffnet: kein zweiter Knopf daneben */}
+        <input
+          ref={photo}
+          id="fetch-photo"
+          type="file"
+          accept="image/*"
+          capture="environment"
+          tabIndex={-1}
+          aria-hidden
+          className="sr-only"
+          disabled={disabled}
+          onChange={(event) => {
+            const file = event.target.files?.[0]
+            event.target.value = ""
+            if (file) void readPhoto(file)
+          }}
+        />
       </div>
+      {fallback && (
+        <p role="status" data-camera-fallback className="text-sm text-foreground-2">
+          {fallback}
+        </p>
+      )}
       {message && (
         <p role="alert" data-camera-message className="text-sm text-destructive">
           {message}

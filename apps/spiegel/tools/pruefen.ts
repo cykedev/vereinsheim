@@ -993,9 +993,22 @@ async function fetchCards(page: Page) {
       ways.join(",") === "camera,link,upload,id",
       ways.join(",")
     )
+    // ein Knopf „QR-Code scannen“; headless gibt es kein Kamerabild, also muss er von selbst das Foto öffnen
+    await page.ev(`(() => { window.__photoClicks = 0; const click = HTMLInputElement.prototype.click
+      HTMLInputElement.prototype.click = function () { if (this.id === "fetch-photo") window.__photoClicks++; return click.call(this) }
+      return true })()`)
+    const scanButtons = await page.ev<number>(`$$("button", $('[data-fetch-way="camera"]')).length`)
+    await page.click(`$("[data-camera-start]")`)
+    const fellBack = await page.waitFor(
+      `!!$("[data-camera-fallback]") && window.__photoClicks > 0`,
+      10_000
+    )
     check(
-      "Kamera: Knöpfe da (Bedienung nicht belegt: headless keine Kamera, `qr.test.ts` liest Codes)",
-      await page.ev<boolean>(`!!$("[data-camera-start]") && !!$("[data-camera-photo]")`)
+      "Kamera: ein Knopf „QR-Code scannen“, ohne Kamerabild öffnet er das Foto und sagt warum (Bild am Gerät nicht belegt, `qr.test.ts` liest Codes)",
+      scanButtons === 1 &&
+        fellBack &&
+        (await page.ev<string>(`txt($("[data-camera-fallback]"))`)).includes("Foto vom QR-Code"),
+      await page.ev<string>(`txt($("[data-camera-fallback]"))`)
     )
 
     // ohne Eingabe: „Holen“ ist nicht gesperrt, sondern sagt am Feld, was fehlt

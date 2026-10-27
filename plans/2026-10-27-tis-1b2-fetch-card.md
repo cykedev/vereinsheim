@@ -297,6 +297,9 @@ Knöpfe der Zeile: „Nicht mehr holen“ (offen, ungefüllt), „Entfernen“ (
 | Ort | Text |
 | --- | --- |
 | Link ohne Eingabe (Feldfehler) | Füge den Link aus dem QR-Code ein. |
+| Kamera: ein Knopf (ersetzt „Kamera starten“ und „Foto aufnehmen“) | QR-Code scannen / im Kamerabild Kamera beenden |
+| Rückfall aufs Foto, Kamera verweigert | Spiegel darf die Kamera nicht nutzen, darum geht es mit einem Foto vom QR-Code weiter. |
+| Rückfall aufs Foto, kein Kamerabild (keine Kamera, ohne HTTPS) | Dieses Gerät bietet hier kein Kamerabild an, darum geht es mit einem Foto vom QR-Code weiter. |
 | Blatt „Neue Scheibe“ ohne Wahl (Feldfehler, Knopf aktiv) | Wähle eine Disziplin. |
 | Uhrzeit nicht bekannt (Liste, „–“ mit Grund) | ohne Uhrzeit |
 | Serien ohne Werte / mit Gesamtergebnis | Noch keine Serien. / Keine Serien. |

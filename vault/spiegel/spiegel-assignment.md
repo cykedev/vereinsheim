@@ -42,7 +42,8 @@ Frei getippte Namen (bei euch neben der Schützenliste üblich) ergeben nur **Vo
 Spiegel hängt dabei nicht vom Layout des Meyton-PDFs ab ([[adr-028]], Änderung vom 6. Oktober 2026).
 
 1. **Erfassen** auf der Seite „Scheibe holen“ (`/scan`, Mitte der Navigation): QR-Code mit der Kamera (natives
-   `BarcodeDetector`, sonst `jsqr` auf einem Bild aus dem Video; dazu „Foto aufnehmen“), Link einfügen oder ein
+   `BarcodeDetector`, sonst `jsqr` auf einem Bild aus dem Video; ein Knopf „QR-Code scannen“, der ohne Kamerabild von
+   selbst ein Foto öffnet und sagt warum), Link einfügen oder ein
    einzelnes PDF hochladen (alte Ausdrucke). Die Kamera gibt es nur über HTTPS oder `localhost`. Es gibt vorerst keine Liste erlaubter Adressen; es
    bleiben nur PDF, höchstens 1 MiB, 10 s und keine Weiterleitungen (SF-47, [[adr-028]], Nachtrag vom 26. Oktober
    2026). Ein Ausdruck hat rund 40 KB. Das Format beschreibt [[meyton-printout]].
