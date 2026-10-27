@@ -131,10 +131,28 @@ async function main() {
         select: { startedAt: true },
       })
       const entered = { created: 0, revised: 0, unchanged: 0 }
-      for (const seed of demoEnteredSeeds({
+      const seeds = demoEnteredSeeds({
         newestMs,
         eveningStartMs: first?.startedAt.getTime() ?? newestMs,
-      })) {
+      })
+      // Der Anker wandert mit der neuesten Scheibe: Demo-Scheiben ohne Brücke, die nicht mehr zum Satz gehören, gehen
+      // vorher weg, sonst häuften sie sich. Nur am Demo-Konto, nie an echten Daten.
+      const kept = (card: { origin: string; startedAt: Date; importKey: string | null }) =>
+        seeds.some((seed) =>
+          seed.importKey
+            ? card.importKey === seed.importKey
+            : card.origin === seed.origin && card.startedAt.getTime() === seed.startedAtMs
+        )
+      const stale = (
+        await db.card.findMany({
+          where: { ownerId: owner.id, sourceId: null },
+          select: { id: true, origin: true, startedAt: true, importKey: true },
+        })
+      ).filter((card) => !kept(card))
+      const { count: removed } = await db.card.deleteMany({
+        where: { id: { in: stale.map((card) => card.id) } },
+      })
+      for (const seed of seeds) {
         // aus Treffsicher findet der Schlüssel die Scheibe, sonst Herkunft und Beginn
         const existing =
           seed.origin === "treffsicher"
@@ -167,7 +185,7 @@ async function main() {
         entered[result.change]++
       }
       out(
-        `Demo-Scheiben in jeder Detailtiefe: neu ${entered.created}, geändert ${entered.revised}, unverändert ${entered.unchanged}`
+        `Demo-Scheiben in jeder Detailtiefe: neu ${entered.created}, geändert ${entered.revised}, unverändert ${entered.unchanged}, entfernt ${removed}`
       )
     }
   } finally {
