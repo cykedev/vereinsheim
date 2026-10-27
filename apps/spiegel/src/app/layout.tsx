@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next"
 import { Archivo, Geist, Geist_Mono } from "next/font/google"
 
 import { ThemeProvider, ThemeScript } from "@vereinsheim/ui/design2/theme"
+import { Toaster } from "@vereinsheim/ui/design2/toaster"
 
 import "./globals.css"
 
@@ -36,7 +37,10 @@ export default function RootLayout({
         <ThemeScript storageKey={THEME_KEY} />
       </head>
       <body className="bg-background font-sans text-foreground antialiased">
-        <ThemeProvider storageKey={THEME_KEY}>{children}</ThemeProvider>
+        <ThemeProvider storageKey={THEME_KEY}>
+          {children}
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   )
