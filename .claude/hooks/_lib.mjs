@@ -1,5 +1,7 @@
 // Gemeinsame Helper für die Hook-Skripte. Kein eigener Hook (Underscore-Präfix).
-import { resolve, dirname } from "node:path"
+import { readFileSync, readdirSync } from "node:fs"
+import { homedir } from "node:os"
+import { delimiter, dirname, join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 
 export async function readStdin() {
@@ -32,4 +34,48 @@ export function isDotenvPath(p) {
   if (/\.(example|sample|template)$/.test(base)) return false
   if (base === ".vereinsheim.local") return true
   return /(^|\/)\.env(\.|$)/.test(p) || /\.env$/.test(base)
+}
+
+// Höchste installierte Version, die zur Angabe aus `.nvmrc` passt ("26", "v26.12", "26.12.1").
+// `versions` sind die Ordnernamen unter `$NVM_DIR/versions/node` ("v26.12.1"). Aliase wie
+// "lts/*" oder "node" löst das nicht auf → null.
+export function pickNodeVersion(spec, versions) {
+  const want = String(spec ?? "").trim().replace(/^v/, "")
+  if (!/^\d+(\.\d+){0,2}$/.test(want)) return null
+  const prefix = want.split(".").map(Number)
+  const parse = (v) => (/^v\d+\.\d+\.\d+$/.test(v) ? v.slice(1).split(".").map(Number) : null)
+  const matches = versions
+    .map((v) => ({ v, n: parse(v) }))
+    .filter(({ n }) => n && prefix.every((p, i) => n[i] === p))
+    .sort((a, b) => b.n[1] - a.n[1] || b.n[2] - a.n[2]) // die Hauptversion ist bei allen gleich
+  return matches[0]?.v ?? null
+}
+
+// Umgebung für Kindprozesse der Hooks (pnpm, node): der bin-Ordner der Node-Version aus
+// `.nvmrc` steht vorn im PATH. Die Hooks selbst startet Claude mit dem Node, den die App
+// vorfindet; der kann älter sein, und `engine-strict` (.npmrc) lässt pnpm dann abbrechen.
+// Ohne passende Version bleibt die Umgebung, wie sie ist, und `note` sagt das.
+export function nodeEnv(root, { env = process.env, home = homedir() } = {}) {
+  let spec
+  try {
+    spec = readFileSync(join(root, ".nvmrc"), "utf8").trim()
+  } catch {
+    return { env }
+  }
+  const dir = join(env.NVM_DIR || join(home, ".nvm"), "versions", "node")
+  let versions = []
+  try {
+    versions = readdirSync(dir)
+  } catch {
+    // kein nvm → Rückfall unten
+  }
+  const version = pickNodeVersion(spec, versions)
+  if (!version) {
+    return {
+      env,
+      note: `[hooks] Kein Node zu .nvmrc (${spec}) unter ${dir}; pnpm und node laufen mit dem Node aus PATH.`,
+    }
+  }
+  const bin = join(dir, version, "bin")
+  return { env: { ...env, PATH: env.PATH ? `${bin}${delimiter}${env.PATH}` : bin } }
 }

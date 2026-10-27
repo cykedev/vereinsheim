@@ -23,6 +23,10 @@ Active LTS). Umgesetzt:
 
 - **Node 26** in `Dockerfile`, `.nvmrc` und `engines`; `@types/node` 26 folgt der Laufzeit. `node:26-alpine` bringt kein
   corepack mehr, das Image installiert es über npm.
+  Seit `engine-strict` (`.npmrc`) bricht pnpm unter einem älteren Node ab. Die Hooks der Harness startet die
+  Desktop-App mit ihrem eigenen Node; ihre Kindprozesse (`pnpm check`, eslint, `vault-lint`) bekommen deshalb den
+  bin-Ordner der Version aus `.nvmrc` vorn in den PATH (`nodeEnv` in `.claude/hooks/_lib.mjs`). Die Hooks selbst nutzen
+  nur Builtins und laufen auch unter Node 20.
 - **Alle Patch- und Minor-Versionen** (Next 16.4.3, Prisma 7.10.1, React 19.3.1, Zod 4.6.7 …), das Lockfile frisch
   aufgelöst, damit die transitiven Fixes ankommen. Wer das wiederholt: `pnpm-lock.yaml` **und** alle `node_modules`
   löschen, sonst übernimmt pnpm die alten Auflösungen aus `node_modules/.pnpm/lock.yaml`.

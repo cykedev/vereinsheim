@@ -4,6 +4,7 @@
 // surfacen (exit 2 = sichtbar, der Edit bleibt aber bestehen). Fail-open sonst.
 import { readFileSync } from "node:fs"
 import { execSync } from "node:child_process"
+import { nodeEnv, repoRoot } from "./_lib.mjs"
 
 let input
 try {
@@ -22,11 +23,14 @@ if (!m) process.exit(0) // nur TS/TSX-Quelldateien der Apps und Pakete (alle mit
 
 const dir = m[2] // apps/<app> bzw. packages/<paket>
 const rel = m[3] // pfad relativ zur App- bzw. Paket-Wurzel
+const { env, note } = nodeEnv(repoRoot(import.meta.url))
+if (note) console.error(note)
 try {
   execSync(`pnpm exec eslint ${JSON.stringify(rel)}`, {
     cwd: `${m[1]}${dir}`,
     stdio: "pipe",
     timeout: 90000,
+    env,
   })
   process.exit(0) // sauber
 } catch (e) {

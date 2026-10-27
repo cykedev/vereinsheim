@@ -8,7 +8,7 @@ import { execSync } from 'node:child_process';
 import { createConnection } from 'node:net';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { readInput } from './_lib.mjs';
+import { nodeEnv, readInput, repoRoot } from './_lib.mjs';
 
 // harness:gate-fast — das Turn-Gate. `true` wäre ein No-op; hier: die volle 5er-Gate.
 const GATE = { command: 'pnpm check' };
@@ -39,24 +39,26 @@ function dbReachable({ host, port }, timeoutMs = 2000) {
 // Liefert { block, message?, note? }. block=true → Gates rot, Turn-Ende halten.
 // note = nicht-blockierender Hinweis (vom Dispatcher + Standalone-Runner ausgegeben).
 export async function evaluate() {
+	const { env, note: nodeNote } = nodeEnv(repoRoot(import.meta.url));
+	const withNodeNote = (r) => (nodeNote ? { ...r, note: [r.note, nodeNote].filter(Boolean).join('\n') } : r);
 	try {
 		// Vorab: läuft die Dev-DB? Wenn nicht, sind die DB-Tests zwangsläufig rot → fail-open.
 		if (!(await dbReachable(DEV_DB))) {
-			return {
+			return withNodeNote({
 				block: false,
 				note: `[stop-gate] Dev-Postgres (${DEV_DB.host}:${DEV_DB.port}) nicht erreichbar — Gate ÜBERSPRUNGEN (fail-open). Vor dem Commit grün ziehen: docker compose -f docker-compose.dev.yml up -d && pnpm check`,
-			};
+			});
 		}
-		execSync(GATE.command, { stdio: 'pipe', timeout: 600000 });
-		return { block: false };
+		execSync(GATE.command, { stdio: 'pipe', timeout: 600000, env });
+		return withNodeNote({ block: false });
 	} catch (e) {
-		if (e.code === 'ENOENT') return { block: false };
+		if (e.code === 'ENOENT') return withNodeNote({ block: false });
 		const out = ((e.stdout && e.stdout.toString()) || '') + ((e.stderr && e.stderr.toString()) || '');
 		// Netz: DB bricht mitten im Lauf weg (Reachability-Check war grün) → weiterhin fail-open.
 		if (/ECONNREFUSED|SASL|password authentication|could not connect|Connection terminated|getaddrinfo|Can't reach database/i.test(out)) {
-			return { block: false, note: '[stop-gate] Dev-Postgres während des Laufs nicht erreichbar — Gate übersprungen (fail-open). Starte: docker compose -f docker-compose.dev.yml up -d' };
+			return withNodeNote({ block: false, note: '[stop-gate] Dev-Postgres während des Laufs nicht erreichbar — Gate übersprungen (fail-open). Starte: docker compose -f docker-compose.dev.yml up -d' });
 		}
-		return { block: true, message: `[stop-gate] Gates sind ROT — bitte grün ziehen, bevor du aufhörst:\n${out.slice(-2200)}` };
+		return withNodeNote({ block: true, message: `[stop-gate] Gates sind ROT — bitte grün ziehen, bevor du aufhörst:\n${out.slice(-2200)}` });
 	}
 }
 

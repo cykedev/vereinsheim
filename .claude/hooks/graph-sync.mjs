@@ -7,14 +7,14 @@
 import { spawnSync } from 'node:child_process';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { readInput, repoRoot } from './_lib.mjs';
+import { nodeEnv, readInput, repoRoot } from './_lib.mjs';
 
 // Liefert { block, message? }. block=true → Vault invalide, Turn-Ende halten.
 // Fail-open (block:false) bei jedem Infra-Fehler (kein node / Timeout / Spawn-Fehler).
 export function evaluate() {
 	try {
 		const ROOT = repoRoot(import.meta.url);
-		const res = spawnSync('node', ['.claude/vault-lint.mjs'], { cwd: ROOT, encoding: 'utf8', timeout: 60000 });
+		const res = spawnSync('node', ['.claude/vault-lint.mjs'], { cwd: ROOT, encoding: 'utf8', timeout: 60000, env: nodeEnv(ROOT).env });
 		if (res.error) return { block: false };
 		if (res.status === 0) return { block: false };
 		const out = `${res.stdout ?? ''}${res.stderr ?? ''}`.trim();
