@@ -114,7 +114,7 @@ Vorgeschlagener Schnitt, endgültig im jeweiligen `/plan`:
     Schusszahl in Versatz und Richtung über Zeiträume ein, zusammen mit den Scheiben mit Lage je Schuss. Für die
     Streuung (Streukreis, R50, σ, engste Gruppe) zählt sie nicht; die Grundlage nennt solche Scheiben. Ein Urteil
     („versetzt“) braucht die Streuung einzelner Schüsse; aus Summen allein sagt Spiegel die Lage ohne Urteil. Auf der
-    Seite der Scheibe steht die Mitte als Kreuz mit „nur Trefferlage vom Ausdruck“.
+    Seite der Scheibe steht die Mitte als Schwerpunkt (`MpiMark`, der geviertelte Kreis) mit „nur Trefferlage vom Ausdruck“.
   - **Wörter der Herkunft** (leise im Kopf der Scheibe, Filter in der Liste statt „Nur PDF“): „gemessen“ (Brücke),
     „vom Ausdruck“ (Scan, Upload), „eingetragen“ (von Hand und aus Treffsicher). Gespeichert bleibt die Herkunft
     „Treffsicher“ getrennt, damit die Übernahme sich wiederholen und Dubletten finden kann; sichtbar und änderbar ist so
@@ -128,7 +128,7 @@ Vorgeschlagener Schnitt, endgültig im jeweiligen `/plan`:
     die Skriptprüfung. 1a-1 läuft parallel zu 1b-1.
   - **Ansichten (1a-2), nach Skizzen mit dem User am 27. Oktober 2026:** Seite einer Scheibe je Detailtiefe (nur
     Serien-Summen: große Zahl, Ø je Schuss, Schusszahl und Grund, Serien als Kacheln ohne kleine Scheiben, die Analyse
-    sagt in einem Satz, was fehlt; nur Gesamtergebnis: große Zahl mit Grund, Trefferlage als goldenes Kreuz auf der
+    sagt in einem Satz, was fehlt; nur Gesamtergebnis: große Zahl mit Grund, Trefferlage als Schwerpunkt (`MpiMark`) auf der
     Scheibe mit „nur die Mitte der Schüsse, keine Streuung“; wartet auf die Anlage: „–“ mit Grund, Platz für PDF und ID
     vom Ausdruck). Herkunft und Ort leise im Kopf. In der Liste die Herkunft nur bei „eingetragen“ und „vom Ausdruck“,
     nie „gemessen“; „–“ immer mit Grund. Im Fortschritt und auf Start die Grundlage nur, wenn nicht alle Scheiben
