@@ -267,8 +267,8 @@ Bedienung prüft `pnpm --filter spiegel pruefen`.
   - Admin sieht nur ein Admin: in der Seitenleiste als letzter Eintrag, auf dem Telefon in Profil.
   - `sidebarFooter`: ein Platz unten in der Seitenleiste (`mt-auto`), neben der Navigation, nicht in ihr; für
     Einstellungen wie die Darstellung. Auf dem Telefon gehört eine Einstellung nach Profil.
-  - Die Wurzel setzt `--app-bar` (72 px mit unterer Leiste, sonst 0 px). `ReturnPill`, der Abstand der Seite und
-    `useTargetFit` richten sich danach.
+  - `design2.css` setzt `--app-bar` (72 px mit unterer Leiste, sonst 0 px) an `:root`, solange der Rahmen da ist.
+    `ReturnPill`, der Abstand der Seite, `useTargetFit` und die Toasts richten sich danach.
   - Der Inhalt ist `<main>` und steht im DOM vor der unteren Leiste (Fokus-Reihenfolge); Seiten setzen kein eigenes
     `<main>`. Die schmale Leiste und der Inhalt halten im Querformat den sicheren Rand frei.
   - Ist Admin offen, ist auf dem Telefon Profil markiert. Schrift nicht unter `text-xs`, auch in den Leisten.

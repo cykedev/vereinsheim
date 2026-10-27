@@ -127,8 +127,8 @@ und über `nav/navigate`.
     `ADMIN_SECTIONS`), so ist jeder zwei Tipps entfernt. Jede Admin-Seite trägt dieselben Reiter (`AdminTabs`), auch
     Konto, Disziplin und Liste; dort ist der Reiter ihres Bereichs markiert und führt zurück. Listen und Disziplinen
     sind gleich gebaut: Liste in Abschnitten, jede Zeile führt auf ihr Blatt, dort Einstellen mit den Folgen.
-  - Platz der Leiste: `--app-bar` (72 px). Die Pille „Zurück zu …“ (`ReturnPill`), der Abstand der Seite und die Größe
-    der Scheibe richten sich danach.
+  - Platz der Leiste: `--app-bar` (72 px), gesetzt in `design2.css` an `:root`, solange der Rahmen da ist. Die Pille
+    „Zurück zu …“ (`ReturnPill`), der Abstand der Seite, die Größe der Scheibe und die Toasts richten sich danach.
   - Der Inhalt ist `<main>` und steht vor der unteren Leiste; im Querformat bleibt der sichere Rand frei. Die Leisten
     haben keine Schrift unter `text-xs`.
   - **Darstellung** (System, Hell, Dunkel) ist eine Einstellung der App: in Profil, am Desktop zusätzlich unten in der
