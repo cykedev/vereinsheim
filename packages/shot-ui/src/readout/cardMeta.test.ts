@@ -37,6 +37,20 @@ describe("Metazeile im Kopf einer Scheibe", () => {
     expect(cardMeta(card, TZ)[0]).toBe("Training")
   })
 
+  it("Herkunft und Ort nach der Liste, ohne Ort ohne Teil", () => {
+    const card = periodCard("e", 0, [100], { startedAtMs: AT })
+    expect(cardMeta(card, TZ, null, { provenance: "entered", place: "Vereinsheim Nord" })).toEqual([
+      "Training",
+      "eingetragen",
+      "Vereinsheim Nord",
+      "Sa 26.09.2026",
+      "10:30",
+    ])
+    expect(cardMeta(card, TZ, { name: "RWK_LP" }, { provenance: "measured", place: null })).toEqual(
+      ["Training", "Liste RWK_LP", "gemessen", "Sa 26.09.2026", "10:30"]
+    )
+  })
+
   it("die Liste aus Meyton nach der Art, ohne Liste nichts", () => {
     const card = periodCard("w", 0, [100], { kind: "competition", startedAtMs: AT })
     expect(cardMeta(card, TZ, { name: "RWK_LP" })).toEqual([

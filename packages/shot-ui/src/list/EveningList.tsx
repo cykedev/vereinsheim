@@ -12,6 +12,7 @@ import {
 } from "@vereinsheim/lib/format"
 import { cn } from "@vereinsheim/lib/utils"
 
+import { Dash } from "../Dash"
 import { quietProvenance } from "../detail"
 import { formatSigned, formatValue } from "../format"
 import { JUMP_BAR } from "@vereinsheim/ui/design2/bar"
@@ -31,16 +32,6 @@ const SCORING_IN: Readonly<Record<Scoring, string>> = {
 const WIDE = "hidden @min-[32rem]:table-cell"
 // am Telefon enger: zwei Spalten für die Wertungen brauchen den Platz; ab 32rem breiter
 const CELL = "px-1 py-2 @min-[32rem]:px-2"
-
-/** „–“ für eine Zahl ohne Wert, mit ihrem Grund als Tooltip und für Screenreader; ohne Grund nur der Strich */
-function Dash({ reason }: { reason?: string }) {
-  if (!reason) return <>–</>
-  return (
-    <span title={reason}>
-      –<span className="sr-only">{` ${reason}`}</span>
-    </span>
-  )
-}
 
 /** Mittag des Tages: das Datum eines Abends, unabhängig von der Zeitumstellung */
 const noonOf = (day: string, timeZone: string) =>

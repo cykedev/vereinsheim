@@ -44,6 +44,8 @@ export interface TargetViewProps {
    * vom alten herüberzugleiten. Ohne Angabe gilt das Scheibenbild als Karte.
    */
   viewKey?: string
+  /** Trefferlage als Summe: goldenes Kreuz, nur die Mitte, keine Streuung */
+  summaryCenter?: { xUm: number; yUm: number } | null
   className?: string
 }
 
@@ -75,6 +77,7 @@ export function TargetView({
   others = "dim",
   popIndex = null,
   viewKey,
+  summaryCenter = null,
   className,
 }: TargetViewProps) {
   const [width, measure] = useElementWidth()
@@ -103,7 +106,7 @@ export function TargetView({
   const training = shots.length > 0 && shots.every(isProbeShot)
   const label = `${target.label}: ${shots.length} ${
     training ? "Probeschüsse als Training" : "Wertungsschüsse"
-  }${selectionText(state)}`
+  }${selectionText(state)}${summaryCenter ? ", Mitte der Schüsse als Kreuz" : ""}`
 
   // die Scheibe zeigt das Probe-Eck, wenn alle Schüsse der Auswahl aus der Probe stammen (Training nur aus Probe)
   const shown = shots.filter((_, i) => selectedAt(i))
@@ -281,6 +284,32 @@ export function TargetView({
               strokeDasharray="5 3"
               {...HAIR}
             />
+          </g>
+        )}
+        {summaryCenter && (
+          // Trefferlage als Summe: ein goldenes Kreuz mit hellem Saum, so groß wie der Schwerpunkt auf dem Bildschirm
+          <g data-summary-center aria-hidden="true">
+            {[
+              `M${mm(summaryCenter.xUm) - sizes.mpiRadius * 1.5} ${-mm(summaryCenter.yUm)}h${sizes.mpiRadius * 3}`,
+              `M${mm(summaryCenter.xUm)} ${-mm(summaryCenter.yUm) - sizes.mpiRadius * 1.5}v${sizes.mpiRadius * 3}`,
+            ].map((d) => (
+              <g key={d}>
+                <path
+                  d={d}
+                  stroke="var(--overlay-halo)"
+                  strokeWidth={5}
+                  strokeLinecap="round"
+                  {...HAIR}
+                />
+                <path
+                  d={d}
+                  stroke="var(--gold)"
+                  strokeWidth={2.5}
+                  strokeLinecap="round"
+                  {...HAIR}
+                />
+              </g>
+            ))}
           </g>
         )}
         {center && (

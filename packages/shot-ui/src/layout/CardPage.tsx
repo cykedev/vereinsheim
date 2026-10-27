@@ -29,8 +29,8 @@ export interface CardPageProps {
   /** Abschnitte darunter in voller Breite (die Analyse) */
   below: readonly Section[]
   /**
-   * ohne Schüsse: statt Ergebnis, Serien, Ablesung, Abschnitten und Sprungleiste nur dieser Hinweis neben der
-   * Scheibe (`NoShots`), keine leeren Gerüste
+   * ohne Einzelschüsse: statt Ergebnis, Serien, Ablesung, Abschnitten und Sprungleiste nur dieser Kasten neben der
+   * Scheibe (`NoShots`, `CardSummary`), keine leeren Gerüste
    */
   empty?: ReactNode
   className?: string

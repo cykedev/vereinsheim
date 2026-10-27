@@ -287,3 +287,27 @@ describe("TargetView: Probe und Scheibe", () => {
     expect(render()).toMatch(/<circle[^>]*r="2.5"[^>]*stroke-dasharray="3 3"/)
   })
 })
+
+describe("TargetView: Trefferlage als Summe", () => {
+  const empty = (summaryCenter?: { xUm: number; yUm: number } | null) =>
+    renderToStaticMarkup(
+      createElement(TargetView, {
+        target: LP_10M,
+        shots: [],
+        state: initialViewState(),
+        summaryCenter,
+      })
+    )
+
+  it("ein goldenes Kreuz an der Mitte, im Namen der Scheibe genannt", () => {
+    const html = empty({ xUm: 1400, yUm: -900 })
+    expect(html).toContain('data-summary-center="true"')
+    expect(html).toMatch(/stroke="var\(--gold\)"/)
+    expect(html).toMatch(/aria-label="[^"]*Mitte der Schüsse als Kreuz"/)
+  })
+
+  it("ohne Trefferlage kein Kreuz", () => {
+    expect(empty()).not.toContain("data-summary-center")
+    expect(render()).not.toContain("data-summary-center")
+  })
+})
