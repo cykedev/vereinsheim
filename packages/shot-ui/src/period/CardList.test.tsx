@@ -88,3 +88,32 @@ describe("Liste der Scheiben", () => {
     expect(html.replace(/<a[^>]*data-show-all[^]*?<\/a>/, "")).toBe(render(4))
   })
 })
+
+describe("Liste der Scheiben: Grund ohne Wert", () => {
+  it("„–“ mit dem Grund, der auch in der Spalte des Abstands steht", () => {
+    const cards = [periodCard("a", 3, [90, 91]), periodCard("s", 2, [])]
+    const model = periodModel({
+      items: cards.map(item),
+      state: initialPeriodState({ family: "lg-10m" }),
+      nowMs: NOW,
+      timeZone: TZ,
+      named: [],
+    })
+    const html = renderToStaticMarkup(
+      createElement(CardList, {
+        cards: model.cards,
+        values: model.values,
+        deltas: model.deltas,
+        metric,
+        timeZone: TZ,
+        chosen: null,
+        reasons: { s: "wartet auf die Anlage" },
+      })
+    )
+    const row = html.slice(html.indexOf('data-card-row="s"'))
+    expect(row.slice(0, row.indexOf("</tr>"))).toContain(
+      '<span title="wartet auf die Anlage">–<span class="sr-only"> wartet auf die Anlage</span></span>'
+    )
+    expect(row.slice(0, row.indexOf("</tr>"))).not.toContain("ohne Wert")
+  })
+})

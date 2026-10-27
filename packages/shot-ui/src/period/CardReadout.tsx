@@ -6,6 +6,7 @@ import type { TargetImage } from "@vereinsheim/shot-core/targets"
 import { formatDateOnly, formatShortDay } from "@vereinsheim/lib/format"
 import { cn } from "@vereinsheim/lib/utils"
 
+import { Dash } from "../Dash"
 import { formatSigned, formatValue, unitText } from "../format"
 import { HelpButton } from "../help/HelpButton"
 import { MiniTarget } from "../target/MiniTarget"
@@ -38,6 +39,8 @@ export interface CardReadoutProps {
   renderLink: RenderItemLink
   /** „?“ am Abstand zum Schnitt davor; ohne kein „?“ */
   onHelp?: (id: string) => void
+  /** warum die Scheibe keinen Wert der Kennzahl hat (`PeriodModel.reasons`); ohne „ohne Wert“ */
+  reason?: string | null
   className?: string
 }
 
@@ -78,6 +81,7 @@ export function CardReadout({
   chosen,
   renderLink,
   onHelp,
+  reason = null,
   className,
 }: CardReadoutProps) {
   const words = usePeriodWords()
@@ -97,7 +101,7 @@ export function CardReadout({
       <div className={cn("grid items-start gap-4", target && "grid-cols-[minmax(0,1fr)_96px]")}>
         <div className="grid min-w-0 content-start gap-1 text-[13px]">
           <p className="font-display text-[1.6rem] leading-none font-bold tabular-nums">
-            {value ? formatValue(value.value, metric.decimals) : "–"}
+            {value ? formatValue(value.value, metric.decimals) : <Dash reason={reason} />}
             {value && unit && (
               <small className="ml-1.5 font-sans text-[13px] font-medium text-muted-foreground">
                 {unit}
@@ -105,7 +109,7 @@ export function CardReadout({
             )}
           </p>
           <p className="text-muted-foreground">
-            {value ? metric.label : `${metric.label}: ohne Wert`}
+            {value ? metric.label : `${metric.label}: ${reason ?? "ohne Wert"}`}
           </p>
           <p>{`${card.shots} Schuss${card.probeOnly ? " (Probe als Training)" : ""}`}</p>
           {value && (
@@ -163,17 +167,18 @@ export function CardLine({
   timeZone,
   renderLink,
   onHelp,
+  reason = null,
   className,
 }: Pick<
   CardReadoutProps,
-  "card" | "value" | "delta" | "metric" | "timeZone" | "renderLink" | "onHelp"
+  "card" | "value" | "delta" | "metric" | "timeZone" | "renderLink" | "onHelp" | "reason"
 > & {
   className?: string
 }) {
   const words = usePeriodWords()
   const parts = [
     formatShortDay(new Date(card.startedAtMs), timeZone),
-    value ? formatValue(value.value, metric.decimals) : "ohne Wert",
+    value ? formatValue(value.value, metric.decimals) : (reason ?? "ohne Wert"),
     ...(value && delta ? [`${formatSigned(delta.delta, metric.decimals)} zum Schnitt davor`] : []),
   ]
   return (

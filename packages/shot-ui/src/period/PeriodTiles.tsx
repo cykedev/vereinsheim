@@ -8,6 +8,7 @@ import { HelpButton } from "../help/HelpButton"
 import type { PeriodTile } from "./model"
 import { usePeriodWords } from "./PeriodWords"
 import { verdictText } from "./sentence"
+import { basisLine } from "./basis"
 import { countOf } from "./words"
 
 export interface PeriodTilesProps {
@@ -75,7 +76,13 @@ export function PeriodTiles({ tiles, compareLabel, onHelp, className }: PeriodTi
                 )}
               </span>
               <span className="text-[12.5px] leading-snug text-muted-foreground">
-                {tile.value === null ? `keine ${words.one} mit Wert` : countOf(tile.n, words)}
+                {tile.basis ? (
+                  <span data-basis>{basisLine(tile.basis, words)}</span>
+                ) : tile.value === null ? (
+                  `keine ${words.one} mit Wert`
+                ) : (
+                  countOf(tile.n, words)
+                )}
               </span>
               {other && compareLabel && (
                 <span data-tile-compare className="text-[12.5px] leading-snug text-foreground-2">

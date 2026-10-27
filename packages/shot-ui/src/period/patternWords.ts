@@ -121,7 +121,16 @@ export function basisText(
   pattern: Pick<PeriodPattern, "shots" | "cards" | "cardsWithoutPosition">
 ): string {
   const without = pattern.cardsWithoutPosition
-  return `Über ${formatInteger(pattern.shots)} Schuss aus ${cardsText(pattern.cards - without)}${without ? `, ${formatInteger(without)} ohne Lage` : ""}.`
+  return `Über ${formatInteger(pattern.shots)} Schuss aus ${cardsText(pattern.cards - without)}${without ? `, ${formatInteger(without)} ohne Lage je Schuss` : ""}.`
+}
+
+/**
+ * der Satz zur Mitte im Trefferbild: Zählen Scheiben nur mit ihrer Trefferlage als Summe, sagt er, wie viele (Versatz
+ * und Richtung, nie Streuung)
+ */
+export function centerNote(summaryCards: number): string {
+  if (!summaryCards) return CENTER_NOTE
+  return `${CENTER_NOTE} ${summaryCards === 1 ? "1 Scheibe zählt" : `${formatInteger(summaryCards)} Scheiben zählen`} darin nur mit ihrer Mitte.`
 }
 
 /** Notiz der Karte „Form über mehrere Scheiben“ */

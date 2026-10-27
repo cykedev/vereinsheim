@@ -251,3 +251,45 @@ describe("Bezeichnungen der Rekorde", () => {
     expect(rows.find((r) => r.key === "R11:20")?.value).toBe("1 Ring")
   })
 })
+
+describe("Grundlage und Herkunft über den Zeitraum", () => {
+  const SERIES = {
+    series: [1, 2, 3, 4].map((series) => ({ series, shots: 10, rings: 104, decimalTenths: 1080 })),
+    total: null,
+    center: null,
+  }
+  const entered = {
+    ...item({ ...periodCard("s", 5, []), sums: SERIES }),
+    provenance: "entered" as const,
+  }
+  const m = periodModel({
+    items: [...now.map(item), entered],
+    state: initialPeriodState({ family: "lg-10m" }),
+    nowMs: NOW,
+    timeZone: TZ,
+    named: [],
+  })
+
+  it("eine Kachel, die nicht über alle rechnet, nennt ihre Grundlage statt der Zahl", () => {
+    const html = renderToStaticMarkup(h(PeriodTiles, { tiles: m.tiles, compareLabel: null }))
+    const sigma = html.slice(html.indexOf('data-period-tile="group.sigma"'))
+    expect(sigma).toMatch(
+      /^[^]*?<span data-basis="true">über 5 von 6 Scheiben · 1 ohne Lage je Schuss<\/span>/
+    )
+    const mean = html.slice(
+      html.indexOf('data-period-tile="result.decimalMean"'),
+      html.indexOf('data-period-tile="result.tensRate"')
+    )
+    expect(mean).not.toContain("data-basis")
+    expect(mean).toContain("6 Scheiben")
+  })
+
+  it("ein Rekord aus einer eingetragenen Scheibe nennt die Herkunft leise", () => {
+    const html = renderToStaticMarkup(
+      h(PeriodInsights, { model: m, scoring: "decimal", timeZone: TZ, explain: false })
+    )
+    const row = html.slice(html.indexOf('data-record-card="s"'))
+    expect(row.slice(0, row.indexOf("</li>"))).toContain(" · eingetragen")
+    expect(html).not.toContain("gemessen")
+  })
+})

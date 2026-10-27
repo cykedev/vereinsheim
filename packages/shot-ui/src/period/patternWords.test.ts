@@ -7,6 +7,8 @@ import { emptyPeriodText } from "./sentence"
 import {
   axisWords,
   basisText,
+  CENTER_NOTE,
+  centerNote,
   outlierWords,
   outsideText,
   pictureWords,
@@ -104,9 +106,19 @@ describe("Worte zum Trefferbild", () => {
     )
   })
 
+  it("die Mitte: Scheiben nur mit ihrer Trefferlage als Summe zählen darin, und der Satz sagt wie viele", () => {
+    expect(centerNote(0)).toBe(CENTER_NOTE)
+    expect(centerNote(1)).toBe(
+      "Der geviertelte Kreis ist die Mitte aller Schüsse. 1 Scheibe zählt darin nur mit ihrer Mitte."
+    )
+    expect(centerNote(4)).toBe(
+      "Der geviertelte Kreis ist die Mitte aller Schüsse. 4 Scheiben zählen darin nur mit ihrer Mitte."
+    )
+  })
+
   it("Grundlage mit und ohne Scheiben ohne Lage", () => {
     expect(basisText({ shots: 1240, cards: 38, cardsWithoutPosition: 7 })).toBe(
-      "Über 1.240 Schuss aus 31 Scheiben, 7 ohne Lage."
+      "Über 1.240 Schuss aus 31 Scheiben, 7 ohne Lage je Schuss."
     )
     expect(basisText({ shots: 40, cards: 1, cardsWithoutPosition: 0 })).toBe(
       "Über 40 Schuss aus 1 Scheibe."

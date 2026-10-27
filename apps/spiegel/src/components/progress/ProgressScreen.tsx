@@ -371,6 +371,7 @@ export function ProgressScreen({
                 card={reading.card}
                 value={readingValue}
                 delta={model.deltas.get(reading.card.id)}
+                reason={model.reasons[reading.card.id] ?? null}
                 metric={model.metric}
                 timeZone={timeZone}
                 renderLink={cardLink}
@@ -446,6 +447,7 @@ export function ProgressScreen({
                 value={readingValue}
                 point={reading.point}
                 delta={model.deltas.get(reading.card.id)}
+                reason={model.reasons[reading.card.id] ?? null}
                 metric={model.metric}
                 timeZone={timeZone}
                 chosen={reading.chosen}
@@ -472,6 +474,7 @@ export function ProgressScreen({
                   timeZone={timeZone}
                   chosen={chosen}
                   onChoose={chooseFromList}
+                  reasons={model.reasons}
                   showAll={(props) => <RouteLink route={listFromProgress(here)} {...props} />}
                 />
               </div>

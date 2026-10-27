@@ -9,7 +9,7 @@ import { CornerButton, OUTLINES_ICON } from "../target/TargetControls"
 import { HeatLegend, PatternTarget, type PatternView } from "./PatternTarget"
 import {
   basisText,
-  CENTER_NOTE,
+  centerNote,
   LEGEND_OUTLINES,
   LEGEND_POINTS,
   OUTLINES_LABEL,
@@ -140,7 +140,7 @@ function Ready({
           {[
             basisText(pattern),
             pattern.picture.outside ? outsideText(pattern.picture.outside) : "",
-            CENTER_NOTE,
+            centerNote(pattern.summaryCards),
           ]
             .filter(Boolean)
             .join(" ")}

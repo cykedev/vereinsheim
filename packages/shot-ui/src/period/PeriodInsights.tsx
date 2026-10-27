@@ -4,6 +4,7 @@ import type { Scoring } from "@vereinsheim/shot-core/metrics"
 import { formatDateOnly } from "@vereinsheim/lib/format"
 import { cn } from "@vereinsheim/lib/utils"
 
+import { quietProvenance } from "../detail"
 import { AnalysisCard, Note } from "../analysis/parts"
 import type { PeriodModel } from "./model"
 import { useHelpTexts } from "../help/HelpTexts"
@@ -14,7 +15,7 @@ import { NEW_RECORDS, recordRows, type RecordRow } from "./records"
 export { recordRows, type RecordRow } from "./records"
 
 export interface PeriodInsightsProps {
-  model: Pick<PeriodModel, "records" | "cards">
+  model: Pick<PeriodModel, "records" | "cards"> & Partial<Pick<PeriodModel, "recordProvenance">>
   scoring: Scoring
   timeZone: string
   explain: boolean
@@ -64,6 +65,8 @@ export function RecordsCard({
   const words = usePeriodWords()
   const texts = useHelpTexts()
   const rows = recordRows(model.records, scoring, words)
+  // die Herkunft leise wie in der Liste, nie „gemessen“
+  const provenanceOf = (id: string) => quietProvenance(model.recordProvenance?.[id])
   const inRange = rows.filter((row) => inPeriod.has(row.record.cardId))
   const recent = inRange.slice(0, NEW_RECORDS)
   const row = (r: RecordRow) => {
@@ -75,6 +78,7 @@ export function RecordsCard({
         <span className="font-semibold tabular-nums">{r.value}</span>
         <span className="text-muted-foreground">
           {` · ${date(r.record.atMs)}${r.record.detail ? ` · ${r.record.detail}` : ""}`}
+          {provenanceOf(r.record.cardId) && ` · ${provenanceOf(r.record.cardId)}`}
         </span>
       </span>
     )

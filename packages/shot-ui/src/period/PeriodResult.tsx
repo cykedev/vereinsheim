@@ -5,13 +5,15 @@ import { cn } from "@vereinsheim/lib/utils"
 
 import { formatSigned, formatValue } from "../format"
 import { HelpButton } from "../help/HelpButton"
+import { basisLine } from "./basis"
 import type { PeriodModel } from "./model"
 import { usePeriodWords } from "./PeriodWords"
 import { verdictText } from "./sentence"
 import { countOf } from "./words"
 
 export interface PeriodResultProps {
-  model: Pick<PeriodModel, "summary" | "comparison" | "compareRange" | "compareShared">
+  model: Pick<PeriodModel, "summary" | "comparison" | "compareRange" | "compareShared"> &
+    Partial<Pick<PeriodModel, "basis">>
   timeZone: string
   onHelp?: (id: string) => void
   className?: string
@@ -20,10 +22,11 @@ export interface PeriodResultProps {
 /**
  * Ergebnis-Box der Seite eines Zeitraums, wie `CardResult`: Ø je Schuss über alle Wertungsschüsse ([[adr-034]])
  * groß, darunter Scheiben und Wertungsschüsse und die beste Scheibe unter der häufigsten Schusszahl; mit Vergleich
- * der Unterschied mit Urteil („deutlich“ nur neben einem Urteil). Auf dem Telefon im Kopf, ab 768 px als Box.
+ * der Unterschied mit Urteil („deutlich“ nur neben einem Urteil). Zählen nicht alle Scheiben, nennt eine Zeile die
+ * Grundlage. Auf dem Telefon im Kopf, ab 768 px als Box.
  */
 export function PeriodResult({ model, timeZone, onHelp, className }: PeriodResultProps) {
-  const { summary, comparison, compareRange, compareShared } = model
+  const { summary, comparison, compareRange, compareShared, basis } = model
   const best = summary.best
   const words = usePeriodWords()
   return (
@@ -45,6 +48,21 @@ export function PeriodResult({ model, timeZone, onHelp, className }: PeriodResul
             ? `${countOf(summary.cards, words)} · ${formatInteger(summary.shots)} Wertungsschüsse`
             : `keine ${words.one} mit Wert`}
         </p>
+        {basis && (
+          <p
+            data-period-basis
+            className="flex items-center gap-1.5 text-[13px] text-muted-foreground"
+          >
+            {basisLine(basis, words)}
+            {onHelp && (
+              <HelpButton
+                label="Grundlage und Herkunft"
+                helpId="grundlage"
+                onClick={() => onHelp("grundlage")}
+              />
+            )}
+          </p>
+        )}
         {best && (
           <p data-best className="text-[13px]">
             <span className="text-muted-foreground">{`beste ${words.one} zu ${best.shots} Schuss `}</span>

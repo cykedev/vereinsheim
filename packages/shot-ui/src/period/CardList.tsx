@@ -5,6 +5,7 @@ import { formatShortDate } from "@vereinsheim/lib/format"
 import { cn } from "@vereinsheim/lib/utils"
 import { useId, useMemo, useState } from "react"
 
+import { Dash } from "../Dash"
 import { formatSigned, formatValue } from "../format"
 import { KindMark } from "../list/KindMark"
 import type { RenderLink } from "./links"
@@ -29,6 +30,8 @@ export interface CardListProps {
    * Zeitraum, `listFromProgress`); ohne keinen
    */
   showAll?: RenderLink
+  /** je Scheibe ohne Wert der Grund (`PeriodModel.reasons`); ohne Eintrag „ohne Wert“ */
+  reasons?: Readonly<Record<string, string>>
   className?: string
 }
 
@@ -47,6 +50,7 @@ export function CardList({
   onChoose,
   collapseAfter = 10,
   showAll,
+  reasons = {},
   className,
 }: CardListProps) {
   const words = usePeriodWords()
@@ -133,10 +137,18 @@ export function CardList({
                   <KindMark kind={itemKind(card)} />
                 </td>
                 <td className="px-2 py-1.5 text-right">
-                  {value ? formatValue(value.value, metric.decimals) : "–"}
+                  {value ? (
+                    formatValue(value.value, metric.decimals)
+                  ) : (
+                    <Dash reason={reasons[card.id]} />
+                  )}
                 </td>
                 <td className="px-2 py-1.5 text-right text-foreground-2">
-                  {value ? (delta ? formatSigned(delta.delta, metric.decimals) : "–") : "ohne Wert"}
+                  {value
+                    ? delta
+                      ? formatSigned(delta.delta, metric.decimals)
+                      : "–"
+                    : (reasons[card.id] ?? "ohne Wert")}
                 </td>
                 <td className="px-2 py-1.5 text-right text-muted-foreground">{count}</td>
               </tr>
