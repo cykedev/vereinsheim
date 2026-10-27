@@ -11,7 +11,9 @@ import {
   type VolumeBucket,
 } from "@vereinsheim/shot-core/analysis"
 import { inScoring, type MetricDefinition, type Scoring } from "@vereinsheim/shot-core/metrics"
-import { recordsInView } from "@vereinsheim/shot-core/projection"
+import { recordsInView, type CardDetail } from "@vereinsheim/shot-core/projection"
+
+import type { CardProvenance } from "../detail"
 
 export interface PeriodItem {
   id: string
@@ -30,6 +32,10 @@ export interface PeriodItem {
   records: Readonly<Record<Scoring, RecordCandidates | null>>
   /** Merkmale; für Rekorde zählt `FLAG_COUNTED_AS_MATCH` */
   flags: readonly string[]
+  /** Grundlage der Werte; fehlt in Treffsicher, dann nennt die Seite keine */
+  detail?: CardDetail
+  /** woher die Scheibe kommt; nur ohne `measured` */
+  provenance?: CardProvenance
 }
 
 /** zeitliche Folge, bei gleichem Beginn nach Id (wie im Fachkern); eine Regel für Zeitraum und Liste */

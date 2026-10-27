@@ -4,6 +4,7 @@ import type { NamedPeriod } from "./calendar"
 import {
   deltasBefore,
   isProbeOnly,
+  lightPeriodModel,
   patternIds,
   periodModel,
   periodReading,
@@ -519,5 +520,65 @@ describe("Grundlage des Trefferbilds", () => {
       })
     expect(patternIds(model(true), true).sort()).toEqual(["a", "b", "p"])
     expect(patternIds(model(false), false).sort()).toEqual(["a", "b"])
+  })
+})
+
+describe("Grundlage, Gründe und Herkunft der Rekorde", () => {
+  const SERIES = {
+    series: [1, 2, 3, 4].map((series) => ({ series, shots: 10, rings: 104, decimalTenths: 1080 })),
+    total: null,
+    center: null,
+  }
+  const items = [
+    item(periodCard("a", 4, [100, 101, 99, 100])),
+    item(periodCard("b", 3, [98, 99, 100, 101])),
+    {
+      ...item({ ...periodCard("s", 2, []), sums: SERIES }),
+      provenance: "entered" as const,
+    },
+    item(periodCard("p", 1, [96, 97, 98], { probe: true })),
+  ]
+  const build = (state: Partial<PeriodState> = {}) =>
+    periodModel({
+      items,
+      state: { ...initialPeriodState({ family: "lg-10m" }), ...state },
+      nowMs: NOW,
+      timeZone: TZ,
+      named: NAMED,
+    })
+
+  it("Ø je Schuss zählt Summen, Streuung nicht: die Grundlage nennt nur die Scheibe ohne Lage", () => {
+    const m = build()
+    expect(m.basis).toBeNull()
+    const sigma = m.tiles.find((t) => t.key === "group.sigma")!
+    expect(sigma.basis).toEqual({
+      counted: 3,
+      of: 4,
+      missing: [{ reason: "noPositions", count: 1 }],
+    })
+    expect(m.tiles[0].basis).toBeNull()
+  })
+
+  it("ohne Trainings nur aus Probe zählt die Grundlage sie nicht mit", () => {
+    const sigma = build({ includeProbeOnly: false }).tiles.find((t) => t.key === "group.sigma")!
+    expect(sigma.basis).toMatchObject({ counted: 2, of: 3 })
+  })
+
+  it("je Scheibe ohne Wert der Kennzahl des Verlaufs der Grund", () => {
+    expect(build({ metric: "group.sigma" }).reasons).toEqual({ s: "ohne Lage je Schuss" })
+    expect(build().reasons).toEqual({})
+  })
+
+  it("die Herkunft einer Scheibe mit Rekord, nur wenn sie nicht gemessen ist", () => {
+    expect(build().recordProvenance).toEqual({ s: "entered" })
+  })
+
+  it("das leichte Modell trägt keine Grundlage und keine Herkunft der Scheiben", () => {
+    const light = lightPeriodModel(build())
+    for (const card of light.cards) {
+      expect(card).not.toHaveProperty("detail")
+      expect(card).not.toHaveProperty("provenance")
+    }
+    expect(light.tiles.find((t) => t.key === "group.sigma")?.basis).not.toBeNull()
   })
 })

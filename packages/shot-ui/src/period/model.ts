@@ -26,7 +26,9 @@ import {
 } from "@vereinsheim/shot-core/metrics"
 import { formatIsoDate, formatMonthYear, zonedDayStartMs } from "@vereinsheim/lib/format"
 
+import { detailReason, REASON_TEXT, type CardProvenance } from "../detail"
 import { metricLabel } from "../labels"
+import { periodBasis, type Basis } from "./basis"
 import {
   compareRange,
   eveningDay,
@@ -39,6 +41,7 @@ import {
   type NamedPeriod,
 } from "./calendar"
 import { byStart, itemRecords, itemValues, itemVolume, type PeriodItem } from "./item"
+import { recordRows } from "./records"
 import type { PeriodMetricKey, PeriodState } from "./state"
 
 export type { PeriodItem } from "./item"
@@ -87,6 +90,8 @@ export interface PeriodTile {
   value: number | null
   /** Scheiben mit Wert */
   n: number
+  /** wie viele Scheiben zählen und warum die übrigen nicht; null, wenn alle zählen oder keine eine Grundlage trägt */
+  basis: Basis | null
   /** mit Vergleich: Wert und n der anderen Seite, der Vergleich (Seite a ist der Vergleich, b der Zeitraum) */
   compare: { value: number | null; n: number; comparison: PeriodComparison | null } | null
 }
@@ -156,6 +161,12 @@ export interface PeriodModel {
     best: (CardValue & { shots: number }) | null
   }
   tiles: PeriodTile[]
+  /** die Grundlage des Ø je Schuss (Ergebnis-Box); null, wenn alle zählen */
+  basis: Basis | null
+  /** je Scheibe ohne Wert der Kennzahl des Verlaufs der Grund (Liste, Ablesung); leer ohne Grundlage */
+  reasons: Record<string, string>
+  /** Herkunft der Scheiben, die einen Rekord halten, nur wenn sie nicht gemessen sind */
+  recordProvenance: Record<string, CardProvenance>
   /**
    * gewählte oder, ohne Wahl, die neueste Scheibe mit Ø je Schuss (`newest`), mit ihrem Punkt im Verlauf; null ohne
    * Scheiben
@@ -349,6 +360,10 @@ export function periodModel(input: {
     label: weekLabel(key),
   }))
 
+  // die Scheiben, über die die Zahlen rechnen könnten: ein Training nur aus Probe nur mit dem Schalter
+  const counted = cards.filter((card) => state.includeProbeOnly || !card.probeOnly)
+  const idsOf = (values: readonly CardValue[]) => new Set(values.map((v) => v.id))
+
   const tiles: PeriodTile[] = (input.tileKeys ?? PERIOD_TILE_KEYS).map((key) => {
     const base = metricByKey(key) as Readonly<MetricDefinition>
     const metric = inScoring(base, scoring)
@@ -362,6 +377,7 @@ export function periodModel(input: {
       better: metric.better,
       value: pooledValue(own, metric),
       n: own.length,
+      basis: periodBasis(counted, idsOf(own), metric),
       compare: theirs
         ? {
             value: pooledValue(theirs, metric),
@@ -414,6 +430,37 @@ export function periodModel(input: {
     }
   })()
 
+  const chartInScoring = inScoring(chartMetric, scoring)
+  const chartValued = idsOf(values)
+  const reasons: Record<string, string> = counted.some((card) => card.detail)
+    ? Object.fromEntries(
+        counted
+          .filter((card) => !chartValued.has(card.id))
+          .map((card) => [
+            card.id,
+            REASON_TEXT[
+              detailReason(
+                { detail: card.detail, shots: card.shots, provenance: card.provenance },
+                chartInScoring
+              )
+            ],
+          ])
+      )
+    : {}
+  const records = itemRecords(input.items, scoring, {
+    kind: state.kind === "all" ? undefined : state.kind,
+    includeProbeOnly: state.includeProbeOnly,
+  })
+  const provenanceOf = new Map(
+    input.items.flatMap((item) => (item.provenance ? [[item.id, item.provenance] as const] : []))
+  )
+  const recordProvenance = Object.fromEntries(
+    recordRows(records, scoring).flatMap((row) => {
+      const provenance = provenanceOf.get(row.record.cardId)
+      return provenance ? [[row.record.cardId, provenance]] : []
+    })
+  )
+
   const model: Omit<PeriodModel, "reading"> = {
     range,
     compareRange: other,
@@ -441,10 +488,7 @@ export function periodModel(input: {
     weeks,
     calendar,
     newest: perShot.at(-1)?.id ?? null,
-    records: itemRecords(input.items, scoring, {
-      kind: state.kind === "all" ? undefined : state.kind,
-      includeProbeOnly: state.includeProbeOnly,
-    }),
+    records,
     summary: {
       mean: pooledValue(perShot, inScoring(summaryMetric, scoring)),
       cards: perShot.length,
@@ -452,13 +496,17 @@ export function periodModel(input: {
       best: best ? { ...best, shots: best.n } : null,
     },
     tiles,
+    basis: periodBasis(counted, idsOf(perShot), inScoring(summaryMetric, scoring)),
+    reasons,
+    recordProvenance,
   }
   return { ...model, reading: periodReading(model, state.chosen) }
 }
 
 /**
  * ein Eintrag für den Browser: nur die Felder von `PeriodItem` (eine App reicht mehr herein), ohne Werte und Rekorde
- * (die Bausteine lesen Art, „nur Probe“ und Schusszahl)
+ * (die Bausteine lesen Art, „nur Probe“ und Schusszahl). Grundlage und Herkunft bleiben auf dem Server: Was die Seite
+ * davon zeigt, steht schon in `basis`, `reasons` und `recordProvenance`.
  */
 const lightCard = (card: PeriodItem): PeriodItem => ({
   id: card.id,
