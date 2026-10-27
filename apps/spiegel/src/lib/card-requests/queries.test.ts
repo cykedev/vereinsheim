@@ -10,8 +10,11 @@ import {
   dismissRequest,
   expireRequests,
   finishRequests,
+  MAX_OPEN_REQUESTS,
+  openRequestsOf,
   recordRequestOutcomes,
   REQUEST_DAYS,
+  requestWindow,
 } from "./queries"
 
 // Aufträge an einer eigenen Testanlage; die Kaskade über die Anlage räumt sie weg, die Konten löscht der Test selbst.
@@ -84,7 +87,12 @@ const rawCard = async (seed: number) => {
 const request = async (
   status: CardRequestStatus,
   cardId: string | null,
-  { userId = user, createdAt }: { userId?: string; createdAt?: Date } = {}
+  {
+    userId = user,
+    createdAt,
+    windowAt,
+    day = "2026-10-21",
+  }: { userId?: string; createdAt?: Date; windowAt?: Date; day?: string } = {}
 ) =>
   (
     await db.cardRequest.create({
@@ -92,10 +100,11 @@ const request = async (
         userId,
         siteId: site.siteId,
         scheibenId: nextId++,
-        day: "2026-10-21",
+        day,
         status,
         cardId,
         ...(createdAt ? { createdAt } : {}),
+        ...(windowAt ? { windowAt } : {}),
       },
     })
   ).id
@@ -104,18 +113,102 @@ const statusOf = async (id: number) =>
   (await db.cardRequest.findUniqueOrThrow({ where: { id } })).status
 
 describe("Frist", () => {
-  it("nach der Frist: ohne Scheibe und ungefüllt ohne Antwort, gefüllt erledigt", async () => {
+  it("nach der Frist ab dem ersten Nennen: ohne Scheibe und ungefüllt ohne Antwort, gefüllt erledigt", async () => {
     const now = Date.now()
-    const createdAt = new Date(now - (REQUEST_DAYS + 1) * DAY)
-    const without = await request("open", null, { createdAt })
-    const unfilled = await request("open", await pdfCard(), { createdAt })
-    const filled = await request("open", await rawCard(1), { createdAt })
-    const young = await request("open", await pdfCard())
+    const longAgo = new Date(now - (REQUEST_DAYS + 1) * DAY)
+    const windowAt = longAgo
+    const without = await request("open", null, { createdAt: longAgo, windowAt })
+    const unfilled = await request("open", await pdfCard(), { createdAt: longAgo, windowAt })
+    const filled = await request("open", await rawCard(1), { createdAt: longAgo, windowAt })
+    // vor langem angelegt, erst kürzlich genannt
+    const lateWindow = await request("open", await pdfCard(), {
+      createdAt: longAgo,
+      windowAt: new Date(now - DAY),
+    })
     expect(await expireRequests(db, now)).toBeGreaterThanOrEqual(3)
     expect(await statusOf(without)).toBe("expired")
     expect(await statusOf(unfilled)).toBe("expired")
     expect(await statusOf(filled)).toBe("done")
-    expect(await statusOf(young)).toBe("open")
+    expect(await statusOf(lateWindow)).toBe("open")
+  })
+
+  it("noch nie genannt: läuft nicht ab, auch lange nach dem Anlegen", async () => {
+    const now = Date.now()
+    const createdAt = new Date(now - 3 * REQUEST_DAYS * DAY)
+    const without = await request("open", null, { createdAt })
+    const unfilled = await request("open", await pdfCard(), { createdAt })
+    await expireRequests(db, now)
+    expect(await statusOf(without)).toBe("open")
+    expect(await statusOf(unfilled)).toBe("open")
+  })
+})
+
+describe("requestWindow", () => {
+  const row = (id: number, userId: string, filled = false) => ({ id, userId, filled })
+
+  it("je Konto die ersten ungefüllten und alle gefüllten, in der Folge, wie sie kommt", () => {
+    const a = Array.from({ length: MAX_OPEN_REQUESTS + 2 }, (_, i) => row(i + 1, "a"))
+    const rows = [
+      ...a.slice(0, 5),
+      row(100, "a", true),
+      row(200, "b"),
+      ...a.slice(5),
+      row(201, "b"),
+    ]
+    expect(requestWindow(rows).map((r) => r.id)).toEqual([
+      1, 2, 3, 4, 5, 100, 200, 6, 7, 8, 9, 10, 201,
+    ])
+  })
+
+  it("endet einer, rückt der nächste nach", () => {
+    const a = Array.from({ length: MAX_OPEN_REQUESTS + 2 }, (_, i) => row(i + 1, "a"))
+    expect(requestWindow(a.slice(1)).map((r) => r.id)).toEqual([2, 3, 4, 5, 6, 7, 8, 9, 10, 11])
+  })
+
+  it("ohne Platz nur die gefüllten", () => {
+    expect(requestWindow([row(1, "a"), row(2, "a", true)], 0).map((r) => r.id)).toEqual([2])
+  })
+})
+
+describe("openRequestsOf", () => {
+  it("je Konto zehn ungefüllte der jüngsten Abende, gefüllte dazu; nur die genannten bekommen `windowAt`", async () => {
+    const now = Date.now()
+    // zuerst angelegt ein heutiger Abend, danach zwölf alte (ein Upload alter Ausdrucke), ein gefüllter und einer eines
+    // anderen Kontos: Es zählt der Abend, nicht die Folge des Anlegens
+    const today = await request("open", await pdfCard(), { day: "2026-10-27" })
+    const old: number[] = []
+    for (let i = 0; i < MAX_OPEN_REQUESTS + 2; i++)
+      old.push(await request("open", null, { day: `2025-01-${String(i + 10).padStart(2, "0")}` }))
+    const filled = await request("open", await rawCard(5), { day: "2024-05-01" })
+    const foreign = await request("open", null, { userId: other, day: "2024-05-01" })
+    const named = new Date(now - DAY)
+    await db.cardRequest.update({ where: { id: old[11] }, data: { windowAt: named } })
+
+    const ids = (await openRequestsOf(db, site.siteId, { nowMs: now })).map((r) => r.id)
+    // der heutige zuerst, dann die neun jüngsten alten Abende; die zwei ältesten warten
+    expect(ids.filter((id) => old.includes(id) || id === today)).toEqual([
+      today,
+      ...old.slice(3).reverse(),
+    ])
+    expect(ids).toContain(filled)
+    expect(ids).toContain(foreign)
+    expect(ids).not.toContain(old[0])
+    expect(ids).not.toContain(old[1])
+
+    const windowAt = async (id: number) =>
+      (await db.cardRequest.findUniqueOrThrow({ where: { id }, select: { windowAt: true } }))
+        .windowAt
+    expect(await windowAt(today)).toEqual(new Date(now))
+    expect(await windowAt(filled)).toEqual(new Date(now))
+    expect(await windowAt(old[11])).toEqual(named)
+    expect(await windowAt(old[0])).toBeNull()
+
+    // endet der heutige, rückt der nächstältere Abend nach
+    await db.cardRequest.update({ where: { id: today }, data: { status: "done" } })
+    const next = (await openRequestsOf(db, site.siteId, { nowMs: now + 1 })).map((r) => r.id)
+    expect(next).toContain(old[2])
+    expect(next).not.toContain(old[1])
+    expect(await windowAt(old[2])).toEqual(new Date(now + 1))
   })
 })
 
