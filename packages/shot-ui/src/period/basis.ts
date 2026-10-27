@@ -32,7 +32,12 @@ export function periodBasis(
   const counts = new Map<DetailReason, number>()
   for (const item of missing) {
     const reason = detailReason(
-      { detail: item.detail, shots: item.shots, provenance: item.provenance },
+      {
+        detail: item.detail,
+        shots: item.shots,
+        provenance: item.provenance,
+        waiting: item.waiting,
+      },
       metric
     )
     counts.set(reason, (counts.get(reason) ?? 0) + 1)

@@ -399,6 +399,17 @@ describe("Herkunft und Gründe in der Liste", () => {
       shots: "wartet auf die Anlage",
     })
   })
+  it("vom Ausdruck ohne offenen Auftrag: „ohne Werte“ statt „wartet auf die Anlage“", () => {
+    const done = cardListModel(
+      [...INPUT, { ...waiting, waiting: false }],
+      query(),
+      context
+    ).evenings.flatMap((e) => e.rows)
+    expect(done.find((r) => r.id === "w")?.reasons).toMatchObject({
+      rings: "ohne Werte",
+      shots: "ohne Werte",
+    })
+  })
 
   it("Serien-Summen in ganzen Ringen: in Zehnteln „ohne Zehntel“, die Ringe haben einen Wert", () => {
     expect(row("s").provenance).toBe("entered")

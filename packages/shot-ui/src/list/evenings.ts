@@ -44,6 +44,8 @@ export interface ListInputCard {
   list?: ListOption | null
   /** woher die Scheibe kommt; fehlt: gemessen */
   provenance?: CardProvenance
+  /** vom Ausdruck: `false`, wenn Spiegel die Werte nicht mehr von der Anlage holt; fehlt: wartet */
+  waiting?: false
 }
 
 /** der Grund je Zahl einer Zeile ohne Wert: Ganze, Zehntel, Ø, Abstand, Schusszahl */
@@ -182,6 +184,7 @@ export function cardListModel(
   const list = input.find((c) => c.list && c.list.id === query.list)?.list ?? null
   const listOf = new Map(input.map((c) => [c.card.id, c.list?.id ?? null]))
   const provenanceOf = new Map(input.map((c) => [c.card.id, c.provenance ?? "measured"]))
+  const notWaiting = new Set(input.filter((c) => c.waiting === false).map((c) => c.card.id))
   const ofKind = ofFamily
     .filter((card) => query.kind === "all" || card.kind === query.kind)
     .sort(byStart)
@@ -227,7 +230,12 @@ export function cardListModel(
     const reasonFor = (metric: Readonly<MetricDefinition>) =>
       REASON_TEXT[
         detailReason(
-          { detail: card.projection.detail, shots: card.projection.printedShots, provenance },
+          {
+            detail: card.projection.detail,
+            shots: card.projection.printedShots,
+            provenance,
+            ...(notWaiting.has(card.id) ? { waiting: false } : {}),
+          },
           metric
         )
       ]

@@ -101,4 +101,16 @@ describe("Ergebnis einer Scheibe ohne Einzelschüsse, gebaut wie CardResult", ()
       expect(result).not.toContain("Kennzahlen der Scheibe")
     }
   })
+
+  it("vom Ausdruck ohne offenen Auftrag: „ohne Werte“ statt „wartet auf die Anlage“", () => {
+    const result = renderToStaticMarkup(
+      h(SummaryResult, {
+        card: { sums: undefined, provenance: "printout", waiting: false },
+        detail: detail({}),
+        level: "none",
+        scoring: "decimal",
+      })
+    )
+    expect(result).toMatch(/data-summary-reason="true"[^>]*>ohne Werte</)
+  })
 })

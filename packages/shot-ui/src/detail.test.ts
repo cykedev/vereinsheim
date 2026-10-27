@@ -46,6 +46,16 @@ describe("detailReason: warum eine Scheibe ohne Wert ist", () => {
     expect(detailReason({ detail: NONE, shots: 0 }, sigma)).toBe("noShot")
   })
 
+  it("vom Ausdruck ohne offenen Auftrag: ohne Werte; ohne Angabe oder wartend: wartet auf die Anlage", () => {
+    const of = (waiting?: boolean) =>
+      detailReason({ detail: NONE, shots: 0, provenance: "printout", waiting }, sigma)
+    expect(of(undefined)).toBe("waiting")
+    expect(of(true)).toBe("waiting")
+    expect(of(false)).toBe("noValues")
+    // nur vom Ausdruck: eine gemessene Scheibe wartet nie
+    expect(detailReason({ detail: NONE, shots: 0, waiting: false }, sigma)).toBe("noShot")
+  })
+
   it("Schüsse, aber kein Ergebnis: nicht jeder Schuss mit Wert", () => {
     expect(detailReason({ detail: NONE, shots: 40 }, metric("result.decimal"))).toBe("missingValue")
   })
@@ -120,6 +130,8 @@ describe("ein Gerüst für jede Detailtiefe: die Sätze an den Stellen ohne Einz
     expect(levelReasons(NONE, "none", "entered")).toEqual(["ohne Werte"])
     expect(levelReasons(NONE, "none", "measured")).toEqual(["noch kein Schuss"])
     expect(levelReasons(NONE, "none")).toEqual(["noch kein Schuss"])
+    expect(levelReasons(NONE, "none", "printout", true)).toEqual(["wartet auf die Anlage"])
+    expect(levelReasons(NONE, "none", "printout", false)).toEqual(["ohne Werte"])
   })
 
   it("Schüsse und Serien sagen, warum sie leer sind", () => {
@@ -129,6 +141,13 @@ describe("ein Gerüst für jede Detailtiefe: die Sätze an den Stellen ohne Einz
     expect(seriesMissingText("total")).toBe("Nur das Gesamtergebnis, keine Serien.")
     expect(seriesMissingText("none", "printout")).toBe(emptyText("printout"))
     expect(seriesMissingText("shots")).toBe("Die Schüsse tragen keine Serie.")
+    expect(seriesMissingText("none", "printout", false)).toBe(
+      "Für diese Scheibe gibt es nur den Ausdruck, noch keine Werte."
+    )
+    expect(emptyText("printout", true)).toBe(emptyText("printout"))
+    expect(emptyText("printout", false)).toBe(
+      "Für diese Scheibe gibt es nur den Ausdruck, noch keine Werte."
+    )
     expect(emptyText("measured")).toBe(
       "Sobald Schüsse da sind, stehen hier Ergebnis, Serien und Schüsse."
     )
@@ -160,6 +179,7 @@ it("alle Texte nach den Schreibregeln", () => {
     missingSentence(SERIES),
     missingSentence({ ...SERIES, center: { xUm: 0, yUm: 0, n: 1, from: "summary" } }),
     emptyText("printout"),
+    emptyText("printout", false),
     emptyText("entered"),
     emptyText("measured"),
     shotsMissingText(["nur Serien-Summen"]),

@@ -435,7 +435,12 @@ export function periodModel(input: {
             card.id,
             REASON_TEXT[
               detailReason(
-                { detail: card.detail, shots: card.shots, provenance: card.provenance },
+                {
+                  detail: card.detail,
+                  shots: card.shots,
+                  provenance: card.provenance,
+                  waiting: card.waiting,
+                },
                 chartInScoring
               )
             ],

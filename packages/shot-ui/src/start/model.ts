@@ -141,7 +141,7 @@ export function startModel(input: StartInput): StartModel {
     const basis = periodBasis(
       tonight
         .filter((c) => c.family === family)
-        .map((c) => fromProjection({ ...c.card, provenance: c.provenance })),
+        .map((c) => fromProjection({ ...c.card, provenance: c.provenance, waiting: c.waiting })),
       new Set(values.filter((v) => ids.has(v.id)).map((v) => v.id)),
       meanMetric
     )

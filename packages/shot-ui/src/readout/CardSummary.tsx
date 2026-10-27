@@ -26,8 +26,11 @@ import { HelpButton } from "../help/HelpButton"
 import { MpiMark } from "../target/MpiMark"
 import { RESULT_FACTS } from "./CardResult"
 
-/** was die Seite ohne Einzelschüsse von der Scheibe braucht: ihre Summen und ihre Herkunft */
-type SummaryCard = Pick<PeriodCard, "sums"> & { provenance?: CardProvenance }
+/**
+ * was die Seite ohne Einzelschüsse von der Scheibe braucht: ihre Summen, ihre Herkunft und ob sie vom Ausdruck noch auf
+ * die Anlage wartet (fehlt: ja)
+ */
+type SummaryCard = Pick<PeriodCard, "sums"> & { provenance?: CardProvenance; waiting?: boolean }
 
 export interface SummaryResultProps {
   card: SummaryCard
@@ -63,7 +66,7 @@ export function SummaryResult({
 }: SummaryResultProps) {
   const result = level === "none" ? null : sumsResult(card.sums, scoring)
   const mean = summaryValue(inScoring(metricByKey("result.decimalMean")!, scoring), card.sums)
-  const reasons = levelReasons(detail, level, card.provenance)
+  const reasons = levelReasons(detail, level, card.provenance, card.waiting)
   return (
     <div data-card-summary={level} className={cn("grid content-start gap-3", className)}>
       <div className="grid gap-1">

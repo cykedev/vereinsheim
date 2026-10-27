@@ -96,6 +96,11 @@ describe("Grundlage über einen Zeitraum", () => {
     expect(basis?.missing.map((m) => m.reason)).toEqual(["waiting", "noPositions"])
   })
 
+  it("vom Ausdruck ohne offenen Auftrag: „ohne Werte“ statt „wartet auf die Anlage“", () => {
+    const items = [{ ...entry("w1", WAITING, "printout", 0), waiting: false as const }]
+    expect(periodBasis(items, ids([]), SIGMA)?.missing).toEqual([{ reason: "noValues", count: 1 }])
+  })
+
   it("in Treffsicher „Einheit“", () => {
     const basis: Basis = { counted: 0, of: 3, missing: [{ reason: "noPositions", count: 3 }] }
     const words = { one: "Einheit", many: "Einheiten", noRecords: "" }

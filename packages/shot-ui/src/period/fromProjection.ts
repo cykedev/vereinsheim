@@ -12,7 +12,9 @@ import type { PeriodItem } from "./item"
  * zählt (`projectedEligible`), trägt keine Kandidaten. Grundlage und Herkunft gehen mit, die Herkunft nur, wenn sie nicht
  * gemessen ist.
  */
-export function fromProjection(card: ProjectedCard & { provenance?: CardProvenance }): PeriodItem {
+export function fromProjection(
+  card: ProjectedCard & { provenance?: CardProvenance; waiting?: false }
+): PeriodItem {
   const { projection } = card
   return {
     id: card.id,
@@ -25,5 +27,6 @@ export function fromProjection(card: ProjectedCard & { provenance?: CardProvenan
     flags: card.flags,
     ...(projection.detail ? { detail: projection.detail } : {}),
     ...(card.provenance && card.provenance !== "measured" ? { provenance: card.provenance } : {}),
+    ...(card.waiting === false ? { waiting: false as const } : {}),
   }
 }

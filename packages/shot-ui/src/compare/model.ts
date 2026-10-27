@@ -27,7 +27,13 @@ import {
 } from "@vereinsheim/shot-core/metrics"
 import { cardDetail } from "@vereinsheim/shot-core/projection"
 
-import { detailLevel, REASON_TEXT, summaryReasons, type CardProvenance } from "../detail"
+import {
+  detailLevel,
+  noValuesReason,
+  REASON_TEXT,
+  summaryReasons,
+  type CardProvenance,
+} from "../detail"
 import { metricLabel } from "../labels"
 import type { CompareType } from "../nav/routes"
 import { itemValues, type PeriodItem } from "../period/item"
@@ -203,6 +209,8 @@ export function cardCompareModel(input: {
   names: { a: SideName; b: SideName }
   /** Herkunft je Seite; ohne gilt gemessen */
   provenance?: { a?: CardProvenance; b?: CardProvenance }
+  /** je Seite vom Ausdruck: `false`, wenn Spiegel die Werte nicht mehr von der Anlage holt; ohne: wartet */
+  waiting?: { a?: false; b?: false }
 }): CompareModel {
   const { scoring } = input
   const shots = compareShots(shownShots(input.a), shownShots(input.b), scoring)
@@ -221,7 +229,8 @@ export function cardCompareModel(input: {
     card: PeriodCard,
     count: number,
     points: number,
-    provenance: CardProvenance | undefined
+    provenance: CardProvenance | undefined,
+    waiting: false | undefined
   ): CompareSide => {
     const detail = cardDetail(card)
     const level = detailLevel(detail, shownShots(card).length, card.sums)
@@ -235,19 +244,29 @@ export function cardCompareModel(input: {
         level === "series" || level === "total"
           ? summaryReasons(detail, level).join(" · ")
           : level === "none"
-            ? provenance === "printout"
-              ? REASON_TEXT.waiting
-              : provenance === "entered"
-                ? REASON_TEXT.noValues
-                : REASON_TEXT.noShot
+            ? REASON_TEXT[noValuesReason(provenance, waiting)]
             : null,
     }
   }
   return {
     type: "cards",
     unit: "shot",
-    a: side(input.names.a, input.a, shots.shots.a, pa.length, input.provenance?.a),
-    b: side(input.names.b, input.b, shots.shots.b, pb.length, input.provenance?.b),
+    a: side(
+      input.names.a,
+      input.a,
+      shots.shots.a,
+      pa.length,
+      input.provenance?.a,
+      input.waiting?.a
+    ),
+    b: side(
+      input.names.b,
+      input.b,
+      shots.shots.b,
+      pb.length,
+      input.provenance?.b,
+      input.waiting?.b
+    ),
     shared: 0,
     result: row(RESULT_KEY, shots.result),
     spread: row(SPREAD_KEY, shots.spread),

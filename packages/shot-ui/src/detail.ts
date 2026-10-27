@@ -79,13 +79,27 @@ export const REASON_TEXT: Readonly<Record<DetailReason, string>> = {
 }
 
 /**
- * was eine Scheibe für den Grund mitbringt: ihre Grundlage, die Schüsse wie am Ausdruck und ihre Herkunft (ohne
- * Angabe gemessen)
+ * was eine Scheibe für den Grund mitbringt: ihre Grundlage, die Schüsse wie am Ausdruck, ihre Herkunft (ohne Angabe
+ * gemessen) und ob sie vom Ausdruck noch auf die Anlage wartet (ohne Angabe ja)
  */
 export interface DetailInput {
   detail?: CardDetail
   shots: number
   provenance?: CardProvenance
+  waiting?: boolean
+}
+
+/**
+ * der Grund ohne jedes Ergebnis: vom Ausdruck wartet sie auf die Anlage, solange Spiegel die Werte holt (`waiting` ohne
+ * Angabe: ja), sonst gibt es nur den Ausdruck; eingetragen fehlt die Eingabe, gemessen der erste Schuss. Eine Stelle für
+ * Liste, Zeitraum, Seite und Vergleichen.
+ */
+export function noValuesReason(
+  provenance?: CardProvenance | null,
+  waiting?: boolean
+): "waiting" | "noValues" | "noShot" {
+  if (provenance === "printout") return waiting === false ? "noValues" : "waiting"
+  return provenance === "entered" ? "noValues" : "noShot"
 }
 
 const fromSums = (source: CardDetail["rings"]) => source === "series" || source === "total"
@@ -104,8 +118,7 @@ export function detailReason(
   if (!detail) return "noValue"
   if (detail.rings === null && detail.tenths === null) {
     if (input.shots > 0) return "missingValue"
-    if (input.provenance === "printout") return "waiting"
-    return input.provenance === "entered" ? "noValues" : "noShot"
+    return noValuesReason(input.provenance, input.waiting)
   }
   if (metric.needs === "position" || metric.needs === "distance") {
     if (detail.positions === 0) return "noPositions"
@@ -164,25 +177,29 @@ export const missingSentence = (detail: CardDetail): string =>
     : "Für Streuung, Lage und Tempo braucht es Einzelschüsse."
 
 /**
- * ein Satz für eine Scheibe ohne Werte: vom Ausdruck wartet sie auf die Anlage, eingetragen fehlt die Eingabe, gemessen
- * fehlt der erste Schuss
+ * ein Satz für eine Scheibe ohne Werte (`noValuesReason`): vom Ausdruck wartet sie auf die Anlage oder hat nur den
+ * Ausdruck, eingetragen fehlt die Eingabe, gemessen fehlt der erste Schuss
  */
-export const emptyText = (provenance?: CardProvenance | null): string =>
-  provenance === "printout"
-    ? "Sobald die Anlage die Scheibe liefert, stehen hier Ergebnis, Serien und Schüsse."
-    : provenance === "entered"
-      ? "Für diese Scheibe sind keine Werte eingetragen."
-      : "Sobald Schüsse da sind, stehen hier Ergebnis, Serien und Schüsse."
+export function emptyText(provenance?: CardProvenance | null, waiting?: boolean): string {
+  const reason = noValuesReason(provenance, waiting)
+  if (reason === "waiting")
+    return "Sobald die Anlage die Scheibe liefert, stehen hier Ergebnis, Serien und Schüsse."
+  if (reason === "noShot")
+    return "Sobald Schüsse da sind, stehen hier Ergebnis, Serien und Schüsse."
+  return provenance === "printout"
+    ? "Für diese Scheibe gibt es nur den Ausdruck, noch keine Werte."
+    : "Für diese Scheibe sind keine Werte eingetragen."
+}
 
 /** der Grund unter der großen Zahl je Detailtiefe ohne Einzelschüsse; ohne Werte nach der Herkunft */
 export function levelReasons(
   detail: CardDetail,
   level: Exclude<DetailLevel, "shots">,
-  provenance?: CardProvenance | null
+  provenance?: CardProvenance | null,
+  waiting?: boolean
 ): string[] {
   if (level !== "none") return summaryReasons(detail, level)
-  if (provenance === "printout") return [REASON_TEXT.waiting]
-  return [provenance === "entered" ? REASON_TEXT.noValues : REASON_TEXT.noShot]
+  return [REASON_TEXT[noValuesReason(provenance, waiting)]]
 }
 
 /** im Abschnitt „Schüsse“ einer Scheibe ohne Einzelschüsse: warum er leer ist */
@@ -193,8 +210,12 @@ export const shotsMissingText = (reasons: readonly string[]): string =>
  * an der Stelle der Serien, wenn es keine gibt: ohne Werte, wann sie kommen; mit Gesamtergebnis, dass es keine Serien
  * gibt; mit Schüssen ohne Serie, dass die Schüsse keine tragen
  */
-export function seriesMissingText(level: DetailLevel, provenance?: CardProvenance | null): string {
-  if (level === "none") return emptyText(provenance)
+export function seriesMissingText(
+  level: DetailLevel,
+  provenance?: CardProvenance | null,
+  waiting?: boolean
+): string {
+  if (level === "none") return emptyText(provenance, waiting)
   if (level === "total") return "Nur das Gesamtergebnis, keine Serien."
   return "Die Schüsse tragen keine Serie."
 }

@@ -36,6 +36,8 @@ export interface PeriodItem {
   detail?: CardDetail
   /** woher die Scheibe kommt; nur ohne `measured` */
   provenance?: CardProvenance
+  /** vom Ausdruck: `false`, wenn Spiegel die Werte nicht mehr von der Anlage holt; fehlt: wartet */
+  waiting?: false
 }
 
 /** zeitliche Folge, bei gleichem Beginn nach Id (wie im Fachkern); eine Regel für Zeitraum und Liste */
