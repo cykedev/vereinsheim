@@ -3,31 +3,28 @@
   "configurations": [
     {
       "name": "ringwerk",
-      "runtimeExecutable": "pnpm",
+      "runtimeExecutable": "bash",
       "runtimeArgs": [
-        "dev",
-        "--filter",
-        "ringwerk"
+        "-c",
+        "f=\"${NVM_DIR:-$HOME/.nvm}/nvm.sh\"; if [ -s \"$f\" ]; then . \"$f\" && nvm use --silent; fi; exec pnpm dev --filter ringwerk"
       ],
       "port": 3000
     },
     {
       "name": "treffsicher",
-      "runtimeExecutable": "pnpm",
+      "runtimeExecutable": "bash",
       "runtimeArgs": [
-        "dev",
-        "--filter",
-        "treffsicher"
+        "-c",
+        "f=\"${NVM_DIR:-$HOME/.nvm}/nvm.sh\"; if [ -s \"$f\" ]; then . \"$f\" && nvm use --silent; fi; exec pnpm dev --filter treffsicher"
       ],
       "port": 3001
     },
     {
       "name": "spiegel",
-      "runtimeExecutable": "pnpm",
+      "runtimeExecutable": "bash",
       "runtimeArgs": [
-        "dev",
-        "--filter",
-        "spiegel"
+        "-c",
+        "f=\"${NVM_DIR:-$HOME/.nvm}/nvm.sh\"; if [ -s \"$f\" ]; then . \"$f\" && nvm use --silent; fi; exec pnpm dev --filter spiegel"
       ],
       "port": 3002
     }
