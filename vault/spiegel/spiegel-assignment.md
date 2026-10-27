@@ -3,7 +3,7 @@ id: spiegel-assignment
 type: concept
 title: "Spiegel — Zuordnung von Scheiben zu Schützen"
 aliases: [zuordnung, claim, scheibe-holen, fundbüro]
-keywords: [zuordnung, werte vom ausdruck, vorbelegung, schuss für schuss, printedshotsfit, printout-import, claim, kamera-scan, scheibe holen, holen, scan, qr scannen, link einfügen, pdf hochladen, id eintippen, neue scheibe, wartet auf die anlage, passt nicht zum ausdruck, printMismatch, nicht mehr holen, teilen, druckzeit, metadaten, layout-unabhängig, besitzer, meyton-qr, qr-code, ausdruck, pdf, scheibenid, sportpass, schützenliste, frei getippte namen, fundbüro, scheibe holen, check-in, stand-aufkleber, admin, konflikt, das war ich, frist, auswärts, erste scheibe bestätigen, nicht meine, mehrdeutige sportpassid, überlauf, zwischenstand, gäste-lan]
+keywords: [zuordnung, werte vom ausdruck, vorbelegung, schuss für schuss, printedshotsfit, printout-import, claim, kamera-scan, scheibe holen, holen, scan, qr scannen, link einfügen, pdf hochladen, id eintippen, neue scheibe, wartet auf die anlage, passt nicht zum ausdruck, printMismatch, nicht mehr holen, fenster der aufträge, warteschlange, grenze von zehn, windowat, teilen, druckzeit, metadaten, layout-unabhängig, besitzer, meyton-qr, qr-code, ausdruck, pdf, scheibenid, sportpass, schützenliste, frei getippte namen, fundbüro, scheibe holen, check-in, stand-aufkleber, admin, konflikt, das war ich, frist, auswärts, erste scheibe bestätigen, nicht meine, mehrdeutige sportpassid, überlauf, zwischenstand, gäste-lan]
 part_of: ["[[spiegel]]"]
 governed_by: ["[[adr-028]]"]
 relates_to: ["[[meyton-printout]]", "[[spiegel-bridge]]", "[[spiegel-privacy]]", "[[spiegel-edge-cases]]"]
@@ -84,13 +84,14 @@ Spiegel hängt dabei nicht vom Layout des Meyton-PDFs ab ([[adr-028]], Änderung
    Konto, keine Antwort). „Nicht mehr holen“ und „Entfernen“ setzen den Auftrag auf zurückgezogen; Scheibe und PDF
    bleiben, die Scheibe heißt dann „ohne Werte“. Erneutes Holen legt einen neuen Auftrag an.
 6. **Rückweg:** Eine falsche Scheibe löscht man (Papierkorb). Im Papierkorb bleibt ihr offener Auftrag (er zählt zur
-   Grenze von zehn, die Brücke füllt die Scheibe weiter); holt man sie zurück und endete ihr Auftrag schon, wartet sie
+   ungefüllt einen der zehn Plätze im Zustand der Brücke, die Brücke füllt die Scheibe weiter); holt man sie zurück und endete ihr Auftrag schon, wartet sie
    mit einem neuen wieder auf die Anlage. Eine Scheibe vom Ausdruck hinterlässt beim endgültigen Löschen keine Sperre;
    ihr offener Auftrag ist dann zurückgezogen.
 
 Stand: gebaut (1b-1 Holen, Lesen, Speichern; 1b-2 die Seite, die Scheibe vom Ausdruck und die Prüfung beim Einlesen,
 `apps/spiegel/src/lib/fetch-card/`; 1c Werte und Lagen vom Ausdruck, Vorbelegung der Disziplin, Prüfung Schuss für
-Schuss, alte Ausdrucke einlesen). Keine neue Brücke.
+Schuss, alte Ausdrucke einlesen; das Fenster der Aufträge im Zustand und die Frist ab `windowAt`, 27. Oktober 2026).
+Keine neue Brücke.
 
 **Ohne lesbare ID** oder ohne Druckzeit speichert Spiegel nichts. Eine Auswahl nach der Druckzeit ist verschoben;
 bis dahin hilft die getippte ID oder später das Fundbüro.
@@ -117,13 +118,20 @@ importieren“; seit 1b-2 auf derselben Seite wie der QR):
    der Scheibe. Sie geht wie jeder Weg: Liegt die Scheibe schon da, öffnet sie sich; bei einem anderen Konto
    „gehört zu einem anderen Konto“; sonst entsteht nach der Wahl von Disziplin und Art eine Scheibe vom Ausdruck
    (Herkunft `pdf`, 12 Uhr des Tags, bis die Brücke den echten Beginn schreibt) mit Auftrag. Geprüft wird beim Einlesen
-   nur der Abend. Höchstens zehn ungefüllte offene Aufträge je Konto; gefüllte warten nur noch auf „endgültig“. Ein
+   nur der Abend. Ohne Ausdruck höchstens zehn ungefüllte offene Aufträge je Konto (gefüllte warten nur noch auf
+   „endgültig“); darüber sagt Spiegel „Es warten schon zehn oder mehr Scheiben auf die Anlage“. Mit Ausdruck (QR, Link,
+   PDF) entstehen Scheibe und Auftrag immer, auch für viele alte Ausdrucke. Ein
    Tippfehler ergibt eine Scheibe ohne Werte, die man löscht. Ältere Aufträge ohne Scheibe (vor 1b-2) stehen unter den
    Wegen, bis sie enden.
 2. **Auftrag** (`CardRequest`): `GET /state` nennt ihn der Brücke (`requests`, ScheibenID und Abend). Die Brücke liest
    die ScheibenID beim nächsten Durchgang, auch während geschossen wird, und schickt sie ohne Zustimmung, wenn ihr
    Beginn auf den Abend fällt (vor 4 Uhr der Vortag, `filter.Evening`); sonst meldet sie „anderer Tag“ (`mismatch`).
    Verdeckte Wertung und gesperrte Scheiben bleiben im Schützenhaus ([[spiegel-bridge]]).
+   **Fenster:** Weil die Brücke jeden genannten Auftrag sofort und ohne Budget aus der SSMDB2 liest, nennt der Zustand je
+   Konto nur zehn ungefüllte zugleich (`requestWindow`, `MAX_OPEN_REQUESTS`), die der jüngsten Abende zuerst: Eine heute
+   gescannte Scheibe geht vor alten Ausdrucken. Gefüllte offene nennt er immer. Die übrigen warten und heißen weiter
+   „wartet auf die Anlage“; endet einer, rückt beim nächsten Zustand (jede Minute) der nächste nach. Kommt die Scheibe
+   eines wartenden Auftrags über eine Zustimmung, füllt sie ihn trotzdem (`openRequestsFor` nimmt jeden offenen).
 3. **Annehmen:** Spiegel prüft den Abend noch einmal und speichert sonst nichts; der Auftrag endet dann mit „an diesem
    Tag nicht gefunden“. Eine aktive oder wartende Zustimmung per Sportpass eines anderen Kontos geht vor („gehört zu
    einem anderen Konto“). Die Scheibe gehört dem Auftraggeber sofort, ohne „Offen“.
@@ -131,7 +139,9 @@ importieren“; seit 1b-2 auf derselben Seite wie der QR):
    und eine Korrektur am selben Abend nachkommen. Der Heartbeat schließt ihn, sobald die Scheibe gefüllt und endgültig
    ist (`finishRequests`); eine Scheibe vom Ausdruck ist von Anfang an endgültig, zählt aber erst mit Rohdaten.
 5. **Ausgang** an der Scheibe (Zeile „Von der Anlage“, siehe oben): Den Ausgang meldet die Brücke im Heartbeat
-   (`requestsDone`) oder das Einlesen; nach 30 Tagen ungefüllt `expired`, gefüllt erledigt. Die Liste der Aufträge im
+   (`requestsDone`) oder das Einlesen; 30 Tage, nachdem der Zustand ihn zum ersten Mal genannt hat (`windowAt`),
+   ungefüllt `expired`, gefüllt erledigt. Ein Auftrag, den der Zustand noch nie genannt hat (wartend, Brücke aus, Konto
+   deaktiviert), läuft nicht ab; ein schon genannter, den neuere wieder aus dem Fenster schieben, behält seine Frist. Die Liste der Aufträge im
    Profil ist entfallen.
 
 „Nicht gefunden“ meldet die Brücke, sobald die ID in der ersten Runde nach dem Auftrag nicht in der Ablage steht oder

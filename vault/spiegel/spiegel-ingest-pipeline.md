@@ -23,7 +23,7 @@ und eingefrorene Beispiele der Anfragen und Antworten liegen im Vertrag (`@verei
 | `POST /api/ingest/v1/pair` | Kopplung mit Einmal-Code (15 min, einmal), liefert Geräte-Token |
 | `POST /api/ingest/v1/snapshots` | Stapel von Snapshots (1 bis 50, höchstens 4 MiB); Ergebnis je Snapshot |
 | `POST /api/ingest/v1/heartbeat` | Version, Beginn des Laufs, Rückstau, letzter DB-Kontakt, Uhrabweichung, Zurückgehaltenes, erledigte Aufträge zum Nachladen (setzt `historyLoadedAt`, nur aktive, offene Zustimmungen der Anlage), Ausgang der Aufträge per ID (`missing` und `held` schließen offene Aufträge der Anlage, `sent` schließt das Einlesen) |
-| `GET /api/ingest/v1/state` | was die Brücke ohne eigenen Zustand braucht: Epoche, gehashte SportpassIDs mit Zustimmung, Grabsteine und Löschsperren, Wasserstand, offene Aufträge zum Nachladen (aktive Zustimmung ohne `historyLoadedAt`), offene Aufträge per ID aktiver Konten (`requests`, Frist 30 Tage) |
+| `GET /api/ingest/v1/state` | was die Brücke ohne eigenen Zustand braucht: Epoche, gehashte SportpassIDs mit Zustimmung, Grabsteine und Löschsperren, Wasserstand, offene Aufträge zum Nachladen (aktive Zustimmung ohne `historyLoadedAt`), offene Aufträge per ID aktiver Konten (`requests`: je Konto die gefüllten und zehn ungefüllte der jüngsten Abende, `requestWindow`; der erste Zustand setzt `windowAt`, ab da Frist 30 Tage) |
 | `GET /api/ingest/v1/commands`, `POST …/commands/<id>/result` | Aufträge mit Vorschau (QR-Weg, Fundbüro, Diagnose): offen (SP-1.5, SP-1.7); Nachladen und Scheibe per ID laufen über `state` und `heartbeat` |
 
 Ergebnis je Snapshot: `stored`, `unchanged`, `lifesign` (nur das Lebenszeichen bewegt), `stale`, `future`,
@@ -114,7 +114,8 @@ Regeln unterscheiden deshalb nach gefüllt, nicht nach `cardId`:
 - Nach dem Schreiben: Ein Auftrag mit Scheibe wird erledigt, wenn sie gefüllt und endgültig ist, sonst bleibt er offen,
   damit weitere Stände nachkommen; der Heartbeat schließt ihn als `done` (`finishRequests` nach `advanceCardStates`,
   nur gefüllte). Ältere Aufträge ohne Scheibe bekommen wie bisher die neue Scheibe der Brücke (`attachRequestCard`).
-- Nach 30 Tagen schließt `expireRequests`: gefüllt `done`, sonst `expired`. Endgültiges Löschen einer Scheibe zieht ihren
+- 30 Tage nach `windowAt` (der Zustand hat den Auftrag zum ersten Mal genannt) schließt `expireRequests`: gefüllt
+  `done`, sonst `expired`; ohne `windowAt` läuft keiner ab. Endgültiges Löschen einer Scheibe zieht ihren
   offenen Auftrag zurück (`purgeCards`), sonst holte er eine Scheibe vom Ausdruck, die keine Sperre hinterlässt, zurück.
 
 Der Vertrag ändert sich nicht: `GET /state` nennt Aufträge als `{ id, scheibenId, day }`, `printMismatch` entsteht nur

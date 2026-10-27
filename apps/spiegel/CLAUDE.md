@@ -329,7 +329,8 @@ Stand mit `past` (`MAX_OBSERVED_LAG_MS`, SF-79).
   - Sonst ohne Wahl `choose` (nichts geschrieben, das Blatt „Neue Scheibe“ fragt, vorbelegt mit der Disziplin aus dem
     Kopf des Ausdrucks, wenn genau eine wählbare so heißt, `headerDisciplineId`; die Seite schickt dieselbe Quelle mit
     `{ disciplineId, kind }` noch einmal; der Ausdruck wird dabei zweimal gelesen, dieselbe Datei nach sha256). Mit Wahl:
-    Disziplin eingeordnet (bestätigt, nicht ignoriert, Familie, Scheibenbild), höchstens zehn ungefüllte offene Aufträge,
+    Disziplin eingeordnet (bestätigt, nicht ignoriert, Familie, Scheibenbild), ohne Ausdruck höchstens zehn ungefüllte
+    offene Aufträge (`tooMany`, mit Ausdruck immer),
     eigene Sperren des Abends gelöscht, `writeEnteredCardIn` (Herkunft `pdf`, Beginn Druckzeit bzw. 12 Uhr, Art auch als
     `kindChoice`; mit den Werten und der Standnummer vom Ausdruck, wenn `detailsFromReading` sie gegen das Scheibenbild
     annimmt, sonst ohne und der Ausdruck `inconsistent`), Ausdruck an, Auftrag mit `cardId` (ein älterer offener ohne
@@ -340,13 +341,15 @@ Stand mit `past` (`MAX_OBSERVED_LAG_MS`, SF-79).
     in `fetch-card/texts.ts`, Dialoge `cardFetchStop`, `cardFetchDismiss`.
   - **Gefüllt** heißt: Die Scheibe des Auftrags hat eine Quelle (`UNFILLED` in `card-requests/queries.ts`). Heartbeat
     (`missing`, `held`, `mismatch`) und Einlesen schließen nur ungefüllte, `finishRequests` nur gefüllte, endgültige;
-    Frist 30 Tage (`expireRequests`: gefüllt `done`, sonst `expired`). Beim Einlesen füllt der passende Block die
+    Frist 30 Tage ab `windowAt`, dem ersten Zustand, der den Auftrag nennt; ohne läuft keiner ab (`expireRequests`:
+    gefüllt `done`, sonst `expired`). Beim Einlesen füllt der passende Block die
     Scheibe vom Ausdruck (`fill` in `adaptKey`, `cardId` an `writeRevision`), [[spiegel-ingest-pipeline]].
   - „Nicht mehr holen“/„Entfernen“ (`dismissRequest`) setzen `withdrawn`, nie löschen; `purgeCards` zieht offene Aufträge
     der Scheibe zurück. Die Seite der Scheibe zeigt ID, PDF und Auftrag im Kasten „Diese Scheibe“ (`cardFetchInfo`,
     `CardPrintout`, `CardFetch`); eine Scheibe vom Ausdruck ohne offenen Auftrag trägt `waiting: false` („ohne Werte“,
     `withWaiting` in `reads.ts`). Ältere Aufträge ohne Scheibe stehen auf `/scan` (`legacyRequests`).
-  - `bridgeState` nennt offene Aufträge aktiver Konten (`requests` mit Abend, dann alle Sperren). Kein Vertrag ändert
+  - `bridgeState` nennt offene Aufträge aktiver Konten (`requests` mit Abend, dann alle Sperren): je Konto die gefüllten
+    und zehn ungefüllte der jüngsten Abende (`requestWindow` in `openRequestsOf`), die übrigen warten. Kein Vertrag ändert
     sich.
 - **Ausdrucke** (`src/lib/printouts/`, SP-1.7 b, [[meyton-printout]]): Bausteine ohne Oberfläche.
   - `fetchPrintout` holt per Link: nur http(s), keine Weiterleitungen, 1 MiB, 10 s, nur PDF, nach außen nur ein fester
