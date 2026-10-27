@@ -71,12 +71,12 @@ describe("setCardKind", () => {
     expect(await choiceOf(own)).toBe("training")
   })
 
-  it("eine Scheibe nur aus Probe bleibt Training", async () => {
+  it("eine Scheibe nur aus Probe bekommt die gewählte Art", async () => {
     mocks.session = { user: { id: site.ownerId, role: "USER" } }
-    expect(await setCardKind(probeOnly, "competition")).toEqual({
-      error: "Eine Scheibe nur aus Probe ist Training.",
-    })
-    expect(await choiceOf(probeOnly)).toBeNull()
+    expect(await setCardKind(probeOnly, "competition")).toEqual({ success: true })
+    expect(await choiceOf(probeOnly)).toBe("competition")
+    expect(await setCardKind(probeOnly, "training")).toEqual({ success: true })
+    expect(await choiceOf(probeOnly)).toBe("training")
   })
 
   it("ohne Sitzung oder mit Passwort vom Admin ein Fehler", async () => {

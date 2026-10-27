@@ -1107,21 +1107,19 @@ export async function saveFamilyScoring(
 }
 
 /**
- * Die gewählte Art einer Scheibe setzen (Seite der Scheibe): nur die eigene, nicht gelöschte; eine Scheibe nur aus Probe
- * ist immer Training. `missing`, wenn es sie für den Schützen nicht gibt
+ * Die gewählte Art einer Scheibe setzen (Seite der Scheibe): nur die eigene, nicht gelöschte, auch eine nur aus Probe.
+ * `missing`, wenn es sie für den Schützen nicht gibt
  */
 export async function chooseCardKind(
   db: Db,
   query: { cardId: string; ownerId: string; kind: CardKind }
-): Promise<"saved" | "missing" | "probeOnly"> {
-  const own = { id: query.cardId, ownerId: query.ownerId, ...VISIBLE_CARD }
-  // Prüfen und Schreiben in einem Befehl; erst wenn nichts geschrieben wurde, nachsehen, warum
+): Promise<"saved" | "missing"> {
+  // Prüfen und Schreiben in einem Befehl
   const { count } = await db.card.updateMany({
-    where: { ...own, NOT: { projection: { is: { probeOnly: true } } } },
+    where: { id: query.cardId, ownerId: query.ownerId, ...VISIBLE_CARD },
     data: { kindChoice: query.kind },
   })
-  if (count === 1) return "saved"
-  return (await db.card.count({ where: own })) ? "probeOnly" : "missing"
+  return count === 1 ? "saved" : "missing"
 }
 
 /** eine Disziplin, die der Schütze für eine Scheibe wählen kann (`disciplineOptions` in reads) */

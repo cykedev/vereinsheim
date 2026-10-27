@@ -75,13 +75,14 @@ export async function newCardChoices(
       kind: true,
       kindChoice: true,
       ranking: { select: { kind: true } },
+      projection: { select: { probeOnly: true } },
     },
   })
   return {
     options,
     preset: {
       disciplineId: options.some((o) => o.id === last?.disciplineId) ? last!.disciplineId : null,
-      kind: last ? kindOfRow(last, false) : "training",
+      kind: last ? kindOfRow(last, last.projection?.probeOnly ?? false) : "training",
     },
   }
 }

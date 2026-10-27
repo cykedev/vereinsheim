@@ -15,7 +15,7 @@ import {
 import type { CardProvenance } from "@vereinsheim/shot-ui/detail"
 import type { NamedPeriod } from "@vereinsheim/shot-ui/period/calendar"
 
-import type { CardOrigin, CardState, Prisma } from "@/generated/prisma/client"
+import type { CardKind, CardOrigin, CardState, Prisma } from "@/generated/prisma/client"
 
 import { UNFILLED } from "../card-requests/queries"
 import type { Db } from "../db"
@@ -139,13 +139,14 @@ function toOverview(rows: readonly OverviewRow[]): OverviewCard[] {
       records: row.projection.records as unknown as CardProjection["records"],
       ...(row.projection.detail ? { detail: row.projection.detail as unknown as CardDetail } : {}),
     }
-    // Wertung der Disziplin (Admin), wenn gesetzt; nur Probe hat keine
-    const official = projection.probeOnly ? null : row.discipline.officialScoring
+    const kind = kindOfRow(row, projection.probeOnly)
+    // Wertung der Disziplin (Admin), wenn gesetzt; ein Training nur aus Probe hat keine
+    const official = officialOf(row.discipline.officialScoring, kind, projection.probeOnly)
     return [
       {
         id: row.id,
         startedAtMs: row.startedAt.getTime(),
-        kind: kindOfRow(row, projection.probeOnly),
+        kind,
         complete: row.complete,
         flags: row.flags,
         ...(official ? { official } : {}),
@@ -168,14 +169,24 @@ function toOverview(rows: readonly OverviewRow[]): OverviewCard[] {
 /**
  * die geltende Art einer Scheibe: gewählt, sonst die Zuordnung ihrer Rangliste durch den Admin, sonst die der Quelle (ein
  * Stand schreibt nur `kind` und die Rangliste). Die Zuordnung gilt beim Lesen: Ändert der Admin sie, folgen alle Scheiben.
- * Nur Probe ist Training (der Schütze kann es dort nicht umstellen): Die Rangliste zählt dann nicht.
+ * Ohne Wahl ist eine Scheibe nur aus Probe Training: Rangliste und Quelle zählen dann nicht.
  */
 export const kindOfRow = (
   row: Pick<OverviewRow, "kind" | "kindChoice"> & {
     ranking: Pick<NonNullable<OverviewRow["ranking"]>, "kind"> | null
   },
   probeOnly: boolean
-) => row.kindChoice ?? (probeOnly ? null : row.ranking?.kind) ?? row.kind
+): CardKind => row.kindChoice ?? (probeOnly ? "training" : (row.ranking?.kind ?? row.kind))
+
+/**
+ * die Wertung der Disziplin an einer Scheibe: gilt im Training und im Wettkampf; ein Training nur aus Probe hat keine
+ * (dann wie am Stand), ein Wettkampf nur aus Probe schon
+ */
+export const officialOf = (
+  official: Scoring | null,
+  kind: CardKind,
+  probeOnly: boolean
+): Scoring | null => (probeOnly && kind !== "competition" ? null : official)
 
 /** die Wertung einer Scheibe aus ihrer Zeile und der Wertung ihrer Disziplin, wie die Scheibe sie zeigt */
 const scoringOfRow = (
@@ -345,20 +356,21 @@ export interface PageCard extends PeriodCard {
 
 function toPageCard(row: PageCardRow): PageCard | null {
   if (!row.currentRevision) return null
-  // nur Probe hat keine Wertung der Disziplin; eine Scheibe ohne Schüsse (wartet auf die Anlage) und Probe neben Summen
-  // der Wertung sind keine Probe (wie `probeOnly` der Projektion)
+  // ein Training nur aus Probe hat keine Wertung der Disziplin; eine Scheibe ohne Schüsse (wartet auf die Anlage) und
+  // Probe neben Summen der Wertung sind keine Probe (wie `probeOnly` der Projektion)
   const { shots, totalShots, seriesSums } = row.currentRevision
   const probeOnly =
     shots.length > 0 &&
     shots.every((shot) => shot.stellung === 0) &&
     totalShots === null &&
     seriesSums.length === 0
-  const official = probeOnly ? null : row.discipline.officialScoring
+  const kind = kindOfRow(row, probeOnly)
+  const official = officialOf(row.discipline.officialScoring, kind, probeOnly)
   const sums = toCardSums(row.currentRevision)
   return {
     id: row.id,
     startedAtMs: row.startedAt.getTime(),
-    kind: kindOfRow(row, probeOnly),
+    kind,
     complete: row.complete,
     flags: row.flags,
     ...(official ? { official } : {}),
@@ -426,6 +438,9 @@ export async function disciplineOptions(
       ...CHOICE_SELECT,
       standScoring: true,
       scoringChoice: true,
+      kind: true,
+      kindChoice: true,
+      ranking: { select: { kind: true } },
       projection: { select: { probeOnly: true } },
     },
   })
@@ -436,15 +451,16 @@ export async function disciplineOptions(
     select: { id: true, name: true, officialScoring: true, family: { select: { name: true } } },
     orderBy: [{ family: { name: "asc" } }, { name: "asc" }, { id: "asc" }],
   })
-  // nur Probe hat keine Wertung der Disziplin (wie `toPageCard`)
+  // ein Training nur aus Probe hat keine Wertung der Disziplin (wie `toPageCard`)
   const probeOnly = card.projection?.probeOnly ?? false
+  const kind = kindOfRow(card, probeOnly)
   return rows.map((row) => ({
     id: row.id,
     name: row.name,
     family: row.family?.name ?? null,
     stand: row.id === choice.standId,
     current: row.id === card.disciplineId,
-    scoring: scoringOfRow(card, probeOnly ? null : row.officialScoring),
+    scoring: scoringOfRow(card, officialOf(row.officialScoring, kind, probeOnly)),
   }))
 }
 

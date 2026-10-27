@@ -396,6 +396,25 @@ describe("newCardChoices", () => {
       expect(choices.options.map((o) => o.id)).toContain(site.disciplineId)
       expect(choices.preset).toEqual({ disciplineId: site.disciplineId, kind: "competition" })
 
+      // ohne Wahl in einer Wettkampf-Liste: Wettkampf, nur aus Probe aber Training (wie die Scheibe selbst)
+      const list = await db.ranking.create({
+        data: { siteId: site.siteId, name: "RWK newCardChoices", kind: "competition" },
+      })
+      await db.card.update({
+        where: { id: created.cardId },
+        data: { kindChoice: null, rankingId: list.id },
+      })
+      const presetKind = async () =>
+        (await newCardChoices(db, { userId: user, siteId: site.siteId })).preset.kind
+      expect(await presetKind()).toBe("competition")
+      await db.cardProjection.update({
+        where: { cardId: created.cardId },
+        data: { probeOnly: true },
+      })
+      expect(await presetKind()).toBe("training")
+      await db.card.update({ where: { id: created.cardId }, data: { rankingId: null } })
+      await db.ranking.delete({ where: { id: list.id } })
+
       const ignored = await db.discipline.create({
         data: {
           siteId: site.siteId,
