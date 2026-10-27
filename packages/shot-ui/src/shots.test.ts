@@ -10,6 +10,7 @@ import {
   selectionShots,
   seriesKeyOf,
   shotLabels,
+  shownShots,
 } from "./shots"
 
 const shot = (
@@ -109,5 +110,34 @@ describe("Schüsse für die Bausteine", () => {
     expect(asOnPrintout(WITH_PROBE).some(isProbeShot)).toBe(false)
     expect(asOnPrintout(CARD)).toBe(CARD)
     expect(asOnPrintout([])).toEqual([])
+  })
+})
+
+describe("shownShots: die Schüsse der Seite einer Scheibe", () => {
+  const sums = {
+    series: [{ series: 1, shots: 10, rings: 92, decimalTenths: 970 }],
+    total: null,
+    center: null,
+  }
+
+  it("Probe neben Serien-Summen der Wertung: kein Schuss, die Seite zeigt die Summen", () => {
+    expect(
+      shownShots({ shots: [shot("probe", null, 0, 100), shot("probe", null, 10, 95)], sums })
+    ).toEqual([])
+  })
+
+  it("nur Probe ohne Summen: die Probe als Training, mit Herkunft", () => {
+    const shown = shownShots({ shots: [shot("probe", null, 0, 100)] })
+    expect(shown).toHaveLength(1)
+    expect(shown.every(isProbeShot)).toBe(true)
+    expect((shown[0] as { fromProbe?: boolean }).fromProbe).toBe(true)
+  })
+
+  it("Wertung mit Probe: nur die Wertung", () => {
+    const shown = shownShots({
+      shots: [shot("probe", null, 0, 100), shot("match", 1, 10, 95)],
+      sums,
+    })
+    expect(shown.map((s) => s.kind)).toEqual(["match"])
   })
 })

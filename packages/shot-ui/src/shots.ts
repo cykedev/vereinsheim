@@ -13,6 +13,8 @@ import {
   type MetricShot,
   type Scoring,
 } from "@vereinsheim/shot-core/metrics"
+import type { PeriodCard } from "@vereinsheim/shot-core/analysis"
+import { sightersBesideSums } from "@vereinsheim/shot-core/projection"
 
 import { formatValue } from "./format"
 import type { SeriesKey, Selection } from "./types"
@@ -29,6 +31,14 @@ export function asOnPrintout(shots: readonly MetricShot[]): readonly MetricShot[
   const printed = asOnPrintoutInCore(shots)
   if (printed === shots || shots.some((shot) => shot.kind === "match")) return printed
   return printed.map((shot) => ({ ...shot, fromProbe: true }))
+}
+
+/**
+ * die Schüsse, die die Seite einer Scheibe zeigt: wie am Ausdruck (`asOnPrintout`). Probe neben Summen der Wertung
+ * zählt nicht ([[adr-033]]); die Seite zeigt dann die Summen und keinen Schuss.
+ */
+export function shownShots(card: Pick<PeriodCard, "shots" | "sums">): readonly MetricShot[] {
+  return sightersBesideSums(card.shots, card.sums) ? [] : asOnPrintout(card.shots)
 }
 
 /** die Wertungsschüsse einer Karte, bei nur Probe die Probe wie Wertung (Zeile, Ablesung, kleine Scheibe) */

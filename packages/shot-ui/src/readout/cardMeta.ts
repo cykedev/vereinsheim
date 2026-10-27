@@ -2,10 +2,11 @@
 // zeigt. Datum und Uhrzeit über `@vereinsheim/lib/format` mit der Anzeige-Zeitzone als Parameter.
 
 import type { PeriodCard } from "@vereinsheim/shot-core/analysis"
+import { probeOnlyCard } from "@vereinsheim/shot-core/projection"
 import { formatTimeOfDay, formatWeekdayDate } from "@vereinsheim/lib/format"
 
 import { KIND_TEXT } from "../list/KindMark"
-import { kindOf, probeOnlyShots } from "../period/model"
+import { kindOf } from "../period/model"
 
 /**
  * „Wettkampf · Liste RWK_LP · Sa 26.09.2026 · 10:30“ als Teile für `CardHeader` (`meta`); ohne Liste (PDF, eigene
@@ -18,7 +19,7 @@ export function cardMeta(
   list?: { name: string } | null
 ): string[] {
   const at = new Date(card.startedAtMs)
-  const kind = KIND_TEXT[kindOf(card.kind, probeOnlyShots(card.shots))]
+  const kind = KIND_TEXT[kindOf(card.kind, probeOnlyCard(card.shots, card.sums))]
   return [
     kind,
     ...(list ? [`Liste ${list.name}`] : []),
