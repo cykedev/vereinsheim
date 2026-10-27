@@ -1,4 +1,4 @@
-// Gegenprobe 1c-0: vergleicht, was ein Meyton-Ausdruck zeigt (`@vereinsheim/meyton-pdf/values`), mit den Rohdaten
+// Gegenprobe ([[meyton-printout]]): vergleicht, was ein Meyton-Ausdruck zeigt (`@vereinsheim/meyton-pdf/values`), mit den Rohdaten
 // derselben Scheibe. Reine Funktionen ohne Datenbank und ohne PDF; das Werkzeug `printout-check.ts` liest beides und
 // fasst die Ergebnisse zusammen. Lagen in µm wie in Spiegel (x nach rechts, y nach oben), Längen im Ergebnis in mm.
 
@@ -34,9 +34,25 @@ export interface RawShot extends Point {
 export const teilerOf = (distanceTenthsUm: number) => distanceTenthsUm / 100
 
 const MM = 1000
-const round2 = (mm: number) => Math.round(mm * 100) / 100
-/** auf 1/100 mm abgeschnitten, zur Null hin */
-const trunc2 = (mm: number) => Math.trunc(mm * 100 + 1e-9 * Math.sign(mm)) / 100
+/** auf `decimals` Stellen gerundet, die Hälfte vom Null weg (auch bei negativen Werten) */
+const roundTo = (value: number, decimals: number) =>
+  (Math.sign(value) * Math.round(Math.abs(value) * 10 ** decimals)) / 10 ** decimals
+/** auf `decimals` Stellen abgeschnitten, zur Null hin */
+const truncTo = (value: number, decimals: number) =>
+  Math.trunc(value * 10 ** decimals + 1e-9 * Math.sign(value)) / 10 ** decimals
+const same = (a: number, b: number) => Math.abs(a - b) < 1e-9
+
+/** Wie ist ein gedruckter Wert aus dem rohen entstanden: abgeschnitten oder gerundet auf `decimals` Stellen? */
+export function howPrinted(
+  printed: number,
+  raw: number,
+  decimals: number
+): { truncated: boolean; rounded: boolean } {
+  return {
+    truncated: same(printed, truncTo(raw, decimals)),
+    rounded: same(printed, roundTo(raw, decimals)),
+  }
+}
 
 // ── Werte je Schuss, Serien, Ergebnis ──────────────────────────────────────────────────────────────────────────────
 
@@ -47,9 +63,10 @@ export interface ShotComparison {
   compared: number
   valueEqual: number
   innerTenEqual: number
-  /** Teiler je Schuss, wo der Ausdruck ihn druckt */
+  /** Teiler je Schuss, wo der Ausdruck ihn druckt, in der gedruckten Genauigkeit abgeschnitten bzw. gerundet gleich */
   teilerCompared: number
-  teilerEqual: number
+  teilerTruncated: number
+  teilerRounded: number
   /** 0-basierte Stellen mit abweichendem Wert oder Innenzehner */
   mismatches: number[]
 }
@@ -63,7 +80,8 @@ export function compareShots(
   let valueEqual = 0
   let innerTenEqual = 0
   let teilerCompared = 0
-  let teilerEqual = 0
+  let teilerTruncated = 0
+  let teilerRounded = 0
   const mismatches: number[] = []
   for (let i = 0; i < compared; i++) {
     const value = printed[i].value === raw[i].decimalTenths
@@ -74,7 +92,13 @@ export function compareShots(
     const teiler = printed[i].teiler
     if (teiler !== null) {
       teilerCompared++
-      if (Math.abs(teiler - Math.round(teilerOf(raw[i].distanceTenthsUm))) < 1e-9) teilerEqual++
+      const how = howPrinted(
+        teiler,
+        teilerOf(raw[i].distanceTenthsUm),
+        Number.isInteger(teiler) ? 0 : 1
+      )
+      if (how.truncated) teilerTruncated++
+      if (how.rounded) teilerRounded++
     }
   }
   return {
@@ -84,7 +108,8 @@ export function compareShots(
     valueEqual,
     innerTenEqual,
     teilerCompared,
-    teilerEqual,
+    teilerTruncated,
+    teilerRounded,
     mismatches,
   }
 }
@@ -144,8 +169,11 @@ export interface TeilerCheck {
   raw: number | null
   /** gedruckt − roh */
   diff: number | null
-  /** der genannte Schuss steht in der Rangfolge der Rohdaten an dieser Stelle */
+  /** der genannte Schuss steht in der Rangfolge der Rohdaten an dieser Stelle (bei gleichem Teiler jeder davon) */
   rankOk: boolean
+  /** auf die gedruckte Genauigkeit abgeschnitten bzw. gerundet gleich (beste eine Nachkommastelle, weiteste ganz) */
+  truncated: boolean
+  rounded: boolean
 }
 
 /**
@@ -164,12 +192,18 @@ export function compareTeiler(
   return refs.map((ref, rank) => {
     const at = numbers.indexOf(ref.shot)
     const rawTeiler = at === -1 ? null : teilerOf(raw[at].distanceTenthsUm)
+    const how =
+      rawTeiler === null
+        ? { truncated: false, rounded: false }
+        : howPrinted(ref.value, rawTeiler, kind === "best" ? 1 : 0)
     return {
       shot: ref.shot,
       printed: ref.value,
       raw: rawTeiler,
       diff: rawTeiler === null ? null : ref.value - rawTeiler,
-      rankOk: ranked[rank]?.n === ref.shot,
+      rankOk:
+        rawTeiler !== null && ranked[rank] !== undefined && same(ranked[rank].teiler, rawTeiler),
+      ...how,
     }
   })
 }
@@ -192,14 +226,14 @@ export function compareCenter(printed: CenterMm, shots: readonly Point[]): Cente
   const c = centroid(shots)
   if (!c) return null
   const raw = { x: c.xUm / MM, y: c.yUm / MM }
-  const same = (f: (mm: number) => number) =>
-    Math.abs(printed.x - f(raw.x)) < 1e-9 && Math.abs(printed.y - f(raw.y)) < 1e-9
+  const x = howPrinted(printed.x, raw.x, 2)
+  const y = howPrinted(printed.y, raw.y, 2)
   return {
     printed,
     raw,
     distanceMm: Math.hypot(printed.x - raw.x, printed.y - raw.y),
-    truncated: same(trunc2),
-    rounded: same(round2),
+    truncated: x.truncated && y.truncated,
+    rounded: x.rounded && y.rounded,
   }
 }
 
@@ -324,7 +358,9 @@ export function fitDrawn(
   const s = num / den
   const tx = px - s * qx
   const ty = py - s * qy
-  const fitted = p.map((v, i) => Math.hypot(v.x - (s * q[i].x + tx), v.y - (s * q[i].y + ty)) / s)
+  const fitted = p.map(
+    (v, i) => Math.hypot(v.x - (s * q[i].x + tx), v.y - (s * q[i].y + ty)) / Math.abs(s)
+  )
 
   const fromRings = rings
     ? p.map((v, i) =>
@@ -368,6 +404,111 @@ export function checkLabels(picture: Picture, firstShot: number, ptPerMm: number
       covered++
   })
   return { missing, covered, offsetsMm }
+}
+
+/** Lage einer Marke in mm, Mitte und Maßstab aus den Ringen; y nach oben wie die Rohdaten */
+export function drawnMm(
+  point: { x: number; y: number },
+  rings: { center: { x: number; y: number }; ptPerMm: number }
+): { x: number; y: number } {
+  return {
+    x: (point.x - rings.center.x) / rings.ptPerMm,
+    y: (point.y - rings.center.y) / rings.ptPerMm,
+  }
+}
+
+/** Teiler in 1/100 mm aus einer Lage in mm (Abstand zur Mitte) */
+export const teilerFromMm = (point: { x: number; y: number }) => Math.hypot(point.x, point.y) * 100
+
+/**
+ * Abweichung der Nummern von der Lage der Rohdaten in mm: Nummer n gegen den n-ten Schuss des Bilds (ab `firstShot`),
+ * die nächste Nummer mit diesem Wert, wenn sie mehrfach dasteht (Ringzahlen im Bild)
+ */
+export function labelDeviations(
+  picture: Picture,
+  firstShot: number,
+  raw: readonly Point[],
+  rings: { center: { x: number; y: number }; ptPerMm: number }
+): number[] {
+  const out: number[] = []
+  raw.forEach((shot, i) => {
+    const q = { x: shot.xUm / MM, y: shot.yUm / MM }
+    const nearest = picture.labels
+      .filter((l) => l.shot === firstShot + i)
+      .map((l) => drawnMm(l, rings))
+      .map((p) => Math.hypot(p.x - q.x, p.y - q.y))
+      .sort((a, b) => a - b)[0]
+    if (nearest !== undefined) out.push(nearest)
+  })
+  return out
+}
+
+export interface SelfCheck {
+  what: string
+  printed: number
+  /** aus den gedruckten Werten je Schuss gerechnet */
+  fromShots: number
+}
+
+/**
+ * Stimmen die gedruckten Summen mit den gedruckten Werten je Schuss? Ring = ganze Zahl des Werts (10,4 → 10), wie
+ * Meyton bei der Luftpistole; ohne Werte je Schuss nichts.
+ */
+export function selfCheck(values: PrintoutValues): SelfCheck[] {
+  const shots = values.shots
+  if (shots.length === 0) return []
+  const ring = (s: ShotValue) => Math.floor(s.value / 10)
+  const checks: SelfCheck[] = []
+  const push = (what: string, printed: number | null | undefined, fromShots: number) => {
+    if (printed !== null && printed !== undefined) checks.push({ what, printed, fromShots })
+  }
+  const sum = (list: readonly ShotValue[], f: (s: ShotValue) => number) =>
+    list.reduce((total, s) => total + f(s), 0)
+  push("Ergebnis Ringe", values.result?.rings, sum(shots, ring))
+  push(
+    "Ergebnis Zehntel",
+    values.result?.tenths,
+    sum(shots, (s) => s.value)
+  )
+  for (const series of values.series) {
+    if (series.shots.length === 0) continue
+    push("Serie Ringe", series.sum?.rings, sum(series.shots, ring))
+    push(
+      "Serie Zehntel",
+      series.sum?.tenths,
+      sum(series.shots, (s) => s.value)
+    )
+  }
+  values.seriesRings?.forEach((printed, i) => {
+    const series = values.series[i]
+    if (series && series.shots.length > 0) push("Serien", printed, sum(series.shots, ring))
+  })
+  push("Innenzehner", values.innerTens, shots.filter((s) => s.innerTen).length)
+  values.counts?.forEach((printed, i) =>
+    push("Zähler", printed, shots.filter((s) => ring(s) === 10 - i).length)
+  )
+  return checks
+}
+
+/** für den Vergleich von Disziplinnamen: klein, Leerraum zusammengefasst, Minuszeichen als Bindestrich */
+const normalizeName = (name: string) =>
+  name
+    .toLowerCase()
+    .replace(/[\u2212\u2013]/g, "-")
+    .replace(/\s+/g, " ")
+    .trim()
+
+export type NameMatch =
+  { kind: "exact" | "normalized"; index: number } | { kind: "ambiguous" | "none" }
+
+/** Der Name im Kopf gegen die Disziplinen der Anlage: genau ein Treffer, wörtlich oder nach Normalisieren */
+export function matchDiscipline(printed: string, names: readonly string[]): NameMatch {
+  const exact = names.flatMap((n, i) => (n === printed ? [i] : []))
+  if (exact.length === 1) return { kind: "exact", index: exact[0] }
+  if (exact.length > 1) return { kind: "ambiguous" }
+  const loose = names.flatMap((n, i) => (normalizeName(n) === normalizeName(printed) ? [i] : []))
+  if (loose.length === 1) return { kind: "normalized", index: loose[0] }
+  return { kind: loose.length > 1 ? "ambiguous" : "none" }
 }
 
 // ── Zusammenfassen ───────────────────────────────────────────────────────────────────────────────────────────────

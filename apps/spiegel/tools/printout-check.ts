@@ -1,4 +1,4 @@
-// Gegenprobe 1c-0: Was ein Meyton-Ausdruck zeigt, gemessen an den Rohdaten derselben Scheibe in der lokalen
+// Gegenprobe ([[meyton-printout]]): Was ein Meyton-Ausdruck zeigt, gemessen an den Rohdaten derselben Scheibe in der lokalen
 // Dev-Datenbank. Liest alle PDFs eines Ordners, nimmt die Ausdrucke des häufigsten Schützen (die übrigen nur gezählt),
 // ordnet sie über die ID im Fuß und den Abend der Druckzeit den Scheiben des Kontos zu und vergleicht Werte, Summen,
 // Teiler, Trefferlage, Trefferkreis, Streuwert und die gezeichneten Lagen.
@@ -15,8 +15,9 @@ import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs"
 import { join, resolve } from "node:path"
 
 import { readPrintout } from "@vereinsheim/meyton-pdf/printout"
+import { zonedWallTimeMs } from "@vereinsheim/lib/format"
 import { readPrintoutValues, type PrintoutValues } from "@vereinsheim/meyton-pdf/values"
-import { TARGETS, type TargetId } from "@vereinsheim/shot-core/targets"
+import { LP_10M, TARGETS, type TargetId } from "@vereinsheim/shot-core/targets"
 import { eveningDay } from "@vereinsheim/shot-ui/period/calendar"
 
 import { createPrismaClient, type Db } from "../src/lib/db"
@@ -28,15 +29,20 @@ import {
   compareShots,
   compareSums,
   compareTeiler,
+  drawnMm,
   fitDrawn,
   HIT_CIRCLE_CANDIDATES,
   hitCircleCandidates,
+  labelDeviations,
+  matchDiscipline,
   nearestCandidate,
   ringDiametersMm,
   scaleFromRings,
+  selfCheck,
   SPREAD_CANDIDATES,
   spreadCandidates,
   summarize,
+  teilerFromMm,
   type RawShot,
   type Summary,
 } from "./printout-check/compare"
@@ -45,14 +51,26 @@ const REPORT_DIR = resolve(__dirname, "../../../reports/tis-1c0")
 
 interface ReadFile {
   values: PrintoutValues
-  hex: string | null
+  /** ID im Fuß als ScheibenID; null ohne eindeutige ID */
+  scheibenId: number | null
   printedAtMs: number | null
+  /** Monat der Druckzeit, nur für den Zeitraum eines Layouts */
+  printedMonth: string | null
   producer: string | null
+  creator: string | null
+  pages: number
 }
 
 interface Candidate {
   startedAt: Date
   targetId: string | null
+  stand: string | null
+  /** Disziplin vom Stand: die gewählte ersetzt sie nicht */
+  disciplineName: string
+  /** erster Wertungsschuss in ms; null ohne Zeit */
+  firstScoredMs: number | null
+  /** erster Schuss überhaupt (auch Probe) in ms; null ohne Zeit */
+  firstShotMs: number | null
   probe: RawShot[]
   scored: RawShot[]
 }
@@ -112,10 +130,6 @@ const percent = (share: number | null) => (share === null ? "–" : `${(100 * sh
 const summaryRow = (label: string, s: Summary, digits = 3) =>
   `| ${label} | ${s.n} | ${num(s.median, digits)} | ${num(s.p95, digits)} | ${num(s.max, digits)} |`
 
-const round1 = (value: number) => Math.round(value * 10) / 10
-const trunc1 = (value: number) => Math.trunc(value * 10 + 1e-9) / 10
-const same = (a: number, b: number) => Math.abs(a - b) < 1e-9
-
 function rawShot(s: {
   series: number | null
   xUm: number | null
@@ -151,7 +165,9 @@ async function candidates(db: Db, email: string, scheibenIds: number[]) {
     select: {
       scheibenId: true,
       startedAt: true,
-      discipline: { select: { targetId: true } },
+      stand: true,
+      discipline: { select: { targetId: true, name: true } },
+      standDiscipline: { select: { name: true } },
       currentRevision: {
         select: {
           shots: {
@@ -165,6 +181,7 @@ async function candidates(db: Db, email: string, scheibenIds: number[]) {
               decimalTenths: true,
               innerTen: true,
               distanceTenthsUm: true,
+              firedAt: true,
             },
           },
         },
@@ -172,23 +189,47 @@ async function candidates(db: Db, email: string, scheibenIds: number[]) {
     },
   })
   const byId = new Map<number, Candidate[]>()
+  let skippedCards = 0
   for (const card of cards) {
     const shots = card.currentRevision?.shots ?? []
     const pick = (stellung: (n: number) => boolean) =>
       shots.filter((s) => stellung(s.stellung)).map(rawShot)
     const probe = pick((n) => n === 0)
     const scored = pick((n) => n !== 0)
-    if (probe.includes(null) || scored.includes(null)) continue
+    if (probe.includes(null) || scored.includes(null)) {
+      skippedCards++
+      continue
+    }
+    const firedAt = (stellung: (n: number) => boolean) =>
+      shots
+        .filter((s) => stellung(s.stellung) && s.firedAt !== null)
+        .map((s) => s.firedAt!.getTime())
+    const fired = firedAt((n) => n !== 0)
+    const firedAll = firedAt(() => true)
     const list = byId.get(card.scheibenId!) ?? []
     list.push({
       startedAt: card.startedAt,
       targetId: card.discipline.targetId,
+      stand: card.stand,
+      disciplineName: (card.standDiscipline ?? card.discipline).name,
+      firstScoredMs: fired.length > 0 ? Math.min(...fired) : null,
+      firstShotMs: firedAll.length > 0 ? Math.min(...firedAll) : null,
       probe: probe as RawShot[],
       scored: scored as RawShot[],
     })
     byId.set(card.scheibenId!, list)
   }
-  return { byId, timeZone: site.timeZone, accountCards: cards.length }
+  const disciplines = await db.discipline.findMany({
+    where: { siteId: site.id },
+    select: { name: true },
+  })
+  return {
+    byId,
+    timeZone: site.timeZone,
+    accountCards: cards.length,
+    skippedCards,
+    disciplineNames: disciplines.map((d) => d.name),
+  }
 }
 
 /** Probe- oder Wertungsschüsse, wie der Modus beim Druck sagt; ohne klaren Modus die, deren Werte passen */
@@ -198,9 +239,21 @@ function shownShots(values: PrintoutValues, card: Candidate): { shots: RawShot[]
   if (/wertung/i.test(mode)) return { shots: card.scored, by: "Modus Wertung → Wertungsschüsse" }
   const fits = (shots: RawShot[]) => compareShots(values.shots, shots).valueEqual
   return fits(card.probe) > fits(card.scored)
-    ? { shots: card.probe, by: `Modus ${mode || "–"} → Probeschüsse (Werte passen)` }
-    : { shots: card.scored, by: `Modus ${mode || "–"} → Wertungsschüsse (Werte passen)` }
+    ? { shots: card.probe, by: `Modus ${modeLabel(values)} → Probeschüsse (Werte passen)` }
+    : { shots: card.scored, by: `Modus ${modeLabel(values)} → Wertungsschüsse (Werte passen)` }
 }
+
+// Freitext aus dem Kopf geht nur in den Bericht, wenn er wie ein Modus oder eine Disziplin aussieht; in einem anderen
+// Layout könnte an dieser Stelle ein Name stehen.
+const MODES = ["Probe", "Wertung", "Training", "Vorbereitung/Probe"]
+const modeLabel = (values: PrintoutValues) =>
+  values.mode === null ? "–" : MODES.includes(values.mode) ? values.mode : "anderer"
+const disciplineLabel = (values: PrintoutValues) =>
+  values.discipline === null
+    ? "–"
+    : /^(LP|LG|KK|GK|ZS|Lp|Lg)\b[\w\s.\-−/]*$/.test(values.discipline)
+      ? values.discipline
+      : "andere"
 
 function layoutOf(values: PrintoutValues): string {
   if (values.layout.includes("Trefferkreis:")) return "mit Trefferkreis"
@@ -236,9 +289,12 @@ async function main() {
       const [values, printout] = await Promise.all([readPrintoutValues(bytes), readPrintout(bytes)])
       read.push({
         values,
-        hex: printout.id.kind === "found" ? printout.id.hex : null,
+        scheibenId: printout.id.kind === "found" ? printout.id.value : null,
         printedAtMs: printout.createdAt?.epochMs ?? null,
+        printedMonth: printout.createdAt?.local.slice(0, 7) ?? null,
         producer: printout.producer,
+        creator: printout.creator,
+        pages: printout.pages,
       })
     } catch {
       unreadable++
@@ -263,16 +319,15 @@ async function main() {
   const noName = read.filter((r) => nameOf(r) === null).length
   const otherName = read.length - own.length - noName
 
+  const ids = [...new Set(own.flatMap((r) => (r.scheibenId === null ? [] : [r.scheibenId])))]
   const db = createPrismaClient(url)
-  const decode = (hex: string) => {
-    const unsigned = Number.parseInt(hex, 16)
-    return unsigned >= 0x8000_0000 ? unsigned - 0x1_0000_0000 : unsigned
-  }
-  const ids = [...new Set(own.flatMap((r) => (r.hex ? [decode(r.hex)] : [])))]
-  const { byId, timeZone, accountCards } = await candidates(db, email, ids)
-  await db.$disconnect()
+  const { byId, timeZone, accountCards, skippedCards, disciplineNames } = await candidates(
+    db,
+    email,
+    ids
+  ).finally(() => db.$disconnect())
 
-  // Abdeckung (Frage 6)
+  // Abdeckung
   const coverage = new Tally()
   const layouts = new Tally()
   const disciplines = new Tally()
@@ -280,11 +335,73 @@ async function main() {
   const drawings = new Tally()
   const producers = new Tally()
   const missingFields = new Tally()
+  // Layouts nach Metadaten und erkannten Zeilen, mit Zeitraum (Monat der ersten und letzten Druckzeit)
+  const layoutGroups = new Tally()
+  const layoutMonths = new Map<string, string[]>()
+  const drawingMonths = new Map<string, string[]>()
+  // Marken über alle eigenen Bilder: außerhalb des Rahmens, Größe des Rahmens je Art der Marke (Ringe der Luftpistole)
+  const markOutside = new Tally()
+  const frameMm = new Samples()
+  const span = (months: readonly string[] | undefined) => {
+    const sorted = [...(months ?? [])].sort()
+    return sorted.length > 0 ? `${sorted[0]} bis ${sorted.at(-1)}` : "–"
+  }
+  // Selbstprüfung: passen die gelesenen Werte zu den gedruckten Summen?
+  const selfRatio = new Ratio()
+  const selfPrintouts = new Tally()
+  // Disziplin im Kopf gegen die Disziplinen der Anlage
+  const disciplineMatch = new Tally()
   for (const r of own) {
+    const key = [
+      r.producer ?? "–",
+      r.creator ?? "–",
+      `${r.pages} Seite${r.pages === 1 ? "" : "n"}`,
+      r.values.layout.filter((l) => !l.startsWith("Serie ")).join(" "),
+    ].join(" · ")
+    layoutGroups.add(key)
+    if (r.printedMonth) layoutMonths.set(key, [...(layoutMonths.get(key) ?? []), r.printedMonth])
+    for (const picture of r.values.pictures) {
+      if (!picture.frame || picture.holeShape === null) continue
+      const frame = picture.frame
+      const shape = picture.holeShape === "cross" ? "Kreuz" : "Kreis"
+      markOutside.add(`${shape}: Marken`, picture.holes.length)
+      markOutside.add(
+        `${shape}: außerhalb des Rahmens`,
+        picture.holes.filter(
+          (h) => h.x < frame.left || h.x > frame.right || h.y < frame.bottom || h.y > frame.top
+        ).length
+      )
+      const ptPerMm = scaleFromRings(picture.ringDiametersPt, ringDiametersMm(LP_10M))
+      if (ptPerMm !== null) frameMm.add(shape, (frame.right - frame.left) / ptPerMm)
+    }
+    const checks = selfCheck(r.values)
+    for (const c of checks) selfRatio.add(c.what, c.printed === c.fromShots)
+    selfPrintouts.add(
+      checks.length === 0
+        ? "ohne Werte je Schuss"
+        : checks.every((c) => c.printed === c.fromShots)
+          ? "alle Summen passen"
+          : "mindestens ein Widerspruch"
+    )
+    disciplineMatch.add(
+      r.values.discipline === null
+        ? "kein Name im Kopf"
+        : {
+            exact: "genau eine, wörtlich",
+            normalized: "genau eine, nach Normalisieren",
+            ambiguous: "mehrere",
+            none: "keine",
+          }[matchDiscipline(r.values.discipline, disciplineNames).kind]
+    )
     layouts.add(layoutOf(r.values))
-    disciplines.add(r.values.discipline ?? "–")
-    modes.add(r.values.mode ?? "–")
+    disciplines.add(disciplineLabel(r.values))
+    modes.add(modeLabel(r.values))
     drawings.add(drawingOf(r.values))
+    if (r.printedMonth)
+      drawingMonths.set(drawingOf(r.values), [
+        ...(drawingMonths.get(drawingOf(r.values)) ?? []),
+        r.printedMonth,
+      ])
     producers.add(r.producer?.replace(/\d+(\.\d+)*$/, "").trim() || "–")
     const v = r.values
     const fields: [string, unknown][] = [
@@ -314,11 +431,11 @@ async function main() {
   }
   const pairs: Pair[] = []
   for (const r of own) {
-    if (!r.hex) {
+    if (r.scheibenId === null) {
       coverage.add("ohne ID im Fuß")
       continue
     }
-    const list = byId.get(decode(r.hex))
+    const list = byId.get(r.scheibenId)
     if (!list) {
       coverage.add("ID ohne Scheibe des Kontos")
       continue
@@ -346,22 +463,27 @@ async function main() {
     pairs.push({ n: pairs.length + 1, file: r, card: best.card, shots: best.shots, by: best.by })
   }
 
-  // Frage 1: Werte, Summen
+  // Werte, Summen
   const shotRatio = new Ratio()
   const sumRatio = new Ratio()
   const selection = new Tally()
   let partial = 0
-  // Frage 2: Teiler
+  // Teiler
   const teilerRatio = new Ratio()
   const teilerDiff = new Samples()
-  // Frage 3: Trefferlage
+  // Trefferlage
   const centerRatio = new Ratio()
   const centerDist = new Samples()
-  // Frage 4: Trefferkreis, Streuwert
+  // Trefferkreis, Streuwert
   const circleDiff = new Samples()
   const circleNearest = new Tally()
   const spreadDiff = new Samples()
-  // Frage 5: Trefferbild
+  // Erweiterung: Fuß, Kopf, Teiler aus den Marken
+  const headRatio = new Ratio()
+  const initDiff = new Samples()
+  const rawRingRatio = new Ratio()
+  const markTeiler = new Samples()
+  // Trefferbild
   const drawn = new Samples()
   const labelTally = new Tally()
   const resolution = new Samples()
@@ -375,14 +497,47 @@ async function main() {
     if (v.shots.length > 0 && v.shots.length < raw.length) partial++
 
     const shots = compareShots(v.shots, raw)
+    for (const s of raw)
+      if (s.ring !== null)
+        rawRingRatio.add(
+          "Ring der Rohdaten = ganze Zahl des Werts",
+          s.ring === Math.floor(s.decimalTenths / 10)
+        )
+    if (v.stand !== null && pair.card.stand !== null)
+      headRatio.add("Standnummer = Card.stand", v.stand === pair.card.stand)
+    if (v.discipline !== null) {
+      const match = matchDiscipline(v.discipline, disciplineNames)
+      headRatio.add(
+        "Disziplin im Kopf = Disziplin vom Stand",
+        "index" in match && disciplineNames[match.index] === pair.card.disciplineName
+      )
+    }
+    if (v.initialized !== null) {
+      const [date, time] = v.initialized.split("T")
+      const [y, mo, d] = date.split("-").map(Number)
+      const [h, mi] = time.split(":").map(Number)
+      const initializedMs = zonedWallTimeMs(Date.UTC(y, mo - 1, d, h, mi), timeZone)
+      if (pair.card.firstScoredMs !== null)
+        initDiff.add(
+          `erster Wertungsschuss − initialisiert (${modeLabel(v)})`,
+          (pair.card.firstScoredMs - initializedMs) / 1000
+        )
+      if (pair.card.firstShotMs !== null)
+        initDiff.add(
+          `erster Schuss − initialisiert (${modeLabel(v)})`,
+          (pair.card.firstShotMs - initializedMs) / 1000
+        )
+    }
     shotRatio.addCounts("Werte je Schuss (Zehntel)", shots.valueEqual, shots.compared)
     shotRatio.addCounts("Innenzehner je Schuss", shots.innerTenEqual, shots.compared)
-    if (shots.teilerCompared > 0)
+    if (shots.teilerCompared > 0) {
       shotRatio.addCounts(
-        "Teiler je Schuss (ganze 1/100 mm, gerundet)",
-        shots.teilerEqual,
+        "Teiler je Schuss = abgeschnitten",
+        shots.teilerTruncated,
         shots.teilerCompared
       )
+      shotRatio.addCounts("Teiler je Schuss = gerundet", shots.teilerRounded, shots.teilerCompared)
+    }
     const sums = compareSums(v, raw)
     for (const check of sums)
       sumRatio.add(check.what.replace(/\d+/, "n").replace(/ n$/, ""), check.printed === check.raw)
@@ -423,17 +578,11 @@ async function main() {
           teilerRatio.add(`${row.label}: Schussnummer vorhanden`, false)
           continue
         }
-        const decimals = row.kind === "best"
-        const asRounded = same(check.printed, decimals ? round1(check.raw) : Math.round(check.raw))
-        const asTruncated = same(
-          check.printed,
-          decimals ? trunc1(check.raw) : Math.trunc(check.raw)
-        )
-        teilerRatio.add(`${row.label}: = gerundet`, asRounded)
-        teilerRatio.add(`${row.label}: = abgeschnitten`, asTruncated)
+        teilerRatio.add(`${row.label}: = gerundet`, check.rounded)
+        teilerRatio.add(`${row.label}: = abgeschnitten`, check.truncated)
         teilerRatio.add(`${row.label}: Rang stimmt`, check.rankOk)
         teilerDiff.add(row.label, check.diff ?? 0)
-        if ((asRounded || asTruncated) && check.rankOk) teilerOk++
+        if ((check.rounded || check.truncated) && check.rankOk) teilerOk++
       }
     }
 
@@ -558,6 +707,30 @@ async function main() {
         drawnWorst = Math.max(drawnWorst ?? 0, d)
       }
       for (const d of fit.fitted) drawn.add(`${part.label}, ${shape}: beste Ausrichtung`, d)
+      if (ptPerMm !== null && part.label === "ganze Scheibe") {
+        const rings = { center: picture.center, ptPerMm }
+        picture.holes.forEach((h, k) => {
+          const fromMark = teilerFromMm(drawnMm(h, rings))
+          markTeiler.add(
+            "Teiler aus der Marke − roh",
+            fromMark - part.shots[k].distanceTenthsUm / 100
+          )
+        })
+        for (const ref of v.bestTeiler ?? []) {
+          const hole = picture.holes[ref.shot - 1]
+          if (hole)
+            markTeiler.add(
+              "gedruckter bester Teiler − Teiler aus der Marke",
+              ref.value - teilerFromMm(drawnMm(hole, rings))
+            )
+        }
+      }
+      if (picture.labels.length > 0 && ptPerMm !== null)
+        for (const d of labelDeviations(picture, part.first, part.shots, {
+          center: picture.center,
+          ptPerMm,
+        }))
+          drawn.add(`${part.label}: Nummer zur Lage der Rohdaten`, d)
       if (ptPerMm !== null) resolution.add(part.label, 1 / ptPerMm)
       if (picture.labels.length > 0 && ptPerMm !== null) {
         const labels = checkLabels(picture, part.first, ptPerMm)
@@ -569,7 +742,7 @@ async function main() {
     })
 
     table.push(
-      `| ${pair.n} | ${layoutOf(v)} | ${v.mode ?? "–"} | ${shots.compared} / ${raw.length} | ${shots.valueEqual} | ${shots.innerTenEqual} | ${sums.filter((s) => s.printed === s.raw).length} / ${sums.length} | ${teilerOk} / ${teilerAll} | ${num(centerWorst, 3)} | ${circleBest} | ${num(drawnWorst, 3)} |`
+      `| ${pair.n} | ${layoutOf(v)} | ${modeLabel(v)} | ${shots.compared} / ${raw.length} | ${shots.valueEqual} | ${shots.innerTenEqual} | ${sums.filter((s) => s.printed === s.raw).length} / ${sums.length} | ${teilerOk} / ${teilerAll} | ${num(centerWorst, 3)} | ${circleBest} | ${num(drawnWorst, 3)} |`
     )
   }
 
@@ -583,7 +756,7 @@ async function main() {
     "Nur Zahlen, ohne ID, Name oder Datum einzelner Scheiben (ADR-029). Längen in mm, Teiler in 1/100 mm."
   )
   line()
-  line("## Abdeckung (Frage 6)")
+  line("## Abdeckung")
   line()
   line("| | Anzahl |")
   line("|---|---|")
@@ -592,14 +765,16 @@ async function main() {
   line(`| eigene (häufigster Name) | ${own.length} |`)
   line(`| anderer Name | ${otherName} |`)
   line(`| ohne Name | ${noName} |`)
-  line(`| Scheiben des Kontos zu diesen IDs | ${accountCards} |`)
+  line(`| verschiedene IDs der eigenen | ${ids.length} |`)
+  line(`| davon mit Scheibe des Kontos | ${byId.size} |`)
+  line(`| Scheiben des Kontos zu diesen IDs (Blöcke) | ${accountCards} |`)
+  line(`| davon ohne Lage, Wert oder Abstand je Schuss (nicht verglichen) | ${skippedCards} |`)
   for (const row of coverage.lines()) out.push(row)
   for (const [title, tally] of [
     ["Layout", layouts],
     ["Erzeuger", producers],
     ["Disziplin", disciplines],
     ["Modus", modes],
-    ["Trefferbild", drawings],
     ["fehlt im eigenen Ausdruck", missingFields],
   ] as const) {
     line()
@@ -608,7 +783,50 @@ async function main() {
     for (const row of tally.lines()) out.push(row)
   }
   line()
-  line("## Werte je Schuss, Serien, Ergebnis (Frage 1)")
+  line("| Layout (Erzeuger · Ersteller · Seiten · erkannte Zeilen) | Ausdrucke | Zeitraum |")
+  line("|---|---|---|")
+  for (const [key, n] of [...layoutGroups.counts].sort((a, b) => b[1] - a[1]))
+    out.push(`| ${key} | ${n} | ${span(layoutMonths.get(key))} |`)
+  line()
+  line("| Trefferbild | Ausdrucke | Zeitraum |")
+  line("|---|---|---|")
+  for (const [key, n] of [...drawings.counts].sort((a, b) => b[1] - a[1]))
+    out.push(`| ${key} | ${n} | ${span(drawingMonths.get(key))} |`)
+  line()
+  line("### Selbstprüfung über alle eigenen Ausdrucke")
+  line()
+  line("Gelesene Werte je Schuss gegen die gedruckten Summen (Ring = ganze Zahl des Werts).")
+  line()
+  line("| Ausdrucke | Anzahl |")
+  line("|---|---|")
+  for (const row of selfPrintouts.lines()) out.push(row)
+  line()
+  line("| Angabe | passt / geprüft | Anteil |")
+  line("|---|---|---|")
+  for (const row of selfRatio.lines()) out.push(row)
+  line()
+  line("### Disziplin im Kopf gegen die Disziplinen der Anlage")
+  line()
+  line("| Zuordnung | Ausdrucke |")
+  line("|---|---|")
+  for (const row of disciplineMatch.lines()) out.push(row)
+  line()
+  line("## Kopf und Fuß gegen die Scheibe")
+  line()
+  line("| Angabe | gleich / verglichen | Anteil |")
+  line("|---|---|---|")
+  for (const row of [...headRatio.lines(), ...rawRingRatio.lines()]) out.push(row)
+  line()
+  line("| Zeit in s (initialisiert auf die Minute) | n | Median | 95 % | Maximum |")
+  line("|---|---|---|---|---|")
+  for (const [key, values] of initDiff.values) {
+    out.push(summaryRow(key, summarize(values), 0))
+    out.push(
+      `| … kleinster, größter Wert | ${values.length} | ${Math.min(...values).toFixed(0)} | | ${Math.max(...values).toFixed(0)} |`
+    )
+  }
+  line()
+  line("## Werte je Schuss, Serien, Ergebnis")
   line()
   line(
     `${pairs.length} Paare; ${partial} Ausdrucke zeigen weniger Schüsse als die Rohdaten (Zwischenausdruck).`
@@ -622,7 +840,7 @@ async function main() {
   line("|---|---|---|")
   for (const row of [...shotRatio.lines(), ...sumRatio.lines()]) out.push(row)
   line()
-  line("## Teiler (Frage 2)")
+  line("## Teiler")
   line()
   line("Roh: `distanceTenthsUm / 100` (1/100 mm). Beste mit einer Nachkommastelle, weiteste ganz.")
   line()
@@ -634,7 +852,7 @@ async function main() {
   line("|---|---|---|---|---|")
   for (const [key, values] of teilerDiff.values) out.push(summaryRow(key, summarize(values)))
   line()
-  line("## Trefferlage (Frage 3)")
+  line("## Trefferlage")
   line()
   line("| Angabe | gleich / verglichen | Anteil |")
   line("|---|---|---|")
@@ -644,7 +862,7 @@ async function main() {
   line("|---|---|---|---|---|")
   for (const [key, values] of centerDist.values) out.push(summaryRow(key, summarize(values)))
   line()
-  line("## Trefferkreis und Streuwert (Frage 4)")
+  line("## Trefferkreis und Streuwert")
   line()
   line("| nächster Kandidat | Anzahl |")
   line("|---|---|")
@@ -658,7 +876,7 @@ async function main() {
   line("|---|---|---|---|---|")
   for (const [key, values] of spreadDiff.values) out.push(summaryRow(key, summarize(values)))
   line()
-  line("## Trefferbild (Frage 5)")
+  line("## Trefferbild")
   line()
   line("Abweichung der gezeichneten Marke von der Lage der Rohdaten je Schuss.")
   line()
@@ -670,6 +888,23 @@ async function main() {
       `${summaryRow(key, s)} ${percent(values.filter((d) => d < 0.5).length / values.length)} |`
     )
   }
+  line()
+  line("| Teiler aus den Marken, 1/100 mm | n | Median | 95 % | Maximum |")
+  line("|---|---|---|---|---|")
+  for (const [key, values] of markTeiler.values) out.push(summaryRow(key, summarize(values)))
+  line()
+  line("Über alle Bilder der eigenen Ausdrucke:")
+  line()
+  line("| Marken und Rahmen | Anzahl |")
+  line("|---|---|")
+  for (const row of markOutside.lines()) out.push(row)
+  line()
+  line("| Breite des Rahmens in mm | Bilder | kleinste | Median | größte |")
+  line("|---|---|---|---|---|")
+  for (const [key, values] of frameMm.values)
+    out.push(
+      `| ${key} | ${values.length} | ${Math.min(...values).toFixed(0)} | ${summarize(values).median!.toFixed(0)} | ${Math.max(...values).toFixed(0)} |`
+    )
   line()
   line("| mm je Punkt der Zeichnung | n | Median | 95 % | Maximum |")
   line("|---|---|---|---|---|")

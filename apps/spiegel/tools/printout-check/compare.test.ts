@@ -4,6 +4,11 @@ import { describe, expect, it } from "vitest"
 
 import {
   checkLabels,
+  drawnMm,
+  labelDeviations,
+  matchDiscipline,
+  selfCheck,
+  teilerFromMm,
   compareCenter,
   compareShots,
   compareSums,
@@ -53,6 +58,8 @@ function values(overrides: Partial<PrintoutValues>): PrintoutValues {
     discipline: null,
     mode: null,
     shooter: null,
+    stand: null,
+    initialized: null,
     result: null,
     seriesRings: null,
     counts: null,
@@ -95,17 +102,52 @@ describe("compareShots", () => {
     })
   })
 
-  it("vergleicht den Teiler je Schuss auf ganze 1/100 mm", () => {
+  it("unterscheidet beim Teiler je Schuss abgeschnitten und gerundet, in der gedruckten Genauigkeit", () => {
+    // roh 223,607 · 1236,93 · 943,398 · 316,228; abgeschnitten und gerundet unterscheiden sich bei den ersten beiden
     const shots = printed(RAW).map((s, i) => ({
       ...s,
-      teiler: Math.round(teilerOf(RAW[i].distanceTenthsUm)),
+      teiler: Math.trunc(teilerOf(RAW[i].distanceTenthsUm)),
     }))
-    shots[2] = { ...shots[2], teiler: shots[2].teiler + 1 }
-    expect(compareShots(shots, RAW)).toMatchObject({ teilerCompared: 4, teilerEqual: 3 })
+    expect(compareShots(shots, RAW)).toMatchObject({
+      teilerCompared: 4,
+      teilerTruncated: 4,
+      teilerRounded: 2,
+    })
+    shots[0] = { ...shots[0], teiler: 223.6 }
+    expect(compareShots(shots, RAW)).toMatchObject({ teilerTruncated: 4, teilerRounded: 3 })
   })
 })
 
 describe("compareSums", () => {
+  it("schneidet die Serien in ihrer Folge aus den Rohdaten", () => {
+    const series = (number: number, shots: ShotValue[], rings: number, tenths: number) => ({
+      number,
+      sum: { rings, tenths },
+      shots,
+      bestTeiler: null,
+      hitCircleMm: null,
+      centerMm: null,
+      spread: null,
+    })
+    // Serie 1: 10 + 9 Ringe, 196 Zehntel; Serie 2: 9 + 10 Ringe, 200 Zehntel
+    const checks = compareSums(
+      values({
+        seriesRings: [19, 18],
+        series: [
+          series(1, printed(RAW.slice(0, 2)), 19, 196),
+          series(2, printed(RAW.slice(2)), 19, 201),
+        ],
+        shots: printed(RAW),
+      }),
+      RAW
+    )
+    expect(checks.filter((c) => c.printed !== c.raw)).toEqual([
+      { what: "Serie 2 Zehntel", printed: 201, raw: 200 },
+      { what: "Serien 2", printed: 18, raw: 19 },
+    ])
+    expect(checks).toHaveLength(6)
+  })
+
   it("prüft Ergebnis, Serien, Innenzehner und Zähler gegen die Rohdaten", () => {
     const checks = compareSums(
       values({
@@ -149,6 +191,38 @@ describe("compareTeiler", () => {
     expect(check.raw).toBeCloseTo(teilerOf(RAW[1].distanceTenthsUm), 6)
     expect(check.diff).not.toBe(0)
     expect(check.rankOk).toBe(false)
+  })
+
+  it("erkennt abgeschnitten und gerundet in der Genauigkeit der Art", () => {
+    // roh 223,607: bester Teiler mit einer Nachkommastelle, weitester ganz
+    const [cut] = compareTeiler([{ value: 223.6, shot: 1 }], RAW, "best")
+    expect(cut).toMatchObject({ truncated: true, rounded: true })
+    const raw = [{ ...RAW[0], distanceTenthsUm: 8817 }]
+    expect(compareTeiler([{ value: 88.1, shot: 1 }], raw, "best")[0]).toMatchObject({
+      truncated: true,
+      rounded: false,
+    })
+    expect(compareTeiler([{ value: 88.2, shot: 1 }], raw, "best")[0]).toMatchObject({
+      truncated: false,
+      rounded: true,
+    })
+    expect(compareTeiler([{ value: 88, shot: 1 }], raw, "widest")[0]).toMatchObject({
+      truncated: true,
+      rounded: true,
+    })
+  })
+
+  it("nimmt bei gleichem Teiler jeden der Schüsse als richtigen Rang", () => {
+    const twins = [RAW[0], { ...RAW[0], xUm: -RAW[0].xUm }, RAW[1]]
+    const checks = compareTeiler(
+      [
+        { value: 223.6, shot: 2 },
+        { value: 223.6, shot: 1 },
+      ],
+      twins,
+      "best"
+    )
+    expect(checks.map((c) => c.rankOk)).toEqual([true, true])
   })
 
   it("rangiert weiteste absteigend und mit den Nummern einer Serie", () => {
@@ -281,6 +355,15 @@ describe("Trefferbild", () => {
     expect(Math.max(...fit.fitted)).toBeGreaterThan(0.25)
   })
 
+  it("misst auch bei gespiegeltem Bild positive Abweichungen", () => {
+    const drawn = raw.map((p) => ({ x: at(p).x, y: 2 * center.y - at(p).y }))
+    drawn[1] = { x: drawn[1].x + 0.75, y: drawn[1].y }
+    const fit = fitDrawn(drawn, raw, null)!
+    expect(fit.fittedScale).toBeLessThan(0)
+    expect(Math.min(...fit.fitted)).toBeGreaterThanOrEqual(0)
+    expect(Math.max(...fit.fitted)).toBeGreaterThan(0.25)
+  })
+
   it("gleicht in der besten Ausrichtung einen falschen Maßstab und eine falsche Mitte aus", () => {
     const drawn = raw.map((p) => ({ x: at(p, 1.6).x + 3, y: at(p, 1.6).y - 2 }))
     const fit = fitDrawn(drawn, raw, { center, ptPerMm: 1.5 })!
@@ -309,6 +392,110 @@ describe("Trefferbild", () => {
     expect(check.missing).toBe(2)
     expect(check.covered).toBe(2)
     expect(check.offsetsMm).toEqual([0, expect.closeTo(0.1, 9), 0])
+  })
+})
+
+describe("Teiler und Nummern aus dem Bild", () => {
+  const rings = { center: { x: 480, y: 650 }, ptPerMm: 1.5 }
+
+  it("rechnet Lage und Teiler einer Marke aus Mitte und Maßstab", () => {
+    const mm = drawnMm({ x: 480 + 4.5, y: 650 - 6 }, rings)
+    expect(mm).toEqual({ x: 3, y: -4 })
+    expect(teilerFromMm(mm)).toBeCloseTo(500, 9)
+  })
+
+  it("misst die Nummer gegen ihren Schuss und nimmt bei doppelten Zahlen die nächste", () => {
+    const picture: Picture = {
+      frame: null,
+      center: rings.center,
+      ringDiametersPt: [],
+      holeDiameterPt: 6.75,
+      holeShape: "circle",
+      holes: [],
+      labels: [
+        { shot: 3, x: 480 + 30, y: 650 },
+        { shot: 3, x: 480 + 1.5 * 2.2, y: 650 },
+        { shot: 4, x: 480, y: 650 + 1.5 * 1.5 },
+      ],
+    }
+    const raw = [
+      { xUm: 2000, yUm: 0 },
+      { xUm: 0, yUm: 1000 },
+      { xUm: 9000, yUm: 9000 },
+    ]
+    const out = labelDeviations(picture, 3, raw, rings)
+    expect(out).toEqual([expect.closeTo(0.2, 9), expect.closeTo(0.5, 9)])
+  })
+})
+
+describe("selfCheck", () => {
+  const series = (number: number, shots: ShotValue[], rings: number, tenths: number) => ({
+    number,
+    sum: { rings, tenths },
+    shots,
+    bestTeiler: null,
+    hitCircleMm: null,
+    centerMm: null,
+    spread: null,
+  })
+  const one = printed(RAW.slice(0, 2))
+  const two = printed(RAW.slice(2))
+
+  it("findet keinen Widerspruch, wo die Summen zu den Werten passen", () => {
+    const checks = selfCheck(
+      values({
+        result: { rings: 38, tenths: 396 },
+        seriesRings: [19, 19],
+        innerTens: 2,
+        counts: [2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        series: [series(1, one, 19, 196), series(2, two, 19, 200)],
+        shots: [...one, ...two],
+      })
+    )
+    expect(checks.filter((c) => c.printed !== c.fromShots)).toEqual([])
+    expect(checks).toHaveLength(2 + 4 + 2 + 1 + 11)
+  })
+
+  it("meldet einen falsch gelesenen Wert über die Summen", () => {
+    const misread = [{ ...one[0], value: 94 }, one[1]]
+    const checks = selfCheck(
+      values({
+        result: { rings: 38, tenths: 396 },
+        counts: [2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        series: [series(1, misread, 19, 196), series(2, two, 19, 200)],
+        shots: [...misread, ...two],
+      })
+    )
+    expect(checks.filter((c) => c.printed !== c.fromShots).map((c) => c.what)).toEqual([
+      "Ergebnis Ringe",
+      "Ergebnis Zehntel",
+      "Serie Ringe",
+      "Serie Zehntel",
+      "Zähler",
+      "Zähler",
+    ])
+  })
+
+  it("prüft ohne Werte je Schuss nichts", () => {
+    expect(selfCheck(values({ result: { rings: 38, tenths: 396 } }))).toEqual([])
+  })
+})
+
+describe("matchDiscipline", () => {
+  const names = ["LP 40", "LP 40 alt", "LP-Trainingsscheibe", "LG 40", "lg 40"]
+
+  it("ordnet wörtlich, sonst nach Normalisieren genau einer Disziplin zu", () => {
+    expect(matchDiscipline("LP 40 alt", names)).toEqual({ kind: "exact", index: 1 })
+    expect(matchDiscipline("LP\u2212Trainingsscheibe", names)).toEqual({
+      kind: "normalized",
+      index: 2,
+    })
+    expect(matchDiscipline("lp  40", names)).toEqual({ kind: "normalized", index: 0 })
+  })
+
+  it("rät nicht bei mehreren oder keinem Treffer", () => {
+    expect(matchDiscipline("Lg 40", names)).toEqual({ kind: "ambiguous" })
+    expect(matchDiscipline("LP 60", names)).toEqual({ kind: "none" })
   })
 })
 
