@@ -221,8 +221,20 @@ Vorgeschlagener Schnitt, endgültig im jeweiligen `/plan`:
        (kein Mittel über diese Teilmenge, heute braucht nur „bester Teiler“ den Teiler); Trefferlage je Serie und
        Trefferkreis gesamt und je Serie als kleine Erweiterung des Modells aus 1a-1; der Trefferkreis zählt, wenn die
        Gegenprobe es trägt, beim Streukreis, nie bei R50, σ oder einem Urteil.
+    **Fehlertoleranz** (entschieden mit dem User am 27. Oktober 2026): Die Zuordnung hängt nie vom Layout ab (ADR-028),
+    die Werte sind ein Versuch. (a) Nie raten: Jedes Feld steht da oder fehlt; ein Schuss als Kreuz am Rand (außerhalb
+    des gezeichneten Bereichs) hat keine Lage. (b) Selbstprüfung jedes Ausdrucks: gelesene Schüsse gegen Zähler,
+    Innenzehner, Serien- und Gesamtsumme; bei Widerspruch übernimmt Spiegel keine Werte, die Scheibe bleibt „nur
+    Ausdruck“. (c) Das PDF bleibt gespeichert, der Leser hat eine Version; ein neuer Leser liest gespeicherte Ausdrucke
+    neu (wie das Nachrechnen der Projektion). (d) Layouts erkennen (Metadaten wie Producer/Creator, erkannte Zeilen); ein
+    unbekanntes liest der Parser vorsichtig und meldet es dem Admin nur als Zustand. (e) Testdaten aus den eigenen
+    Ausdrucken des Users über die Zeit (ohne Namen, Nummer, ID), damit eine Änderung bei Meyton einen Test fallen lässt.
+    Mitgemessen in 1c-0: „initialisiert“ als Beginn der Wertung, Standnummer, Disziplin im Kopf (Vorbelegung im Blatt
+    „Neue Scheibe“), Teiler jedes Schusses aus den Kreisen, Häufigkeit der Kreuze, Zahl der Layouts, Quote der
+    Selbstprüfung.
     3. **1c-2 Lagen aus dem Trefferbild**, eigener Teil, nur wenn die Gegenprobe zeigt, dass die gezeichneten Lagen genau
-       genug sind; dann als eigene Angabe (aus dem Bild), nie gleichgesetzt mit gemessener Lage.
+       genug sind (95 % unter 0,5 mm); dann als eigene Angabe „vom Ausdruck“, nie gleichgesetzt mit gemessener Lage. Sonst
+       das Trefferbild nur zur Anzeige auf der Seite der Scheibe, ohne in eine Zahl einzugehen (wie „geschätzt“, ADR-033).
 - **1d Handeingabe (SP-4.4):** „Ergebnis eintragen“ je Serie und je Schuss, Trefferlage als Summe, Beleg an der Scheibe,
   eigene Einträge ändern und löschen. Braucht 1a, für den Beleg den Datei-Speicher aus 1b.
 - **1e Grundlage sichtbar:** geht in 1a-2 auf (entschieden mit dem User am 26. Oktober 2026).
