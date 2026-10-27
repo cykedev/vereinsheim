@@ -101,6 +101,17 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   mehrere Tests laufen, trifft es bei etwa jeder fünften ganz normalen Scheibe einmal zufällig zu.
   Mit einer Pause ist es etwa jede vierte.
 
+**Grundlage und Herkunft**
+- *Was:* Nicht jede Scheibe bringt alles mit. Gemessen heißt: Die Anlage hat jeden Schuss mit Wert,
+  Lage und Zeit geliefert. Vom Ausdruck heißt: Die Werte stammen vom Papier, das die Anlage gedruckt
+  hat. Eingetragen heißt: Die Werte sind von Hand eingegeben oder aus Treffsicher übernommen. Je
+  nach Herkunft hat eine Scheibe Schüsse mit Lage, nur Serien-Summen oder nur ein Gesamtergebnis.
+- *So liest du es:* Jede Zahl rechnet nur über die Scheiben, die dafür etwas mitbringen. Zählen
+  nicht alle, steht darunter die Grundlage, etwa „über 12 von 20 Scheiben · 6 ohne Lage je Schuss“.
+  Ergebnis und Ø je Schuss kommen auch aus Summen. Streuung, Tempo und jedes Urteil über die Lage
+  brauchen Einzelschüsse. Die Mitte der Schüsse aus einer Summe zählt beim Versatz mit, nie bei der
+  Streuung. Wo ein Wert fehlt, steht „–“ mit dem Grund.
+
 ## Ergebnis
 
 **Ergebnis und Ø je Schuss (E1, E2)**

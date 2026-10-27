@@ -91,6 +91,12 @@ describe("HelpButton und HelpSheet", () => {
     expect(viewHtml).toMatch(new RegExp(`<h2[^>]*>${view.title}</h2>`))
   })
 
+  it("„Grundlage und Herkunft“ öffnet als Blatt (Liste, Fortschritt, Start, Seite einer Scheibe)", () => {
+    const html = render(createElement(HelpSheet, { helpId: "grundlage", onClose: () => {} }))
+    expect(html).toMatch(/<h2[^>]*>Grundlage und Herkunft<\/h2>/)
+    expect(html).toContain("Gemessen heißt")
+  })
+
   it("ohne Erklärung ein leeres, geschlossenes Blatt", () => {
     const html = render(createElement(HelpSheet, { helpId: null, onClose: () => {} }))
     expect(html).toMatch(/^<dialog(?![^>]*\bopen)/)
