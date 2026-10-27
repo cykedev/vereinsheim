@@ -18,6 +18,13 @@ Geschichte in `vault/incidents/`.
   nahe der ersten Beobachtung setzen. → DOCUMENT (`apps/spiegel/CLAUDE.md`)
 - **`pnpm add` löste fremde Peer-Varianten neu auf** (`eslint-plugin-import` in den Snapshots, alle Apps betroffen),
   auch mit `--lockfile-only`. Nur die Einfügungen übernommen, `--frozen-lockfile` grün. → DOCUMENT (conventions §9)
+- **Die Vorschau startet `next dev` mit dem nvm-Default (Node 20):** Darunter liefert der Leser im Kindprozess nichts,
+  Link, Upload und Kamera endeten im Dev-Server mit „Spiegel kann dieses PDF nicht lesen.“, während die Skriptprüfung
+  gegen den Build unter Node 26 grün war. Den Dev-Server für Ausdrucke unter Node 26 starten, bis der Default 26 ist. →
+  REMEMBER (Auto-Memory, maschinenlokal)
+- **Ein Grund gehört an eine Stelle:** Nach der Durchsicht wollte der User den Grund ohne Werte nur in der Ergebnis-Box,
+  an den übrigen Stellen des Gerüsts kurze Sätze („Noch keine Serien.“); ebenso aktive Knöpfe mit Feldfehler statt
+  gesperrter und ein Knopf für Kamera und Foto. → DOCUMENT (`spiegel-ui-design`, `spiegel-navigation`)
 - **Spiegel hatte keinen `Toaster`:** Die Konvention verlangt Toasts nach Aktionen, Spiegel nutzte bisher nur den
   Hinweis „Rückgängig“. Jetzt im Root-Layout wie in Treffsicher und Ringwerk. → ARCHIVE (im Code gelöst)
 
