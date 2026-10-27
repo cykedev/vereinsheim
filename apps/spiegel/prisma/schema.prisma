@@ -61,6 +61,15 @@ enum CardRequestStatus {
   printMismatch
 }
 
+// Werte eines Ausdrucks: gelesen und in sich stimmig, keine Werte darauf, Widerspruch (auch zum Scheibenbild der
+// Disziplin), nicht lesbar
+enum PrintoutValuesStatus {
+  ok
+  empty
+  inconsistent
+  unreadable
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Anlage, Quelle, Brücke
 // ─────────────────────────────────────────────────────────────────────────────
@@ -605,7 +614,7 @@ model Shot {
   stellung         Int
   treffer          Int
   series           Int?
-  // Lage in µm, x nach rechts, y nach oben; null nur aus dem PDF
+  // Lage in µm, x nach rechts, y nach oben; null ohne Lage (eingetragen, Ausdruck ohne Trefferbild)
   xUm              Int?
   yUm              Int?
   ring             Int?
@@ -648,15 +657,22 @@ model CardProjection {
 
 // gespeicherter Meyton-Ausdruck mit gelesener ID im Fuß und Erstellzeit (meyton-pdf)
 model Printout {
-  id        String    @id @default(cuid())
-  cardId    String
-  card      Card      @relation(fields: [cardId], references: [id], onDelete: Cascade)
-  sha256    String
-  fileName  String
-  size      Int
-  footerId  String?
-  printedAt DateTime? @db.Timestamptz(3)
-  storedAt  DateTime  @default(now()) @db.Timestamptz(3)
+  id            String                @id @default(cuid())
+  cardId        String
+  card          Card                  @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  sha256        String
+  fileName      String
+  size          Int
+  footerId      String?
+  printedAt     DateTime?             @db.Timestamptz(3)
+  storedAt      DateTime              @default(now()) @db.Timestamptz(3)
+  // Version des Lesers der Werte; null: noch nie gelesen, wird neu gelesen
+  readerVersion String?
+  // ghostscript, qt oder unknown, nach dem Producer
+  layout        String?
+  // die Lesung ohne Name, Nummer, ID und Datum; nur bei ok
+  reading       Json?
+  valuesStatus  PrintoutValuesStatus?
 
   @@unique([cardId, sha256])
   // gleiche ID im Fuß ist gleiche Scheibe (SF-43)
