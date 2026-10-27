@@ -1,13 +1,19 @@
+import { createHash } from "node:crypto"
+
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 
 import { computeChecksum } from "@vereinsheim/ingest-contract/checksum"
 import type { SnapshotV1 } from "@vereinsheim/ingest-contract/snapshot"
+import { zonedDayStartMs, zonedWallTimeMs } from "@vereinsheim/lib/format"
 import { frozenExpected, frozenReadings } from "@vereinsheim/ssmdb2-cases/frozen"
 
 import { createPrismaClient } from "@/lib/db"
 import { createTestSite, type TestSite } from "../../../test/fixtures"
-import { eveningOfStart } from "../card-requests/id"
+import { eveningOfStart, printedId } from "../card-requests/id"
 import { startHintMs } from "../db/blocks"
+import { writeEnteredCard } from "../db/entered"
+import { purgeCards } from "../db/purge"
+import { attachPrintout } from "../printouts/queries"
 
 import { finishRequests, recordRequestOutcomes } from "../card-requests/queries"
 
@@ -325,5 +331,253 @@ describe("Zustand und Heartbeat mit Aufträgen", () => {
       { id: fetching.id, outcome: "held" },
     ])
     expect((await statusOf(fetching.id)).status).toBe("open")
+  })
+})
+
+describe("Scheibe vom Ausdruck", () => {
+  const ZONE = "Europe/Berlin"
+  const MINUTE = 60_000
+  /** Beginn eines Stands als Wanduhr der Anlage (Felder als UTC) */
+  const wallStart = (snapshot: SnapshotV1) =>
+    startHintMs(
+      snapshot.data.treffer.rows.map((row) => row.Zeitstempel),
+      Date.parse(snapshot.observedAt)
+    )
+  const lastShotWall = (snapshot: SnapshotV1) =>
+    Math.max(
+      ...snapshot.data.treffer.rows.map((row) =>
+        Date.parse(`${row.Zeitstempel!.replace(" ", "T")}Z`)
+      )
+    )
+  const STAMP = /^(\d{4})-(\d\d)-(\d\d) (\d\d):(\d\d):(\d\d)$/
+  const shiftStamp = (value: string | null, ms: number) => {
+    const m = value && STAMP.exec(value)
+    if (!m) return value
+    const at = Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]) + ms
+    return new Date(at).toISOString().slice(0, 19).replace("T", " ")
+  }
+  /**
+   * derselbe Stand später: alle Zeiten der Ablage, Beobachtung und Folgenummer um `ms` verschoben; mit `shotsOnly` nur die
+   * Zeiten der Ablage
+   */
+  const shifted = (snapshot: SnapshotV1, ms: number, shotsOnly = false): SnapshotV1 => {
+    const shift = (rows: typeof snapshot.data.treffer.rows) =>
+      rows.map((row) =>
+        Object.fromEntries(
+          Object.entries(row).map(([k, v]) => [k, k === "ScheibenID" ? v : shiftStamp(v, ms)])
+        )
+      )
+    const data = {
+      scheiben: { ...snapshot.data.scheiben, rows: shift(snapshot.data.scheiben.rows) },
+      serien: { ...snapshot.data.serien, rows: shift(snapshot.data.serien.rows) },
+      treffer: { ...snapshot.data.treffer, rows: shift(snapshot.data.treffer.rows) },
+    }
+    if (shotsOnly) return { ...snapshot, data, checksum: computeChecksum(data) }
+    const observedMs = Date.parse(snapshot.observedAt) + ms
+    return {
+      ...snapshot,
+      sequence: snapshot.sequence + ms,
+      observedAt: new Date(observedMs).toISOString(),
+      data,
+      checksum: computeChecksum(data),
+    }
+  }
+
+  /**
+   * eine Scheibe vom Ausdruck des Schützen mit Auftrag, wie „Scheibe holen“ sie anlegt: mit einer Druckzeit (Wanduhr der
+   * Anlage) ein erfundener Ausdruck daran, ohne (getippte ID) 12 Uhr des Tags
+   */
+  async function pdfCard(scheibenId: number, day: string, printedWallMs: number | null) {
+    const saved = await writeEnteredCard(db, {
+      ownerId: site.ownerId,
+      origin: "pdf",
+      disciplineId: site.disciplineId,
+      startedAtMs:
+        printedWallMs === null
+          ? zonedDayStartMs(day, ZONE) + 12 * 60 * MINUTE
+          : zonedWallTimeMs(printedWallMs, ZONE),
+      kind: "training",
+      details: {},
+      reason: "printout",
+    })
+    if (saved.kind !== "saved") throw new Error(saved.kind)
+    if (printedWallMs !== null)
+      await attachPrintout(
+        db,
+        {
+          sha256: createHash("sha256").update(`${site.siteId}-${scheibenId}`).digest("hex"),
+          size: 1,
+          fileName: "ausdruck.pdf",
+          hex: printedId(scheibenId),
+          scheibenId,
+          printedAt: new Date(zonedWallTimeMs(printedWallMs, ZONE)),
+        },
+        saved.cardId
+      )
+    const r = await db.cardRequest.create({
+      data: { userId: site.ownerId, siteId: site.siteId, scheibenId, day, cardId: saved.cardId },
+    })
+    return { cardId: saved.cardId, requestId: r.id }
+  }
+  const cardsOf = (scheibenId: number) =>
+    db.card.findMany({
+      where: { sourceId: site.sourceId, scheibenId },
+      orderBy: { block: "asc" },
+    })
+  const cardById = (id: string) => db.card.findUniqueOrThrow({ where: { id } })
+
+  /** nur die Wertung von SF-03 (ein Block) unter eigener ScheibenID */
+  const scoring = (scheibenId: number, sportpass = "87654321") =>
+    as(sent("SF-03").slice(1), sportpass, scheibenId)
+
+  it("gedruckt nach den Schüssen: dieselbe Scheibe bekommt Quelle und Rohdaten, keine zweite", async () => {
+    const snapshots = scoring(71_001)
+    const { cardId, requestId } = await pdfCard(
+      71_001,
+      eveningOf(snapshots[0]),
+      lastShotWall(snapshots.at(-1)!) + 2 * MINUTE
+    )
+    const results = await ingest(snapshots)
+    expect(results.every((x) => x.outcome !== "discarded")).toBe(true)
+    const card = await cardById(cardId)
+    expect(card).toMatchObject({
+      sourceId: site.sourceId,
+      scheibenId: 71_001,
+      origin: "raw",
+      place: null,
+      ownerId: site.ownerId,
+    })
+    // die Disziplin des Stands (LP 20), nicht die gewählte
+    expect(card.disciplineId).not.toBe(site.disciplineId)
+    expect(await db.cardRevision.count({ where: { cardId } })).toBe(2)
+    expect((await cardsOf(71_001)).map((c) => c.id)).toEqual([cardId])
+    expect(await statusOf(requestId)).toEqual({ status: "open", cardId })
+  })
+
+  it("gedruckt sechs Minuten vor dem ersten Schuss: nichts gespeichert, „passt nicht zum Ausdruck“", async () => {
+    const snapshots = scoring(71_002)
+    const { cardId, requestId } = await pdfCard(
+      71_002,
+      eveningOf(snapshots[0]),
+      wallStart(snapshots[0]) - 6 * MINUTE
+    )
+    const results = await ingest(snapshots)
+    expect(results.every((x) => x.reason === "no-consent")).toBe(true)
+    expect(await stored(71_002)).toBe(0)
+    expect((await statusOf(requestId)).status).toBe("printMismatch")
+    expect(await cardById(cardId)).toMatchObject({ origin: "pdf", sourceId: null })
+  })
+
+  it("gedruckt drei Minuten vor dem ersten Schuss: gefüllt (Uhren der Anlage, SF-29)", async () => {
+    const snapshots = scoring(71_003)
+    const { cardId } = await pdfCard(
+      71_003,
+      eveningOf(snapshots[0]),
+      wallStart(snapshots[0]) - 3 * MINUTE
+    )
+    await ingest(snapshots)
+    expect((await cardById(cardId)).sourceId).toBe(site.sourceId)
+  })
+
+  describe("zwei Blöcke (SF-03, die Probe 20 Minuten früher)", () => {
+    const twoBlocks = (scheibenId: number) => {
+      const [probe, ...rest] = as(sent("SF-03"), "87654321", scheibenId)
+      return [shifted(probe, -20 * MINUTE, true), ...rest]
+    }
+    /** in einem Stapel, „jetzt“ nahe der Probe: Sonst ist ihre Beobachtung zu alt (SF-79) */
+    const ingestTwo = (snapshots: readonly SnapshotV1[]) =>
+      ingestBatch(db, target(), snapshots, {
+        nowMs: Date.parse(snapshots[0].observedAt) + 10 * MINUTE,
+      })
+
+    it("nach beiden Blöcken gedruckt: Die Scheibe vom Ausdruck ist die Wertung, die Probe eine eigene", async () => {
+      const snapshots = twoBlocks(71_004)
+      const { cardId } = await pdfCard(
+        71_004,
+        eveningOf(snapshots[0]),
+        lastShotWall(snapshots.at(-1)!) + 2 * MINUTE
+      )
+      await ingestTwo(snapshots)
+      const cards = await cardsOf(71_004)
+      expect(cards.map((c) => [c.block, c.id === cardId, c.ownerId])).toEqual([
+        [0, false, site.ownerId],
+        [1, true, site.ownerId],
+      ])
+    })
+
+    it("zwischen den Blöcken gedruckt: Die Scheibe vom Ausdruck ist die Probe, die Wertung neu", async () => {
+      const snapshots = twoBlocks(71_005)
+      const { cardId } = await pdfCard(
+        71_005,
+        eveningOf(snapshots[0]),
+        wallStart(snapshots[0]) + 10 * MINUTE
+      )
+      await ingestTwo(snapshots)
+      const cards = await cardsOf(71_005)
+      expect(cards.map((c) => [c.block, c.id === cardId])).toEqual([
+        [0, true],
+        [1, false],
+      ])
+    })
+  })
+
+  it("getippte ID ohne Ausdruck: gefüllt; ein Stand eines anderen Abends schließt den gefüllten Auftrag nicht", async () => {
+    const snapshots = scoring(71_006)
+    const day = eveningOf(snapshots[0])
+    const { cardId, requestId } = await pdfCard(71_006, day, null)
+    await ingest(snapshots)
+    expect((await cardById(cardId)).sourceId).toBe(site.sourceId)
+    const later = shifted(snapshots.at(-1)!, 3 * 86_400_000)
+    expect(eveningOf(later)).not.toBe(day)
+    expect((await ingest([later]))[0].reason).toBe("no-consent")
+    expect(await statusOf(requestId)).toEqual({ status: "open", cardId })
+  })
+
+  it("Zustimmung eines anderen Kontos geht vor: vergeben, die Scheibe vom Ausdruck bleibt, wie sie ist", async () => {
+    const snapshots = scoring(71_007, String(MUSTER))
+    const { cardId, requestId } = await pdfCard(
+      71_007,
+      eveningOf(snapshots[0]),
+      lastShotWall(snapshots.at(-1)!) + 2 * MINUTE
+    )
+    await ingest(snapshots)
+    expect((await statusOf(requestId)).status).toBe("taken")
+    expect(await cardById(cardId)).toMatchObject({ origin: "pdf", sourceId: null })
+    expect((await cardsOf(71_007)).map((c) => c.ownerId)).toEqual([other])
+  })
+
+  it("Heartbeat „nicht gefunden“: an der ungefüllten Scheibe geschlossen, an der gefüllten nicht", async () => {
+    const snapshots = scoring(71_008)
+    const day = eveningOf(snapshots[0])
+    const unfilled = await pdfCard(71_009, day, null)
+    const filled = await pdfCard(71_008, day, null)
+    await ingest(snapshots)
+    await recordRequestOutcomes(db, site.siteId, [
+      { id: unfilled.requestId, outcome: "missing" },
+      { id: filled.requestId, outcome: "missing" },
+    ])
+    expect((await statusOf(unfilled.requestId)).status).toBe("missing")
+    expect((await statusOf(filled.requestId)).status).toBe("open")
+  })
+
+  it("„endgültig“: ungefüllt bleibt offen, gefüllt und endgültig ist erledigt", async () => {
+    const snapshots = scoring(71_010)
+    const day = eveningOf(snapshots[0])
+    const unfilled = await pdfCard(71_011, day, null)
+    const filled = await pdfCard(71_010, day, null)
+    await ingest(snapshots)
+    await db.card.update({ where: { id: filled.cardId }, data: { state: "final" } })
+    await finishRequests(db, site.siteId)
+    expect((await statusOf(unfilled.requestId)).status).toBe("open")
+    expect((await statusOf(filled.requestId)).status).toBe("done")
+  })
+
+  it("endgültig gelöscht, dann ein Stand: verworfen, keine Scheibe", async () => {
+    const snapshots = scoring(71_012)
+    const { cardId } = await pdfCard(71_012, eveningOf(snapshots[0]), null)
+    await db.$transaction((tx) => purgeCards(tx, [cardId], { lock: true }))
+    const results = await ingest(snapshots)
+    expect(results.every((x) => x.reason === "no-consent")).toBe(true)
+    expect(await cardsOf(71_012)).toEqual([])
   })
 })

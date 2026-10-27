@@ -2,14 +2,17 @@
 // Deutung durch den Adapter. Die HTTP-Schicht (`http.ts`) prüft vorher Token, Größe und Vertrag. Last: Rohdaten werden
 // je Snapshot abgelegt (Zeilenversionen, billig), der Adapter deutet jeden neuen Stand (eine reine Funktion), geschrieben
 // wird je Block der Scheibe nur der letzte (SF-03, SF-72); ändert sich nur das Lebenszeichen, wird es nur vermerkt. Was
-// nicht zugestimmt ist, wird nicht gespeichert ([[spiegel-privacy]]).
+// nicht zugestimmt ist, wird nicht gespeichert ([[spiegel-privacy]]). Ein Auftrag per ID gilt wie eine Zustimmung für
+// genau seine Scheibe; hängt an ihm eine Scheibe vom Ausdruck, prüft das Einlesen die Druckzeit und füllt sie mit den
+// Rohdaten, statt eine zweite anzulegen.
 
 import type { DiscardReason, SnapshotOutcome } from "@vereinsheim/ingest-contract/api"
 import type { SnapshotV1 } from "@vereinsheim/ingest-contract/snapshot"
 import { plannedShotsOf } from "@vereinsheim/shot-core/discipline"
 import type { TargetId } from "@vereinsheim/shot-core/targets"
+import { wallTimeOfMs } from "@vereinsheim/lib/format"
 
-import { eveningOfStart } from "../card-requests/id"
+import { eveningOfStart, startsBeforePrint } from "../card-requests/id"
 import { attachRequestCard, closeRequest, openRequestsFor } from "../card-requests/queries"
 import { ACTIVE_CONSENT } from "../consent/status"
 import type { Db } from "../db"
@@ -230,11 +233,15 @@ export async function adaptStored(
   })
 }
 
-/** wohin ein gedeuteter Stand gehört: Zyklus, Block und die jüngste Scheibe dieses Zyklus, wenn es sie gibt */
+/**
+ * wohin ein gedeuteter Stand gehört: Zyklus, Block und die jüngste Scheibe dieses Zyklus, wenn es sie gibt; `fill` ist
+ * die Scheibe vom Ausdruck eines Auftrags, die dieser Stand füllt
+ */
 export interface Placement {
   cycle: number
   block: number
   latest: KeyCard | undefined
+  fill?: string
 }
 
 /** was beim Schreiben eines gedeuteten Stands geschah; mit `change` und `cardId`, wenn geschrieben */
@@ -252,7 +259,7 @@ export async function writeAdapted(
   owner: Owner,
   card: AdaptedCard,
   known: KnownDiscipline | null,
-  { cycle, block, latest }: Placement,
+  { cycle, block, latest, fill }: Placement,
   stored: { snapshotId: bigint; sequence: number }
 ): Promise<Written> {
   const ownerId = owner.userId
@@ -279,6 +286,7 @@ export async function writeAdapted(
   const rankingId = await rankingFor(db, target.siteId, card.ranking)
   try {
     const result = await writeRevision(db, {
+      ...(fill ? { cardId: fill } : {}),
       card: {
         sourceId,
         scheibenId: card.scheibenId,
@@ -321,6 +329,15 @@ export async function writeAdapted(
   }
 }
 
+/**
+ * die Scheibe vom Ausdruck, die ein Auftrag mit Rohdaten füllt, und die Wanduhr der Anlage zur jüngsten Druckzeit ihrer
+ * Ausdrucke (null bei einer getippten ID ohne Ausdruck)
+ */
+interface Fill {
+  cardId: string
+  printedWallMs: number | null
+}
+
 /** ein zu deutender Stand einer Scheibe aus dem Stapel */
 interface AdaptItem {
   index: number
@@ -332,13 +349,17 @@ interface AdaptItem {
  * Die Stände einer Scheibe aus dem Stapel deuten, in Folge der Folgenummer, und je Block den letzten schreiben (SF-03,
  * SF-72, [[adr-027]]): Kommen der letzte Stand eines Blocks und der erste des nächsten im selben Stapel, geht so keiner
  * verloren. Liefert die Indizes der Stände, die in Quarantäne gingen.
+ *
+ * Mit `fill` und ohne Scheibe in diesem Zyklus füllt ein Block die Scheibe vom Ausdruck: der jüngste, der vor dem Druck
+ * begann, ohne Druckzeit der jüngste überhaupt. Frühere Blöcke werden eigene Scheiben, wie ohne Ausdruck.
  */
 async function adaptKey(
   db: Db,
   target: IngestTarget,
   sourceId: number,
   owner: Owner,
-  items: readonly AdaptItem[]
+  items: readonly AdaptItem[],
+  fill?: Fill
 ): Promise<number[]> {
   const quarantined: number[] = []
   const scheibenId = items[0].snapshot.scheibenId
@@ -379,6 +400,22 @@ async function adaptKey(
     latest ? await currentShotsOf(db, latest.id) : null,
     adapted.map((a) => a.card.shots)
   )
+  let fillAt: number | undefined
+  if (fill && !latest) {
+    const card = await db.card.findFirst({
+      where: { id: fill.cardId, sourceId: null, origin: "pdf" },
+      select: { id: true },
+    })
+    if (card) {
+      const { printedWallMs } = fill
+      const before = ends.filter(
+        (end) =>
+          printedWallMs !== null &&
+          startsBeforePrint(startOf(adapted[end.index].item.snapshot), printedWallMs)
+      )
+      fillAt = (before.at(-1) ?? ends.at(-1))?.index
+    }
+  }
   let block = latest?.block ?? 0
   let from = 0
   for (const end of ends) {
@@ -391,7 +428,7 @@ async function adaptKey(
       owner,
       last.card,
       last.known,
-      { cycle, block, latest },
+      { cycle, block, latest, ...(end.index === fillAt ? { fill: fill!.cardId } : {}) },
       { snapshotId: last.item.stored.snapshotId, sequence: last.item.snapshot.sequence }
     )
     if (handled === "stored")
@@ -423,7 +460,10 @@ export async function ingestBatch(
    * je Scheibe die Stände dieses Stapels, die der Adapter deuten muss, in Folge der Folgenummer: neu gespeichert, oder
    * schon da, aber noch nicht gedeutet (ein Fehler beim letzten Mal); derselbe Stand nur einmal
    */
-  const toAdapt = new Map<string, { sourceId: number; owner: Owner; items: AdaptItem[] }>()
+  const toAdapt = new Map<
+    string,
+    { sourceId: number; owner: Owner; items: AdaptItem[]; fill?: Fill }
+  >()
   /** je Scheibe das zuletzt nur vermerkte Lebenszeichen */
   const lifesigns = new Map<string, { sourceId: number; scheibenId: number; atMs: number }>()
   /** Sperren je Scheibe nur einmal je Stapel nachsehen (die meisten Stände sind Lebenszeichen derselben Scheiben) */
@@ -431,15 +471,42 @@ export async function ingestBatch(
   /**
    * offene Aufträge per ID (`CardRequest`) für die Scheiben dieses Stapels: Ein Auftrag gilt wie eine Zustimmung für genau
    * diese Scheibe, wenn ihr Beginn auf den genannten Abend fällt, auch für spätere Stände, bis sie endgültig ist.
-   * Geschlossen wird er hier (anderer Abend, gehalten, vergeben) oder nach dem Schreiben (`claims`)
+   * Geschlossen wird er hier (anderer Abend, passt nicht zum Ausdruck, gehalten, vergeben) oder nach dem Schreiben
+   * (`claims`). Ein gefüllter Auftrag (seine Scheibe hat Rohdaten) schließt hier nicht mehr: Er wartet nur noch auf
+   * „endgültig“ oder die Frist.
    */
   const requests = await openRequestsFor(
     db,
     target.siteId,
     snapshots.map((s) => s.scheibenId)
   )
+  type Request = (typeof requests)[number]
+  const unfilled = (r: Request) => r.cardId === null || r.card?.sourceId === null
+  /** die eigene Scheibe vom Ausdruck, die der Auftrag füllt; sonst null */
+  const fillOf = (r: Request) =>
+    r.cardId !== null && r.card?.sourceId === null && r.card.ownerId === r.userId ? r.cardId : null
+  /** je Auftrag mit Ausdrucken die Wanduhr der Anlage zur jüngsten Druckzeit */
+  const printedWall = new Map<number, number>()
+  for (const r of requests) {
+    const printed = (r.card?.printouts ?? []).map((p) => p.printedAt?.getTime() ?? null)
+    const latest = printed.filter((ms): ms is number => ms !== null)
+    if (latest.length) printedWall.set(r.id, wallTimeOfMs(Math.max(...latest), target.timeZone))
+  }
+  /** Aufträge, deren Scheibe ein Stand dieses Stapels sein kann: an ihrem Abend und vor dem Druck begonnen */
+  const passes = new Set<number>()
+  for (const r of requests) {
+    const printedWallMs = printedWall.get(r.id)
+    if (printedWallMs === undefined) continue
+    const fits = snapshots.some(
+      (s) =>
+        s.scheibenId === r.scheibenId &&
+        eveningOfStart(startOf(s)) === r.day &&
+        startsBeforePrint(startOf(s), printedWallMs)
+    )
+    if (fits) passes.add(r.id)
+  }
   const closed = new Set<number>()
-  const close = async (id: number, status: "mismatch" | "held" | "taken") => {
+  const close = async (id: number, status: "mismatch" | "held" | "taken" | "printMismatch") => {
     if (closed.has(id)) return
     closed.add(id)
     await closeRequest(db, { id, status, nowMs })
@@ -447,7 +514,7 @@ export async function ingestBatch(
   /** Auftrag → Scheibe, die ihn erfüllen soll; nach dem Schreiben hängt sie am Auftrag, wenn sie beim Auftraggeber liegt */
   const claims = new Map<
     number,
-    { userId: string; sourceId: number; scheibenId: number; startMs: number }
+    { userId: string; sourceId: number; scheibenId: number; startMs: number; cardId: string | null }
   >()
 
   const order = snapshots
@@ -477,10 +544,10 @@ export async function ingestBatch(
     const open = requests.filter((r) => r.scheibenId === snapshot.scheibenId && !closed.has(r.id))
     if (open.length) {
       const evening = eveningOfStart(startOf(snapshot))
-      for (const r of open) if (r.day !== evening) await close(r.id, "mismatch")
+      for (const r of open) if (r.day !== evening && unfilled(r)) await close(r.id, "mismatch")
       const matching = open.filter((r) => r.day === evening)
       claim = owner ? matching.find((r) => r.userId === owner!.userId) : matching[0]
-      for (const r of matching) if (r !== claim) await close(r.id, "taken")
+      for (const r of matching) if (r !== claim && unfilled(r)) await close(r.id, "taken")
       // eine Sportpassnummer, die ein anderes Konto eingetragen hat (auch wartend oder abgelehnt): Die Scheibe gehört
       // nicht dem Auftraggeber, auch wenn die Zustimmung (noch) nicht gilt
       if (!owner && claim && sportpassId !== null) {
@@ -489,9 +556,15 @@ export async function ingestBatch(
           select: { id: true },
         })
         if (claimed) {
-          await close(claim.id, "taken")
+          if (unfilled(claim)) await close(claim.id, "taken")
           claim = undefined
         }
+      }
+      // eine Scheibe vom Ausdruck: Kein Stand dieses Abends begann vor dem Druck, also ist es nicht die Scheibe des
+      // Ausdrucks. Spiegel speichert nichts von ihr (SF-29: fünf Minuten Spielraum für die Uhren)
+      if (claim && unfilled(claim) && printedWall.has(claim.id) && !passes.has(claim.id)) {
+        await close(claim.id, "printMismatch")
+        claim = undefined
       }
       if (!owner && claim) owner = { userId: claim.userId, pending: false }
     }
@@ -500,7 +573,7 @@ export async function ingestBatch(
       continue
     }
     if (hasHeldShot(snapshot)) {
-      if (claim) await close(claim.id, "held")
+      if (claim && unfilled(claim)) await close(claim.id, "held")
       result("discarded", "hidden")
       continue
     }
@@ -517,7 +590,7 @@ export async function ingestBatch(
         )
       )
     if (blocked.get(key)) {
-      if (claim) await close(claim.id, "held")
+      if (claim && unfilled(claim)) await close(claim.id, "held")
       result("discarded", "blocked")
       continue
     }
@@ -529,7 +602,7 @@ export async function ingestBatch(
     )
     if (stored.outcome === "blocked") {
       blocked.set(key, true)
-      if (claim) await close(claim.id, "held")
+      if (claim && unfilled(claim)) await close(claim.id, "held")
       result("discarded", "blocked")
       continue
     }
@@ -539,10 +612,14 @@ export async function ingestBatch(
         sourceId: source.sourceId,
         scheibenId: snapshot.scheibenId,
         startMs: startOf(snapshot),
+        cardId: claim.cardId,
       })
     const adapt = (previous: PreviousLifesign) => {
       const snapshotId = (stored as { snapshotId: bigint }).snapshotId
       const entry = toAdapt.get(key) ?? { sourceId: source.sourceId, owner, items: [] }
+      const fillCard = claim ? fillOf(claim) : null
+      if (claim && fillCard)
+        entry.fill ??= { cardId: fillCard, printedWallMs: printedWall.get(claim.id) ?? null }
       if (!entry.items.some((item) => item.stored.snapshotId === snapshotId))
         entry.items.push({ index, snapshot, stored: { snapshotId, ...previous } })
       toAdapt.set(key, entry)
@@ -568,7 +645,14 @@ export async function ingestBatch(
   let failure: unknown = null
   for (const entry of toAdapt.values()) {
     try {
-      for (const index of await adaptKey(db, target, entry.sourceId, entry.owner, entry.items)) {
+      for (const index of await adaptKey(
+        db,
+        target,
+        entry.sourceId,
+        entry.owner,
+        entry.items,
+        entry.fill
+      )) {
         const result = results.find((r) => r.index === index)
         if (result) result.outcome = "quarantined"
       }
@@ -578,11 +662,21 @@ export async function ingestBatch(
   }
   for (const { sourceId, scheibenId, atMs } of lifesigns.values())
     await touchLifesign(db, sourceId, scheibenId, atMs)
-  // Aufträge mit geschriebener Scheibe (dieselbe Kennung, Beginn nahe dem Stand; die ScheibenID kehrt wieder, SF-77): beim
-  // Auftraggeber hängt sie am Auftrag, endgültig ist er erledigt, sonst bleibt er offen, damit weitere Schüsse
-  // nachkommen (`finishRequests` beim Heartbeat). Gehört sie (schon vorher) einem anderen, ist sie vergeben. Ohne
-  // Scheibe (Quarantäne, Fehler) bleibt der Auftrag, wie er ist; der nächste Stand versucht es wieder
+  // Aufträge mit Scheibe (vom Ausdruck): gefüllt und endgültig erledigt, sonst bleiben sie offen, bis weitere Stände sie
+  // füllen oder ergänzen (`finishRequests` beim Heartbeat). Ältere Aufträge ohne Scheibe: die geschriebene (dieselbe
+  // Kennung, Beginn nahe dem Stand; die ScheibenID kehrt wieder, SF-77) hängt beim Auftraggeber am Auftrag, endgültig ist
+  // er erledigt, sonst bleibt er offen. Gehört sie (schon vorher) einem anderen, ist sie vergeben. Ohne Scheibe
+  // (Quarantäne, Fehler) bleibt der Auftrag, wie er ist; der nächste Stand versucht es wieder
   for (const [id, claim] of claims) {
+    if (claim.cardId !== null) {
+      const own = await db.card.findUnique({
+        where: { id: claim.cardId },
+        select: { sourceId: true, state: true },
+      })
+      if (own?.sourceId != null && own.state === "final")
+        await closeRequest(db, { id, status: "done", nowMs })
+      continue
+    }
     const card = await db.card.findFirst({
       where: {
         sourceId: claim.sourceId,
