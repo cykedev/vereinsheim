@@ -141,6 +141,8 @@ const qtHead = [
   text("21.36 mm", 250, 517),
   text("Trefferlage:", 154, 505),
   text("1.09 mm links, 0.40 mm tief", 250, 505),
+  text("initialisiert: 02.10.2026 19:21", 57, 35, 8),
+  text("gedruckt am: 02.10.2026 19:52", 57, 26, 8),
   text("ID: ff914420 - Seite: 1", 256, 26, 8),
 ]
 
@@ -209,6 +211,8 @@ describe("readPrintoutValues", () => {
     expect(values.discipline).toBe("LP 40")
     expect(values.mode).toBe("Probe")
     expect(values.shooter).toBe("Muster, Max")
+    expect(values.stand).toBe("4")
+    expect(values.initialized).toBe("2026-10-02T19:21")
     expect(values.result).toEqual({ rings: 97, tenths: 1013 })
     expect(values.seriesRings).toEqual([97])
     expect(values.counts).toEqual([4, 4, 1, 1, 0, 0, 0, 0, 0, 0, 0])
@@ -242,6 +246,37 @@ describe("readPrintoutValues", () => {
     expect(values.shots.every((s) => s.series === 1)).toBe(true)
   })
 
+  it("trennt die Serien: Werte und Zeilen jeder Serie bleiben bei ihr", async () => {
+    const values = await readPrintoutValues(
+      // Serie 2 steht im Strom vor Serie 1: die Zuordnung hängt an der Lage, nicht an der Folge
+      await printout([
+        text("Serie 2:", 155, 483),
+        text("93", 190, 483),
+        text("(97.1)", 206, 483),
+        ...["9.9", "9.6", "8.8", "10.2", "9.5"].map((v, i) => text(v, 205 + i * 77, 469)),
+        ...["10.0", "9.1", "9.3", "10.7*", "10.0"].map((v, i) => text(v, 205 + i * 77, 455)),
+        text("beste Teiler:", 154, 441),
+        text("41.0 (19.), 177.3 (14.), 201.7 (20.)", 250, 441),
+        text("Trefferkreis:", 154, 429),
+        text("30.02 mm", 250, 429),
+        text("Trefferlage:", 154, 417),
+        text("2.20 mm rechts, 0.15 mm hoch", 250, 417),
+        ...qtHead,
+      ])
+    )
+    expect(values.series.map((s) => s.shots.length)).toEqual([10, 10])
+    const [one, two] = values.series
+    expect(one.shots.at(-1)?.value).toBe(90)
+    expect(one.centerMm).toEqual({ x: -1.09, y: -0.4 })
+    expect(two.sum).toEqual({ rings: 93, tenths: 971 })
+    expect(two.shots.map((s) => s.value)).toEqual([99, 96, 88, 102, 95, 100, 91, 93, 107, 100])
+    expect(two.shots.every((s) => s.series === 2)).toBe(true)
+    expect(two.bestTeiler?.[0]).toEqual({ value: 41, shot: 19 })
+    expect(two.hitCircleMm).toBe(30.02)
+    expect(two.centerMm).toEqual({ x: 2.2, y: 0.15 })
+    expect(values.shots).toHaveLength(20)
+  })
+
   it("liest das Layout mit Streuwert und die Summe im Kopf der Serie", async () => {
     const values = await readPrintoutValues(await printout(gsHead))
     expect(values.mode).toBe("Wertung")
@@ -265,6 +300,8 @@ describe("readPrintoutValues", () => {
     expect(values.result).toBeNull()
     expect(values.mode).toBeNull()
     expect(values.shooter).toBeNull()
+    expect(values.stand).toBeNull()
+    expect(values.initialized).toBeNull()
     expect(values.counts).toBeNull()
     expect(values.bestTeiler).toBeNull()
     expect(values.centerMm).toBeNull()
@@ -350,14 +387,14 @@ describe("readPrintoutValues", () => {
   it("liest den Teiler je Schuss, wo das Layout ihn druckt", async () => {
     const values = await readPrintoutValues(
       await printout([
-        text("Serie 1: 18 (17.8)", 156, 587),
-        text("10.0 766T", 149, 573),
-        text("7.8* 2555.5T", 229, 573),
+        text("Serie 1: 18 (18.7)", 156, 587),
+        text("10.3* 312.5T", 149, 573),
+        text("8.4 1650T", 229, 573),
       ])
     )
     expect(values.shots).toEqual([
-      { series: 1, value: 100, innerTen: false, teiler: 766 },
-      { series: 1, value: 78, innerTen: true, teiler: 2555.5 },
+      { series: 1, value: 103, innerTen: true, teiler: 312.5 },
+      { series: 1, value: 84, innerTen: false, teiler: 1650 },
     ])
   })
 

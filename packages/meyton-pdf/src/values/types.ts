@@ -32,7 +32,7 @@ export interface ShotValue {
   series: number
   value: number
   innerTen: boolean
-  /** Teiler des Schusses, nur in Layouts, die ihn je Schuss drucken („10.0 766T“) */
+  /** Teiler des Schusses, nur in Layouts, die ihn je Schuss drucken („9.6 912T“) */
   teiler: number | null
 }
 
@@ -93,6 +93,10 @@ export interface PrintoutValues {
    * speichern oder ausgeben (ADR-029).
    */
   shooter: string | null
+  /** „StandNr: 10“ → "10" */
+  stand: string | null
+  /** „initialisiert“ im Fuß als Wanduhr der Anlage ohne Zone, „2026-10-16T18:32“; nur im Layout mit Trefferkreis */
+  initialized: string | null
   result: SumValue | null
   /** Zeile „Serien:“ in ganzen Ringen */
   seriesRings: number[] | null

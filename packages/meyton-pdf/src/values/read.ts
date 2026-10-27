@@ -1,4 +1,4 @@
-// Prototyp: liest die Werte eines Meyton-Ausdrucks samt Trefferbild, für die Gegenprobe gegen die Rohdaten (1c-0).
+// Prototyp: liest die Werte eines Meyton-Ausdrucks samt Trefferbild, für die Gegenprobe gegen die Rohdaten ([[meyton-printout]]).
 // Anders als `readPrintout` braucht er das Layout: Zeilen über ihre Beschriftung („Ergebnis:“, „Serie 2:“ …), Werte
 // je Schuss unter dem Kopf ihrer Serie, und aus der Zeichnung die Ringe und Treffer als Kreise. Gemessen an zwei
 // Druckwegen (Ghostscript mit „Streuwert“, Qt mit „Trefferkreis“). Was nicht dasteht, bleibt null.
@@ -61,10 +61,11 @@ function tenthsOf(text: string): number | null {
   return m ? Number(m[1]) * 10 + Number(m[2] ?? 0) : null
 }
 
-const sameLine = (a: TextPiece, b: TextPiece) => Math.abs(a.y - b.y) < 0.3 * b.size
+const sameLine = (a: TextPiece, b: TextPiece) =>
+  Math.abs(a.y - b.y) < 0.3 * Math.max(a.size, b.size)
 /**
  * Zeile für Zeile von oben, in der Zeile von links. Nicht nach y allein: Ghostscript setzt Werte derselben Zeile um
- * Bruchteile eines Punkts versetzt, und der erste Wert einer Serie rutschte so ans Zeilenende.
+ * Bruchteile eines Punkts versetzt, sonst rutscht der erste Wert einer Serie ans Zeilenende.
  */
 const readingOrder = (a: TextPiece, b: TextPiece) => (sameLine(a, b) ? a.x - b.x : b.y - a.y)
 
@@ -143,7 +144,7 @@ function parseInts(text: string): number[] | null {
   return values.length > 0 ? values : null
 }
 
-/** „10.4*“, mit Teiler je Schuss in manchen Layouts „10.0 766T“ */
+/** „10.4*“, mit Teiler je Schuss in manchen Layouts „9.6 912T“ */
 const SHOT_VALUE = new RegExp(String.raw`^(\d{1,2})[.,](\d)(\*?)(?:\s+(${NUMBER})T)?$`)
 const SERIES_HEAD = /^Serie (\d+):$/
 
@@ -157,6 +158,8 @@ interface TextValues {
   discipline: string | null
   mode: string | null
   shooter: string | null
+  stand: string | null
+  initialized: string | null
   head: Partial<Record<Label, string>>
   series: SeriesValues[]
   layout: string[]
@@ -216,6 +219,14 @@ export function readText(pieces: readonly TextPiece[], frames: readonly BoxPt[] 
         .map((p) => p.str.trim())
         .find((s) => !/\d/.test(s)) ?? null)
     : null
+  const standNr = stand ? (/^StandNr:\s*(\S+)$/.exec(stand.str.trim())?.[1] ?? null) : null
+  // Fuß im Layout mit Trefferkreis: „initialisiert: 16.10.2026 18:32“
+  const initPiece = outside
+    .map((p) => /^initialisiert:\s*(\d{2})\.(\d{2})\.(\d{4}) (\d{2}):(\d{2})$/.exec(p.str.trim()))
+    .find((m) => m !== null)
+  const initialized = initPiece
+    ? `${initPiece[3]}-${initPiece[2]}-${initPiece[1]}T${initPiece[4]}:${initPiece[5]}`
+    : null
   // die Zeile mit „#Nummer“: davor der Name
   const number = outside.find((p) => /^#\d+$/.test(p.str.trim()))
   const shooter = number
@@ -260,7 +271,7 @@ export function readText(pieces: readonly TextPiece[], frames: readonly BoxPt[] 
     return seriesValues(h.number, sumText, rows, below, outside)
   })
 
-  return { discipline, mode, shooter, head, series, layout }
+  return { discipline, mode, shooter, stand: standNr, initialized, head, series, layout }
 }
 
 // ── Zeichnung ───────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -280,6 +291,9 @@ const isSquare = (box: BoxPt) =>
  * findet die Trefferbilder: Kreise mit gemeinsamer Mitte (mindestens vier Durchmesser) sind die Ringe einer Scheibe,
  * die übrigen Kreise und kleine Kreuze ihre Treffer, zugeordnet in der Reihenfolge der Zeichnung (Treffer folgen den
  * Ringen ihres Bilds). Die Nummern sind ganze Zahlen im Rahmen des Bilds.
+ *
+ * Grenzen: Zwei Treffer mit genau gleicher Lage direkt hintereinander zählen wie Füllung und Rand als eine Marke. Auch
+ * gedruckte Ringzahlen im Rahmen gelten als Nummern; wer Nummern einem Treffer zuordnet, nimmt die nächste.
  */
 export function readPictures(
   shapes: readonly PathShape[],
@@ -398,6 +412,8 @@ export function valuesOf(
     discipline: text.discipline,
     mode: text.mode,
     shooter: text.shooter,
+    stand: text.stand,
+    initialized: text.initialized,
     result: parsed("Ergebnis:", parseSum),
     seriesRings: parsed("Serien:", parseInts),
     counts: parsed("Zähler:", parseInts),
