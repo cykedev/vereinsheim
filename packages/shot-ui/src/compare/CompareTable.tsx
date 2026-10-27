@@ -22,9 +22,20 @@ const rowHelp = (model: Pick<CompareModel, "unit">) =>
  * eine Zahl ohne Einheit (die steht beim Namen der Zeile, so sind alle Zahlen gleich gebaut), in Gold, wenn sie klar
  * besser ist; ohne Wert „–“ mit Grund, für Screenreader und als Tooltip
  */
-function Value({ row, value, gold }: { row: CompareRow; value: number | null; gold: boolean }) {
+function Value({
+  row,
+  value,
+  gold,
+  side,
+}: {
+  row: CompareRow
+  value: number | null
+  gold: boolean
+  /** die Seite der Spalte: Fehlen ihr die Einzelschüsse, steht ihr Grund */
+  side: CompareModel["a"]
+}) {
   if (value === null) {
-    const reason = missingReason(row)
+    const reason = missingReason(row, side)
     return (
       <span title={reason} className="text-muted-foreground">
         –<span className="sr-only"> {reason}</span>
@@ -105,10 +116,10 @@ export function CompareTable({
                 )}
               </span>
               <span className={cn(CELL, NUMBER)}>
-                <Value row={row} value={row.a} gold={gold === "a"} />
+                <Value row={row} value={row.a} gold={gold === "a"} side={model.a} />
               </span>
               <span className={cn(CELL, NUMBER)}>
-                <Value row={row} value={row.b} gold={gold === "b"} />
+                <Value row={row} value={row.b} gold={gold === "b"} side={model.b} />
               </span>
             </div>
           )

@@ -112,6 +112,11 @@ export function emptySideText(model: Pick<CompareModel, "type" | "a" | "b">): st
 export function compareSentence(model: CompareModel): { lead: string; more: string | null } {
   const empty = emptySideText(model)
   if (empty) return { lead: empty, more: null }
+  if (model.unit === "shot" && (model.a.reason || model.b.reason))
+    return {
+      lead: "Ein Vergleich Schuss für Schuss braucht Einzelschüsse auf beiden Scheiben.",
+      more: null,
+    }
   const c = model.result.comparison
   if (!c || c.test === null)
     return { lead: `Für einen Vergleich sind es zu wenige ${unitWord(model)}.`, more: null }
@@ -172,8 +177,14 @@ export function positionValue(model: CompareModel): string | null {
   return p ? `${formatValue(p.distanceUm / 1000, 1)} mm auseinander` : null
 }
 
-/** warum eine Zeile ohne Wert ist („–“ mit Grund) */
-export function missingReason(row: Pick<CompareRow, "key">): string {
+/**
+ * warum eine Zeile ohne Wert ist („–“ mit Grund); hat die Seite keine Einzelschüsse, ihr Grund („Nur Serien-Summen.“)
+ */
+export function missingReason(
+  row: Pick<CompareRow, "key">,
+  side?: Pick<CompareModel["a"], "reason">
+): string {
+  if (side?.reason) return `${capital(side.reason)}.`
   if (row.key.startsWith("group.")) return "Ohne Lage der Schüsse."
   if (row.key.startsWith("time.")) return "Ohne Zeit der Schüsse."
   return "Ohne Wertungsschuss."
@@ -181,14 +192,24 @@ export function missingReason(row: Pick<CompareRow, "key">): string {
 
 const cards = (n: number) => `${formatInteger(n)} ${n === 1 ? "Scheibe" : "Scheiben"}`
 
-/** die Grundlage unter den Zeilen: Scheiben und Schüsse je Seite, geteilte Scheiben, bei zwei Scheiben die Schüsse */
+/**
+ * die Grundlage unter den Zeilen: Scheiben und Schüsse je Seite mit denen ohne Lage je Schuss und ohne Werte, geteilte
+ * Scheiben, bei zwei Scheiben die Schüsse; fehlen einer Scheibe die Einzelschüsse, warum
+ */
 export function basisText(model: CompareModel): string {
-  if (model.unit === "shot")
+  if (model.unit === "shot") {
+    const reasons = [
+      model.a.reason ? `A: ${model.a.reason}.` : null,
+      model.b.reason ? `B: ${model.b.reason}.` : null,
+    ].filter(Boolean)
+    if (reasons.length)
+      return `${reasons.join(" ")} Schuss für Schuss vergleicht Spiegel nur Einzelschüsse.`
     return `Verglichen Schuss für Schuss: ${formatInteger(model.a.shots)} gegen ${formatInteger(model.b.shots)} Wertungsschüsse.`
+  }
   const side = (label: string, s: CompareModel["a"]) =>
     `${label}: ${cards(s.cards)}, ${formatInteger(s.shots)} Schuss${
-      s.withoutPosition ? `, ${formatInteger(s.withoutPosition)} ohne Lage` : ""
-    }.`
+      s.withoutPosition ? `, ${formatInteger(s.withoutPosition)} ohne Lage je Schuss` : ""
+    }${s.withoutValues ? `, ${formatInteger(s.withoutValues)} ohne Werte` : ""}.`
   const shared = model.shared
     ? model.shared === 1
       ? " 1 Scheibe liegt in beiden Zeiträumen. Sie zählt nur in A."

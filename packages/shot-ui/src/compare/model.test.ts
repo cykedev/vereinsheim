@@ -142,3 +142,56 @@ describe("cardCompareModel", () => {
     expect(model.picture.style).toBe("dots")
   })
 })
+
+describe("Vergleichen ohne Einzelschüsse", () => {
+  const SERIES = {
+    series: [1, 2, 3, 4].map((series) => ({ series, shots: 10, rings: 96, decimalTenths: 1000 })),
+    total: null,
+    center: null,
+  }
+  const names = {
+    a: { name: "A", at: "am 29.09.", short: "29.09." },
+    b: { name: "B", at: "am 28.09.", short: "28.09." },
+  }
+  const measured = periodCard(
+    "m",
+    2,
+    Array.from({ length: 20 }, () => 95)
+  )
+
+  it("zwei Scheiben, A aus Serien-Summen: kein Vergleich Schuss für Schuss, das Ergebnis aus den Summen", () => {
+    const model = cardCompareModel({
+      a: { ...periodCard("s", 1, []), sums: SERIES },
+      b: measured,
+      scoring: "decimal",
+      names,
+      provenance: { a: "entered" },
+    })
+    expect(model.result.a).toBeCloseTo(10, 9)
+    expect(model.result.comparison).toBeNull()
+    expect(model.a).toMatchObject({ reason: "nur Serien-Summen", withoutValues: 0 })
+    expect(model.b.reason).toBeNull()
+  })
+
+  it("A wartet auf die Anlage: ohne Werte, nicht ohne Lage", () => {
+    const model = cardCompareModel({
+      a: periodCard("w", 1, []),
+      b: measured,
+      scoring: "decimal",
+      names,
+      provenance: { a: "printout" },
+    })
+    expect(model.a).toMatchObject({
+      withoutValues: 1,
+      withoutPosition: 0,
+      reason: "wartet auf die Anlage",
+    })
+  })
+
+  it("Gruppe mit einer wartenden und zwei aus Summen: eine ohne Werte, zwei ohne Lage", () => {
+    const sums = [1, 2].map((i) => ({ ...periodCard(`s${i}`, 20 + i, []), sums: SERIES }))
+    const waiting = periodCard("w", 23, [])
+    const model = group([...cardsOf("a", 3, 104), ...sums, waiting], cardsOf("b", 5, 90, 30))
+    expect(model.a).toMatchObject({ cards: 6, withoutValues: 1, withoutPosition: 2 })
+  })
+})

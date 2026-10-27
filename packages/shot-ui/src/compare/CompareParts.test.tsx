@@ -46,6 +46,8 @@ const MODEL: CompareModel = {
     cards: 10,
     shots: 400,
     withoutPosition: 0,
+    withoutValues: 0,
+    reason: null,
   },
   b: {
     name: "Zeitraum davor",
@@ -54,6 +56,8 @@ const MODEL: CompareModel = {
     cards: 8,
     shots: 320,
     withoutPosition: 0,
+    withoutValues: 0,
+    reason: null,
   },
   shared: 0,
   result: row("result.decimalMean", 9.2),

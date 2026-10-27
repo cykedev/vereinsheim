@@ -18,7 +18,6 @@ import {
   type PeriodComparison,
 } from "@vereinsheim/shot-core/analysis"
 import {
-  asOnPrintout,
   eligibleShots,
   inScoring,
   metricByKey,
@@ -26,11 +25,14 @@ import {
   type MetricUnit,
   type Scoring,
 } from "@vereinsheim/shot-core/metrics"
+import { cardDetail } from "@vereinsheim/shot-core/projection"
 
+import { detailLevel, REASON_TEXT, summaryReasons, type CardProvenance } from "../detail"
 import { metricLabel } from "../labels"
 import type { CompareType } from "../nav/routes"
 import { itemValues, type PeriodItem } from "../period/item"
 import { PERIOD_TILE_KEYS } from "../period/model"
+import { shownShots } from "../shots"
 
 /** Name einer Seite: im Chip, im Satz und kurz über der Spalte („Letzte 90 Tage“, „in den letzten 90 Tagen“, „90 Tage“) */
 export interface SideName {
@@ -44,8 +46,12 @@ export interface CompareSide extends SideName {
   cards: number
   /** Schüsse wie am Ausdruck */
   shots: number
-  /** Scheiben ohne Lage der Schüsse */
+  /** Scheiben ohne Lage der Schüsse (mit Werten) */
   withoutPosition: number
+  /** Scheiben ohne Werte, sie zählen in keiner Zahl */
+  withoutValues: number
+  /** bei zwei Scheiben, warum eine nicht Schuss für Schuss vergleichbar ist; sonst null */
+  reason: string | null
 }
 
 /** eine Kennzahl für A und B; der Vergleich mit Δ = A − B, „höher“ heißt A höher (`compareAB`, `compareShots`) */
@@ -135,7 +141,11 @@ export function groupCompareModel(input: {
     shots: items.reduce((sum, item) => sum + item.shots, 0),
     // ohne Lage ist eine Scheibe, deren Lagen gelesen und leer sind; eine, deren Lagen die Obergrenze nicht mehr gelesen
     // hat, zählt nicht dazu
-    withoutPosition: items.filter((item) => byId.get(item.id)?.points.length === 0).length,
+    withoutPosition: items.filter(
+      (item) => !withoutValues(item) && byId.get(item.id)?.points.length === 0
+    ).length,
+    withoutValues: items.filter(withoutValues).length,
+    reason: null,
   })
   const a = counted(input.a)
   const b = counted(input.b)
@@ -169,9 +179,13 @@ export function groupCompareModel(input: {
   }
 }
 
-/** Lagen der Wertungsschüsse wie am Ausdruck, wie σ: mit Lage, ohne verdächtige */
+/** ein Eintrag ohne Werte (weder Schüsse noch Summen): Er zählt in keiner Zahl, auch nicht als Scheibe ohne Lage */
+const withoutValues = (item: PeriodItem) =>
+  !!item.detail && item.detail.rings === null && item.detail.tenths === null && item.shots === 0
+
+/** Lagen der Schüsse der Seite einer Scheibe (`shownShots`), wie σ: mit Lage, ohne verdächtige */
 const drawn = (card: PeriodCard) =>
-  eligibleShots(metric(SPREAD_KEY), asOnPrintout(card.shots)).map((shot) => ({
+  eligibleShots(metric(SPREAD_KEY), shownShots(card)).map((shot) => ({
     xUm: shot.xUm as number,
     yUm: shot.yUm as number,
   }))
@@ -179,15 +193,19 @@ const drawn = (card: PeriodCard) =>
 /**
  * Zwei Scheiben Schuss für Schuss (`compareShots`): Die Zeilen zeigen die Werte der Scheiben (Ø je Schuss, σ), der
  * Vergleich zählt die Schüsse. Die übrigen Kennzahlen stehen ohne Vergleich da: Für sie gibt es keinen Test über Schüsse.
+ * Eine Scheibe ohne Einzelschüsse (nur Summen, ohne Werte) bricht nichts: Ihre Werte aus Summen stehen da, ohne
+ * Vergleich, und die Seite sagt warum (`reason`).
  */
 export function cardCompareModel(input: {
   a: PeriodCard
   b: PeriodCard
   scoring: Scoring
   names: { a: SideName; b: SideName }
+  /** Herkunft je Seite; ohne gilt gemessen */
+  provenance?: { a?: CardProvenance; b?: CardProvenance }
 }): CompareModel {
   const { scoring } = input
-  const shots = compareShots(input.a.shots, input.b.shots, scoring)
+  const shots = compareShots(shownShots(input.a), shownShots(input.b), scoring)
   const valueOf = (card: PeriodCard, key: string) =>
     cardValues([card], metric(key), scoring, { includeProbeOnly: true })[0]?.value ?? null
   const row = (key: string, comparison: PeriodComparison | null = null): CompareRow => ({
@@ -198,17 +216,36 @@ export function cardCompareModel(input: {
   })
   const pa = drawn(input.a)
   const pb = drawn(input.b)
-  const side = (name: SideName, count: number, points: number): CompareSide => ({
-    ...name,
-    cards: 1,
-    shots: count,
-    withoutPosition: points ? 0 : 1,
-  })
+  const side = (
+    name: SideName,
+    card: PeriodCard,
+    count: number,
+    points: number,
+    provenance: CardProvenance | undefined
+  ): CompareSide => {
+    const detail = cardDetail(card)
+    const level = detailLevel(detail, shownShots(card).length)
+    return {
+      ...name,
+      cards: 1,
+      shots: count,
+      withoutPosition: points || level === "none" ? 0 : 1,
+      withoutValues: level === "none" ? 1 : 0,
+      reason:
+        level === "series" || level === "total"
+          ? summaryReasons(detail, level)[0]
+          : level === "none"
+            ? provenance === "printout"
+              ? REASON_TEXT.waiting
+              : REASON_TEXT.noValues
+            : null,
+    }
+  }
   return {
     type: "cards",
     unit: "shot",
-    a: side(input.names.a, shots.shots.a, pa.length),
-    b: side(input.names.b, shots.shots.b, pb.length),
+    a: side(input.names.a, input.a, shots.shots.a, pa.length, input.provenance?.a),
+    b: side(input.names.b, input.b, shots.shots.b, pb.length, input.provenance?.b),
     shared: 0,
     result: row(RESULT_KEY, shots.result),
     spread: row(SPREAD_KEY, shots.spread),

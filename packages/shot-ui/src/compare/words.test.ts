@@ -64,6 +64,8 @@ const model = (over: Partial<CompareModel> = {}): CompareModel => ({
     cards: 10,
     shots: 398,
     withoutPosition: 0,
+    withoutValues: 0,
+    reason: null,
   },
   b: {
     name: "Zeitraum davor",
@@ -72,6 +74,8 @@ const model = (over: Partial<CompareModel> = {}): CompareModel => ({
     cards: 8,
     shots: 300,
     withoutPosition: 0,
+    withoutValues: 0,
+    reason: null,
   },
   shared: 0,
   result: row("result.decimalMean", "higher", comparison(0.12, "higher")),
@@ -284,7 +288,7 @@ describe("Zeilen, Grundlage, Bild", () => {
     expect(
       basisText(model({ shared: 3, a: { ...model().a, shots: 1240, withoutPosition: 2 } }))
     ).toBe(
-      "A: 10 Scheiben, 1.240 Schuss, 2 ohne Lage. B: 8 Scheiben, 300 Schuss. 3 Scheiben liegen in beiden Zeiträumen. Sie zählen nur in A."
+      "A: 10 Scheiben, 1.240 Schuss, 2 ohne Lage je Schuss. B: 8 Scheiben, 300 Schuss. 3 Scheiben liegen in beiden Zeiträumen. Sie zählen nur in A."
     )
     expect(basisText(model({ shared: 1 }))).toContain(
       "1 Scheibe liegt in beiden Zeiträumen. Sie zählt nur in A."
@@ -294,6 +298,39 @@ describe("Zeilen, Grundlage, Bild", () => {
         model({ unit: "shot", a: { ...model().a, shots: 40 }, b: { ...model().b, shots: 40 } })
       )
     ).toBe("Verglichen Schuss für Schuss: 40 gegen 40 Wertungsschüsse.")
+  })
+
+  it("Scheiben ohne Einzelschüsse: Grundlage, Zelle und Satz nennen den Grund", () => {
+    expect(
+      basisText(
+        model({ a: { ...model().a, cards: 12, shots: 480, withoutPosition: 3, withoutValues: 1 } })
+      )
+    ).toBe(
+      "A: 12 Scheiben, 480 Schuss, 3 ohne Lage je Schuss, 1 ohne Werte. B: 8 Scheiben, 300 Schuss."
+    )
+    const cards = model({
+      type: "cards",
+      unit: "shot",
+      a: { ...model().a, cards: 1, shots: 0, reason: "nur Serien-Summen" },
+      b: { ...model().b, cards: 1, shots: 40 },
+    })
+    expect(basisText(cards)).toBe(
+      "A: nur Serien-Summen. Schuss für Schuss vergleicht Spiegel nur Einzelschüsse."
+    )
+    expect(missingReason({ key: "group.sigma" }, cards.a)).toBe("Nur Serien-Summen.")
+    expect(missingReason({ key: "group.sigma" }, cards.b)).toBe("Ohne Lage der Schüsse.")
+    expect(compareSentence(cards)).toEqual({
+      lead: "Ein Vergleich Schuss für Schuss braucht Einzelschüsse auf beiden Scheiben.",
+      more: null,
+    })
+    const texts = [
+      basisText(cards),
+      compareSentence(cards).lead,
+      ...["nur Serien-Summen", "nur Gesamtergebnis", "wartet auf die Anlage", "ohne Werte"].map(
+        (reason) => missingReason({ key: "result.decimal" }, { reason })
+      ),
+    ]
+    expect(forbiddenIn(texts)).toEqual([])
   })
 
   it("Legende und Hinweise", () => {

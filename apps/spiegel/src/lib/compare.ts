@@ -161,7 +161,16 @@ export async function comparePageData(
       context.timeZone
     )
     return {
-      model: problem || !a || !b ? null : cardCompareModel({ a, b, scoring, names }),
+      model:
+        problem || !a || !b
+          ? null
+          : cardCompareModel({
+              a,
+              b,
+              scoring,
+              names,
+              provenance: { a: a.provenance, b: b.provenance },
+            }),
       problem: problem && problemText(problem),
       query: { type: "cards", family, a: aId, b: bId },
       family,
