@@ -3,7 +3,7 @@ id: spiegel-navigation
 type: concept
 title: "Spiegel — Navigation, Einstieg und Auswahl"
 aliases: [navigation-spiegel, einstieg, scheiben-liste-konzept, app-rahmen]
-keywords: [art der scheibe, wettkampf, training, kindchoice, navigation, einstieg, startseite, start, scheiben-liste, übersicht, auswahl, auswahlmodus, abend, trainingsabend, einheit, mischabend, familie, blättern, vorige, nächste, zurück, adresse, url, query, deep link, routen, seitenleiste, untere leiste, bottom navigation, scan, offen, bestätigen, eingang, löschen, papierkorb, rückgängig, weiche sperre, löschsperre, grabstein, wiederherstellen, admin, profil, fortschritt, schnitt davor, wertung, zehntel, ganze ringe, wertung der scheibe, wertung der familie, wie am stand, amtliche wertung, liste aus meyton, rangliste, filter liste, zeitraum merken, gemerkter zeitraum, kalender blättern, früher, später, darstellung, cookie, teilen, link teilen, geteilte scheibe, share, uuid, ohne anmeldung, herkunft, gemessen, vom ausdruck, eingetragen, detailtiefe, serien-summen, gesamtergebnis, ohne werte, wartet auf die anlage, grund, ort]
+keywords: [art der scheibe, wettkampf, training, kindchoice, navigation, einstieg, startseite, start, scheiben-liste, übersicht, auswahl, auswahlmodus, abend, trainingsabend, einheit, mischabend, familie, blättern, vorige, nächste, zurück, adresse, url, query, deep link, routen, seitenleiste, untere leiste, bottom navigation, scan, scheibe holen, holen, qr, ausdruck an der scheibe, von der anlage, nicht mehr holen, offen, bestätigen, eingang, löschen, papierkorb, rückgängig, weiche sperre, löschsperre, grabstein, wiederherstellen, admin, profil, fortschritt, schnitt davor, wertung, zehntel, ganze ringe, wertung der scheibe, wertung der familie, wie am stand, amtliche wertung, liste aus meyton, rangliste, filter liste, zeitraum merken, gemerkter zeitraum, kalender blättern, früher, später, darstellung, cookie, teilen, link teilen, geteilte scheibe, share, uuid, ohne anmeldung, herkunft, gemessen, vom ausdruck, eingetragen, detailtiefe, serien-summen, gesamtergebnis, ohne werte, wartet auf die anlage, grund, ort]
 part_of: ["[[spiegel]]"]
 governed_by: ["[[adr-030]]"]
 relates_to: ["[[spiegel-ui-design]]", "[[spiegel-langzeit]]", "[[spiegel-assignment]]", "[[spiegel-mobile]]", "[[spiegel-roadmap]]", "[[spiegel-privacy]]", "[[spiegel-edge-cases]]", "[[spiegel-durchsicht]]", "[[navigation-pattern]]"]
@@ -11,11 +11,11 @@ relates_to: ["[[spiegel-ui-design]]", "[[spiegel-langzeit]]", "[[spiegel-assignm
 
 **TL;DR** Spiegel öffnet auf **Start**: „Offen (n)“, je Familie der letzte Abend groß (Satz, Formband, Kacheln, neue
 Rekorde) und die Form der letzten 90 Tage. Daneben stehen die Bereiche **Scheiben** (Liste nach Abend, eine Familie),
-**Fortschritt** (Seite eines Zeitraums) und **Profil**; **Scannen** kommt mit dem QR-Weg (SP-1.7 b). Liste und
+**Fortschritt** (Seite eines Zeitraums) und **Profil**; **Scheibe holen** (`/scan`) ist die Aktion in der Mitte. Liste und
 Fortschritt sind zwei verlinkte Bereiche mit derselben Filterzeile und derselben Familie. Wertung und Art gehören zur
 Scheibe bzw. Familie und werden beim Umschalten gespeichert. Gelöschtes liegt 30 Tage im Papierkorb, danach hält eine
-weiche Sperre die Brücke ab. Der ganze Zustand steht in der Adresse, mit englischen Pfaden. Offen sind vor allem die
-Auswahl, Scannen und der Vergleich zweier Scheiben.
+weiche Sperre die Brücke ab, die ausdrückliches Holen wieder aufhebt. Der ganze Zustand steht in der Adresse, mit
+englischen Pfaden. Offen ist vor allem die Auswahl.
 
 ## Konzept
 
@@ -51,7 +51,7 @@ Reiter einer App; das Rückgrat ist die Liste der Scheiben. Die Seiten einer Sch
 | Fortschritt | untere Leiste | Seitenleiste | `/progress?range=12m&compare=previous&family=lg-freihand&sighters=0&pick=<id>#history` |
 | Profil | untere Leiste, für Admins oben die Bereiche des Admins | Seitenleiste | `/profile` |
 | Admin | in Profil oben (Abschnitt „Admin“ mit allen Bereichen), nur für Admins | letzter Eintrag der Seitenleiste, nur für Admins | `/admin{/users,/disciplines,/lists,/site}` |
-| Scannen | nicht in der Navigation bis zum QR-Weg (SP-1.7 b) | ebenso | `/scan` (Platzhalter) |
+| Scheibe holen | Mitte der unteren Leiste, nur das Symbol (`ScanQrCode`), der Name für Screenreader | Pille „Scheibe holen“ in der Seitenleiste | `/scan` |
 
 Seiten ohne eigenen Bereich:
 
@@ -118,8 +118,8 @@ und über `nav/navigate`.
   - Ab 1024 px eine Seitenleiste: „Spiegel“, Start mit Zähler, Scheiben, Fortschritt, Profil, Admin als letzter
     Eintrag. Jede Seite steht in voller Breite daneben; keine Liste neben der Scheibe, keine Kopfzeile nach
     [[navigation-pattern]].
-  - Unter 1024 px eine untere Leiste. Ohne Scannen (`scan={false}`) hat sie vier Felder; mit Scannen fünf, Scannen erhaben in
-    der Mitte, und die Seitenleiste nennt „QR scannen“.
+  - Unter 1024 px eine untere Leiste mit fünf Feldern, „Scheibe holen“ erhaben in der Mitte (nur das Symbol, wie
+    „Neue Einheit“ in Treffsicher; `short: "Holen"`); die Seitenleiste zeigt „Scheibe holen“ als Pille.
   - Telefon quer (unter 500 px hoch): eine schmale Leiste links. Eine untere Leiste nähme dort 72 von 375 px, die
     Scheibe passte nicht mehr unter die Sprungleiste.
   - Admin sieht nur ein Admin; auf dem Telefon steckt Admin in Profil, und ist Admin offen, ist dort Profil markiert.
@@ -290,11 +290,28 @@ Die Liste markiert, wohin man kommt, wie der Fortschritt seine Wahl (`bg-accent-
   - Geschrieben nur beim Umschalten, nie beim Öffnen: Nach Zurück und Vor bringt Next die Seite aus dem Cache mit der
     Darstellung ihres ersten Besuchs, ein Schreiben beim Öffnen überschriebe die zuletzt gewählte.
   - Eine Seite aus dem Cache übernimmt die gemerkte über `useSyncExternalStore` (beim Hydrieren gilt die vom Server).
-- **Kasten „Diese Scheibe“** am Ende (`CardActions`, nur für den Besitzer): Disziplin, Teilen und Löschen als Zeilen, je
+- **Kasten „Diese Scheibe“** am Ende (`CardActions`, nur für den Besitzer): Ausdruck, Von der Anlage, Disziplin, Teilen
+  und Löschen als Zeilen, je
   mit Zustand links und Aktion rechts („Ändern“, „Teilen“, „Löschen“; für Screenreader „Disziplin ändern“,
   „Scheibe teilen“, „Scheibe löschen“). Darüber „Mit der Scheibe davor vergleichen“ als eigener Kasten. Nach
   conventions §2 stünden sie oben (`DetailActionBar`); der Kopf ist aber schon voll, und man braucht sie selten. Siehe
-  „Disziplin einer Scheibe“, „Teilen per Link“ und „Löschen und Papierkorb“.
+  „Ausdruck und Holen an der Scheibe“, „Disziplin einer Scheibe“, „Teilen per Link“ und „Löschen und Papierkorb“.
+
+## Ausdruck und Holen an der Scheibe
+
+Gleiches steht an derselben Stelle: ID, PDF und der Auftrag an die Anlage sind Zeilen im Kasten „Diese Scheibe“, vor
+Disziplin, wie dort mit Zustand links und Aktion rechts. Die geteilte Seite (`/share`) zeigt sie nicht, denn ID und
+Abend holen die Scheibe.
+
+- **Ausdruck** (`CardPrintout`, wenn es eine ID oder einen Ausdruck gibt): „ID ff914420 · gedruckt Di 27.10.2026 um
+  19:52“ mit „PDF öffnen“ (`/api/printouts/<id>`, nur für den Besitzer, nicht aus dem Papierkorb); weitere Ausdrucke
+  darunter. Ohne PDF nur die ID und „Das PDF hängt an, wenn du den QR-Code unter „Scheibe holen“ scannst.“ Die ID kommt
+  von der Brücke (`scheibenId`), sonst vom jüngsten Ausdruck, sonst vom Auftrag (`cardFetchInfo`).
+- **Von der Anlage** (`CardFetch`, solange der Auftrag etwas zu sagen hat, `requestShown`): Zustand und Satz
+  (`REQUEST_STATUS_TEXT`, `REQUEST_STATUS_NOTE`). Wartend „Nicht mehr holen“, beendet ohne Werte „Entfernen“, beides mit
+  Rückfrage (`cardFetchStop`, `cardFetchDismiss`); der Auftrag ist danach zurückgezogen, Scheibe und PDF bleiben.
+- **Grund ohne Werte** folgt dem Auftrag: Eine Scheibe vom Ausdruck ohne offenen, ungefüllten Auftrag heißt „ohne
+  Werte“ statt „wartet auf die Anlage“ (`waiting: false`, in Liste, Start, Fortschritt, Vergleichen und auf der Seite).
 
 ## Fortschritt
 
@@ -343,8 +360,9 @@ Eine eigene Scheibe lässt sich löschen, über Papierkorb und weiche Sperre ([[
     Brücke.
   - Grund: Die Brücke hat keinen eigenen Zustand, gleicht die letzten 30 Tage ab und schickt nach einer Korrektur einen
     neuen Snapshot. Ohne Sperre käme eine Opt-in-Scheibe am nächsten Abend von selbst zurück.
-  - Ein ausdrückliches Holen (QR-Scan, „Scheibe holen“, Nachladen) soll die Sperre aufheben und die Scheibe
-    zurückbringen, solange Meyton sie noch hat; gebaut ist das nicht (siehe „Was noch fehlt“).
+  - Ausdrückliches Holen auf „Scheibe holen“ hebt die eigene Sperre dieses Abends auf und legt die Scheibe vom
+    Ausdruck wieder an; die Brücke füllt sie, solange Meyton sie noch hat. Eine eigene Scheibe im Papierkorb holt es
+    zurück. Grabsteine und Sperren anderer Konten bleiben. Das Nachladen hebt keine Sperre auf.
 - **Grabstein** für „Nicht meine“ und abgelehnte Scheiben, denn dort geht es um die Daten eines anderen (SF-28, SF-37).
   Meldungen „nicht meine“ einer Nummer hebt ein Admin am Konto auf (`liftNotMine`); die Scheiben kommen wartend wieder.
 - Der Papierkorb zeigt auch, was nicht von selbst wiederkommt: eigene endgültig gelöschte Scheiben und eigene Meldungen
@@ -467,7 +485,7 @@ Neben einer Zahl stehen Art und Wertung als weiche Kreise, in einer Filterzeile 
 
 ## Was noch fehlt
 
-Stand am Code (15. Oktober 2026):
+Stand am Code (27. Oktober 2026):
 
 - **Auswahl** (SP-1.8; der Vergleich braucht C2 aus SP-2.2): nicht gebaut.
   - Aktionen: Vergleichen (genau zwei), Im Verlauf zeigen, Aus Verläufen ausnehmen (die sanfte Alternative ohne
@@ -476,14 +494,9 @@ Stand am Code (15. Oktober 2026):
   - Auf dem Telefon über langes Drücken oder „Auswählen“, am Desktop über Kästchen. Im Auswahlmodus ersetzt eine
     Aktionsleiste die untere Navigation.
   - Heute löscht man nur an der Seite einer Scheibe.
-- **Scannen** (QR-Weg, SP-1.7 b): `/scan` ist ein Platzhalter und nicht in der Navigation. Geplant: Vorschau,
-  Bestätigen, dann die Seite der neuen Scheibe; „←“ führt in die Liste, die neue Scheibe ist dort über `pick` markiert
-  (die Markierung steht schon). Dann steht Scannen wieder in der Navigation: erhaben in der Mitte der unteren Leiste, am
-  Desktop „QR scannen“ und „Link einfügen“.
-- **Weitere Fälle in „Offen“:** wartender QR-Scan (SP-1.7 b), „Das war ich“ ([[spiegel-assignment]]), eine Vorschau des
-  Nachladens (SP-2.5). Das Nachladen selbst läuft ohne Vorschau; Profil zeigt seinen Stand.
-- **Weiche Sperre aufheben:** Kein Weg hebt eine `DeleteLock` auf; auch das Nachladen schickt der Brücke alle Sperren
-  mit. Das Holen per QR (SP-1.7 b) und „Scheibe holen“ (SP-2.4) fehlen noch.
+- **Weitere Fälle in „Offen“:** „Das war ich“ ([[spiegel-assignment]]), eine Vorschau des Nachladens (SP-2.5). Das
+  Nachladen selbst läuft ohne Vorschau; Profil zeigt seinen Stand. Scannen und „Weiche Sperre aufheben“ sind erledigt
+  (1b-2, „Scheibe holen“).
 - **„Läuft gerade“ auf Start** („Läuft · Stand 6 · 23 Schuss“): nicht gebaut.
 - **Abstand zum Schnitt in den Kacheln einer Scheibe:** Die Kacheln des Überblicks zeigen ihn nicht; käme er, wäre es
   der Schnitt der fünf davor.
@@ -494,7 +507,7 @@ Stand am Code (15. Oktober 2026):
 ## Skizze
 
 ```
-Telefon (eine Spalte, untere Leiste immer da; Scannen kommt mit SP-1.7 b)
+Telefon (eine Spalte, untere Leiste immer da; Holen (◉) erhaben in der Mitte)
 
 ┌── Start ──────────────────────────┐    ┌── Scheiben ───────────────────────┐
 │ Offen (1)                       › │    │ [LG | LP] [Alle Scheiben]         │
@@ -508,7 +521,7 @@ Telefon (eine Spalte, untere Leiste immer da; Scannen kommt mit SP-1.7 b)
 │ └────────────────────────────┘    │    │                                   │
 │ Form der letzten 90 Tage        › │    │                                   │
 ├───────────────────────────────────┤    ├───────────────────────────────────┤
-│ Start Scheiben Fortschritt Profil │    │ Start Scheiben Fortschritt Profil │
+│ Start Scheiben (◉) Fortschr. Prof.│    │ Start Scheiben (◉) Fortschr. Prof.│
 └───────────────────────────────────┘    └───────────────────────────────────┘
         │ Kachel                                 │ Zeile
         ▼                                        ▼
@@ -525,6 +538,7 @@ Desktop (Seitenleiste ab 1024 px, Seiten in voller Breite)
 │ ▸ Start (1)  │ ┌ September 2026 ────────────────────────────────────────┐   │
 │ ▸ Scheiben   │ │ Di 30.9. (◎) Zeit Art Ringe Zehntel Ø Schnitt Schuss   │   │
 │ ▸ Fortschritt│ │         auch 1 Scheibe Luftpistole ›                   │   │
+│ (Sch. holen) │ │                                                        │   │
 │ ▸ Profil     │ │ Do 25.9. (◎) …                                         │   │
 │ ▸ Admin      │ └────────────────────────────────────────────────────────┘   │
 │              │                                                              │

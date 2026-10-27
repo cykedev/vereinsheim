@@ -3,7 +3,7 @@ id: spiegel-ingest-pipeline
 type: subsystem
 title: "Spiegel — Ingest-API und Normalisierung"
 aliases: [ingest, ingest-api, normalisierung, rohdaten-pipeline]
-keywords: [ingest, api, endpunkt, geräte-token, device token, kopplung, pairing, kopplungscode, heartbeat, zustand der brücke, ratenbegrenzung, rate limit, retry-after, bytegrenze, last, vps, lebenszeichen, lifesign, idempotenz, snapshot, rohdatensatz, raw store, normalisierung, adapter, meyton-ssmdb2, skalen, zeitzone, epoche, revision, projektion, neu berechnen, vertrag, contract, json schema, folgenummer, kompaktierung, probe sammeln, merkmale, zustimmung, vertragsversion]
+keywords: [ingest, api, auftrag per id, gefüllt, ungefüllt, druckzeit, printMismatch, passt nicht zum ausdruck, scheibe vom ausdruck füllen, wanduhr, endpunkt, geräte-token, device token, kopplung, pairing, kopplungscode, heartbeat, zustand der brücke, ratenbegrenzung, rate limit, retry-after, bytegrenze, last, vps, lebenszeichen, lifesign, idempotenz, snapshot, rohdatensatz, raw store, normalisierung, adapter, meyton-ssmdb2, skalen, zeitzone, epoche, revision, projektion, neu berechnen, vertrag, contract, json schema, folgenummer, kompaktierung, probe sammeln, merkmale, zustimmung, vertragsversion]
 subsystem_of: ["[[spiegel-architecture]]"]
 governed_by: ["[[adr-027]]"]
 relates_to: ["[[spiegel-ingest-contract]]", "[[spiegel-bridge]]", "[[spiegel-data-model]]", "[[meyton-ssmdb2]]", "[[spiegel-edge-cases]]"]
@@ -84,16 +84,37 @@ Abend öffnet der nächste Stand die Scheibe wieder).
 
 ## Auftrag per ID beim Einlesen
 
-`ingestBatch` liest die offenen Aufträge der Anlage für die ScheibenIDs des Stapels (`openRequestsFor`). Ohne Zustimmung
-gilt ein Auftrag wie eine Zustimmung für genau diese Scheibe, wenn der Abend aus dem groben Beginn (`startHintMs`,
-`eveningOfStart`) der genannte ist; der älteste passende Auftrag bekommt sie, nicht wartend. Andere Abende schließen ihre
-Aufträge als `mismatch`, ohne dass etwas gespeichert wird; eine Zustimmung eines anderen Kontos für die SportpassID
-(aktiv oder wartend) und weitere Aufträge desselben Abends als `taken`; verdeckt oder gesperrt als `held`. Nach dem
-Schreiben hängt der Auftrag an der Scheibe mit demselben Beginn (`attachRequestCard`) und bleibt offen, damit weitere
-Stände des Abends nachkommen; der Heartbeat schließt ihn als `done`, sobald die Scheibe endgültig ist
-(`finishRequests` nach `advanceCardStates`). Ein Auftrag mit Scheibe ändert ein `missing` oder `held` der Brücke nicht
-mehr. Nach 30 Tagen schließt `expireRequests`: mit Scheibe `done`, ohne `expired`. Tests:
-`src/lib/ingest/requests.test.ts`, `src/lib/card-requests/queries.test.ts`.
+`ingestBatch` liest die offenen Aufträge der Anlage für die ScheibenIDs des Stapels (`openRequestsFor`, mit der Scheibe
+des Auftrags und den Druckzeiten ihrer Ausdrucke). Ohne Zustimmung gilt ein Auftrag wie eine Zustimmung für genau diese
+Scheibe, wenn der Abend aus dem groben Beginn (`startHintMs`, `eveningOfStart`) der genannte ist; der älteste passende
+Auftrag bekommt sie, nicht wartend.
+
+**Gefüllt oder ungefüllt** (`UNFILLED`): Ein Auftrag ist gefüllt, sobald seine Scheibe eine Quelle hat. Mit „Scheibe
+holen“ hat jeder neue Auftrag vom Anlegen an eine Scheibe vom Ausdruck (`cardId`), die von Anfang an endgültig ist; alle
+Regeln unterscheiden deshalb nach gefüllt, nicht nach `cardId`:
+
+- Andere Abende (`mismatch`), eine Zustimmung eines anderen Kontos für die SportpassID (aktiv oder wartend) und weitere
+  Aufträge desselben Abends (`taken`), verdeckt oder gesperrt (`held`) schließen nur ungefüllte. Ebenso der Heartbeat
+  (`missing`, `held`, `mismatch`, `recordRequestOutcomes`).
+- **Druckzeit** (nur ungefüllt, nur mit Ausdruck): Ein Stand des Stapels mit derselben ScheibenID und demselben Abend
+  muss höchstens fünf Minuten nach der jüngsten Druckzeit begonnen haben (`startsBeforePrint`, `PRINT_GRACE_MS`, SF-29).
+  Verglichen wird Wanduhr mit Wanduhr: `startHintMs` ist die Wanduhr der Anlage als UTC-Felder, die Druckzeit wird mit
+  `wallTimeOfMs` umgerechnet. Besteht keiner, endet der Auftrag mit `printMismatch` („passt nicht zum Ausdruck“) und
+  der Stand wird verworfen (`no-consent`). Bei einer getippten ID (ohne Ausdruck) gilt nur der Abend.
+- **Füllen** (`adaptKey` mit `fill`): Gibt es im Zyklus noch keine Scheibe dieser ScheibenID, schreibt der jüngste Block,
+  der vor dem Druck begann (ohne Druckzeit der jüngste), mit `cardId` in die Scheibe vom Ausdruck (`writeRevision`,
+  `identityUpdate`: Quelle, ScheibenID, Zyklus und Block, Herkunft `raw`, neue Revision ohne „korrigiert“). Frühere
+  Blöcke werden eigene Scheiben des Auftraggebers, spätere kommen mit späteren Stapeln (SF-03, SF-72). Die Disziplin des
+  Stands gilt; die gewählte Art bleibt (`kindChoice`).
+- Nach dem Schreiben: Ein Auftrag mit Scheibe wird erledigt, wenn sie gefüllt und endgültig ist, sonst bleibt er offen,
+  damit weitere Stände nachkommen; der Heartbeat schließt ihn als `done` (`finishRequests` nach `advanceCardStates`,
+  nur gefüllte). Ältere Aufträge ohne Scheibe bekommen wie bisher die neue Scheibe der Brücke (`attachRequestCard`).
+- Nach 30 Tagen schließt `expireRequests`: gefüllt `done`, sonst `expired`. Endgültiges Löschen einer Scheibe zieht ihren
+  offenen Auftrag zurück (`purgeCards`), sonst holte er eine Scheibe vom Ausdruck, die keine Sperre hinterlässt, zurück.
+
+Der Vertrag ändert sich nicht: `GET /state` nennt Aufträge als `{ id, scheibenId, day }`, `printMismatch` entsteht nur
+in Spiegel. Tests: `src/lib/ingest/requests.test.ts` („Scheibe vom Ausdruck“), `src/lib/card-requests/queries.test.ts`,
+Ende zu Ende `pnpm --filter spiegel bridge-e2e`.
 
 ## Rohdaten
 

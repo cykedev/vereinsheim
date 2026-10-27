@@ -23,7 +23,7 @@ Stack Ende zu Ende.
 | `pnpm --filter spiegel ingest-load`                            | Lastskript der Ingest-API: ein Abend mit belegten Ständen wie eine Brücke (`--start`, `--docker <name>`)                                                                                                                                       |
 | `pnpm --filter spiegel stack-probe`                            | Grenzen hinter Caddy gegen einen laufenden Stack (`BASE_URL`, `DATABASE_URL`; aus `tools/stack-e2e/run.sh`)                                                                                                                                    |
 | `pnpm --filter spiegel bridge-e2e`                             | die echte Brücke (Go) Ende zu Ende gegen den eigenen Build auf :3012 mit MariaDB, drei Fällen und Aufträgen per ID (`--keep`), mit `BASE_URL` gegen einen laufenden Spiegel                                                                    |
-| `pnpm --filter spiegel exec tsx tools/printout-sample.ts`      | erfundener Meyton-Ausdruck (ID `ff914420`) als PDF nach stdout, für den Stack-Test und zum Messen des Lesers (`--kind memory\|time`: präparierte Bomben)                                                                                       |
+| `pnpm --filter spiegel exec tsx tools/printout-sample.ts`      | erfundener Meyton-Ausdruck (`--id`, Vorgabe `ff914420`; `--printed` mit Versatz) als PDF nach stdout, für den Stack-Test, die Skriptprüfung (`samplePrintout`) und zum Messen des Lesers (`--kind memory\|time`)                               |
 
 Die Dev-Datenbank legt `dev/db-init` beim ersten Start an, `scripts/bootstrap-dev.sh` zieht sie für bestehende Volumes
 nach. Ohne `.env` nehmen Tests und Messung die Dev-Datenbank aus `.env.example` (`test/dev-database.ts`), NextAuth den
@@ -36,7 +36,7 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
 - `src/app/login` ohne Rahmen; `src/app/(app)/*` mit Anmeldepflicht (`requireSession` im Layout, `proxy.ts` davor):
   Start `/`, Scheiben `/cards`, Scheibe `/cards/[id]`, Fortschritt `/progress`, Vergleichen `/compare` (Bereich
   Fortschritt, nicht in der Leiste), Profil, Papierkorb `/profile/trash`,
-  Offen `/open`, Platzhalter Scannen `/scan` (nicht in der Navigation, `scan={false}` im `AppShell`),
+  Offen `/open`, „Scheibe holen“ `/scan` (Aktion in der Mitte der Navigation),
   Admin `/admin` (Übersicht), `/admin/users{/[id],/new}`, `/admin/disciplines{/[id]}`, `/admin/lists{/[id]}`,
   `/admin/site`; die Bereiche stehen einmal in `src/lib/admin/sections.ts` (Reiter `AdminTabs` auf jeder Admin-Seite,
   am Telefon oben in Profil). `src/app/share/[shareId]` ohne Anmeldung und ohne
@@ -247,7 +247,9 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
   Blättern, Rückwege, Rekorde, Blatt „Filter“, Fachbegriffe auf den ersten Ebenen, ein „?“ je Thema des Fortschritts,
   keine Skriptfehler; „Detailtiefen“ (Herkunft in Liste und Kopf, „–“ mit Grund, Filter nach Herkunft, Seiten aus Summen,
   Grundlage in Fortschritt, Trefferbild und Start, Vergleichen) mit den Demo-Scheiben aus `seed:own --demo`; `pickCard`
-  nimmt nur gemessene Scheiben (`/cards?provenance=measured`). Nicht im Gate (braucht Chrome, Server, Daten). Nach Änderungen an Bedienung oder Bausteinen:
+  nimmt nur gemessene Scheiben (`/cards?provenance=measured`); „Scheibe holen“ (Link auf einen Ausdruck eines eigenen
+  Servers, Upload über `setFiles`, getippte ID, „Nicht mehr holen“, die Sperre `7fff0a03` aus `seed:own --demo`, am
+  Ende alles endgültig gelöscht; `--start` gibt dem eigenen Server ein `UPLOAD_DIR` nur für den Lauf). Nicht im Gate (braucht Chrome, Server, Daten). Nach Änderungen an Bedienung oder Bausteinen:
   `pnpm build` (oder `pnpm check`), dann `pruefen --start`, damit die Prüfung den eigenen Stand sieht und nicht einen
   Dev-Server aus einem anderen Checkout. Neue Bedienung bekommt eine Prüfung dort. Eine Taste, die die Seite nicht nimmt,
   meldet `window.__keys` (Lauscher ganz außen; Alt+Pfeil wird dort abgefangen, sonst ginge der Browser zurück).
@@ -258,8 +260,8 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
   geschrieben je Block der letzte; jeder Stand trägt danach `adapterVersion` und `block`). Kopplung, Token, Heartbeat und Zustand in `bridges.ts`, der Adapter in `meyton-ssmdb2.ts` (reine Funktion,
   Tests an allen Fällen von `ssmdb2-cases`).
   - **Nichts ohne Zustimmung speichern:** Was nicht zu einer aktiven SportpassID der Anlage passt (bestätigt, nicht
-    abgelehnt) oder zu einem offenen Auftrag per ID mit passendem Abend, verwirft das Einlesen, bevor `storeSnapshot`
-    läuft. Eine neue Regel dort braucht einen Test, der zeigt,
+    abgelehnt) oder zu einem offenen Auftrag per ID mit passendem Abend (mit Ausdruck auch: begann höchstens fünf
+    Minuten nach dem Druck, sonst `printMismatch`), verwirft das Einlesen, bevor `storeSnapshot` läuft. Eine neue Regel dort braucht einen Test, der zeigt,
     dass nichts abgelegt wird.
   - **Logs nur mit Zahlen und festen Codes** (`Log` in `http.ts`), unerwartete Fehler nur mit ihrem Namen: Die Meldungen
     von Prisma enthalten Werte. Der Test in `http.test.ts` schickt einen Namen durch jede Fehlerart.
@@ -309,18 +311,30 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
   Aktion). Eine alte Adresse einer gelöschten Scheibe führt in den Papierkorb (`ownCardState`). Der Papierkorb zeigt
   auch, was nicht von selbst wiederkommt (`blockedCards`: eigene Sperren und Meldungen „nicht meine“); die
   Admin-Übersicht zählt nur die Meldungen der Anlage, ohne Namen.
-- **Scheibe per ID holen** (Profil, `src/lib/card-requests/`): Der Schütze tippt die ID vom Ausdruck (`parseCardId`, acht
-  Hex-Zeichen wie im Fuß) und den Tag. `requestCard` legt einen `CardRequest` an, außer die Scheibe des Abends liegt schon
-  in Spiegel (eigene: Weg zu ihr, fremde: „vergeben“), höchstens zehn offene je Konto, Frist 30 Tage (`expireRequests`).
-  `bridgeState` nennt offene Aufträge aktiver Konten (`requests` mit Abend, dann alle Sperren), `ingestBatch` nimmt einen
-  Stand ohne Zustimmung nur mit offenem Auftrag und passendem Abend an (`eveningOfStart` aus `startHintMs`), hängt die
-  Scheibe an den Auftrag (`attachRequestCard`) oder schließt ihn (`mismatch`, `taken`, `held`). Offen mit Scheibe bleibt
-  er, bis sie endgültig ist (`finishRequests` im Heartbeat, dann `done`); `recordHeartbeat` schließt `missing`, `held`
-  und `mismatch` aus `requestsDone` nur ohne Scheibe. Eine Zustimmung per Sportpass geht vor, auch eine wartende eines
-  anderen Kontos. Gesperrte Abende nimmt `requestCard` gar nicht an (`blocked`). Nach 30 Tagen `expireRequests`: mit
-  Scheibe `done`, ohne `expired`. Abschnitt `CardRequests` im Profil, Texte `cardRequest`, `cardRequestWithdraw`. Ein
-  beendeter Auftrag ohne Scheibe lässt sich im Profil entfernen (`isRemovable` in `src/lib/card-requests/status.ts`,
-  `removeRequest` löscht die Zeile, Text `cardRequestRemove`).
+- **Scheibe holen** (`/scan`, `src/lib/fetch-card/`, [[spiegel-assignment]]): Kamera (`src/lib/scan/qr.ts`: natives
+  `BarcodeDetector`, sonst `jsqr`), Link, PDF hochladen und getippte ID (`parseCardId`, acht Hex-Zeichen wie im Fuß, mit
+  Tag) gehen alle über `fetchCard` (eine Transaktion unter der Sperre der Kontozeile):
+  - Die eigene Scheibe des Abends (zuerst der Brücke über Quelle und ScheibenID, dann vom Ausdruck mit Auftrag dieser ID
+    und dieses Tags, dann über `Printout.footerId`) öffnet sich; ein PDF hängt an (`attachPrintout`). Wartend → `/open`.
+    Im Papierkorb: zurück, nach 30 Tagen `trashExpired`. Ungefüllt ohne offenen Auftrag: neuer Auftrag.
+  - Fremde Scheibe der Brücke → `taken`; Grabstein oder Sperre eines anderen Kontos an diesem Abend → `blocked`.
+  - Sonst ohne Wahl `choose` (nichts geschrieben, das Blatt „Neue Scheibe“ fragt, die Seite schickt dieselbe Quelle mit
+    `{ disciplineId, kind }` noch einmal; der Ausdruck wird dabei zweimal gelesen, dieselbe Datei nach sha256). Mit Wahl:
+    Disziplin eingeordnet (bestätigt, nicht ignoriert, Familie, Scheibenbild), höchstens zehn ungefüllte offene Aufträge,
+    eigene Sperren des Abends gelöscht, `writeEnteredCardIn` (Herkunft `pdf`, Beginn Druckzeit bzw. 12 Uhr, Art auch als
+    `kindChoice`), Ausdruck an, Auftrag mit `cardId` (ein älterer offener ohne Scheibe bekommt sie).
+  - Actions in `fetch-card/actions.ts` (`fetchCardByLink`, `fetchCardByUpload`, `fetchCardById`, `stopCardFetch`), Texte
+    in `fetch-card/texts.ts`, Dialoge `cardFetchStop`, `cardFetchDismiss`.
+  - **Gefüllt** heißt: Die Scheibe des Auftrags hat eine Quelle (`UNFILLED` in `card-requests/queries.ts`). Heartbeat
+    (`missing`, `held`, `mismatch`) und Einlesen schließen nur ungefüllte, `finishRequests` nur gefüllte, endgültige;
+    Frist 30 Tage (`expireRequests`: gefüllt `done`, sonst `expired`). Beim Einlesen füllt der passende Block die
+    Scheibe vom Ausdruck (`fill` in `adaptKey`, `cardId` an `writeRevision`), [[spiegel-ingest-pipeline]].
+  - „Nicht mehr holen“/„Entfernen“ (`dismissRequest`) setzen `withdrawn`, nie löschen; `purgeCards` zieht offene Aufträge
+    der Scheibe zurück. Die Seite der Scheibe zeigt ID, PDF und Auftrag im Kasten „Diese Scheibe“ (`cardFetchInfo`,
+    `CardPrintout`, `CardFetch`); eine Scheibe vom Ausdruck ohne offenen Auftrag trägt `waiting: false` („ohne Werte“,
+    `withWaiting` in `reads.ts`). Ältere Aufträge ohne Scheibe stehen auf `/scan` (`legacyRequests`).
+  - `bridgeState` nennt offene Aufträge aktiver Konten (`requests` mit Abend, dann alle Sperren). Kein Vertrag ändert
+    sich.
 - **Ausdrucke** (`src/lib/printouts/`, SP-1.7 b, [[meyton-printout]]): Bausteine ohne Oberfläche.
   - `fetchPrintout` holt per Link: nur http(s), keine Weiterleitungen, 1 MiB, 10 s, nur PDF, nach außen nur ein fester
     Grund. Keine Liste erlaubter Adressen ([[adr-028]], Restrisiko SF-47).
@@ -333,9 +347,11 @@ mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für 
   - `storePrintout` prüft, liest und speichert die Datei nach sha256 unter `UPLOAD_DIR/printouts/` (in Produktion
     Pflicht), ohne Datenbank; nur mit ID und Druckzeit (ohne Zeitzone die Wanduhr der Anlage).
   - `attachPrintout(tx, file, cardId)` legt die Zeile in der Transaktion des Aufrufers an: Ein Ausdruck hängt immer an
-    einer Scheibe. `printoutFile` liest die Datei nur für den Besitzer, nicht für eine wartende Scheibe.
+    einer Scheibe. `printoutFile` liest die Datei nur für den Besitzer und nur wie die Seite der Scheibe (`VISIBLE_CARD`:
+    nicht wartend, nicht im Papierkorb, nicht bei ignorierter Disziplin); die Route `/api/printouts/<id>`
+    (`printouts/http.ts`) reicht nur durch (`inline`, `private, no-store`, `nosniff`).
   - Dateien löscht nur `removeOrphanPrintoutFiles` (beim Start, stündlich nach dem Papierkorb, nach „Nicht meine“ und
-    `purgeCardNow`): jede Datei ohne Zeile, älter als zehn Minuten; bei ganz leerer Tabelle keine.
+    `purgeCardNow`): jede Datei ohne Zeile, älter als zehn Minuten; gibt es gar keine Scheibe, keine.
 - **Ältere Scheiben nachladen:** Eine aktive Zustimmung ohne
   `historyLoadedAt` ist ein Auftrag mit `since` (`historyRequestedAt`, gesetzt beim Bestätigen und Aufheben; alte Zeilen:
   `confirmedAt`); `bridgeState` nennt sie in `history` und liefert dann alle Sperren, nicht nur die jüngsten 60 Tage.
