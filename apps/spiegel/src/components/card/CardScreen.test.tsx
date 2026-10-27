@@ -47,10 +47,10 @@ const card: PageCard = {
   shots,
 }
 const route = routeFromUrl(`/cards/${card.id}`, "?from=cards", "") as CardRoute
-const render = (own: Parameters<typeof CardScreen>[0]["own"]) =>
+const render = (own: Parameters<typeof CardScreen>[0]["own"], shown: PageCard = card) =>
   renderToStaticMarkup(
     createElement(CardScreen, {
-      card,
+      card: shown,
       route,
       own,
       path: own ? `/cards/${card.id}` : "/share/3f2b8c1e-9a4d-4e7b-8c2a-1d5e6f7a8b9c",
@@ -103,5 +103,84 @@ describe("Seite einer Scheibe: eigene und geteilte", () => {
       .map((m) => m[1])
       .filter((href) => !href.startsWith("#"))
     expect(leaving).toEqual([])
+  })
+})
+
+describe("Seite einer Scheibe je Detailtiefe", () => {
+  const OWN = { near: null, paging: false, share: null, previous: null, disciplines: [] }
+  const meta = (html: string) => {
+    const header = html.slice(html.indexOf("data-card-header"))
+    return /<p class="text-\[13px\][^"]*">([^<]*)<\/p>/.exec(header)?.[1] ?? ""
+  }
+  const SERIES = {
+    series: [921, 905, 934, 912].map((decimalTenths, i) => ({
+      series: i + 1,
+      shots: 10,
+      rings: Math.floor(decimalTenths / 10) - 4,
+      decimalTenths,
+    })),
+    total: null,
+    center: null,
+  }
+  const entered: PageCard = {
+    ...card,
+    shots: [],
+    sums: SERIES,
+    provenance: "entered",
+    place: "Vereinsheim Nord",
+  }
+
+  it("Serien-Summen eingetragen: Kasten mit Serien statt Schüssen, Herkunft und Ort im Kopf", () => {
+    const html = render(OWN, entered)
+    expect(html).toContain('data-card-summary="series"')
+    expect(html).not.toContain("data-no-shots")
+    expect(html).not.toContain('id="shot-table"')
+    expect(meta(html)).toContain("eingetragen")
+    expect(meta(html)).toContain("Vereinsheim Nord")
+  })
+
+  it("Gesamtergebnis mit Trefferlage aus Treffsicher: goldenes Kreuz, eingetragen", () => {
+    const html = render(OWN, {
+      ...entered,
+      sums: {
+        series: [],
+        total: { shots: 40, rings: 362, decimalTenths: null },
+        center: { xUm: 1400, yUm: -900, shots: 40 },
+      },
+      place: null,
+    })
+    expect(html).toContain('data-card-summary="total"')
+    expect(html).toContain("data-summary-center")
+    expect(meta(html)).toContain("eingetragen")
+  })
+
+  it("vom Ausdruck ohne Werte: wartet auf die Anlage", () => {
+    const html = render(OWN, { ...card, shots: [], provenance: "printout" })
+    expect(html).toContain('data-card-summary="none"')
+    expect(html).toContain("wartet auf die Anlage")
+    expect(meta(html)).toContain("vom Ausdruck")
+  })
+
+  it("gemessen ohne Schuss: wie bisher „Noch kein Schuss“", () => {
+    const html = render(OWN, { ...card, shots: [] })
+    expect(html).toContain("data-no-shots")
+    expect(html).not.toContain("data-card-summary")
+  })
+
+  it("Probe neben Serien-Summen: die Summen, und die Art ist Training mit Kreis", () => {
+    const html = render(OWN, {
+      ...entered,
+      shots: shots.slice(0, 3).map((shot) => ({ ...shot, kind: "probe", series: null })),
+    })
+    expect(html).toContain('data-card-summary="series"')
+    expect(html).toContain("data-kind-toggle")
+    expect(meta(html)).toMatch(/^Training ·/)
+    expect(meta(html)).not.toContain("nur Probe")
+  })
+
+  it("gemessen mit Schüssen: „gemessen“ im Kopf", () => {
+    const html = render(OWN)
+    expect(meta(html)).toContain("gemessen")
+    expect(html).toContain('id="shot-table"')
   })
 })

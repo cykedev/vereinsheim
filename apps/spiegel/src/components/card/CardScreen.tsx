@@ -12,6 +12,7 @@ import {
 } from "react"
 
 import type { MetricShot, Scoring } from "@vereinsheim/shot-core/metrics"
+import { cardDetail, probeOnlyCard } from "@vereinsheim/shot-core/projection"
 import { TARGETS } from "@vereinsheim/shot-core/targets"
 import {
   AnalysisPanel,
@@ -19,6 +20,7 @@ import {
   type AnalysisTab,
 } from "@vereinsheim/shot-ui/analysis/AnalysisPanel"
 import { analysisInput } from "@vereinsheim/shot-ui/analysis/input"
+import { detailLevel } from "@vereinsheim/shot-ui/detail"
 import { keyObservations, observations } from "@vereinsheim/shot-ui/analysis/observations"
 import { HelpIcon } from "@vereinsheim/shot-ui/help/HelpButton"
 import { CardPage } from "@vereinsheim/shot-ui/layout/CardPage"
@@ -39,14 +41,14 @@ import {
 import { urlFromRoute, type CardRoute } from "@vereinsheim/shot-ui/nav/routes"
 import { KindToggle } from "@vereinsheim/shot-ui/controls/KindToggle"
 import { ScoringToggle } from "@vereinsheim/shot-ui/controls/ScoringToggle"
-import { probeOnlyShots } from "@vereinsheim/shot-ui/period/model"
 import { cardMeta } from "@vereinsheim/shot-ui/readout/cardMeta"
 import { CardHeader } from "@vereinsheim/shot-ui/readout/CardHeader"
 import { CardResult } from "@vereinsheim/shot-ui/readout/CardResult"
+import { CardSummary, SummaryResult } from "@vereinsheim/shot-ui/readout/CardSummary"
 import { ShotLine } from "@vereinsheim/shot-ui/readout/ShotLine"
 import { ShotReadout } from "@vereinsheim/shot-ui/readout/ShotReadout"
 import { SeriesStrip } from "@vereinsheim/shot-ui/series/SeriesStrip"
-import { asOnPrintout, shotLabels } from "@vereinsheim/shot-ui/shots"
+import { shotLabels, shownShots } from "@vereinsheim/shot-ui/shots"
 import { ShotTable } from "@vereinsheim/shot-ui/table/ShotTable"
 import { TargetControls, type Others } from "@vereinsheim/shot-ui/target/TargetControls"
 import {
@@ -160,8 +162,15 @@ export function CardScreen({
 }) {
   const onHelp = useHelp()
   const target = TARGETS[card.targetId ?? "lp-10m"]
-  // wie am Ausdruck (ADR-027): mit Wertung nur die Wertung, nur Probe zeigt sich wie Wertung
-  const shots = useMemo(() => asOnPrintout(card.shots), [card.shots])
+  // wie am Ausdruck (ADR-027): mit Wertung nur die Wertung, nur Probe zeigt sich wie Wertung; Probe neben Summen der
+  // Wertung zählt nicht, die Seite zeigt dann die Summen (ADR-033)
+  const shots = useMemo(
+    () => shownShots({ shots: card.shots, sums: card.sums }),
+    [card.shots, card.sums]
+  )
+  // die Grundlage der Werte, daraus das Gerüst der Seite: Schüsse, Serien-Summen, Gesamtergebnis oder nichts
+  const detail = useMemo(() => cardDetail(card), [card])
+  const level = detailLevel(detail, shots.length)
   // die ganze Karte als Kontext für Abstände: eine Probe zwischen Wertung reißt keine Lücke (SF-04)
   const context = card.shots
 
@@ -339,12 +348,11 @@ export function CardScreen({
     save: (kind) => setCardKind(card.id, kind),
     notSaved: "Die Art ließ sich nicht speichern.",
   })
-  const empty = shots.length === 0
   // Art und Wertung als Kreise neben der Zahl: gezeigt sofort, gespeichert an der Scheibe. Eine Scheibe nur aus Probe
   // ist Training und hat keinen Kreis der Art
   const actions = (
     <>
-      {!probeOnlyShots(card.shots) && (
+      {!probeOnlyCard(card.shots, card.sums) && (
         <KindToggle kind={kindChoice.shown} onChange={kindChoice.change} />
       )}
       <ScoringToggle
@@ -355,21 +363,43 @@ export function CardScreen({
     </>
   )
   const saveError = kindChoice.error ?? scoringChoice.error
+  const notice = saveError && (
+    <p role="alert" className="text-sm text-destructive">
+      {saveError}
+    </p>
+  )
   // auf dem Telefon im Kopf, ab 768 px als Box über der Ablesung; beide zeigen dieselbe Wahl
   const result = (
-    <CardResult
-      shots={shots}
-      state={state}
-      actions={own ? actions : undefined}
-      notice={
-        saveError && (
-          <p role="alert" className="text-sm text-destructive">
-            {saveError}
-          </p>
-        )
-      }
-    />
+    <CardResult shots={shots} state={state} actions={own ? actions : undefined} notice={notice} />
   )
+
+  // ohne Einzelschüsse: eine Scheibe der Brücke ohne Schuss wartet auf ihren ersten, jede andere zeigt, was sie
+  // mitbringt (Summen, Gesamtergebnis) oder warum sie nichts hat
+  const noShots = level === "none" && card.provenance === "measured"
+  const summary =
+    level === "shots" || noShots ? null : (
+      <SummaryResult
+        card={card}
+        detail={detail}
+        level={level}
+        scoring={state.scoring}
+        actions={own ? actions : undefined}
+        notice={notice}
+        onHelp={onHelp}
+      />
+    )
+  const empty =
+    level === "shots" ? undefined : noShots ? (
+      <NoShots />
+    ) : (
+      <CardSummary
+        result={summary}
+        level={level}
+        card={card}
+        detail={detail}
+        scoring={state.scoring}
+      />
+    )
 
   return (
     <Page>
@@ -387,8 +417,11 @@ export function CardScreen({
         header={
           <CardHeader
             title={target.label}
-            meta={cardMeta(card, pageContext.timeZone, card.list)}
-            result={empty ? null : result}
+            meta={cardMeta(card, pageContext.timeZone, card.list, {
+              provenance: card.provenance,
+              place: card.place,
+            })}
+            result={level === "shots" ? result : summary}
             observations={headObservations}
             onMore={() => {
               // „Alle Beobachtungen“: der Überblick der Analyse, an der Karte „Beobachtungen“ (nicht an seinem Anfang)
@@ -408,7 +441,7 @@ export function CardScreen({
         }
         nav={<SectionNav active={active} />}
         result={result}
-        empty={empty ? <NoShots /> : undefined}
+        empty={empty}
         target={
           <div className="grid gap-3 rounded-2xl border border-border bg-card p-3.5">
             <div
@@ -425,6 +458,7 @@ export function CardScreen({
                 popIndex={null}
                 viewKey={card.id}
                 onChoose={choose}
+                summaryCenter={detail.center?.from === "summary" ? detail.center : null}
               />
               <TargetControls
                 state={state}
