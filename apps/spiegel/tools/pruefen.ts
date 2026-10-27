@@ -10,7 +10,13 @@
 //   … --nur <abschnitt>                        nur Abschnitte, deren Name das Wort enthält
 
 import type { ChildProcess } from "node:child_process"
+import { mkdtemp, rm, writeFile } from "node:fs/promises"
+import { createServer } from "node:http"
+import type { AddressInfo } from "node:net"
+import { tmpdir } from "node:os"
+import { join } from "node:path"
 
+import { formatIsoDate, wallTimeOfMs } from "@vereinsheim/lib/format"
 import { HELP_TOPICS } from "@vereinsheim/shot-help/topics"
 
 import { Browser, type Page } from "@vereinsheim/pruefen/browser"
@@ -24,6 +30,7 @@ import {
 } from "@vereinsheim/pruefen/common"
 import { startServer } from "@vereinsheim/pruefen/server"
 import { DEMO_EMAIL, DEMO_PASSWORD } from "./demo-account"
+import { samplePrintout } from "./printout-sample"
 
 /** mit `--start`: der eigene Produktions-Server aus `.next` dieses Checkouts (nach `build` bzw. `pnpm check`) */
 const START = process.argv.includes("--start")
@@ -705,8 +712,8 @@ async function listFilterSheet(page: Page) {
 }
 
 /**
- * „Offen“ und die Leiste: Das Demo-Konto hat nichts Wartendes, also sagt „Offen“ das; Scannen steht ohne den QR-Weg
- * nicht in der Navigation, die untere Leiste hat vier Felder.
+ * „Offen“ und die Leiste: Das Demo-Konto hat nichts Wartendes, also sagt „Offen“ das; „Scheibe holen“ steht in der Mitte
+ * der unteren Leiste (nur das Symbol, der Name für Screenreader) und in der Seitenleiste als Pille.
  */
 async function openAndBar(page: Page) {
   await page.viewport(1280, 900)
@@ -719,15 +726,17 @@ async function openAndBar(page: Page) {
     open.empty && open.cards === 0,
     JSON.stringify(open)
   )
+  const pill = await page.ev<string>(`txt($('[data-app-sidebar] a[href="/scan"]'))`)
+  check("Desktop: in der Seitenleiste die Pille „Scheibe holen“", pill === "Scheibe holen", pill)
   await page.viewport(375, 812)
   await page.goto(`${BASE}/`)
-  const bar = await page.ev<{ areas: string[]; scan: number }>(
+  const bar = await page.ev<{ areas: string[]; label: string | null }>(
     `({ areas: [...document.querySelectorAll("[data-app-bar] [data-area]")].map((a) => a.dataset.area),
-        scan: document.querySelectorAll('[data-area="scan"]').length })`
+        label: $('[data-app-bar] a[href="/scan"]')?.getAttribute("aria-label") ?? null })`
   )
   check(
-    "Telefon: untere Leiste ohne Scannen",
-    bar.scan === 0 && bar.areas.join(",") === "start,cards,progress,profile",
+    "Telefon: untere Leiste mit Holen in der Mitte",
+    bar.areas.join(",") === "start,cards,scan,progress,profile" && bar.label === "Scheibe holen",
     JSON.stringify(bar)
   )
 }
@@ -869,104 +878,247 @@ async function cardDiscipline(page: Page, href: string) {
   )
 }
 
-/** die ID des Auftrags, den die Prüfung anlegt und wieder entfernt; eine Scheibe mit ihr gibt es nicht */
-const PROBE_REQUEST = "7fff0abc"
-/** seine (erste) Zeile in der Liste der Aufträge, im Fenster; null ohne */
-const probeRow = `($$("[data-card-request]").find((li) => txt(li).includes("${PROBE_REQUEST}")) ?? null)`
-/** wie viele Zeilen mit seiner ID die Liste hat, im Fenster */
-const probeCount = `$$("[data-card-request]").filter((li) => txt(li).includes("${PROBE_REQUEST}")).length`
+/** erfundene IDs der Prüfung: über den Link (und dann hochgeladen), getippt, mit der Sperre aus `seed:own --demo` */
+const PROBE_LINK = "7fff0a01"
+const PROBE_TYPED = "7fff0a02"
+const PROBE_LOCKED = "7fff0a03"
+const PROBES = [PROBE_LINK, PROBE_TYPED, PROBE_LOCKED]
+/** der Tag der Sperre aus `seed:own --demo` */
+const LOCKED_DAY = "2026-10-01"
 
-/** in der Zeile des Auftrags der Prüfung auf `label` tippen und im Dialog mit demselben Knopf bestätigen */
-async function confirmProbeRow(page: Page, label: string): Promise<string> {
-  await page.click(`button("${label}", ${probeRow})`)
+/** den Wert eines gesteuerten Felds setzen wie eine Eingabe: über den nativen Setter, dann `input` */
+const setValue = (selector: string, value: string) =>
+  `(() => { const el = $(${JSON.stringify(selector)});
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set.call(el, ${JSON.stringify(value)});
+    el.dispatchEvent(new Event("input", { bubbles: true })); return true })()`
+
+/** eine eigene Scheibe der Prüfung löschen und im Papierkorb gleich endgültig löschen (sie steht dort zuoberst) */
+async function removeProbeCard(page: Page, cardPath: string) {
+  await page.goto(`${BASE}${cardPath}`)
+  await page.click(`button("Scheibe löschen")`)
   await page.waitFor(`!!$('[role="alertdialog"]')`)
-  const dialog = await page.ev<string>(`txt($('[role="alertdialog"]'))`)
-  await page.click(`button("${label}", $('[role="alertdialog"]'))`)
-  await page.waitFor(`!$('[role="alertdialog"]')`)
-  return dialog
+  await page.click(`button("Löschen", $('[role="alertdialog"]'))`)
+  await page.waitFor(`location.pathname !== ${JSON.stringify(cardPath)}`)
+  await page.goto(`${BASE}/profile/trash`)
+  const rows = await page.ev<number>(`$$("[data-trash-card]").length`)
+  if (!rows) return
+  await page.click(`button("Endgültig löschen", $("[data-trash-card]"))`)
+  await page.waitFor(`!!$('[role="alertdialog"]')`)
+  await page.click(`button("Endgültig löschen", $('[role="alertdialog"]'))`)
+  await page.waitFor(`$$("[data-trash-card]").length < ${rows}`, 10_000)
+}
+
+/** die ID vom Ausdruck auf der Seite einer Scheibe; null ohne */
+const printedIdOf = (page: Page) =>
+  page.ev<string | null>(`$("[data-printed-id]")?.dataset.printedId ?? null`)
+
+/**
+ * im Blatt „Neue Scheibe“: Ist eine Disziplin vorbelegt, ist es genau eine (die der jüngsten Scheibe, wenn sie an dieser
+ * Anlage zur Wahl steht); sonst ist „Scheibe anlegen“ gesperrt, bis die Prüfung die erste wählt. Dann anlegen und auf
+ * die Seite der neuen Scheibe warten. Liefert den Text des Blatts, die Zahl der markierten und die Adresse der Scheibe.
+ */
+async function createInSheet(page: Page) {
+  if (!(await page.waitFor(`!!sheet() && !!$("[data-new-card]", sheet())`, 15_000)))
+    throw new Error(
+      `kein Blatt „Neue Scheibe“: ${await page.ev<string>(`$$("[data-fetch-error]").map(txt).join(" · ") || location.pathname`)}`
+    )
+  const text = await page.ev<string>(`txt(sheet())`)
+  const marked = await page.ev<number>(
+    `$$('[data-discipline-option][aria-current="true"]', sheet()).length`
+  )
+  const lockedWithout =
+    marked === 0 ? await page.ev<boolean>(`!!$("[data-new-card-create]", sheet())?.disabled`) : true
+  if (marked === 0) await page.click(`$("[data-discipline-option]", sheet())`)
+  await page.click(`$("[data-new-card-create]", sheet())`)
+  await page.waitFor(`location.pathname.startsWith("/cards/c")`, 15_000)
+  await page.waitFor(`!!$("[data-card-actions]")`, 10_000)
+  return { text, marked, lockedWithout, path: await page.ev<string>(`location.pathname`) }
 }
 
 /**
- * Scheibe per ID holen (Profil): Der Abschnitt steht unter der Sportpassnummer; eine falsche ID zeigt den Feldfehler,
- * ohne zu fragen; eine richtige fragt mit Folgen, „Abbrechen“ legt keinen Auftrag an. Danach legt die Prüfung einen
- * Auftrag an, zieht ihn zurück und entfernt ihn; am Ende ist die Liste wie vorher.
+ * Scheibe holen: Die Seite hat vier Wege in fester Folge. Ein Link auf einen erfundenen Ausdruck (ein Server der
+ * Prüfung) fragt nach Disziplin und Art, legt die Scheibe an und öffnet sie (wartet auf die Anlage, ID und PDF im Kasten);
+ * ein zweiter Ausdruck derselben ID hängt ohne Blatt an. Eine getippte ID legt eine Scheibe ohne PDF an, „Nicht mehr
+ * holen“ lässt sie stehen („ohne Werte“). Die ID mit der Sperre aus `seed:own --demo` sagt, dass sie gelöscht war, und
+ * hebt die Sperre auf. Am Ende sind alle Scheiben der Prüfung endgültig gelöscht.
  */
-async function cardRequests(page: Page) {
+async function fetchCards(page: Page) {
   await page.viewport(1280, 900)
-  await page.goto(`${BASE}/profile`)
-  // abgebrochene Läufe ließen Aufträge der Prüfung stehen: je einen zurückziehen und entfernen, bis keiner mehr da ist
-  for (let left = 5; left > 0; left--) {
-    const rows = await page.ev<number>(probeCount)
-    if (!rows) break
-    if (await page.ev<boolean>(`!!button("Zurückziehen", ${probeRow})`)) {
-      await confirmProbeRow(page, "Zurückziehen")
-      await page.waitFor(`!!button("Entfernen", ${probeRow})`)
-    }
-    if (!(await page.ev<boolean>(`!!button("Entfernen", ${probeRow})`))) break
-    await confirmProbeRow(page, "Entfernen")
-    await page.waitFor(`${probeCount} < ${rows}`)
+  // Reste abgebrochener Läufe: Scheiben vom Ausdruck mit einer ID der Prüfung
+  await page.goto(`${BASE}/cards?provenance=printout`)
+  const listed = await page.ev<string[]>(
+    `[...new Set($$('a[href^="/cards/c"]').map((a) => a.getAttribute("href").split("?")[0]))]`
+  )
+  for (const path of listed) {
+    await page.goto(`${BASE}${path}`)
+    const hex = await printedIdOf(page)
+    if (hex && PROBES.includes(hex)) await removeProbeCard(page, path)
   }
-  const before = await page.ev<number>(`$$("[data-card-request]").length`)
-  check(
-    "Scheibe per ID: der Abschnitt steht im Profil, mit ID und Tag",
-    await page.ev<boolean>(
-      `!!$("[data-card-requests]") && !!$("#card-request-id") && !!$("#card-request-day")`
-    )
-  )
-  await page.click(`$("#card-request-id")`)
-  await page.type("ff91442")
-  await page.click(`button("Scheibe holen")`)
-  check(
-    "Scheibe per ID: eine falsche ID zeigt den Feldfehler, ohne Rückfrage",
-    (await page.waitFor(`txt($("[data-card-requests]")).includes("acht Zeichen")`)) &&
-      !(await page.ev<boolean>(`!!$('[role="alertdialog"]')`)) &&
-      (await page.ev<string>(`$("#card-request-id").getAttribute("aria-invalid")`)) === "true"
-  )
-  await page.click(`$("#card-request-id")`)
-  await page.type("0")
-  await page.click(`button("Scheibe holen")`)
-  await page.waitFor(`!!$('[role="alertdialog"]')`)
-  const dialog = await page.ev<string>(`txt($('[role="alertdialog"]'))`)
-  await page.click(`button("Abbrechen", $('[role="alertdialog"]'))`)
-  check(
-    "Scheibe per ID: eine richtige fragt mit Folgen, Abbrechen legt keinen Auftrag an",
-    dialog.includes("ff914420") &&
-      dialog.includes("Andere Scheiben holt Spiegel nicht") &&
-      (await page.waitFor(`!$('[role="alertdialog"]')`)) &&
-      (await page.ev<number>(`$$("[data-card-request]").length`)) === before,
-    dialog.slice(0, 120)
-  )
 
-  // anlegen, zurückziehen, entfernen: am Ende ist die Liste wie vorher
-  await page.click(`$("#card-request-id")`)
-  await page.ev<boolean>(`($("#card-request-id").select(), true)`)
-  await page.type(PROBE_REQUEST)
-  await page.click(`button("Scheibe holen")`)
-  await page.waitFor(`!!$('[role="alertdialog"]')`)
-  await page.click(`button("Scheibe holen", $('[role="alertdialog"]'))`)
-  const created =
-    (await page.waitFor(`!!${probeRow} && txt(${probeRow}).includes("wartet auf die Anlage")`)) &&
-    (await page.ev<number>(`$$("[data-card-request]").length`)) === before + 1
-  check(
-    "Scheibe per ID: bestätigt, steht der Auftrag in der Liste und wartet auf die Anlage",
-    created
-  )
-  // ohne angelegten Auftrag sagten die nächsten Schritte nichts mehr
-  if (!created) return
-  await confirmProbeRow(page, "Zurückziehen")
-  const withdrawn = await page.waitFor(
-    `!!${probeRow} && txt(${probeRow}).includes("zurückgezogen") && !!button("Entfernen", ${probeRow})`
-  )
-  check("Scheibe per ID: zurückgezogen, lässt sich der Auftrag entfernen", withdrawn)
-  if (!withdrawn) return
-  const removeDialog = await confirmProbeRow(page, "Entfernen")
-  check(
-    "Scheibe per ID: Entfernen fragt mit Folgen, danach ist die Liste wie vorher",
-    removeDialog.includes("verschwindet aus dieser Liste") &&
-      (await page.waitFor(`!${probeRow}`)) &&
-      (await page.ev<number>(`$$("[data-card-request]").length`)) === before,
-    removeDialog.slice(0, 120)
-  )
+  const dir = await mkdtemp(join(tmpdir(), "spiegel-pruefen-"))
+  const today = formatIsoDate(new Date(), "Europe/Berlin")
+  // der Versatz der Zone heute, für die Druckzeit mit Versatz wie im PDF
+  const offsetMin = Math.round((wallTimeOfMs(Date.now(), "Europe/Berlin") - Date.now()) / 60_000)
+  const zone = `${offsetMin < 0 ? "-" : "+"}${String(Math.floor(Math.abs(offsetMin) / 60)).padStart(2, "0")}:${String(Math.abs(offsetMin) % 60).padStart(2, "0")}`
+  const printed = (time: string) => `${today}T${time}:00${zone}`
+  const pdfs = new Map([
+    [PROBE_LINK, await samplePrintout({ hex: PROBE_LINK, printed: printed("19:30") })],
+  ])
+  const sample = createServer((request, response) => {
+    const pdf = pdfs.get(/^\/print_([0-9a-f]{8})\.pdf$/.exec(request.url ?? "")?.[1] ?? "")
+    if (!pdf) {
+      response.writeHead(404)
+      response.end()
+      return
+    }
+    response.writeHead(200, { "content-type": "application/pdf" })
+    response.end(pdf)
+  })
+  await new Promise<void>((resolve) => sample.listen(0, "127.0.0.1", resolve))
+  const link = `http://127.0.0.1:${(sample.address() as AddressInfo).port}/print_${PROBE_LINK}.pdf`
+  const created: string[] = []
+  try {
+    await page.goto(`${BASE}/scan`)
+    const ways = await page.ev<string[]>(`$$("[data-fetch-way]").map((w) => w.dataset.fetchWay)`)
+    check(
+      "Scheibe holen: vier Wege in der Folge Kamera, Link, PDF, ID",
+      ways.join(",") === "camera,link,upload,id",
+      ways.join(",")
+    )
+    check(
+      "Kamera: Knöpfe da (Bedienung nicht belegt: headless keine Kamera, `qr.test.ts` liest Codes)",
+      await page.ev<boolean>(`!!$("[data-camera-start]") && !!$("[data-camera-photo]")`)
+    )
+
+    // Link: Blatt, anlegen, Seite der neuen Scheibe
+    await page.click(`$("#fetch-link")`)
+    await page.type(link)
+    await page.click(`button("Holen", $('[data-fetch-way="link"]'))`)
+    const viaLink = await createInSheet(page)
+    created.push(viaLink.path)
+    check(
+      "Link: Blatt „Neue Scheibe“, höchstens eine Disziplin vorbelegt, ohne Vorbelegung gesperrt",
+      viaLink.text.includes("Diese Scheibe liegt noch nicht in Spiegel") &&
+        viaLink.text.includes(`ID ${PROBE_LINK}`) &&
+        viaLink.marked <= 1 &&
+        viaLink.lockedWithout,
+      `markiert ${viaLink.marked}${viaLink.marked ? "" : " (nicht belegt: die Disziplin der jüngsten Scheibe steht an dieser Anlage nicht zur Wahl)"}`
+    )
+    const page1 = await page.ev<{
+      reason: string
+      hex: string | null
+      status: string | null
+      href: string | null
+    }>(
+      `({ reason: txt($("[data-card-summary]")), hex: $("[data-printed-id]")?.dataset.printedId ?? null,
+          status: $("[data-card-fetch]")?.dataset.fetchStatus ?? null,
+          href: $("a[data-printout-file]")?.getAttribute("href") ?? null })`
+    )
+    const pdfType = page1.href
+      ? await page.ev<string>(
+          `fetch(${JSON.stringify(page1.href)}).then((r) => r.headers.get("content-type") ?? "")`
+        )
+      : ""
+    check(
+      "Link: neue Scheibe mit „–“ und „wartet auf die Anlage“, ID im Kasten, PDF über die Route, Auftrag offen",
+      page1.reason.includes("wartet auf die Anlage") &&
+        page1.hex === PROBE_LINK &&
+        page1.status === "open" &&
+        pdfType === "application/pdf",
+      JSON.stringify({ ...page1, pdfType })
+    )
+
+    // ein zweiter Ausdruck derselben ID, hochgeladen: ohne Blatt an dieselbe Scheibe
+    const second = join(dir, `ausdruck-${PROBE_LINK}.pdf`)
+    await writeFile(second, await samplePrintout({ hex: PROBE_LINK, printed: printed("20:10") }))
+    await page.goto(`${BASE}/scan`)
+    await page.setFiles(`$("#fetch-upload")`, [second])
+    const attached = await page.waitFor(
+      `location.pathname === ${JSON.stringify(viaLink.path)} && $$("a[data-printout-file]").length === 2`,
+      15_000
+    )
+    check(
+      "PDF hochladen: ein zweiter Ausdruck derselben ID hängt ohne Blatt an, zwei PDFs im Kasten",
+      attached,
+      await page.ev<string>(`location.pathname`)
+    )
+
+    // getippte ID: Blatt, anlegen, Ausdruck ohne PDF, Auftrag wartet
+    await page.goto(`${BASE}/scan`)
+    await page.click(`$("#fetch-id")`)
+    await page.type(PROBE_TYPED)
+    await page.click(`button("Holen", $('[data-fetch-way="id"]'))`)
+    const typed = await createInSheet(page)
+    created.push(typed.path)
+    const typedPage = await page.ev<{ hex: string | null; pdf: number; status: string | null }>(
+      `({ hex: $("[data-printed-id]")?.dataset.printedId ?? null, pdf: $$("a[data-printout-file]").length,
+          status: $("[data-card-fetch]")?.dataset.fetchStatus ?? null })`
+    )
+    check(
+      "ID eintippen: Zeile „Ausdruck“ ohne PDF, der Auftrag wartet",
+      typedPage.hex === PROBE_TYPED && typedPage.pdf === 0 && typedPage.status === "open",
+      JSON.stringify(typedPage)
+    )
+
+    // „Nicht mehr holen“: Rückfrage, danach ohne Zeile „Von der Anlage“, „ohne Werte“, die Scheibe bleibt
+    await page.click(`button("Nicht mehr holen", $("[data-card-fetch]"))`)
+    await page.waitFor(`!!$('[role="alertdialog"]')`)
+    const stopDialog = await page.ev<string>(`txt($('[role="alertdialog"]'))`)
+    await page.click(`button("Nicht mehr holen", $('[role="alertdialog"]'))`)
+    const stopped = await page.waitFor(
+      `!$("[data-card-fetch]") && txt($("[data-card-summary]")).includes("ohne Werte")`,
+      10_000
+    )
+    check(
+      "Nicht mehr holen: Rückfrage „Die Scheibe bleibt in Spiegel“, danach „ohne Werte“, die Scheibe ist da",
+      stopDialog.includes("Die Scheibe bleibt in Spiegel") &&
+        stopped &&
+        (await page.ev<string>(`location.pathname`)) === typed.path,
+      stopDialog.slice(0, 120)
+    )
+
+    // die Sperre aus `seed:own --demo`: das Blatt sagt es, nach dem Anlegen ist sie weg
+    await page.goto(`${BASE}/scan`)
+    await page.click(`$("#fetch-id")`)
+    await page.type(PROBE_LOCKED)
+    await page.ev(setValue("#fetch-day", LOCKED_DAY))
+    await page.click(`button("Holen", $('[data-fetch-way="id"]'))`)
+    const locked = await createInSheet(page)
+    created.push(locked.path)
+    if (!locked.text.includes("hattest du gelöscht"))
+      check("Gelöschte Scheibe holen (nicht belegt: vorher seed:own --demo)", true)
+    else {
+      await page.goto(`${BASE}/profile/trash`)
+      const blocked = await page.ev<string>(`txt($("[data-trash-blocked]"))`)
+      check(
+        "Gelöschte Scheibe holen: das Blatt sagt es, danach fehlt der 1. Oktober unter „Kommt nicht von selbst wieder“",
+        !blocked.includes("01.10.2026"),
+        blocked.slice(0, 120)
+      )
+    }
+
+    // eine falsche ID: der Feldfehler, kein Blatt
+    await page.goto(`${BASE}/scan`)
+    await page.click(`$("#fetch-id")`)
+    await page.type("7fff0a0")
+    await page.click(`button("Holen", $('[data-fetch-way="id"]'))`)
+    check(
+      "ID eintippen: eine falsche ID zeigt den Feldfehler, ohne Blatt",
+      (await page.waitFor(`txt($('[data-fetch-way="id"]')).includes("acht Zeichen")`)) &&
+        (await page.ev<string | null>(`$("#fetch-id").getAttribute("aria-invalid")`)) === "true" &&
+        !(await page.ev<boolean>(`!!sheet()`))
+    )
+  } finally {
+    await new Promise((resolve) => sample.close(resolve))
+    await rm(dir, { recursive: true, force: true })
+    for (const path of created) await removeProbeCard(page, path)
+  }
+  const left: string[] = []
+  for (const path of created) {
+    await page.goto(`${BASE}${path}`, '$("body")')
+    if (await page.ev<boolean>(`!!$("[data-card-actions]")`)) left.push(path)
+  }
+  check("Aufräumen: keine Scheibe der Prüfung mehr da", left.length === 0, left.join(" · "))
 }
 
 /**
@@ -2324,6 +2476,7 @@ async function detailLevels(page: Page, href: string) {
 
 async function main() {
   let server: ChildProcess | null = null
+  let uploads: string | null = null
   let browser: Browser | null = null
   // die ganze Prüfung höchstens fünf Minuten; hängt etwas, steht es im Bericht und der Lauf endet hart mit 1
   const guard = setTimeout(() => {
@@ -2337,6 +2490,11 @@ async function main() {
     // das Demo-Konto meldet sich an; gegen einen fremden Server nur mit ausdrücklichem Schalter
     if (!ANY_HOST && !/^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/.test(BASE))
       throw new Error(`${BASE} ist kein lokaler Server; --fremder-host, wenn das gewollt ist`)
+    // der eigene Produktions-Server braucht ein Verzeichnis für Ausdrucke (`UPLOAD_DIR`); fehlt es, eines nur für den Lauf
+    if (START && !process.env.UPLOAD_DIR) {
+      uploads = await mkdtemp(join(tmpdir(), "spiegel-pruefen-uploads-"))
+      process.env.UPLOAD_DIR = uploads
+    }
     server = START ? await startServer({ app: "spiegel", port: START_PORT, out }) : null
     browser = await Browser.launch()
     const chrome = browser
@@ -2360,7 +2518,7 @@ async function main() {
     await section("Papierkorb", () => trash(page))
     await section("Admin ohne Rolle", () => adminWithoutRole(page))
     await section("Disziplin einer Scheibe", () => cardDiscipline(page, href))
-    await section("Scheibe per ID holen", () => cardRequests(page))
+    await section("Scheibe holen", () => fetchCards(page))
     await section("Geteilte Scheibe", () => sharing(chrome, page, href))
     await section("Gemeinsame Prüfungen", () => commonChecks(page, href))
     // React meldet in der Entwicklung manches über console.error; jede Meldung zählt, damit keine untergeht
@@ -2371,6 +2529,7 @@ async function main() {
   } finally {
     await browser?.close()
     server?.kill()
+    if (uploads) await rm(uploads, { recursive: true, force: true })
   }
   clearTimeout(guard)
   process.exit(report() ? 1 : 0)

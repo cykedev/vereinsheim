@@ -417,6 +417,25 @@ export class Page {
     await wait(60)
   }
 
+  /**
+   * Dateien in ein `<input type="file">` legen, wie eine Wahl im Dialog des Browsers (`input` und `change` feuern);
+   * `paths` sind Pfade auf dem Rechner der Prüfung
+   */
+  async setFiles(locator: Locator, paths: readonly string[]): Promise<void> {
+    const { result, exceptionDetails } = await this.send<{
+      result: { objectId?: string }
+      exceptionDetails?: { text: string }
+    }>("Runtime.evaluate", { expression: locator })
+    if (exceptionDetails || !result.objectId)
+      throw new Error(`kein Feld für Dateien: ${locator.slice(0, 80)}`)
+    try {
+      await this.send("DOM.setFileInputFiles", { files: [...paths], objectId: result.objectId })
+    } finally {
+      await this.send("Runtime.releaseObject", { objectId: result.objectId })
+    }
+    await wait(60)
+  }
+
   /** Text in das fokussierte Feld tippen, wie eine Eingabe von der Tastatur (ersetzt eine Auswahl) */
   async type(text: string): Promise<void> {
     await this.send("Input.insertText", { text })
