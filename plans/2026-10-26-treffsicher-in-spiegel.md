@@ -187,13 +187,13 @@ Vorgeschlagener Schnitt, endgültig im jeweiligen `/plan`:
     letzte verwaiste Datei liegen; an „keine Scheibe“ knüpfen. `printoutFile` liefert auch für eine Scheibe im
     Papierkorb; mit der Seite der Scheibe entscheiden. Next kopiert `src/lib/printouts/` samt Tests ins
     Standalone-Image (harmlos, Lesson in 1b-1).
-  **ID vom Ausdruck an der Scheibe** (Wunsch des Users, 26. Oktober 2026): Die Seite einer Scheibe zeigt leise die ID,
-  wie sie im Fuß des Ausdrucks steht (acht Hex-Zeichen, `printedId`), damit der Schütze Papier und Scheibe zuordnen
-  kann. Bei Scheiben der Brücke steht sie schon in `Card.scheibenId`, gezeigt wird sie heute nur bei den Aufträgen im
-  Profil. Nicht auf der geteilten Seite (`/share`), denn ID und Abend sind der Schlüssel für „Scheibe per ID“. Eine
-  von Hand eingetragene Scheibe hat keine ID, die Zeile fehlt dann. Die ID eines Ausdrucks von einer fremden Anlage
-  (1c) gehört zu deren Nummernkreis: Das Modell (1a) speichert sie so, dass sie nie mit einer ID der eigenen Anlage
-  gleichgesetzt wird.
+    **ID vom Ausdruck an der Scheibe** (Wunsch des Users, 26. Oktober 2026): Die Seite einer Scheibe zeigt leise die ID,
+    wie sie im Fuß des Ausdrucks steht (acht Hex-Zeichen, `printedId`), damit der Schütze Papier und Scheibe zuordnen
+    kann. Bei Scheiben der Brücke steht sie schon in `Card.scheibenId`, gezeigt wird sie heute nur bei den Aufträgen im
+    Profil. Nicht auf der geteilten Seite (`/share`), denn ID und Abend sind der Schlüssel für „Scheibe per ID“. Eine
+    von Hand eingetragene Scheibe hat keine ID, die Zeile fehlt dann. Die ID eines Ausdrucks von einer fremden Anlage
+    (1c) gehört zu deren Nummernkreis: Das Modell (1a) speichert sie so, dass sie nie mit einer ID der eigenen Anlage
+    gleichgesetzt wird.
 - **1c Ergebnis sofort aus dem PDF (SP-2.6), für jede Anlage:** vollständiger Parser in `packages/meyton-pdf`. Jeder
   gescannte Ausdruck ergibt sofort eine Scheibe aus dem PDF, sobald der Parser ihn lesen kann, ob von der eigenen oder
   einer fremden Anlage. Liefert die Brücke die Scheibe, kommen die Rohdaten als neue Revision derselben Scheibe dazu
@@ -221,17 +221,17 @@ Vorgeschlagener Schnitt, endgültig im jeweiligen `/plan`:
        (kein Mittel über diese Teilmenge, heute braucht nur „bester Teiler“ den Teiler); Trefferlage je Serie und
        Trefferkreis gesamt und je Serie als kleine Erweiterung des Modells aus 1a-1; der Trefferkreis zählt, wenn die
        Gegenprobe es trägt, beim Streukreis, nie bei R50, σ oder einem Urteil.
-    **Fehlertoleranz** (entschieden mit dem User am 27. Oktober 2026): Die Zuordnung hängt nie vom Layout ab (ADR-028),
-    die Werte sind ein Versuch. (a) Nie raten: Jedes Feld steht da oder fehlt; ein Schuss als Kreuz am Rand (außerhalb
-    des gezeichneten Bereichs) hat keine Lage. (b) Selbstprüfung jedes Ausdrucks: gelesene Schüsse gegen Zähler,
-    Innenzehner, Serien- und Gesamtsumme; bei Widerspruch übernimmt Spiegel keine Werte, die Scheibe bleibt „nur
-    Ausdruck“. (c) Das PDF bleibt gespeichert, der Leser hat eine Version; ein neuer Leser liest gespeicherte Ausdrucke
-    neu (wie das Nachrechnen der Projektion). (d) Layouts erkennen (Metadaten wie Producer/Creator, erkannte Zeilen); ein
-    unbekanntes liest der Parser vorsichtig und meldet es dem Admin nur als Zustand. (e) Testdaten aus den eigenen
-    Ausdrucken des Users über die Zeit (ohne Namen, Nummer, ID), damit eine Änderung bei Meyton einen Test fallen lässt.
-    Mitgemessen in 1c-0: „initialisiert“ als Beginn der Wertung, Standnummer, Disziplin im Kopf (Vorbelegung im Blatt
-    „Neue Scheibe“), Teiler jedes Schusses aus den Kreisen, Häufigkeit der Kreuze, Zahl der Layouts, Quote der
-    Selbstprüfung.
+       **Fehlertoleranz** (entschieden mit dem User am 27. Oktober 2026): Die Zuordnung hängt nie vom Layout ab (ADR-028),
+       die Werte sind ein Versuch. (a) Nie raten: Jedes Feld steht da oder fehlt; ein Schuss als Kreuz am Rand (außerhalb
+       des gezeichneten Bereichs) hat keine Lage. (b) Selbstprüfung jedes Ausdrucks: gelesene Schüsse gegen Zähler,
+       Innenzehner, Serien- und Gesamtsumme; bei Widerspruch übernimmt Spiegel keine Werte, die Scheibe bleibt „nur
+       Ausdruck“. (c) Das PDF bleibt gespeichert, der Leser hat eine Version; ein neuer Leser liest gespeicherte Ausdrucke
+       neu (wie das Nachrechnen der Projektion). (d) Layouts erkennen (Metadaten wie Producer/Creator, erkannte Zeilen); ein
+       unbekanntes liest der Parser vorsichtig und meldet es dem Admin nur als Zustand. (e) Testdaten aus den eigenen
+       Ausdrucken des Users über die Zeit (ohne Namen, Nummer, ID), damit eine Änderung bei Meyton einen Test fallen lässt.
+       Mitgemessen in 1c-0: „initialisiert“ als Beginn der Wertung, Standnummer, Disziplin im Kopf (Vorbelegung im Blatt
+       „Neue Scheibe“), Teiler jedes Schusses aus den Kreisen, Häufigkeit der Kreuze, Zahl der Layouts, Quote der
+       Selbstprüfung.
     3. **1c-2 Lagen aus dem Trefferbild**, eigener Teil, nur wenn die Gegenprobe zeigt, dass die gezeichneten Lagen genau
        genug sind (95 % unter 0,5 mm); dann als eigene Angabe „vom Ausdruck“, nie gleichgesetzt mit gemessener Lage. Sonst
        das Trefferbild nur zur Anzeige auf der Seite der Scheibe, ohne in eine Zahl einzugehen (wie „geschätzt“, ADR-033).
@@ -302,7 +302,7 @@ In `main`, noch nicht gepusht und nicht deployt: 1b-1, 1a-1, 1a-2, ADR-035, 1b-2
 - **Migrationen beim Start:** `20261027120000_card_details` (1a-1, additiv; Spiegel rechnet danach alle Projektionen
   einmal neu, Version 6) und `20261027180000_card_request_print_mismatch` (1b-2, additiv).
 - **Rückweg auf ein älteres Image** nach 1b-2: vorher `UPDATE "CardRequest" SET status = 'mismatch' WHERE status =
-  'printMismatch';` (das alte Image kennt den Wert nicht).
+'printMismatch';` (das alte Image kennt den Wert nicht).
 - **Neues Volume** `uploads_spiegel` (1b-1), legt `vereinsheim deploy` an; Backups enthalten danach die PDFs.
 - **Messung des Lesers auf dem VPS** (amd64) mit dem Einzeiler aus `vault/operations/vps-resource-sizing.md`, bevor
   das Scannen genutzt wird; über 80 MiB → Grenze oder Speicher von Spiegel anpassen.
@@ -315,20 +315,20 @@ Reiter Lage der Skriptprüfung (`vault/incidents/pruefen-reiter-lage-scroll-jump
 
 ## Stand
 
-| Teil | Plan | Branch | Session | Stand |
-|---|---|---|---|---|
-| V1 | `plans/2026-10-26-tis-v1-accounts.md` | `feat/tis-v1-accounts` | tis-v1-accounts | im Basisbranch, Plan entfernt |
-| 1a-1 | `plans/2026-10-27-tis-1a1-card-details.md` | `feat/tis-1a1-card-details` (von `main`) | tis-1a1-card-details | in `main` (`a7c98a09`), noch nicht deployt |
-| 1a-2 | `plans/2026-10-27-tis-1a2-views.md` | `feat/tis-1a2-views` (von `main`) | tis-1a2-views | in `main` (`38fc63b6`), noch nicht deployt |
-| 1b-1 | `plans/2026-10-26-tis-1b1-printouts.md` | `feat/tis-1b1-printouts` (von `main`) | tis-1b1-printouts | in `main` (`f0213d9a`), noch nicht deployt |
-| 1b-2 | `plans/2026-10-27-tis-1b2-fetch-card.md` | `feat/tis-1b2-fetch-card` (von `main`) | tis-1b2-fetch-card | in `main` (`053c11b8`), noch nicht deployt |
-| 1c-0 | `plans/2026-10-27-tis-1c0-printout-check.md` | `feat/tis-1c0-printout-check` (von `main`) | tis-1c0-printout-check | in `main` (`028234b0`); Ergebnis in [[meyton-printout]] |
-| 1c | `plans/2026-10-27-tis-1c-printout-values.md` | `feat/tis-1c-printout-values` (von `main`) | | geplant (1c-1 und 1c-2 zusammen) |
-| 1d | | | | offen |
-| 1e | | | | in 1a-2 |
-| 2 | | | | offen |
-| 3 | | | | offen |
-| 4 | | | | offen |
+| Teil | Plan                                         | Branch                                     | Session                  | Stand                                                   |
+| ---- | -------------------------------------------- | ------------------------------------------ | ------------------------ | ------------------------------------------------------- |
+| V1   | `plans/2026-10-26-tis-v1-accounts.md`        | `feat/tis-v1-accounts`                     | tis-v1-accounts          | im Basisbranch, Plan entfernt                           |
+| 1a-1 | `plans/2026-10-27-tis-1a1-card-details.md`   | `feat/tis-1a1-card-details` (von `main`)   | tis-1a1-card-details     | in `main` (`a7c98a09`), noch nicht deployt              |
+| 1a-2 | `plans/2026-10-27-tis-1a2-views.md`          | `feat/tis-1a2-views` (von `main`)          | tis-1a2-views            | in `main` (`38fc63b6`), noch nicht deployt              |
+| 1b-1 | `plans/2026-10-26-tis-1b1-printouts.md`      | `feat/tis-1b1-printouts` (von `main`)      | tis-1b1-printouts        | in `main` (`f0213d9a`), noch nicht deployt              |
+| 1b-2 | `plans/2026-10-27-tis-1b2-fetch-card.md`     | `feat/tis-1b2-fetch-card` (von `main`)     | tis-1b2-fetch-card       | in `main` (`053c11b8`), noch nicht deployt              |
+| 1c-0 | `plans/2026-10-27-tis-1c0-printout-check.md` | `feat/tis-1c0-printout-check` (von `main`) | tis-1c0-printout-check   | in `main` (`028234b0`); Ergebnis in [[meyton-printout]] |
+| 1c   | `plans/2026-10-27-tis-1c-printout-values.md` | `feat/tis-1c-printout-values` (von `main`) | `tis-1c-printout-values` | freigegeben, in Arbeit (1c-1 und 1c-2 zusammen)         |
+| 1d   |                                              |                                            |                          | offen                                                   |
+| 1e   |                                              |                                            |                          | in 1a-2                                                 |
+| 2    |                                              |                                            |                          | offen                                                   |
+| 3    |                                              |                                            |                          | offen                                                   |
+| 4    |                                              |                                            |                          | offen                                                   |
 
 ## Verification
 
