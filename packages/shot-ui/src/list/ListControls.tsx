@@ -6,6 +6,8 @@ import { Sheet } from "@vereinsheim/ui/design2/sheet"
 import { useState, type ReactNode } from "react"
 
 import { CardFilters, KIND_OPTIONS } from "../controls/CardFilters"
+import { PROVENANCE_LABELS, type CardProvenance } from "../detail"
+import { HelpButton } from "../help/HelpButton"
 import { RouteLink } from "../nav/RouteLink"
 import type { ListQuery, ProgressRoute } from "../nav/routes"
 import type { ListOption } from "./evenings"
@@ -42,6 +44,10 @@ export interface ListControlsProps {
   flags: readonly string[]
   /** Listen aus Meyton der Scheiben dieser Familie (Modell, mit der gewählten); ohne keine Wahl „Liste“ */
   lists: readonly ListOption[]
+  /** Herkünfte der Scheiben dieser Familie (Modell, mit der gewählten); nur gemessene: keine Wahl „Herkunft“ */
+  provenances: readonly CardProvenance[]
+  /** öffnet eine Erklärung („?“ an der Herkunft); ohne kein „?“ */
+  onHelp?: (id: string) => void
   /** Name des Zeitraums aus „Alle in Scheiben zeigen“ (`resolveRange`); null: alle Abende */
   rangeLabel: string | null
   onQuery: (query: ListQuery) => void
@@ -58,17 +64,20 @@ export function listFilterSummary({
   kind,
   flag,
   list,
+  provenance = null,
   rangeLabel,
 }: {
   kind: ListQuery["kind"]
   flag: string | null
   /** Name der gewählten Liste aus Meyton */
   list: string | null
+  provenance?: CardProvenance | null
   rangeLabel: string | null
 }): string {
   const parts = [
     kind === "all" ? null : (KIND_OPTIONS.find((o) => o.value === kind)?.label ?? null),
     list ? `Liste ${list}` : null,
+    provenance ? PROVENANCE_LABELS[provenance] : null,
     flag ? flagName(flag) : null,
     rangeLabel,
   ].filter(Boolean)
@@ -77,8 +86,8 @@ export function listFilterSummary({
 
 /**
  * Filter der Scheiben-Liste in einer Zeile (wie der Fortschritt): vorn die Familie, daneben
- * ein Chip mit der Zusammenfassung. Er öffnet das Blatt „Filter“ mit Art, Liste aus Meyton und Merkmal (beide nur,
- * wenn es welche gibt), dem Zeitraum aus dem Fortschritt (mit „entfernen“) und dem Weg „Im Fortschritt zeigen“. Eine
+ * ein Chip mit der Zusammenfassung. Er öffnet das Blatt „Filter“ mit Art, Liste aus Meyton, Herkunft und Merkmal (nur,
+ * wenn es welche gibt; Herkunft nur, wenn nicht alle gemessen sind), dem Zeitraum aus dem Fortschritt (mit „entfernen“) und dem Weg „Im Fortschritt zeigen“. Eine
  * Wahl im Blatt gilt sofort. Ein Familienwechsel behält Art, Liste, Merkmal und Zeitraum.
  */
 export function ListControls(props: ListControlsProps) {
@@ -100,6 +109,8 @@ export function ListControlsView({
   families,
   flags,
   lists,
+  provenances,
+  onHelp,
   rangeLabel,
   onQuery,
   progress,
@@ -127,6 +138,7 @@ export function ListControlsView({
           kind: query.kind,
           flag: query.flag,
           list: lists.find((l) => l.id === query.list)?.name ?? null,
+          provenance: query.provenance,
           rangeLabel,
         })}
         <svg
@@ -173,6 +185,35 @@ export function ListControlsView({
                   ...lists.map((list) => ({ value: String(list.id), label: list.name })),
                 ]}
                 onChange={(list) => onQuery({ ...query, list: list === ANY ? null : Number(list) })}
+              />
+            </div>
+          )}
+          {(provenances.length > 1 || query.provenance) && (
+            <div className="grid gap-1.5">
+              <div className="flex items-center gap-1.5">
+                <span className="text-[13px] font-semibold text-muted-foreground">Herkunft</span>
+                {onHelp && (
+                  <HelpButton
+                    label="Grundlage und Herkunft"
+                    helpId="grundlage"
+                    onClick={() => onHelp("grundlage")}
+                  />
+                )}
+              </div>
+              <Segmented
+                label="Herkunft"
+                wrap
+                value={query.provenance ?? ANY}
+                options={[
+                  { value: ANY, label: "Alle" },
+                  ...provenances.map((p) => ({ value: p, label: PROVENANCE_LABELS[p] })),
+                ]}
+                onChange={(provenance) =>
+                  onQuery({
+                    ...query,
+                    provenance: provenance === ANY ? null : (provenance as CardProvenance),
+                  })
+                }
               />
             </div>
           )}

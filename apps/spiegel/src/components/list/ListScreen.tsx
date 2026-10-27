@@ -20,6 +20,7 @@ import {
 } from "@vereinsheim/shot-ui/nav/routes"
 
 import { NoCards } from "@/components/shell/NoCards"
+import { useHelp } from "@vereinsheim/ui/design2/help-sheet"
 import { Page } from "@vereinsheim/ui/design2/page"
 import { PAGE_SINGLE } from "@vereinsheim/shot-ui/layout/columns"
 import { cn } from "@vereinsheim/lib/utils"
@@ -74,6 +75,7 @@ export function ListScreen({
   context: PageContext
 }) {
   const router = useRouter()
+  const onHelp = useHelp()
   const { timeZone } = context
   const route: ListRoute = { page: "cards", query, evening: null }
   // die Wertung der Familie (Ø und Abstand) als Kreis neben dem Titel; die fette Spalte gehört der Scheibe
@@ -147,6 +149,8 @@ export function ListScreen({
               families={families}
               flags={model.flags}
               lists={model.lists}
+              provenances={model.provenances}
+              onHelp={onHelp}
               rangeLabel={model.range?.label ?? null}
               onQuery={onQuery}
               progress={progressFromList(route)}

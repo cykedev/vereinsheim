@@ -12,6 +12,7 @@ import {
 } from "@vereinsheim/lib/format"
 import { cn } from "@vereinsheim/lib/utils"
 
+import { quietProvenance } from "../detail"
 import { formatSigned, formatValue } from "../format"
 import { JUMP_BAR } from "@vereinsheim/ui/design2/bar"
 import { RouteLink, shouldIntercept, useRouteNavigate } from "../nav/RouteLink"
@@ -30,6 +31,16 @@ const SCORING_IN: Readonly<Record<Scoring, string>> = {
 const WIDE = "hidden @min-[32rem]:table-cell"
 // am Telefon enger: zwei Spalten für die Wertungen brauchen den Platz; ab 32rem breiter
 const CELL = "px-1 py-2 @min-[32rem]:px-2"
+
+/** „–“ für eine Zahl ohne Wert, mit ihrem Grund als Tooltip und für Screenreader; ohne Grund nur der Strich */
+function Dash({ reason }: { reason?: string }) {
+  if (!reason) return <>–</>
+  return (
+    <span title={reason}>
+      –<span className="sr-only">{` ${reason}`}</span>
+    </span>
+  )
+}
 
 /** Mittag des Tages: das Datum eines Abends, unabhängig von der Zeitumstellung */
 const noonOf = (day: string, timeZone: string) =>
@@ -96,13 +107,15 @@ export function EveningList({
     row.resultScoring === "rings" ? "decimal" : "rings"
   const resultText = (value: number | null, scoring: Scoring) =>
     value === null ? "–" : formatValue(value, digits.result[scoring])
+  const resultReason = (row: ListRow) => row.reasons?.[row.resultScoring]
   const rowName = (row: ListRow, day: string, time: string) =>
     [
       formatWeekdayDate(noonOf(day, timeZone), timeZone),
       time,
       KIND_TEXT[row.kind],
+      quietProvenance(row.provenance),
       row.result === null
-        ? "ohne Ergebnis"
+        ? `ohne Ergebnis${resultReason(row) ? ` (${resultReason(row)})` : ""}`
         : `Ergebnis ${resultText(row.result, row.resultScoring)} ${SCORING_IN[row.resultScoring]}${row.ofCard ? " (Wertung der Scheibe)" : ""}`,
       row.otherResult === null
         ? null
@@ -192,6 +205,7 @@ export function EveningList({
                           <tr
                             key={row.id}
                             data-card-row={row.id}
+                            data-provenance={row.provenance}
                             data-marked={marked || undefined}
                             aria-current={row.id === pick ? "true" : undefined}
                             onClick={(event) => {
@@ -244,6 +258,14 @@ export function EveningList({
                             <td className={cn(CELL, WIDE, "text-foreground-2")}>{time}</td>
                             <td className={cn(CELL, "text-muted-foreground")}>
                               <KindMark kind={row.kind} />
+                              {row.provenance && (
+                                <span
+                                  data-provenance-word
+                                  className="block text-xs text-muted-foreground"
+                                >
+                                  {quietProvenance(row.provenance)}
+                                </span>
+                              )}
                             </td>
                             {/* beide Wertungen mit Namen in eigenen Spalten, die der Scheibe fett */}
                             {(["rings", "decimal"] as const).map((scoring) => {
@@ -263,21 +285,37 @@ export function EveningList({
                                     ofCard ? "font-semibold" : "text-foreground-2"
                                   )}
                                 >
-                                  {resultText(value, scoring)}
+                                  {value === null ? (
+                                    <Dash reason={row.reasons?.[scoring]} />
+                                  ) : (
+                                    resultText(value, scoring)
+                                  )}
                                 </td>
                               )
                             })}
                             <td data-mean className={cn(CELL, "text-right")}>
-                              {row.mean === null ? "–" : formatValue(row.mean, digits.mean)}
+                              {row.mean === null ? (
+                                <Dash reason={row.reasons?.mean} />
+                              ) : (
+                                formatValue(row.mean, digits.mean)
+                              )}
                             </td>
                             <td
                               data-delta
                               className={cn(CELL, WIDE, "text-right text-foreground-2")}
                             >
-                              {row.delta ? formatSigned(row.delta.delta, digits.mean) : "–"}
+                              {row.delta ? (
+                                formatSigned(row.delta.delta, digits.mean)
+                              ) : (
+                                <Dash reason={row.reasons?.delta} />
+                              )}
                             </td>
                             <td className={cn(CELL, WIDE, "text-right text-muted-foreground")}>
-                              {row.shots}
+                              {row.shots === 0 && row.reasons?.shots ? (
+                                <Dash reason={row.reasons.shots} />
+                              ) : (
+                                row.shots
+                              )}
                             </td>
                           </tr>
                         )

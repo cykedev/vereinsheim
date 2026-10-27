@@ -283,3 +283,70 @@ describe("Kleine Scheiben der Liste", () => {
     expect(rows.every((c) => c.split(" ").includes("align-top"))).toBe(true)
   })
 })
+
+describe("Herkunft und Gründe in den Zeilen", () => {
+  const SERIES = {
+    series: [1, 2, 3, 4].map((series) => ({ series, shots: 10, rings: 90, decimalTenths: 950 })),
+    total: null,
+    center: null,
+  }
+  const model = cardListModel(
+    [
+      ...INPUT.map((c) => ({ family: c.family, card: projected(c.card) })),
+      {
+        family: "lg-freihand",
+        provenance: "entered" as const,
+        card: projected({
+          ...periodCard("s", 2, [], { startedAtMs: at(17, 0, 28) }),
+          sums: SERIES,
+        }),
+      },
+      {
+        family: "lg-freihand",
+        provenance: "printout" as const,
+        card: projected(periodCard("w", 2, [], { startedAtMs: at(18, 0, 28) })),
+      },
+    ],
+    { ...DEFAULT_LIST, family: "lg-freihand" },
+    { timeZone: TZ, nowMs: NOW, named: [], scoring: "decimal" }
+  )
+  const html = renderToStaticMarkup(
+    h(EveningList, {
+      model,
+      marks: new Map(),
+      target: LG_10M,
+      families: FAMILIES,
+      timeZone: TZ,
+      cardRoute: (id: string) => openCard(LIST, id),
+      otherFamilyRoute: (family: string, day: string) =>
+        listOnEvening({ ...DEFAULT_LIST, family: "lg-freihand" }, family, day),
+    })
+  )
+  const rowOf = (id: string) => {
+    const start = html.indexOf(`data-card-row="${id}"`)
+    return html.slice(start, html.indexOf("</tr>", start))
+  }
+
+  it("eingetragen und vom Ausdruck stehen leise unter der Art, gemessen nie", () => {
+    expect(rowOf("s")).toMatch(/data-provenance="entered"/)
+    expect(rowOf("s")).toMatch(/<span data-provenance-word="true"[^>]*>eingetragen<\/span>/)
+    expect(rowOf("w")).toMatch(/data-provenance-word="true"[^>]*>vom Ausdruck</)
+    expect(rowOf("a")).not.toContain("data-provenance")
+    expect(text(html)).not.toContain("gemessen")
+  })
+
+  it("jede „–“ trägt ihren Grund als Tooltip und für Screenreader", () => {
+    const row = rowOf("w")
+    expect(row).toContain(
+      '<span title="wartet auf die Anlage">–<span class="sr-only"> wartet auf die Anlage</span></span>'
+    )
+    expect(row.match(/title="wartet auf die Anlage"/g)?.length).toBe(5)
+  })
+
+  it("der Name der Zeile nennt Herkunft und Grund", () => {
+    expect(rowOf("w")).toMatch(
+      /aria-label="[^"]*Training, vom Ausdruck, ohne Ergebnis \(wartet auf die Anlage\)/
+    )
+    expect(rowOf("s")).toMatch(/aria-label="[^"]*Training, eingetragen, Ergebnis 380,0/)
+  })
+})

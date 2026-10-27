@@ -30,6 +30,7 @@ const props = (patch: Partial<ListControlsProps> = {}): ListControlsProps => ({
   ],
   flags: ["korrigiert"],
   lists: [],
+  provenances: ["measured"],
   rangeLabel: "Neue Munition",
   onQuery: () => {},
   progress: {
@@ -62,6 +63,34 @@ const view = (patch: Partial<ListControlsProps> = {}) =>
   ListControlsView({ ...props(patch), open: false, onOpen: () => {}, onClose: () => {} })
 
 describe("Filter der Scheiben-Liste in einer Zeile (wie der Fortschritt)", () => {
+  it("die Herkunft im Blatt: „Alle“ und jede Herkunft der Familie, am Chip mit Namen", () => {
+    const html = renderToStaticMarkup(
+      h(
+        ListControls,
+        props({
+          provenances: ["measured", "printout", "entered"],
+          query: { ...QUERY, provenance: "entered" },
+        })
+      )
+    )
+    expect(html).toMatch(
+      /data-list-chip="true"[^>]*>Training · Eingetragen · Korrigiert · Neue Munition<svg/
+    )
+    const sheet = html.slice(html.indexOf("<dialog"))
+    const group = sheet.slice(sheet.indexOf('aria-label="Herkunft"'))
+    const labels = [...group.slice(0, group.indexOf("</div>")).matchAll(/>([^<>]+)<\/button>/g)]
+    expect(labels.map((m) => m[1])).toEqual(["Alle", "Gemessen", "Vom Ausdruck", "Eingetragen"])
+  })
+
+  it("nur gemessene: keine Gruppe „Herkunft“; „?“ nur mit `onHelp`", () => {
+    expect(renderToStaticMarkup(h(ListControls, props()))).not.toContain('aria-label="Herkunft"')
+    const mixed = props({ provenances: ["measured", "entered"] })
+    expect(renderToStaticMarkup(h(ListControls, mixed))).not.toContain('data-help="grundlage"')
+    expect(renderToStaticMarkup(h(ListControls, { ...mixed, onHelp: () => {} }))).toContain(
+      'data-help="grundlage"'
+    )
+  })
+
   it("ein weiterer Chip in der Zeile nach dem Chip „Filter“", () => {
     const html = renderToStaticMarkup(
       h(ListControls, props({ actions: h("span", { "data-kreis": true }) }))
