@@ -283,6 +283,18 @@ Folgen, die der Teilplan von Stufe 3 klärt:
   ohnehin braucht.
 - **Zwei Datenbanken:** Die Übernahme liest Treffsicher und schreibt Spiegel. Die Apps selbst greifen nie quer
   (ADR-002); das CLI läuft als eigener Schritt mit Zugang zu beiden, auch für die Dateien der Anhänge.
+- **Ausdrucke aus Treffsicher werden gelesen** (gewünscht vom User am 27. Oktober 2026): Hängt an einer Einheit in
+  Treffsicher ein Meyton-PDF (in der Prod-Kopie 49 PDFs an 48 Einheiten), übernimmt die Übernahme es als Ausdruck der
+  Scheibe und liest es mit dem Leser aus 1c. Passt der Ausdruck zur Einheit (Tag, Disziplin, Summen), werden seine
+  Werte und Lagen eine neue Revision über den eingetragenen Zahlen, die als frühere Revision bleiben. Passt er nicht,
+  hängt er ohne Werte an und steht im Prüfbestand. Trägt Spiegel schon eine Scheibe mit derselben ID im Fuß (von der
+  Brücke oder per Import), entsteht keine zweite: Die Einheit ergänzt diese Scheibe.
+- **Ein später geholter Ausdruck ergänzt die übernommene Scheibe** (gewünscht vom User am 27. Oktober 2026): Holt der
+  Schütze später einen Ausdruck (Scan, Link, Upload, `printout-import`), zu dem es keine Scheibe mit dieser ID gibt,
+  sucht Spiegel unter den übernommenen Scheiben desselben Kontos eine, die passt (Tag, Disziplin, Gesamt- und
+  Seriensummen, soweit eingetragen). Passt genau eine, hängt der Ausdruck dort an, und seine Werte werden eine neue
+  Revision. Passen keine oder mehrere, rät Spiegel nicht: Es entsteht eine neue Scheibe, bei mehreren mit Hinweis. Ein
+  reiner Probe-Ausdruck passt nie zu einer Einheit, die nur die Wertung trägt.
 - **Aufruf** über das Ops-CLI `vereinsheim`, auf dem VPS und lokal gegen die Prod-Kopie.
 - **Zeitpunkt in Prod:** Konto für Konto in Prod geht erst, wenn Spiegel mit Tagebuch deployt ist, also nach dem Merge
   des Basisbranchs (siehe „Branches“). Bis dahin wird die Übernahme nur lokal gegen die Prod-Kopie geübt.
