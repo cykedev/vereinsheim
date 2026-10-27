@@ -1,11 +1,14 @@
 // Schreibt einen erfundenen Meyton-Ausdruck (Qt-Weg, ID und Druckzeit wählbar, Vorgabe ff914420) als PDF nach stdout. Für
 // den Stack-Test (`tools/stack-e2e/ops.sh`), die Skriptprüfung („Scheibe holen“, `samplePrintout`) und zum Messen des
-// Lesers von Hand; mit `--kind memory|time` eine der präparierten Bomben. Kein echter Ausdruck (ADR-029).
+// Lesers von Hand; mit `--values` ein in sich stimmiger Ausdruck mit Werten und Trefferbild (LP 40, Wertung, 40 Schuss,
+// `valuedPrintout`), mit `--kind memory|time` eine der präparierten Bomben. Kein echter Ausdruck (ADR-029).
 //
-//   pnpm exec tsx tools/printout-sample.ts | node .next/standalone/apps/spiegel/printout-reader.mjs
+//   pnpm exec tsx tools/printout-sample.ts --values | node .next/standalone/apps/spiegel/printout-reader.mjs
 //   pnpm exec tsx tools/printout-sample.ts --id 7fff0a09 --printed 2026-10-27T19:30:00+01:00 > ausdruck.pdf
 
 import { bombContent, buildPdf } from "@vereinsheim/meyton-pdf/test-pdf"
+
+import { valuedPrintout } from "../test/printout"
 
 const PRODUCER = "Qt 5.12.8"
 const ISO = /^(\d{4})-(\d\d)-(\d\d)T(\d\d):(\d\d):(\d\d)([+-])(\d\d):(\d\d)$/
@@ -49,14 +52,22 @@ function kindOf(argv: readonly string[]): "sample" | "memory" | "time" {
 async function main() {
   const argv = process.argv.slice(2)
   const kind = kindOf(argv)
+  const hex = option(argv, "--id")
+  const printed = option(argv, "--printed")
   const pdf =
-    kind === "sample"
-      ? await samplePrintout({ hex: option(argv, "--id"), printed: option(argv, "--printed") })
-      : await buildPdf({
-          pages: [[]],
-          rawPages: [bombContent(kind)],
-          info: { CreationDate: pdfDate("2026-10-02T19:52:12+02:00"), Producer: PRODUCER },
+    kind === "sample" && argv.includes("--values")
+      ? await valuedPrintout({
+          layout: "qt",
+          id: hex,
+          printed: pdfDate(printed ?? "2026-10-02T19:52:12+02:00"),
         })
+      : kind === "sample"
+        ? await samplePrintout({ hex, printed })
+        : await buildPdf({
+            pages: [[]],
+            rawPages: [bombContent(kind)],
+            info: { CreationDate: pdfDate("2026-10-02T19:52:12+02:00"), Producer: PRODUCER },
+          })
   process.stdout.write(pdf)
 }
 
