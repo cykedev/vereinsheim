@@ -18,7 +18,12 @@ Fachwissen: `vault/meyton/meyton-printout.md`, Sonderfälle SF-41 bis SF-48 in
 | `@vereinsheim/meyton-pdf/pdf-date`    | `src/pdfDate.ts`               | `parsePdfDate`, `parseXmpDate` (rein, auch im Browser)                      |
 | `@vereinsheim/meyton-pdf/errors`      | `src/errors.ts`                | `MeytonPdfError` mit festem `code`, `MEYTON_PDF_ERROR_CODES`                |
 | `@vereinsheim/meyton-pdf/header`      | `src/header.ts`                | `hasPdfHeader` (rein, ohne pdf.js)                                          |
+| `@vereinsheim/meyton-pdf/values`      | `src/values/read.ts`           | `readPrintoutValues`: Werte und Trefferbild (Prototyp, braucht pdf.js)      |
 | `@vereinsheim/meyton-pdf/test-pdf`    | `src/__fixtures__/buildPdf.ts` | `buildPdf`, `bombContent`; nur für Tests und Werkzeuge                      |
+
+`./values` ist ein Prototyp für die Gegenprobe 1c-0 (`apps/spiegel/tools/printout-check.ts`), noch nicht von Apps
+genutzt. Er liest das Layout (Beschriftungen, Serien, Kreise und Kreuze des Trefferbilds); die Regel „Kein
+Layout-Wissen“ unten gilt für ID und Erstellzeit.
 
 ## Regeln
 

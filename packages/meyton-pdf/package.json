@@ -11,6 +11,7 @@
     "./limits": "./src/limits.ts",
     "./errors": "./src/errors.ts",
     "./header": "./src/header.ts",
+    "./values": "./src/values/read.ts",
     "./test-pdf": "./src/__fixtures__/buildPdf.ts"
   },
   "scripts": {
