@@ -12,7 +12,8 @@
     "./errors": "./src/errors.ts",
     "./header": "./src/header.ts",
     "./values": "./src/values/read.ts",
-    "./test-pdf": "./src/__fixtures__/buildPdf.ts"
+    "./test-pdf": "./src/__fixtures__/buildPdf.ts",
+    "./test-printout": "./src/__fixtures__/printoutPdf.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit",

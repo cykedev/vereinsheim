@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { buildPdf } from "../__fixtures__/buildPdf"
+import { circle, printoutPdf, type TestPrintout } from "../__fixtures__/printoutPdf"
 import { MeytonPdfError } from "../errors"
 import {
   parseCenter,
@@ -11,162 +11,53 @@ import {
   readPrintoutValues,
 } from "./read"
 
-// Erfundene Ausdrucke nach den zwei gemessenen Layouts (ohne Namen, ADR-029): Text an Positionen wie gedruckt, dazu
-// Trefferbilder aus Kreisen und Rahmen als Inhaltsstrom.
-
-const escape = (text: string) =>
-  text.replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)")
-const text = (str: string, x: number, y: number, size = 10) =>
-  `BT /F1 ${size} Tf 1 0 0 1 ${x} ${y} Tm (${escape(str)}) Tj ET`
-
-/** Kreis aus vier Bézier-Bögen; `paint` "S" (Rand), "f" (Füllung) oder "B" (beides) */
-function circle(cx: number, cy: number, d: number, paint = "S"): string {
-  const r = d / 2
-  const k = 0.5523 * r
-  return [
-    `${cx + r} ${cy} m`,
-    `${cx + r} ${cy + k} ${cx + k} ${cy + r} ${cx} ${cy + r} c`,
-    `${cx - k} ${cy + r} ${cx - r} ${cy + k} ${cx - r} ${cy} c`,
-    `${cx - r} ${cy - k} ${cx - k} ${cy - r} ${cx} ${cy - r} c`,
-    `${cx + k} ${cy - r} ${cx + r} ${cy - k} ${cx + r} ${cy} c`,
-    `h ${paint}`,
-  ].join("\n")
-}
-const square = (left: number, bottom: number, size: number) =>
-  `${left} ${bottom} ${size} ${size} re S`
-
-interface TestPicture {
-  center: [number, number]
-  /** Punkt je mm */
-  scale: number
-  frame: number
-  /** Lagen der Treffer in mm, in Schussfolge */
-  holes: [number, number][]
-  firstShot?: number
-  /** jeden Kreis als Füllung und dann als Rand, wie Ghostscript */
-  twice?: boolean
-  /** Treffer als Kreuz aus Linien (5,1 mm, fast wie die Innenzehn) ohne Nummer, wie ältere Ausdrucke */
-  cross?: boolean
-}
-
-/** ein Kreuz aus zwölf Linien um (x, y), `size` breit */
-function cross(x: number, y: number, size: number): string {
-  const a = size / 2
-  const b = size / 10
-  const points = [
-    [a, b],
-    [b, b],
-    [b, a],
-    [-b, a],
-    [-b, b],
-    [-a, b],
-    [-a, -b],
-    [-b, -b],
-    [-b, -a],
-    [b, -a],
-    [b, -b],
-    [a, -b],
-  ]
-  return `${points.map(([px, py], i) => `${x + px} ${y + py} ${i === 0 ? "m" : "l"}`).join(" ")} h f`
-}
-
-/** Scheibe der Luftpistole: Ringe 10 bis 1, Innenzehn, Treffer mit Nummer in der Mitte */
-function picture(p: TestPicture): string[] {
-  const [cx, cy] = p.center
-  const ops = [square(cx - p.frame / 2, cy - p.frame / 2, p.frame)]
-  const draw = (x: number, y: number, d: number) =>
-    p.twice ? [circle(x, y, d, "f"), circle(x, y, d, "S")] : [circle(x, y, d, "B")]
-  for (const mm of [155.5, 139.5, 123.5, 107.5, 91.5, 75.5, 59.5, 43.5, 27.5, 11.5, 5])
-    ops.push(...draw(cx, cy, mm * p.scale))
-  p.holes.forEach(([x, y], i) => {
-    const hx = cx + x * p.scale
-    const hy = cy + y * p.scale
-    if (p.cross) {
-      ops.push(cross(hx, hy, 5.1 * p.scale))
-      return
-    }
-    ops.push(...draw(hx, hy, 4.5 * p.scale))
-    const label = String((p.firstShot ?? 1) + i)
-    ops.push(text(label, hx - label.length * 1.5, hy - 1.05, 6))
-  })
-  return ops
-}
-
-async function printout(ops: string[]): Promise<Uint8Array> {
-  return buildPdf({
-    pages: [[]],
-    // Latin-1 wie WinAnsi, damit „Zähler:“ ankommt
-    rawPages: [Uint8Array.from(ops.join("\n"), (char) => char.charCodeAt(0))],
-    info: { CreationDate: "D:20261002195212+02'00'", Producer: "GPL Ghostscript 9.55.0" },
-  })
-}
+// Erfundene Ausdrucke nach den zwei gemessenen Layouts aus `printoutPdf` (ohne echte Namen, ADR-029).
 
 /** Kopf und Zeilen wie im Layout mit „Trefferkreis“ (Qt): Werte als eigene Stücke */
-const qtHead = [
-  text("LP 40", 57, 782, 15),
-  text("Klasse", 268, 782, 15),
-  text("StandNr: 4", 57, 766, 13),
-  text("Probe", 280, 766, 13),
-  text("02.10.2026 19:52", 436, 766, 13),
-  text("Muster, Max", 58, 749, 13),
-  text("#12345678", 153, 749, 9),
-  text("Ergebnis:", 57, 702, 12),
-  text("97", 157, 701, 12),
-  text("(101.3)", 181, 701, 12),
-  text("Serien:", 57, 686, 12),
-  text("97", 157, 686, 12),
-  text("Zähler:", 57, 670, 11),
-  text("4 4 1 1 0 0 0 0 0 0 0", 157, 670, 11),
-  text("Innenzehner:", 57, 655, 11),
-  text("2", 157, 655, 11),
-  text("Weiteste:", 57, 642, 11),
-  text("1520 (9.), 990 (4.), 610 (2.)", 156, 642, 11),
-  text("beste Teiler:", 57, 629, 11),
-  text("88.1 (1.), 201.7 (6.), 255.0 (3.)", 156, 629, 11),
-  text("Trefferkreis:", 57, 615, 11),
-  text("21.36 mm", 156, 615, 11),
-  text("Trefferlage:", 57, 602, 11),
-  text("1.09 mm links, 0.40 mm tief", 156, 602, 11),
-  text("Serie 1:", 155, 571),
-  text("97", 190, 571),
-  text("(101.3)", 206, 571),
-  // der erste Wert einer Zeile steht wie bei Ghostscript einen Hauch tiefer als die übrigen
-  ...["10.5*", "9.8", "10.1", "9.4", "8.9"].map((v, i) =>
-    text(v, 205 + i * 77, i === 0 ? 556.99 : 557)
-  ),
-  ...["10.6*", "10.2", "9.9", "8.2", "9.0"].map((v, i) => text(v, 205 + i * 77, 543)),
-  text("beste Teiler:", 154, 529),
-  text("88.1 (1.), 201.7 (6.), 255.0 (3.)", 250, 529),
-  text("Trefferkreis:", 154, 517),
-  text("21.36 mm", 250, 517),
-  text("Trefferlage:", 154, 505),
-  text("1.09 mm links, 0.40 mm tief", 250, 505),
-  text("initialisiert: 02.10.2026 19:21", 57, 35, 8),
-  text("gedruckt am: 02.10.2026 19:52", 57, 26, 8),
-  text("ID: ff914420 - Seite: 1", 256, 26, 8),
-]
+const qtSpec: TestPrintout = {
+  layout: "qt",
+  stand: "4",
+  mode: "Probe",
+  result: "97 (101.3)",
+  seriesLine: "97",
+  counts: "4 4 1 1 0 0 0 0 0 0 0",
+  innerTens: "2",
+  widest: "1520 (9.), 990 (4.), 610 (2.)",
+  best: "88.1 (1.), 201.7 (6.), 255.0 (3.)",
+  circle: "21.36 mm",
+  center: "1.09 mm links, 0.40 mm tief",
+  series: [
+    {
+      sum: "97 (101.3)",
+      values: ["10.5*", "9.8", "10.1", "9.4", "8.9", "10.6*", "10.2", "9.9", "8.2", "9.0"],
+      best: "88.1 (1.), 201.7 (6.), 255.0 (3.)",
+      circle: "21.36 mm",
+      center: "1.09 mm links, 0.40 mm tief",
+    },
+  ],
+  initialized: "02.10.2026 19:21",
+}
 
 /** Kopf im Layout mit „Streuwert“ (Ghostscript): Kopf der Serie samt Summe in einem Stück */
-const gsHead = [
-  text("LP 40", 57, 782, 15),
-  text("StandNr: 3", 57, 764, 13),
-  text("Wertung", 273, 764, 13),
-  text("Ergebnis:", 57, 697, 12),
-  text("18", 156, 697, 12),
-  text("(19.4)", 241, 697, 12),
-  text("Trefferlage:", 57, 612, 12),
-  text("0.50 mm rechts, 1.30 mm hoch", 156, 612, 12),
-  text("Streuwert:", 57, 598, 12),
-  text("10.88, horizontal: 11.90, vertikal: 9.77", 156, 598, 12),
-  text("Serie 1: 18 (19.4)", 156, 570),
-  text("9.2", 180, 556),
-  text("10.2", 260, 556),
-  text("Trefferlage:", 156, 515),
-  text("0.98 mm rechts, 3.66 mm tief", 227, 515),
-  text("Streuwert:", 156, 504),
-  text("10.16, horizontal: 12.00, vertikal: 7.89", 227, 504),
-  text("Serie 2: 0 (0.0)", 156, 479),
-]
+const gsSpec: TestPrintout = {
+  layout: "ghostscript",
+  stand: "3",
+  mode: "Wertung",
+  result: "18 (19.4)",
+  center: "0.50 mm rechts, 1.30 mm hoch",
+  spread: "10.88, horizontal: 11.90, vertikal: 9.77",
+  series: [
+    {
+      sum: "18 (19.4)",
+      values: ["9.2", "10.2"],
+      center: "0.98 mm rechts, 3.66 mm tief",
+      spread: "10.16, horizontal: 12.00, vertikal: 7.89",
+    },
+    { sum: "0 (0.0)", values: [] },
+  ],
+}
+
+const readSpec = async (spec: TestPrintout) => readPrintoutValues(await printoutPdf(spec))
 
 describe("einzelne Zeilen", () => {
   it("liest Summen in Ringen und Zehnteln", () => {
@@ -207,7 +98,7 @@ describe("einzelne Zeilen", () => {
 
 describe("readPrintoutValues", () => {
   it("liest Kopf, Zeilen und Serie im Layout mit Trefferkreis", async () => {
-    const values = await readPrintoutValues(await printout(qtHead))
+    const values = await readSpec(qtSpec)
     expect(values.discipline).toBe("LP 40")
     expect(values.mode).toBe("Probe")
     expect(values.shooter).toBe("Muster, Max")
@@ -247,23 +138,21 @@ describe("readPrintoutValues", () => {
   })
 
   it("trennt die Serien: Werte und Zeilen jeder Serie bleiben bei ihr", async () => {
-    const values = await readPrintoutValues(
+    const values = await readSpec({
+      ...qtSpec,
       // Serie 2 steht im Strom vor Serie 1: die Zuordnung hängt an der Lage, nicht an der Folge
-      await printout([
-        text("Serie 2:", 155, 483),
-        text("93", 190, 483),
-        text("(97.1)", 206, 483),
-        ...["9.9", "9.6", "8.8", "10.2", "9.5"].map((v, i) => text(v, 205 + i * 77, 469)),
-        ...["10.0", "9.1", "9.3", "10.7*", "10.0"].map((v, i) => text(v, 205 + i * 77, 455)),
-        text("beste Teiler:", 154, 441),
-        text("41.0 (19.), 177.3 (14.), 201.7 (20.)", 250, 441),
-        text("Trefferkreis:", 154, 429),
-        text("30.02 mm", 250, 429),
-        text("Trefferlage:", 154, 417),
-        text("2.20 mm rechts, 0.15 mm hoch", 250, 417),
-        ...qtHead,
-      ])
-    )
+      reversedStream: true,
+      series: [
+        ...qtSpec.series!,
+        {
+          sum: "93 (97.1)",
+          values: ["9.9", "9.6", "8.8", "10.2", "9.5", "10.0", "9.1", "9.3", "10.7*", "10.0"],
+          best: "41.0 (19.), 177.3 (14.), 201.7 (20.)",
+          circle: "30.02 mm",
+          center: "2.20 mm rechts, 0.15 mm hoch",
+        },
+      ],
+    })
     expect(values.series.map((s) => s.shots.length)).toEqual([10, 10])
     const [one, two] = values.series
     expect(one.shots.at(-1)?.value).toBe(90)
@@ -278,7 +167,7 @@ describe("readPrintoutValues", () => {
   })
 
   it("liest das Layout mit Streuwert und die Summe im Kopf der Serie", async () => {
-    const values = await readPrintoutValues(await printout(gsHead))
+    const values = await readSpec(gsSpec)
     expect(values.mode).toBe("Wertung")
     expect(values.result).toEqual({ rings: 18, tenths: 194 })
     expect(values.hitCircleMm).toBeNull()
@@ -294,9 +183,7 @@ describe("readPrintoutValues", () => {
   })
 
   it("lässt fehlende Felder null und findet ohne Zeichnung kein Trefferbild", async () => {
-    const values = await readPrintoutValues(
-      await printout([text("LP 40", 57, 782, 15), text("Ergebnis:", 57, 702, 12)])
-    )
+    const values = await readSpec({ layout: "ghostscript", shooter: null, result: "" })
     expect(values.result).toBeNull()
     expect(values.mode).toBeNull()
     expect(values.shooter).toBeNull()
@@ -317,20 +204,21 @@ describe("readPrintoutValues", () => {
       [3, -2],
       [-10, 4],
     ]
-    const ops = [
-      ...qtHead,
-      ...picture({ center: [480, 656], scale: 1.5, frame: 114, holes: whole }),
-      ...picture({ center: [98, 540], scale: 1.2, frame: 82, holes: whole.slice(0, 2) }),
-      ...picture({
-        center: [98, 452],
-        scale: 1.0,
-        frame: 82,
-        holes: whole.slice(2),
-        firstShot: 3,
-        twice: true,
-      }),
-    ]
-    const values = await readPrintoutValues(await printout(ops))
+    const values = await readSpec({
+      ...qtSpec,
+      pictures: [
+        { center: [480, 656], scale: 1.5, frame: 114, holes: whole },
+        { center: [98, 540], scale: 1.2, frame: 82, holes: whole.slice(0, 2) },
+        {
+          center: [98, 452],
+          scale: 1.0,
+          frame: 82,
+          holes: whole.slice(2),
+          firstShot: 3,
+          twice: true,
+        },
+      ],
+    })
     expect(values.pictures).toHaveLength(3)
     const [big, first, second] = values.pictures
     expect(big.center.x).toBeCloseTo(480, 3)
@@ -357,22 +245,26 @@ describe("readPrintoutValues", () => {
   })
 
   it("nimmt Kreuze als Treffer, hält die Innenzehn für einen Ring und lässt ferne Kreise weg", async () => {
-    const ops = [
-      ...picture({
-        center: [480, 656],
-        scale: 1.25,
-        frame: 128,
-        holes: [
-          [2, 1],
-          [-6, 3],
-          [0, 0],
+    const [only] = (
+      await readSpec({
+        layout: "ghostscript",
+        pictures: [
+          {
+            center: [480, 656],
+            scale: 1.25,
+            frame: 128,
+            holes: [
+              [2, 1],
+              [-6, 3],
+              [0, 0],
+            ],
+            cross: true,
+          },
         ],
-        cross: true,
-      }),
-      // gleich groß wie die Kreuze, aber weit außerhalb der Scheibe
-      circle(150, 300, 5.1 * 1.25, "B"),
-    ]
-    const [only] = (await readPrintoutValues(await printout(ops))).pictures
+        // gleich groß wie die Kreuze, aber weit außerhalb der Scheibe
+        extra: [circle(150, 300, 5.1 * 1.25, "B")],
+      })
+    ).pictures
     expect(only.holeShape).toBe("cross")
     expect(only.holeDiameterPt).toBeCloseTo(5.1 * 1.25, 1)
     expect(only.ringDiametersPt).toHaveLength(11)
@@ -385,13 +277,10 @@ describe("readPrintoutValues", () => {
   })
 
   it("liest den Teiler je Schuss, wo das Layout ihn druckt", async () => {
-    const values = await readPrintoutValues(
-      await printout([
-        text("Serie 1: 18 (18.7)", 156, 587),
-        text("10.3* 312.5T", 149, 573),
-        text("8.4 1650T", 229, 573),
-      ])
-    )
+    const values = await readSpec({
+      layout: "ghostscript",
+      series: [{ sum: "18 (18.7)", values: ["10.3* 312.5T", "8.4 1650T"] }],
+    })
     expect(values.shots).toEqual([
       { series: 1, value: 103, innerTen: true, teiler: 312.5 },
       { series: 1, value: 84, innerTen: false, teiler: 1650 },
@@ -402,7 +291,7 @@ describe("readPrintoutValues", () => {
     await expect(readPrintoutValues(new TextEncoder().encode("hallo"))).rejects.toMatchObject({
       code: "notPdf",
     })
-    const pdf = await printout(qtHead)
+    const pdf = await printoutPdf(qtSpec)
     const error = await readPrintoutValues(pdf, { limits: { maxBytes: 10 } }).catch(
       (e: unknown) => e
     )
@@ -412,7 +301,7 @@ describe("readPrintoutValues", () => {
 
   it("bricht nach der Zeitgrenze ab", async () => {
     let clock = 0
-    const pdf = await printout(qtHead)
+    const pdf = await printoutPdf(qtSpec)
     await expect(
       readPrintoutValues(pdf, { limits: { maxParseMs: 5 }, now: () => (clock += 10) })
     ).rejects.toMatchObject({ code: "timeout" })
