@@ -491,57 +491,53 @@ export function cardDiscipline({
 }
 
 /**
- * eine Scheibe per ID vom Ausdruck holen (Profil): `id` wie auf dem Ausdruck, `day` der Tag in Worten („Di 21.10.2026“).
- * Spiegel holt sie, wenn die Anlage läuft, und nur, wenn der Tag passt
+ * „Nicht mehr holen“: Spiegel wartet auf die Werte einer Scheibe von der Anlage. `card`: Der Auftrag hängt an einer Scheibe
+ * vom Ausdruck (an der Scheibe); ohne Scheibe ist es ein älterer Auftrag auf „Scheibe holen“.
  */
-export function cardRequest({ id, day }: { id: string; day: string }): Decision {
+export function cardFetchStop({
+  id,
+  when,
+  card,
+}: {
+  id: string
+  when: string
+  card: boolean
+}): Decision {
   return {
-    title: "Scheibe holen?",
-    about: `Du holst die Scheibe mit der ID ${id} vom ${day}.`,
-    check: "Die ID steht unten auf deinem Ausdruck. Der Tag muss der Tag der Scheibe sein.",
-    happens: [
-      "Läuft die Anlage, holt Spiegel genau diese Scheibe in dein Konto. Das dauert ein paar Minuten.",
-      "Ist die Anlage aus, holt Spiegel sie beim nächsten Einschalten.",
-      "Wird auf der Scheibe noch geschossen, holt Spiegel die neuen Schüsse nach.",
-      "Passt der Tag nicht, holt Spiegel nichts und sagt es hier.",
-    ],
+    title: "Nicht mehr holen?",
+    about: `Spiegel wartet auf die Werte der Scheibe vom ${spoken(when)} (ID ${id}).`,
+    happens: ["Spiegel holt diese Scheibe nicht mehr von der Anlage."],
     notHappening: [
-      "Andere Scheiben holt Spiegel nicht.",
-      "Ändert die Standaufsicht die Scheibe später, holt Spiegel das nicht nach.",
+      card ? "Die Scheibe bleibt in Spiegel, mit ihrem Ausdruck." : "Deine Scheiben bleiben.",
       "An der Meyton-Anlage ändert sich nichts.",
     ],
-    undo: "Den Auftrag hier zurückziehen, solange er wartet. Eine geholte Scheibe auf ihrer Seite löschen.",
-    confirmLabel: "Scheibe holen",
-    destructive: false,
-  }
-}
-
-/** einen wartenden Auftrag per ID zurückziehen */
-export function cardRequestWithdraw({ id, day }: { id: string; day: string }): Decision {
-  return {
-    title: "Auftrag zurückziehen?",
-    about: `Spiegel soll die Scheibe mit der ID ${id} vom ${day} holen.`,
-    happens: ["Spiegel holt die Scheibe nicht."],
-    notHappening: ["Deine anderen Scheiben und Aufträge bleiben."],
-    undo: "Die Scheibe hier neu anfragen.",
-    confirmLabel: "Zurückziehen",
+    undo: "Unter „Scheibe holen“ dieselbe Scheibe noch einmal holen.",
+    confirmLabel: "Nicht mehr holen",
     destructive: true,
   }
 }
 
-/** einen beendeten Auftrag per ID ohne Scheibe aus der Liste entfernen */
-export function cardRequestRemove({ id, day }: { id: string; day: string }): Decision {
+/** den Hinweis eines beendeten Auftrags an der Scheibe entfernen; `state` ist sein Zustand in Worten */
+export function cardFetchDismiss({
+  id,
+  when,
+  state,
+}: {
+  id: string
+  when: string
+  state: string
+}): Decision {
   return {
-    title: "Auftrag entfernen?",
-    about: `Spiegel hat die Scheibe mit der ID ${id} vom ${day} nicht geholt.`,
-    happens: ["Der Auftrag verschwindet aus dieser Liste."],
+    title: "Hinweis entfernen?",
+    about: `Spiegel hat die Werte der Scheibe vom ${spoken(when)} (ID ${id}) nicht bekommen: ${state}.`,
+    happens: ["Der Hinweis verschwindet von dieser Seite."],
     notHappening: [
-      "Deine Scheiben und die anderen Aufträge bleiben.",
+      "Die Scheibe bleibt in Spiegel, mit ihrem Ausdruck.",
       "An der Meyton-Anlage ändert sich nichts.",
     ],
-    undo: "Die Scheibe hier neu anfragen.",
+    undo: "Unter „Scheibe holen“ dieselbe Scheibe noch einmal holen.",
     confirmLabel: "Entfernen",
-    destructive: true,
+    destructive: false,
   }
 }
 

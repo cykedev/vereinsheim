@@ -7,9 +7,6 @@ import {
   bridgeRevoke,
   cardDelete,
   cardDiscipline,
-  cardRequest,
-  cardRequestRemove,
-  cardRequestWithdraw,
   cardPurgeNow,
   cardShare,
   cardShareStop,
@@ -24,6 +21,8 @@ import {
   notMine,
   notMineLift,
   OLD_WORDS,
+  cardFetchDismiss,
+  cardFetchStop,
   type DisciplineMapping,
   ownConsentRevoke,
   ownRejectionRemove,
@@ -563,53 +562,52 @@ describe("Disziplin einer Scheibe", () => {
   })
 })
 
-describe("Scheibe per ID holen", () => {
-  it("holen: welche Scheibe, was zu prüfen ist, wann sie kommt, was nicht passiert", () => {
-    const d = cardRequest({ id: "ff914420", day: "Di 21.10.2026" })
+describe("Scheibe holen", () => {
+  it("nicht mehr holen, an der Scheibe: was bleibt, wie es zurückgeht", () => {
+    const d = cardFetchStop({ id: "ff914420", when: "Di 21.10.2026", card: true })
     wellFormed(d)
     expect(d).toEqual({
-      title: "Scheibe holen?",
-      about: "Du holst die Scheibe mit der ID ff914420 vom Di 21.10.2026.",
-      check: "Die ID steht unten auf deinem Ausdruck. Der Tag muss der Tag der Scheibe sein.",
-      happens: [
-        "Läuft die Anlage, holt Spiegel genau diese Scheibe in dein Konto. Das dauert ein paar Minuten.",
-        "Ist die Anlage aus, holt Spiegel sie beim nächsten Einschalten.",
-        "Wird auf der Scheibe noch geschossen, holt Spiegel die neuen Schüsse nach.",
-        "Passt der Tag nicht, holt Spiegel nichts und sagt es hier.",
-      ],
+      title: "Nicht mehr holen?",
+      about: "Spiegel wartet auf die Werte der Scheibe vom Di 21.10.2026 (ID ff914420).",
+      happens: ["Spiegel holt diese Scheibe nicht mehr von der Anlage."],
       notHappening: [
-        "Andere Scheiben holt Spiegel nicht.",
-        "Ändert die Standaufsicht die Scheibe später, holt Spiegel das nicht nach.",
+        "Die Scheibe bleibt in Spiegel, mit ihrem Ausdruck.",
         "An der Meyton-Anlage ändert sich nichts.",
       ],
-      undo: "Den Auftrag hier zurückziehen, solange er wartet. Eine geholte Scheibe auf ihrer Seite löschen.",
-      confirmLabel: "Scheibe holen",
-      destructive: false,
+      undo: "Unter „Scheibe holen“ dieselbe Scheibe noch einmal holen.",
+      confirmLabel: "Nicht mehr holen",
+      destructive: true,
     })
   })
 
-  it("zurückziehen", () => {
-    const d = cardRequestWithdraw({ id: "ff914420", day: "Di 21.10.2026" })
+  it("nicht mehr holen, älterer Auftrag ohne Scheibe", () => {
+    const d = cardFetchStop({ id: "ff914420", when: "Di 21.10.2026", card: false })
     wellFormed(d)
-    expect(d.title).toBe("Auftrag zurückziehen?")
-    expect(d.happens).toEqual(["Spiegel holt die Scheibe nicht."])
-    expect(d.destructive).toBe(true)
+    expect(d.notHappening).toEqual([
+      "Deine Scheiben bleiben.",
+      "An der Meyton-Anlage ändert sich nichts.",
+    ])
   })
 
-  it("entfernen, wenn der Auftrag ohne Scheibe endete", () => {
-    const d = cardRequestRemove({ id: "ff914420", day: "Di 21.10.2026" })
+  it("Hinweis entfernen: mit dem Zustand, nicht destruktiv", () => {
+    const d = cardFetchDismiss({
+      id: "ff914420",
+      when: "Di 21.10.2026",
+      state: "passt nicht zum Ausdruck",
+    })
     wellFormed(d)
     expect(d).toEqual({
-      title: "Auftrag entfernen?",
-      about: "Spiegel hat die Scheibe mit der ID ff914420 vom Di 21.10.2026 nicht geholt.",
-      happens: ["Der Auftrag verschwindet aus dieser Liste."],
+      title: "Hinweis entfernen?",
+      about:
+        "Spiegel hat die Werte der Scheibe vom Di 21.10.2026 (ID ff914420) nicht bekommen: passt nicht zum Ausdruck.",
+      happens: ["Der Hinweis verschwindet von dieser Seite."],
       notHappening: [
-        "Deine Scheiben und die anderen Aufträge bleiben.",
+        "Die Scheibe bleibt in Spiegel, mit ihrem Ausdruck.",
         "An der Meyton-Anlage ändert sich nichts.",
       ],
-      undo: "Die Scheibe hier neu anfragen.",
+      undo: "Unter „Scheibe holen“ dieselbe Scheibe noch einmal holen.",
       confirmLabel: "Entfernen",
-      destructive: true,
+      destructive: false,
     })
   })
 })
@@ -670,9 +668,15 @@ describe("Schreibregeln", () => {
     ["endgültig löschen", cardPurgeNow({ evening })],
     ["teilen", cardShare({ evening })],
     ["teilen beenden", cardShareStop({ evening })],
-    ["Scheibe holen", cardRequest({ id: "ff914420", day: "Di 21.10.2026" })],
-    ["Auftrag zurückziehen", cardRequestWithdraw({ id: "ff914420", day: "Di 21.10.2026" })],
-    ["Auftrag entfernen", cardRequestRemove({ id: "ff914420", day: "Di 21.10.2026" })],
+    ["nicht mehr holen", cardFetchStop({ id: "ff914420", when: "Di 21.10.2026", card: true })],
+    [
+      "nicht mehr holen, älterer Auftrag",
+      cardFetchStop({ id: "ff914420", when: "Di 21.10.2026", card: false }),
+    ],
+    [
+      "Hinweis entfernen",
+      cardFetchDismiss({ id: "ff914420", when: "Di 21.10.2026", state: "nicht gefunden" }),
+    ],
     [
       "Disziplin der Scheibe",
       cardDiscipline({
