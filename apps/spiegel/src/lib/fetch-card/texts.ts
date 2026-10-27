@@ -36,7 +36,8 @@ const ERROR_TEXT: Readonly<Record<FetchProblem, string>> = {
   nodeVersion: "Dieser Server kann keine Ausdrucke lesen. Er braucht eine neuere Version von Node.",
   taken: "Diese Scheibe gehört schon zu einem anderen Konto.",
   blocked: "Diese Scheibe lässt sich nicht holen.",
-  tooMany: "Es warten schon zehn Scheiben auf die Anlage. Warte, bis die Anlage sie geliefert hat.",
+  tooMany:
+    "Es warten schon zehn oder mehr Scheiben auf die Anlage. Mit dem Ausdruck geht es trotzdem. Ohne Ausdruck geht es erst, wenn die Anlage einige geliefert hat.",
   notAllowed: "Diese Disziplin steht nicht zur Wahl. Lade die Seite neu.",
   trashExpired: "Die 30 Tage sind um. Die Scheibe lässt sich nicht mehr wiederherstellen.",
   noSite: "Spiegel ist noch mit keiner Anlage verbunden.",

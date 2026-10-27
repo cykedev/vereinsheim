@@ -18,7 +18,7 @@ describe("Texte zu „Scheibe holen“", () => {
     expect(fetchErrorText("redirect")).toBe(fetchErrorText("httpStatus"))
     expect(fetchErrorText("unreachable")).toBe(fetchErrorText("httpStatus"))
     expect(fetchErrorText("tooMany")).toBe(
-      "Es warten schon zehn Scheiben auf die Anlage. Warte, bis die Anlage sie geliefert hat."
+      "Es warten schon zehn oder mehr Scheiben auf die Anlage. Mit dem Ausdruck geht es trotzdem. Ohne Ausdruck geht es erst, wenn die Anlage einige geliefert hat."
     )
     expect(fetchErrorText("nodeVersion")).toBe(
       "Dieser Server kann keine Ausdrucke lesen. Er braucht eine neuere Version von Node."

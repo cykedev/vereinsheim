@@ -255,7 +255,7 @@ describe("fetchCard", () => {
     expect(await db.deleteLock.count({ where: { id: mine.id } })).toBe(1)
   })
 
-  it("zehn ungefüllte offene Aufträge: keine weitere Scheibe; gefüllte zählen nicht", async () => {
+  it("getippte ID: über zehn ungefüllten offenen Aufträgen keine weitere Scheibe; gefüllte zählen nicht", async () => {
     const user = (
       await db.user.create({
         data: { email: `fetch-c-${site.siteId}@example.com`, name: "C", passwordHash: "-" },
@@ -272,6 +272,58 @@ describe("fetchCard", () => {
       expect(await fetchCard(db, withChoice(nextId++, { userId: user }))).toEqual({
         kind: "tooMany",
       })
+    } finally {
+      await db.card.deleteMany({ where: { ownerId: user } })
+      await db.user.delete({ where: { id: user } })
+    }
+  })
+
+  it("mit Ausdruck über der Grenze: Scheibe und Auftrag entstehen, auch beim Öffnen und aus dem Papierkorb", async () => {
+    const user = (
+      await db.user.create({
+        data: { email: `fetch-d-${site.siteId}@example.com`, name: "D", passwordHash: "-" },
+      })
+    ).id
+    try {
+      for (let i = 0; i < MAX_OPEN_REQUESTS; i++)
+        await db.cardRequest.create({
+          data: { userId: user, siteId: site.siteId, scheibenId: nextId++, day: DAY },
+        })
+      const id = nextId++
+      const created = await fetchCard(db, withChoice(id, { userId: user, file: file(id) }))
+      if (created.kind !== "created") throw new Error(created.kind)
+      const open = async () =>
+        (await requestsOf(id)).filter((r) => r.status === "open" && r.cardId === created.cardId)
+      expect(await open()).toHaveLength(1)
+      // ohne Ausdruck weiter die Grenze
+      expect(await fetchCard(db, withChoice(nextId++, { userId: user }))).toEqual({
+        kind: "tooMany",
+      })
+
+      // die eigene Scheibe ohne offenen Auftrag: ohne Ausdruck die Grenze, mit Ausdruck ein neuer Auftrag
+      const withdraw = () =>
+        db.cardRequest.updateMany({
+          where: { cardId: created.cardId, status: "open" },
+          data: { status: "withdrawn" },
+        })
+      await withdraw()
+      expect(await fetchCard(db, input(id, { userId: user }))).toEqual({ kind: "tooMany" })
+      expect(await fetchCard(db, input(id, { userId: user, file: file(id, "b") }))).toEqual({
+        kind: "opened",
+        cardId: created.cardId,
+        attached: true,
+      })
+      expect(await open()).toHaveLength(1)
+
+      // im Papierkorb ebenso
+      await withdraw()
+      await db.card.update({ where: { id: created.cardId }, data: { deletedAt: new Date() } })
+      expect(await fetchCard(db, input(id, { userId: user }))).toEqual({ kind: "tooMany" })
+      expect(await fetchCard(db, input(id, { userId: user, file: file(id, "c") }))).toEqual({
+        kind: "restored",
+        cardId: created.cardId,
+      })
+      expect(await open()).toHaveLength(1)
     } finally {
       await db.card.deleteMany({ where: { ownerId: user } })
       await db.user.delete({ where: { id: user } })

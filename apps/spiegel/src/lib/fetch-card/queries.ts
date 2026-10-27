@@ -2,8 +2,10 @@
 // die eigene Scheibe des Abends schon in Spiegel, öffnet Spiegel sie (ein PDF hängt nur an, SF-43). Sonst wählt der
 // Schütze Disziplin und Art (vorbelegt mit der Disziplin aus dem Kopf des Ausdrucks); die Scheibe entsteht sofort vom
 // Ausdruck (Herkunft `pdf`, mit seinen Werten, wenn der Leser sie stimmig fand), an ihr hängt ein Auftrag an die Brücke,
-// die sie beim Einlesen füllt. Ausdrückliches Holen hebt nur die eigene Löschsperre auf und holt aus dem
-// Papierkorb zurück; Grabsteine und Sperren anderer Konten bleiben.
+// die sie beim Einlesen füllt. Mit Ausdruck entstehen Scheibe und Auftrag immer, die Brücke sieht je Konto nur zehn
+// ungefüllte zugleich (`requestWindow`); eine getippte ID ohne Ausdruck legt über dieser Grenze keinen Auftrag an.
+// Ausdrückliches Holen hebt nur die eigene Löschsperre auf und holt aus dem Papierkorb zurück; Grabsteine und Sperren
+// anderer Konten bleiben.
 
 import { zonedWallTimeMs } from "@vereinsheim/lib/format"
 import { TARGETS, type TargetId } from "@vereinsheim/shot-core/targets"
@@ -132,6 +134,7 @@ export type FetchResult =
   | { kind: "taken" }
   /** ein Grabstein oder die Sperre eines anderen Kontos an diesem Abend */
   | { kind: "blocked" }
+  /** getippte ID ohne Ausdruck: schon zehn ungefüllte offene Aufträge */
   | { kind: "tooMany" }
   /** die gewählte Disziplin steht nicht zur Wahl */
   | { kind: "notAllowed" }
@@ -218,7 +221,8 @@ export function newCardValues(file: StoredPrintout | null, targetId: string | nu
  * ergeben eine; `FOR NO KEY UPDATE`, damit das Einlesen beim Anlegen einer Scheibe des Kontos über den Fremdschlüssel
  * nicht über Kreuz wartet). Die eigene Scheibe des Abends findet Spiegel zuerst als Scheibe der Brücke (Quelle, ScheibenID), dann als
  * eigene Scheibe vom Ausdruck mit einem Auftrag dieser ID und dieses Tags, dann über einen Ausdruck dieser ID. Ohne Wahl
- * schreibt eine neue Scheibe nichts (`choose`); die Seite fragt und ruft noch einmal.
+ * schreibt eine neue Scheibe nichts (`choose`); die Seite fragt und ruft noch einmal. Mit Ausdruck legt Holen immer an;
+ * die Grenze der Aufträge gilt nur für die getippte ID.
  */
 export async function fetchCard(db: Db, input: FetchInput): Promise<FetchResult> {
   const { userId, siteId, scheibenId, day, file, choice } = input
@@ -240,9 +244,12 @@ export async function fetchCard(db: Db, input: FetchInput): Promise<FetchResult>
 
     const openRequestOf = (cardId: string) =>
       tx.cardRequest.findFirst({ where: { cardId, status: "open" }, select: { id: true } })
+    // mit Ausdruck entsteht der Auftrag immer, die Brücke sieht je Konto nur zehn (`requestWindow`); eine getippte ID
+    // ohne Ausdruck legt über der Grenze keinen an
     const overLimit = async () =>
+      file === null &&
       (await tx.cardRequest.count({ where: { userId, status: "open", ...UNFILLED } })) >=
-      MAX_OPEN_REQUESTS
+        MAX_OPEN_REQUESTS
     const attach = (cardId: string) => (file ? attachPrintout(tx, file, cardId) : null)
     /** eine Scheibe vom Ausdruck ohne Brücke bekommt die Werte ihrer Ausdrucke */
     const applyValues = async (card: { id: string; origin: string; sourceId: number | null }) => {
