@@ -301,7 +301,9 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
   kann Peer-Varianten neu auflösen, ohne die `node_modules`-Links der **anderen** App
   nachzuziehen. Deren Gate fällt dann mit `Cannot find package …` aus, obwohl der Diff sauber ist.
   Ein `pnpm install --frozen-lockfile` verlinkt neu. Den Lockfile-Diff auf Änderungen in fremden
-  Importern prüfen: Sie invalidieren deren Image-Build-Cache.
+  Importern prüfen: Sie invalidieren deren Image-Build-Cache. Löst pnpm dabei Peer-Varianten fremder Pakete neu auf
+  (etwa `eslint-plugin-import` in den Snapshots), nur die eingefügten Zeilen übernehmen (alter Lockfile plus die
+  Einfügungen aus dem neuen, etwa per `difflib`) und mit `pnpm install --frozen-lockfile` gegenprüfen.
 
 - **Ein neuer FAIL der Skriptprüfung ohne Codeänderung: erst an den Daten nachstellen**: Die Prüfung läuft gegen echte
   Daten in rollenden Zeiträumen („Letzte 90 Tage“), sie trifft also jeden Tag etwas andere Scheiben. Am 21. Oktober 2026

@@ -3,6 +3,24 @@
 Kurzzeit-Gedächtnis (die letzten Einträge); Regeln stehen nach `/consolidate-lessons` in `vault/conventions.md`, die
 Geschichte in `vault/incidents/`.
 
+## 2026-10-27 · Scheibe holen (1b-2)
+
+- **In der Prod-Kopie ist die erste Anlage die echte:** „Scheibe holen“ arbeitet an `requestSiteId` (erste Anlage), die
+  Demo-Scheiben liegen an der „Dev-Anlage“. Eine Demo-Sperre an der Dev-Anlage sah `fetchCard` nie, und die Vorbelegung
+  der Disziplin fehlt dem Demo-Konto. Demo-Daten fürs Holen an `requestSiteId`, die Skriptprüfung prüft die Vorbelegung
+  nur, wenn es eine gibt. → DOCUMENT (`apps/spiegel/CLAUDE.md`)
+- **`next start` braucht `UPLOAD_DIR`:** Die Dev-`.env` hat es nicht (der Dev-Server nimmt `./uploads`), der
+  Produktions-Server der Skriptprüfung warf beim ersten Ausdruck „Die Scheibe ließ sich nicht holen.“ Gefunden über den
+  Fehlertext der Seite, nicht im Log. `pruefen --start` gibt dem Server jetzt ein Verzeichnis nur für den Lauf. →
+  ENFORCE (`tools/pruefen.ts`)
+- **Gebaute Stapel über 15 Minuten enden mit `past`:** Ein Test verschob die Beobachtung der Wertung um 20 Minuten, die
+  Probe kam als `past` und es gab nur einen Block. Statt der Beobachtung die Zeiten der Probe zurückschieben und `nowMs`
+  nahe der ersten Beobachtung setzen. → DOCUMENT (`apps/spiegel/CLAUDE.md`)
+- **`pnpm add` löste fremde Peer-Varianten neu auf** (`eslint-plugin-import` in den Snapshots, alle Apps betroffen),
+  auch mit `--lockfile-only`. Nur die Einfügungen übernommen, `--frozen-lockfile` grün. → DOCUMENT (conventions §9)
+- **Spiegel hatte keinen `Toaster`:** Die Konvention verlangt Toasts nach Aktionen, Spiegel nutzte bisher nur den
+  Hinweis „Rückgängig“. Jetzt im Root-Layout wie in Treffsicher und Ringwerk. → ARCHIVE (im Code gelöst)
+
 ## 2026-10-27 · Ansichten jeder Detailtiefe (1a-2)
 
 - **Neue Felder im Modell ändern die Charakterisierung:** `period/season.test.ts` schreibt jedes Feld von

@@ -29,7 +29,11 @@ Die Dev-Datenbank legt `dev/db-init` beim ersten Start an, `scripts/bootstrap-de
 nach. Ohne `.env` nehmen Tests und Messung die Dev-Datenbank aus `.env.example` (`test/dev-database.ts`), NextAuth den
 Beispiel-Secret (`src/lib/auth-secret.ts`, nur außerhalb von Produktion). Das erste Admin-Konto legt der Server beim Start
 an (`src/instrumentation.ts`, aus `SEED_ADMIN_*`); danach `seed:own`. Für Prüfungen im Browser: `seed:own --demo`, dann
-mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für das eigene Konto.
+mit dem Demo-Konto aus `tools/demo-account.ts` anmelden; danach `seed:own` für das eigene Konto. Die Demo-Daten für
+„Scheibe holen“ (offener Auftrag `7fff0a00`, Sperre `7fff0a03`) legt `seed:own --demo` an der Anlage aus `requestSiteId`
+an, nicht an der „Dev-Anlage“: In der Prod-Kopie ist die erste Anlage die echte. Tests, die Stände über
+`ingestBatch` einlesen, setzen `nowMs` nahe der ältesten Beobachtung; liegt sie mehr als 15 Minuten davor, endet der
+Stand mit `past` (`MAX_OBSERVED_LAG_MS`, SF-79).
 
 ## Aufbau
 
