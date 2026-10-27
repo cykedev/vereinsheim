@@ -78,6 +78,14 @@ const LINK_MISSING = "Füge den Link aus dem QR-Code ein."
  * öffnet Spiegel sie; sonst fragt das Blatt „Neue Scheibe“ nach Disziplin und Art und schickt dieselbe Quelle noch
  * einmal. Jeder Weg hat sein eigenes „läuft“ und seinen eigenen Fehler. Darunter ältere Aufträge, solange es welche gibt.
  */
+/** Vorbelegung des Blatts „Neue Scheibe“: die Disziplin aus dem Kopf des Ausdrucks vor der der letzten Scheibe */
+export function sheetPreset(
+  preset: { disciplineId: number | null; kind: CardKind },
+  headerDisciplineId: number | null
+): { disciplineId: number | null; kind: CardKind } {
+  return { ...preset, disciplineId: headerDisciplineId ?? preset.disciplineId }
+}
+
 export function ScanScreen({
   options,
   preset,
@@ -103,6 +111,8 @@ export function ScanScreen({
     source: Source
     idLine: string
     relifts: boolean
+    /** die Disziplin aus dem Kopf des Ausdrucks; null: wie bisher die der letzten Scheibe */
+    disciplineId: number | null
     key: number
   } | null>(null)
   const [cameraPending, startCamera] = useTransition()
@@ -171,6 +181,7 @@ export function ScanScreen({
           source,
           idLine: `ID ${outcome.hex} vom ${dayText(outcome.day)}`,
           relifts: outcome.relifts,
+          disciplineId: outcome.disciplineId,
           key: Date.now(),
         })
         return
@@ -362,7 +373,7 @@ export function ScanScreen({
           idLine={sheet.idLine}
           relifts={sheet.relifts}
           options={options}
-          preset={preset}
+          preset={sheetPreset(preset, sheet.disciplineId)}
           pending={pendingOf[sheet.source.way]}
           onCreate={(choice) => submit(sheet.source, choice)}
         />

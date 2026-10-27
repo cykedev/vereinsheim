@@ -95,7 +95,7 @@ describe("Scheibe holen (Actions)", () => {
     const asked = await fetchCardByLink(`${base}/print.pdf`, null)
     expect(asked).toEqual({
       success: true,
-      data: { kind: "choose", hex: HEX, day: "2026-10-02", relifts: false },
+      data: { kind: "choose", hex: HEX, day: "2026-10-02", relifts: false, disciplineId: null },
     })
     const site = await db.site.findFirstOrThrow({ orderBy: { id: "asc" }, select: { id: true } })
     const discipline = await db.discipline.findFirst({

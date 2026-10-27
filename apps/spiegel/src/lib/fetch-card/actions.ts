@@ -15,7 +15,7 @@ import { parseCardId } from "../card-requests/id"
 import { dismissRequest, requestSiteId } from "../card-requests/queries"
 import { fetchPrintout } from "../printouts/fetch"
 import { storePrintout, type StoredPrintout } from "../printouts/store"
-import { fetchCard, type NewCardChoice } from "./queries"
+import { fetchCard, headerDisciplineId, type NewCardChoice } from "./queries"
 import { fetchErrorText, type FetchOutcome, type FetchProblem } from "./texts"
 
 // Scheibe holen ([[spiegel-assignment]]): Link aus dem QR, ein hochgeladenes PDF oder die getippte ID mit Tag. Jede
@@ -95,7 +95,15 @@ async function fetchFrom(
       case "choose":
         return {
           success: true,
-          data: { kind: "choose", hex: got.hex, day: got.day, relifts: result.relifts },
+          data: {
+            kind: "choose",
+            hex: got.hex,
+            day: got.day,
+            relifts: result.relifts,
+            disciplineId: got.file
+              ? await headerDisciplineId(db, { siteId, name: got.file.values.discipline })
+              : null,
+          },
         }
       case "taken":
       case "blocked":
@@ -106,7 +114,10 @@ async function fetchFrom(
     }
     revalidatePath("/", "layout")
     if (result.kind === "created")
-      return { success: true, data: { kind: "created", cardId: result.cardId } }
+      return {
+        success: true,
+        data: { kind: "created", cardId: result.cardId, values: result.values },
+      }
     return { success: true, data: result }
   } catch (error) {
     console.error(

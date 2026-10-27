@@ -1,5 +1,8 @@
 import { createHash, randomUUID } from "node:crypto"
 
+import { printoutReading } from "@vereinsheim/meyton-pdf/reading"
+import { printoutPdf } from "@vereinsheim/meyton-pdf/test-printout"
+import { readPrintoutValues } from "@vereinsheim/meyton-pdf/values"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 
 import { createPrismaClient } from "@/lib/db"
@@ -8,11 +11,13 @@ import { createTestSite, type TestSite } from "../../../test/fixtures"
 import { dismissRequest, MAX_OPEN_REQUESTS } from "../card-requests/queries"
 import { writeRevision } from "../db/cards"
 import { kindOfRow } from "../db/reads"
-import { NO_VALUES, type StoredPrintout } from "../printouts/store"
+import { NO_VALUES, valuesReadOf, type StoredPrintout } from "../printouts/store"
+import { valuedSpec, type ValuedPrintoutSpec } from "../../../test/printout"
 
 import {
   cardFetchInfo,
   fetchCard,
+  headerDisciplineId,
   legacyRequests,
   newCardChoices,
   type FetchInput,
@@ -439,7 +444,7 @@ describe("cardFetchInfo", () => {
     const info = await cardFetchInfo(db, { cardId: viaPdf.cardId, ownerId: site.ownerId })
     expect(info).toMatchObject({
       hex: file(printed).hex,
-      printouts: [{ printedAtMs: PRINTED.getTime() }],
+      printouts: [{ printedAtMs: PRINTED.getTime(), unreadable: false }],
       request: { status: "open", filled: false, hex: file(printed).hex, day: DAY },
     })
 
@@ -454,5 +459,101 @@ describe("cardFetchInfo", () => {
       printouts: [],
       request: null,
     })
+  })
+})
+
+/** ein Ausdruck mit stimmigen Werten (gelesen im Testprozess wie im Kindprozess) */
+async function valuedFile(
+  scheibenId: number,
+  spec: ValuedPrintoutSpec = {},
+  text = "valued"
+): Promise<StoredPrintout> {
+  const printout = valuedSpec(spec)
+  const values = await readPrintoutValues(await printoutPdf(printout))
+  return {
+    ...file(scheibenId, text),
+    values: valuesReadOf(printoutReading(values, { producer: "Qt 5.12.8" })),
+  }
+}
+const shotsOf = async (cardId: string) => {
+  const card = await db.card.findUniqueOrThrow({
+    where: { id: cardId },
+    select: { stand: true, currentRevision: { select: { shots: { orderBy: { seq: "asc" } } } } },
+  })
+  return { stand: card.stand, shots: card.currentRevision?.shots ?? [] }
+}
+
+describe("fetchCard mit Werten vom Ausdruck", () => {
+  it("neu mit stimmigem Ausdruck: Werte mit Lagen und Standnummer sofort", async () => {
+    const id = nextId++
+    const result = await fetchCard(db, withChoice(id, { file: await valuedFile(id) }))
+    if (result.kind !== "created") throw new Error(result.kind)
+    expect(result.values).toBe(true)
+    const { stand, shots } = await shotsOf(result.cardId)
+    expect(stand).toBe("7")
+    expect(shots).toHaveLength(40)
+    expect(shots.every((shot) => shot.xUm !== null)).toBe(true)
+  })
+
+  it("Widerspruch zum Scheibenbild: ohne Werte, der Ausdruck ist inconsistent", async () => {
+    const id = nextId++
+    const bad = await valuedFile(id, {
+      tamper: (printout) => (printout.center = "9.99 mm links, 9.99 mm tief"),
+    })
+    const result = await fetchCard(db, withChoice(id, { file: bad }))
+    if (result.kind !== "created") throw new Error(result.kind)
+    expect(result.values).toBe(false)
+    expect((await shotsOf(result.cardId)).shots).toEqual([])
+    const [printout] = await db.printout.findMany({ where: { cardId: result.cardId } })
+    expect(printout).toMatchObject({ valuesStatus: "inconsistent", reading: null })
+    const info = await cardFetchInfo(db, { cardId: result.cardId, ownerId: site.ownerId })
+    expect(info?.printouts).toEqual([expect.objectContaining({ unreadable: true })])
+  })
+
+  it("eine Scheibe vom Ausdruck ohne Werte bekommt sie beim zweiten Holen", async () => {
+    const id = nextId++
+    const first = await fetchCard(db, withChoice(id, { file: file(id) }))
+    if (first.kind !== "created") throw new Error(first.kind)
+    expect(first.values).toBe(false)
+    const again = await fetchCard(db, input(id, { file: await valuedFile(id) }))
+    expect(again).toEqual({ kind: "opened", cardId: first.cardId, attached: true })
+    expect((await shotsOf(first.cardId)).shots).toHaveLength(40)
+  })
+})
+
+describe("headerDisciplineId", () => {
+  it("genau eine wählbare Disziplin mit diesem Namen, sonst keine", async () => {
+    expect(await headerDisciplineId(db, { siteId: site.siteId, name: "LP 40" })).toBe(
+      site.disciplineId
+    )
+    expect(await headerDisciplineId(db, { siteId: site.siteId, name: "LP 40 alt" })).toBeNull()
+    expect(await headerDisciplineId(db, { siteId: site.siteId, name: null })).toBeNull()
+    const choosable = {
+      siteId: site.siteId,
+      familyId: site.familyId,
+      targetId: "lp-10m",
+      confirmedAt: new Date(),
+    }
+    const twins = await Promise.all(
+      [10_199_501, 10_199_502].map((meytonId) =>
+        db.discipline.create({ data: { ...choosable, meytonId, name: "LP 20 Kopf" } })
+      )
+    )
+    const hidden = await db.discipline.create({
+      data: { ...choosable, meytonId: 10_199_503, name: "LP 30 Kopf", ignoredAt: new Date() },
+    })
+    const shown = await db.discipline.create({
+      data: { ...choosable, meytonId: 10_199_504, name: "LP 30 Kopf" },
+    })
+    try {
+      expect(await headerDisciplineId(db, { siteId: site.siteId, name: "LP 20 Kopf" })).toBeNull()
+      expect(await headerDisciplineId(db, { siteId: site.siteId, name: "LP 30 Kopf" })).toBe(
+        shown.id
+      )
+    } finally {
+      await db.discipline.deleteMany({
+        where: { id: { in: [...twins.map((t) => t.id), hidden.id, shown.id] } },
+      })
+    }
   })
 })

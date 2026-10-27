@@ -1,14 +1,15 @@
 // Scheibe holen ([[spiegel-assignment]], „Der QR-Weg im Detail“): Kamera, Link, PDF und getippte ID gehen gleich. Liegt
 // die eigene Scheibe des Abends schon in Spiegel, öffnet Spiegel sie (ein PDF hängt nur an, SF-43). Sonst wählt der
-// Schütze Disziplin und Art; die Scheibe entsteht sofort vom Ausdruck (Herkunft `pdf`), an ihr hängt ein Auftrag an die
-// Brücke, die sie beim Einlesen füllt. Ausdrückliches Holen hebt nur die eigene Löschsperre auf und holt aus dem
+// Schütze Disziplin und Art (vorbelegt mit der Disziplin aus dem Kopf des Ausdrucks); die Scheibe entsteht sofort vom
+// Ausdruck (Herkunft `pdf`, mit seinen Werten, wenn der Leser sie stimmig fand), an ihr hängt ein Auftrag an die Brücke,
+// die sie beim Einlesen füllt. Ausdrückliches Holen hebt nur die eigene Löschsperre auf und holt aus dem
 // Papierkorb zurück; Grabsteine und Sperren anderer Konten bleiben.
 
 import { zonedWallTimeMs } from "@vereinsheim/lib/format"
-import { TARGETS } from "@vereinsheim/shot-core/targets"
+import { TARGETS, type TargetId } from "@vereinsheim/shot-core/targets"
 import { eveningDay } from "@vereinsheim/shot-ui/period/calendar"
 
-import type { CardKind, CardRequestStatus } from "@/generated/prisma/client"
+import type { CardKind, CardRequestStatus, Prisma } from "@/generated/prisma/client"
 
 import { printedId } from "../card-requests/id"
 import { expireRequests, MAX_OPEN_REQUESTS, UNFILLED } from "../card-requests/queries"
@@ -19,8 +20,10 @@ import { lockCard } from "../db/purge"
 import { kindOfRow } from "../db/reads"
 import { trashEndsAt } from "../db/trash"
 import { VISIBLE_CARD } from "../db/visible"
-import { attachPrintout } from "../printouts/queries"
+import { applyPrintoutValues } from "../printouts/apply"
+import { attachPrintout, markPrintoutValues } from "../printouts/queries"
 import type { StoredPrintout } from "../printouts/store"
+import { detailsFromReading } from "../printouts/values"
 
 /** eine Disziplin, die der Schütze für eine neue Scheibe wählen kann */
 export interface NewCardOption {
@@ -83,6 +86,23 @@ export async function newCardChoices(
   }
 }
 
+/**
+ * Die Disziplin aus dem Kopf des Ausdrucks für die Vorbelegung: unter den wählbaren genau eine mit wörtlich diesem Namen,
+ * sonst null (nie raten)
+ */
+export async function headerDisciplineId(
+  db: Db | Prisma.TransactionClient,
+  { siteId, name }: { siteId: number; name: string | null }
+): Promise<number | null> {
+  if (name === null || name.trim() === "") return null
+  const rows = await db.discipline.findMany({
+    where: { ...choosable(siteId), name },
+    select: { id: true, targetId: true },
+  })
+  const known = rows.filter((row) => knownTarget(row.targetId))
+  return known.length === 1 ? known[0].id : null
+}
+
 export interface FetchInput {
   userId: string
   siteId: number
@@ -105,7 +125,8 @@ export type FetchResult =
   | { kind: "pending" }
   /** neu: erst Disziplin und Art wählen; `relifts`: Der Schütze hatte sie gelöscht, Holen hebt die Sperre auf */
   | { kind: "choose"; relifts: boolean }
-  | { kind: "created"; cardId: string; relifted: boolean }
+  /** neu angelegt; `values`: mit den Werten vom Ausdruck */
+  | { kind: "created"; cardId: string; relifted: boolean; values: boolean }
   /** die Scheibe des Abends gehört einem anderen Konto */
   | { kind: "taken" }
   /** ein Grabstein oder die Sperre eines anderen Kontos an diesem Abend */
@@ -131,6 +152,66 @@ const OWN_SELECT = {
   startedAt: true,
 } as const
 
+type Tx = Prisma.TransactionClient
+
+/**
+ * Die eigene Scheibe eines Abends: zuerst als Scheibe der Brücke (Quelle, ScheibenID), dann als eigene Scheibe vom
+ * Ausdruck mit einem Auftrag dieser ID und dieses Tags, dann über einen Ausdruck dieser ID. Dazu alle Scheiben der Brücke
+ * mit dieser ID an diesem Abend (auch fremde).
+ */
+export async function ownCardOfEvening(
+  tx: Tx,
+  input: { userId: string; siteId: number; scheibenId: number; day: string; timeZone: string }
+) {
+  const { userId, siteId, scheibenId, day, timeZone } = input
+  const sameEvening = (at: Date) => eveningDay(at.getTime(), timeZone) === day
+  const footerId = printedId(scheibenId)
+  const bridgeCards = (
+    await tx.card.findMany({
+      where: { source: { siteId }, scheibenId },
+      orderBy: [{ cycle: "desc" }, { block: "desc" }],
+      select: { ...OWN_SELECT, ownerId: true },
+    })
+  ).filter((card) => sameEvening(card.startedAt))
+  const own =
+    bridgeCards.find((card) => card.ownerId === userId) ??
+    (await tx.card.findFirst({
+      where: {
+        ownerId: userId,
+        sourceId: null,
+        origin: "pdf",
+        requests: { some: { siteId, scheibenId, day } },
+      },
+      orderBy: { createdAt: "desc" },
+      select: OWN_SELECT,
+    })) ??
+    (
+      await tx.card.findMany({
+        where: { ownerId: userId, printouts: { some: { footerId } } },
+        orderBy: { createdAt: "desc" },
+        select: OWN_SELECT,
+      })
+    ).find((card) => sameEvening(card.startedAt)) ??
+    null
+  return { own, bridgeCards }
+}
+
+/**
+ * Die Angaben einer neuen Scheibe aus dem Ausdruck: stimmt die Lesung mit dem Scheibenbild der Disziplin, ihre Werte
+ * und die Standnummer; sonst keine (`inconsistent`, wenn der Ausdruck eine Lesung hatte)
+ */
+export function newCardValues(file: StoredPrintout | null, targetId: string | null) {
+  const reading = file?.values.reading ?? null
+  if (reading === null) return { details: {}, stand: undefined, inconsistent: false }
+  const result = detailsFromReading(
+    reading,
+    targetId !== null && Object.hasOwn(TARGETS, targetId) ? (targetId as TargetId) : null
+  )
+  return result.ok
+    ? { details: result.details, stand: result.stand, inconsistent: false }
+    : { details: {}, stand: undefined, inconsistent: true }
+}
+
 /**
  * Eine Scheibe holen, in einer Transaktion unter der Sperre der Kontozeile (zwei gleichzeitige Holen derselben Scheibe
  * ergeben eine; `FOR NO KEY UPDATE`, damit das Einlesen beim Anlegen einer Scheibe des Kontos über den Fremdschlüssel
@@ -148,34 +229,13 @@ export async function fetchCard(db: Db, input: FetchInput): Promise<FetchResult>
       select: { timeZone: true },
     })
     const sameEvening = (at: Date) => eveningDay(at.getTime(), timeZone) === day
-    const footerId = printedId(scheibenId)
-
-    const bridgeCards = (
-      await tx.card.findMany({
-        where: { source: { siteId }, scheibenId },
-        orderBy: [{ cycle: "desc" }, { block: "desc" }],
-        select: { ...OWN_SELECT, ownerId: true },
-      })
-    ).filter((card) => sameEvening(card.startedAt))
-    const own =
-      bridgeCards.find((card) => card.ownerId === userId) ??
-      (await tx.card.findFirst({
-        where: {
-          ownerId: userId,
-          sourceId: null,
-          origin: "pdf",
-          requests: { some: { siteId, scheibenId, day } },
-        },
-        orderBy: { createdAt: "desc" },
-        select: OWN_SELECT,
-      })) ??
-      (
-        await tx.card.findMany({
-          where: { ownerId: userId, printouts: { some: { footerId } } },
-          orderBy: { createdAt: "desc" },
-          select: OWN_SELECT,
-        })
-      ).find((card) => sameEvening(card.startedAt))
+    const { own, bridgeCards } = await ownCardOfEvening(tx, {
+      userId,
+      siteId,
+      scheibenId,
+      day,
+      timeZone,
+    })
 
     const openRequestOf = (cardId: string) =>
       tx.cardRequest.findFirst({ where: { cardId, status: "open" }, select: { id: true } })
@@ -183,6 +243,11 @@ export async function fetchCard(db: Db, input: FetchInput): Promise<FetchResult>
       (await tx.cardRequest.count({ where: { userId, status: "open", ...UNFILLED } })) >=
       MAX_OPEN_REQUESTS
     const attach = (cardId: string) => (file ? attachPrintout(tx, file, cardId) : null)
+    /** eine Scheibe vom Ausdruck ohne Brücke bekommt die Werte ihrer Ausdrucke */
+    const applyValues = async (card: { id: string; origin: string; sourceId: number | null }) => {
+      if (file && card.origin === "pdf" && card.sourceId === null)
+        await applyPrintoutValues(tx, card.id)
+    }
 
     if (own) {
       // Löschen, Wiederherstellen und „Nicht meine“ ändern die Scheibe unter ihrer Sperre: den Zustand erst danach lesen
@@ -202,6 +267,7 @@ export async function fetchCard(db: Db, input: FetchInput): Promise<FetchResult>
         if (needsRequest && (await overLimit())) return { kind: "tooMany" }
         await tx.card.update({ where: { id: card.id }, data: { deletedAt: null } })
         await attach(card.id)
+        await applyValues(card)
         if (needsRequest) await request()
         return { kind: "restored", cardId: card.id }
       }
@@ -211,6 +277,7 @@ export async function fetchCard(db: Db, input: FetchInput): Promise<FetchResult>
       }
       if (needsRequest && (await overLimit())) return { kind: "tooMany" }
       await attach(card.id)
+      await applyValues(card)
       if (needsRequest) await request()
       return { kind: "opened", cardId: card.id, attached: file !== null }
     }
@@ -249,18 +316,28 @@ export async function fetchCard(db: Db, input: FetchInput): Promise<FetchResult>
 
     if (relifts)
       await tx.deleteLock.deleteMany({ where: { id: { in: eveningLocks.map((lock) => lock.id) } } })
-    const saved = await writeEnteredCardIn(tx, {
-      ownerId: userId,
-      origin: "pdf",
-      disciplineId: choice.disciplineId,
-      startedAtMs: file?.printedAt.getTime() ?? noonOf(day, timeZone),
-      kind: choice.kind,
-      kindChoice: choice.kind,
-      details: {},
-      reason: "printout",
-    })
+    const values = newCardValues(file, discipline.targetId)
+    const write = (withValues: boolean) =>
+      writeEnteredCardIn(tx, {
+        ownerId: userId,
+        origin: "pdf",
+        disciplineId: choice.disciplineId,
+        startedAtMs: file?.printedAt.getTime() ?? noonOf(day, timeZone),
+        kind: choice.kind,
+        kindChoice: choice.kind,
+        details: withValues ? values.details : {},
+        ...(withValues && values.stand !== undefined ? { stand: values.stand } : {}),
+        reason: "printout",
+      })
+    const tried = Object.keys(values.details).length > 0
+    let saved = await write(tried)
+    // Angaben, die die Disziplin nicht nimmt, zählen wie ein Widerspruch: die Scheibe ohne Werte
+    const refused = tried && saved.kind === "invalid"
+    if (refused) saved = await write(false)
     if (saved.kind !== "saved") throw new Error(`Scheibe vom Ausdruck: ${saved.kind}`)
-    await attach(saved.cardId)
+    const printoutId = await attach(saved.cardId)
+    if (printoutId && (values.inconsistent || refused))
+      await markPrintoutValues(tx, printoutId, "inconsistent")
     // die Bedingung im Befehl: Einlesen und „Nicht mehr holen“ nehmen die Sperre der Kontozeile nicht (§9)
     const adopted = legacy
       ? await tx.cardRequest.updateMany({
@@ -272,7 +349,12 @@ export async function fetchCard(db: Db, input: FetchInput): Promise<FetchResult>
       await tx.cardRequest.create({
         data: { userId, siteId, scheibenId, day, cardId: saved.cardId, createdAt: new Date(nowMs) },
       })
-    return { kind: "created", cardId: saved.cardId, relifted: relifts }
+    return {
+      kind: "created",
+      cardId: saved.cardId,
+      relifted: relifts,
+      values: tried && !refused,
+    }
   })
 }
 
@@ -302,8 +384,11 @@ export async function legacyRequests(
 export interface CardFetchInfo {
   /** die ID vom Ausdruck: der Brücke, sonst des jüngsten Ausdrucks, sonst des jüngsten Auftrags; null ohne */
   hex: string | null
-  /** die Ausdrucke in der Folge des Anhängens */
-  printouts: { id: string; printedAtMs: number | null }[]
+  /**
+   * die Ausdrucke in der Folge des Anhängens; `unreadable`: an einer Scheibe vom Ausdruck ohne Brücke konnte Spiegel
+   * seine Werte nicht übernehmen (Widerspruch oder nicht lesbar)
+   */
+  printouts: { id: string; printedAtMs: number | null; unreadable: boolean }[]
   /** der jüngste Auftrag, wenn die Seite ihn zeigt (`requestShown`) */
   request: {
     id: number
@@ -324,9 +409,10 @@ export async function cardFetchInfo(
     select: {
       sourceId: true,
       scheibenId: true,
+      origin: true,
       printouts: {
         orderBy: [{ storedAt: "asc" }, { id: "asc" }],
-        select: { id: true, printedAt: true, footerId: true },
+        select: { id: true, printedAt: true, footerId: true, valuesStatus: true },
       },
       requests: {
         orderBy: [{ createdAt: "desc" }, { id: "desc" }],
@@ -350,6 +436,10 @@ export async function cardFetchInfo(
     printouts: card.printouts.map((p) => ({
       id: p.id,
       printedAtMs: p.printedAt?.getTime() ?? null,
+      unreadable:
+        card.origin === "pdf" &&
+        card.sourceId === null &&
+        (p.valuesStatus === "inconsistent" || p.valuesStatus === "unreadable"),
     })),
     request:
       latestRequest && requestShown(latestRequest.status, filled)

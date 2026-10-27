@@ -12,7 +12,7 @@ vi.mock("@/lib/fetch-card/actions", () => ({
   stopCardFetch: async () => ({ success: true }),
 }))
 
-const { ScanScreen } = await import("./ScanScreen")
+const { ScanScreen, sheetPreset } = await import("./ScanScreen")
 
 const render = (legacy: Parameters<typeof ScanScreen>[0]["legacy"] = []) =>
   renderToStaticMarkup(
@@ -68,5 +68,17 @@ describe("Seite „Scheibe holen“ (Markup)", () => {
     expect(html.indexOf("data-legacy-requests")).toBeGreaterThan(
       html.indexOf('data-fetch-way="id"')
     )
+  })
+})
+
+describe("Vorbelegung des Blatts „Neue Scheibe“", () => {
+  it("die Disziplin aus dem Kopf des Ausdrucks vor der der letzten Scheibe", () => {
+    const last = { disciplineId: 1, kind: "competition" } as const
+    expect(sheetPreset(last, 7)).toEqual({ disciplineId: 7, kind: "competition" })
+    expect(sheetPreset(last, null)).toEqual(last)
+    expect(sheetPreset({ disciplineId: null, kind: "training" }, null)).toEqual({
+      disciplineId: null,
+      kind: "training",
+    })
   })
 })

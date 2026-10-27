@@ -22,8 +22,11 @@ describe("Texte zu „Scheibe holen“", () => {
 
   it("Meldungen nach dem Holen", () => {
     const toast = (outcome: FetchOutcome) => fetchToast(outcome)
-    expect(toast({ kind: "created", cardId: "c" })).toBe(
+    expect(toast({ kind: "created", cardId: "c", values: false })).toBe(
       "Scheibe angelegt. Spiegel holt die Werte von der Anlage."
+    )
+    expect(toast({ kind: "created", cardId: "c", values: true })).toBe(
+      "Scheibe mit den Werten vom Ausdruck angelegt."
     )
     expect(toast({ kind: "opened", cardId: "c", attached: true })).toBe(
       "Ausdruck an die Scheibe gehängt."
@@ -33,13 +36,22 @@ describe("Texte zu „Scheibe holen“", () => {
     )
     expect(toast({ kind: "restored", cardId: "c" })).toBe("Scheibe aus dem Papierkorb geholt.")
     expect(toast({ kind: "pending" })).toBe("Die Scheibe wartet in „Offen“.")
-    expect(toast({ kind: "choose", hex: "ff914420", day: "2026-10-21", relifts: false })).toBeNull()
+    expect(
+      toast({
+        kind: "choose",
+        hex: "ff914420",
+        day: "2026-10-21",
+        relifts: false,
+        disciplineId: null,
+      })
+    ).toBeNull()
   })
 
   it("keine Semikolons, keine alten Wörter", () => {
     const toasts = (
       [
-        { kind: "created", cardId: "c" },
+        { kind: "created", cardId: "c", values: false },
+        { kind: "created", cardId: "c", values: true },
         { kind: "opened", cardId: "c", attached: true },
         { kind: "opened", cardId: "c", attached: false },
         { kind: "restored", cardId: "c" },

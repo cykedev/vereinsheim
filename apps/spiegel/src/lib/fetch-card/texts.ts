@@ -49,9 +49,13 @@ export const fetchErrorText = (problem: FetchProblem): string => ERROR_TEXT[prob
 
 /** was nach dem Holen geschah, für die Seite */
 export type FetchOutcome =
-  /** neu: erst Disziplin und Art wählen; `relifts`: Der Schütze hatte die Scheibe gelöscht */
-  | { kind: "choose"; hex: string; day: string; relifts: boolean }
-  | { kind: "created"; cardId: string }
+  /**
+   * neu: erst Disziplin und Art wählen; `relifts`: Der Schütze hatte die Scheibe gelöscht; `disciplineId`: die Disziplin
+   * aus dem Kopf des Ausdrucks, wenn genau eine wählbare so heißt
+   */
+  | { kind: "choose"; hex: string; day: string; relifts: boolean; disciplineId: number | null }
+  /** `values`: mit den Werten vom Ausdruck */
+  | { kind: "created"; cardId: string; values: boolean }
   /** die eigene Scheibe; `attached`: mit einem Ausdruck */
   | { kind: "opened"; cardId: string; attached: boolean }
   | { kind: "restored"; cardId: string }
@@ -63,7 +67,9 @@ export function fetchToast(outcome: FetchOutcome): string | null {
     case "choose":
       return null
     case "created":
-      return "Scheibe angelegt. Spiegel holt die Werte von der Anlage."
+      return outcome.values
+        ? "Scheibe mit den Werten vom Ausdruck angelegt."
+        : "Scheibe angelegt. Spiegel holt die Werte von der Anlage."
     case "opened":
       return outcome.attached
         ? "Ausdruck an die Scheibe gehängt."
