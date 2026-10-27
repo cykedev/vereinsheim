@@ -3,6 +3,25 @@
 Kurzzeit-Gedächtnis (die letzten Einträge); Regeln stehen nach `/consolidate-lessons` in `vault/conventions.md`, die
 Geschichte in `vault/incidents/`.
 
+## 2026-10-27 · Gegenprobe Ausdruck gegen Rohdaten (1c-0)
+
+- **Summen gleich, Einzelwerte nicht: erst die Reihenfolge prüfen.** Der erste Lauf zeigte 82 % gleiche Werte je Schuss
+  bei 100 % gleichen Serien-Summen. Ursache war keine Abweichung von Meyton, sondern der Leser: Ghostscript setzt den
+  ersten Wert einer Zeile um Bruchteile eines Punkts tiefer, und das Sortieren nach y vor x schob ihn ans Zeilenende.
+  Jetzt Zeile für Zeile (`readingOrder`), mit Test. → ARCHIVE (im Code gelöst); als Muster → DOCUMENT (conventions §9)
+- **Ein Test kann eine Grenze verfehlen, weil die Fixture in Lesefolge steht:** Die Mutation „Serien-Block ohne untere
+  Grenze“ blieb grün, weil `find` die Zeile der ersten Serie zuerst traf. Erst mit Serie 2 vor Serie 1 im Strom wurde sie
+  rot. Fixtures für Leser von Positionen absichtlich aus der Lesefolge bringen. → DOCUMENT (conventions §9)
+- **Werte aus echten Ausdrucken rutschen in Fixtures:** Beim Erkunden gesehene Zahlen („766T“ eines Ausdrucks ohne Namen)
+  standen danach im Test und im Vault, bis die Review sie fand. Fixtures erfinden, nie aus der Erkundung abschreiben,
+  auch keine einzelnen Zahlen. → REMEMBER (ADR-029 gilt schon)
+- **Der übernommene Plan trug die E-Mail des Kontos:** `git show <basis>:plans/…` übernimmt den Plan wörtlich, samt
+  Personendaten; ein späteres Löschen lässt sie in der History. Den Plan vor dem ersten Commit auf Namen, E-Mails und
+  Nummern prüfen. → DOCUMENT (Skill `coordinate`, an die koordinierende Session gemeldet)
+- **Wenige Paare trotz vieler Ausdrucke:** 63 eigene IDs, aber nur 12 mit Scheibe in der Dev-Datenbank, und die
+  SSMDB2-Kopie hatte keine weiteren: Die Ablage behält ältere Scheiben nicht. Für Gegenproben am Ausdruck zuerst zählen,
+  wie viele Paare es gibt. → ARCHIVE (Zahl im Vault, [[meyton-printout]])
+
 ## 2026-10-27 · Scheibe holen (1b-2)
 
 - **In der Prod-Kopie ist die erste Anlage die echte:** „Scheibe holen“ arbeitet an `requestSiteId` (erste Anlage), die
