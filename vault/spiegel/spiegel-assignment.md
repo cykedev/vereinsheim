@@ -3,7 +3,7 @@ id: spiegel-assignment
 type: concept
 title: "Spiegel — Zuordnung von Scheiben zu Schützen"
 aliases: [zuordnung, claim, scheibe-holen, fundbüro]
-keywords: [zuordnung, claim, kamera-scan, scheibe holen, holen, scan, qr scannen, link einfügen, pdf hochladen, id eintippen, neue scheibe, wartet auf die anlage, passt nicht zum ausdruck, printMismatch, nicht mehr holen, teilen, druckzeit, metadaten, layout-unabhängig, besitzer, meyton-qr, qr-code, ausdruck, pdf, scheibenid, sportpass, schützenliste, frei getippte namen, fundbüro, scheibe holen, check-in, stand-aufkleber, admin, konflikt, das war ich, frist, auswärts, erste scheibe bestätigen, nicht meine, mehrdeutige sportpassid, überlauf, zwischenstand, gäste-lan]
+keywords: [zuordnung, werte vom ausdruck, vorbelegung, schuss für schuss, printedshotsfit, printout-import, claim, kamera-scan, scheibe holen, holen, scan, qr scannen, link einfügen, pdf hochladen, id eintippen, neue scheibe, wartet auf die anlage, passt nicht zum ausdruck, printMismatch, nicht mehr holen, teilen, druckzeit, metadaten, layout-unabhängig, besitzer, meyton-qr, qr-code, ausdruck, pdf, scheibenid, sportpass, schützenliste, frei getippte namen, fundbüro, scheibe holen, check-in, stand-aufkleber, admin, konflikt, das war ich, frist, auswärts, erste scheibe bestätigen, nicht meine, mehrdeutige sportpassid, überlauf, zwischenstand, gäste-lan]
 part_of: ["[[spiegel]]"]
 governed_by: ["[[adr-028]]"]
 relates_to: ["[[meyton-printout]]", "[[spiegel-bridge]]", "[[spiegel-privacy]]", "[[spiegel-edge-cases]]"]
@@ -50,21 +50,31 @@ Spiegel hängt dabei nicht vom Layout des Meyton-PDFs ab ([[adr-028]], Änderung
 2. **Speichern und lesen:** Spiegel liest ID und Druckzeit in einem kurzlebigen Kindprozess mit eigener Speicher- und
    Zeitgrenze (SF-48) und speichert das PDF als Original nach seiner sha256 im Upload-Volume (Meyton hält es nur eine
    Woche). Nur mit lesbarer ID und Druckzeit entsteht eine Datei. Ändert Meyton das Layout, ändert sich daran nichts
-   (SF-46).
+   (SF-46). Danach liest derselbe Kindprozess die Werte und das Trefferbild mit Selbstprüfung ([[meyton-printout]]
+   „Werte lesen“, seit 1c); scheitern sie, gelten ID und Druckzeit trotzdem.
 3. **Scheibe:** Liegt die eigene Scheibe des Abends schon in Spiegel, öffnet Spiegel sie und hängt nur das PDF an
    (SF-43); liegt sie in „Offen“, führt die Seite dorthin; im Papierkorb holt Spiegel sie zurück (nach 30 Tagen nicht
    mehr). Sonst fragt das Blatt „Neue Scheibe“ nach Disziplin (eingeordnete der eigenen Anlage) und Art, vorbelegt mit
-   der jüngsten Scheibe. Ohne Bestätigung entsteht sofort eine Scheibe vom Ausdruck (Herkunft `pdf`, Beginn ist die
-   Druckzeit, „wartet auf die Anlage“) und öffnet sich. Mehrere Ausdrucke derselben Scheibe hängen alle an ihr.
+   der Disziplin aus dem Kopf des Ausdrucks, wenn genau eine wählbare wörtlich so heißt, sonst mit der der jüngsten
+   Scheibe. Ohne Bestätigung entsteht sofort eine Scheibe vom Ausdruck (Herkunft `pdf`, Beginn ist die Druckzeit) und
+   öffnet sich: mit den Werten und Lagen vom Ausdruck und der Standnummer, wenn die Lesung stimmig ist und zum
+   Scheibenbild der Disziplin passt („Scheibe mit den Werten vom Ausdruck angelegt.“), sonst ohne Werte („wartet auf
+   die Anlage“). Mehrere Ausdrucke derselben Scheibe hängen alle an ihr; eine Scheibe vom Ausdruck ohne Brücke nimmt
+   dabei die Werte des zuletzt gedruckten stimmigen.
    Ausdrückliches Holen hebt die eigene Löschsperre dieses Abends auf („Diese Scheibe hattest du gelöscht. Spiegel
    holt sie wieder.“); Grabsteine und Sperren anderer Konten bleiben („lässt sich nicht holen“).
 4. **Auftrag und Prüfung:** An der Scheibe hängt ein Auftrag an die Brücke (`CardRequest.cardId`; ID als
    vorzeichenbehaftete 32-Bit-Zahl, `ff914420` → −7257056, und der Abend aus der Druckzeit). Beim Einlesen prüft
    Spiegel selbst, solange die Scheibe noch keine Rohdaten hat: gleicher Abend und ein Stand, der höchstens fünf
    Minuten nach der jüngsten Druckzeit begann (Druck und Stand an verschiedenen Rechnern, SF-29; verglichen wird die
-   Wanduhr der Anlage, `wallTimeOfMs`). Besteht kein Stand des Stapels die Prüfung, speichert Spiegel nichts von der
-   Brücke und der Auftrag endet mit „passt nicht zum Ausdruck“ (`printMismatch`, SF-41). Sonst füllt der jüngste
-   Block, der vor dem Druck begann, genau diese Scheibe (neue Revision, Herkunft dann gemessen); frühere Blöcke werden
+   Wanduhr der Anlage, `wallTimeOfMs`). Hat die Scheibe Werte vom Ausdruck, prüft Spiegel zusätzlich Schuss für Schuss:
+   Die Schüsse derselben Art (Probe oder Wertung, in Nummernfolge) müssen mit den Schüssen der Scheibe beginnen,
+   Zehntel gleich, ohne Zehntel der Ring (`printedShotsFit`; ein Zwischenausdruck mit weniger Schüssen passt). Besteht
+   kein Stand des Stapels beide Prüfungen, speichert Spiegel nichts von der Brücke und der Auftrag endet mit „passt
+   nicht zum Ausdruck“ (`printMismatch`, SF-41: „Die Scheibe der Anlage begann nach dem Druck oder hat andere Werte.“);
+   die Scheibe behält ihre Werte vom Ausdruck. Sonst füllt der jüngste
+   Block, der vor dem Druck begann, genau diese Scheibe (neue Revision mit Lagen, Werten und Zeiten der Rohdaten,
+   Herkunft dann gemessen); frühere Blöcke werden
    eigene Scheiben (SF-03, SF-72). Mit den Rohdaten gilt die Disziplin des Stands, die gewählte Art bleibt
    (`kindChoice`). Bei einem Zwischenausdruck hat die Scheibe danach mehr Schüsse (SF-42). Gehört die Scheibe laut
    SportpassID einem anderen Konto, geht die Zustimmung dieses Kontos vor.
@@ -79,7 +89,8 @@ Spiegel hängt dabei nicht vom Layout des Meyton-PDFs ab ([[adr-028]], Änderung
    ihr offener Auftrag ist dann zurückgezogen.
 
 Stand: gebaut (1b-1 Holen, Lesen, Speichern; 1b-2 die Seite, die Scheibe vom Ausdruck und die Prüfung beim Einlesen,
-`apps/spiegel/src/lib/fetch-card/`). Keine neue Brücke.
+`apps/spiegel/src/lib/fetch-card/`; 1c Werte und Lagen vom Ausdruck, Vorbelegung der Disziplin, Prüfung Schuss für
+Schuss, alte Ausdrucke einlesen). Keine neue Brücke.
 
 **Ohne lesbare ID** oder ohne Druckzeit speichert Spiegel nichts. Eine Auswahl nach der Druckzeit ist verschoben;
 bis dahin hilft die getippte ID oder später das Fundbüro.
@@ -92,9 +103,9 @@ nach 30 Tagen „ohne Antwort“.
 **Brücke aus:** Anlage und Brücke werden nach dem Training ausgeschaltet. Scannst du den QR später, zum Beispiel zu
 Hause, steht die Scheibe sofort mit ihrem PDF in Spiegel; die Rohdaten kommen beim nächsten Einschalten.
 
-**Auswärts,** ohne Brücke, bleibt die Scheibe beim Ausdruck. Mit dem vollständigen Parser liest Spiegel später das
-ganze PDF, soweit es das Layout kennt, und ergänzt ein **Ergebnis ohne Rohdaten** (Serien, Schusswerte, Teiler,
-Trefferlage); klappt das nicht, bleibt das PDF ohne Werte angehängt (SP-2.6).
+**Auswärts,** ohne Brücke, bleibt die Scheibe beim Ausdruck: mit seinen Werten und Lagen, wenn der Leser das Layout
+kennt und die Selbstprüfung besteht; sonst bleibt das PDF ohne Werte angehängt, leise mit „Werte nicht lesbar“, und
+ein späterer Leser liest es neu (SP-2.6). Fremde Anlagen sind an echten Ausdrucken noch nicht belegt.
 
 ## Getippte ID
 

@@ -3,12 +3,12 @@ id: meyton-printout
 type: concept
 title: "Meyton-Ergebnisausdruck und QR-Code"
 aliases: [meyton-ausdruck, meyton-qr, print-pdf, qrcode-meyton]
-keywords: [ausdruck, ergebnisausdruck, pdf, qr-code, meyton-pdf, readprintout, creationdate, erstellzeit, druckzeit, xmp, pdf.js, unpdf, identity-h, ghostscript, qrcode.meyton.eu, 195.201.88.185, http, lighttpd, uuid, id im fuß, scheibenid, hex, vorzeichenbehaftet, qt 5.12.8, trefferkreis, trefferlage, streuwert, trefferbild, gegenprobe, printout-check, readprintoutvalues, zähler, innenzehner, beste teiler, weiteste, startnr, standnr]
+keywords: [ausdruck, werte lesen, meyton-values, reader_version, printoutreading, selbstprüfung, valuesstatus, werte nicht lesbar, neu lesen, printout-import, alte ausdrucke, ergebnisausdruck, pdf, qr-code, meyton-pdf, readprintout, creationdate, erstellzeit, druckzeit, xmp, pdf.js, unpdf, identity-h, ghostscript, qrcode.meyton.eu, 195.201.88.185, http, lighttpd, uuid, id im fuß, scheibenid, hex, vorzeichenbehaftet, qt 5.12.8, trefferkreis, trefferlage, streuwert, trefferbild, gegenprobe, printout-check, readprintoutvalues, zähler, innenzehner, beste teiler, weiteste, startnr, standnr]
 part_of: ["[[meyton]]"]
 relates_to: ["[[treffsicher-meyton-import]]", "[[meyton-pdf-format-change]]", "[[spiegel-assignment]]"]
 ---
 
-**TL;DR** Der QR-Code am Meyton-Stand führt per HTTP auf ein PDF bei Meyton (`http://195.201.88.185/print_<UUID>.pdf`, eine Woche abrufbar). Das PDF enthält Stand, Zeiten, Name mit #Nummer, alle Werte, Teiler, Trefferkreis bzw. Streuwert und Trefferlage; Koordinaten nicht als Zahl, aber im Trefferbild als Vektorgrafik auf 0,01 mm genau (gemessen am 27. Oktober 2026). Im Fuß steht eine Hex-ID, die ScheibenID (am 9. Oktober 2026 an der eigenen Anlage belegt), die Spiegel für die exakte Zuordnung nutzt. Für die Zuordnung liest Spiegel nur diese ID und die Erstellzeit aus den Metadaten, unabhängig vom Layout ([[adr-028]]).
+**TL;DR** Der QR-Code am Meyton-Stand führt per HTTP auf ein PDF bei Meyton (`http://195.201.88.185/print_<UUID>.pdf`, eine Woche abrufbar). Das PDF enthält Stand, Zeiten, Name mit #Nummer, alle Werte, Teiler, Trefferkreis bzw. Streuwert und Trefferlage; Koordinaten nicht als Zahl, aber im Trefferbild als Vektorgrafik auf 0,01 mm genau (gemessen am 27. Oktober 2026). Im Fuß steht eine Hex-ID, die ScheibenID (am 9. Oktober 2026 an der eigenen Anlage belegt), die Spiegel für die exakte Zuordnung nutzt. Für die Zuordnung liest Spiegel nur diese ID und die Erstellzeit aus den Metadaten, unabhängig vom Layout ([[adr-028]]). Getrennt davon liest Spiegel seit 1c die Werte und die Lage jedes Schusses aus dem Trefferbild, mit Selbstprüfung und Version des Lesers (siehe „Werte lesen“).
 
 ## Link
 
@@ -78,34 +78,78 @@ Lage so genau wie ein Kreis (siehe Frage 5). Im Prototyp ist die Art der Marke `
 | Disziplin im Kopf | 64 von 67 genau einer Disziplin der Anlage wörtlich zugeordnet, 3 keiner: Trainingsscheibe und „LP 40 alt SpO“ gibt es an der Anlage (noch) nicht als Disziplin; bei den 12 Paaren immer die Disziplin vom Stand |
 | initialisiert | nur im Qt-Layout, auf die Minute: im Modus Probe 47 bis 79 s vor dem ersten Schuss (3), im Modus Wertung 73 s vor dem ersten Wertungsschuss (1, die Probe war gelöscht). Mit 4 Paaren nicht eindeutig; passt zu „Beginn der Scheibe, beim Wechsel auf Wertung neu“ |
 
-**Empfehlung für 1c-1 (Parser und Modell):**
-
-- Übernehmen: Werte je Schuss mit Zehntel und Innenzehner in Schussfolge, Serien-Summen und Ergebnis. Zähler,
-  Innenzehner, Serien- und Gesamtsumme dienen als Selbstprüfung: Bei einem Widerspruch keine Werte übernehmen (bei 65
-  von 67 eigenen gab es keinen; die übrigen 2 haben ein anderes Zählerformat und brauchen eine eigene Regel).
-- Die genannten Teiler am jeweiligen Schuss mit dem Vermerk, dass sie abgeschnitten sind (bester Teiler auf 0,1, also
-  bis knapp 0,1 · 1/100 mm zu klein). Trefferlage gesamt und je Serie als Summe: abgeschnitten auf 1/100 mm, für
-  Versatz und Richtung genau genug.
-- Trefferkreis: zählt beim Streukreis, als Durchmesser des kleinsten Kreises um die Zentren = Trefferkreis − Kaliber
-  (Spiegels Definition `enclosingDiameter` ohne Kaliber prüfen, bevor er einfließt). Belegt nur am Qt-Layout.
-- Streuwert (Ghostscript): eine eigene Angabe, die σ je Achse genau trägt (n − 1); ob er in Spiegels σ eingeht, ist eine
-  Frage an 1c-1, solange σ dort anders definiert ist.
-- Standnummer übernehmen (12 von 12). Den Namen der Disziplin für die Vorbelegung im Blatt „Neue Scheibe“ nur bei
-  genau einem wörtlichen Treffer nehmen (64 von 67), sonst ohne Vorbelegung.
-- „initialisiert“ nur als Hinweis, nicht als Beginn der Wertung (4 Paare, Minute).
-- Nicht übernehmen: die Nummern im Trefferbild (verdeckt, wo Treffer dicht liegen).
-
-**1c-2 (Lagen aus dem Trefferbild):** Die Schwelle (95 % der Schüsse unter 0,5 mm, ein Bruchteil eines Zehntels der
-Luftpistole mit 0,8 mm) ist weit unterschritten, jede Marke liegt höchstens 0,01 mm daneben, Kreise wie Kreuze. Damit
-gilt der Zweig „genau genug“: Die Lage je Schuss wird eine eigene Angabe „vom Ausdruck“, die zählt, nie gleichgesetzt
-mit gemessener Lage. (Der andere Zweig, „nur grob“, wäre das Trefferbild nur zur Anzeige, ohne zu zählen, wie
-„geschätzt“ in [[adr-033]].) Die Lagen kommen aus Kreisen und Kreuzen, nicht aus den Nummern; die Folge der Marken ist
-die Schussfolge, Mitte und Maßstab kommen aus den Ringen jedes Bilds.
+**Umgesetzt in 1c** (27. Oktober 2026, siehe „Werte lesen“): Werte je Schuss mit Zehnteln und Innenzehner, Serien und
+Ergebnis, Standnummer, Lage je Schuss aus den Marken (Kreise wie Kreuze, nie aus den Nummern), Vorbelegung der Disziplin
+bei genau einem wörtlichen Treffer. Zähler, Innenzehner, Summen, Trefferlage, Trefferkreis, Streuwert und die
+gedruckten Teiler dienen der Selbstprüfung und werden nicht gespeichert. „initialisiert“ bleibt ungenutzt, Beginn ist die
+Druckzeit. Die Lage vom Ausdruck zählt voll wie eine gemessene (Herkunft bleibt „vom Ausdruck“, [[adr-033]], Nachtrag
+vom 27. Oktober 2026 zu 1c).
 
 **Nicht belegt:** der Teiler je Schuss (nur ein Ausdruck ohne Namen), Zwischenausdrucke (kein Paar zeigte weniger Schüsse
 als die Rohdaten), Trefferkreis nur an 4 Qt-Ausdrucken, „initialisiert“ nur an 4, Probe nur an 3 Paaren, Kreuze nur an 2
 Paaren (80 Marken), Modus Training und die Trainingsscheibe, Luftgewehr, fremde Anlagen und andere Meyton-Versionen,
 Disziplinen ohne eigene Ausdrucke.
+
+## Werte lesen
+
+Seit 1c (27. Oktober 2026) liest Spiegel aus jedem Ausdruck nach ID und Druckzeit auch die Werte, im selben Kindprozess
+(SF-48) in der restlichen Zeit. Die Zuordnung hängt weiter nur an ID und Druckzeit ([[adr-028]]); scheitern die Werte,
+gelten ID und Druckzeit trotzdem. Dafür schreibt der Kindprozess ID und Druckzeit als eigene Zeile vor den Werten: pdf.js
+baut die Zeichnung eines präparierten PDFs sekundenlang am Stück, ohne dass eine Prüfung der Zeit dazwischenkommt.
+
+- **Leser:** `readPrintoutValues` und die reine Lesung `printoutReading` (`@vereinsheim/meyton-pdf/reading`), Version
+  `meyton-values@1` (`READER_VERSION`). Die Lesung enthält keinen Namen, keine Nummer, keine ID und kein Datum.
+- **Layout** nur nach dem Erzeuger: `GPL Ghostscript …` → `ghostscript`, `Qt …` → `qt`, sonst `unknown`. Ein
+  unbekanntes liest der Leser trotzdem, die Selbstprüfung entscheidet.
+- **Modus:** „Probe“ und „Vorbereitung/Probe“ geben Probeschüsse (ohne Summen), „Wertung“ Wertungsschüsse mit Serien
+  und Ergebnis; jeder andere (etwa „Training“, nicht belegt) gibt keine Werte.
+- **Selbstprüfung** (Gründe in dieser Folge): `empty` keine Schüsse, `mode`, `shotValue` (Wert über 10,9 oder
+  Innenzehner unter 10), `series` (Serien nicht 1 … n), `sums` (Summe je Serie, Zeile „Serien“, Ergebnis; Ring je Schuss
+  wie Meyton min(10, ⌊Wert⌋)), `innerTens`, `counts` (genau 11 Felder von 10 bis 0; die Trainingsscheibe druckt 12),
+  `marks` (Marken im Bild der Scheibe = Schüsse, je Serie ein Bild mit ihren Schüssen), `teilerRefs` (Schussnummer der
+  Teiler außerhalb). Was nicht gedruckt ist, prüft sie nicht.
+- **Gegen das Scheibenbild der Disziplin** (`detailsFromReading` in Spiegel): Maßstab und Mitte jedes Bilds aus seinen
+  Ringen (jedes Verhältnis höchstens 0,5 % neben dem Median, sonst `rings`, auch ohne Scheibenbild), Lage je Schuss aus
+  dem Bild seiner Serie auf 10 µm, gegengeprüft am Bild der ganzen Scheibe (0,05 mm, sonst `marks`). Dann Trefferlage
+  (Schwerpunkt, je Achse 0,02 mm), Trefferkreis (kleinster Kreis plus Kaliber, 0,02 mm), Streuwert (σ mit n − 1,
+  0,02 mm) und Teiler (beste 1,5, weiteste 2,0 · 1/100 mm) gegen die Lagen, gesamt und je Serie.
+- **Teiler aus der Lage:** Spiegel speichert keinen Teiler je Schuss vom Ausdruck, sondern rechnet ihn aus der Lage,
+  eine Regel für jeden Schuss. Folge: Der beste Teiler auf der Seite kann in der letzten Stelle vom Papier abweichen
+  (höchstens 0,01 mm; Meyton schneidet ab, die Marken liegen bis 0,01 mm daneben).
+- **Status je Ausdruck** (`Printout.valuesStatus`): `ok` (Lesung gespeichert), `empty` (keine Werte darauf),
+  `inconsistent` (Widerspruch, auch zum Scheibenbild), `unreadable` (Leser scheiterte). Die Seite einer Scheibe vom
+  Ausdruck ohne Brücke nennt `inconsistent` und `unreadable` leise „Werte nicht lesbar“; der Admin sieht die Zahl nur
+  als Zustand an der Anlage.
+- **Welcher Ausdruck:** an einer Scheibe vom Ausdruck ohne Brücke der zuletzt gedruckte mit `ok`; passt er nicht zum
+  Scheibenbild, der nächste. Gibt keiner Werte, verliert die Scheibe ihre Werte vom Ausdruck (neue Revision ohne
+  Angaben).
+- **Neu lesen:** Beim Start und stündlich liest Spiegel Ausdrucke mit einer anderen oder keiner Version des Lesers neu
+  (höchstens 50 je Lauf, nur Scheiben vom Ausdruck ohne Brücke, nicht wartend, nicht im Papierkorb). Scheitert schon
+  das Lesen (etwa ein zu altes Node), bleibt die Zeile für einen späteren Lauf.
+- **Beim Einlesen** prüft Spiegel zusätzlich zur Druckzeit Schuss für Schuss gegen die Rohdaten ([[spiegel-assignment]]);
+  passen sie, werden die Rohdaten eine neue Revision derselben Scheibe.
+- **Node:** Der Leser braucht Node 26 (`READER_MIN_NODE`, wie `engines` und `.nvmrc`); auf einem älteren meldet der
+  Server es im Log und „Scheibe holen“ sagt „Dieser Server kann keine Ausdrucke lesen“.
+
+**Lokale Regression:** Die eigenen Ausdrucke eines Schützen liegen nur lokal und gitignored in
+`packages/meyton-pdf/src/__fixtures__/private/printouts/` (ADR-029, Nachtrag). `private.test.ts` vergleicht jede Lesung
+mit einem Schnappschuss daneben und verlangt mindestens 90 % mit Werten; ohne Ordner läuft nichts. Stand 27. Oktober
+2026: 67 eigene Ausdrucke, 65 mit Werten, 2 `mode` (Trainingsscheibe).
+
+## Alte Ausdrucke einlesen
+
+Ein Ordner alter Ausdrucke wird zu Scheiben eines Kontos, derselbe Weg wie ein Upload, ohne Auftrag an die Brücke: die
+eigene Scheibe des Abends bekommt das PDF (eine Scheibe vom Ausdruck auch seine Werte), sonst entsteht eine Scheibe vom
+Ausdruck (Training, ohne Ort) mit der Disziplin aus dem Kopf, wenn genau eine wählbare so heißt; ohne Disziplin
+übersprungen. Idempotent über sha256, der Bericht nur mit Zahlen.
+
+- **Dev:** `pnpm --filter spiegel printout-import <ordner> --email <adresse> --dry-run`, dann ohne `--dry-run`. Die
+  Dateien landen unter `apps/spiegel/uploads/printouts/` des Checkouts, aus dem der Dev-Server läuft.
+- **Prod** (nach dem Deploy, durch den User): einen SSH-Tunnel auf die Datenbank öffnen, `DATABASE_URL` auf den Tunnel
+  setzen, `UPLOAD_DIR` auf einen leeren Ordner, `printout-import <ordner> --email <adresse> --dry-run`, dann
+  ohne `--dry-run`. Danach die Dateien aus `<UPLOAD_DIR>/printouts/*.pdf` mit `docker cp` in den Container `app-spiegel`
+  nach `/app/uploads/printouts/` kopieren (Volume `uploads_spiegel`). Ohne die Dateien zeigt die Seite die Werte, aber
+  kein PDF, und das Neulesen zählt sie als fehlend.
 
 ## ID im Fuß
 

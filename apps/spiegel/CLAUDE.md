@@ -11,20 +11,21 @@ Stack Ende zu Ende.
 
 ## Befehle
 
-| Befehl                                                         | Zweck                                                                                                                                                                                                                                          |
-| -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pnpm dev --filter spiegel`                                    | Dev-Server auf :3002                                                                                                                                                                                                                           |
-| `pnpm --filter spiegel exec prisma migrate dev --name <x>`     | Schema ändern (braucht `.env` mit `DATABASE_URL`)                                                                                                                                                                                              |
-| `pnpm --filter spiegel test`                                   | Tests, die Zugriffe gegen die Dev-Datenbank `spiegel`                                                                                                                                                                                          |
-| `pnpm --filter spiegel measure`                                | Messung „sehr aktiv, 5 Jahre“ mit `EXPLAIN ANALYZE`, nicht im Gate                                                                                                                                                                             |
-| `pnpm --filter spiegel seed:own`                               | eigene Scheiben aus `tools/private/own-cards.json` (gitignored) in die Dev-Datenbank, ohne sie erfundene; dem Konto aus `SEED_ADMIN_EMAIL` (`--email`, `--demo`: dazu erfundene Scheiben ohne Brücke in jeder Detailtiefe, `demoEnteredSeeds`) |
-| `pnpm --filter spiegel projection-check dump\|compare <datei>` | Projektionen der Brücke vor und nach einer neuen `PROJECTION_VERSION` vergleichen; Datei nach `reports/`                                                                                                                                       |
-| `pnpm --filter spiegel printout-check <ordner>`                | Gegenprobe 1c-0: eigene Meyton-Ausdrucke (PDF) gegen die Rohdaten der Dev-Datenbank (`--email`, sonst `SEED_ADMIN_EMAIL`); Bericht nur mit Zahlen nach `reports/tis-1c0/`                                                                      |
-| `pnpm --filter spiegel pruefen`                                | Skriptprüfung der Bedienung in Chrome gegen :3002 (`--start`: eigener Build auf :3012, `--alle`, `--nur`)                                                                                                                                      |
-| `pnpm --filter spiegel ingest-load`                            | Lastskript der Ingest-API: ein Abend mit belegten Ständen wie eine Brücke (`--start`, `--docker <name>`)                                                                                                                                       |
-| `pnpm --filter spiegel stack-probe`                            | Grenzen hinter Caddy gegen einen laufenden Stack (`BASE_URL`, `DATABASE_URL`; aus `tools/stack-e2e/run.sh`)                                                                                                                                    |
-| `pnpm --filter spiegel bridge-e2e`                             | die echte Brücke (Go) Ende zu Ende gegen den eigenen Build auf :3012 mit MariaDB, drei Fällen und Aufträgen per ID (`--keep`), mit `BASE_URL` gegen einen laufenden Spiegel                                                                    |
-| `pnpm --filter spiegel exec tsx tools/printout-sample.ts`      | erfundener Meyton-Ausdruck (`--id`, Vorgabe `ff914420`; `--printed` mit Versatz) als PDF nach stdout, für den Stack-Test, die Skriptprüfung (`samplePrintout`) und zum Messen des Lesers (`--kind memory\|time`)                               |
+| Befehl                                                         | Zweck                                                                                                                                                                                                                                                            |
+| -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm dev --filter spiegel`                                    | Dev-Server auf :3002                                                                                                                                                                                                                                             |
+| `pnpm --filter spiegel exec prisma migrate dev --name <x>`     | Schema ändern (braucht `.env` mit `DATABASE_URL`)                                                                                                                                                                                                                |
+| `pnpm --filter spiegel test`                                   | Tests, die Zugriffe gegen die Dev-Datenbank `spiegel`                                                                                                                                                                                                            |
+| `pnpm --filter spiegel measure`                                | Messung „sehr aktiv, 5 Jahre“ mit `EXPLAIN ANALYZE`, nicht im Gate                                                                                                                                                                                               |
+| `pnpm --filter spiegel seed:own`                               | eigene Scheiben aus `tools/private/own-cards.json` (gitignored) in die Dev-Datenbank, ohne sie erfundene; dem Konto aus `SEED_ADMIN_EMAIL` (`--email`, `--demo`: dazu erfundene Scheiben ohne Brücke in jeder Detailtiefe, `demoEnteredSeeds`)                   |
+| `pnpm --filter spiegel projection-check dump\|compare <datei>` | Projektionen der Brücke vor und nach einer neuen `PROJECTION_VERSION` vergleichen; Datei nach `reports/`                                                                                                                                                         |
+| `pnpm --filter spiegel printout-check <ordner>`                | Gegenprobe 1c-0: eigene Meyton-Ausdrucke (PDF) gegen die Rohdaten der Dev-Datenbank (`--email`, sonst `SEED_ADMIN_EMAIL`); Bericht nur mit Zahlen nach `reports/tis-1c0/`                                                                                        |
+| `pnpm --filter spiegel printout-import <ordner>`               | Ordner alter Meyton-Ausdrucke in Scheiben des Kontos einlesen (`--email`, sonst `SEED_ADMIN_EMAIL`; `--dry-run`), wie ein Upload, ohne Auftrag an die Brücke; Bericht nur mit Zahlen; Weg in Prod in [[meyton-printout]]                                         |
+| `pnpm --filter spiegel pruefen`                                | Skriptprüfung der Bedienung in Chrome gegen :3002 (`--start`: eigener Build auf :3012, `--alle`, `--nur`)                                                                                                                                                        |
+| `pnpm --filter spiegel ingest-load`                            | Lastskript der Ingest-API: ein Abend mit belegten Ständen wie eine Brücke (`--start`, `--docker <name>`)                                                                                                                                                         |
+| `pnpm --filter spiegel stack-probe`                            | Grenzen hinter Caddy gegen einen laufenden Stack (`BASE_URL`, `DATABASE_URL`; aus `tools/stack-e2e/run.sh`)                                                                                                                                                      |
+| `pnpm --filter spiegel bridge-e2e`                             | die echte Brücke (Go) Ende zu Ende gegen den eigenen Build auf :3012 mit MariaDB, drei Fällen und Aufträgen per ID (`--keep`), mit `BASE_URL` gegen einen laufenden Spiegel                                                                                      |
+| `pnpm --filter spiegel exec tsx tools/printout-sample.ts`      | erfundener Meyton-Ausdruck (`--id`, Vorgabe `ff914420`; `--printed` mit Versatz) als PDF nach stdout, für den Stack-Test, die Skriptprüfung (`samplePrintout`) und zum Messen des Lesers (`--values`: stimmig mit Werten und Trefferbild; `--kind memory\|time`) |
 
 Die Dev-Datenbank legt `dev/db-init` beim ersten Start an, `scripts/bootstrap-dev.sh` zieht sie für bestehende Volumes
 nach. Ohne `.env` nehmen Tests und Messung die Dev-Datenbank aus `.env.example` (`test/dev-database.ts`), NextAuth den
@@ -266,7 +267,8 @@ Stand mit `past` (`MAX_OBSERVED_LAG_MS`, SF-79).
   Tests an allen Fällen von `ssmdb2-cases`).
   - **Nichts ohne Zustimmung speichern:** Was nicht zu einer aktiven SportpassID der Anlage passt (bestätigt, nicht
     abgelehnt) oder zu einem offenen Auftrag per ID mit passendem Abend (mit Ausdruck auch: begann höchstens fünf
-    Minuten nach dem Druck, sonst `printMismatch`), verwirft das Einlesen, bevor `storeSnapshot` läuft. Eine neue Regel dort braucht einen Test, der zeigt,
+    Minuten nach dem Druck und, hat die Scheibe Werte vom Ausdruck, beginnt Schuss für Schuss mit ihnen,
+    `printedShotsFit`; sonst `printMismatch`), verwirft das Einlesen, bevor `storeSnapshot` läuft. Eine neue Regel dort braucht einen Test, der zeigt,
     dass nichts abgelegt wird.
   - **Logs nur mit Zahlen und festen Codes** (`Log` in `http.ts`), unerwartete Fehler nur mit ihrem Namen: Die Meldungen
     von Prisma enthalten Werte. Der Test in `http.test.ts` schickt einen Namen durch jede Fehlerart.
@@ -323,11 +325,16 @@ Stand mit `past` (`MAX_OBSERVED_LAG_MS`, SF-79).
     und dieses Tags, dann über `Printout.footerId`) öffnet sich; ein PDF hängt an (`attachPrintout`). Wartend → `/open`.
     Im Papierkorb: zurück, nach 30 Tagen `trashExpired`. Ungefüllt ohne offenen Auftrag: neuer Auftrag.
   - Fremde Scheibe der Brücke → `taken`; Grabstein oder Sperre eines anderen Kontos an diesem Abend → `blocked`.
-  - Sonst ohne Wahl `choose` (nichts geschrieben, das Blatt „Neue Scheibe“ fragt, die Seite schickt dieselbe Quelle mit
+  - Sonst ohne Wahl `choose` (nichts geschrieben, das Blatt „Neue Scheibe“ fragt, vorbelegt mit der Disziplin aus dem
+    Kopf des Ausdrucks, wenn genau eine wählbare so heißt, `headerDisciplineId`; die Seite schickt dieselbe Quelle mit
     `{ disciplineId, kind }` noch einmal; der Ausdruck wird dabei zweimal gelesen, dieselbe Datei nach sha256). Mit Wahl:
     Disziplin eingeordnet (bestätigt, nicht ignoriert, Familie, Scheibenbild), höchstens zehn ungefüllte offene Aufträge,
     eigene Sperren des Abends gelöscht, `writeEnteredCardIn` (Herkunft `pdf`, Beginn Druckzeit bzw. 12 Uhr, Art auch als
-    `kindChoice`), Ausdruck an, Auftrag mit `cardId` (ein älterer offener ohne Scheibe bekommt sie).
+    `kindChoice`; mit den Werten und der Standnummer vom Ausdruck, wenn `detailsFromReading` sie gegen das Scheibenbild
+    annimmt, sonst ohne und der Ausdruck `inconsistent`), Ausdruck an, Auftrag mit `cardId` (ein älterer offener ohne
+    Scheibe bekommt sie). Öffnet oder holt es eine Scheibe vom Ausdruck ohne Brücke zurück, nimmt sie die Werte ihrer
+    Ausdrucke an (`applyPrintoutValues`). Die eigene Scheibe des Abends sucht `ownCardOfEvening`, auch für den Import
+    alter Ausdrucke (`fetch-card/import.ts`, ohne Auftrag).
   - Actions in `fetch-card/actions.ts` (`fetchCardByLink`, `fetchCardByUpload`, `fetchCardById`, `stopCardFetch`), Texte
     in `fetch-card/texts.ts`, Dialoge `cardFetchStop`, `cardFetchDismiss`.
   - **Gefüllt** heißt: Die Scheibe des Auftrags hat eine Quelle (`UNFILLED` in `card-requests/queries.ts`). Heartbeat
@@ -345,12 +352,20 @@ Stand mit `past` (`MAX_OBSERVED_LAG_MS`, SF-79).
     Grund. Keine Liste erlaubter Adressen ([[adr-028]], Restrisiko SF-47).
   - `readPrintoutIsolated` liest ID und Druckzeit in einem kurzlebigen Kindprozess (SF-48): 48 MB Heap, `--lite-mode`,
     Abbruch über 96 MiB RSS (Linux), harte Zeitgrenze erst nach „bereit“, einer zur Zeit, höchstens drei warten. Umgebung nur
-    `NODE_ENV`. **Nie `@vereinsheim/meyton-pdf/printout` im Server importieren**, sonst liegt pdf.js im Prozess der App.
+    `NODE_ENV`. Danach in der restlichen Zeit die Werte (`printoutReading`, Protokoll mit zwei Zeilen: ID und Zeit gelten
+    auch, wenn die Werte scheitern oder der Kindprozess dabei beendet wird; `protocol.ts` prüft beide mit zod und
+    Grenzen). Unter Node < 26 startet er nicht (`nodeTooOld`, Log-Zeile, Grund `nodeVersion`). **Nie `@vereinsheim/meyton-pdf/printout` im Server importieren**, sonst liegt pdf.js im Prozess der App.
     In Produktion läuft das Bündel `printout-reader.mjs`, gebaut nach `next build` (`tools/build-reader.ts`) direkt in
     `.next/standalone/apps/spiegel`; in Dev und Tests die Quelle über `--import tsx`. Fehlt das Bündel in Produktion,
     meldet der Start es.
   - `storePrintout` prüft, liest und speichert die Datei nach sha256 unter `UPLOAD_DIR/printouts/` (in Produktion
-    Pflicht), ohne Datenbank; nur mit ID und Druckzeit (ohne Zeitzone die Wanduhr der Anlage).
+    Pflicht), ohne Datenbank; nur mit ID und Druckzeit (ohne Zeitzone die Wanduhr der Anlage). Die Werte kommen als
+    `PrintoutValuesRead` mit (Version des Lesers, Layout, Status, Lesung); `write: false` liest nur (Probelauf).
+  - Werte vom Ausdruck ([[meyton-printout]] „Werte lesen“): `values.ts` (rein: `detailsFromReading` mit Maßstab aus den
+    Ringen, Lagen, Prüfung von Trefferlage, Trefferkreis, Streuwert und Teilern; `readingOrder`), `apply.ts`
+    (`applyPrintoutValues` unter der Sperre der Scheibe, Herkunft `pdf`, Standnummer), `reread.ts` (neu lesen bei neuer
+    `READER_VERSION`, beim Start und stündlich, höchstens 50, in Tests mit `siteId`: die Dev-Datenbank ist eine
+    Prod-Kopie). `attachPrintout` schreibt die Spalten der Werte auch beim erneuten Anhängen.
   - `attachPrintout(tx, file, cardId)` legt die Zeile in der Transaktion des Aufrufers an: Ein Ausdruck hängt immer an
     einer Scheibe. `printoutFile` liest die Datei nur für den Besitzer und nur wie die Seite der Scheibe (`VISIBLE_CARD`:
     nicht wartend, nicht im Papierkorb, nicht bei ignorierter Disziplin); die Route `/api/printouts/<id>`

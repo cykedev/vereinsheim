@@ -11,19 +11,23 @@ Fachwissen: `vault/meyton/meyton-printout.md`, Sonderfälle SF-41 bis SF-48 in
 
 ## Exporte
 
-| Export                                | Datei                          | Inhalt                                                                      |
-| ------------------------------------- | ------------------------------ | --------------------------------------------------------------------------- |
-| `@vereinsheim/meyton-pdf/printout`    | `src/printout.ts`              | `readPrintout`, `preloadPdfjs` (brauchen pdf.js), `MeytonPdfError`, Grenzen |
-| `@vereinsheim/meyton-pdf/printout-id` | `src/printoutId.ts`            | `findPrintoutId`, `decodePrintoutId` (rein, auch im Browser)                |
-| `@vereinsheim/meyton-pdf/pdf-date`    | `src/pdfDate.ts`               | `parsePdfDate`, `parseXmpDate` (rein, auch im Browser)                      |
-| `@vereinsheim/meyton-pdf/errors`      | `src/errors.ts`                | `MeytonPdfError` mit festem `code`, `MEYTON_PDF_ERROR_CODES`                |
-| `@vereinsheim/meyton-pdf/header`      | `src/header.ts`                | `hasPdfHeader` (rein, ohne pdf.js)                                          |
-| `@vereinsheim/meyton-pdf/values`      | `src/values/read.ts`           | `readPrintoutValues`: Werte und Trefferbild (Prototyp, braucht pdf.js)      |
-| `@vereinsheim/meyton-pdf/test-pdf`    | `src/__fixtures__/buildPdf.ts` | `buildPdf`, `bombContent`; nur für Tests und Werkzeuge                      |
+| Export                                  | Datei                             | Inhalt                                                                                                       |
+| --------------------------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `@vereinsheim/meyton-pdf/printout`      | `src/printout.ts`                 | `readPrintout`, `preloadPdfjs` (brauchen pdf.js), `MeytonPdfError`, Grenzen                                  |
+| `@vereinsheim/meyton-pdf/printout-id`   | `src/printoutId.ts`               | `findPrintoutId`, `decodePrintoutId` (rein, auch im Browser)                                                 |
+| `@vereinsheim/meyton-pdf/pdf-date`      | `src/pdfDate.ts`                  | `parsePdfDate`, `parseXmpDate` (rein, auch im Browser)                                                       |
+| `@vereinsheim/meyton-pdf/errors`        | `src/errors.ts`                   | `MeytonPdfError` mit festem `code`, `MEYTON_PDF_ERROR_CODES`                                                 |
+| `@vereinsheim/meyton-pdf/header`        | `src/header.ts`                   | `hasPdfHeader` (rein, ohne pdf.js)                                                                           |
+| `@vereinsheim/meyton-pdf/values`        | `src/values/read.ts`              | `readPrintoutValues`: Werte und Trefferbild (braucht pdf.js)                                                 |
+| `@vereinsheim/meyton-pdf/reading`       | `src/values/reading.ts`           | `printoutReading` (Selbstprüfung, rein), `READER_VERSION`, `layoutOf`                                        |
+| `@vereinsheim/meyton-pdf/test-pdf`      | `src/__fixtures__/buildPdf.ts`    | `buildPdf`, `bombContent`; nur für Tests und Werkzeuge                                                       |
+| `@vereinsheim/meyton-pdf/test-printout` | `src/__fixtures__/printoutPdf.ts` | `printoutPdf`: erfundene Ausdrucke mit Werten und Trefferbild in beiden Layouts; nur für Tests und Werkzeuge |
 
-`./values` ist ein Prototyp für die Gegenprobe 1c-0 (`apps/spiegel/tools/printout-check.ts`), noch nicht von Apps
-genutzt. Er liest das Layout (Beschriftungen, Serien, Kreise und Kreuze des Trefferbilds); die Regel „Kein
-Layout-Wissen“ unten gilt für ID und Erstellzeit.
+`./values` liest das Layout (Beschriftungen, Serien, Kreise und Kreuze des Trefferbilds); `./reading` prüft die Werte in
+sich und baut die Lesung ohne Name, Nummer, ID und Datum ([[meyton-printout]] „Werte lesen“). Spiegel liest beides nur
+im Kindprozess. Die Regel „Kein Layout-Wissen“ unten gilt für ID und Erstellzeit; die Werte lesen das Layout mit
+Selbstprüfung, bei jedem Widerspruch gibt es keine. Ändert sich das Verhalten des Lesers, steigt `READER_VERSION`
+(Spiegel liest gespeicherte Ausdrucke dann neu).
 
 ## Regeln
 
@@ -47,7 +51,10 @@ Layout-Wissen“ unten gilt für ID und Erstellzeit.
   Kindprozess statt der Meldung weitergibt.
 - **Keine echten Ausdrucke im Paket** (Namen, #Nummer; ADR-029). Tests bauen ihre PDFs mit
   `src/__fixtures__/buildPdf.ts` (Ghostscript-Weg: Type1 mit Literal-Strings; Qt-Weg: Type0/Identity-H
-  mit ToUnicode und einem Glyph je `Tj`). Echte PDFs nur lokal in der Validierung.
+  mit ToUnicode und einem Glyph je `Tj`) bzw. `printoutPdf.ts`. Echte PDFs nur lokal: Die eigenen Ausdrucke liegen
+  gitignored in `src/__fixtures__/private/printouts/` (`.prettierignore`), `src/values/private.test.ts` vergleicht jede
+  Lesung mit einem Schnappschuss daneben und verlangt mindestens 90 % mit Werten; ohne Ordner läuft nichts. Nur dieser
+  Test nutzt Node (`@types/node` per `/// <reference>`); `tsconfig` bleibt bei `types: []`.
 - `unpdf` in derselben festen Version wie Treffsicher (`1.9.1`); in den Katalog kommt es, sobald
   Treffsicher das Paket nutzt.
 - Muster, Dekodierung oder Datumsformate nur mit Test ändern; `toBeCloseTo` nimmt null als 0

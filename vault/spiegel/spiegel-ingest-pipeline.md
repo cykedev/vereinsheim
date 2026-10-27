@@ -3,7 +3,7 @@ id: spiegel-ingest-pipeline
 type: subsystem
 title: "Spiegel — Ingest-API und Normalisierung"
 aliases: [ingest, ingest-api, normalisierung, rohdaten-pipeline]
-keywords: [ingest, api, auftrag per id, gefüllt, ungefüllt, druckzeit, printMismatch, passt nicht zum ausdruck, scheibe vom ausdruck füllen, wanduhr, endpunkt, geräte-token, device token, kopplung, pairing, kopplungscode, heartbeat, zustand der brücke, ratenbegrenzung, rate limit, retry-after, bytegrenze, last, vps, lebenszeichen, lifesign, idempotenz, snapshot, rohdatensatz, raw store, normalisierung, adapter, meyton-ssmdb2, skalen, zeitzone, epoche, revision, projektion, neu berechnen, vertrag, contract, json schema, folgenummer, kompaktierung, probe sammeln, merkmale, zustimmung, vertragsversion]
+keywords: [ingest, api, auftrag per id, schuss für schuss, printedshotsfit, werte vom ausdruck, gefüllt, ungefüllt, druckzeit, printMismatch, passt nicht zum ausdruck, scheibe vom ausdruck füllen, wanduhr, endpunkt, geräte-token, device token, kopplung, pairing, kopplungscode, heartbeat, zustand der brücke, ratenbegrenzung, rate limit, retry-after, bytegrenze, last, vps, lebenszeichen, lifesign, idempotenz, snapshot, rohdatensatz, raw store, normalisierung, adapter, meyton-ssmdb2, skalen, zeitzone, epoche, revision, projektion, neu berechnen, vertrag, contract, json schema, folgenummer, kompaktierung, probe sammeln, merkmale, zustimmung, vertragsversion]
 subsystem_of: ["[[spiegel-architecture]]"]
 governed_by: ["[[adr-027]]"]
 relates_to: ["[[spiegel-ingest-contract]]", "[[spiegel-bridge]]", "[[spiegel-data-model]]", "[[meyton-ssmdb2]]", "[[spiegel-edge-cases]]"]
@@ -99,8 +99,13 @@ Regeln unterscheiden deshalb nach gefüllt, nicht nach `cardId`:
 - **Druckzeit** (nur ungefüllt, nur mit Ausdruck): Ein Stand des Stapels mit derselben ScheibenID und demselben Abend
   muss höchstens fünf Minuten nach der jüngsten Druckzeit begonnen haben (`startsBeforePrint`, `PRINT_GRACE_MS`, SF-29).
   Verglichen wird Wanduhr mit Wanduhr: `startHintMs` ist die Wanduhr der Anlage als UTC-Felder, die Druckzeit wird mit
-  `wallTimeOfMs` umgerechnet. Besteht keiner, endet der Auftrag mit `printMismatch` („passt nicht zum Ausdruck“) und
-  der Stand wird verworfen (`no-consent`). Bei einer getippten ID (ohne Ausdruck) gilt nur der Abend.
+  `wallTimeOfMs` umgerechnet. Hat die Scheibe Werte vom Ausdruck ([[meyton-printout]] „Werte lesen“), muss derselbe
+  Stand sie auch Schuss für Schuss tragen: Seine Schüsse derselben Art (Probe oder Wertung, in Nummernfolge;
+  `shotValuesOf`) beginnen mit den Schüssen der aktuellen Revision der Scheibe (`printedShotsOf`), Zehntel gleich, ohne
+  Zehntel der Ring (`printedShotsFit`, rein; ein Zwischenausdruck passt). Ohne Werte gilt nur die Druckzeit. Besteht
+  keiner, endet der Auftrag mit `printMismatch` („passt nicht zum Ausdruck“), der Stand wird verworfen (`no-consent`,
+  vor `storeSnapshot`: nichts von der Brücke gespeichert) und die Scheibe behält ihre Werte vom Ausdruck. Bei einer
+  getippten ID (ohne Ausdruck) gilt nur der Abend.
 - **Füllen** (`adaptKey` mit `fill`): Gibt es im Zyklus noch keine Scheibe dieser ScheibenID, schreibt der jüngste Block,
   der vor dem Druck begann (ohne Druckzeit der jüngste), mit `cardId` in die Scheibe vom Ausdruck (`writeRevision`,
   `identityUpdate`: Quelle, ScheibenID, Zyklus und Block, Herkunft `raw`, neue Revision ohne „korrigiert“). Frühere
