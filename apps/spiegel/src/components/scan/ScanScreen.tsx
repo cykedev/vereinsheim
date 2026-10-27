@@ -20,6 +20,7 @@ import type { LegacyRequest, NewCardChoice, NewCardOption } from "@/lib/fetch-ca
 import { fetchToast, type FetchOutcome } from "@/lib/fetch-card/texts"
 import type { ActionResult } from "@/lib/types"
 
+import { CameraScan } from "./CameraScan"
 import { LegacyRequests } from "./LegacyRequests"
 import { NewCardSheet } from "./NewCardSheet"
 
@@ -190,6 +191,10 @@ export function ScanScreen({
           sentence="Halte die Kamera auf den QR-Code am Stand oder auf dem Ausdruck."
           error={errors.camera ?? null}
         >
+          <CameraScan
+            onLink={(url) => submit({ way: "camera", url }, null)}
+            disabled={cameraPending}
+          />
           {cameraPending && (
             <p role="status" className="text-sm text-foreground-2">
               {READING}
