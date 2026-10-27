@@ -1,9 +1,9 @@
 import { join } from "node:path"
 
 import { bombContent, buildPdf, type TestText } from "@vereinsheim/meyton-pdf/test-pdf"
-import { beforeAll, describe, expect, it } from "vitest"
+import { beforeAll, describe, expect, it, vi } from "vitest"
 
-import { childEnv, readerArgs, readerState, readPrintoutIsolated } from "./reader"
+import { childEnv, nodeTooOld, readerArgs, readerState, readPrintoutIsolated } from "./reader"
 
 // Erfundene Ausdrucke aus `buildPdf`, kein echter. Ohne Bündel im Arbeitsverzeichnis startet der Kindprozess die
 // Quelle über tsx; die Mechanik prüfen kleine Skripte in `__fixtures__`.
@@ -161,6 +161,38 @@ describe("readPrintoutIsolated: Warteschlange", () => {
     // nacheinander, nicht zugleich: vier Zeitgrenzen von je 300 ms hintereinander
     expect(Date.now() - started).toBeGreaterThanOrEqual(4 * 300)
   }, 15_000)
+})
+
+describe("readPrintoutIsolated: Node zu alt", () => {
+  it("erkennt die Hauptversion", () => {
+    expect(nodeTooOld("20.19.0")).toBe(true)
+    expect(nodeTooOld("v24.12.0")).toBe(true)
+    expect(nodeTooOld("26.0.0")).toBe(false)
+    expect(nodeTooOld("27.1.0")).toBe(false)
+    expect(nodeTooOld("")).toBe(true)
+  })
+
+  it("liest nicht, startet keinen Kindprozess und sagt im Log, was fehlt", async () => {
+    const log = vi.spyOn(console, "error").mockImplementation(() => {})
+    try {
+      // das Skript hinge 300 ms: kommt die Antwort sofort, lief es nicht
+      const started = Date.now()
+      expect(
+        await readPrintoutIsolated(qtPdf, {
+          nodeVersion: "20.19.0",
+          script: fixture("hang"),
+          maxParseMs: 300,
+        })
+      ).toEqual({ kind: "failed", reason: "nodeVersion" })
+      expect(Date.now() - started).toBeLessThan(200)
+      expect(readerState()).toEqual({ running: false, waiting: 0 })
+      expect(log).toHaveBeenCalledWith(
+        "Ausdrucke lesen braucht Node 26 oder neuer, der Server läuft mit 20.19.0. Den Server mit der Version aus .nvmrc starten."
+      )
+    } finally {
+      log.mockRestore()
+    }
+  })
 })
 
 describe("Start des Kindprozesses", () => {

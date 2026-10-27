@@ -14,6 +14,9 @@ describe("Texte zu „Scheibe holen“", () => {
     expect(fetchErrorText("tooMany")).toBe(
       "Es warten schon zehn Scheiben auf die Anlage. Warte, bis die Anlage sie geliefert hat."
     )
+    expect(fetchErrorText("nodeVersion")).toBe(
+      "Dieser Server kann keine Ausdrucke lesen. Er braucht eine neuere Version von Node."
+    )
     for (const text of ALL_ERROR_TEXTS) expect(text).toMatch(/\.$/)
   })
 

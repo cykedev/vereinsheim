@@ -37,7 +37,11 @@ const MAX_WAITING = 3
 /** der gebündelte Kindprozess im Arbeitsverzeichnis der App (`tools/build-reader.ts`) */
 export const READER_BUNDLE = "printout-reader.mjs"
 
-export type ReadFailure = "busy" | "timeout" | "memory" | "crashed" | MeytonPdfErrorCode
+/** ab dieser Hauptversion liest der Kindprozess (wie `engines` und `.nvmrc`); er läuft mit `process.execPath` */
+export const READER_MIN_NODE = 26
+
+export type ReadFailure =
+  "busy" | "timeout" | "memory" | "crashed" | "nodeVersion" | MeytonPdfErrorCode
 
 export type IsolatedRead =
   | {
@@ -56,6 +60,14 @@ export interface IsolatedReadOptions {
   script?: string
   /** RSS eines Prozesses in Bytes; null: keine Wache */
   rssOf?: (pid: number) => number | null
+  /** Version von Node, mit der der Kindprozess liefe (Tests); sonst die eigene */
+  nodeVersion?: string
+}
+
+/** zu alt für den Leser: Hauptversion unter `READER_MIN_NODE` */
+export function nodeTooOld(version: string = process.versions.node): boolean {
+  const major = Number(/^v?(\d+)/.exec(version)?.[1])
+  return !Number.isFinite(major) || major < READER_MIN_NODE
 }
 
 const heapFlags = (heapMb: number) => [
@@ -236,6 +248,13 @@ export async function readPrintoutIsolated(
   bytes: Uint8Array,
   options: IsolatedReadOptions = {}
 ): Promise<IsolatedRead> {
+  const version = options.nodeVersion ?? process.versions.node
+  if (nodeTooOld(version)) {
+    console.error(
+      `Ausdrucke lesen braucht Node ${READER_MIN_NODE} oder neuer, der Server läuft mit ${version}. Den Server mit der Version aus .nvmrc starten.`
+    )
+    return failed("nodeVersion")
+  }
   const queue = readerQueue()
   if (queue.running) {
     if (queue.waiting.length >= MAX_WAITING) return failed("busy")

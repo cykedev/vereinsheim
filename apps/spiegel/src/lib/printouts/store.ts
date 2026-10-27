@@ -28,7 +28,15 @@ export interface StoredPrintout {
 }
 
 export type StoreRejection =
-  "tooLarge" | "notPdf" | "unreadable" | "noId" | "idConflict" | "noTime" | "timeout" | "busy"
+  | "tooLarge"
+  | "notPdf"
+  | "unreadable"
+  | "noId"
+  | "idConflict"
+  | "noTime"
+  | "timeout"
+  | "busy"
+  | "nodeVersion"
 
 export type StoreResult =
   { kind: "stored"; file: StoredPrintout } | { kind: "rejected"; reason: StoreRejection }
@@ -42,6 +50,7 @@ function rejectionOf(reason: ReadFailure): StoreRejection {
     case "timeout":
     case "tooLarge":
     case "notPdf":
+    case "nodeVersion":
       return reason
     default:
       return "unreadable"
@@ -50,7 +59,7 @@ function rejectionOf(reason: ReadFailure): StoreRejection {
 
 export async function storePrintout(
   input: { bytes: Uint8Array; timeZone: string; fileName?: string | null },
-  options: Pick<IsolatedReadOptions, "script" | "maxParseMs"> = {}
+  options: Pick<IsolatedReadOptions, "script" | "maxParseMs" | "nodeVersion"> = {}
 ): Promise<StoreResult> {
   const { bytes } = input
   if (bytes.length === 0) return rejected("notPdf")

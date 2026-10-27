@@ -33,6 +33,7 @@ const ERROR_TEXT: Readonly<Record<FetchProblem, string>> = {
   idConflict: "Auf dem Ausdruck stehen verschiedene IDs.",
   noTime: "Im PDF fehlt die Druckzeit.",
   busy: "Spiegel liest gerade andere Ausdrucke. Versuche es gleich noch einmal.",
+  nodeVersion: "Dieser Server kann keine Ausdrucke lesen. Er braucht eine neuere Version von Node.",
   taken: "Diese Scheibe gehört schon zu einem anderen Konto.",
   blocked: "Diese Scheibe lässt sich nicht holen.",
   tooMany: "Es warten schon zehn Scheiben auf die Anlage. Warte, bis die Anlage sie geliefert hat.",

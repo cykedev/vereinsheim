@@ -3,7 +3,7 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 
 import { bombContent, buildPdf, type TestText } from "@vereinsheim/meyton-pdf/test-pdf"
-import { afterEach, beforeEach, describe, expect, it } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { printoutDir } from "./files"
 import { storePrintout } from "./store"
@@ -98,5 +98,24 @@ describe("storePrintout: abgelehnt, ohne Datei", () => {
       reason,
     })
     expect(await storedFiles()).toEqual([])
+  })
+})
+
+describe("storePrintout: Node zu alt", () => {
+  it("gibt den Grund weiter, ohne Datei", async () => {
+    const log = vi.spyOn(console, "error").mockImplementation(() => {})
+    try {
+      const bytes = await buildPdf({
+        pages: [footer("ff914420")],
+        info: { CreationDate: "D:20261002195212+02'00'" },
+      })
+      expect(await storePrintout({ bytes, timeZone: ZONE }, { nodeVersion: "24.12.0" })).toEqual({
+        kind: "rejected",
+        reason: "nodeVersion",
+      })
+      expect(await storedFiles()).toEqual([])
+    } finally {
+      log.mockRestore()
+    }
   })
 })
