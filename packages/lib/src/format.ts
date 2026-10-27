@@ -176,6 +176,14 @@ export function zonedWallTimeMs(wallMs: number, timeZone: string): number {
   return fits.length ? Math.min(...fits) : wallMs - before
 }
 
+/**
+ * Umkehrung von `zonedWallTimeMs`: die Wanduhr der Zone zum Zeitpunkt `utcMs`, als wären ihre Felder UTC (wie Meytons
+ * `datetime` in `startHintMs`). Millisekunden bleiben.
+ */
+export function wallTimeOfMs(utcMs: number, timeZone: string): number {
+  return utcMs + zoneOffsetMs(utcMs, timeZone)
+}
+
 /** "2026-09-09" — sortierbar, für Dateinamen. */
 export function formatIsoDate(date: Date, timeZone: string): string {
   const parts = dateTimeFormat(

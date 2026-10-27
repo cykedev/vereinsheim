@@ -17,6 +17,7 @@ import {
   formatTimeOfDay,
   formatWeekdayDate,
   formatWeekdayDay,
+  wallTimeOfMs,
   zonedDayStartMs,
   zonedWallTimeMs,
 } from "./format"
@@ -197,6 +198,29 @@ describe("zonedWallTimeMs", () => {
     expect(zonedWallTimeMs(wall(2026, 3, 29, 1, 59), "Europe/Berlin")).toBe(
       Date.UTC(2026, 2, 29, 0, 59)
     )
+  })
+})
+
+describe("wallTimeOfMs", () => {
+  it("Sommer +2 h, Winter +1 h, Millisekunden bleiben", () => {
+    expect(wallTimeOfMs(Date.UTC(2026, 9, 9, 17, 5, 41, 381), "Europe/Berlin")).toBe(
+      Date.UTC(2026, 9, 9, 19, 5, 41, 381)
+    )
+    expect(wallTimeOfMs(Date.UTC(2026, 0, 15, 18), "Europe/Berlin")).toBe(Date.UTC(2026, 0, 15, 19))
+    expect(wallTimeOfMs(Date.UTC(2026, 6, 1, 12, 0, 0, 7), "UTC")).toBe(
+      Date.UTC(2026, 6, 1, 12, 0, 0, 7)
+    )
+  })
+
+  it("Rundlauf mit zonedWallTimeMs über einen Tag im Oktober, außer in der doppelten Stunde", () => {
+    const zone = "Europe/Berlin"
+    // 25. Oktober 2026: 02:00 bis 03:00 Wanduhr gibt es zweimal (00:00 bis 02:00 UTC)
+    const doubledFrom = Date.UTC(2026, 9, 25, 0)
+    const doubledTo = Date.UTC(2026, 9, 25, 2)
+    for (let t = Date.UTC(2026, 9, 24, 12); t < Date.UTC(2026, 9, 26, 12); t += 15 * 60_000) {
+      if (t >= doubledFrom && t < doubledTo) continue
+      expect(zonedWallTimeMs(wallTimeOfMs(t + 123, zone), zone)).toBe(t + 123)
+    }
   })
 })
 
