@@ -20,14 +20,14 @@ import type { Route } from "../nav/routes"
 const ITEMS: Readonly<Record<Area, { label: string; short: string; Icon: LucideIcon }>> = {
   start: { label: "Start", short: "Start", Icon: House },
   cards: { label: "Scheiben", short: "Scheiben", Icon: List },
-  scan: { label: "QR scannen", short: "Scannen", Icon: ScanQrCode },
+  scan: { label: "Scheibe holen", short: "Holen", Icon: ScanQrCode },
   progress: { label: "Fortschritt", short: "Fortschritt", Icon: ChartLine },
   compare: { label: "Vergleichen", short: "Vergleichen", Icon: ArrowLeftRight },
   profile: { label: "Profil", short: "Profil", Icon: CircleUser },
   admin: { label: "Admin", short: "Admin", Icon: Shield },
 }
 
-/** die untere und die schmale Leiste: Scannen in der Mitte, Admin steckt in Profil */
+/** die untere und die schmale Leiste: Scheibe holen in der Mitte, Admin steckt in Profil */
 const BAR: readonly Area[] = ["start", "cards", "scan", "progress", "profile"]
 
 export interface AppFrameProps {
@@ -41,14 +41,13 @@ export interface AppFrameProps {
   isAdmin: boolean
   /** unten in der Seitenleiste, etwa die Darstellung; nicht in den Leisten des Telefons */
   sidebarFooter?: ReactNode
-  /** Scannen anbieten (Vorgabe ja); eine App ohne QR-Weg blendet es aus, die untere Leiste hat dann vier Felder */
-  scan?: boolean
   children?: ReactNode
 }
 
 /**
  * Rahmen von Spiegel: der allgemeine Rahmen aus Design 2 (`@vereinsheim/ui/design2/app-frame`) mit den Bereichen
- * von Spiegel. Scannen ist die Aktion in der Mitte; Admin steckt auf dem Telefon in Profil.
+ * von Spiegel. Scheibe holen ist die Aktion in der Mitte (am Telefon nur das Symbol, der Name für Screenreader, in der
+ * Seitenleiste als Pille); Admin steckt auf dem Telefon in Profil.
  */
 export function AppFrame({
   current,
@@ -56,7 +55,6 @@ export function AppFrame({
   openCount,
   isAdmin,
   sidebarFooter,
-  scan = true,
   children,
 }: AppFrameProps) {
   const item = (area: Area): FrameItem => ({
@@ -72,8 +70,8 @@ export function AppFrame({
       brand="Spiegel"
       primary={(["start", "cards", "progress"] as const).map(item)}
       secondary={isAdmin ? [item("profile"), item("admin")] : [item("profile")]}
-      action={scan ? item("scan") : undefined}
-      bar={scan ? [...BAR] : BAR.filter((area) => area !== "scan")}
+      action={item("scan")}
+      bar={[...BAR]}
       current={current}
       // auf dem Telefon steckt Admin in Profil: ist Admin offen, ist dort Profil der Bereich.
       // Vergleichen gehört zum Fortschritt

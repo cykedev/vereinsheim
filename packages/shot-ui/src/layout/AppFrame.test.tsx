@@ -26,34 +26,10 @@ const areasIn = (html: string, marker: string) => {
   return [...html.slice(start, end).matchAll(/data-area="([a-z]+)"/g)].map((m) => m[1])
 }
 
-describe("ohne Scannen", () => {
-  const html = render({ scan: false })
-
-  it("keine Leiste und kein Knopf führt zum Scannen", () => {
-    expect(html).not.toContain('data-area="scan"')
-    expect(areasIn(html, "data-app-sidebar")).toEqual([
-      "start",
-      "cards",
-      "progress",
-      "compare",
-      "profile",
-      "admin",
-    ])
-    expect(areasIn(html, "data-app-bar")).toEqual(["start", "cards", "progress", "profile"])
-    expect(areasIn(html, "data-app-rail")).toEqual(["start", "cards", "progress", "profile"])
-  })
-
-  it("die untere Leiste hat vier Felder; ohne Angabe fünf", () => {
-    expect(html).toContain("grid-cols-4")
-    expect(html).not.toContain("grid-cols-5")
-    expect(render()).toContain("grid-cols-5")
-  })
-})
-
 describe("Rahmen der App", () => {
   const html = render()
 
-  it("Seitenleiste ab 1024 px: Start, Scheiben, Fortschritt mit Vergleichen, QR scannen, Profil, Admin zuletzt", () => {
+  it("Seitenleiste ab 1024 px: Start, Scheiben, Fortschritt mit Vergleichen, Scheibe holen, Profil, Admin zuletzt", () => {
     expect(areasIn(html, "data-app-sidebar")).toEqual([
       "start",
       "cards",
@@ -69,7 +45,7 @@ describe("Rahmen der App", () => {
     expect(html).toMatch(/data-app-sidebar[\s\S]*?>Spiegel</)
   })
 
-  it("untere Leiste und schmale Leiste: fünf Bereiche, Scannen in der Mitte, kein Admin", () => {
+  it("untere Leiste und schmale Leiste: fünf Bereiche, Scheibe holen in der Mitte, kein Admin", () => {
     expect(areasIn(html, "data-app-bar")).toEqual(["start", "cards", "scan", "progress", "profile"])
     expect(areasIn(html, "data-app-rail")).toEqual([
       "start",
@@ -82,10 +58,17 @@ describe("Rahmen der App", () => {
     expect(html).toMatch(
       /data-app-rail="true" class="[^"]*max-lg:\[@media\(max-height:499px\)\]:flex/
     )
-    // Scannen als runder Knopf mit Namen
+    // Scheibe holen als runder Knopf, der Name für Screenreader; fünf Felder
     expect(html).toMatch(
-      /<a href="\/scan"[^>]*aria-label="QR scannen"[^>]*class="[^"]*rounded-full bg-primary/
+      /<a href="\/scan"[^>]*aria-label="Scheibe holen"[^>]*class="[^"]*rounded-full bg-primary/
     )
+    expect(html).toContain("grid-cols-5")
+    // in der Seitenleiste als Pille mit Text
+    const sidebar = html.slice(
+      html.indexOf("data-app-sidebar"),
+      html.indexOf("</nav>", html.indexOf("data-app-sidebar"))
+    )
+    expect(sidebar).toMatch(/<a href="\/scan"[^>]*>[\s\S]*?Scheibe holen[\s\S]*?<\/a>/)
   })
 
   it("der Inhalt ist <main> und steht vor der unteren Leiste (Fokus-Reihenfolge)", () => {

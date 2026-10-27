@@ -78,8 +78,6 @@ export function AppShell({
           links={areaLinks(memory, family)}
           openCount={openCount}
           isAdmin={isAdmin}
-          // Scannen steht ohne den QR-Weg nicht in der Navigation
-          scan={false}
           sidebarFooter={<ThemeSwitch />}
         >
           {/* im Rahmen, damit der Hinweis „Rückgängig“ über der unteren Leiste steht (`--app-bar`) */}
