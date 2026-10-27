@@ -8,7 +8,6 @@ import {
   smallestEnclosingCircle,
   type Point,
 } from "@vereinsheim/shot-core/geometry"
-import type { TargetImage } from "@vereinsheim/shot-core/targets"
 import type {
   CenterMm,
   Picture,
@@ -303,21 +302,6 @@ export function nearestCandidate<K extends string>(
 }
 
 // ── Trefferbild ──────────────────────────────────────────────────────────────────────────────────────────────────
-
-/** Durchmesser der Ringe der Scheibe in mm, absteigend: Ring 1 bis 10, dann der Innenzehner */
-export function ringDiametersMm(target: TargetImage): number[] {
-  return [...target.ringRadiiUm.map((r) => (2 * r) / MM), target.innerTen.diameterMm]
-}
-
-/** Punkt je mm aus den gezeichneten Ringen (Median der Verhältnisse); null, wenn die Zahl der Ringe nicht passt */
-export function scaleFromRings(
-  ringPt: readonly number[],
-  ringMm: readonly number[]
-): number | null {
-  if (ringPt.length !== ringMm.length || ringPt.length === 0) return null
-  const ratios = ringPt.map((pt, i) => pt / ringMm[i]).sort((a, b) => a - b)
-  return median(ratios)
-}
 
 export interface DrawnFit {
   /** Abweichung je Schuss in mm, Maßstab und Mitte aus den Ringen */

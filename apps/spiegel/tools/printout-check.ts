@@ -36,8 +36,6 @@ import {
   labelDeviations,
   matchDiscipline,
   nearestCandidate,
-  ringDiametersMm,
-  scaleFromRings,
   selfCheck,
   SPREAD_CANDIDATES,
   spreadCandidates,
@@ -46,6 +44,7 @@ import {
   type RawShot,
   type Summary,
 } from "./printout-check/compare"
+import { ringDiametersMm, scaleFromRings } from "../src/lib/printouts/values"
 
 const REPORT_DIR = resolve(__dirname, "../../../reports/tis-1c0")
 

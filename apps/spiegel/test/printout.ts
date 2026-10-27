@@ -16,13 +16,9 @@ import {
   standardDeviation,
 } from "@vereinsheim/shot-core/geometry"
 import { scoreFromCoordinates } from "@vereinsheim/shot-core/scoring"
-import { TARGETS, type TargetId, type TargetImage } from "@vereinsheim/shot-core/targets"
+import { TARGETS, type TargetId } from "@vereinsheim/shot-core/targets"
 
-/** Ringe des Scheibenbilds in mm, außen zuerst, dazu die Innenzehn */
-const ringDiametersMm = (target: TargetImage) => [
-  ...target.ringRadiiUm.map((r) => (2 * r) / 1000),
-  target.innerTen.diameterMm,
-]
+import { ringDiametersMm } from "@/lib/printouts/values"
 
 export interface ValuedPrintoutSpec {
   layout?: "qt" | "ghostscript"

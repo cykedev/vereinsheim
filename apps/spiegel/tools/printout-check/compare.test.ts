@@ -1,5 +1,4 @@
 import type { Picture, PrintoutValues, ShotValue } from "@vereinsheim/meyton-pdf/values"
-import { LP_10M } from "@vereinsheim/shot-core/targets"
 import { describe, expect, it } from "vitest"
 
 import {
@@ -16,8 +15,6 @@ import {
   fitDrawn,
   hitCircleCandidates,
   nearestCandidate,
-  ringDiametersMm,
-  scaleFromRings,
   spreadCandidates,
   summarize,
   teilerOf,
@@ -307,19 +304,6 @@ describe("Trefferkreis und Streuwert", () => {
 })
 
 describe("Trefferbild", () => {
-  it("liest den Maßstab aus den Ringen der Luftpistole", () => {
-    const mm = ringDiametersMm(LP_10M)
-    expect(mm[0]).toBe(155.5)
-    expect(mm.at(-1)).toBe(5)
-    expect(
-      scaleFromRings(
-        mm.map((d) => d * 1.8),
-        mm
-      )
-    ).toBeCloseTo(1.8, 9)
-    expect(scaleFromRings([1, 2], mm)).toBeNull()
-  })
-
   const raw = [
     { xUm: 0, yUm: 0 },
     { xUm: 10000, yUm: 0 },
