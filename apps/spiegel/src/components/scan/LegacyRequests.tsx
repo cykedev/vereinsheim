@@ -4,13 +4,13 @@ import { useRouter } from "next/navigation"
 import { useState, useTransition } from "react"
 
 import { formatWeekdayDate, zonedDayStartMs } from "@vereinsheim/lib/format"
-import { getErrorMessage } from "@vereinsheim/lib/forms/fieldErrors"
 import { DecisionDialog } from "@vereinsheim/ui/design2/decision-dialog"
 
 import { cardFetchStop } from "@/lib/admin/consequences"
 import { REQUEST_STATUS_TEXT } from "@/lib/card-requests/status"
 import { stopCardFetch } from "@/lib/fetch-card/actions"
 import type { LegacyRequest } from "@/lib/fetch-card/queries"
+import { saveChoice } from "@/lib/save-choice"
 
 /**
  * Ältere Aufträge (vor „Scheibe holen“ ohne Scheibe angelegt), die noch auf die Anlage warten: je Zeile ID, Tag und
@@ -84,10 +84,14 @@ export function LegacyRequests({
           }}
           onConfirm={() =>
             startTransition(async () => {
-              const result = await stopCardFetch(stopping.id)
+              const failed = await saveChoice(
+                stopCardFetch,
+                stopping.id,
+                "Das ließ sich nicht ändern. Versuche es noch einmal."
+              )
               setStopping(null)
-              if ("error" in result) {
-                setError(getErrorMessage(result) ?? "Das ließ sich nicht ändern.")
+              if (failed) {
+                setError(failed)
                 return
               }
               router.refresh()

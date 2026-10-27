@@ -3,15 +3,17 @@
 import { useRouter } from "next/navigation"
 import { useState, useTransition } from "react"
 
-import { getErrorMessage } from "@vereinsheim/lib/forms/fieldErrors"
 import { DecisionDialog } from "@vereinsheim/ui/design2/decision-dialog"
 
 import { cardFetchDismiss, cardFetchStop } from "@/lib/admin/consequences"
 import { requestRemovable, requestStateNote, requestStateText } from "@/lib/card-requests/status"
 import { stopCardFetch } from "@/lib/fetch-card/actions"
 import type { CardFetchInfo } from "@/lib/fetch-card/queries"
+import { saveChoice } from "@/lib/save-choice"
 
 import { ActionRow } from "./ActionRow"
+
+const NOT_CHANGED = "Das ließ sich nicht ändern. Versuche es noch einmal."
 
 const BUTTON =
   "inline-flex h-10 items-center rounded-full px-3.5 text-[13px] font-semibold hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-60"
@@ -82,9 +84,9 @@ export function CardFetch({
           onOpenChange={setOpen}
           onConfirm={() =>
             startTransition(async () => {
-              const result = await stopCardFetch(request.id)
-              if ("error" in result) {
-                setError(getErrorMessage(result) ?? "Das ließ sich nicht ändern.")
+              const failed = await saveChoice(stopCardFetch, request.id, NOT_CHANGED)
+              if (failed) {
+                setError(failed)
                 return
               }
               router.refresh()

@@ -6,6 +6,7 @@ import { toast } from "sonner"
 
 import { formatWeekdayDate, zonedDayStartMs } from "@vereinsheim/lib/format"
 import { getFieldError, getGeneralError } from "@vereinsheim/lib/forms/fieldErrors"
+import { DEFAULT_LIMITS } from "@vereinsheim/meyton-pdf/limits"
 import { PAGE_SINGLE } from "@vereinsheim/shot-ui/layout/columns"
 import { cn } from "@vereinsheim/lib/utils"
 import { Button } from "@vereinsheim/ui/button"
@@ -17,7 +18,7 @@ import { Label } from "@vereinsheim/ui/label"
 import type { CardKind } from "@/generated/prisma/enums"
 import { fetchCardById, fetchCardByLink, fetchCardByUpload } from "@/lib/fetch-card/actions"
 import type { LegacyRequest, NewCardChoice, NewCardOption } from "@/lib/fetch-card/queries"
-import { fetchToast, type FetchOutcome } from "@/lib/fetch-card/texts"
+import { fetchErrorText, fetchToast, type FetchOutcome } from "@/lib/fetch-card/texts"
 import type { ActionResult } from "@/lib/types"
 
 import { CameraScan } from "./CameraScan"
@@ -144,7 +145,16 @@ export function ScanScreen({
     start[source.way](async () => {
       setErrors((current) => ({ ...current, [source.way]: undefined }))
       if (source.way === "id") setIdState(null)
-      const result = await call(source, choice)
+      // ein abgelehnter Aufruf (kein Netz am Stand, eine Datei über der Grenze der Anfrage, nach einem Deploy eine
+      // unbekannte Action) wird zur Meldung am Weg; aus der Transition geworfen ersetzte er die ganze Seite
+      let result: Awaited<ReturnType<typeof call>>
+      try {
+        result = await call(source, choice)
+      } catch {
+        setSheet(null)
+        setErrors((current) => ({ ...current, [source.way]: fetchErrorText("failed") }))
+        return
+      }
       if ("error" in result) {
         setSheet(null)
         if (source.way === "id") setIdState(result)
@@ -254,7 +264,11 @@ export function ScanScreen({
                 const file = event.target.files?.[0]
                 // dieselbe Datei noch einmal wählen löst wieder ein `change` aus
                 event.target.value = ""
-                if (file) submit({ way: "upload", file }, null)
+                if (!file) return
+                // zu groß geht gar nicht erst los: die Grenze der Anfrage läge vor der Action
+                if (file.size > DEFAULT_LIMITS.maxBytes)
+                  setErrors((current) => ({ ...current, upload: fetchErrorText("tooLarge") }))
+                else submit({ way: "upload", file }, null)
               }}
             />
             <label
