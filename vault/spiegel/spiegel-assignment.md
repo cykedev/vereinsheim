@@ -83,8 +83,9 @@ Spiegel hängt dabei nicht vom Layout des Meyton-PDFs ab ([[adr-028]], Änderung
    gefunden, an diesem Tag nicht gefunden, passt nicht zum Ausdruck, lässt sich nicht holen, gehört zu einem anderen
    Konto, keine Antwort). „Nicht mehr holen“ und „Entfernen“ setzen den Auftrag auf zurückgezogen; Scheibe und PDF
    bleiben, die Scheibe heißt dann „ohne Werte“. Erneutes Holen legt einen neuen Auftrag an.
-6. **Rückweg:** Eine falsche Scheibe löscht man (Papierkorb). Im Papierkorb bleibt ihr offener Auftrag (er zählt zur
-   ungefüllt einen der zehn Plätze im Zustand der Brücke, die Brücke füllt die Scheibe weiter); holt man sie zurück und endete ihr Auftrag schon, wartet sie
+6. **Rückweg:** Eine falsche Scheibe löscht man (Papierkorb). Im Papierkorb bleibt ihr offener Auftrag (er belegt
+   ungefüllt einen der zehn Plätze im Zustand der Brücke, die Brücke füllt die Scheibe weiter); holt man sie zurück und
+   endete ihr Auftrag schon, wartet sie
    mit einem neuen wieder auf die Anlage. Eine Scheibe vom Ausdruck hinterlässt beim endgültigen Löschen keine Sperre;
    ihr offener Auftrag ist dann zurückgezogen.
 
@@ -99,7 +100,7 @@ bis dahin hilft die getippte ID oder später das Fundbüro.
 **Bewusst offen:** Ein Ausdruck, an einem späteren Tag aus der Ablage gedruckt, endet mit „an diesem Tag nicht
 gefunden“ (der Abend kommt aus der Druckzeit). Kommt zwischen Anlegen und erstem Stand über eine Zustimmung desselben
 Kontos schon eine Scheibe der Brücke für denselben Block, füllt der Auftrag die Scheibe vom Ausdruck nicht; sie endet
-nach 30 Tagen „ohne Antwort“.
+30 Tage nach dem ersten Nennen im Zustand „ohne Antwort“.
 
 **Brücke aus:** Anlage und Brücke werden nach dem Training ausgeschaltet. Scannst du den QR später, zum Beispiel zu
 Hause, steht die Scheibe sofort mit ihrem PDF in Spiegel; die Rohdaten kommen beim nächsten Einschalten.
