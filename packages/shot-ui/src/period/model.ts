@@ -20,7 +20,6 @@ import {
   inScoring,
   metricByKey,
   type MetricDefinition,
-  type MetricShot,
   type MetricUnit,
   type Scoring,
 } from "@vereinsheim/shot-core/metrics"
@@ -198,10 +197,6 @@ export const itemKind = (item: PeriodItem): CardKind => kindOf(item.kind, item.p
 /** die Art aus Wettkampf oder Training und „nur Probe“: eine Regel für die Übersichten und die Seite einer Scheibe */
 export const kindOf = (kind: PeriodItem["kind"], probeOnly: boolean): CardKind =>
   kind === "competition" ? "competition" : probeOnly ? "probe" : "training"
-
-/** „nur Probe“ aus den Schüssen, für die Seite einer Scheibe (sie hat Schüsse statt Projektion); wie `isProbeOnly` */
-export const probeOnlyShots = (shots: readonly Pick<MetricShot, "kind">[]) =>
-  shots.length > 0 && shots.every((s) => s.kind === "probe")
 
 /**
  * Die Ablesung zu einer Wahl: die gewählte Scheibe, wenn sie im Zeitraum liegt, sonst die neueste mit Ø je Schuss,
