@@ -31,9 +31,14 @@ describe("Blatt „Neue Scheibe“ (Markup)", () => {
     expect(html).toContain("data-new-card")
     expect(html).toContain("ID ff914420 vom Di 27.10.2026")
     expect(
-      [...html.matchAll(/aria-current="true"[^>]*>\s*<span>([^<]+)</g)].map((m) => m[1])
+      [...html.matchAll(/aria-current="true"[^>]*><span[^>]*><span>([^<]+)</g)].map((m) => m[1])
     ).toEqual(["LG 40"])
     expect(html).toMatch(/role="radio"[^>]*aria-checked="true"[^>]*>Wettkampf</)
+    // die gewählte im Akzent wie der Umschalter, mit Häkchen
+    expect(html.match(/data-option-check/g)).toHaveLength(1)
+    expect(html).toMatch(
+      /data-discipline-option="true" aria-current="true" class="[^"]*aria-\[current=true\]:bg-primary/
+    )
     expect(html).toMatch(
       /<button[^>]*data-new-card-create="true"(?![^>]*disabled)[^>]*>Scheibe anlegen/
     )

@@ -1,11 +1,14 @@
 "use client"
 
+import { Check } from "lucide-react"
+
 /**
- * eine Wahl: ein Knopf je Disziplin, die aktuelle getönt. Knöpfe statt Radios: Pfeiltasten in einer Radiogruppe
- * wählten sofort und öffneten die Rückfrage, die Liste ließe sich mit der Tastatur nicht durchgehen
+ * eine Wahl: ein Knopf je Disziplin, die aktuelle im Akzent wie der gewählte Knopf eines Umschalters (`Segmented`) und
+ * mit Häkchen rechts, damit sie sich vom Überfahren unterscheidet. Knöpfe statt Radios: Pfeiltasten in einer
+ * Radiogruppe wählten sofort und öffneten die Rückfrage, die Liste ließe sich mit der Tastatur nicht durchgehen
  */
 const OPTION =
-  "grid w-full cursor-pointer justify-items-start rounded-lg px-2 py-1.5 text-left text-[14px] hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-ring aria-[current=true]:bg-accent-wash"
+  "group flex w-full cursor-pointer items-center justify-between gap-3 rounded-lg px-2 py-1.5 text-left text-[14px] hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-ring aria-[current=true]:bg-primary aria-[current=true]:text-primary-foreground aria-[current=true]:hover:bg-primary"
 
 export interface ChoiceOption {
   id: number
@@ -53,9 +56,16 @@ export function DisciplineChoice<T extends ChoiceOption>({
               onClick={() => onChoose(option)}
               className={OPTION}
             >
-              <span>{option.name}</span>
-              {option.note && (
-                <span className="text-[12.5px] text-muted-foreground">{option.note}</span>
+              <span className="grid justify-items-start">
+                <span>{option.name}</span>
+                {option.note && (
+                  <span className="text-[12.5px] text-muted-foreground group-aria-[current=true]:text-primary-foreground">
+                    {option.note}
+                  </span>
+                )}
+              </span>
+              {option.current && (
+                <Check aria-hidden data-option-check className="size-4 shrink-0" />
               )}
             </button>
           ))}
