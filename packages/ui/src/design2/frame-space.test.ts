@@ -52,8 +52,13 @@ describe("Platz des Rahmens (design2.css)", () => {
     )
   })
 
-  it("nur diese drei Blöcke", () => {
-    expect([...blocks.keys()]).toHaveLength(3)
+  it("nur diese drei Blöcke, der ohne Abfrage zuerst (gleiche Spezifität: die Reihenfolge entscheidet)", () => {
+    expect(css.split(SELECTOR)).toHaveLength(4)
+    expect([...blocks.keys()]).toEqual([
+      "",
+      "(width >= 64rem)",
+      "(width < 64rem) and (max-height: 499px)",
+    ])
   })
 
   it("der Rahmen nimmt die Werte aus dem Token und hat dieselben Grenzen", () => {

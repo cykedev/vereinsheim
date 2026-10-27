@@ -58,10 +58,11 @@ describe("Toaster", () => {
     )
   })
 
-  it("keeps clear of the rail of a phone held sideways, other sides as sonner sets them", () => {
+  it("keeps clear of the rail and the notch of a phone held sideways, other sides as sonner sets them", () => {
     const { offset, mobileOffset } = propsOf()
     expect((mobileOffset as Record<string, string>).left).toBe("calc(var(--app-rail, 0px) + 16px)")
-    expect(Object.keys(offset as object)).toEqual(["bottom"])
+    expect((offset as Record<string, string>).right).toBe("calc(env(safe-area-inset-right) + 24px)")
+    expect(Object.keys(offset as object).sort()).toEqual(["bottom", "right"])
     expect(Object.keys(mobileOffset as object).sort()).toEqual(["bottom", "left"])
   })
 

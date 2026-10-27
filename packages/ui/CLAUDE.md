@@ -58,9 +58,8 @@ für alle drei Apps (ADR-015/016). Jede Komponente gibt es nur einmal — Drift 
   1024 px und im Querformat) und `--app-rail` (Breite der schmalen Leiste, nur im Querformat) an `:root`, solange ein
   `AppFrame` (`data-app-frame`) auf der Seite steht; dieselben Grenzen wie die Klassen der Leisten (Test
   `frame-space.test.ts`). Was unten fest steht, rückt über `--app-bar` und `env(safe-area-inset-bottom)`, nie mit eigener
-  Zahl: „Rückgängig“ (`UndoBar`) 12 px darüber, die Toasts 16 px (sonner unter 600 px Breite) bzw. 24 px. Beide zugleich
-  lägen übereinander, der Toast oben; heute zeigt nur „Scheibe löschen“ in Spiegel „Rückgängig“, ohne Toast. Eine
-  Aktion, die beides tut, braucht eine eigene Lösung.
+  Zahl: „Rückgängig“ (`UndoBar`) 12 px darüber, die Toasts 16 px (sonner unter 600 px Breite) bzw. 24 px. Eine Aktion
+  zeigt deshalb „Rückgängig“ oder einen Toast, nicht beides: Beide lägen übereinander, der Toast oben.
 - **App-frei:** Bausteine aus `src/design2/` kennen keine App: Texte, Routen und Schlüssel kommen als Props
   (`brand`, `renderLink`, `storageKey`, `Decision`). Was den Fachkern braucht, bleibt in `@vereinsheim/shot-ui`.
 - **`src/ui/*` steht in Design 2:** Dialoge auf der Kartenfläche mit `rounded-2xl` über `scrim`, Titel in
