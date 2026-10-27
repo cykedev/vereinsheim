@@ -307,42 +307,42 @@ Erst nur lesend mit Hinweis und Weiterleitung, dann abgeschaltet. Berührt Deplo
 Speicher von Treffsicher (320 MB) bekommt Spiegel mehr als heute 256 MB (gewünscht vom User am 26. Oktober 2026). Teilplan
 nach Stufe 3. Wie Treffsicher lesend läuft, solange der Basisbranch nicht auf `main` ist, klärt dieser Teilplan.
 
-## Vor dem nächsten Release (Stufe 1)
+## Release von Stufe 1 (27. Oktober 2026)
 
-In `main`, noch nicht gepusht und nicht deployt: 1b-1, 1a-1, 1a-2, ADR-035, 1b-2, 1c-0, 1c (`88ea1140`).
+Deployt vom User am 27. Oktober 2026, nur Spiegel (`APPS=spiegel`), `main` auf `3f91dd55`: 1b-1, 1a-1, 1a-2, ADR-035,
+1b-2, 1c-0, 1c und der Fix der Hooks (Node aus `.nvmrc`). Vorher auf `main` der ganze Stack mit den echten Images grün
+(`tools/stack-e2e/run.sh --bridge --ops`: Apps, Migratoren, Grenzen, Brücke, Deploy, Backup und Restore samt
+Ausdrucken, Rollback; Leser im Image 73 MiB, Spiegel in der Spitze 137 MiB).
 
-**Zeitpunkt** (entschieden mit dem User am 27. Oktober 2026): direkt nach dem Merge von 1c, vor 1d. Erst mit 1c bringt
-„Scheibe holen“ Werte; 1d folgt mit einem eigenen Release. Nur Spiegel: Ringwerk und Treffsicher haben seit dem letzten
-Deploy keine eigene Änderung (nur `packages/lib/format` kam dazu), ihre Images bleiben.
+Erledigt:
 
-**Ablauf:**
+- **Migrationen** `20261027120000_card_details`, `20261027180000_card_request_print_mismatch`,
+  `20261027200000_printout_values` (alle additiv), neues Volume `uploads_spiegel`.
+- **Echter Luftgewehr-Ausdruck** lokal gelesen (Leser v2): 60 Schüsse in 6 Serien, alle mit Wert und Lage; Ring 10 und
+  Innenzehn sind dort ein Kreis. Nichts davon gespeichert.
+- **Eigene Ausdrucke in Prod** importiert (User): 38 Ausdrucke.
+- **Leser auf dem VPS gemessen** (amd64, gegen alle 38): alle mit Werten, 72 bis 79 MiB. Container: Spiegel 165 MiB,
+  Spitze 201 MiB von 256 ([[vps-resource-sizing]], Branch `feat/vps-reader-measurement`).
 
-1. 1c in `main`, dann auf `main` den ganzen Stack mit den echten Images prüfen: `tools/stack-e2e/run.sh` (gewünscht vom
-   User). Die Koordination startet ihn und berichtet.
-2. Der User pusht `main` und holt ihn auf dem VPS (`git pull`: `compose.yml` mit dem neuen Volume, Backup und Restore).
-3. Release nur für Spiegel: `APPS=spiegel ./scripts/vereinsheim release`. Sind in der `.env` des VPS Tags gepinnt, nur
-   `SPIEGEL_TAG` und `SPIEGEL_MIGRATOR_TAG` auf den neuen Stand setzen.
-4. Danach die Punkte unten: Leser auf dem VPS messen, Kamera am Telefon, eigene Ausdrucke importieren (Anleitung im
-   Bericht von 1c).
+Offen:
 
-- **Migrationen beim Start:** `20261027120000_card_details` (1a-1, additiv; Spiegel rechnet danach alle Projektionen
-  einmal neu, Version 6), `20261027180000_card_request_print_mismatch` (1b-2, additiv) und
-  `20261027200000_printout_values` (1c, additiv).
-- **Neulesen beim Start** (1c): Spiegel liest alle Ausdrucke mit Leser älter als `meyton-values@2` neu, 50 je Lauf,
-  beim Start und stündlich. In Prod liegen vor dem Release noch keine Ausdrucke, der Lauf ist also leer.
-- **Rückweg auf ein älteres Image** nach 1b-2: vorher `UPDATE "CardRequest" SET status = 'mismatch' WHERE status =
-'printMismatch';` (das alte Image kennt den Wert nicht).
-- **Neues Volume** `uploads_spiegel` (1b-1), legt `vereinsheim deploy` an; Backups enthalten danach die PDFs.
-- **Messung des Lesers auf dem VPS** (amd64) mit dem Einzeiler aus `vault/operations/vps-resource-sizing.md`, bevor
-  das Scannen genutzt wird, dazu `printout-sample --values` und ein echter Ausdruck mit großem Trefferbild (im
-  Container arm64 bis 87,5 MiB, die Wache greift bei 96 MiB; greift sie, gelten ID und Druckzeit, nur die Werte fehlen);
-  über 80 MiB → Grenze oder Speicher von Spiegel anpassen.
-- **Echter Luftgewehr-Ausdruck** nach dem Deploy (1c): Werte nur an erfundenen LG-Ausdrucken belegt. Ein beliebiger
-  LG-Ausdruck über „Scheibe holen“ zeigt, ob die Werte kommen.
-- **Eigene Ausdrucke in Prod importieren** (User, nach dem Deploy): Weg in [[meyton-printout]].
-- **Node 26 Pflicht** (1c, `engine-strict`): `pnpm install` und `pnpm dev` brechen unter älterem Node hart ab.
+- **Speicher von Spiegel:** Der Leser zählt zur Grenze des Containers. Spiegel lag nach dem Import bei 137 MiB Programm,
+  ein Leser kommt mit bis zu 79 MiB dazu, Rest rund 40 MiB. Entscheidung des Users ausstehend (Vorschlag: Treffsicher
+  320 → 256 MB, Spiegel 256 → 320 MB, Summe gleich; Treffsicher lag zuletzt bei 59 MiB, früher höchstens 163).
 - **Am echten Telefon über HTTPS prüfen:** Kamera und der Rückfall auf das Foto.
-- **Keine neue Brücke** nötig.
+- **Rückweg auf ein älteres Image:** vorher `UPDATE "CardRequest" SET status = 'mismatch' WHERE status =
+'printMismatch';` (das alte Image kennt den Wert nicht).
+- **Node 26 Pflicht** (`engine-strict`): `pnpm install` und `pnpm dev` brechen unter älterem Node hart ab.
+- **Build hängt im Haupt-Checkout:** `next build` von Spiegel hängt dort (600 % CPU, ohne Ende), in einem frischen
+  Worktree baut derselbe Stand in Sekunden. Debug-Session vorgeschlagen; bis dahin Gates im Worktree.
+
+## Wie es weitergeht
+
+1. **1d Handeingabe** planen (mit dem User), eigenes Release auf `main`; dazu das Admin-Formular für Disziplinen ohne
+   Meyton-ID (3 eigene Ausdrucke blieben beim Import ohne passende Disziplin).
+2. Daneben ohne den User: der hängende Build im Haupt-Checkout; der kleine Teil für die Toasts über der unteren Leiste.
+3. **Stufe 2 Tagebuch:** Entwurf der Oberfläche mit dem User, während 1d gebaut wird; Teilpläne auf dem Basisbranch.
+4. **Stufe 3 Übernahme**, dann **Stufe 4 Ruhestand**.
 
 Für später festgehalten: Toasts über der unteren Leiste (gemeinsamer Toaster, alle Apps, eigener kleiner Teil); Randfall
 „Wertung endgültig gelöscht, Probe des Abends bleibt“: Holen öffnet die Probe, die Sperre der Wertung bleibt;
