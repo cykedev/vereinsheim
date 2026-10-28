@@ -293,8 +293,8 @@ Die Liste markiert, wohin man kommt, wie der Fortschritt seine Wahl (`bg-accent-
   - Geschrieben nur beim Umschalten, nie beim Öffnen: Nach Zurück und Vor bringt Next die Seite aus dem Cache mit der
     Darstellung ihres ersten Besuchs, ein Schreiben beim Öffnen überschriebe die zuletzt gewählte.
   - Eine Seite aus dem Cache übernimmt die gemerkte über `useSyncExternalStore` (beim Hydrieren gilt die vom Server).
-- **Kasten „Diese Scheibe“** am Ende (`CardActions`, nur für den Besitzer): Ausdruck, Von der Anlage, Disziplin, Teilen
-  und Löschen als Zeilen, je
+- **Kasten „Diese Scheibe“** am Ende (`CardActions`, nur für den Besitzer): Eintrag und Beleg (eingetragene Scheiben),
+  Ausdruck, Von der Anlage, Ort (vom Ausdruck), Disziplin, Teilen und Löschen als Zeilen, je
   mit Zustand links und Aktion rechts („Ändern“, „Teilen“, „Löschen“; für Screenreader „Disziplin ändern“,
   „Scheibe teilen“, „Scheibe löschen“). Darüber „Mit der Scheibe davor vergleichen“ als eigener Kasten. Nach
   conventions §2 stünden sie oben (`DetailActionBar`); der Kopf ist aber schon voll, und man braucht sie selten. Siehe
@@ -315,6 +315,35 @@ Abend holen die Scheibe.
   Rückfrage (`cardFetchStop`, `cardFetchDismiss`); der Auftrag ist danach zurückgezogen, Scheibe und PDF bleiben.
 - **Grund ohne Werte** folgt dem Auftrag: Eine Scheibe vom Ausdruck ohne offenen, ungefüllten Auftrag heißt „ohne
   Werte“ statt „wartet auf die Anlage“ (`waiting: false`, in Liste, Start, Fortschritt, Vergleichen und auf der Seite).
+
+## Von Hand eintragen
+
+Eine Scheibe ohne Ausdruck (fremde Anlage, Papier, Gedächtnis) entsteht auf demselben Weg wie die anderen ([[adr-033]],
+Teil 1d, entschieden mit dem User am 28. Oktober 2026):
+
+- **Einstieg:** fünfte Karte „Von Hand eintragen“ auf „Scheibe holen“. „Eintragen“ öffnet das Blatt „Neue Scheibe“
+  (Disziplin und Art, ohne ID-Zeile, Knopf „Weiter“), danach das Formular `/cards/new?discipline=…&kind=…`. Angelegt
+  wird erst beim Speichern; eine Disziplin, die nicht zur Wahl steht, führt zurück zu „Scheibe holen“.
+- **Formular** (`EnteredCardForm`, Logik rein in `src/lib/entered/form.ts`): Tag, Uhrzeit (wenn bekannt; ohne gilt 12 Uhr
+  und `Card.timeUnknown`, gezeigt wird nur der Tag), Ort als Freitext mit den eigenen Orten als Vorschlag, Werte in
+  Zehnteln oder ganzen Ringen (nie umgerechnet, „97“ in Zehnteln ist 97,0), dann Serien mit „Schüsse einzeln“ zum
+  Aufklappen (die Summe kommt dann aus den Schüssen) oder nur das Gesamtergebnis mit Schusszahl (leer: die der
+  Disziplin). Eine Disziplin ohne Serienlänge hat nur das Gesamtergebnis. Leere Serien am Ende zählen nicht, eine Lücke
+  ist ein Fehler. Schüsse einzeln in allen gefüllten Serien oder in keiner, wie das Modell aus 1a-1 es verlangt (in der
+  Prod-Kopie von Treffsicher hat keine Einheit Schüsse nur in einigen Serien). Trefferlage als Summe waagrecht und
+  senkrecht in mm mit Richtung. Fehler stehen am Feld. „Zurück“ mit Eingaben fragt (`enteredDiscard`).
+- **Ändern:** Zeile „Eintrag“ im Kasten „Diese Scheibe“ („Von Hand eingetragen“, „Aus Treffsicher übernommen“) mit
+  „Ändern“ zu `/cards/<id>/edit`. Geänderte Werte sind eine neue Revision (`writeEnteredCard`), Tag, Uhrzeit und Ort
+  stehen an der Scheibe ohne Verlauf, wie Disziplin und Art. Kann das Formular nicht alle Angaben zeigen (Lage, Zeit
+  oder Probe an Schüssen), fehlt „Ändern“. Löschen wie jede Scheibe.
+- **Ort einer Scheibe vom Ausdruck:** Zeile „Ort“ mit einem Blatt (`setCardPlace`). Scheiben der Anlage tragen ihren Ort
+  über die Anlage und haben keine Zeile.
+- **Beleg** (Zeile „Beleg“, nur eingetragene Scheiben): ein Foto oder PDF, damit der Schütze später nachsehen kann. Der
+  Browser zeichnet Fotos neu als JPEG unter 4 MiB (Grenze der Anfrage 5 MiB, `prepareEvidence`), das nimmt die
+  Drehung mit und lässt die übrigen Metadaten weg. Der Typ zählt an den Bytes. Ein PDF, in dem Spiegel einen
+  Meyton-Ausdruck erkennt, wird kein Beleg: Unter „Scheibe holen“ bringt es seine Werte mit. Öffnen nur für den
+  Besitzer (`/api/evidence/<id>`, Sandbox), nie auf der geteilten Seite. Ersetzen und Entfernen (mit Rückfrage,
+  `evidenceRemove`).
 
 ## Fortschritt
 

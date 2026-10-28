@@ -205,6 +205,12 @@ Stand mit `past` (`MAX_OBSERVED_LAG_MS`, SF-79).
   Summen (`SUMS_SELECT`/`toCardSums` aus `cards.ts`, dieselben wie `revisionSums`), `patternCardsOf` die Trefferlage als
   Summe (`summaryCenter`). `CardScreen` wählt das Gerüst nach `detailLevel`. Die geteilte Seite zeigt die Herkunft, nie
   den Ort (`sharedCard`).
+- **Von Hand eintragen** ([[spiegel-navigation]] „Von Hand eintragen“): Formular `/cards/new` und `/cards/[id]/edit`
+  (`EnteredCardForm`), die Regeln rein in `src/lib/entered/form.ts` (`formToDetails`, `detailsToForm`, `problemText`),
+  gespeichert nur über `saveEnteredCard` (`src/lib/entered/actions.ts`, Herkunft `manual`). Ohne Uhrzeit 12 Uhr und
+  `Card.timeUnknown` (`timeKnown` in `reads.ts`). Beleg je eingetragener Scheibe (`CardEvidence`, Dateien unter
+  `UPLOAD_DIR/evidence/`, `src/lib/evidence/`, Actions in `src/lib/entered/evidence-actions.ts`, Route
+  `/api/evidence/<id>`); Ort einer Scheibe vom Ausdruck über `setCardPlace`.
 - **Familie mitgeführt:** `Card.familyId` kopiert die Familie der Disziplin für den Index; umhängen nur über
   `moveDisciplineFamily` (in der Transaktion des Aufrufers, mit den Scheiben) bzw. `setDisciplineFamily`.
 - **Disziplinen einordnen** (Admin → Disziplinen, [[spiegel-target-library]]): Das Einlesen legt jede neue Disziplin
@@ -212,7 +218,7 @@ Stand mit `past` (`MAX_OBSERVED_LAG_MS`, SF-79).
   Disziplin derselben Nummer (in Meyton umbenannt), sonst mit dem Vorschlag des Fachkerns, ignoriert bei Meytons Spielen
   und Trainingsscheiben (`suggestIgnore`). Eingeordnet erst mit `confirmedAt`. Felder: Scheibe (`targetId`, null = eigene
   Scheibe), Familie (auch eigene, Kennung aus dem Namen und fest, `familySlug`), Wertung
-  (`officialScoring`, Vorgabe für Training und Wettkampf), Schusszahl (`plannedShots`: null aus der ID, 0 keine feste, `plannedShotsOf`), Serienlänge (`seriesShots`, `seriesShotsOf`), ohne Meyton-ID möglich (`meytonId` null; Anlegen im Admin folgt mit 1d), Ignorieren
+  (`officialScoring`, Vorgabe für Training und Wettkampf), Schusszahl (`plannedShots`: null aus der ID, 0 keine feste, `plannedShotsOf`), Serienlänge (`seriesShots`, `seriesShotsOf`), ohne Meyton-ID möglich (`meytonId` null; Anlegen im Admin mit „Neue Disziplin“, `createDiscipline`), Ignorieren
   (`ignoredAt`). Ändern sich Scheibe oder Schusszahl, steigt `Discipline.version`; `refreshStaleDisciplineCards` rechnet
   Scheiben mit anderer `Card.disciplineVersion` aus den Schüssen der aktuellen Revision nach (nach dem Speichern über
   `after()`, beim Start, stündlich). Gegenprobe und Merkmale der Disziplin rechnen Adapter und Nachrechnen mit denselben
@@ -376,7 +382,8 @@ Stand mit `past` (`MAX_OBSERVED_LAG_MS`, SF-79).
     einer Scheibe. `printoutFile` liest die Datei nur für den Besitzer und nur wie die Seite der Scheibe (`VISIBLE_CARD`:
     nicht wartend, nicht im Papierkorb, nicht bei ignorierter Disziplin); die Route `/api/printouts/<id>`
     (`printouts/http.ts`) reicht nur durch (`inline`, `private, no-store`, `nosniff`).
-  - Dateien löscht nur `removeOrphanPrintoutFiles` (beim Start, stündlich nach dem Papierkorb, nach „Nicht meine“ und
+  - Dateien löscht nur `removeOrphanFiles` (`removeOrphanPrintoutFiles`, `removeOrphanEvidenceFiles`, zusammen über
+    `sweepUploadsSoon` in `src/lib/uploads.ts`: beim Start, stündlich nach dem Papierkorb, nach „Nicht meine“ und
     `purgeCardNow`): jede Datei ohne Zeile, älter als zehn Minuten; gibt es gar keine Scheibe, keine.
 - **Ältere Scheiben nachladen:** Eine aktive Zustimmung ohne
   `historyLoadedAt` ist ein Auftrag mit `since` (`historyRequestedAt`, gesetzt beim Bestätigen und Aufheben; alte Zeilen:

@@ -212,7 +212,11 @@ Ziel: **Mit Opt-in erscheint die Dienstagsscheibe von selbst in Spiegel; ohne Op
   entfernt. Offen bleibt die Durchsicht nach drei Ebenen (unten unter „Offene Einzelpunkte“).
 
 ### SP-4.4 Weitere Quellen
-- DISAG, neue Meyton-Linie ESTANX, Handeingabe als weitere Adapter ([[meyton-interfaces]]). Die Handeingabe (je Serie, je Schuss, mit Beleg) ist Teil von Stufe 1 aus [[adr-033]]. **Status:** offen.
+- DISAG, neue Meyton-Linie ESTANX als weitere Adapter ([[meyton-interfaces]]). **Status:** offen.
+- **Handeingabe** (Stufe 1, Teil 1d aus [[adr-033]]): „Von Hand eintragen“ als Weg in „Scheibe holen“, Formular je
+  Serie mit „Schüsse einzeln“ oder nur das Gesamtergebnis, Tag mit Uhrzeit, wenn bekannt, Ort mit Vorschlägen,
+  Trefferlage als Summe; eingetragene Scheiben ganz ändern; ein Beleg (Foto oder PDF) je Scheibe; Disziplinen ohne
+  Meyton-ID legt der Admin an ([[spiegel-navigation]] „Von Hand eintragen“). **Status:** umgesetzt (28. Oktober 2026).
 
 ## Offene Einzelpunkte
 
