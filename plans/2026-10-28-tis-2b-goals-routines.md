@@ -149,7 +149,7 @@ model DiaryGoal {
   id        String            @id @default(cuid())
   userId    String
   user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  // `Family.id`; null nur aus der Übernahme, wenn sich keine Disziplin ergibt
+  // `Family.id`; null ohne Disziplin (die Seite bietet „Disziplin festlegen“, gemessen wird nur mit Disziplin)
   familyId  Int?
   title     String
   note      String?
@@ -182,7 +182,7 @@ model DiaryRoutine {
   id        String    @id @default(cuid())
   userId    String
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  // `Family.id`; null nur aus der Übernahme
+  // `Family.id`; null ohne Disziplin (im Faden unter „Ohne Disziplin“, die Seite bietet „Disziplin festlegen“)
   familyId  Int?
   name      String
   // [{ "title": string, "description"?: string }] in Reihenfolge, geprüft mit zod (`routineSteps`)
@@ -265,7 +265,7 @@ Transaktion, die die Zeile `FOR UPDATE` sperrt und `userId` prüft, Fehler als T
 - Abläufe: `createRoutine`, `updateRoutine` (Name und Schritte aus dem Text), `setRoutineFamily`, `deleteRoutine`,
   `restoreRoutine`, `purgeRoutineNow`.
 - Prüfung mit zod in `src/diary/goals/validation.ts` und `src/diary/routines/validation.ts`: Satz 1–200 Zeichen,
-  `to` ≥ `from`, Disziplin aus `resultFamilies`, Schwelle > 0, ganze Zahl bis 10 × Schusszahl bei `rings`, eine
+  `to` ≥ `from`, Disziplin aus `resultFamilies` oder keine (Pflicht nur mit Messung), Schwelle > 0, ganze Zahl bis 10 × Schusszahl bei `rings`, eine
   Stelle bis 10,9 × Schusszahl bei `decimal`, Schusszahl 1–200.
 - Actions in `src/diary/goals/actions.ts` und `src/diary/routines/actions.ts` (`"use server"`, nur direkt deklarierte
   async-Funktionen), mit `guard()` wie `src/diary/actions.ts` (Sitzung, Schalter), `ActionResult`,
@@ -285,7 +285,8 @@ Transaktion, die die Zeile `FOR UPDATE` sperrt und `userId` prüft, Fehler als T
 - **`/diary/goals/[id]`** (`GoalScreen`), eine Spalte (`PAGE_SINGLE`): Rückweg „Ziele“, Satz als `h1`, Unterzeile
   „{Disziplin} · {Art der Scheiben, nur wenn nicht alle} · {from} – {to}“ (Prozessziel: „Prozessziel“ statt der Art),
   dann Kästen in fester Folge, gleich für jedes Ziel:
-  1. **Stand:** Kopf „Stand“ mit Zustand. Mit Messung: große Zahl und Satz, drei Kacheln („zuletzt“, „Bestes“,
+  1. **Stand:** Kopf „Stand“ mit Zustand. Ohne Disziplin zuerst eine Zeile mit „+“ „Disziplin festlegen“ (öffnet das
+     Formular), so gebaut wie „Messung festlegen“. Mit Messung: große Zahl und Satz, drei Kacheln („zuletzt“, „Bestes“,
      „Schnitt“), der Verlauf (`GoalChart`, SVG: ein Punkt je gezählter Einheit, Ziellinie gestrichelt in `gold`, Punkte
      ab der Schwelle in `gold`, die übrigen in `quiet`; Achse nur erster und letzter Monat), Grundlage (nur wenn etwas
      nicht zählt) und „Im Fortschritt ansehen ›“. Ohne Messung beim Ergebnisziel eine Zeile mit „+“ „Messung
@@ -303,7 +304,8 @@ Transaktion, die die Zeile `FOR UPDATE` sperrt und `userId` prüft, Fehler als T
     includeProbeOnly: false, choice: { type: "free", from, to } } })`; bei einem Ziel, das noch läuft, `to` = heute.
 - **`/diary/goals/new` und `/diary/goals/[id]/edit`** (`GoalForm`, gesteuert, conventions §9): „Was willst du
   erreichen?“, „Art“ (Segment Ergebnisziel · Prozessziel), „Disziplin“ (Chips aus `resultFamilies`, vorgewählt die
-  der neuesten eigenen Scheibe), „Zeitraum“ (Segment „Saison 26/27“ · „Saison 27/28“ · „Frei“, bei „Frei“ zwei
+  der neuesten eigenen Scheibe, ein Tipp auf die gewählte nimmt sie weg; ohne Disziplin geht der Schalter „Spiegel misst
+  mit“ nicht an, mit dem Satz dazu), „Zeitraum“ (Segment „Saison 26/27“ · „Saison 27/28“ · „Frei“, bei „Frei“ zwei
   Datumsfelder; Vorgabe die laufende Saison), bei Ergebnisziel der Kasten „Spiegel misst mit“ (Schalter, an), darin
   „Was zählt?“ (Segment Scheibe · Serie · Schnitt), „Ab wie vielen Ringen?“ (Feld `w-0 grow max-w-28`, conventions §9),
   darunter die Zeile „in ganzen Ringen · auf 40 Schuss“ mit „Ändern“, das Wertung (Segment Ganze Ringe · Zehntel) und
@@ -311,7 +313,7 @@ Transaktion, die die Zeile `FOR UPDATE` sperrt und `userId` prüft, Fehler als T
   „Welche Scheiben?“ (Segment Alle · Training · Wettkampf), der Satz aus `previewGoal` (300 ms nach der letzten
   Änderung). Unten eine klebende Leiste mit „Abbrechen“ und „Ziel anlegen“ bzw. „Speichern“; `toast.dismiss()` beim
   Öffnen, Fehler an der Leiste (conventions §9). Verlassen mit Ungespeichertem: `useUnsavedChangesGuard`,
-  `useNavigationConfirm` und Rückfrage `goalDiscard`. Ein bestehendes Ziel ohne Messung (aus der Übernahme) öffnet mit
+  `useNavigationConfirm` und Rückfrage `goalDiscard`. Ein bestehendes Ergebnisziel ohne Messung öffnet mit
   Schalter aus.
 - **Start:** `goalStartLines(db, { ownerId, families, timeZone })` in `src/parts/lines.ts` gibt je Familie die Zeile
   des zuletzt angelegten laufenden Ziels mit Messung (`PartLine`: Titel „Ziel {Schwelle}“, Zustand „{hits} von {counted}
@@ -322,16 +324,19 @@ Transaktion, die die Zeile `FOR UPDATE` sperrt und `userId` prüft, Fehler als T
 
 ### Abläufe: Oberfläche
 
-- **Faden** (`ThreadView`): Chips der Disziplinen mit Frage oder Ablauf (heute nur mit Frage), dann der Kasten
+- **Faden** (`ThreadView`): Chips der Disziplinen mit Frage oder Ablauf (heute nur mit Frage), dazu als letzter Chip
+  „Ohne Disziplin“, wenn es einen Ablauf ohne Disziplin gibt (`?family=none`: nur der Kasten „Abläufe“ mit dem Satz
+  dazu, keine Fragen, denn Fragen gehören immer zu einer Disziplin). Dann der Kasten
   „Abläufe“ (`RoutineBox`): Kopf mit „+“ (`/diary/routines/new?family=<slug>`), je Ablauf eine Zeile (Name, „{n}
   Schritte“, ganz der Link), ohne Ablauf eine Zeile mit „+“ und Satz. Darunter Satz und Zeitstrahl wie heute. Hat das
   Konto weder Frage noch Ablauf, steht der Kasten über dem Leersatz, ohne Chips.
 - **`/diary/routines/[id]`** (`RoutineScreen`): Rückweg „Faden“ (zur Disziplin des Ablaufs), Name als `h1`,
-  „{Disziplin} · {n} Schritte“, ein Kasten mit der nummerierten Liste (weiche gefüllte Kreise `accent-wash` mit Nummer,
+  „{Disziplin} · {n} Schritte“ (ohne: „Ohne Disziplin · {n} Schritte“), ohne Disziplin darunter eine Zeile mit „+“
+  „Disziplin festlegen“ (öffnet das Blatt mit Chips), ein Kasten mit der nummerierten Liste (weiche gefüllte Kreise `accent-wash` mit Nummer,
   Titel fett, Erklärung mit Zeilenumbrüchen), „Dieser Ablauf“: „Schritte und Name“ · „Bearbeiten“, „Disziplin“ ·
-  „Ändern“ (Blatt mit Chips), „Löschen“ mit Rückfrage und „Ablauf gelöscht · Rückgängig“.
+  „Ändern“ bzw. ohne Disziplin „Festlegen“ (Blatt mit Chips), „Löschen“ mit Rückfrage und „Ablauf gelöscht · Rückgängig“.
 - **`/diary/routines/new` und `/diary/routines/[id]/edit`** (`RoutineForm`): „Name“, bei neu „Disziplin“ (Chips,
-  vorgewählt aus `?family=`), „Schritte“ als ein Textfeld (`textarea`, wächst mit), darunter der Hinweis mit der
+  vorgewählt aus `?family=`, abwählbar), „Schritte“ als ein Textfeld (`textarea`, wächst mit), darunter der Hinweis mit der
   Zahl der Schritte live aus `textToSteps`. Klebende Leiste „Verwerfen“ / „Speichern“ bzw. „Ablauf anlegen“; Wächter
   und Rückfrage `routineDiscard` wie beim Ziel.
 
@@ -351,14 +356,15 @@ Transaktion, die die Zeile `FOR UPDATE` sperrt und `userId` prüft, Fehler als T
 Schreibregeln conventions §10, keine Semikolons, keine Pronomen für Personen in Rückfragen. `{…}` setzt die App ein.
 
 **Reiter und Liste** (`GOAL_TEXTS`): Reiter „Ziele“; Knopf „Neues Ziel“; Gruppen „Laufend“, „Kommend“, „Vorbei“;
-Karte „{Disziplin} · bis {to}“, vorbei „{Disziplin} · {from} – {to}“; Stand „{hits} von {counted} Scheiben ab
+Karte „{Disziplin} · bis {to}“, vorbei „{Disziplin} · {from} – {to}“, ohne Disziplin „Ohne Disziplin“ an ihrer Stelle; Stand „{hits} von {counted} Scheiben ab
 {Schwelle}“, „{hits} von {counted} Serien ab {Schwelle}“, „Schnitt {mean} über {counted} Scheiben“, ohne Messung
 „Ergebnisziel ohne Messung“ bzw. „Prozessziel · {n} Einträge im Zeitraum“; Zustand „läuft“, „beginnt am {from}“,
 „vorbei“, sonst „Ja“, „Teilweise“, „Nein“. Leer: Titel „Noch kein Ziel“, Text „Ein Ziel ist ein Satz in deinen Worten
 für eine Saison. Spiegel kann mitzählen, wie oft du eine Ringzahl erreichst.“, Knopf „Neues Ziel“.
 
 **Seite eines Ziels:** Rückweg „Ziele“; Unterzeile „Prozessziel“, „Training“, „Wettkampf“; Kopf „Stand“, Zustand
-„läuft · noch {n} Monate“ („noch 1 Monat“), „beginnt am {from}“, „vorbei“; große Zahl „{hits}“ mit „von {counted}
+„läuft · noch {n} Monate“ („noch 1 Monat“), „beginnt am {from}“, „vorbei“; ohne Disziplin Zeile „Disziplin
+festlegen“, „Ohne Disziplin misst Spiegel nichts und zeigt alle Einträge im Zeitraum.“; große Zahl „{hits}“ mit „von {counted}
 Scheiben ab {Schwelle} Ringen“ bzw. „Serien“, bei Schnitt „{mean}“ mit „Schnitt über {counted} Scheiben · Ziel
 {Schwelle}“; Kacheln „{hits} von {n}“ · „zuletzt“, „{best}“ · „Bestes, {Tag}“, „{mean}“ · „Schnitt“; Grundlage „über
 {n} Scheiben · {k} ohne Ergebnis zählen nicht“, „· {k} mit anderer Schusszahl zählen nicht“, „· {k} ohne Serien zählen
@@ -374,17 +380,19 @@ das Ziel 30 Tage im Papierkorb im Profil. Scheiben und Einträge bleiben.“
 **Formular:** Titel „Neues Ziel“ bzw. „Ziel ändern“; „Was willst du erreichen?“ (Platzhalter „zum Beispiel: 355 im
 Training regelmäßig schießen“); „Art“ mit „Ergebnisziel“, „Prozessziel“; „Disziplin“; „Zeitraum“ mit „Saison {26/27}“,
 „Frei“, „Von“, „Bis“, darunter „{from} bis {to}“; „Spiegel misst mit“, „Aus heißt: nur der Satz, wie ein
-Prozessziel.“; „Was zählt?“ mit „Scheibe“, „Serie“, „Schnitt“; „Ab wie vielen Ringen?“; „in ganzen Ringen“ bzw. „in
+Prozessziel.“; „Was zählt?“ mit „Scheibe“, „Serie“, „Schnitt“; ohne Disziplin „Messen geht erst mit einer Disziplin.“; „Ab wie vielen Ringen?“; „in ganzen Ringen“ bzw. „in
 Zehnteln“, „auf {n} Schuss“, „Ändern“, „Wertung“ mit „Ganze Ringe“, „Zehntel“, „Schuss je Scheibe“ bzw. „Schuss je
 Serie“; „Welche Scheiben?“ mit „Alle“, „Training“, „Wettkampf“; Vorschau „Bisher in diesem Zeitraum: {hits} von
 {counted} Scheiben ab {Schwelle}.“ (Serie, Schnitt entsprechend), ohne Scheiben „Bisher keine Scheibe in diesem
 Zeitraum.“; Knöpfe „Abbrechen“, „Ziel anlegen“, „Speichern“; Toasts „Ziel angelegt.“, „Ziel gespeichert.“.
-Feldfehler: „Bitte einen Satz.“, „Höchstens 200 Zeichen.“, „Bitte eine Disziplin wählen.“, „Das Ende liegt vor dem
+Feldfehler: „Bitte einen Satz.“, „Höchstens 200 Zeichen.“, „Zum Messen bitte eine Disziplin wählen.“, „Das Ende liegt vor dem
 Beginn.“, „Bitte eine Ringzahl wie 355.“, „Bitte eine Ringzahl wie 365,5.“, „So viele Ringe gehen auf {n} Schuss
 nicht.“, „Bitte eine Schusszahl von 1 bis 200.“ Allgemein `ERRORS` aus 2a, dazu „Dieses Ziel gibt es nicht mehr.“
 
 **Abläufe:** Kasten „Abläufe“, Zeile „{n} Schritte“ („1 Schritt“), leer „Noch kein Ablauf für {Disziplin}. Schreib auf,
-wie du einen Schuss aufbaust.“; Seite: Rückweg „Faden“, „{Disziplin} · {n} Schritte“, „Dieser Ablauf“, „Schritte und
+wie du einen Schuss aufbaust.“; Chip „Ohne Disziplin“ mit Satz „Abläufe ohne Disziplin. Mit einer Disziplin stehen sie in
+deren Faden.“; Seite: Rückweg „Faden“, „{Disziplin} · {n} Schritte“ bzw. „Ohne Disziplin · {n} Schritte“, Zeile „Disziplin
+festlegen“, „Dann steht der Ablauf im Faden dieser Disziplin.“, Knopf „Festlegen“, „Dieser Ablauf“, „Schritte und
 Name“, „Bearbeiten“, „Disziplin“, „Ändern“, „Löschen“, „Danach liegt der Ablauf 30 Tage im Papierkorb im Profil.“;
 Formular: „Neuer Ablauf“ bzw. „Ablauf bearbeiten“, „Name“ (Platzhalter „zum Beispiel: Mein Ablauf“), „Disziplin“,
 „Schritte“, Hinweis „Jeder Absatz ist ein Schritt. Die erste Zeile ist sein Titel, was darunter steht, die Erklärung.
@@ -476,7 +484,7 @@ Koordination.
 10. `OutcomeChoice` mit `save`, `DiaryHeader` mit drittem Reiter und Knopf je Reiter, `GoalList` und
     `/diary/goals`; Markup-Tests in `components.test.tsx` (Gruppen, leere Gruppe fehlt, Karte ist Link).
 11. `GoalChart`, `GoalScreen`, `DeleteGoal`, `/diary/goals/[id]`; Markup-Tests (feste Folge der Kästen mit und ohne
-    Messung, Prozessziel, vor Beginn, Grundlage nur wenn etwas fehlt).
+    Messung, Prozessziel, vor Beginn, ohne Disziplin, Grundlage nur wenn etwas fehlt).
 12. `GoalForm`, `/diary/goals/new`, `/diary/goals/[id]/edit`; Markup-Test (Messung nur bei Ergebnisziel).
 13. Start: `startLines` als Liste, `goalStartLines`, `StartScreen`, `page.tsx`; Tests in `lines.test.ts` (Tagebuch
     aus → leer, Ziel ohne Messung → keine Zeile, zwei laufende → das zuletzt angelegte).
@@ -486,9 +494,10 @@ Koordination.
 
 15. `routines/validation.ts`, `routines/routines.ts`, `routines/queries.ts`, `routines/actions.ts`, Texte, Folgen;
     Tests gegen die Dev-Datenbank wie in 7.
-16. `threadView` mit Abläufen, `RoutineBox`, `ThreadView`; Markup-Tests (Konto nur mit Ablauf zeigt den Kasten).
+16. `threadView` mit Abläufen, `RoutineBox`, `ThreadView`; Markup-Tests (Konto nur mit Ablauf zeigt den Kasten, Ablauf
+    ohne Disziplin steht unter „Ohne Disziplin“ und verschwindet nicht).
 17. `RoutineScreen`, `RoutineForm`, `DeleteRoutine`, die drei Seiten; Markup-Tests (Nummern, Erklärung mit
-    Zeilenumbruch, Zahl der Schritte im Hinweis).
+    Zeilenumbruch, Zahl der Schritte im Hinweis, ohne Disziplin die Zeile „Disziplin festlegen“).
 18. Papierkorb für Abläufe, `diaryExport` mit `goals` und `routines`, Test in `account.test.ts`; Kaskade in
     `account-actions.test.ts`.
 19. Skriptprüfung in `tools/pruefen-diary.ts` (siehe „Tests und Verifikation“), Aufräumen am Ende um Ziele und
@@ -548,7 +557,14 @@ Koordination.
   gemessenen Scheibe gleich den Serien auf ihrer Seite.
 - Keine neue Brücke nötig (kein Vertrag berührt).
 
-## Offene Fragen an die Koordination
+## Entschieden (Koordination und User, 28. Oktober 2026)
+
+Alle vier Fragen mit der Empfehlung: Serien in der Projektion in 2b (`PROJECTION_VERSION` 7), die Stelle auf Start als
+Liste, Schusszahl und Wertung vorbelegt mit „Ändern“, Papierkorb 30 Tage für Ziele und Abläufe. Dazu: Eine fehlende
+Disziplin ist kein Sonderfall der Übernahme. Modell, Kommentare und Oberfläche behandeln sie allgemein („Disziplin
+festlegen“, im Faden „Ohne Disziplin“).
+
+## Fragen beim Planen (entschieden)
 
 1. **Serien in der Projektion** (Fachkern, `PROJECTION_VERSION` 7): Ohne sie müsste „Serie ab X“ die Schüsse aller
    Scheiben einer Saison lesen, gegen ADR-031. Es ist eine Änderung in `packages/shot-core` (Ergebnisteil), ohne Wissen
