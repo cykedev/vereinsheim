@@ -401,7 +401,7 @@ die eigentlich die Wertung war.
 | 1c   | `plans/2026-10-27-tis-1c-printout-values.md` | `feat/tis-1c-printout-values` (von `main`) | `tis-1c-printout-values` | in `main` (`88ea1140`); Luftgewehr-Fix, Leser v2        |
 | 1d   | `plans/2026-10-28-tis-1d-hand-entry.md`      | `feat/tis-1d-hand-entry` (von `main`)      | `tis-1d-hand-entry`      | in `main` (`dbc9e45c`), noch nicht deployt              |
 | 1e   |                                              |                                            |                          | in 1a-2                                                 |
-| 2a   | `plans/2026-10-28-tis-2a-diary-entries.md`   | `feat/tis-2a-diary-entries` (vom Basis)    | `tis-2a-diary-entries`   | Entscheidungen da, Plan entsteht in der Kindsession     |
+| 2a   | `plans/2026-10-28-tis-2a-diary-entries.md`   | `feat/tis-2a-diary-entries` (vom Basis)    | `tis-2a-diary-entries`   | Konzept und Plan freigegeben (28.10.), wird gebaut      |
 | 3    |                                              |                                            |                          | offen                                                   |
 | 4    |                                              |                                            |                          | offen                                                   |
 
