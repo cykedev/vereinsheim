@@ -333,9 +333,10 @@ Teil 1d, entschieden mit dem User am 28. Oktober 2026):
   Prod-Kopie von Treffsicher hat keine Einheit Schüsse nur in einigen Serien). Trefferlage als Summe waagrecht und
   senkrecht in mm mit Richtung. Fehler stehen am Feld, ein Wert, der nicht passt, schon
   beim Verlassen des Felds. „Zurück“ mit Eingaben fragt (`enteredDiscard`).
-- **Schnell zu tippen** (Wunsch des Users vom 28. Oktober 2026: richtig gut aussehen, extrem gut bedienbar): je Serie
-  eine Zeile mit Name, Summe und „Schüsse einzeln“; aufgeklappt zehn Felder in zwei Reihen auf einer leicht abgesetzten
-  Fläche, Name und Summe bleiben auf derselben Linie wie in den übrigen Serien. Ein fertiger Schuss springt ins
+- **Schnell zu tippen** (Wunsch des Users vom 28. Oktober 2026: richtig gut aussehen, extrem gut bedienbar): Das Formular
+  nimmt die volle Breite einer Spalte (`PAGE_SINGLE`, wie „Scheibe holen“), Tag, Uhrzeit und Ort in einer Reihe. Je Serie
+  eine Zeile mit Name, Summe und „Schüsse einzeln“; aufgeklappt zehn Felder, am Telefon in zwei Reihen, sonst in einer,
+  auf einer leicht abgesetzten Fläche, Name und Summe bleiben auf derselben Linie wie in den übrigen Serien. Ein fertiger Schuss springt ins
   nächste Feld (`shotComplete`: in Zehnteln nach der Stelle hinter dem Komma, in ganzen Ringen nach einer Ziffer außer
   der 1 oder nach 10), Enter ebenso; nach dem letzten Schuss einer Serie klappt die nächste leere auf. Gesamt und
   „Speichern“ kleben über der unteren Leiste.

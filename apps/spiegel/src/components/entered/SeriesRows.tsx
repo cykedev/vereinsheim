@@ -151,7 +151,7 @@ export function SeriesRows({
               <Button
                 type="button"
                 variant="ghost"
-                className="ml-auto h-10 shrink-0 px-2 text-[13px]"
+                className="h-10 shrink-0 px-2 text-[13px]"
                 aria-expanded={row.open}
                 aria-controls={`series-${i}-shots`}
                 disabled={disabled}
@@ -175,7 +175,7 @@ export function SeriesRows({
             )}
             <FieldError id={`${sumId}-error`} message={sumError} />
             {row.open && (
-              <div id={`series-${i}-shots`} className="grid grid-cols-5 gap-2">
+              <div id={`series-${i}-shots`} className="grid grid-cols-5 gap-2 sm:grid-cols-10">
                 {row.shots.map((shot, j) => {
                   const field = `series.${i}.shot.${j}`
                   const shotId = `series-${i}-shot-${j}`

@@ -136,8 +136,14 @@ export function EnteredCardForm({
     })
   }
 
-  const field = (id: string, label: string, error: string | undefined, input: ReactNode) => (
-    <div className="grid gap-1.5">
+  const field = (
+    id: string,
+    label: string,
+    error: string | undefined,
+    input: ReactNode,
+    className?: string
+  ) => (
+    <div className={cn("grid content-start gap-1.5", className)}>
       <Label htmlFor={id}>{label}</Label>
       {input}
       <FieldError id={`${id}-error`} message={error} />
@@ -152,7 +158,7 @@ export function EnteredCardForm({
         onSubmit={submit}
         className={cn("grid gap-6", PAGE_SINGLE)}
       >
-        <div className="grid max-w-lg gap-3">
+        <div className="grid gap-3">
           <div>
             <Button
               type="button"
@@ -186,7 +192,8 @@ export function EnteredCardForm({
           </div>
         </div>
 
-        <section className={cn(CARD, "max-w-lg")} aria-label="Wann und wo">
+        {/* volle Breite der Spalte wie jede Seite mit einer Spalte (`PAGE_SINGLE`, conventions §3) */}
+        <section className={CARD} aria-label="Wann und wo">
           <div className="flex flex-wrap gap-3">
             {field(
               "entered-day",
@@ -196,7 +203,7 @@ export function EnteredCardForm({
                 id="entered-day"
                 type="date"
                 max={today}
-                className="w-44"
+                className="w-40"
                 value={form.day}
                 disabled={pending}
                 onChange={(e) => set("day", e.target.value)}
@@ -210,40 +217,41 @@ export function EnteredCardForm({
               <Input
                 id="entered-time"
                 type="time"
-                className="w-36"
+                className="w-32"
                 value={form.time}
                 disabled={pending}
                 onChange={(e) => set("time", e.target.value)}
                 {...errorProps("entered-time-error", errorOf("time"))}
               />
             )}
+            {field(
+              "entered-place",
+              "Ort",
+              errorOf("place"),
+              <>
+                <Input
+                  id="entered-place"
+                  list="entered-places"
+                  autoComplete="off"
+                  maxLength={PLACE_MAX}
+                  placeholder="etwa Schützenhaus Musterdorf"
+                  value={form.place}
+                  disabled={pending}
+                  onChange={(e) => set("place", e.target.value)}
+                  {...errorProps("entered-place-error", errorOf("place"))}
+                />
+                <datalist id="entered-places">
+                  {places.map((place) => (
+                    <option key={place} value={place} />
+                  ))}
+                </datalist>
+              </>,
+              "min-w-0 grow basis-56"
+            )}
           </div>
-          {field(
-            "entered-place",
-            "Ort",
-            errorOf("place"),
-            <>
-              <Input
-                id="entered-place"
-                list="entered-places"
-                autoComplete="off"
-                maxLength={PLACE_MAX}
-                placeholder="etwa Schützenhaus Musterdorf"
-                value={form.place}
-                disabled={pending}
-                onChange={(e) => set("place", e.target.value)}
-                {...errorProps("entered-place-error", errorOf("place"))}
-              />
-              <datalist id="entered-places">
-                {places.map((place) => (
-                  <option key={place} value={place} />
-                ))}
-              </datalist>
-            </>
-          )}
         </section>
 
-        <section className={cn(CARD, "max-w-lg")} aria-label="Ergebnis">
+        <section className={CARD} aria-label="Ergebnis">
           <div className="grid gap-2">
             <p className={HEADING}>Werte in</p>
             <Segmented
@@ -315,7 +323,7 @@ export function EnteredCardForm({
           <FieldError id="entered-result-error" message={errorOf("result")} />
         </section>
 
-        <section className={cn(CARD, "max-w-lg")} aria-labelledby="entered-center-title">
+        <section className={CARD} aria-labelledby="entered-center-title">
           <div className="grid gap-1">
             <h2 id="entered-center-title" className="text-[15px] font-semibold">
               Trefferlage (wenn bekannt)
@@ -380,7 +388,7 @@ export function EnteredCardForm({
 
         {/* Gesamt und Speichern kleben über der unteren Leiste: bei 60 Schuss bleibt beides im Blick. Darunter füllt
             `after` den Platz neben dem erhabenen Knopf der Leiste, sonst schiene der Inhalt dort durch */}
-        <div className="sticky bottom-[calc(var(--app-bar,0px)+env(safe-area-inset-bottom))] z-10 -mx-4 max-w-[calc(32rem+2rem)] border-t border-border bg-background px-4 py-3 after:absolute after:inset-x-0 after:top-full after:h-4 after:bg-background">
+        <div className="sticky bottom-[calc(var(--app-bar,0px)+env(safe-area-inset-bottom))] z-10 -mx-4 border-t border-border bg-background px-4 py-3 after:absolute after:inset-x-0 after:top-full after:h-4 after:bg-background">
           {general && (
             <p role="alert" className="pb-2 text-sm text-destructive">
               {general}
