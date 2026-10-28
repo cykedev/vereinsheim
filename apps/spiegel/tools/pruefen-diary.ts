@@ -286,7 +286,13 @@ async function run(page: Page, { base, check, record }: Context) {
     "Tagebuch: mit übernommenem Vorhaben ist der Kasten mit der Frage weg",
     await page.waitFor(`!$("[data-thread-hint]")`, 10_000)
   )
-  const cleared = await saveText(page, "intention", "")
+  // leeren: tippen hängt nur an, deshalb den Wert setzen
+  await page.ev(setText('[data-entry-text="intention"] textarea', ""))
+  await page.click(`button("Speichern", $('[data-entry-text="intention"]'))`)
+  const cleared = await page.waitFor(
+    `!button("Speichern", $('[data-entry-text="intention"]'))`,
+    10_000
+  )
   const back = await page.waitFor(`!!$("[data-thread-hint]")`, 10_000)
   const own = await saveText(page, "intention", "Ruhig bleiben")
   check(
