@@ -1,9 +1,9 @@
 // Skriptprüfung des Tagebuchs ([[spiegel-diary]]), Abschnitt „Tagebuch“ in `pruefen.ts`: mit dem Demo-Konto am
 // Telefon einschalten, Hinweis, ein Eintrag aus dem ersten Vorschlag, Texte, Befinden, Satzanfänge, ein zweiter Eintrag
-// mit der Frage des ersten, Faden, die Zeilen an Scheibe und Start, Scheibe lösen, Löschen mit Rückgängig, Papierkorb,
+// mit der Frage des ersten, Fragen (`/diary/thread`), die Zeilen an Scheibe und Start, Scheibe lösen, Löschen mit Rückgängig, Papierkorb,
 // Export und der Dialog „Konto löschen“ mit falschem Passwort; Ziele (anlegen mit Messung und Vorschau, Stand, Notiz,
-// „Hat es geklappt?“, ändern, Zeile auf Start, Löschen mit Rückgängig) und Abläufe im Faden (anlegen als Text,
-// Leseseite, bearbeiten, Wächter, Löschen mit Rückgängig). Am Ende sind alle Einträge, Ziele und Abläufe des
+// „Hat es geklappt?“, ändern, Zeile auf Start, Löschen mit Rückgängig) und Abläufe im eigenen Reiter (vier Reiter in
+// einer Zeile, anlegen als Text, Leseseite, bearbeiten, Wächter, Fragen ohne Abläufe, Löschen mit Rückgängig). Am Ende sind alle Einträge, Ziele und Abläufe des
 // Demo-Kontos endgültig gelöscht und das Tagebuch ist aus, auch nach einem Abbruch.
 
 import type { Page } from "@vereinsheim/pruefen/browser"
@@ -70,7 +70,7 @@ async function setDiary(page: Page, base: string, on: boolean): Promise<boolean>
   )
 }
 
-/** alle Ziele und Abläufe des Kontos in den Papierkorb (Abläufe aus jedem Chip des Fadens) */
+/** alle Ziele und Abläufe des Kontos in den Papierkorb */
 async function removeGoalsAndRoutines(page: Page, base: string) {
   await page.goto(`${base}/diary/goals`)
   const goals = await page.ev<string[]>(`$$("[data-goal]").map((a) => a.getAttribute("data-goal"))`)
@@ -80,23 +80,15 @@ async function removeGoalsAndRoutines(page: Page, base: string) {
     await confirm(page, "Löschen")
     await page.waitFor(`location.pathname === "/diary/goals"`, 10_000)
   }
-  await page.goto(`${base}/diary/thread`)
-  const threads = await page.ev<string[]>(
-    `["/diary/thread", ...$$('nav[aria-label="Disziplin"] a').map((a) => a.getAttribute("href"))]`
+  await page.goto(`${base}/diary/routines`)
+  const routines = await page.ev<string[]>(
+    `$$("[data-routine]").map((a) => a.getAttribute("data-routine"))`
   )
-  const routines = new Set<string>()
-  for (const href of threads) {
-    await page.goto(`${base}${href}`)
-    for (const id of await page.ev<string[]>(
-      `$$("[data-routine]").map((a) => a.getAttribute("data-routine"))`
-    ))
-      routines.add(id)
-  }
   for (const id of routines) {
     await page.goto(`${base}/diary/routines/${id}`)
     await page.click(`button("Ablauf löschen")`)
     await confirm(page, "Löschen")
-    await page.waitFor(`location.pathname === "/diary/thread"`, 10_000)
+    await page.waitFor(`location.pathname === "/diary/routines"`, 10_000)
   }
 }
 
@@ -290,15 +282,26 @@ async function run(page: Page, { base, check, record }: Context) {
       10_000
     )
   )
+  check(
+    "Tagebuch: mit übernommenem Vorhaben ist der Kasten mit der Frage weg",
+    await page.waitFor(`!$("[data-thread-hint]")`, 10_000)
+  )
+  const cleared = await saveText(page, "intention", "")
+  const back = await page.waitFor(`!!$("[data-thread-hint]")`, 10_000)
+  const own = await saveText(page, "intention", "Ruhig bleiben")
+  check(
+    "Tagebuch: ohne Vorhaben kommt die Frage wieder, mit eigenem Vorhaben ist sie weg",
+    cleared && back && own && (await page.waitFor(`!$("[data-thread-hint]")`, 10_000))
+  )
   await saveText(page, "question", "die Serie ruhig zu Ende zu schießen?")
 
-  // Faden: beide Fragen, neueste oben
+  // Fragen: beide, neueste oben
   await page.goto(`${base}/diary/thread`)
   const thread = await page.ev<string[]>(
     `$$("[data-thread-item]").map((li) => li.getAttribute("data-thread-item"))`
   )
   check(
-    "Tagebuch: der Faden zeigt beide Fragen, neueste oben",
+    "Tagebuch: „Fragen“ zeigt beide Fragen, neueste oben",
     thread[0] === second && thread[1] === first,
     thread.join(", ")
   )
@@ -450,7 +453,7 @@ async function run(page: Page, { base, check, record }: Context) {
 async function goals(page: Page, { base, check, record }: Context) {
   await page.goto(`${base}/diary/goals`)
   check(
-    "Ziele: dritter Reiter, ohne Ziel der Leerzustand und „Neues Ziel“ oben",
+    "Ziele: Reiter Ziele, ohne Ziel der Leerzustand und „Neues Ziel“ oben",
     (await page.ev<boolean>(
       `$('[data-diary-switch] a[aria-current="page"]')?.textContent === "Ziele"`
     )) &&
@@ -550,7 +553,7 @@ async function goals(page: Page, { base, check, record }: Context) {
   // Start: die Zeile zum Ziel
   await page.goto(`${base}/`)
   const line = await page.ev<string>(
-    `($$("a").find((a) => txt(a).startsWith("Ziel 1 · ")) ?? null)?.getAttribute("href") ?? ""`
+    `($$("a").find((a) => txt(a).startsWith("Ziel ab 1 · ")) ?? null)?.getAttribute("href") ?? ""`
   )
   check("Ziele: auf Start die Zeile zum Ziel, sie führt zum Ziel", line === goalPath, line)
 
@@ -590,14 +593,35 @@ async function goals(page: Page, { base, check, record }: Context) {
   )
 }
 
-/** Abläufe im Faden: anlegen als Text, Leseseite, bearbeiten mit Wächter, Löschen mit Rückgängig */
+/** Abläufe im eigenen Reiter: anlegen als Text, Leseseite, bearbeiten mit Wächter, Löschen mit Rückgängig */
 async function routines(page: Page, { base, check, record }: Context) {
-  await page.goto(`${base}/diary/thread`)
+  await page.goto(`${base}/diary/routines`)
   check(
-    "Abläufe: im Faden der Kasten „Abläufe“",
-    await page.ev<boolean>(`!!$("[data-routine-box]")`)
+    "Abläufe: vierter Reiter, ohne Ablauf der Leerzustand und „Neuer Ablauf“ oben",
+    (await page.ev<boolean>(
+      `$('[data-diary-switch] a[aria-current="page"]')?.textContent === "Abläufe"`
+    )) &&
+      (await page.ev<boolean>(`txt(document.body).includes("Noch kein Ablauf")`)) &&
+      (await page.ev<boolean>(`!!link("Neuer Ablauf")`))
   )
-  await page.click(`link("Neuer Ablauf", $("[data-routine-box]"))`)
+  for (const width of [390, 360]) {
+    await page.viewport(width, 844)
+    await page.goto(`${base}/diary/routines`)
+    const tabs = await page.ev<{ rows: number; right: number; inner: number; visual: number }>(
+      `(() => { const links = $$("[data-diary-switch] a")
+        return { rows: new Set(links.map((a) => Math.round(a.getBoundingClientRect().top))).size,
+          right: Math.max(...links.map((a) => a.getBoundingClientRect().right)),
+          inner: innerWidth, visual: visualViewport.width } })()`
+    )
+    check(
+      `Abläufe: Telefon ${width} px, die vier Reiter in einer Zeile ohne seitliches Scrollen`,
+      tabs.rows === 1 && tabs.inner === tabs.visual && tabs.right <= tabs.inner,
+      JSON.stringify(tabs)
+    )
+  }
+  await page.viewport(390, 844)
+  await page.goto(`${base}/diary/routines`)
+  await page.click(`link("Neuer Ablauf")`)
   await page.waitFor(`location.pathname === "/diary/routines/new"`, 10_000)
   await typeInto(page, "[data-routine-name]", "Ablauf zum Prüfen")
   await page.ev(
@@ -617,6 +641,12 @@ async function routines(page: Page, { base, check, record }: Context) {
     "Abläufe: anlegen öffnet die Leseseite mit drei nummerierten Schritten",
     created && (await page.waitFor(`$$("[data-routine-steps] li").length === 3`, 10_000)),
     routinePath
+  )
+  check(
+    "Abläufe: der Rückweg der Leseseite führt auf den Reiter „Abläufe“",
+    await page.ev<boolean>(
+      `link("Abläufe", $("[data-routine-page]"))?.getAttribute("href") === "/diary/routines"`
+    )
   )
 
   // bearbeiten: Verlassen mit Ungespeichertem fragt, dann speichern
@@ -642,16 +672,29 @@ async function routines(page: Page, { base, check, record }: Context) {
       (await page.waitFor(`$$("[data-routine-steps] li").length === 4`, 10_000))
   )
   const id = routinePath.split("/").pop()
+  await page.goto(`${base}/diary/routines`)
+  check(
+    "Abläufe: im Reiter steht der Ablauf unter „Ohne Disziplin“ mit seiner Zahl der Schritte",
+    await page.ev<boolean>(
+      `txt($('[data-routine-group="none"] [data-routine="${id}"]')).includes("4 Schritte")`
+    )
+  )
   await page.goto(`${base}/diary/thread`)
   check(
-    "Abläufe: im Faden steht der Ablauf mit seiner Zahl der Schritte",
-    await page.ev<boolean>(`txt($('[data-routine="${id}"]')).includes("4 Schritte")`)
+    "Abläufe: „Fragen“ zeigt keine Abläufe",
+    await page.ev<boolean>(`!$("[data-routine-box]") && !$("[data-routine]")`)
   )
 
   record(
     await noSideScroll(page, {
       base,
-      paths: ["/diary/thread", routinePath, `${routinePath}/edit`, "/diary/routines/new"],
+      paths: [
+        "/diary/routines",
+        "/diary/thread",
+        routinePath,
+        `${routinePath}/edit`,
+        "/diary/routines/new",
+      ],
       widths: [390, 360],
     })
   )
@@ -661,15 +704,15 @@ async function routines(page: Page, { base, check, record }: Context) {
   await page.click(`button("Ablauf löschen")`)
   await confirm(page, "Löschen")
   check(
-    "Abläufe: Löschen geht in den Faden mit „Rückgängig“",
+    "Abläufe: Löschen geht auf den Reiter „Abläufe“ mit „Rückgängig“",
     await page.waitFor(
-      `location.pathname === "/diary/thread" && txt($("[data-undo-bar]")).includes("Ablauf gelöscht")`,
+      `location.pathname === "/diary/routines" && txt($("[data-undo-bar]")).includes("Ablauf gelöscht")`,
       10_000
     )
   )
   await page.click(`button("Rückgängig", $("[data-undo-bar]"))`)
   check(
-    "Abläufe: Rückgängig bringt den Ablauf zurück in den Faden",
+    "Abläufe: Rückgängig bringt den Ablauf zurück in den Reiter",
     await page.waitFor(`!!$('[data-routine="${id}"]')`, 10_000)
   )
 }

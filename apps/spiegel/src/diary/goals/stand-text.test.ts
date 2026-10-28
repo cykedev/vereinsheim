@@ -75,7 +75,7 @@ describe("Sätze zum Stand", () => {
       value: "352,9",
       caption: "Schnitt über 3 Scheiben · Ziel 350",
     })
-    expect(startState(average, s)).toBe("Schnitt 352,9")
+    expect(startState(average, s)).toBe("bisher 352,9")
   })
 
   it("ohne gezählte Scheibe kein Wert, ein Satz statt einer Zahl", () => {

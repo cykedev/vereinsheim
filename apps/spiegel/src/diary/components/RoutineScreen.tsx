@@ -15,7 +15,7 @@ import { useUndo } from "@vereinsheim/ui/design2/undo"
 import { ActionRow } from "@/components/card/ActionRow"
 
 import { routineDelete } from "../consequences"
-import { NO_FAMILY } from "../paths"
+import { ROUTINES_PATH } from "../paths"
 import type { Family } from "../queries"
 import {
   deleteRoutineAction,
@@ -31,11 +31,11 @@ import { BOX, CHIP, ROW_BUTTON } from "./styles"
 
 /**
  * Ein Ablauf zum Lesen, gut am Stand auf dem Telefon: nummerierte Schritte in weichen Kreisen, Titel fett, die
- * Erklärung darunter. Ohne Disziplin oben „Disziplin festlegen“, dann steht er im Faden dieser Disziplin.
+ * Erklärung darunter. Ohne Disziplin oben „Disziplin festlegen“, dann steht er in „Abläufe“ unter dieser Disziplin.
  */
 export function RoutineScreen({ routine, families }: { routine: RoutineView; families: Family[] }) {
   const [familyOpen, setFamilyOpen] = useState(false)
-  const back = `/diary/thread?family=${routine.family ? encodeURIComponent(routine.family.slug) : NO_FAMILY}`
+  const back = ROUTINES_PATH
   return (
     <Page>
       <section data-routine-page className={`grid gap-5 ${PAGE_SINGLE}`}>
@@ -205,7 +205,7 @@ function RoutineFamily({
   )
 }
 
-/** Löschen wie bei einem Eintrag: Rückfrage, Papierkorb, zurück in den Faden mit „Ablauf gelöscht · Rückgängig“ */
+/** Löschen wie bei einem Eintrag: Rückfrage, Papierkorb, zurück auf „Abläufe“ mit „Ablauf gelöscht · Rückgängig“ */
 function DeleteRoutine({
   routineId,
   name,

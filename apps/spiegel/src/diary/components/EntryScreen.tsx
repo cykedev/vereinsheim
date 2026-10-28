@@ -159,13 +159,8 @@ export function EntryScreen({
 
         <div className="grid gap-3">
           <h2 className={H2}>{ENTRY_TEXTS.before}</h2>
-          {entry.thread && threadDayLabel && (
-            <ThreadHint
-              entryId={entry.id}
-              thread={entry.thread}
-              dayLabel={threadDayLabel}
-              canTake={!entry.intention}
-            />
+          {entry.thread && threadDayLabel && !entry.intention && (
+            <ThreadHint entryId={entry.id} thread={entry.thread} dayLabel={threadDayLabel} />
           )}
           <ScaleSection
             entryId={entry.id}

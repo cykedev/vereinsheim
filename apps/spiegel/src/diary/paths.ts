@@ -1,4 +1,4 @@
 // Werte der Adressen im Tagebuch, die Server und Browser teilen (ohne Abhängigkeit auf die Datenbank).
 
-/** „Ohne Disziplin“ im Faden (`/diary/thread?family=none`): die Abläufe ohne Disziplin */
-export const NO_FAMILY = "none"
+/** der Reiter „Abläufe“: dorthin führen die Rückwege von einem Ablauf */
+export const ROUTINES_PATH = "/diary/routines"

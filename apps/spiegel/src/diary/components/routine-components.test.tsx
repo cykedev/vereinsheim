@@ -6,54 +6,53 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh: () => {}, push: () => {}, replace: () => {} }),
 }))
 
-const { ThreadView } = await import("./ThreadView")
+const { RoutineList } = await import("./RoutineList")
 const { RoutineScreen } = await import("./RoutineScreen")
 const { RoutineForm } = await import("./RoutineForm")
+const { DiaryHeader } = await import("./DiaryList")
 
 const LP = { id: 1, slug: "lp", name: "Luftpistole" }
-const thread = (extra: Partial<Parameters<typeof ThreadView>[0]> = {}) =>
-  renderToStaticMarkup(
-    createElement(ThreadView, {
-      families: [LP],
-      family: LP,
-      withoutFamily: false,
-      noFamily: false,
-      items: [],
-      routines: [{ id: "r1", name: "Mein Ablauf", familyId: 1, steps: 7 }],
-      timeZone: "Europe/Berlin",
-      ...extra,
-    })
-  )
 
-describe("Faden mit Abläufen", () => {
-  it("der Kasten „Abläufe“ steht über den Fragen, jede Zeile ist der Link, „+“ legt für die Disziplin an", () => {
-    const html = thread()
-    expect(html.indexOf("data-routine-box")).toBeLessThan(html.indexOf("Noch keine Frage"))
+describe("Reiter „Abläufe“", () => {
+  it("vier Reiter, bei Abläufen „Neuer Ablauf“ oben", () => {
+    const html = renderToStaticMarkup(createElement(DiaryHeader, { current: "routines" }))
+    expect([...html.matchAll(/<a[^>]*href="(\/diary[^"]*)"/g)].map((m) => m[1])).toEqual([
+      "/diary/routines/new",
+      "/diary",
+      "/diary/thread",
+      "/diary/goals",
+      "/diary/routines",
+    ])
+    expect(html).toMatch(/<a(?=[^>]*href="\/diary\/routines")(?=[^>]*aria-current="page")/)
+    expect(html).toContain("Neuer Ablauf")
+    expect(html).toContain(">Abläufe<")
+  })
+
+  it("je Disziplin eine Gruppe, „Ohne Disziplin“ zuletzt, die ganze Karte ist der Link", () => {
+    const html = renderToStaticMarkup(
+      createElement(RoutineList, {
+        groups: [
+          { family: LP, routines: [{ id: "r1", name: "Mein Ablauf", familyId: 1, steps: 7 }] },
+          {
+            family: null,
+            routines: [{ id: "r2", name: "Stand einrichten", familyId: null, steps: 1 }],
+          },
+        ],
+      })
+    )
+    expect([...html.matchAll(/<h2[^>]*>([^<]*)<\/h2>/g)].map((m) => m[1])).toEqual([
+      "Luftpistole",
+      "Ohne Disziplin",
+    ])
     expect(html).toMatch(/<a(?=[^>]*href="\/diary\/routines\/r1")(?=[^>]*data-routine="r1")/)
     expect(html).toContain("7 Schritte")
-    expect(html).toContain('href="/diary/routines/new?family=lp"')
+    expect(html).toContain("1 Schritt<")
   })
 
-  it("ohne Ablauf eine Zeile mit „+“ und Satz", () => {
-    expect(thread({ routines: [] })).toContain(
-      "Noch kein Ablauf für Luftpistole. Schreib auf, wie du einen Schuss aufbaust."
-    )
-  })
-
-  it("ein Ablauf ohne Disziplin verschwindet nicht: Chip „Ohne Disziplin“ mit seinen Abläufen und ohne Fragen", () => {
-    const chips = thread({ withoutFamily: true })
-    expect(chips).toContain('href="/diary/thread?family=none"')
-    expect(chips).toContain(">Ohne Disziplin<")
-    const none = thread({
-      family: null,
-      withoutFamily: true,
-      noFamily: true,
-      routines: [{ id: "r2", name: "Stand einrichten", familyId: null, steps: 2 }],
-    })
-    expect(none).toContain("Stand einrichten")
-    expect(none).toContain("Abläufe ohne Disziplin. Mit einer Disziplin stehen sie in deren Faden.")
-    expect(none).toContain('href="/diary/routines/new"')
-    expect(none).not.toContain("Noch keine Frage")
+  it("ohne Ablauf ein Leerzustand mit „Neuer Ablauf“", () => {
+    const html = renderToStaticMarkup(createElement(RoutineList, { groups: [] }))
+    expect(html).toContain("Noch kein Ablauf")
+    expect(html).toContain('href="/diary/routines/new"')
   })
 })
 
@@ -74,18 +73,20 @@ describe("Ein Ablauf", () => {
     ])
     expect(html).toContain("whitespace-pre-line")
     expect(html).toContain('href="/diary/routines/r1/edit"')
+    expect(html).toContain('href="/diary/routines"')
     expect(html).toContain(">Ändern<")
     expect(html).not.toContain('data-plus-row="family"')
   })
 
-  it("ohne Disziplin „Disziplin festlegen“ oben und „Festlegen“ in der Zeile, zurück unter „Ohne Disziplin“", () => {
+  it("ohne Disziplin „Disziplin festlegen“ oben und „Festlegen“ in der Zeile, zurück auf „Abläufe“", () => {
     const html = renderToStaticMarkup(
       createElement(RoutineScreen, { routine: { ...routine, family: null }, families: [LP] })
     )
     expect(html).toContain('data-plus-row="family"')
     expect(html).toContain("Ohne Disziplin · 2 Schritte")
     expect(html).toContain(">Festlegen<")
-    expect(html).toContain('href="/diary/thread?family=none"')
+    expect(html).toContain('href="/diary/routines"')
+    expect(html).not.toContain("/diary/thread")
   })
 
   it("Bearbeiten: ein Textfeld und der Hinweis zählt die Schritte", () => {

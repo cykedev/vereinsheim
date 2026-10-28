@@ -2,19 +2,19 @@
 // `../consequences.ts`.
 
 export const ROUTINE_TEXTS = {
-  box: "Abläufe",
+  /** der Reiter im Kopf des Tagebuchs */
+  tab: "Abläufe",
   steps: (n: number) => (n === 1 ? "1 Schritt" : `${n} Schritte`),
-  empty: (family: string) =>
-    `Noch kein Ablauf für ${family}. Schreib auf, wie du einen Schuss aufbaust.`,
-  emptyAny: "Noch kein Ablauf. Schreib auf, wie du einen Schuss aufbaust.",
+  emptyTitle: "Noch kein Ablauf",
+  emptyText:
+    "Schreib auf, wie du einen Schuss aufbaust. Am Stand liest du dann Schritt für Schritt nach.",
   newRoutine: "Neuer Ablauf",
   noFamily: "Ohne Disziplin",
-  noFamilyLead: "Abläufe ohne Disziplin. Mit einer Disziplin stehen sie in deren Faden.",
-  back: "Faden",
+  back: "Abläufe",
   meta: (family: string, steps: number) =>
     `${family} · ${steps === 1 ? "1 Schritt" : `${steps} Schritte`}`,
   setFamily: "Disziplin festlegen",
-  setFamilyHint: "Dann steht der Ablauf im Faden dieser Disziplin.",
+  setFamilyHint: "Dann steht der Ablauf unter dieser Disziplin.",
   thisRoutine: "Dieser Ablauf",
   stepsAndName: "Schritte und Name",
   edit: "Bearbeiten",

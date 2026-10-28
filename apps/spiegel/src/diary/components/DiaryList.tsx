@@ -10,6 +10,7 @@ import { EmptyState } from "@vereinsheim/ui/empty-state"
 import type { EntrySummary } from "../queries"
 import { entryLine, entryTitle } from "../summaries"
 import { GOAL_TEXTS } from "../goals/texts"
+import { ROUTINE_TEXTS } from "../routines/texts"
 import { LIST_TEXTS } from "../texts"
 
 const PRIMARY =
@@ -18,15 +19,17 @@ const PRIMARY =
 /** so viele kleine Scheiben je Eintrag in der Liste, darüber „+N“ */
 export const LIST_IMAGES = 5
 
-/**
- * Kopf des Tagebuchs: Titel und der Knopf des Reiters („Neuer Eintrag“, bei Ziele „Neues Ziel“), darunter „Einträge ·
- * Faden · Ziele“
- */
-export function DiaryHeader({ current }: { current: "entries" | "thread" | "goals" }) {
-  const [href, label] =
-    current === "goals"
-      ? ["/diary/goals/new", GOAL_TEXTS.newGoal]
-      : ["/diary/new", LIST_TEXTS.newEntry]
+/** der Knopf oben je Reiter: Einträge und Fragen legen einen Eintrag an, Ziele ein Ziel, Abläufe einen Ablauf */
+const NEW_BUTTON = {
+  entries: ["/diary/new", LIST_TEXTS.newEntry],
+  thread: ["/diary/new", LIST_TEXTS.newEntry],
+  goals: ["/diary/goals/new", GOAL_TEXTS.newGoal],
+  routines: ["/diary/routines/new", ROUTINE_TEXTS.newRoutine],
+} as const
+
+/** Kopf des Tagebuchs: Titel und der Knopf des Reiters, darunter „Einträge · Fragen · Ziele · Abläufe“ */
+export function DiaryHeader({ current }: { current: keyof typeof NEW_BUTTON }) {
+  const [href, label] = NEW_BUTTON[current]
   return (
     <>
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -48,6 +51,7 @@ export function DiaryHeader({ current }: { current: "entries" | "thread" | "goal
             ["entries", "/diary", LIST_TEXTS.entries],
             ["thread", "/diary/thread", LIST_TEXTS.thread],
             ["goals", "/diary/goals", GOAL_TEXTS.tab],
+            ["routines", "/diary/routines", ROUTINE_TEXTS.tab],
           ] as const
         ).map(([key, href, label]) => (
           <Link

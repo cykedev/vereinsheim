@@ -1,3 +1,6 @@
+import { readdirSync, readFileSync } from "node:fs"
+import { join } from "node:path"
+
 import { describe, expect, it } from "vitest"
 
 import { OLD_WORDS } from "@/lib/admin/consequences"
@@ -18,6 +21,7 @@ import {
   routinePurgeNow,
   type Decision,
 } from "./consequences"
+import { LIST_TEXTS } from "./texts"
 
 const textsOf = (decision: Decision) => [
   decision.title,
@@ -52,6 +56,27 @@ describe("Folgen im Tagebuch", () => {
     for (const text of textsOf(decision)) expect(text).not.toMatch(OLD_WORDS)
   })
 
+  it("nennt die Fragen in keinem Text „Faden“: Quellen des Tagebuchs ohne Kommentare und Tests", () => {
+    const root = join(__dirname)
+    const sources = [
+      ...readdirSync(root, { recursive: true, encoding: "utf8" }),
+      ...readdirSync(join(root, "../app/(app)/diary"), { recursive: true, encoding: "utf8" }).map(
+        (file) => join("../app/(app)/diary", file)
+      ),
+    ].filter((file) => /\.tsx?$/.test(file) && !/\.test\.tsx?$/.test(file))
+    const hits = sources.flatMap((file) =>
+      readFileSync(join(root, file), "utf8")
+        .replace(/\/\*[\s\S]*?\*\//g, "")
+        .split("\n")
+        .map((line) => line.replace(/^\s*\/\/.*$/, ""))
+        .filter((line) => /Faden/.test(line))
+        .map((line) => `${file}: ${line.trim()}`)
+    )
+    expect(sources.length).toBeGreaterThan(40)
+    expect(hits).toEqual([])
+    expect(LIST_TEXTS.thread).toBe("Fragen")
+  })
+
   it("sagt beim Einschalten, wo die Scheiben dann stehen und wer das Tagebuch sieht", () => {
     expect(diaryOn().happens).toEqual([
       "In der unteren Leiste steht dann „Tagebuch“ statt „Scheiben“.",
@@ -83,7 +108,7 @@ describe("Folgen im Tagebuch", () => {
     expect(decision.notHappening[0]).toBe("Die Scheiben bleiben in Spiegel, mit allen Schüssen.")
   })
 
-  it("legt Ziel und Ablauf in den Papierkorb, Scheiben, Einträge und Faden bleiben", () => {
+  it("legt Ziel und Ablauf in den Papierkorb, Scheiben, Einträge und Fragen bleiben", () => {
     const goal = goalDelete({ title: "355 im Training" })
     expect(goal.about).toBe("Du löschst das Ziel „355 im Training“.")
     expect(goal.happens[0]).toBe(
@@ -92,7 +117,10 @@ describe("Folgen im Tagebuch", () => {
     expect(goal.notHappening).toEqual(["Scheiben und Einträge bleiben, wie sie sind."])
     const routine = routineDelete({ name: "Mein Ablauf" })
     expect(routine.about).toBe("Du löschst den Ablauf „Mein Ablauf“.")
-    expect(routine.notHappening).toEqual(["Einträge und Faden bleiben, wie sie sind."])
+    expect(routine.happens[0]).toBe(
+      "Er liegt 30 Tage im Papierkorb (im Profil). So lange steht er nirgends, auch nicht unter „Abläufe“."
+    )
+    expect(routine.notHappening).toEqual(["Einträge und Fragen bleiben, wie sie sind."])
     expect(routinePurgeNow({ name: "Mein Ablauf" }).undo).toBe(
       "Das lässt sich nicht rückgängig machen."
     )

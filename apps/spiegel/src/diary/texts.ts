@@ -76,12 +76,12 @@ export const KIND_CHOICES = [
   { value: "mental", label: "Mentaltraining" },
 ] as const
 
-/** Liste, Faden und Hinweis beim ersten Öffnen */
+/** Liste, Fragen (`/diary/thread`) und Hinweis beim ersten Öffnen */
 export const LIST_TEXTS = {
   title: "Tagebuch",
   newEntry: "Neuer Eintrag",
   entries: "Einträge",
-  thread: "Faden",
+  thread: "Fragen",
   emptyTitle: "Noch kein Eintrag",
   emptyText:
     "Ein Eintrag hält fest, was du dir vornimmst, wie es lief und was du daraus lernst. Er gehört zu einem Tag und trägt die Scheiben dieses Abends.",

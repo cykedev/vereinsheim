@@ -14,7 +14,7 @@ import {
   setRoutineFamily,
   updateRoutine,
 } from "./routines"
-import { routineList, routineView } from "./queries"
+import { routineGroups, routineList, routineView } from "./queries"
 import { ROUTINE_ERRORS } from "./texts"
 import { parseRoutine } from "./validation"
 
@@ -121,6 +121,37 @@ describe("Abläufe schreiben und lesen", () => {
     expect(await setRoutineFamily(db, site.ownerId, id, site.familyId)).toBeNull()
     expect((await routineView(db, site.ownerId, id))?.family?.id).toBe(site.familyId)
     expect(await setRoutineFamily(db, site.ownerId, id, 2_000_000_000)).toBe(ERRORS.failed)
+  })
+
+  it("Gruppen für den Reiter: je Disziplin nach Name, „Ohne Disziplin“ zuletzt, eine fremde Disziplin auch dort", async () => {
+    const own = (await createRoutine(db, site.ownerId, {
+      name: "Gruppe",
+      familyId: site.familyId,
+      text: TEXT,
+    })) as { id: string }
+    const none = (await createRoutine(db, site.ownerId, {
+      name: "Ohne",
+      familyId: null,
+      text: TEXT,
+    })) as { id: string }
+    // eine Disziplin, die es für das Konto nicht gibt
+    const gone = (await createRoutine(db, site.ownerId, {
+      name: "Verwaist",
+      familyId: null,
+      text: TEXT,
+    })) as { id: string }
+    await db.diaryRoutine.update({ where: { id: gone.id }, data: { familyId: 2_000_000_000 } })
+    const groups = await routineGroups(db, site.ownerId)
+    const last = groups[groups.length - 1]
+    expect(last.family).toBeNull()
+    expect(last.routines.map((r) => r.id)).toEqual(expect.arrayContaining([none.id, gone.id]))
+    const named = groups.slice(0, -1).map((g) => g.family!.name)
+    expect(named).toEqual([...named].sort((a, b) => a.localeCompare(b)))
+    expect(groups.find((g) => g.family?.id === site.familyId)?.routines.map((r) => r.id)).toContain(
+      own.id
+    )
+    expect(groups.every((g) => g.routines.length > 0)).toBe(true)
+    await db.diaryRoutine.deleteMany({ where: { id: { in: [own.id, none.id, gone.id] } } })
   })
 
   it("ein fremder Ablauf ändert niemand", async () => {

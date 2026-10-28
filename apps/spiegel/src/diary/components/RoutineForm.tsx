@@ -17,7 +17,7 @@ import { Page } from "@vereinsheim/ui/design2/page"
 import type { ActionResult } from "@/lib/types"
 
 import { routineDiscard } from "../consequences"
-import { NO_FAMILY } from "../paths"
+import { ROUTINES_PATH } from "../paths"
 import type { Family } from "../queries"
 import { createRoutineAction, updateRoutineAction } from "../routines/actions"
 import { textToSteps } from "../routines/steps"
@@ -39,7 +39,7 @@ export function RoutineForm({
   /** zum Bearbeiten: Kennung, Name, Disziplin und die Schritte als Text */
   routine: { id: string; name: string; family: Family | null; text: string } | null
   families: Family[]
-  /** bei neu vorgewählt (aus dem Faden) */
+  /** bei neu vorgewählt (`?family=`) */
   familyId: number | null
 }) {
   const router = useRouter()
@@ -55,10 +55,7 @@ export function RoutineForm({
   const dirty = JSON.stringify(form) !== JSON.stringify(start)
   useUnsavedChangesGuard({ enabled: dirty && !pending })
   const leave = useNavigationConfirm({ isDirty: dirty && !pending })
-  const familyOf = (fid: number | null) => families.find((f) => f.id === fid) ?? null
-  const back = routine
-    ? `/diary/routines/${routine.id}`
-    : `/diary/thread?family=${familyOf(form.familyId)?.slug ?? NO_FAMILY}`
+  const back = routine ? `/diary/routines/${routine.id}` : ROUTINES_PATH
   const steps = textToSteps(form.text).length
 
   // ein Toast der vorigen Seite läge über der klebenden Leiste (conventions §9)
@@ -92,7 +89,7 @@ export function RoutineForm({
             if ("error" in answer) return
             toast.success(routine ? T.saved : T.created)
             const target = routine?.id ?? (answer as { data?: { id: string } }).data?.id
-            router.replace(target ? `/diary/routines/${target}` : "/diary/thread")
+            router.replace(target ? `/diary/routines/${target}` : ROUTINES_PATH)
           })
         }}
       >

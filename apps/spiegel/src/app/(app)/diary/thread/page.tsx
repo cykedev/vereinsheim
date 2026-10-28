@@ -10,9 +10,9 @@ import { requireDiary } from "@/diary/page-guard"
 import { threadView } from "@/diary/queries"
 import { db } from "@/lib/db"
 
-export const metadata: Metadata = { title: "Faden" }
+export const metadata: Metadata = { title: "Fragen" }
 
-// Faden: die Lernfragen einer Disziplin, neueste oben (`?family=` wählt die Disziplin)
+// Fragen (der Faden): die Lernfragen einer Disziplin, neueste oben (`?family=` wählt die Disziplin)
 export default async function ThreadRoute({
   searchParams,
 }: {

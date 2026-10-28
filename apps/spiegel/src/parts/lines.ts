@@ -94,7 +94,10 @@ export async function startLines(
         ? [
             {
               key: `goal:${goal.id}`,
-              title: GOAL_TEXTS.startTitle(thresholdText(goal.rule.threshold, goal.rule.scoring)),
+              title: GOAL_TEXTS.startTitle(
+                thresholdText(goal.rule.threshold, goal.rule.scoring),
+                goal.rule.measure === "average"
+              ),
               state: startState(goal.rule, goal.stand),
               href: `/diary/goals/${goal.id}`,
               action: "",

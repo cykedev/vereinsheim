@@ -213,13 +213,17 @@ describe("Seite eines Eintrags", () => {
     expect(rows(blocks[1][2])).toEqual(["Serie 1|93"])
   })
 
-  it("zeigt die Frage des Fadens und bietet sie als Vorhaben nur, solange keines da ist", () => {
+  it("zeigt die Frage des Fadens nur, solange das Vorhaben leer ist", () => {
     const thread = { entryId: "e0", day: "2026-03-06", question: "das öfter zu schaffen?" }
     const empty = screen(entry({ thread }))
+    expect(empty).toContain("data-thread-hint")
     expect(empty).toContain("Deine Frage vom Fr 06.03.")
     expect(empty).toContain("Wie schaffe ich es, das öfter zu schaffen?")
     expect(empty).toContain("Als Vorhaben nehmen")
-    expect(screen(entry({ thread, intention: "Ruhe" }))).not.toContain("Als Vorhaben nehmen")
+    const taken = screen(entry({ thread, intention: "Ruhe" }))
+    expect(taken).not.toContain("data-thread-hint")
+    expect(taken).not.toContain("Deine Frage vom")
+    expect(taken).not.toContain("Als Vorhaben nehmen")
   })
 
   it("Trocken- und Mentaltraining ohne Kasten der Scheiben", () => {
@@ -277,9 +281,6 @@ describe("Liste und Faden", () => {
       createElement(ThreadView, {
         families: [{ id: 1, slug: "lp", name: "Luftpistole" }],
         family: { id: 1, slug: "lp", name: "Luftpistole" },
-        withoutFamily: false,
-        noFamily: false,
-        routines: [],
         items: [
           { entryId: "b", day: "2026-06-09", question: "öfters zu akzeptieren?", learned: null },
           {

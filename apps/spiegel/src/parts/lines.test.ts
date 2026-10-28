@@ -174,9 +174,21 @@ describe("Stellen für das Tagebuch", () => {
     const lines = (await startLines(db, { ownerId: site.ownerId, blocks, timeZone: ZONE }))[
       `${day}|${slug}`
     ]
-    expect(lines.map((line) => line.title)).toEqual(["Tagebuch", "Ziel 90"])
+    expect(lines.map((line) => line.title)).toEqual(["Tagebuch", "Ziel ab 90"])
     expect(lines[1]).toMatchObject({ href: `/diary/goals/${latest.id}`, action: "" })
     expect(lines[1].state).toMatch(/^\d+ von \d+ Serien?$/)
-    await db.diaryGoal.deleteMany({ where: { id: { in: [first.id, latest.id] } } })
+    const average = await goal("Schnitt", {
+      measure: "average",
+      threshold: "350",
+      scoring: "rings",
+      shots: 40,
+      cards: "all",
+    })
+    const withAverage = (await startLines(db, { ownerId: site.ownerId, blocks, timeZone: ZONE }))[
+      `${day}|${slug}`
+    ]
+    expect(withAverage[1].title).toBe("Ziel Schnitt 350")
+    expect(withAverage[1].state).toMatch(/^(bisher \d+(,\d)?|noch keine Scheibe)$/)
+    await db.diaryGoal.deleteMany({ where: { id: { in: [first.id, latest.id, average.id] } } })
   })
 })

@@ -22,8 +22,6 @@ import {
   type EntryRef,
 } from "./cards"
 import { proposals, type Proposal } from "./proposals"
-import { NO_FAMILY } from "./paths"
-import { routineList, type RoutineSummary } from "./routines/queries"
 import type { ScalePart } from "./scales"
 import { entryTitle, type DiaryKindValue } from "./summaries"
 import { dayOfDate } from "./validation"
@@ -250,54 +248,32 @@ export interface ThreadItem {
   learned: string | null
 }
 
-export { NO_FAMILY }
-
 /**
- * Der Faden: die Disziplinen mit Fragen oder Abläufen (die mit der jüngsten Frage zuerst, dann die übrigen nach Name),
- * zuletzt „Ohne Disziplin“, wenn ein Ablauf keine hat. Zur gewählten die Abläufe und die Fragen, neueste oben; ohne
- * Wahl die erste. Fragen gehören immer zu einer Disziplin, unter „Ohne Disziplin“ stehen nur Abläufe.
+ * Der Faden: die Disziplinen mit Fragen, die mit der jüngsten Frage zuerst. Zur gewählten die Fragen, neueste oben;
+ * ohne Wahl die erste.
  */
 export async function threadView(
   db: Db,
   userId: string,
   familySlug: string | null
-): Promise<{
-  families: Family[]
-  family: Family | null
-  /** es gibt Abläufe ohne Disziplin (der Chip „Ohne Disziplin“) */
-  withoutFamily: boolean
-  /** „Ohne Disziplin“ ist gewählt */
-  noFamily: boolean
-  items: ThreadItem[]
-  routines: RoutineSummary[]
-}> {
-  const [rows, families, routines] = await Promise.all([
+): Promise<{ families: Family[]; family: Family | null; items: ThreadItem[] }> {
+  const [rows, families] = await Promise.all([
     db.diaryEntry.findMany({
       where: { userId, deletedAt: null, question: { not: null }, familyId: { not: null } },
       orderBy: [{ day: "desc" }, { createdAt: "desc" }],
       select: { id: true, day: true, familyId: true, question: true, learned: true },
     }),
     familyMap(db, userId),
-    routineList(db, userId),
   ])
   const chips: Family[] = []
-  const add = (familyId: number | null) => {
-    const family = familyId === null ? undefined : families.get(familyId)
+  for (const row of rows) {
+    const family = families.get(row.familyId!)
     if (family && !chips.some((f) => f.id === family.id)) chips.push(family)
   }
-  for (const row of rows) add(row.familyId)
-  const withQuestion = chips.length
-  for (const routine of routines) add(routine.familyId)
-  const rest = chips.splice(withQuestion).sort((a, b) => a.name.localeCompare(b.name))
-  chips.push(...rest)
-  const withoutFamily = routines.some((r) => r.familyId === null || !families.has(r.familyId))
-  const noFamily = familySlug === NO_FAMILY && withoutFamily
-  const family = noFamily ? null : (chips.find((f) => f.slug === familySlug) ?? chips[0] ?? null)
+  const family = chips.find((f) => f.slug === familySlug) ?? chips[0] ?? null
   return {
     families: chips,
     family,
-    withoutFamily,
-    noFamily: noFamily || (!family && withoutFamily),
     items: family
       ? rows
           .filter((row) => row.familyId === family.id)
@@ -308,9 +284,6 @@ export async function threadView(
             learned: row.learned,
           }))
       : [],
-    routines: routines.filter((r) =>
-      family ? r.familyId === family.id : r.familyId === null || !families.has(r.familyId)
-    ),
   }
 }
 

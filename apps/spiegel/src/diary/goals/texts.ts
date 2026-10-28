@@ -57,7 +57,9 @@ export const GOAL_TEXTS = {
   deleted: "Ziel gelöscht",
   /** im Papierkorb unter dem Satz */
   trashKind: "Ziel",
-  startTitle: (threshold: string) => `Ziel ${threshold}`,
+  /** vorn in der Zeile auf Start: „Ziel ab 350“, beim Schnitt „Ziel Schnitt 350“ */
+  startTitle: (threshold: string, average: boolean) =>
+    average ? `Ziel Schnitt ${threshold}` : `Ziel ab ${threshold}`,
 } as const
 
 /** das Formular „Neues Ziel“ und „Ziel ändern“ */

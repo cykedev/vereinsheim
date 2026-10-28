@@ -7,7 +7,7 @@ import { resultFamilies } from "@/lib/results-read"
 
 export const metadata: Metadata = { title: "Neuer Ablauf" }
 
-// Neuer Ablauf: die Disziplin aus dem Faden vorgewählt (`?family=`)
+// Neuer Ablauf: die Disziplin aus `?family=` vorgewählt
 export default async function NewRoutineRoute({
   searchParams,
 }: {

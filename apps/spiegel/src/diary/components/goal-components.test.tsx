@@ -72,10 +72,11 @@ const boxes = (html: string) =>
   [...html.matchAll(/data-goal-(stand|note|entries|actions)/g)].map((m) => m[1])
 
 describe("Kopf des Tagebuchs", () => {
-  it("drei Reiter, der Knopf folgt dem Reiter", () => {
+  it("vier Reiter, der Knopf folgt dem Reiter", () => {
     const goals = renderToStaticMarkup(createElement(DiaryHeader, { current: "goals" }))
     expect(goals).toContain(">Einträge<")
-    expect(goals).toContain(">Faden<")
+    expect(goals).toContain(">Fragen<")
+    expect(goals).toContain(">Abläufe<")
     expect(goals).toMatch(/<a(?=[^>]*href="\/diary\/goals")(?=[^>]*aria-current="page")/)
     expect(goals).toContain('href="/diary/goals/new"')
     expect(goals).toContain("Neues Ziel")
