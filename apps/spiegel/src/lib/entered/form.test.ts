@@ -8,6 +8,7 @@ import {
   parseValue,
   problemText,
   seriesSumText,
+  seriesTotalText,
   startedAtOf,
   TEXTS,
   type EnteredFormState,
@@ -67,6 +68,17 @@ describe("parseValue", () => {
     expect(parseValue("11", "rings", 1)).toEqual({ ok: false, error: TEXTS.shotMax })
     expect(parseValue("109,1", "decimal", 10)).toEqual({ ok: false, error: TEXTS.sumMax(10) })
     expect(parseValue("101", "rings", 10)).toEqual({ ok: false, error: TEXTS.sumMax(10) })
+  })
+})
+
+describe("seriesTotalText", () => {
+  it("Summen zählen als volle Serien, Schüsse einzeln je Schuss", () => {
+    const state = form({
+      series: [...rows("102,4"), { sum: "", open: true, shots: ["10,0", "9,9", "", ""] }],
+    })
+    expect(seriesTotalText(state, LG40)).toBe("Gesamt 122,3 · 12 Schuss")
+    expect(seriesTotalText(form(), LG40)).toBeNull()
+    expect(seriesTotalText(form({ series: rows("abc") }), LG40)).toBeNull()
   })
 })
 

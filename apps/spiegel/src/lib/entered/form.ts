@@ -131,8 +131,36 @@ export function seriesSumText(row: SeriesRow, mode: ValueMode): string | null {
   return values.length ? valueText(sumOf(values, mode), mode) : ""
 }
 
-const filled = (row: SeriesRow) =>
-  row.open ? row.shots.some((shot) => shot.trim()) : row.sum.trim() !== ""
+/** „Gesamt 204,3 · 20 Schuss“ über die gefüllten Serien; null, solange nichts da ist oder ein Wert nicht lesbar ist */
+export function seriesTotalText(form: EnteredFormState, discipline: FormDiscipline): string | null {
+  const values: Value[] = []
+  let shots = 0
+  for (const row of form.series) {
+    if (!filled(row)) continue
+    if (row.open) {
+      for (const text of row.shots) {
+        const parsed = parseValue(text, form.values, 1)
+        if (!parsed.ok) return null
+        if (parsed.value) {
+          values.push(parsed.value)
+          shots++
+        }
+      }
+    } else {
+      const count = discipline.seriesShots ?? 1
+      const parsed = parseValue(row.sum, form.values, count)
+      if (!parsed.ok || !parsed.value) return null
+      values.push(parsed.value)
+      shots += count
+    }
+  }
+  if (!values.length) return null
+  return `Gesamt ${valueText(sumOf(values, form.values), form.values)} · ${shots} Schuss`
+}
+
+function filled(row: SeriesRow): boolean {
+  return row.open ? row.shots.some((shot) => shot.trim()) : row.sum.trim() !== ""
+}
 
 /** so viele Serien zeigt das Formular am Anfang: die Schusszahl in Serien, ohne feste Schusszahl eine */
 export function defaultSeriesCount(discipline: FormDiscipline): number {

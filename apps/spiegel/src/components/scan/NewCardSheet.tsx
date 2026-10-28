@@ -30,6 +30,8 @@ export function NewCardSheet({
   idLine,
   relifts,
   withValues = false,
+  intro,
+  confirmLabel,
   options,
   preset,
   pending,
@@ -37,12 +39,16 @@ export function NewCardSheet({
 }: {
   open: boolean
   onClose: () => void
-  /** „ID ff914420 vom Di 27.10.2026“ */
-  idLine: string
+  /** „ID ff914420 vom Di 27.10.2026“; fehlt beim Weg von Hand */
+  idLine?: string
   /** der Schütze hatte die Scheibe gelöscht; Holen hebt die Sperre auf */
   relifts: boolean
   /** der Ausdruck ist stimmig gelesen: Spiegel legt die Scheibe mit seinen Werten an */
   withValues?: boolean
+  /** ein eigener Satz oben (Weg von Hand); fehlt: der zum Ausdruck */
+  intro?: string
+  /** ein eigener Knopf (Weg von Hand: „Weiter“, ohne „läuft“); fehlt: „Scheibe anlegen“ */
+  confirmLabel?: string
   options: readonly NewCardOption[]
   preset: { disciplineId: number | null; kind: CardKind }
   pending: boolean
@@ -56,11 +62,13 @@ export function NewCardSheet({
     <Sheet open={open} onClose={onClose} title="Neue Scheibe">
       <div data-new-card className="grid gap-4">
         <p data-new-card-intro className="text-sm text-foreground-2">
-          {newCardIntro(withValues)}
+          {intro ?? newCardIntro(withValues)}
         </p>
-        <p data-new-card-id className="text-sm font-semibold">
-          {idLine}
-        </p>
+        {idLine && (
+          <p data-new-card-id className="text-sm font-semibold">
+            {idLine}
+          </p>
+        )}
         {relifts && (
           <p data-new-card-relift className="text-sm text-foreground-2">
             Diese Scheibe hattest du gelöscht. Spiegel holt sie wieder.
@@ -89,7 +97,7 @@ export function NewCardSheet({
               else onCreate({ disciplineId, kind })
             }}
           >
-            {pending ? "Anlegen…" : "Scheibe anlegen"}
+            {confirmLabel ?? (pending ? "Anlegen…" : "Scheibe anlegen")}
           </Button>
           <FieldError
             id="new-card-missing"

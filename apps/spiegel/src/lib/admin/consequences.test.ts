@@ -16,6 +16,8 @@ import {
   disciplineChange,
   disciplineCreate,
   disciplineIgnore,
+  enteredDiscard,
+  evidenceRemove,
   disciplineRecalculates,
   disciplineShow,
   familyRemove,
@@ -738,6 +740,8 @@ describe("Schreibregeln", () => {
     ],
     ["Disziplin zeigen", disciplineShow({ name: "LG Schach 6x6", cards: 3, visible: false })],
     ["Familie entfernen", familyRemove({ name: "Zimmerstutzen" })],
+    ["Eingaben verwerfen", enteredDiscard()],
+    ["Beleg entfernen", evidenceRemove({ kind: "pdf" })],
   ]
 
   it.each(decisions)("%s: keine Semikolons, keine alten Wörter", (_name, decision) => {
@@ -902,5 +906,23 @@ describe("Folgen beim Einordnen einer Disziplin", () => {
     const remove = familyRemove({ name: "Zimmerstutzen" })
     expect(remove.title).toBe("Familie „Zimmerstutzen“ entfernen?")
     expect(remove.destructive).toBe(true)
+  })
+})
+
+describe("Eingabe von Hand", () => {
+  it("verwerfen und Beleg entfernen im Wortlaut des Textbuchs", () => {
+    wellFormed(enteredDiscard())
+    expect(enteredDiscard()).toMatchObject({
+      title: "Eingaben verwerfen?",
+      about: "Du hast Werte eingetragen, aber nicht gespeichert.",
+      confirmLabel: "Verwerfen",
+    })
+    expect(evidenceRemove({ kind: "photo" }).about).toBe("An dieser Scheibe hängt ein Foto.")
+    expect(evidenceRemove({ kind: "pdf" })).toMatchObject({
+      about: "An dieser Scheibe hängt ein PDF.",
+      happens: ["Spiegel entfernt den Beleg von der Scheibe."],
+      notHappening: ["Die Werte der Scheibe bleiben, wie sie sind."],
+      confirmLabel: "Entfernen",
+    })
   })
 })

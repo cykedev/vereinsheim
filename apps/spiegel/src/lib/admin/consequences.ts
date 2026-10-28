@@ -776,3 +776,29 @@ export function familyRemove({ name }: { name: string }): Decision {
     destructive: true,
   }
 }
+
+/** Eingaben im Formular „Ergebnis eintragen“ verwerfen, bevor sie gespeichert sind */
+export function enteredDiscard(): Decision {
+  return {
+    title: "Eingaben verwerfen?",
+    about: "Du hast Werte eingetragen, aber nicht gespeichert.",
+    happens: ["Spiegel vergisst diese Eingaben."],
+    notHappening: ["Keine gespeicherte Scheibe ändert sich."],
+    undo: "Nicht rückgängig zu machen. Die Werte noch einmal eintragen.",
+    confirmLabel: "Verwerfen",
+    destructive: true,
+  }
+}
+
+/** den Beleg (Foto oder PDF) einer eingetragenen Scheibe entfernen */
+export function evidenceRemove({ kind }: { kind: "photo" | "pdf" }): Decision {
+  return {
+    title: "Beleg entfernen?",
+    about: `An dieser Scheibe hängt ${kind === "pdf" ? "ein PDF" : "ein Foto"}.`,
+    happens: ["Spiegel entfernt den Beleg von der Scheibe."],
+    notHappening: ["Die Werte der Scheibe bleiben, wie sie sind."],
+    undo: "Den Beleg wieder anhängen, solange du die Datei noch hast.",
+    confirmLabel: "Entfernen",
+    destructive: true,
+  }
+}
