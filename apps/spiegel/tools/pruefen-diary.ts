@@ -1,8 +1,10 @@
 // Skriptprüfung des Tagebuchs ([[spiegel-diary]]), Abschnitt „Tagebuch“ in `pruefen.ts`: mit dem Demo-Konto am
 // Telefon einschalten, Hinweis, ein Eintrag aus dem ersten Vorschlag, Texte, Befinden, Satzanfänge, ein zweiter Eintrag
 // mit der Frage des ersten, Faden, die Zeilen an Scheibe und Start, Scheibe lösen, Löschen mit Rückgängig, Papierkorb,
-// Export und der Dialog „Konto löschen“ mit falschem Passwort. Am Ende sind alle Einträge des Demo-Kontos endgültig
-// gelöscht und das Tagebuch ist aus, auch nach einem Abbruch.
+// Export und der Dialog „Konto löschen“ mit falschem Passwort; Ziele (anlegen mit Messung und Vorschau, Stand, Notiz,
+// „Hat es geklappt?“, ändern, Zeile auf Start, Löschen mit Rückgängig) und Abläufe im Faden (anlegen als Text,
+// Leseseite, bearbeiten, Wächter, Löschen mit Rückgängig). Am Ende sind alle Einträge, Ziele und Abläufe des
+// Demo-Kontos endgültig gelöscht und das Tagebuch ist aus, auch nach einem Abbruch.
 
 import type { Page } from "@vereinsheim/pruefen/browser"
 import { type Check, noSideScroll } from "@vereinsheim/pruefen/common"
@@ -30,6 +32,13 @@ const setValue = (selector: string, value: string) =>
     Object.getOwnPropertyDescriptor(proto, "value").set.call(el, ${JSON.stringify(value)})
     el.dispatchEvent(new Event("input", { bubbles: true }))
     el.dispatchEvent(new Event("change", { bubbles: true }))
+    return el.value })()`
+
+/** den Text eines gesteuerten Textfelds setzen, wie ihn der Browser beim Einfügen setzt (Zeilenumbrüche) */
+const setText = (selector: string, value: string) =>
+  `(() => { const el = $(${JSON.stringify(selector)})
+    Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, "value").set.call(el, ${JSON.stringify(value)})
+    el.dispatchEvent(new Event("input", { bubbles: true }))
     return el.value })()`
 
 /** einen Text im Eintrag schreiben und speichern; true, wenn „Speichern“ danach weg ist */
@@ -61,10 +70,42 @@ async function setDiary(page: Page, base: string, on: boolean): Promise<boolean>
   )
 }
 
-/** alle Einträge in den Papierkorb, dann den Teil des Tagebuchs im Papierkorb leeren, dann aus */
+/** alle Ziele und Abläufe des Kontos in den Papierkorb (Abläufe aus jedem Chip des Fadens) */
+async function removeGoalsAndRoutines(page: Page, base: string) {
+  await page.goto(`${base}/diary/goals`)
+  const goals = await page.ev<string[]>(`$$("[data-goal]").map((a) => a.getAttribute("data-goal"))`)
+  for (const id of goals) {
+    await page.goto(`${base}/diary/goals/${id}`)
+    await page.click(`button("Ziel löschen")`)
+    await confirm(page, "Löschen")
+    await page.waitFor(`location.pathname === "/diary/goals"`, 10_000)
+  }
+  await page.goto(`${base}/diary/thread`)
+  const threads = await page.ev<string[]>(
+    `["/diary/thread", ...$$('nav[aria-label="Disziplin"] a').map((a) => a.getAttribute("href"))]`
+  )
+  const routines = new Set<string>()
+  for (const href of threads) {
+    await page.goto(`${base}${href}`)
+    for (const id of await page.ev<string[]>(
+      `$$("[data-routine]").map((a) => a.getAttribute("data-routine"))`
+    ))
+      routines.add(id)
+  }
+  for (const id of routines) {
+    await page.goto(`${base}/diary/routines/${id}`)
+    await page.click(`button("Ablauf löschen")`)
+    await confirm(page, "Löschen")
+    await page.waitFor(`location.pathname === "/diary/thread"`, 10_000)
+  }
+}
+
+/** alle Einträge, Ziele und Abläufe in den Papierkorb, dann den Teil des Tagebuchs im Papierkorb leeren, dann aus */
 async function cleanUp(page: Page, base: string) {
   await page.goto(`${base}/diary`)
   if (await page.ev<boolean>(`location.pathname === "/diary"`)) {
+    await removeGoalsAndRoutines(page, base)
+    await page.goto(`${base}/diary`)
     const ids = await page.ev<string[]>(
       `$$("[data-diary-entry]").map((a) => a.getAttribute("data-diary-entry"))`
     )
@@ -378,6 +419,9 @@ async function run(page: Page, { base, check, record }: Context) {
     await page.waitFor(`!$("[data-diary-trash] [data-trash-entry]")`, 10_000)
   )
 
+  await goals(page, { base, check, record })
+  await routines(page, { base, check, record })
+
   // Konto löschen: nur der Dialog, mit falschem Passwort
   await page.goto(`${base}/profile`)
   await page.click(`button("Konto löschen", $("[data-own-data]"))`)
@@ -400,4 +444,232 @@ async function run(page: Page, { base, check, record }: Context) {
     await page.click(`button("Abbrechen", ${DIALOG})`)
     await page.waitFor(`!${DIALOG}`)
   }
+}
+
+/** Ziele: anlegen mit Messung und Vorschau, Stand, Notiz, „Hat es geklappt?“, ändern, Zeile auf Start, Löschen */
+async function goals(page: Page, { base, check, record }: Context) {
+  await page.goto(`${base}/diary/goals`)
+  check(
+    "Ziele: dritter Reiter, ohne Ziel der Leerzustand und „Neues Ziel“ oben",
+    (await page.ev<boolean>(
+      `$('[data-diary-switch] a[aria-current="page"]')?.textContent === "Ziele"`
+    )) &&
+      (await page.ev<boolean>(`txt(document.body).includes("Noch kein Ziel")`)) &&
+      (await page.ev<boolean>(`!!link("Neues Ziel")`))
+  )
+
+  // Verlassen mit Ungespeichertem fragt
+  await page.click(`link("Neues Ziel")`)
+  await page.waitFor(`location.pathname === "/diary/goals/new"`, 10_000)
+  await typeInto(page, "[data-goal-title]", "Ein Ziel zum Prüfen")
+  await page.click(`link("Ziele")`)
+  check(
+    "Ziele: das Formular mit Ungespeichertem verlassen fragt",
+    await page.waitFor(`txt(${DIALOG}).includes("Änderungen verwerfen?")`, 5_000)
+  )
+  await page.click(`button("Abbrechen", ${DIALOG})`)
+  await page.waitFor(`!${DIALOG}`)
+
+  // Messung „Scheibe ab 1“ über alles bis heute, damit die Demo-Scheiben zählen
+  check(
+    "Ziele: neu mit Saison, Disziplin und „Spiegel misst mit“ vorbelegt",
+    await page.ev<boolean>(
+      `$('[role="switch"]')?.getAttribute("aria-checked") === "true" && !!$('[role="group"][aria-label="Disziplin"] [aria-pressed="true"]') && /Saison \\d\\d\\/\\d\\d/.test(txt($("[data-goal-form]")))`
+    )
+  )
+  await page.click(`button("Frei")`)
+  await page.ev(setValue('[data-goal-form] input[type="date"]', "2000-01-01"))
+  await typeInto(page, "[data-goal-threshold]", "1")
+  const preview = await page.waitFor(
+    `/^Bisher in diesem Zeitraum: \\d+ von [1-9]\\d* Scheiben? ab 1\\.$/.test(txt($("[data-goal-preview]")))`,
+    10_000
+  )
+  check(
+    "Ziele: die Vorschau zählt die Scheiben im Zeitraum",
+    preview,
+    await page.ev<string>(`txt($("[data-goal-preview]"))`)
+  )
+  await page.click(`$("[data-goal-save]")`)
+  const created = await page.waitFor(
+    String.raw`/^\/diary\/goals\/(?!new$)[^/]+$/.test(location.pathname)`,
+    10_000
+  )
+  const goalPath = await page.ev<string>(`location.pathname`)
+  check(
+    "Ziele: anlegen öffnet das Ziel mit Stand, großer Zahl, Verlauf und Weg in den Fortschritt",
+    created &&
+      (await page.waitFor(`!!$("[data-goal-big]") && !!$("[data-goal-chart]")`, 10_000)) &&
+      (await page.ev<boolean>(
+        `(link("Im Fortschritt ansehen ›")?.getAttribute("href") ?? "").startsWith("/progress?")`
+      )),
+    goalPath
+  )
+  const order = await page.ev<string[]>(
+    `$$("[data-goal-stand], [data-goal-note], [data-goal-entries], [data-goal-actions]").map((el) => [...el.attributes].find((a) => a.name.startsWith("data-goal-")).name)`
+  )
+  check(
+    "Ziele: die Kästen stehen in fester Folge",
+    order.join(",") === "data-goal-stand,data-goal-note,data-goal-entries,data-goal-actions",
+    order
+  )
+
+  // Notiz, „Hat es geklappt?“
+  await page.click(`button("Notiz", $("[data-goal-note]"))`)
+  check("Ziele: Notiz speichern", await saveText(page, "note", "Jede zweite Scheibe."))
+  await page.click(`button("Ja", $("[data-outcome]"))`)
+  const yes = await page.waitFor(
+    `button("Ja", $("[data-outcome]"))?.getAttribute("aria-pressed") === "true"`,
+    10_000
+  )
+  await page.goto(`${base}${goalPath}`)
+  const kept = await page.ev<boolean>(
+    `button("Ja", $("[data-outcome]"))?.getAttribute("aria-pressed") === "true"`
+  )
+  await page.click(`button("Ja", $("[data-outcome]"))`)
+  check(
+    "Ziele: „Hat es geklappt?“ speichert beim Tippen, ein zweiter Tipp nimmt es zurück",
+    yes &&
+      kept &&
+      (await page.waitFor(
+        `button("Ja", $("[data-outcome]"))?.getAttribute("aria-pressed") === "false"`,
+        10_000
+      ))
+  )
+
+  // ändern auf „Serie“
+  await page.click(`link("Ändern", $("[data-goal-actions]"))`)
+  await page.waitFor(`location.pathname === "${goalPath}/edit"`, 10_000)
+  await page.click(`button("Serie")`)
+  await page.click(`$("[data-goal-save]")`)
+  check(
+    "Ziele: ändern auf „Serie“ zählt Serien",
+    (await page.waitFor(`location.pathname === "${goalPath}"`, 10_000)) &&
+      (await page.waitFor(`/Serien? ab 1 Ringen/.test(txt($("[data-goal-big]")))`, 10_000))
+  )
+
+  // Start: die Zeile zum Ziel
+  await page.goto(`${base}/`)
+  const line = await page.ev<string>(
+    `($$("a").find((a) => txt(a).startsWith("Ziel 1 · ")) ?? null)?.getAttribute("href") ?? ""`
+  )
+  check("Ziele: auf Start die Zeile zum Ziel, sie führt zum Ziel", line === goalPath, line)
+
+  // Telefon, schmal: kein seitliches Scrollen
+  record(
+    await noSideScroll(page, {
+      base,
+      paths: ["/diary/goals", goalPath, "/diary/goals/new", `${goalPath}/edit`],
+      widths: [390, 360],
+    })
+  )
+  await page.viewport(390, 844)
+
+  // löschen mit Rückgängig, dann im Papierkorb
+  const remove = async () => {
+    await page.goto(`${base}${goalPath}`)
+    await page.click(`button("Ziel löschen")`)
+    await confirm(page, "Löschen")
+    return page.waitFor(
+      `location.pathname === "/diary/goals" && txt($("[data-undo-bar]")).includes("Ziel gelöscht")`,
+      10_000
+    )
+  }
+  check("Ziele: Löschen geht zu den Zielen mit „Rückgängig“", await remove())
+  await page.click(`button("Rückgängig", $("[data-undo-bar]"))`)
+  check(
+    "Ziele: Rückgängig bringt das Ziel zurück",
+    await page.waitFor(`!!$('[data-goal="${goalPath.split("/").pop()}"]')`, 10_000)
+  )
+  await remove()
+  await page.goto(`${base}/profile/trash`)
+  check(
+    "Ziele: das Ziel liegt im Papierkorb unter „Im Tagebuch“",
+    await page.ev<boolean>(
+      `!!$('[data-diary-trash] [data-trash-entry="goal"]') && txt($("[data-diary-trash]")).startsWith("Im Tagebuch")`
+    )
+  )
+}
+
+/** Abläufe im Faden: anlegen als Text, Leseseite, bearbeiten mit Wächter, Löschen mit Rückgängig */
+async function routines(page: Page, { base, check, record }: Context) {
+  await page.goto(`${base}/diary/thread`)
+  check(
+    "Abläufe: im Faden der Kasten „Abläufe“",
+    await page.ev<boolean>(`!!$("[data-routine-box]")`)
+  )
+  await page.click(`link("Neuer Ablauf", $("[data-routine-box]"))`)
+  await page.waitFor(`location.pathname === "/diary/routines/new"`, 10_000)
+  await typeInto(page, "[data-routine-name]", "Ablauf zum Prüfen")
+  await page.ev(
+    setText("[data-routine-text]", "Griff fassen\nHand ganz hoch.\n\nAtmen\n\nAbziehen")
+  )
+  check(
+    "Abläufe: der Hinweis zählt die Schritte beim Schreiben",
+    await page.waitFor(`txt($("[data-routine-hint]")).endsWith("Gerade: 3 Schritte.")`, 5_000)
+  )
+  await page.click(`$("[data-routine-save]")`)
+  const created = await page.waitFor(
+    String.raw`/^\/diary\/routines\/(?!new$)[^/]+$/.test(location.pathname)`,
+    10_000
+  )
+  const routinePath = await page.ev<string>(`location.pathname`)
+  check(
+    "Abläufe: anlegen öffnet die Leseseite mit drei nummerierten Schritten",
+    created && (await page.waitFor(`$$("[data-routine-steps] li").length === 3`, 10_000)),
+    routinePath
+  )
+
+  // bearbeiten: Verlassen mit Ungespeichertem fragt, dann speichern
+  await page.click(`link("Bearbeiten", $("[data-routine-actions]"))`)
+  await page.waitFor(`location.pathname === "${routinePath}/edit"`, 10_000)
+  await page.ev(
+    setText(
+      "[data-routine-text]",
+      "Griff fassen\nHand ganz hoch.\n\nAtmen\n\nAbziehen\n\nNachhalten"
+    )
+  )
+  await page.click(`link("Ablauf zum Prüfen")`)
+  check(
+    "Abläufe: mit Ungespeichertem verlassen fragt",
+    await page.waitFor(`txt(${DIALOG}).includes("Änderungen verwerfen?")`, 5_000)
+  )
+  await page.click(`button("Abbrechen", ${DIALOG})`)
+  await page.waitFor(`!${DIALOG}`)
+  await page.click(`$("[data-routine-save]")`)
+  check(
+    "Abläufe: bearbeiten speichert den Text als Schritte",
+    (await page.waitFor(`location.pathname === "${routinePath}"`, 10_000)) &&
+      (await page.waitFor(`$$("[data-routine-steps] li").length === 4`, 10_000))
+  )
+  const id = routinePath.split("/").pop()
+  await page.goto(`${base}/diary/thread`)
+  check(
+    "Abläufe: im Faden steht der Ablauf mit seiner Zahl der Schritte",
+    await page.ev<boolean>(`txt($('[data-routine="${id}"]')).includes("4 Schritte")`)
+  )
+
+  record(
+    await noSideScroll(page, {
+      base,
+      paths: ["/diary/thread", routinePath, `${routinePath}/edit`, "/diary/routines/new"],
+      widths: [390, 360],
+    })
+  )
+  await page.viewport(390, 844)
+
+  await page.goto(`${base}${routinePath}`)
+  await page.click(`button("Ablauf löschen")`)
+  await confirm(page, "Löschen")
+  check(
+    "Abläufe: Löschen geht in den Faden mit „Rückgängig“",
+    await page.waitFor(
+      `location.pathname === "/diary/thread" && txt($("[data-undo-bar]")).includes("Ablauf gelöscht")`,
+      10_000
+    )
+  )
+  await page.click(`button("Rückgängig", $("[data-undo-bar]"))`)
+  check(
+    "Abläufe: Rückgängig bringt den Ablauf zurück in den Faden",
+    await page.waitFor(`!!$('[data-routine="${id}"]')`, 10_000)
+  )
 }
