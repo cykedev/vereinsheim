@@ -2,7 +2,7 @@
 // Springen, Geometrie bei mehreren Fenstergrößen, Anker, Rückwege), gegen die laufende App mit dem Demo-Konto. Nicht im
 // Gate: braucht Chrome, einen laufenden Server und Daten. Ohne feste Zahlen, denn die App zeigt echte Scheiben; geprüft
 // werden Struktur, Lage und Gleichheiten. Der Abschnitt „Detailtiefen“ braucht die Demo-Scheiben ohne Brücke in jeder
-// Detailtiefe, die `seed:own --demo` mit anlegt.
+// Detailtiefe, die `seed:own --demo` mit anlegt. Der Abschnitt „Tagebuch“ steht in `pruefen-diary.ts`.
 //
 //   pnpm --filter spiegel seed:own --demo      einmal: die Scheiben dem Demo-Konto
 //   pnpm --filter spiegel pruefen              gegen http://localhost:3002 (BASE_URL), `--alle` zeigt jede Prüfung
@@ -30,6 +30,7 @@ import {
 } from "@vereinsheim/pruefen/common"
 import { startServer } from "@vereinsheim/pruefen/server"
 import { DEMO_EMAIL, DEMO_PASSWORD } from "./demo-account"
+import { diary } from "./pruefen-diary"
 import { samplePrintout } from "./printout-sample"
 
 /** mit `--start`: der eigene Produktions-Server aus `.next` dieses Checkouts (nach `build` bzw. `pnpm check`) */
@@ -2989,6 +2990,7 @@ async function main() {
     await section("Scheibe holen", () => fetchCards(page))
     await section("Von Hand eintragen", () => handEntry(page))
     await section("Geteilte Scheibe", () => sharing(chrome, page, href))
+    await section("Tagebuch", () => diary(page, { base: BASE, check, record }))
     await section("Gemeinsame Prüfungen", () => commonChecks(page, href))
     // React meldet in der Entwicklung manches über console.error; jede Meldung zählt, damit keine untergeht
     check("Keine Skriptfehler", page.errors.length === 0, page.errors.slice(0, 5).join(" · "))

@@ -136,7 +136,11 @@ export function EntryCards({
         <div data-offered className="my-2 grid gap-0.5 rounded-xl bg-surface-2 px-3 pt-2 pb-1">
           <p className="text-[13px] font-semibold text-foreground-2">{ENTRY_TEXTS.sameEvening}</p>
           {cards.offered.map((card) => (
-            <div key={card.id} className="flex items-center gap-3 py-1.5">
+            <div
+              key={card.id}
+              data-offered-card={card.id}
+              className="flex items-center gap-3 py-1.5"
+            >
               <span className="min-w-0 flex-1 text-sm tabular-nums">
                 <span className="font-semibold text-primary">{timeOf(card, timeZone)}</span>
                 <span className="text-foreground-2">
