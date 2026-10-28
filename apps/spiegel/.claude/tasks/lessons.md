@@ -86,3 +86,20 @@ Geschichte in `vault/incidents/`.
 - **Ein Dev-Server aus dem Haupt-Checkout belegt :3002:** Die Vorschau `spiegel` hat einen festen Port; im Worktree
   lief der eigene Server deshalb über `next dev --port 3022`. Dabei schreibt Next ein `AGENTS.md` in `apps/spiegel`
   (untracked), das am Ende wieder weg muss. → REMEMBER (Auto-Memory, maschinenlokal)
+
+## 2026-10-28 · Ziele und Abläufe im Tagebuch (2b)
+
+- **Ein Wert aus einer Abfrage-Datei zieht die Datenbank in den Browser:** `RoutineScreen` und `RoutineForm` (Client)
+  holten die Konstante `NO_FAMILY` aus `src/diary/queries.ts`. `tsc`, Lint und Tests waren grün, erst `next build` fiel
+  mit „does not support external modules (request: node:module)“. Client-Komponenten holen aus Abfrage-Dateien nur
+  Typen; geteilte Werte stehen in Dateien ohne Datenbank (`src/diary/paths.ts`, `components/styles.ts`). → DOCUMENT
+  (`apps/spiegel/CLAUDE.md`, Tagebuch)
+- **Gate und Commit mit `&&`, nie mit `;`:** Eine Kette mit `;` hat den Commit trotz rotem `next build` gemacht; er
+  wurde danach mit grünem Gate nachgebessert. → REMEMBER (Auto-Memory „Gate before commit“ besteht schon)
+- **Die Projektion steht in festen Spalten:** Ein neues Feld an `CardProjection` (Fachkern) kommt erst in der Datenbank
+  an, wenn `CardProjection` eine Spalte dafür hat und `saveProjection` sie schreibt; der Test „Version und Ausgabe“ im
+  Fachkern sieht das nicht. Die Übersichten lesen die Spalte nicht (`OVERVIEW_SELECT`), nur wer sie braucht
+  (`seriesOfCards`). → DOCUMENT (`vault/spiegel/spiegel-metrics.md`)
+- **`seed:own` nach `seed:own --demo` braucht `--email`, wenn `SEED_ADMIN_EMAIL` ein Konto nennt, das es in der
+  Prod-Kopie nicht gibt:** Sonst bleiben die eigenen Scheiben beim Demo-Konto (am 28. Oktober 2026 rund 20 Minuten, 90
+  statt 122 Scheiben). → REMEMBER (Auto-Memory)
