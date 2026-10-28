@@ -249,6 +249,10 @@ Vorgeschlagener Schnitt, endgültig im jeweiligen `/plan`:
   - **Admin → Disziplinen:** neue Disziplin ohne Meyton-ID anlegen (Name, Familie, Scheibenbild, Schusszahl, Serienlänge,
     Wertung).
 - **1e Grundlage sichtbar:** geht in 1a-2 auf (entschieden mit dem User am 26. Oktober 2026).
+- **1f Mehrere Belege je Scheibe:** `CardEvidence` trägt statt eines Belegs eine Liste, mit Originalnamen. Ein eigener
+  Teil nach `main`, weil er den Ergebnisteil betrifft und auch ohne Tagebuch nützt (Fotos von Ergebnislisten
+  auswärts). Grundlage für Stufe 3: Jeder Anhang aus Treffsicher wird Ausdruck oder Beleg seiner Scheibe (entschieden
+  mit dem User am 28. Oktober 2026, aus dem Konzept 2b). Erst ein Designkonzept, dann Plan und Bau.
 
 Reihenfolge: 1b-1 und 1a-1 parallel (1b-1 ändert kein Schema), dann 1a-2; danach 1b-2, 1d und 1c in einer Reihenfolge,
 die wir nach 1a festlegen. Jeder Teil geht einzeln nach `main` und in Prod.
@@ -284,6 +288,18 @@ Entschieden mit dem User am 28. Oktober 2026:
   mit „Hat es geklappt?“, den Satzanfängen „Ich habe gelernt, dass …“ und „Wie schaffe ich es, …?“ und „Was hat
   gestört?“ (immer, eingeklappt). Der Faden der Lernfragen als Zeitstrahl wird eine eigene Ansicht, schon in 2a. Leere
   Abschnitte sind eine Zeile mit „+“, gefüllte offen; die Seite hängt nicht von der Nutzung ab.
+- **Designkonzept 2b, Runde 1** (https://claude.ai/artifact/89ohQLbvhxYSyuDfJvpV35), vom User mit allen Empfehlungen
+  freigegeben (28. Oktober 2026):
+  - **Ziele:** Satz, Disziplin, Zeitraum, Ergebnis- oder Prozessziel. Ein Ergebnisziel kann eine Messung tragen
+    (Scheibe, Serie oder Schnitt ab X Ringen; alle, Training oder Wettkampf). Spiegel zeigt die Zahlen, urteilt aber nicht:
+    „Hat es geklappt?“ beantwortet der Schütze. Kein Anhaken von Einträgen, „Einträge im Zeitraum“ wird aus Disziplin und
+    Zeitraum abgeleitet. Dritter Reiter „Ziele“ im Tagebuch, eine Zeile auf Start (laufende Ziele mit Messung, eins je
+    Disziplin). Saison vorbelegt vom 1. September bis 31. August. Übernahme ohne geratene Messung; die
+    Verknüpfungen außerhalb des Zeitraums in den Prüfbestand.
+  - **Schuss-Abläufe:** oben im Faden ihrer Disziplin, eigene Leseseite je Ablauf, Bearbeiten als ein Textfeld (Absatz =
+    Schritt, erste Zeile = Titel). Weicht von ADR-033 ab (eigene Seite im Tagebuch), vom User wieder aufgemacht.
+  - **Anhänge:** keine im Tagebuch. Jede Datei wird Ausdruck oder Beleg ihrer Scheibe (Teil 1f). Weicht von ADR-033 ab
+    („Anhänge bleiben im Tagebuch“), vom User wieder aufgemacht. Der Nachtrag zu ADR-033 kommt mit 2b.
 
 ### Stufe 3 · Die Daten ziehen um
 
@@ -381,8 +397,8 @@ Holen“ ins Textbuch Spiegel (steht in `reports/2026-10-27-fetch-no-request-cap
 2. **Stufe 2 Tagebuch:** 2a (Einträge, Faden, Papierkorb, Export) ist im Basisbranch, Migration
    `20261028180000_diary_entries`. In der Dev-DB stehen 94 Vorschau-Einträge des Users aus Treffsicher
    (`importKey` `preview:`); vor der Übernahme in Stufe 3 löschen mit
-   `delete from "DiaryEntry" where "importKey" like 'preview:%'`. Als Nächstes 2b (Saisonziele, Abläufe, Anhänge),
-   wieder mit Entwurf der Oberfläche vor dem Plan; Ergebnisziele misst Spiegel selbst.
+   `delete from "DiaryEntry" where "importKey" like 'preview:%'`. 2b (Ziele, Abläufe) ist im Konzept freigegeben und wird
+   geplant; 1f (mehrere Belege je Scheibe) geht als eigener Teil nach `main`.
 3. **Stufe 3 Übernahme**, dann **Stufe 4 Ruhestand**.
 
 Für später festgehalten: Randfall „Wertung endgültig gelöscht, Probe des Abends bleibt“: Holen öffnet die Probe, die
@@ -406,7 +422,9 @@ Befund aus dem Review von 2a).
 | 1c   | `plans/2026-10-27-tis-1c-printout-values.md` | `feat/tis-1c-printout-values` (von `main`) | `tis-1c-printout-values` | in `main` (`88ea1140`); Luftgewehr-Fix, Leser v2        |
 | 1d   | `plans/2026-10-28-tis-1d-hand-entry.md`      | `feat/tis-1d-hand-entry` (von `main`)      | `tis-1d-hand-entry`      | in `main` (`dbc9e45c`), noch nicht deployt              |
 | 1e   |                                              |                                            |                          | in 1a-2                                                 |
+| 1f   |                                              |                                            |                          | entschieden (28.10.), Konzept offen                     |
 | 2a   | `plans/2026-10-28-tis-2a-diary-entries.md`   | `feat/tis-2a-diary-entries` (vom Basis)    | `tis-2a-diary-entries`   | im Basisbranch (`3fd30d85`), Plan entfernt              |
+| 2b   |                                              | (vom Basis)                                | `tis-2b-goals-routines`  | Konzept freigegeben (28.10.), Plan in Arbeit            |
 | 3    |                                              |                                            |                          | offen                                                   |
 | 4    |                                              |                                            |                          | offen                                                   |
 
