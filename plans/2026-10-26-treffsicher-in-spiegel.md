@@ -237,6 +237,17 @@ Vorgeschlagener Schnitt, endgültig im jeweiligen `/plan`:
        das Trefferbild nur zur Anzeige auf der Seite der Scheibe, ohne in eine Zahl einzugehen (wie „geschätzt“, ADR-033).
 - **1d Handeingabe (SP-4.4):** „Ergebnis eintragen“ je Serie und je Schuss, Trefferlage als Summe, Beleg an der Scheibe,
   eigene Einträge ändern und löschen. Braucht 1a, für den Beleg den Datei-Speicher aus 1b.
+  Entschieden mit dem User am 28. Oktober 2026:
+  - **Einstieg in „Scheibe holen“** als weiterer Weg „Von Hand eintragen“, zuerst das Blatt „Disziplin und Art“ wie
+    bei den anderen Wegen.
+  - **Eingabe wie in Treffsicher:** je Serie eine Summe, je Serie aufklappbar „Schüsse einzeln“; ohne Serien nur das
+    Gesamtergebnis; Zehntel oder ganze Ringe, wie vorhanden; Trefferlage optional als Summe (Betrag in mm und Richtung).
+  - **Ein Beleg je Scheibe**, Foto oder PDF, optional, im Kasten „Diese Scheibe“; Fotos verkleinert der Browser unter
+    die Grenze von 5 MiB je Anfrage.
+  - **Ändern:** Eingetragene Scheiben ganz (Werte, Datum, Ort, Beleg, Löschen), jede Änderung als neue Revision.
+    Scheiben vom Ausdruck oder der Anlage: Werte nicht, nur Disziplin, Art und Ort wie heute.
+  - **Admin → Disziplinen:** neue Disziplin ohne Meyton-ID anlegen (Name, Familie, Scheibenbild, Schusszahl, Serienlänge,
+    Wertung).
 - **1e Grundlage sichtbar:** geht in 1a-2 auf (entschieden mit dem User am 26. Oktober 2026).
 
 Reihenfolge: 1b-1 und 1a-1 parallel (1b-1 ändert kein Schema), dann 1a-2; danach 1b-2, 1d und 1c in einer Reihenfolge,
@@ -363,7 +374,7 @@ die eigentlich die Wertung war.
 | 1b-2 | `plans/2026-10-27-tis-1b2-fetch-card.md`     | `feat/tis-1b2-fetch-card` (von `main`)     | tis-1b2-fetch-card       | in `main` (`053c11b8`), noch nicht deployt              |
 | 1c-0 | `plans/2026-10-27-tis-1c0-printout-check.md` | `feat/tis-1c0-printout-check` (von `main`) | tis-1c0-printout-check   | in `main` (`028234b0`); Ergebnis in [[meyton-printout]] |
 | 1c   | `plans/2026-10-27-tis-1c-printout-values.md` | `feat/tis-1c-printout-values` (von `main`) | `tis-1c-printout-values` | in `main` (`88ea1140`); Luftgewehr-Fix, Leser v2        |
-| 1d   |                                              |                                            |                          | offen                                                   |
+| 1d   | `plans/2026-10-28-tis-1d-hand-entry.md`      | `feat/tis-1d-hand-entry` (von `main`)      | `tis-1d-hand-entry`      | Entscheidungen da, Plan entsteht in der Kindsession     |
 | 1e   |                                              |                                            |                          | in 1a-2                                                 |
 | 2    |                                              |                                            |                          | offen                                                   |
 | 3    |                                              |                                            |                          | offen                                                   |
