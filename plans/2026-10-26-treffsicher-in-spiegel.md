@@ -260,6 +260,20 @@ Serie, Anhänge, Saisonziele, Schuss-Abläufe, Einflüsse, Selbstbild, Schalter 
 Teilen). Der Entwurf der Oberfläche mit dem User kann beginnen, während Stufe 1 umgesetzt wird; die Teilpläne folgen,
 wenn das Modell aus 1a steht.
 
+Entschieden mit dem User am 28. Oktober 2026:
+
+- **Drei Teilpläne:** 2a Einträge (Modell, Schalter im Profil, Bereich, Liste, Seite eines Eintrags, Hinweis beim
+  ersten Öffnen, Export und Löschen, Gate), 2b Saisonziele, Schuss-Abläufe und Anhänge, 2c Einflüsse und Selbstbild.
+  Skalen von Befinden und Prognose wie in Treffsicher, damit die Übernahme nichts verliert.
+- **Navigation:** Mit Tagebuch steht es in der unteren Leiste statt Scheiben (Start, Tagebuch, Holen, Fortschritt,
+  Profil); die Scheiben erreicht man über Start und am Desktop in der Seitenleiste. Ohne Tagebuch bleibt alles wie
+  heute.
+- **Eintrag in Abschnitten:** Die Seite eines Eintrags zeigt Vorher (Absicht, Befinden, Prognose) und Nachher
+  (Feedback, Reflexion, Ausführung je Serie) als Kästen; jeder öffnet ein eigenes kurzes Formular. Kein langes
+  Formular wie in Treffsicher.
+- **Verweis über eine Stelle:** Die Seite einer Scheibe (Kasten „Diese Scheibe“) und Start haben eine Stelle, an die das
+  Tagebuch eine Zeile zum Eintrag setzt. Der Ergebnisteil kennt nur die Stelle, nicht das Tagebuch; das Gate bleibt.
+
 ### Stufe 3 · Die Daten ziehen um
 
 Übernahme mit Prüfbestand, Dubletten mit Scheiben der Brücke (Grundlage: V1). Teilpläne nach Stufe 2.
@@ -376,7 +390,7 @@ die eigentlich die Wertung war.
 | 1c   | `plans/2026-10-27-tis-1c-printout-values.md` | `feat/tis-1c-printout-values` (von `main`) | `tis-1c-printout-values` | in `main` (`88ea1140`); Luftgewehr-Fix, Leser v2        |
 | 1d   | `plans/2026-10-28-tis-1d-hand-entry.md`      | `feat/tis-1d-hand-entry` (von `main`)      | `tis-1d-hand-entry`      | in `main` (`dbc9e45c`), noch nicht deployt              |
 | 1e   |                                              |                                            |                          | in 1a-2                                                 |
-| 2    |                                              |                                            |                          | offen                                                   |
+| 2a   | `plans/2026-10-28-tis-2a-diary-entries.md`   | `feat/tis-2a-diary-entries` (vom Basis)    | `tis-2a-diary-entries`   | Entscheidungen da, Plan entsteht in der Kindsession     |
 | 3    |                                              |                                            |                          | offen                                                   |
 | 4    |                                              |                                            |                          | offen                                                   |
 
