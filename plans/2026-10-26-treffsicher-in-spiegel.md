@@ -327,7 +327,7 @@ Erledigt:
 Offen:
 
 - **Speicher:** Spiegel 320 MB, Treffsicher 256 MB (Heap je 160), deployt am 27. Oktober 2026 abends.
-- **Am echten Telefon über HTTPS prüfen:** Kamera und der Rückfall auf das Foto.
+- **Am echten Telefon:** QR-Code scannen am iPhone über HTTPS funktioniert (User, 27. Oktober 2026).
 - **Rückweg auf ein älteres Image:** vorher `UPDATE "CardRequest" SET status = 'mismatch' WHERE status =
 'printMismatch';` (das alte Image kennt den Wert nicht).
 - **Node 26 Pflicht** (`engine-strict`): `pnpm install` und `pnpm dev` brechen unter älterem Node hart ab.
@@ -335,7 +335,7 @@ Offen:
 **Zweites Release am 27. Oktober 2026 abends** (alle drei Apps, `main` `bc47bbd1`): Art auch für Scheiben nur aus
 Probe, Toasts über der unteren Leiste, Speichergrenzen, Holen mit Ausdruck ohne Sperre bei zehn Aufträgen (Migration
 `20261027220000_card_request_window_at`, additiv; die Brücke bekommt je Konto die zehn neuesten Aufträge). Vorher auf
-`main` der Stack mit Brücke grün. Offen danach: `memory.max` auf dem VPS ansehen; den Text „Grenze der Aufträge beim
+`main` der Stack mit Brücke grün. Läuft laut User ohne Fehler. Offen danach: den Text „Grenze der Aufträge beim
 Holen“ ins Textbuch Spiegel (steht in `reports/2026-10-27-fetch-no-request-cap.md`).
 
 ## Wie es weitergeht
