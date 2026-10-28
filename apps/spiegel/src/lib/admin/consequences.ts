@@ -610,6 +610,7 @@ export function disciplineChange({
   targetLabel,
   familyName,
   plannedShotsFromId,
+  series,
 }: {
   name: string
   /** Scheiben in Spiegel in dieser Disziplin (nicht gelöscht) */
@@ -622,6 +623,8 @@ export function disciplineChange({
   familyName: string | null
   /** Schusszahl aus der DisziplinID; null, wenn sie keine nennt */
   plannedShotsFromId: number | null
+  /** Schüsse je Serie für Einträge von Hand (`seriesShotsOf`) vorher und nachher, null ohne Serien; fehlt: unverändert */
+  series?: { before: number | null; after: number | null }
 }): Decision {
   const happens: string[] = []
   const targetChanged = before.targetId !== after.targetId
@@ -659,6 +662,12 @@ export function disciplineChange({
         : "Eine Scheibe ist dann vollständig, sobald sie fertig ist."
     )
   }
+  if (series && series.before !== series.after)
+    happens.push(
+      series.after
+        ? `Neue Einträge von Hand haben dann Serien zu ${series.after} Schuss.`
+        : "Neue Einträge von Hand haben dann keine Serien."
+    )
   if (!happens.length)
     happens.push(
       "Spiegel übernimmt den Vorschlag. Die Disziplin steht danach nicht mehr unter „Neu“."
@@ -677,6 +686,37 @@ export function disciplineChange({
     ],
     undo: "Jederzeit hier wieder umstellen.",
     confirmLabel: "So einordnen",
+    destructive: false,
+  }
+}
+
+/** eine Disziplin ohne Meyton anlegen ([[adr-033]]): für Scheiben, die nicht von der Anlage kommen */
+export function disciplineCreate({
+  name,
+  familyName,
+  targetLabel,
+  plannedShots,
+}: {
+  name: string
+  familyName: string
+  /** Name des Scheibenbilds */
+  targetLabel: string
+  /** Schusszahl; null ohne feste */
+  plannedShots: number | null
+}): Decision {
+  return {
+    title: `„${name}“ anlegen?`,
+    about: "Die Disziplin kommt nicht von Meyton.",
+    happens: [
+      "Schützen können sie wählen, wenn sie eine Scheibe von Hand eintragen oder holen.",
+      `Sie steht in der Familie „${familyName}“ und wird als ${targetLabel} gezeichnet.`,
+      plannedShots
+        ? `Eine Scheibe ist mit ${plannedShots} Schüssen vollständig.`
+        : "Eine Scheibe ist vollständig, sobald sie fertig ist.",
+    ],
+    notHappening: ["Scheiben der Anlage ordnet Spiegel ihr nicht zu."],
+    undo: "Unter der Disziplin auf „Ignorieren“ tippen. Dann ist sie nicht mehr wählbar.",
+    confirmLabel: "Anlegen",
     destructive: false,
   }
 }

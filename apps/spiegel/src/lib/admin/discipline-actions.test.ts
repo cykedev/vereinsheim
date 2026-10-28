@@ -18,8 +18,15 @@ vi.mock("@/lib/auth-helpers", () => ({
 vi.mock("next/cache", () => ({ revalidatePath: () => {} }))
 vi.mock("next/server", () => ({ after: () => void mocks.after++ }))
 
-const { createFamily, removeFamily, renameFamily, saveDiscipline, setDisciplineIgnored } =
-  await import("./discipline-actions")
+const {
+  createDiscipline,
+  createFamily,
+  removeFamily,
+  renameFamily,
+  saveDiscipline,
+  setDisciplineIgnored,
+} = await import("./discipline-actions")
+const { newCardChoices } = await import("@/lib/fetch-card/queries")
 
 const tag = randomUUID().slice(0, 8)
 let adminId: string
@@ -122,6 +129,14 @@ describe("saveDiscipline", () => {
     expect(await read(id)).toMatchObject({ plannedShots: null, version: 4 })
   })
 
+  it("die Serienlänge nur, wenn sie mitkommt, und ohne neue Version", async () => {
+    const id = await discipline({ seriesShots: 5 })
+    await saveDiscipline(id, input())
+    expect(await read(id)).toMatchObject({ seriesShots: 5, version: 0 })
+    await saveDiscipline(id, input({ seriesShots: 0 }))
+    expect(await read(id)).toMatchObject({ seriesShots: 0, version: 0 })
+  })
+
   it("eine andere Familie zieht die Scheiben mit", async () => {
     const id = await discipline()
     const generated = generateSeason({
@@ -159,6 +174,65 @@ describe("saveDiscipline", () => {
     const ignored = await discipline({ ignoredAt: new Date() })
     expect(await saveDiscipline(ignored, input())).toEqual(reload)
     expect((await read(ignored)).confirmedAt).toBeNull()
+  })
+})
+
+describe("createDiscipline", () => {
+  const fresh = (over: Partial<Parameters<typeof createDiscipline>[0]> = {}) => ({
+    name: `KK 3x20 ${tag}`,
+    targetId: "lg-10m",
+    familyId: familyA,
+    officialScoring: "rings" as const,
+    plannedShots: 60,
+    seriesShots: 10,
+    ...over,
+  })
+  const created = (result: Awaited<ReturnType<typeof createDiscipline>>) => {
+    if (!("success" in result) || !result.data) throw new Error("nicht angelegt")
+    disciplineIds.push(result.data.id)
+    return result.data.id
+  }
+
+  it("legt ohne Meyton an, eingeordnet und wählbar", async () => {
+    const id = created(await createDiscipline(fresh({ name: `  KK   3x20 ${tag} ` })))
+    expect(await read(id)).toMatchObject({
+      siteId,
+      meytonId: null,
+      name: `KK 3x20 ${tag}`,
+      targetId: "lg-10m",
+      familyId: familyA,
+      officialScoring: "rings",
+      plannedShots: 60,
+      seriesShots: 10,
+      ignoredAt: null,
+    })
+    expect((await read(id)).confirmedAt).not.toBeNull()
+    const { options } = await newCardChoices(db, { siteId, userId: adminId })
+    expect(options.some((option) => option.id === id)).toBe(true)
+  })
+
+  it("ein Name nur einmal je Anlage, ohne Groß- und Kleinschreibung", async () => {
+    created(await createDiscipline(fresh({ name: `LP Zivil ${tag}` })))
+    expect(await createDiscipline(fresh({ name: `lp zivil ${tag.toUpperCase()}` }))).toEqual({
+      error: { name: ["Eine Disziplin mit diesem Namen gibt es schon."] },
+    })
+    expect(await createDiscipline(fresh({ name: "   " }))).toEqual({
+      error: { name: ["Gib der Disziplin einen Namen."] },
+    })
+  })
+
+  it("abgewiesen: kein Admin, kein Scheibenbild, unbekannte Familie, falsche Zahlen", async () => {
+    const reload = { error: "Das ließ sich nicht speichern. Bitte lade die Seite neu." }
+    expect(await createDiscipline(fresh({ targetId: "own" }))).toEqual(reload)
+    expect(await createDiscipline(fresh({ targetId: "constructor" }))).toEqual(reload)
+    expect(await createDiscipline(fresh({ familyId: 2_000_000_000 }))).toEqual(reload)
+    expect(await createDiscipline(fresh({ plannedShots: -1 }))).toEqual(reload)
+    expect(await createDiscipline(fresh({ seriesShots: 1.5 }))).toEqual(reload)
+    mocks.session = { user: { id: adminId, role: "USER" } }
+    expect(await createDiscipline(fresh({ name: `Neu ${tag}` }))).toEqual({
+      error: "Das darf nur ein Admin.",
+    })
+    expect(await db.discipline.count({ where: { name: `Neu ${tag}` } })).toBe(0)
   })
 })
 

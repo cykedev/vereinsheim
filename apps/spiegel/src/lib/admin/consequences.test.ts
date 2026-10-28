@@ -14,6 +14,7 @@ import {
   consentReject,
   consentRemove,
   disciplineChange,
+  disciplineCreate,
   disciplineIgnore,
   disciplineRecalculates,
   disciplineShow,
@@ -713,6 +714,28 @@ describe("Schreibregeln", () => {
     ],
     ["Disziplin verstecken", change({}, { targetId: null, familyId: null }, 0)],
     ["Disziplin ignorieren", disciplineIgnore({ name: "LG Schach 6x6", cards: 1 })],
+    [
+      "Disziplin anlegen",
+      disciplineCreate({
+        name: "KK 50m 3x20",
+        familyName: "KK",
+        targetLabel: "Luftgewehr 10 m",
+        plannedShots: 60,
+      }),
+    ],
+    [
+      "Serienlänge ändern",
+      disciplineChange({
+        name: "KK 50m 3x20",
+        cards: 0,
+        before: mapping(),
+        after: mapping(),
+        targetLabel: null,
+        familyName: null,
+        plannedShotsFromId: null,
+        series: { before: 10, after: 20 },
+      }),
+    ],
     ["Disziplin zeigen", disciplineShow({ name: "LG Schach 6x6", cards: 3, visible: false })],
     ["Familie entfernen", familyRemove({ name: "Zimmerstutzen" })],
   ]
@@ -808,6 +831,52 @@ describe("Folgen beim Einordnen einer Disziplin", () => {
     expect(
       disciplineRecalculates(mapping(), mapping({ familyId: 9, officialScoring: "rings" }))
     ).toBe(false)
+  })
+
+  it("anlegen: woher, was passiert, Schusszahl oder keine feste", () => {
+    const d = disciplineCreate({
+      name: "KK 50m 3x20",
+      familyName: "KK",
+      targetLabel: "Luftgewehr 10 m",
+      plannedShots: 60,
+    })
+    wellFormed(d)
+    expect(d).toEqual({
+      title: "„KK 50m 3x20“ anlegen?",
+      about: "Die Disziplin kommt nicht von Meyton.",
+      happens: [
+        "Schützen können sie wählen, wenn sie eine Scheibe von Hand eintragen oder holen.",
+        "Sie steht in der Familie „KK“ und wird als Luftgewehr 10 m gezeichnet.",
+        "Eine Scheibe ist mit 60 Schüssen vollständig.",
+      ],
+      notHappening: ["Scheiben der Anlage ordnet Spiegel ihr nicht zu."],
+      undo: "Unter der Disziplin auf „Ignorieren“ tippen. Dann ist sie nicht mehr wählbar.",
+      confirmLabel: "Anlegen",
+      destructive: false,
+    })
+    expect(
+      disciplineCreate({ name: "X", familyName: "KK", targetLabel: "L", plannedShots: null })
+        .happens[2]
+    ).toBe("Eine Scheibe ist vollständig, sobald sie fertig ist.")
+  })
+
+  it("eine andere Serienlänge sagt, wie neue Einträge von Hand aussehen", () => {
+    const series = (before: number | null, after: number | null) =>
+      disciplineChange({
+        name: "X",
+        cards: 0,
+        before: mapping(),
+        after: mapping(),
+        targetLabel: null,
+        familyName: null,
+        plannedShotsFromId: null,
+        series: { before, after },
+      }).happens
+    expect(series(10, 20)[0]).toBe("Neue Einträge von Hand haben dann Serien zu 20 Schuss.")
+    expect(series(10, null)[0]).toBe("Neue Einträge von Hand haben dann keine Serien.")
+    expect(series(10, 10)[0]).toBe(
+      "Spiegel übernimmt den Vorschlag. Die Disziplin steht danach nicht mehr unter „Neu“."
+    )
   })
 
   it("ignorieren, wieder zeigen, Familie entfernen", () => {

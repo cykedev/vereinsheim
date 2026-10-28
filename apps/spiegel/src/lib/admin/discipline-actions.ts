@@ -14,8 +14,9 @@ import type { ActionResult } from "@/lib/types"
 import { disciplineRecalculates, type DisciplineMapping } from "./consequences"
 import { familySlug } from "./discipline-model"
 
-// Admin → Disziplinen: eine Disziplin einordnen oder ignorieren, Familien anlegen, umbenennen und entfernen. Jede Action
-// prüft selbst (`adminActor`), arbeitet auf der ersten Anlage (ADR-029) und gibt ein ActionResult zurück.
+// Admin → Disziplinen: eine Disziplin einordnen, ignorieren oder ohne Meyton anlegen, Familien anlegen, umbenennen und
+// entfernen. Jede Action prüft selbst (`adminActor`), arbeitet auf der ersten Anlage (ADR-029) und gibt ein ActionResult
+// zurück.
 
 const RELOAD = "Das ließ sich nicht speichern. Bitte lade die Seite neu."
 
@@ -28,6 +29,8 @@ const MappingSchema = z.object({
     z.object({ mode: z.literal("open") }),
     z.object({ mode: z.literal("count"), count: z.number().int().min(1).max(200) }),
   ]),
+  // fehlt: nicht anfassen; 0 ohne Serien
+  seriesShots: z.number().int().min(0).max(200).optional(),
 })
 
 /** die Zuordnung, wie sie in der Zeile steht */
@@ -74,6 +77,8 @@ export async function saveDiscipline(
     familyId: number | null
     officialScoring: "decimal" | "rings" | "open"
     plannedShots: { mode: "id" } | { mode: "open" } | { mode: "count"; count: number }
+    /** Schüsse je Serie für Einträge von Hand; 0 ohne Serien, fehlt: nicht anfassen */
+    seriesShots?: number
   }
 ): Promise<ActionResult> {
   const actor = await adminActor()
@@ -110,6 +115,7 @@ export async function saveDiscipline(
           targetId: next.targetId,
           officialScoring: next.officialScoring,
           plannedShots: next.plannedShots,
+          ...(wanted.seriesShots === undefined ? {} : { seriesShots: wanted.seriesShots }),
           confirmedAt: new Date(),
           ...(recalculates ? { version: { increment: 1 } } : {}),
         },
@@ -162,6 +168,82 @@ export async function setDisciplineIgnored(
   if (!saved) return { error: RELOAD }
   revalidatePath("/", "layout")
   return { success: true }
+}
+
+const DisciplineName = z
+  .string()
+  .trim()
+  .min(1, "Gib der Disziplin einen Namen.")
+  .max(60, "Höchstens 60 Zeichen.")
+  .transform((name) => name.replace(/\s+/g, " "))
+
+const NewDisciplineSchema = z.object({
+  name: DisciplineName,
+  targetId: z.string().refine((value) => Object.hasOwn(TARGETS, value)),
+  familyId: z.number().int().positive().max(2_147_483_647),
+  officialScoring: z.enum(["decimal", "rings", "open"]),
+  // 0: keine feste Schusszahl
+  plannedShots: z.number().int().min(0).max(200),
+  // 0: ohne Serien
+  seriesShots: z.number().int().min(0).max(200),
+})
+
+/**
+ * Eine Disziplin ohne Meyton anlegen ([[adr-033]]): für Scheiben von Hand, von fremden Anlagen und aus Treffsicher.
+ * Eingeordnet und wählbar (Scheibenbild und Familie sind Pflicht); der Name ist auf der Anlage eindeutig, ohne Groß- und
+ * Kleinschreibung, geprüft unter einer Sperre, damit zwei Admins nicht denselben anlegen.
+ */
+export async function createDiscipline(input: {
+  name: string
+  targetId: string
+  familyId: number
+  officialScoring: "decimal" | "rings" | "open"
+  plannedShots: number
+  seriesShots: number
+}): Promise<ActionResult<{ id: number }>> {
+  const actor = await adminActor()
+  if ("error" in actor) return actor
+  const parsed = NewDisciplineSchema.safeParse(input)
+  if (!parsed.success) {
+    const name = parsed.error.issues.filter((issue) => issue.path[0] === "name")
+    return name.length ? { error: { name: name.map((i) => i.message) } } : { error: RELOAD }
+  }
+  const site = await firstSite()
+  if (!site) return { error: RELOAD }
+  const wanted = parsed.data
+  try {
+    const created = await db.$transaction(async (tx) => {
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext('discipline-name:' || ${site.id}::text))`
+      if (!(await tx.family.findUnique({ where: { id: wanted.familyId } }))) return "family"
+      const same = await tx.discipline.findFirst({
+        where: { siteId: site.id, name: { equals: wanted.name, mode: "insensitive" } },
+        select: { id: true },
+      })
+      if (same) return "taken"
+      const { id } = await tx.discipline.create({
+        data: {
+          siteId: site.id,
+          meytonId: null,
+          name: wanted.name,
+          targetId: wanted.targetId,
+          familyId: wanted.familyId,
+          officialScoring: wanted.officialScoring === "open" ? null : wanted.officialScoring,
+          plannedShots: wanted.plannedShots,
+          seriesShots: wanted.seriesShots,
+          confirmedAt: new Date(),
+        },
+        select: { id: true },
+      })
+      return id
+    })
+    if (created === "taken")
+      return { error: { name: ["Eine Disziplin mit diesem Namen gibt es schon."] } }
+    if (created === "family") return { error: RELOAD }
+    revalidatePath("/", "layout")
+    return { success: true, data: { id: created } }
+  } catch {
+    return { error: "Das ließ sich nicht speichern. Bitte noch einmal versuchen." }
+  }
 }
 
 const FamilyName = z
