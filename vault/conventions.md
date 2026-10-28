@@ -271,6 +271,11 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
   und prüft darin die Funktion, die die Transaktion nimmt (`deleteAccountIn` in
   `apps/spiegel/src/parts/account-actions.test.ts`). Echte Admins kurz zu deaktivieren hätte ihre Sitzungen beendet.
 
+- **Prettier nicht auf Vault-Notes**: Prettier bricht lange Listen der Frontmatter (`keywords:`, `relates_to:`) auf
+  mehrere Zeilen um. Der Loader liest nur die einzeilige Form; `vault-lint` meldet dann fehlende `keywords:`, und die
+  Kanten aus `relates_to` fehlen still im Graph. Das Gate prüft den Vault nicht mit Prettier; wer Dateien von Hand
+  formatiert, lässt `vault/` aus (aufgefallen im Oktober 2026 an `spiegel-diary`, 641 statt 647 Kanten).
+
 - **Datenlage vor der Sichtprüfung abgleichen**: Bevor eine Änderung im Browser als geprüft gilt,
   die vorhandenen Dev-Daten gegen die zu prüfenden Zustände halten (z.B. „abgeschlossener
   Wettbewerb", „Liga mit Ergebnissen", „mehr Zeilen als die Vorschau"). Was die Daten nicht

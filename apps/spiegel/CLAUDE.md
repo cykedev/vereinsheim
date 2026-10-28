@@ -422,7 +422,9 @@ Stand mit `past` (`MAX_OBSERVED_LAG_MS`, SF-79).
   `Diary*` haben keinen Fremdschlüssel auf Scheiben oder Familien, nur `User` kaskadiert. Je Konto abschaltbar
   (`DiarySettings.enabled`, aus heißt: keine Leiste, keine Stellen, `/diary` führt ins Profil). Werte 0 bis 100, gezeigt
   in fünf Stufen (`src/diary/scales.ts`). Scheiben vom selben Abend leitet `entryCards` (`src/diary/cards.ts`) beim
-  Lesen ab; gespeichert wird nur Verknüpfen und Lösen (`DiaryEntryCard.link`). Schreiben nur über `src/diary/entries.ts`
+  Lesen ab; gespeichert wird nur Verknüpfen und Lösen (`DiaryEntryCard.link`). Ein Eintrag im Papierkorb hält keine
+  Scheibe (`activeLinks`); seine Zeilen bleiben bis zu einer anderen Zuordnung, `restoreEntry` gibt nur freie zurück.
+  „Eintrag anlegen“ an Scheibe und Start ist eine Server Action in `PartLine.run` (`PartLineAction`). Schreiben nur über `src/diary/entries.ts`
   (serialisierbar, Zeile des Eintrags `FOR UPDATE`), die Actions prüfen Sitzung und Schalter. Texte in
   `src/diary/texts.ts`, Folgen in `src/diary/consequences.ts`. Skriptprüfung im Abschnitt „Tagebuch“
   (`tools/pruefen-diary.ts`), die am Ende alle Einträge des Demo-Kontos löscht und das Tagebuch ausschaltet.
