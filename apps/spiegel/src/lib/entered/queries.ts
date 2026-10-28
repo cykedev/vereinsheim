@@ -9,7 +9,7 @@ import type { CardKind } from "@/generated/prisma/client"
 import type { Db } from "../db"
 import { kindOfRow } from "../db/reads"
 import { VISIBLE_CARD } from "../db/visible"
-import type { FormDiscipline, StoredDetails } from "./form"
+import { detailsToForm, type FormDiscipline, type StoredDetails } from "./form"
 
 /** so viele Orte schlägt das Feld „Ort“ vor */
 const PLACES = 20
@@ -184,5 +184,33 @@ export async function cardForEdit(
       total,
       center,
     },
+  }
+}
+
+/** was der Kasten „Diese Scheibe“ zu Eintrag und Ort zeigt */
+export type CardEntryInfo =
+  | { kind: "entered"; from: "manual" | "treffsicher"; editable: boolean }
+  | { kind: "place"; place: string | null; places: string[] }
+
+/**
+ * Eintrag und Ort einer eigenen, sichtbaren Scheibe: eingetragen (änderbar, wenn das Formular alle Angaben zeigen
+ * kann), vom Ausdruck nur der Ort mit den eigenen Orten als Vorschlag; von der Anlage nichts (ihr Ort ist die Anlage)
+ */
+export async function cardEntryInfo(
+  db: Db,
+  { cardId, ownerId, timeZone }: { cardId: string; ownerId: string; timeZone: string }
+): Promise<CardEntryInfo | null> {
+  const row = await db.card.findFirst({
+    where: { id: cardId, ownerId, ...VISIBLE_CARD },
+    select: { origin: true, place: true },
+  })
+  if (!row || row.origin === "raw") return null
+  if (row.origin === "pdf")
+    return { kind: "place", place: row.place, places: await ownPlaces(db, ownerId) }
+  const card = await cardForEdit(db, { cardId, ownerId, timeZone })
+  return {
+    kind: "entered",
+    from: row.origin,
+    editable: card !== null && detailsToForm(card.stored, card.discipline, card) !== null,
   }
 }

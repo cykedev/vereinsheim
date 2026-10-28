@@ -71,6 +71,7 @@ import {
 import { ToggleChip } from "@vereinsheim/ui/design2/toggle-chip"
 
 import { CardActions } from "@/components/card/CardActions"
+import type { CardEntryInfo } from "@/lib/entered/queries"
 import { CompareWithPrevious } from "@/components/card/CompareWithPrevious"
 import { Page } from "@vereinsheim/ui/design2/page"
 import { useSavedChoice } from "@/components/shell/useSavedChoice"
@@ -160,6 +161,8 @@ export function CardScreen({
     disciplines: readonly DisciplineOption[]
     /** Ausdruck und Holen (`cardFetchInfo`); null ohne */
     fetch: CardFetchInfo | null
+    /** Eintrag und Ort (`cardEntryInfo`); null bei Scheiben der Anlage */
+    entry?: CardEntryInfo | null
   } | null
   /** die Adresse dieser Seite, für Anker und Fortschreiben (`/cards/<id>` bzw. `/share/<uuid>`) */
   path: string
@@ -567,6 +570,7 @@ export function CardScreen({
               options: own.disciplines,
             }}
             fetch={own.fetch}
+            entry={own.entry ?? null}
             share={share}
             onShareChange={setShare}
             back={urlFromRoute(backRoute(route))}

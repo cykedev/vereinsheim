@@ -15,6 +15,7 @@ import {
   ownerCards,
   previousInFamily,
 } from "@/lib/db/reads"
+import { cardEntryInfo } from "@/lib/entered/queries"
 import { cardFetchInfo } from "@/lib/fetch-card/queries"
 import { pageContext } from "@/lib/page-context"
 import { listable, withFamily } from "@/lib/pages"
@@ -76,6 +77,7 @@ export default async function CardRoutePage({
         previous,
         disciplines: await disciplineOptions(db, { cardId: id, ownerId }),
         fetch: await cardFetchInfo(db, { cardId: id, ownerId }),
+        entry: await cardEntryInfo(db, { cardId: id, ownerId, timeZone: context.timeZone }),
       }}
       path={`/cards/${encodeURIComponent(id)}`}
       context={context}

@@ -11,6 +11,7 @@ vi.mock("@/lib/share-actions", () => ({
   stopSharingCard: async () => ({ success: true }),
 }))
 vi.mock("@/lib/fetch-card/actions", () => ({ stopCardFetch: async () => ({ success: true }) }))
+vi.mock("@/lib/card-place-actions", () => ({ setCardPlace: async () => ({ success: true }) }))
 vi.mock("@/lib/trash-actions", () => ({
   deleteCard: async () => ({ success: true }),
   restoreCard: async () => ({ success: true }),
@@ -19,7 +20,7 @@ vi.mock("@/lib/trash-actions", () => ({
 const { CardActions } = await import("./CardActions")
 
 type Props = Parameters<typeof CardActions>[0]
-const render = (fetch: Props["fetch"]) =>
+const render = (fetch: Props["fetch"], entry: Props["entry"] = null) =>
   renderToStaticMarkup(
     createElement(CardActions, {
       cardId: "c1",
@@ -33,6 +34,7 @@ const render = (fetch: Props["fetch"]) =>
         options: [],
       },
       fetch,
+      entry,
       share: null,
       onShareChange: () => {},
       back: "/cards",
@@ -174,5 +176,36 @@ describe("Kasten „Diese Scheibe“", () => {
     })
     const row = rowText(html, "data-card-fetch")
     expect(row).toBe("Von der Anlage geholt, wird noch ergänzt")
+  })
+})
+
+describe("Eintrag und Ort je Herkunft", () => {
+  it("eingetragen: „Eintrag“ zuerst, mit „Ändern“ zum Formular; ohne Ort-Zeile", () => {
+    const html = render(null, { kind: "entered", from: "manual", editable: true })
+    expect(html.indexOf("data-card-entry")).toBeLessThan(html.indexOf("data-card-discipline"))
+    expect(rowText(html, 'data-card-entry="manual"')).toContain("Eintrag Von Hand eingetragen")
+    expect(html).toContain('href="/cards/c1/edit"')
+    expect(html).not.toContain("data-card-place")
+  })
+
+  it("aus Treffsicher, nicht ganz zu zeigen: ohne „Ändern“", () => {
+    const html = render(null, { kind: "entered", from: "treffsicher", editable: false })
+    expect(rowText(html, 'data-card-entry="treffsicher"')).toContain("Aus Treffsicher übernommen")
+    expect(html).not.toContain("/edit")
+  })
+
+  it("vom Ausdruck: Ort mit „Ändern“, ohne Ort der Satz", () => {
+    const html = render(null, { kind: "place", place: null, places: [] })
+    expect(rowText(html, "data-card-place")).toContain("Ort Kein Ort angegeben")
+    expect(html).toContain('aria-label="Ort ändern"')
+    expect(render(null, { kind: "place", place: "Halle", places: [] })).toMatch(
+      /data-place-name[^>]*>Halle</
+    )
+  })
+
+  it("von der Anlage: weder Eintrag noch Ort", () => {
+    const html = render(null, null)
+    expect(html).not.toContain("data-card-entry")
+    expect(html).not.toContain("data-card-place")
   })
 })
