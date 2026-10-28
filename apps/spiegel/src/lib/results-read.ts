@@ -199,6 +199,38 @@ export async function resultGoalCards(
   }
 }
 
+/** was ein neues Ziel je Familie vorbelegt: Wertung, häufigste Schusszahl je Scheibe und je Serie, neueste Scheibe */
+export interface GoalDefaults {
+  familyId: number
+  scoring: Scoring
+  usualShots: number | null
+  usualSeriesShots: number | null
+  latestMs: number
+}
+
+/** die Vorgaben eines Ziels für jede Familie mit eigenen Scheiben, in einem Durchgang */
+export async function resultGoalDefaults(db: Db, ownerId: string): Promise<GoalDefaults[]> {
+  const { shown, scoringOf } = await overviewCards(db, ownerId)
+  const byFamily = new Map<number, OverviewCard[]>()
+  for (const card of shown)
+    if (card.familyId !== null && card.family)
+      byFamily.set(card.familyId, [...(byFamily.get(card.familyId) ?? []), card])
+  return [...byFamily].map(([familyId, cards]) => {
+    const counted = cards.filter((card) => !card.projection.probeOnly)
+    return {
+      familyId,
+      scoring: scoringOf(cards[0].family!.slug),
+      usualShots: modalLength(
+        counted.map((card) => card.projection.printedShots).filter((shots) => shots > 0)
+      ),
+      usualSeriesShots: modalLength(
+        counted.flatMap((card) => (card.projection.series ?? []).map((series) => series.shots))
+      ),
+      latestMs: Math.max(...cards.map((card) => card.startedAtMs)),
+    }
+  })
+}
+
 /** die Lagen der kleinen Scheiben (`MiniTarget`), nur eigene, sichtbare Scheiben */
 export function resultMarks(
   db: Db,

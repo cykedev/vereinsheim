@@ -9,7 +9,13 @@ import { writeEnteredCard, type EnteredCardInput } from "./db/entered"
 import type { DetailsInput } from "./entered/details"
 import { overviewCards } from "./overview"
 import { listable, withFamily } from "./pages"
-import { resultCards, resultCardSeries, resultFamilies, resultGoalCards } from "./results-read"
+import {
+  resultCards,
+  resultCardSeries,
+  resultFamilies,
+  resultGoalCards,
+  resultGoalDefaults,
+} from "./results-read"
 
 const db = createPrismaClient()
 const ZONE = "Europe/Berlin"
@@ -241,6 +247,20 @@ describe("resultGoalCards", () => {
     expect(result.scoring).toBe("rings")
     expect(result.usualShots).toBe(20)
     expect(result.usualSeriesShots).toBe(10)
+  })
+
+  it("Vorgaben je Familie in einem Durchgang, gleich denen von resultGoalCards", async () => {
+    const defaults = (await resultGoalDefaults(db, site.ownerId)).find(
+      (d) => d.familyId === site.familyId
+    )
+    const goal = await june()
+    expect(defaults).toMatchObject({
+      scoring: goal.scoring,
+      usualShots: goal.usualShots,
+      usualSeriesShots: goal.usualSeriesShots,
+    })
+    expect(defaults?.latestMs).toBeGreaterThanOrEqual(JUNE + 2 * DAY)
+    expect((await resultGoalDefaults(db, otherId)).map((d) => d.familyId)).toEqual([site.familyId])
   })
 
   it("grenzt nach Beginn ein", async () => {

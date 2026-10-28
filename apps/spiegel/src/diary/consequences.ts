@@ -130,3 +130,85 @@ export function diaryDiscard(): Decision {
     destructive: true,
   }
 }
+
+/** ein Ziel in den Papierkorb */
+export function goalDelete({ title }: { title: string }): Decision {
+  return {
+    title: "Ziel löschen?",
+    about: `Du löschst das Ziel „${title}“.`,
+    happens: [
+      "Es liegt 30 Tage im Papierkorb (im Profil). So lange steht es nirgends, auch nicht auf Start.",
+      "Danach löscht Spiegel es endgültig, mit Notiz und Antwort.",
+    ],
+    notHappening: ["Scheiben und Einträge bleiben, wie sie sind."],
+    undo: "30 Tage lang im Papierkorb wiederherstellen.",
+    confirmLabel: "Löschen",
+    destructive: true,
+  }
+}
+
+export function goalPurgeNow({ title }: { title: string }): Decision {
+  return {
+    title: "Ziel endgültig löschen?",
+    about: `Du löschst das Ziel „${title}“ endgültig.`,
+    happens: ["Spiegel löscht es sofort, mit allen Angaben."],
+    notHappening: ["Scheiben und Einträge bleiben."],
+    undo: "Das lässt sich nicht rückgängig machen.",
+    confirmLabel: "Endgültig löschen",
+    destructive: true,
+  }
+}
+
+/** das Formular eines Ziels mit Ungespeichertem verlassen */
+export function goalDiscard(): Decision {
+  return {
+    title: "Änderungen verwerfen?",
+    about: "Am Ziel ist etwas geändert und noch nicht gespeichert.",
+    happens: ["Die Änderungen sind weg."],
+    notHappening: ["Was schon gespeichert war, bleibt."],
+    undo: "Neu eintragen.",
+    confirmLabel: "Verwerfen",
+    destructive: true,
+  }
+}
+
+/** einen Ablauf in den Papierkorb */
+export function routineDelete({ name }: { name: string }): Decision {
+  return {
+    title: "Ablauf löschen?",
+    about: `Du löschst den Ablauf „${name}“.`,
+    happens: [
+      "Er liegt 30 Tage im Papierkorb (im Profil). So lange steht er nirgends, auch nicht im Faden.",
+      "Danach löscht Spiegel ihn endgültig, mit allen Schritten.",
+    ],
+    notHappening: ["Einträge und Faden bleiben, wie sie sind."],
+    undo: "30 Tage lang im Papierkorb wiederherstellen.",
+    confirmLabel: "Löschen",
+    destructive: true,
+  }
+}
+
+export function routinePurgeNow({ name }: { name: string }): Decision {
+  return {
+    title: "Ablauf endgültig löschen?",
+    about: `Du löschst den Ablauf „${name}“ endgültig.`,
+    happens: ["Spiegel löscht ihn sofort, mit allen Schritten."],
+    notHappening: ["Einträge und Faden bleiben."],
+    undo: "Das lässt sich nicht rückgängig machen.",
+    confirmLabel: "Endgültig löschen",
+    destructive: true,
+  }
+}
+
+/** das Formular eines Ablaufs mit Ungespeichertem verlassen */
+export function routineDiscard(): Decision {
+  return {
+    title: "Änderungen verwerfen?",
+    about: "Am Ablauf ist etwas geändert und noch nicht gespeichert.",
+    happens: ["Die Änderungen sind weg."],
+    notHappening: ["Was schon gespeichert war, bleibt."],
+    undo: "Neu schreiben.",
+    confirmLabel: "Verwerfen",
+    destructive: true,
+  }
+}

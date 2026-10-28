@@ -10,6 +10,12 @@ import {
   diaryOff,
   diaryOn,
   diarySectionRemove,
+  goalDelete,
+  goalDiscard,
+  goalPurgeNow,
+  routineDelete,
+  routineDiscard,
+  routinePurgeNow,
   type Decision,
 } from "./consequences"
 
@@ -33,6 +39,12 @@ const ALL: [string, Decision][] = [
   ["löschen ohne Disziplin", diaryEntryDelete({ day: "Mi 21.10.", family: null })],
   ["endgültig", diaryEntryPurgeNow({ day: "Fr 13.03." })],
   ["verwerfen", diaryDiscard()],
+  ["Ziel löschen", goalDelete({ title: "355 im Training" })],
+  ["Ziel endgültig", goalPurgeNow({ title: "355 im Training" })],
+  ["Ziel verwerfen", goalDiscard()],
+  ["Ablauf löschen", routineDelete({ name: "Mein Ablauf" })],
+  ["Ablauf endgültig", routinePurgeNow({ name: "Mein Ablauf" })],
+  ["Ablauf verwerfen", routineDiscard()],
 ]
 
 describe("Folgen im Tagebuch", () => {
@@ -69,5 +81,20 @@ describe("Folgen im Tagebuch", () => {
     expect(decision.about).toBe("Du löschst den Eintrag vom Fr 13.03. (Luftpistole).")
     expect(decision.happens[0]).toMatch(/^Er liegt 30 Tage im Papierkorb/)
     expect(decision.notHappening[0]).toBe("Die Scheiben bleiben in Spiegel, mit allen Schüssen.")
+  })
+
+  it("legt Ziel und Ablauf in den Papierkorb, Scheiben, Einträge und Faden bleiben", () => {
+    const goal = goalDelete({ title: "355 im Training" })
+    expect(goal.about).toBe("Du löschst das Ziel „355 im Training“.")
+    expect(goal.happens[0]).toBe(
+      "Es liegt 30 Tage im Papierkorb (im Profil). So lange steht es nirgends, auch nicht auf Start."
+    )
+    expect(goal.notHappening).toEqual(["Scheiben und Einträge bleiben, wie sie sind."])
+    const routine = routineDelete({ name: "Mein Ablauf" })
+    expect(routine.about).toBe("Du löschst den Ablauf „Mein Ablauf“.")
+    expect(routine.notHappening).toEqual(["Einträge und Faden bleiben, wie sie sind."])
+    expect(routinePurgeNow({ name: "Mein Ablauf" }).undo).toBe(
+      "Das lässt sich nicht rückgängig machen."
+    )
   })
 })
