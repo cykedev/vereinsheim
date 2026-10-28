@@ -42,6 +42,8 @@ export interface DisciplineRow {
   officialScoring: Scoring | null
   /** gespeichert: null aus der DisziplinID, 0 keine feste Zahl, sonst die Zahl */
   plannedShots: number | null
+  /** Schüsse je Serie, gespeichert: null aus der Schusszahl (`seriesShotsOf`), 0 ohne Serien */
+  seriesShots: number | null
   confirmed: boolean
   ignored: boolean
   status: DisciplineStatus
@@ -105,6 +107,7 @@ export function disciplineRow(input: {
     targetId: string | null
     officialScoring: Scoring | null
     plannedShots: number | null
+    seriesShots?: number | null
     confirmedAt: Date | null
     ignoredAt: Date | null
     family: { id: number; name: string } | null
@@ -127,6 +130,7 @@ export function disciplineRow(input: {
     familyName: d.family?.name ?? null,
     officialScoring: d.officialScoring,
     plannedShots: d.plannedShots,
+    seriesShots: d.seriesShots ?? null,
     confirmed,
     ignored,
     status: disciplineStatus({ confirmed, ignored, targetId, familyId }),

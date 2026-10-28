@@ -27,6 +27,7 @@ const DISCIPLINE_SELECT = {
   targetId: true,
   officialScoring: true,
   plannedShots: true,
+  seriesShots: true,
   confirmedAt: true,
   ignoredAt: true,
   family: { select: { id: true, name: true } },

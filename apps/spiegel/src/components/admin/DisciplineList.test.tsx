@@ -9,11 +9,13 @@ vi.mock("@/lib/admin/discipline-actions", () => ({
   createFamily: async () => ({ success: true }),
   renameFamily: async () => ({ success: true }),
   removeFamily: async () => ({ success: true }),
+  createDiscipline: async () => ({ success: true }),
 }))
 
 const { DisciplineList } = await import("./DisciplineList")
 const { DisciplineForm } = await import("./DisciplineForm")
 const { FamilyForms } = await import("./FamilyForms")
+const { NewDisciplineForm } = await import("./NewDisciplineForm")
 const { disciplineRow } = await import("@/lib/admin/discipline-model")
 
 const stats = {
@@ -158,6 +160,47 @@ describe("Blatt einer Disziplin (Markup)", () => {
       })
     )
     expect(html).toContain("Bisher hat keine Scheibe dieser Disziplin Wertungsschüsse.")
+  })
+})
+
+describe("Serienlänge und Disziplin ohne Meyton (Markup)", () => {
+  it("die Serienlänge aus der Schusszahl, „ohne Serien“ ohne Zahl", () => {
+    const fromId = renderToStaticMarkup(createElement(DisciplineForm, { row: row(), families }))
+    expect(fromId).toContain('aria-label="Serienlänge"')
+    expect(fromId).toMatch(/id="series-shots"[^>]*value="10"/)
+    const none = renderToStaticMarkup(
+      createElement(DisciplineForm, { row: row({ plannedShots: 0 }), families })
+    )
+    expect(none).not.toContain('id="series-shots"')
+    const own = renderToStaticMarkup(
+      createElement(DisciplineForm, { row: row({ plannedShots: 40, seriesShots: 5 }), families })
+    )
+    expect(own).toMatch(/id="series-shots"[^>]*value="5"/)
+  })
+
+  it("ohne Meyton-ID keine Schusszahl „wie in der Nummer“", () => {
+    const html = renderToStaticMarkup(
+      createElement(DisciplineForm, {
+        row: row({ meytonId: null, plannedShots: 60, name: "KK 3x20" }),
+        families,
+      })
+    )
+    expect(html).not.toContain("Wie in der Nummer")
+    expect(html).toMatch(/id="planned-shots"[^>]*value="60"/)
+  })
+
+  it("„Neue Disziplin“: Felder ohne eigene Scheibe und ohne „keine“ Familie", () => {
+    const html = renderToStaticMarkup(createElement(NewDisciplineForm, { families }))
+    expect(html).toContain(">Neue Disziplin<")
+    expect(html).toContain(
+      "Für Scheiben, die nicht von der Anlage kommen. Meyton-Disziplinen legt Spiegel selbst an."
+    )
+    for (const label of ["Familie", "Scheibe", "Schusszahl", "Serienlänge", "Wertung"])
+      expect(html).toContain(`aria-label="${label}"`)
+    expect(html).toContain(">Wie eingetragen<")
+    expect(html).not.toContain("Eigene Scheibe")
+    expect(html).not.toContain(">Keine<")
+    expect(html).toContain(">Anlegen<")
   })
 })
 

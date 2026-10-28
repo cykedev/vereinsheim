@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation"
 import { useState, useTransition, type FormEvent } from "react"
 
 import { getErrorMessage } from "@vereinsheim/lib/forms/fieldErrors"
+import { plannedShotsOf, seriesShotsOf } from "@vereinsheim/shot-core/discipline"
 import { TARGETS, type TargetId } from "@vereinsheim/shot-core/targets"
 import { Button } from "@vereinsheim/ui/button"
 import { Segmented } from "@vereinsheim/ui/design2/segmented"
@@ -30,6 +31,7 @@ import { IgnoreButton } from "./DisciplineList"
 type TargetChoice = TargetId | "own"
 type ScoringChoice = "decimal" | "rings" | "open"
 type ShotsChoice = "id" | "count" | "open"
+type SeriesChoice = "count" | "none"
 
 const TARGET_OPTIONS: readonly { value: TargetChoice; label: string }[] = [
   ...(Object.keys(TARGETS) as TargetId[]).map((id) => ({ value: id, label: TARGETS[id].label })),
@@ -44,6 +46,13 @@ const SCORING_OPTIONS = [
 const CARD = "grid gap-3 rounded-2xl border border-border bg-card p-5"
 const NOTE = "text-sm text-foreground-2"
 const MAX_SHOTS = 200
+
+const isCount = (value: number) => Number.isInteger(value) && value >= 1 && value <= MAX_SHOTS
+
+/** Schüsse je Serie, wie Einträge von Hand sie bekommen; 0 ohne Serien */
+export const effectiveSeriesShots = (
+  row: Pick<DisciplineRow, "meytonId" | "plannedShots" | "seriesShots">
+) => seriesShotsOf(row.seriesShots, plannedShotsOf(row.meytonId, row.plannedShots)) ?? 0
 
 /** die gespeicherte Zuordnung einer Zeile */
 const mappingOf = (row: DisciplineRow): DisciplineMapping => ({
@@ -71,9 +80,13 @@ export function DisciplineForm({
   const [target, setTarget] = useState<TargetChoice>(row.targetId ?? "own")
   const [family, setFamily] = useState(row.familyId === null ? "none" : String(row.familyId))
   const [scoring, setScoring] = useState<ScoringChoice>(row.officialScoring ?? "open")
+  // ohne Meyton-ID gibt es keine Schusszahl aus der Nummer
   const [shots, setShots] = useState<ShotsChoice>(
-    row.plannedShots === null ? "id" : row.plannedShots === 0 ? "open" : "count"
+    row.plannedShots === null && row.meytonId !== null ? "id" : row.plannedShots ? "count" : "open"
   )
+  const seriesBefore = effectiveSeriesShots(row)
+  const [series, setSeries] = useState<SeriesChoice>(seriesBefore ? "count" : "none")
+  const [seriesCount, setSeriesCount] = useState(String(seriesBefore || 10))
   const [count, setCount] = useState(
     row.plannedShots ? String(row.plannedShots) : String(row.suggestion.plannedShotsFromId ?? 40)
   )
@@ -82,7 +95,10 @@ export function DisciplineForm({
   const [error, setError] = useState<string | null>(null)
 
   const countValue = Number(count)
-  const countValid = Number.isInteger(countValue) && countValue >= 1 && countValue <= MAX_SHOTS
+  const countValid = isCount(countValue)
+  const seriesValue = Number(seriesCount)
+  const seriesValid = series === "none" || isCount(seriesValue)
+  const seriesAfter = series === "none" ? 0 : seriesValue
   const before = mappingOf(row)
   const after: DisciplineMapping = {
     targetId: target === "own" ? null : target,
@@ -95,7 +111,8 @@ export function DisciplineForm({
     before.targetId !== after.targetId ||
     before.familyId !== after.familyId ||
     before.officialScoring !== after.officialScoring ||
-    before.plannedShots !== after.plannedShots
+    before.plannedShots !== after.plannedShots ||
+    seriesAfter !== seriesBefore
   const familyName = families.find((f) => f.id === after.familyId)?.name ?? null
   const state = statusText(row)
   const hint = ignoreHintText(row)
@@ -131,7 +148,7 @@ export function DisciplineForm({
 
   const submit = (event: FormEvent) => {
     event.preventDefault()
-    if (pending || (shots === "count" && !countValid)) return
+    if (pending || (shots === "count" && !countValid) || !seriesValid) return
     setAsking(true)
   }
 
@@ -202,7 +219,9 @@ export function DisciplineForm({
         <Segmented
           label="Schusszahl"
           options={[
-            { value: "id", label: fromIdLabel(row.suggestion.plannedShotsFromId) },
+            ...(row.meytonId === null
+              ? []
+              : [{ value: "id" as const, label: fromIdLabel(row.suggestion.plannedShotsFromId) }]),
             { value: "count", label: "Eigene Zahl" },
             { value: "open", label: "Keine feste" },
           ]}
@@ -227,6 +246,16 @@ export function DisciplineForm({
         )}
         <p className={NOTE}>{shotsText(row.stats)}</p>
       </section>
+      <section className={CARD}>
+        <h2 className="text-[15px] font-semibold">Serienlänge</h2>
+        <SeriesFields
+          value={series}
+          onChange={setSeries}
+          count={seriesCount}
+          onCount={setSeriesCount}
+          valid={seriesValid}
+        />
+      </section>
       {error && (
         <p role="alert" className="text-sm text-destructive">
           {error}
@@ -236,7 +265,12 @@ export function DisciplineForm({
         <Button
           type="submit"
           className="h-10"
-          disabled={pending || (row.confirmed && !changed) || (shots === "count" && !countValid)}
+          disabled={
+            pending ||
+            (row.confirmed && !changed) ||
+            (shots === "count" && !countValid) ||
+            !seriesValid
+          }
         >
           {pending ? "Speichern…" : row.confirmed ? "Übernehmen" : "So einordnen"}
         </Button>
@@ -251,6 +285,10 @@ export function DisciplineForm({
           targetLabel: after.targetId ? TARGETS[after.targetId as TargetId].label : null,
           familyName,
           plannedShotsFromId: row.suggestion.plannedShotsFromId,
+          series: {
+            before: seriesBefore || null,
+            after: seriesAfter || null,
+          },
         })}
         open={asking}
         onOpenChange={setAsking}
@@ -262,6 +300,8 @@ export function DisciplineForm({
               officialScoring: scoring,
               plannedShots:
                 shots === "count" ? { mode: "count", count: countValue } : { mode: shots },
+              // nur eine geänderte Serienlänge: eine aus der Schusszahl bleibt sonst eine aus der Schusszahl
+              ...(seriesAfter === seriesBefore ? {} : { seriesShots: seriesAfter }),
             })
             if ("error" in result) setError(getErrorMessage(result) ?? null)
             else back()
@@ -269,5 +309,52 @@ export function DisciplineForm({
         }
       />
     </form>
+  )
+}
+
+/** Serienlänge für Einträge von Hand: eine Zahl oder ohne Serien; im Formular einer Disziplin und beim Anlegen */
+export function SeriesFields({
+  value,
+  onChange,
+  count,
+  onCount,
+  valid,
+  id = "series-shots",
+}: {
+  value: SeriesChoice
+  onChange: (value: SeriesChoice) => void
+  count: string
+  onCount: (count: string) => void
+  valid: boolean
+  id?: string
+}) {
+  return (
+    <>
+      <Segmented
+        label="Serienlänge"
+        options={[
+          { value: "count", label: "Zahl" },
+          { value: "none", label: "Ohne Serien" },
+        ]}
+        value={value}
+        onChange={onChange}
+        wrap
+      />
+      {value === "count" && (
+        <div className="grid max-w-40 gap-1.5">
+          <Label htmlFor={id}>Schüsse je Serie</Label>
+          <Input
+            id={id}
+            type="number"
+            inputMode="numeric"
+            min={1}
+            max={MAX_SHOTS}
+            value={count}
+            onChange={(e) => onCount(e.target.value)}
+            aria-invalid={valid ? undefined : true}
+          />
+        </div>
+      )}
+    </>
   )
 }
