@@ -4,6 +4,9 @@
 
 import { createEntryForCard } from "@/diary/actions"
 import { cardPlaceOf, eveningEntries } from "@/diary/queries"
+import { startGoals } from "@/diary/goals/queries"
+import { startState, thresholdText } from "@/diary/goals/stand-text"
+import { GOAL_TEXTS } from "@/diary/goals/texts"
 import { diarySettings } from "@/diary/settings"
 import { dayLabel } from "@/diary/summaries"
 import type { Db } from "@/lib/db"
@@ -57,8 +60,10 @@ const line = (state: string, href: string, action: string): PartLine => ({
 })
 
 /**
- * Je Block auf Start (Abend und Familie) eine Zeile: der Eintrag der neuesten Scheibe des Blocks, die in einem steckt
- * oder angeboten ist, sonst „Eintrag anlegen“ mit der neuesten freien Scheibe (legt direkt an). Schlüssel `Tag|Familie`.
+ * Je Block auf Start (Abend und Familie) die Zeilen des Tagebuchs. Erst der Eintrag: der Eintrag der neuesten Scheibe des
+ * Blocks, die in einem steckt oder angeboten ist, sonst „Eintrag anlegen“ mit der neuesten freien Scheibe (legt direkt
+ * an). Dann das Ziel: das zuletzt angelegte laufende Ziel der Familie mit Messung und sein Stand. Schlüssel
+ * `Tag|Familie`.
  */
 export async function startLines(
   db: Db,
@@ -67,31 +72,56 @@ export async function startLines(
     blocks: readonly { day: string; familySlug: string; cardIds: readonly string[] }[]
     timeZone: string
   }
-): Promise<Record<string, PartLine>> {
+): Promise<Record<string, PartLine[]>> {
   if (!query.blocks.length || !(await diarySettings(db, query.ownerId)).enabled) return {}
-  const targets = await eveningEntries(db, query.ownerId, query.blocks, query.timeZone)
-  const lines: Record<string, PartLine> = {}
+  const [targets, goals] = await Promise.all([
+    eveningEntries(db, query.ownerId, query.blocks, query.timeZone),
+    startGoals(
+      db,
+      query.ownerId,
+      query.blocks.map((block) => block.familySlug),
+      query.timeZone
+    ),
+  ])
+  const lines: Record<string, PartLine[]> = {}
   for (const block of query.blocks) {
     const key = `${block.day}|${block.familySlug}`
     const target = targets.get(key)
-    if (!target) continue
-    lines[key] =
-      "entryId" in target
-        ? {
-            key,
-            title: TITLE,
-            state: "",
-            href: `/diary/${target.entryId}`,
-            action: "Eintrag öffnen",
-          }
-        : {
-            key,
-            title: TITLE,
-            state: "",
-            href: newHref(target.cardId),
-            action: "Eintrag anlegen",
-            run: createEntryForCard.bind(null, target.cardId),
-          }
+    const goal = goals.get(block.familySlug)
+    lines[key] = [
+      ...(target ? [entryLine(key, target)] : []),
+      ...(goal
+        ? [
+            {
+              key: `goal:${goal.id}`,
+              title: GOAL_TEXTS.startTitle(thresholdText(goal.rule.threshold, goal.rule.scoring)),
+              state: startState(goal.rule, goal.stand),
+              href: `/diary/goals/${goal.id}`,
+              action: "",
+            },
+          ]
+        : []),
+    ]
   }
   return lines
+}
+
+/** die Zeile des Eintrags eines Blocks: öffnen oder direkt anlegen */
+function entryLine(key: string, target: { entryId: string } | { cardId: string }): PartLine {
+  return "entryId" in target
+    ? {
+        key,
+        title: TITLE,
+        state: "",
+        href: `/diary/${target.entryId}`,
+        action: "Eintrag öffnen",
+      }
+    : {
+        key,
+        title: TITLE,
+        state: "",
+        href: newHref(target.cardId),
+        action: "Eintrag anlegen",
+        run: createEntryForCard.bind(null, target.cardId),
+      }
 }

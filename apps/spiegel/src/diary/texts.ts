@@ -13,7 +13,7 @@ export const PROFILE_TEXTS = {
   allCards: "Alle Scheiben",
   /** der Satz oben im Papierkorb, wenn auch Einträge darin liegen können */
   trashLead:
-    "Gelöschte Scheiben und Einträge liegen hier 30 Tage und zählen nirgends mit. Danach werden sie endgültig gelöscht.",
+    "Gelöschte Scheiben, Einträge, Ziele und Abläufe liegen hier 30 Tage und zählen nirgends mit. Danach werden sie endgültig gelöscht.",
 } as const
 
 /** Fehler, die jede Action des Tagebuchs geben kann */

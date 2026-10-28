@@ -9,6 +9,9 @@ import { createPrismaClient } from "@/lib/db"
 import { writeEnteredCard } from "@/lib/db/entered"
 import { createTestSite, type TestSite } from "../../test/fixtures"
 
+import { createGoal } from "@/diary/goals/goals"
+import type { GoalInput } from "@/diary/goals/validation"
+
 import { cardLines, startLines } from "./lines"
 
 const db = createPrismaClient()
@@ -83,7 +86,7 @@ describe("Stellen für das Tagebuch", () => {
     // legt direkt an (Server Action), der Link bleibt der Weg ohne Skript
     expect(typeof create.run).toBe("function")
     expect(
-      (await startLines(db, { ownerId: site.ownerId, blocks, timeZone: ZONE }))[`${day}|${slug}`]
+      (await startLines(db, { ownerId: site.ownerId, blocks, timeZone: ZONE }))[`${day}|${slug}`][0]
     ).toMatchObject({
       href: `/diary/new?card=${c}`,
       action: "Eintrag anlegen",
@@ -98,7 +101,7 @@ describe("Stellen für das Tagebuch", () => {
     expect(line).toMatchObject({ href: `/diary/${entry.id}`, action: "Eintrag öffnen" })
     expect(line.state).toMatch(/^Im Eintrag vom \S+ \d\d\.\d\d\.\.$/)
     expect(
-      (await startLines(db, { ownerId: site.ownerId, blocks, timeZone: ZONE }))[`${day}|${slug}`]
+      (await startLines(db, { ownerId: site.ownerId, blocks, timeZone: ZONE }))[`${day}|${slug}`][0]
     ).toMatchObject({
       href: `/diary/${entry.id}`,
       action: "Eintrag öffnen",
@@ -123,7 +126,7 @@ describe("Stellen für das Tagebuch", () => {
       /^Noch in keinem Eintrag\. Im Eintrag vom \S+ \d\d\.\d\d\. unter „Scheiben ändern“ anhaken\.$/
     )
     expect(
-      (await startLines(db, { ownerId: site.ownerId, blocks, timeZone: ZONE }))[`${day}|${slug}`]
+      (await startLines(db, { ownerId: site.ownerId, blocks, timeZone: ZONE }))[`${day}|${slug}`][0]
     ).toMatchObject({ href: `/diary/${entry.id}`, action: "Eintrag öffnen" })
 
     // im Papierkorb hält der Eintrag die Scheibe nicht: „Eintrag anlegen“ legt direkt an
@@ -133,7 +136,47 @@ describe("Stellen für das Tagebuch", () => {
     expect(free).toMatchObject({ state: "Noch in keinem Eintrag.", action: "Eintrag anlegen" })
     expect(typeof free.run).toBe("function")
     expect(
-      (await startLines(db, { ownerId: site.ownerId, blocks, timeZone: ZONE }))[`${day}|${slug}`]
+      (await startLines(db, { ownerId: site.ownerId, blocks, timeZone: ZONE }))[`${day}|${slug}`][0]
     ).toMatchObject({ action: "Eintrag anlegen" })
+  })
+
+  it("auf Start nach dem Eintrag die Zeile zum laufenden Ziel mit Messung, zuletzt angelegtes zuerst", async () => {
+    await setDiaryEnabled(db, site.ownerId, true)
+    const day = formatIsoDate(new Date(Date.now() - 7 * 86_400_000), ZONE)
+    const c = await card(day)
+    const blocks = [{ day, familySlug: slug, cardIds: [c] }]
+    const from = formatIsoDate(new Date(Date.now() - 30 * 86_400_000), ZONE)
+    const to = formatIsoDate(new Date(Date.now() + 30 * 86_400_000), ZONE)
+    const goal = (title: string, measure: GoalInput["measure"]) =>
+      createGoal(db, site.ownerId, {
+        title,
+        kind: "result",
+        familyId: site.familyId,
+        from,
+        to,
+        measure,
+      }) as Promise<{ id: string }>
+    await goal("ohne Messung", null)
+    const first = await goal("Scheibe", {
+      measure: "card",
+      threshold: "1",
+      scoring: "rings",
+      shots: 40,
+      cards: "all",
+    })
+    const latest = await goal("Serie", {
+      measure: "series",
+      threshold: "90",
+      scoring: "rings",
+      shots: 10,
+      cards: "all",
+    })
+    const lines = (await startLines(db, { ownerId: site.ownerId, blocks, timeZone: ZONE }))[
+      `${day}|${slug}`
+    ]
+    expect(lines.map((line) => line.title)).toEqual(["Tagebuch", "Ziel 90"])
+    expect(lines[1]).toMatchObject({ href: `/diary/goals/${latest.id}`, action: "" })
+    expect(lines[1].state).toMatch(/^\d+ von \d+ Serien?$/)
+    await db.diaryGoal.deleteMany({ where: { id: { in: [first.id, latest.id] } } })
   })
 })

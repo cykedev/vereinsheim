@@ -6,6 +6,7 @@ import { createTestSite, type TestSite } from "../../../test/fixtures"
 
 import { createWithout } from "../entries"
 import { ERRORS } from "../texts"
+import { diaryTrashThings, purgeExpiredDiaryTrash } from "../trash"
 import {
   GOAL_TRASH_ERRORS,
   createGoal,
@@ -153,6 +154,23 @@ describe("Ziele schreiben", () => {
       GOAL_TRASH_ERRORS.expired
     )
     expect(await purgeGoalNow(db, site.ownerId, id)).toBeNull()
+    expect(await db.diaryGoal.findUnique({ where: { id } })).toBeNull()
+  })
+
+  it("Papierkorb zeigt das Ziel mit den Tagen; nach 30 Tagen löscht der Lauf es endgültig", async () => {
+    const id = await created({ title: "Im Papierkorb" })
+    expect(await deleteGoal(db, site.ownerId, id)).toBeNull()
+    const { goals } = await diaryTrashThings(db, site.ownerId)
+    expect(goals.find((g) => g.id === id)).toEqual({
+      id,
+      name: "Im Papierkorb",
+      left: "noch 30 Tage",
+    })
+    await db.diaryGoal.update({
+      where: { id },
+      data: { deletedAt: new Date(Date.now() - 31 * DAY) },
+    })
+    expect(await purgeExpiredDiaryTrash(db, { nowMs: Date.now() })).toBeGreaterThanOrEqual(1)
     expect(await db.diaryGoal.findUnique({ where: { id } })).toBeNull()
   })
 })

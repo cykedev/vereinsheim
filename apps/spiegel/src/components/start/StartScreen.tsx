@@ -89,8 +89,8 @@ export function StartScreen({
   open: OpenItem[]
   /** eigene Scheiben, deren Disziplin ein Admin noch einordnen muss (`waitingForDiscipline`) */
   waiting?: number
-  /** Zeilen anderer Teile je Block (das Tagebuch), Schlüssel `Tag|Familie` */
-  lines?: Readonly<Record<string, PartLine>>
+  /** Zeilen anderer Teile je Block (Tagebuch, Ziel), Schlüssel `Tag|Familie` */
+  lines?: Readonly<Record<string, readonly PartLine[]>>
 }) {
   const { timeZone } = context
   const onHelp = useHelp()
@@ -119,7 +119,7 @@ export function StartScreen({
             open={open.length ? <OpenBox items={open} /> : undefined}
             evenings={model.blocks.map((block) => {
               const family = familyOf.get(block.family)
-              const line = lines[`${block.day}|${block.family}`]
+              const blockLines = lines[`${block.day}|${block.family}`] ?? []
               return (
                 <ScoredEveningBlock
                   key={block.family}
@@ -131,16 +131,15 @@ export function StartScreen({
                   cardRoute={cardRoute}
                   recordRoute={recordRoute}
                   onHelp={onHelp}
-                  extra={
-                    line && (
-                      <PartLineAction
-                        line={line}
-                        className="text-[13px] font-semibold text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring"
-                      >
-                        {`${line.title} · ${line.action} ›`}
-                      </PartLineAction>
-                    )
-                  }
+                  extra={blockLines.map((line) => (
+                    <PartLineAction
+                      key={line.key}
+                      line={line}
+                      className="text-[13px] font-semibold text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring"
+                    >
+                      {`${[line.title, line.state, line.action].filter(Boolean).join(" · ")} ›`}
+                    </PartLineAction>
+                  ))}
                   listRoute={{
                     page: "cards",
                     query: { ...DEFAULT_LIST, family: block.family },

@@ -6,7 +6,8 @@ import { useOptimistic, useState, useTransition } from "react"
 import { getErrorMessage } from "@vereinsheim/lib/forms/fieldErrors"
 import { cn } from "@vereinsheim/lib/utils"
 
-import { saveOutcome } from "../actions"
+import type { ActionResult } from "@/lib/types"
+
 import { ERRORS } from "../texts"
 
 type Outcome = "yes" | "partly" | "no"
@@ -16,8 +17,21 @@ const CHOICES: readonly [Outcome, string][] = [
   ["no", "Nein"],
 ]
 
-/** „Hat es geklappt?“ mit Ja, Teilweise, Nein; speichert beim Tippen, ein Tipp auf die gewählte nimmt sie zurück */
-export function OutcomeChoice({ entryId, value }: { entryId: string; value: Outcome | null }) {
+/**
+ * „Hat es geklappt?“ mit Ja, Teilweise, Nein, an einem Eintrag und an einem Ziel; speichert beim Tippen, ein Tipp auf
+ * die gewählte nimmt sie zurück. `hint` steht leise darunter.
+ */
+export function OutcomeChoice({
+  id,
+  value,
+  save,
+  hint,
+}: {
+  id: string
+  value: Outcome | null
+  save: (outcome: Outcome | null) => Promise<ActionResult>
+  hint?: string
+}) {
   const router = useRouter()
   const [shown, show] = useOptimistic(value)
   const [error, setError] = useState<string | null>(null)
@@ -25,10 +39,10 @@ export function OutcomeChoice({ entryId, value }: { entryId: string; value: Outc
   return (
     <div data-outcome className="grid gap-1.5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <span id={`outcome-${entryId}`} className="text-sm font-semibold">
+        <span id={`outcome-${id}`} className="text-sm font-semibold">
           Hat es geklappt?
         </span>
-        <span role="group" aria-labelledby={`outcome-${entryId}`} className="flex gap-1.5">
+        <span role="group" aria-labelledby={`outcome-${id}`} className="flex gap-1.5">
           {CHOICES.map(([key, label]) => (
             <button
               key={key}
@@ -39,7 +53,7 @@ export function OutcomeChoice({ entryId, value }: { entryId: string; value: Outc
                 setError(null)
                 startSaving(async () => {
                   show(next)
-                  const result = await saveOutcome(entryId, next)
+                  const result = await save(next)
                   if ("error" in result) {
                     setError(getErrorMessage(result) ?? ERRORS.failed)
                     return
@@ -59,6 +73,7 @@ export function OutcomeChoice({ entryId, value }: { entryId: string; value: Outc
           ))}
         </span>
       </div>
+      {hint && <p className="text-[13px] text-muted-foreground">{hint}</p>}
       {error && (
         <p role="alert" className="text-sm text-destructive">
           {error}

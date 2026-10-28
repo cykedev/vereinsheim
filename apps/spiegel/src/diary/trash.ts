@@ -21,6 +21,12 @@ export const TRASH_ERRORS = {
 
 const endsAt = (deletedAt: Date) => deletedAt.getTime() + DIARY_TRASH_DAYS * DAY_MS
 
+/** wie lange etwas noch im Papierkorb liegt („noch 29 Tage“) */
+export function leftText(deletedAt: Date, nowMs: number): string {
+  const days = Math.max(0, Math.ceil((endsAt(deletedAt) - nowMs) / DAY_MS))
+  return days === 1 ? "noch 1 Tag" : days === 0 ? "wird gleich gelöscht" : `noch ${days} Tage`
+}
+
 /** in den Papierkorb */
 export async function deleteEntry(db: Db, userId: string, entryId: string): Promise<string | null> {
   const { count } = await db.diaryEntry.updateMany({
@@ -98,15 +104,54 @@ export async function purgeEntryNow(
   return count === 1 ? null : TRASH_ERRORS.notInTrash
 }
 
-/** abgelaufene Einträge aller Konten endgültig löschen (beim Start und stündlich); die Zahl */
+/** abgelaufene Einträge, Ziele und Abläufe aller Konten endgültig löschen (beim Start und stündlich); die Zahl */
 export async function purgeExpiredDiaryTrash(
   db: Db,
   { nowMs }: { nowMs: number }
 ): Promise<number> {
-  const { count } = await db.diaryEntry.deleteMany({
-    where: { deletedAt: { lte: new Date(nowMs - DIARY_TRASH_DAYS * DAY_MS) } },
-  })
-  return count
+  const where = { deletedAt: { lte: new Date(nowMs - DIARY_TRASH_DAYS * DAY_MS) } }
+  const [entries, goals, routines] = await Promise.all([
+    db.diaryEntry.deleteMany({ where }),
+    db.diaryGoal.deleteMany({ where }),
+    db.diaryRoutine.deleteMany({ where }),
+  ])
+  return entries.count + goals.count + routines.count
+}
+
+/** ein Ziel oder Ablauf im Papierkorb: Name und wie lange noch */
+export interface DiaryTrashThing {
+  id: string
+  name: string
+  left: string
+}
+
+/** die eigenen Ziele und Abläufe im Papierkorb, zuletzt gelöschte oben */
+export async function diaryTrashThings(
+  db: Db,
+  userId: string,
+  nowMs = Date.now()
+): Promise<{ goals: DiaryTrashThing[]; routines: DiaryTrashThing[] }> {
+  const where = { userId, deletedAt: { not: null } }
+  const [goals, routines] = await Promise.all([
+    db.diaryGoal.findMany({
+      where,
+      orderBy: { deletedAt: "desc" },
+      select: { id: true, title: true, deletedAt: true },
+    }),
+    db.diaryRoutine.findMany({
+      where,
+      orderBy: { deletedAt: "desc" },
+      select: { id: true, name: true, deletedAt: true },
+    }),
+  ])
+  return {
+    goals: goals.map((g) => ({ id: g.id, name: g.title, left: leftText(g.deletedAt!, nowMs) })),
+    routines: routines.map((r) => ({
+      id: r.id,
+      name: r.name,
+      left: leftText(r.deletedAt!, nowMs),
+    })),
+  }
 }
 
 export interface DiaryTrashItem {
@@ -143,7 +188,6 @@ export async function diaryTrash(
   ])
   const nameOf = new Map(families.map((f) => [f.id, f.name]))
   return rows.map((row) => {
-    const days = Math.max(0, Math.ceil((endsAt(row.deletedAt!) - nowMs) / DAY_MS))
     const family = row.familyId === null ? null : (nameOf.get(row.familyId) ?? null)
     const cards = row._count.cards
     const facts =
@@ -154,7 +198,7 @@ export async function diaryTrash(
       entryId: row.id,
       day: dayLabel(dayOfDate(row.day), timeZone),
       facts: facts.filter(Boolean).join(" · "),
-      left: days === 1 ? "noch 1 Tag" : days === 0 ? "wird gleich gelöscht" : `noch ${days} Tage`,
+      left: leftText(row.deletedAt!, nowMs),
     }
   })
 }

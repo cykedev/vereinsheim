@@ -53,6 +53,8 @@ export const GOAL_TEXTS = {
   removeState:
     "Danach liegt das Ziel 30 Tage im Papierkorb im Profil. Scheiben und Einträge bleiben.",
   deleted: "Ziel gelöscht",
+  /** im Papierkorb unter dem Satz */
+  trashKind: "Ziel",
   startTitle: (threshold: string) => `Ziel ${threshold}`,
 } as const
 

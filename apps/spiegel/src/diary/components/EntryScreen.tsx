@@ -13,7 +13,7 @@ import { PAGE_SINGLE } from "@vereinsheim/shot-ui/layout/columns"
 import { DecisionDialog } from "@vereinsheim/ui/design2/decision-dialog"
 import { Page } from "@vereinsheim/ui/design2/page"
 
-import { saveEntryText, saveExpected } from "../actions"
+import { saveEntryText, saveExpected, saveOutcome } from "../actions"
 import { diaryDiscard } from "../consequences"
 import type { EntryView, Family } from "../queries"
 import type { ScalePart } from "../scales"
@@ -207,7 +207,11 @@ export function EntryScreen({
           <div className={`${BOX} grid gap-4`}>
             {/* gefragt mit Vorhaben; eine gespeicherte Antwort bleibt sichtbar, auch wenn das Vorhaben geleert ist */}
             {(entry.intention || entry.outcome) && (
-              <OutcomeChoice entryId={entry.id} value={entry.outcome} />
+              <OutcomeChoice
+                id={entry.id}
+                value={entry.outcome}
+                save={(next) => saveOutcome(entry.id, next)}
+              />
             )}
             <EntryText
               name="learned"

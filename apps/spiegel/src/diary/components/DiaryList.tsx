@@ -9,25 +9,33 @@ import { EmptyState } from "@vereinsheim/ui/empty-state"
 
 import type { EntrySummary } from "../queries"
 import { entryLine, entryTitle } from "../summaries"
+import { GOAL_TEXTS } from "../goals/texts"
 import { LIST_TEXTS } from "../texts"
 
-const PRIMARY =
+export const PRIMARY =
   "inline-flex h-10 items-center justify-center gap-2 justify-self-start rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-90 focus-visible:outline-2 focus-visible:outline-ring"
 
 /** so viele kleine Scheiben je Eintrag in der Liste, darüber „+N“ */
 export const LIST_IMAGES = 5
 
-/** Kopf von Tagebuch und Faden: Titel und „Neuer Eintrag“, darunter „Einträge · Faden“ */
-export function DiaryHeader({ current }: { current: "entries" | "thread" }) {
+/**
+ * Kopf des Tagebuchs: Titel und der Knopf des Reiters („Neuer Eintrag“, bei Ziele „Neues Ziel“), darunter „Einträge ·
+ * Faden · Ziele“
+ */
+export function DiaryHeader({ current }: { current: "entries" | "thread" | "goals" }) {
+  const [href, label] =
+    current === "goals"
+      ? ["/diary/goals/new", GOAL_TEXTS.newGoal]
+      : ["/diary/new", LIST_TEXTS.newEntry]
   return (
     <>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <h1 className="font-display text-[1.7rem] leading-tight font-bold tracking-tight">
           {LIST_TEXTS.title}
         </h1>
-        <Link href="/diary/new" className={PRIMARY}>
+        <Link href={href} className={PRIMARY}>
           <Plus aria-hidden className="size-4" />
-          {LIST_TEXTS.newEntry}
+          {label}
         </Link>
       </div>
       <nav
@@ -39,6 +47,7 @@ export function DiaryHeader({ current }: { current: "entries" | "thread" }) {
           [
             ["entries", "/diary", LIST_TEXTS.entries],
             ["thread", "/diary/thread", LIST_TEXTS.thread],
+            ["goals", "/diary/goals", GOAL_TEXTS.tab],
           ] as const
         ).map(([key, href, label]) => (
           <Link
