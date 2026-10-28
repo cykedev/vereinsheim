@@ -397,8 +397,8 @@ Holen“ ins Textbuch Spiegel (steht in `reports/2026-10-27-fetch-no-request-cap
 2. **Stufe 2 Tagebuch:** 2a (Einträge, Faden, Papierkorb, Export) ist im Basisbranch, Migration
    `20261028180000_diary_entries`. In der Dev-DB stehen 94 Vorschau-Einträge des Users aus Treffsicher
    (`importKey` `preview:`); vor der Übernahme in Stufe 3 löschen mit
-   `delete from "DiaryEntry" where "importKey" like 'preview:%'`. 2b (Ziele, Abläufe) ist im Konzept freigegeben und wird
-   geplant; 1f (mehrere Belege je Scheibe) geht als eigener Teil nach `main`.
+   `delete from "DiaryEntry" where "importKey" like 'preview:%'`. 2b (Ziele, Abläufe) ist in Konzept und Plan freigegeben
+   und wird gebaut; 1f (mehrere Belege je Scheibe) geht als eigener Teil nach `main`.
 3. **Stufe 3 Übernahme**, dann **Stufe 4 Ruhestand**.
 
 Für später festgehalten: Randfall „Wertung endgültig gelöscht, Probe des Abends bleibt“: Holen öffnet die Probe, die
@@ -424,7 +424,7 @@ Befund aus dem Review von 2a).
 | 1e   |                                              |                                            |                          | in 1a-2                                                 |
 | 1f   |                                              |                                            |                          | entschieden (28.10.), Konzept offen                     |
 | 2a   | `plans/2026-10-28-tis-2a-diary-entries.md`   | `feat/tis-2a-diary-entries` (vom Basis)    | `tis-2a-diary-entries`   | im Basisbranch (`3fd30d85`), Plan entfernt              |
-| 2b   |                                              | (vom Basis)                                | `tis-2b-goals-routines`  | Konzept freigegeben (28.10.), Plan in Arbeit            |
+| 2b   | `plans/2026-10-28-tis-2b-goals-routines.md`  | `feat/tis-2b-goals-routines` (vom Basis)   | `tis-2b-goals-routines`  | Konzept und Plan freigegeben (28.10.), wird gebaut      |
 | 3    |                                              |                                            |                          | offen                                                   |
 | 4    |                                              |                                            |                          | offen                                                   |
 
