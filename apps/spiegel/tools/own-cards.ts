@@ -199,6 +199,8 @@ export interface DemoEnteredSeed {
   place: string | null
   /** nur aus Treffsicher: der Schlüssel der Übernahme findet die Scheibe wieder */
   importKey?: string
+  /** von Hand ohne Uhrzeit eingetragen */
+  timeUnknown?: boolean
   details: DetailsInput
   level: "none" | "series" | "total" | "shots"
 }
@@ -210,7 +212,7 @@ const DAY_MS = 86_400_000
  * Erfundene Scheiben in jeder Detailtiefe (nur mit `--demo`, für die Skriptprüfung): eine vom Ausdruck, die auf die Anlage
  * wartet, kurz vor dem letzten Abend (also auf Start), dazu auf einem eigenen Abend 13 Tage vor der neuesten Scheibe
  * Serien-Summen mit und ohne Zehntel, ein Gesamtergebnis mit Trefferlage aus Treffsicher, eins nur in Zehnteln, Schüsse
- * ohne Zehntel und Schüsse vom Ausdruck ohne Lage und Zeit. Für die Disziplin des Aufrufers (LP 40: 40 Schuss, Serie
+ * ohne Zehntel und Schüsse vom Ausdruck ohne Lage und Zeit. Das Gesamtergebnis in Zehnteln ist ohne Uhrzeit eingetragen. Für die Disziplin des Aufrufers (LP 40: 40 Schuss, Serie
  * 10). Die Schüsse kommen aus `generateSeason` (fester Seed), nur die Wertung.
  */
 export function demoEnteredSeeds(anchor: {
@@ -282,6 +284,7 @@ export function demoEnteredSeeds(anchor: {
       kind: "training",
       place: north,
       details: { total: { decimalTenths: 3658 } },
+      timeUnknown: true,
       level: "total",
     },
     {

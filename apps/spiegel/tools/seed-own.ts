@@ -188,6 +188,7 @@ async function main() {
           kind: seed.kind,
           place: seed.place,
           importKey: seed.importKey,
+          timeUnknown: seed.timeUnknown ?? false,
           details: seed.details,
           reason: "seed",
         })

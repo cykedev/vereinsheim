@@ -944,7 +944,7 @@ async function createInSheet(page: Page) {
 }
 
 /**
- * Scheibe holen: Die Seite hat vier Wege in fester Folge. Ein Link auf einen erfundenen Ausdruck (ein Server der
+ * Scheibe holen: Die Seite hat fünf Wege in fester Folge, den von Hand prüft `handEntry`. Ein Link auf einen erfundenen Ausdruck (ein Server der
  * Prüfung) fragt nach Disziplin und Art, legt die Scheibe an und öffnet sie (wartet auf die Anlage, ID und PDF im Kasten);
  * ein zweiter Ausdruck derselben ID hängt ohne Blatt an. Eine getippte ID legt eine Scheibe ohne PDF an, „Nicht mehr
  * holen“ lässt sie stehen („ohne Werte“). Die ID mit der Sperre aus `seed:own --demo` sagt, dass sie gelöscht war, und
@@ -989,8 +989,8 @@ async function fetchCards(page: Page) {
     await page.goto(`${BASE}/scan`)
     const ways = await page.ev<string[]>(`$$("[data-fetch-way]").map((w) => w.dataset.fetchWay)`)
     check(
-      "Scheibe holen: vier Wege in der Folge Kamera, Link, PDF, ID",
-      ways.join(",") === "camera,link,upload,id",
+      "Scheibe holen: fünf Wege in der Folge Kamera, Link, PDF, ID, von Hand",
+      ways.join(",") === "camera,link,upload,id,hand",
       ways.join(",")
     )
     // ein Knopf „QR-Code scannen“; headless gibt es kein Kamerabild, also muss er von selbst das Foto öffnen
@@ -1156,6 +1156,108 @@ async function fetchCards(page: Page) {
     if (await page.ev<boolean>(`!!$("[data-card-actions]")`)) left.push(path)
   }
   check("Aufräumen: keine Scheibe der Prüfung mehr da", left.length === 0, left.join(" · "))
+}
+
+/** in das Feld tippen: hineinklicken, ans Ende, `remove` Zeichen löschen, dann den Text */
+async function fill(page: Page, selector: string, text: string, remove = 0) {
+  await page.click(`$(${JSON.stringify(selector)})`)
+  await page.key("End")
+  for (let i = 0; i < remove; i++) await page.key("Backspace")
+  await page.type(text)
+}
+
+/**
+ * Von Hand eintragen ([[adr-033]]): „Eintragen“ in „Scheibe holen“ öffnet das Blatt „Neue Scheibe“ mit „Weiter“, danach
+ * das Formular. Eine Summe neben einer Serie mit Schüssen einzeln ist ein Fehler an der Summe; mit Schüssen in beiden
+ * Serien speichert es, und die Seite zeigt „Von Hand eingetragen“ und das Ergebnis. Ändern übernimmt die Werte, ein neuer
+ * Schuss und ein Ort landen auf der Seite. Mit Eingaben fragt „Zurück“ erst. Am Ende ist die Scheibe endgültig gelöscht.
+ */
+async function handEntry(page: Page) {
+  await page.viewport(390, 844)
+  const created: string[] = []
+  try {
+    await page.goto(`${BASE}/scan`)
+    await page.click(`button("Eintragen", $('[data-fetch-way="hand"]'))`)
+    const opened = await page.waitFor(`!!sheet() && !!$("[data-new-card]", sheet())`)
+    check(
+      "Von Hand: das Blatt fragt nach Disziplin und Art, ohne ID, mit „Weiter“",
+      opened &&
+        (await page.ev<boolean>(
+          `txt(sheet()).includes("Danach trägst du die Werte ein.") && !$("[data-new-card-id]", sheet()) && txt($("[data-new-card-create]", sheet())) === "Weiter"`
+        ))
+    )
+    if (
+      !(await page.ev<number>(
+        `$$('[data-discipline-option][aria-current="true"]', sheet()).length`
+      ))
+    )
+      await page.click(`$("[data-discipline-option]", sheet())`)
+    await page.click(`$("[data-new-card-create]", sheet())`)
+    check(
+      "Von Hand: „Weiter“ öffnet das Formular, noch ohne Scheibe",
+      await page.waitFor(
+        `location.pathname === "/cards/new" && !!$('[data-entered-form="new"]')`,
+        10_000
+      )
+    )
+
+    await fill(page, "#series-0-sum", "98,5")
+    await page.click(`button("Schüsse einzeln", $('[data-entered-row="2"]'))`)
+    await fill(page, "#series-1-shot-0", "10,4")
+    await fill(page, "#series-1-shot-1", "9,8")
+    check(
+      "Von Hand: aufgeklappt rechnet die Summe aus den Schüssen",
+      await page.waitFor(`$("#series-1-sum").value === "20,2"`)
+    )
+    await page.click(`$("[data-entered-save]")`)
+    check(
+      "Von Hand: Summe neben Schüssen einzeln ist ein Fehler an der Summe",
+      await page.waitFor(
+        `txt($('[data-entered-row="1"]')).includes("in jeder Serie einzeln") && $("#series-0-sum").getAttribute("aria-invalid") === "true"`,
+        10_000
+      )
+    )
+    await page.click(`button("Schüsse einzeln", $('[data-entered-row="1"]'))`)
+    await fill(page, "#series-0-shot-0", "10,0")
+    await fill(page, "#series-0-shot-1", "9,9")
+    await page.click(`$("[data-entered-save]")`)
+    const saved = await page.waitFor(`/^\\/cards\\/c[^/]+$/.test(location.pathname)`, 15_000)
+    if (saved) created.push(await page.ev<string>(`location.pathname`))
+    await page.waitFor(`!!$("[data-card-entry]")`, 10_000)
+    const body = await page.ev<string>(`txt(document.body)`)
+    check(
+      "Von Hand: gespeichert, die Seite sagt „Von Hand eingetragen“ und das Ergebnis",
+      saved && body.includes("Von Hand eingetragen") && body.includes("40,1"),
+      body.slice(0, 120)
+    )
+
+    await page.click(`link("Eintrag ändern")`)
+    check(
+      "Ändern: das Formular trägt die Schüsse",
+      (await page.waitFor(`!!$('[data-entered-form="edit"]')`, 10_000)) &&
+        (await page.ev<string>(`$("#series-0-shot-0").value`)) === "10,0"
+    )
+    await fill(page, "#series-0-shot-0", "1", 1)
+    await fill(page, "#entered-place", "Prüfhalle")
+    await page.click(`button("Zurück")`)
+    check(
+      "Ändern: mit Eingaben fragt „Zurück“ erst",
+      await page.waitFor(`txt($('[role="alertdialog"]')).includes("Eingaben verwerfen?")`)
+    )
+    await page.key("Escape")
+    await page.waitFor(`!$('[role="alertdialog"]')`)
+    await page.click(`$("[data-entered-save]")`)
+    const back = await page.waitFor(`!!$("[data-card-entry]")`, 15_000)
+    const after = await page.ev<string>(`txt(document.body)`)
+    check(
+      "Ändern: der neue Schuss und der Ort stehen auf der Seite",
+      back && after.includes("40,2") && after.includes("Prüfhalle"),
+      after.slice(0, 120)
+    )
+  } finally {
+    await page.viewport(1280, 900)
+    for (const path of created) await removeProbeCard(page, path)
+  }
 }
 
 /**
@@ -2560,6 +2662,7 @@ async function main() {
     await section("Admin ohne Rolle", () => adminWithoutRole(page))
     await section("Disziplin einer Scheibe", () => cardDiscipline(page, href))
     await section("Scheibe holen", () => fetchCards(page))
+    await section("Von Hand eintragen", () => handEntry(page))
     await section("Geteilte Scheibe", () => sharing(chrome, page, href))
     await section("Gemeinsame Prüfungen", () => commonChecks(page, href))
     // React meldet in der Entwicklung manches über console.error; jede Meldung zählt, damit keine untergeht
