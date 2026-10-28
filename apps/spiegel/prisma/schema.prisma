@@ -361,6 +361,9 @@ model User {
   familyScorings     FamilyScoring[]
   consents           SportpassConsent[]
   cardRequests       CardRequest[]
+  // das Tagebuch ([[adr-033]]): Konto löschen nimmt es mit
+  diarySettings      DiarySettings?
+  diaryEntries       DiaryEntry[]
 }
 
 // benannter Zeitraum des Schützen („Vorbereitung Landesmeisterschaft“), Tage in der Anzeige-Zone
@@ -706,4 +709,122 @@ model Printout {
   @@unique([cardId, sha256])
   // gleiche ID im Fuß ist gleiche Scheibe (SF-43)
   @@index([footerId])
+}
+
+// ─── Tagebuch ([[adr-033]]): eigener Teil. Liest Scheiben nur über `src/lib/results-read.ts`; `cardId` und
+// `familyId` sind Werte ohne Fremdschlüssel, damit der Ergebnisteil nichts vom Tagebuch trägt
+
+// Art eines Eintrags: mit Scheiben (Training oder Wettkampf kommt von den Scheiben), Trocken- oder Mentaltraining
+enum DiaryKind {
+  shooting
+  dry
+  mental
+}
+
+// „Hat es geklappt?“
+enum DiaryOutcome {
+  yes
+  partly
+  no
+}
+
+// zu welchem Abschnitt ein Wert auf der Skala 0 bis 100 gehört
+enum DiaryScalePart {
+  wellbeing
+  prognosis
+  feedback
+}
+
+// was der Schütze an einer Scheibe entschieden hat: von Hand verknüpft oder gelöst
+enum DiaryCardLink {
+  linked
+  released
+}
+
+// Einstellung des Tagebuchs je Konto; ohne Zeile aus
+model DiarySettings {
+  userId       String    @id
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // für neue Konten aus, für Konten mit Einträgen aus Treffsicher an
+  enabled      Boolean   @default(false)
+  // der Hinweis „Nur du siehst dein Tagebuch“ ist gesehen
+  noticeSeenAt DateTime? @db.Timestamptz(3)
+  createdAt    DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt    DateTime  @updatedAt @db.Timestamptz(3)
+}
+
+model DiaryEntry {
+  id            String                 @id @default(cuid())
+  userId        String
+  user          User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // der Abend wie in Spiegel (Tag der Anzeige-Zone, vor 4 Uhr der Vortag)
+  day           DateTime               @db.Date
+  kind          DiaryKind              @default(shooting)
+  // `Family.id`; Pflicht bei `shooting`, sonst frei
+  familyId      Int?
+  // Vorhaben, die erste Zeile; Titel in der Liste
+  intention     String?
+  // Notiz: was passiert ist, mehrzeilig
+  note          String?
+  // „Hat es geklappt?“, nur mit Vorhaben gefragt
+  outcome       DiaryOutcome?
+  // „Ich habe gelernt, dass …“ ohne den Satzanfang
+  learned       String?
+  // „Wie schaffe ich es, …?“ ohne den Satzanfang; der Faden
+  question      String?
+  // „Was hat gestört?“
+  disturbed     String?
+  // Prognose: erwartetes Ergebnis in Ringen
+  expectedScore Decimal?               @db.Decimal(5, 1)
+  // Schlüssel der Übernahme (`treffsicher:<id>`): ein zweiter Lauf ersetzt statt zu verdoppeln
+  importKey     String?                @unique
+  // Papierkorb: 30 Tage, danach endgültig gelöscht; die Scheiben bleiben verknüpft
+  deletedAt     DateTime?              @db.Timestamptz(3)
+  createdAt     DateTime               @default(now()) @db.Timestamptz(3)
+  updatedAt     DateTime               @updatedAt @db.Timestamptz(3)
+  cards         DiaryEntryCard[]
+  scales        DiaryScale[]
+  executions    DiarySeriesExecution[]
+
+  // Liste, Vorschläge
+  @@index([userId, day])
+  // Faden je Disziplin
+  @@index([userId, familyId, day])
+}
+
+// eine Scheibe steckt höchstens in einem Eintrag. Gespeichert wird nur, was der Schütze tut: Anlegen und Dazunehmen
+// verknüpfen, Lösen löst. Ohne Zeile gehört eine Scheibe zum einzigen Eintrag ihres Abends und ihrer Disziplin, der
+// nicht im Papierkorb liegt; das leitet `entryCards` beim Lesen ab („dazugekommen“), ohne zu schreiben
+model DiaryEntryCard {
+  cardId    String        @id
+  entryId   String
+  entry     DiaryEntry    @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  link      DiaryCardLink
+  createdAt DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime      @updatedAt @db.Timestamptz(3)
+
+  @@index([entryId])
+}
+
+// ein Wert auf 0 bis 100: Befinden, Prognose und Feedback, die Aspekte je Teil in `src/diary/scales.ts`; ohne Zeile
+// kein Wert. Ein Tipp speichert die Mitte der Stufe, übernommene Werte bleiben genau
+model DiaryScale {
+  entryId String
+  entry   DiaryEntry     @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  part    DiaryScalePart
+  aspect  String
+  value   Int
+
+  @@id([entryId, part, aspect])
+}
+
+// Ausführung je Serie einer Scheibe des Eintrags, 0 bis 100 wie die übrigen Stufen; `series` wie `SeriesSum.series`
+model DiarySeriesExecution {
+  entryId String
+  entry   DiaryEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  cardId  String
+  series  Int
+  value   Int
+
+  @@id([entryId, cardId, series])
 }
