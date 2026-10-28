@@ -66,8 +66,9 @@ Alle in einer Spalte (`PAGE_SINGLE`), Bereich „Tagebuch“ mit `BookOpen` ([[s
   jüngsten Frage vorgewählt; darunter je Punkt „Ich habe gelernt, dass …“.
 - **`/diary/new`:** oben „Heute“ (Tag vorbelegt und änderbar, Art, Disziplin, ein Knopf „Anlegen“), der Weg für
   Vorhaben und Prognose vor dem Training; die Scheiben des Tages kommen von selbst dazu. Darunter „Abende ohne Eintrag“
-  der letzten 30 Tage als Karten, die ganz anlegen. `?card=<id>` hebt den Abend dieser Scheibe hervor (auch älter) oder
-  leitet in ihren Eintrag.
+  als Karten, die ganz anlegen: jeder Abend, egal wie alt (kein Zeitfenster, dieselbe Regel wie an der Scheibe), neueste
+  zuerst, die ersten fünf, die übrigen hinter „Ältere Abende zeigen“ nach Monat. `?card=<id>` hebt den Abend dieser
+  Scheibe hervor (liegt er weiter hinten, ist alles offen) oder leitet in ihren Eintrag.
 - **`/diary/[id]`:** Rückweg, Tag, „Disziplin · Art“, die Scheiben wie in der Scheibenliste (kleine Scheibe, Uhrzeit,
   Ringe, die Zeile führt zur Scheibe) mit leisem „Scheiben ändern“, darunter Vorhaben und Notiz in einem Kasten, Vorher
   (die letzte Frage derselben Disziplin mit „Als Vorhaben nehmen“, Befinden, Prognose mit erwartetem Ergebnis), Nachher
@@ -75,7 +76,7 @@ Alle in einer Spalte (`PAGE_SINGLE`), Bereich „Tagebuch“ mit `BookOpen` ([[s
   Prognose gestrichelt, Ausführung je Serie als Block je Scheibe mit eingerückten Serien), am Ende „Dieser Eintrag“
   (Tag, Art und Disziplin nur ohne Scheiben änderbar, Löschen).
 - **Liste:** bis zu fünf kleine Scheiben je Eintrag, darüber „+N“.
-- **Feste Regel der Abschnitte:** leer eine Zeile mit „+“, gefüllt offen mit „Entfernen“ (Rückfrage). Die Seite hängt
+- **Feste Regel der Abschnitte:** leer eine Zeile mit „+“, gefüllt offen mit „{Abschnitt} leeren“ (Rückfrage). Die Seite hängt
   nicht davon ab, was jemand bisher genutzt hat (Konsistenz als Grundsatz, [[adr-035]]).
 - Texte sind gesteuerte Felder mit „Speichern“ und „Verwerfen“; wer mit Ungespeichertem geht, wird gefragt.
 

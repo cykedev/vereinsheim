@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation"
 import { useState, useTransition } from "react"
 import { toast } from "sonner"
 
-import { formatTimeOfDay } from "@vereinsheim/lib/format"
+import { formatMonthYear, formatTimeOfDay, zonedDayStartMs } from "@vereinsheim/lib/format"
 import { getErrorMessage } from "@vereinsheim/lib/forms/fieldErrors"
 import { cn } from "@vereinsheim/lib/utils"
 import { markShots, type CardMark } from "@vereinsheim/shot-core/projection"
@@ -27,13 +27,30 @@ import { ENTRY_TEXTS, ERRORS, KIND_CHOICES, NEW_TEXTS } from "../texts"
 
 const PRIMARY =
   "inline-flex h-10 shrink-0 cursor-pointer items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-90 focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-60"
+/** so viele Abende ohne Eintrag stehen zuerst, die übrigen hinter „Ältere Abende zeigen“ */
+const FIRST = 5
+
+/** Abende nach Monat, in der Folge der Liste (neueste zuerst) */
+function groupByMonth(list: Proposal<ResultCard>[], timeZone: string) {
+  const months = new Map<string, Proposal<ResultCard>[]>()
+  for (const proposal of list) {
+    const month = formatMonthYear(
+      new Date(zonedDayStartMs(proposal.day, timeZone) + 12 * 3_600_000),
+      timeZone
+    )
+    months.set(month, [...(months.get(month) ?? []), proposal])
+  }
+  return months
+}
+
 const FIELD =
   "h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-2 focus-visible:outline-ring"
 
 /**
  * „Neuer Eintrag“: oben „Heute“ (Tag vorbelegt und änderbar, Art, Disziplin, ein Knopf), der Weg für Vorhaben und
- * Prognose vor dem Training; die Scheiben des Tages kommen von selbst dazu. Darunter die Abende der letzten 30 Tage mit
- * Scheiben ohne Eintrag als Karten, die ganz anlegen (die aus der Adresse hervorgehoben). Anlegen öffnet den Eintrag.
+ * Prognose vor dem Training; die Scheiben des Tages kommen von selbst dazu. Darunter jeder Abend mit Scheiben ohne
+ * Eintrag, egal wie alt, als Karte, die ganz anlegt (die aus der Adresse hervorgehoben): die ersten fünf, die übrigen
+ * hinter „Ältere Abende zeigen“ nach Monat. Anlegen öffnet den Eintrag.
  */
 export function NewEntryScreen({
   proposals,
@@ -82,6 +99,62 @@ export function NewEntryScreen({
     return times.length === 1
       ? `${count} · ${times[0]}`
       : `${count} · ${times[0]} bis ${times[times.length - 1]}`
+  }
+
+  // die ersten Abende stehen offen; ist der aus der Adresse älter, sind alle offen
+  const [showOlder, setShowOlder] = useState(() => proposals.findIndex((p) => p.marked) >= FIRST)
+  const olderByMonth = [...groupByMonth(proposals.slice(FIRST), timeZone)]
+  const evening = (proposal: Proposal<ResultCard>) => {
+    const key = `${proposal.day}|${proposal.family.id}`
+    const cards = proposal.cards
+    const label = dayLabel(proposal.day, timeZone)
+    return (
+      <li key={key}>
+        {/* die ganze Karte legt an (conventions §7), ohne eigenen Knopf */}
+        <button
+          type="button"
+          data-proposal={key}
+          data-marked={proposal.marked || undefined}
+          disabled={pending}
+          aria-label={NEW_TEXTS.createFor(label, proposal.family.name)}
+          onClick={() =>
+            create(key, () => createEntryFromEvening(proposal.day, proposal.family.id))
+          }
+          className={cn(
+            "grid w-full cursor-pointer grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border bg-card p-4 text-left hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-60",
+            proposal.marked ? "border-line-strong bg-accent-wash" : "border-border"
+          )}
+        >
+          <span className="grid min-w-0 gap-2">
+            <span className="text-[15px] font-semibold">
+              {label}
+              <span className="font-normal text-foreground-2">{` · ${proposal.family.name}`}</span>
+            </span>
+            <span className="text-[13px] text-foreground-2 tabular-nums">{cardsText(cards)}</span>
+            <span className="flex flex-wrap gap-1">
+              {cards.map((card) => {
+                const shots = markShots(marks[card.id] ?? [])
+                return card.targetId ? (
+                  <MiniTarget
+                    key={card.id}
+                    target={TARGETS[card.targetId]}
+                    shots={shots}
+                    placeholder={shots.length === 0}
+                    className="size-10"
+                  />
+                ) : null
+              })}
+            </span>
+          </span>
+          <ChevronRight aria-hidden className="size-5 text-muted-foreground" />
+        </button>
+        {error?.where === key && (
+          <p role="alert" className="pt-1 text-sm text-destructive">
+            {error.text}
+          </p>
+        )}
+      </li>
+    )
   }
 
   return (
@@ -173,62 +246,25 @@ export function NewEntryScreen({
           {proposals.length === 0 && (
             <p className="text-sm text-muted-foreground">{NEW_TEXTS.none}</p>
           )}
-          <ul className="grid gap-3">
-            {proposals.map((proposal) => {
-              const key = `${proposal.day}|${proposal.family.id}`
-              const cards = proposal.cards
-              const label = dayLabel(proposal.day, timeZone)
-              return (
-                <li key={key}>
-                  {/* die ganze Karte legt an (conventions §7), ohne eigenen Knopf */}
-                  <button
-                    type="button"
-                    data-proposal={key}
-                    data-marked={proposal.marked || undefined}
-                    disabled={pending}
-                    aria-label={NEW_TEXTS.createFor(label, proposal.family.name)}
-                    onClick={() =>
-                      create(key, () => createEntryFromEvening(proposal.day, proposal.family.id))
-                    }
-                    className={cn(
-                      "grid w-full cursor-pointer grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border bg-card p-4 text-left hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-60",
-                      proposal.marked ? "border-line-strong bg-accent-wash" : "border-border"
-                    )}
-                  >
-                    <span className="grid min-w-0 gap-2">
-                      <span className="text-[15px] font-semibold">
-                        {label}
-                        <span className="font-normal text-foreground-2">{` · ${proposal.family.name}`}</span>
-                      </span>
-                      <span className="text-[13px] text-foreground-2 tabular-nums">
-                        {cardsText(cards)}
-                      </span>
-                      <span className="flex flex-wrap gap-1">
-                        {cards.map((card) => {
-                          const shots = markShots(marks[card.id] ?? [])
-                          return card.targetId ? (
-                            <MiniTarget
-                              key={card.id}
-                              target={TARGETS[card.targetId]}
-                              shots={shots}
-                              placeholder={shots.length === 0}
-                              className="size-10"
-                            />
-                          ) : null
-                        })}
-                      </span>
-                    </span>
-                    <ChevronRight aria-hidden className="size-5 text-muted-foreground" />
-                  </button>
-                  {error?.where === key && (
-                    <p role="alert" className="pt-1 text-sm text-destructive">
-                      {error.text}
-                    </p>
-                  )}
-                </li>
-              )
-            })}
-          </ul>
+          <ul className="grid gap-3">{proposals.slice(0, FIRST).map(evening)}</ul>
+          {proposals.length > FIRST &&
+            (showOlder ? (
+              olderByMonth.map(([month, list]) => (
+                <section key={month} aria-label={month} className="grid gap-3 pt-2">
+                  <h3 className="text-[13px] font-semibold text-muted-foreground">{month}</h3>
+                  <ul className="grid gap-3">{list.map(evening)}</ul>
+                </section>
+              ))
+            ) : (
+              <button
+                type="button"
+                data-older-evenings
+                onClick={() => setShowOlder(true)}
+                className="inline-flex h-10 cursor-pointer items-center justify-self-start rounded-full border border-line-strong px-3.5 text-[13px] font-semibold text-primary hover:bg-accent-wash focus-visible:outline-2 focus-visible:outline-ring"
+              >
+                {`${NEW_TEXTS.older} (${proposals.length - FIRST})`}
+              </button>
+            ))}
         </section>
       </section>
     </Page>

@@ -32,9 +32,6 @@ export interface Family {
   name: string
 }
 
-/** Abende, aus denen „Neuer Eintrag“ vorschlägt */
-export const PROPOSAL_DAYS = 30
-
 const ENTRY_REF = { id: true, day: true, familyId: true, deletedAt: true } as const
 const toRef = (row: {
   id: string
@@ -298,24 +295,18 @@ export async function newEntryView(
   markedCardId: string | null
 ): Promise<{ proposals: Proposal<ResultCard>[]; families: Family[]; today: string }> {
   const nowMs = Date.now()
+  // jeder Abend ohne Eintrag, egal wie alt: dieselbe Regel wie an der Scheibe und auf Start (`cardPlace`)
   const [{ entries, links, cards }, families] = await Promise.all([
     linkData(db, userId, timeZone),
     resultFamilies(db, userId),
   ])
-  // der Abend der Scheibe aus der Adresse steht auch, wenn er älter ist: Die Zeile an der Scheibe führt hierher
-  const marked = cards.find((card) => card.id === markedCardId)
-  const recent = cards.filter(
-    (card) =>
-      card.startedAtMs >= nowMs - (PROPOSAL_DAYS + 1) * 86_400_000 ||
-      (marked && card.day === marked.day && card.family?.id === marked.family?.id)
-  )
   const linked = new Set(
     activeLinks(entries, links)
       .filter((l) => l.link === "linked")
       .map((l) => l.cardId)
   )
   return {
-    proposals: proposals(recent, entries, linked, markedCardId),
+    proposals: proposals(cards, entries, linked, markedCardId),
     families,
     today: formatIsoDate(new Date(nowMs), timeZone),
   }

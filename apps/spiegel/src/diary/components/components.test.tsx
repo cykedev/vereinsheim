@@ -138,7 +138,8 @@ describe("Seite eines Eintrags", () => {
     )
     expect(html).not.toMatch(/data-section="wellbeing" data-empty/)
     expect(html).not.toMatch(/data-section="feedback" data-empty/)
-    expect(html).toContain("Entfernen")
+    expect(html).toContain(">Befinden leeren<")
+    expect(html).toContain(">Feedback leeren<")
     expect(html).toMatch(
       /aria-label="Technik: 4, gut"[^>]*class="[^"]*outline-dashed|class="[^"]*outline-dashed[^"]*"[^>]*aria-label="Technik: 4, gut"/
     )
@@ -203,10 +204,13 @@ describe("Seite eines Eintrags", () => {
       ...html.matchAll(/data-execution-card="(c\d)"([\s\S]*?)(?=data-execution-card=|$)/g),
     ]
     expect(blocks.map((m) => m[1])).toEqual(["c1", "c2"])
-    expect(blocks[0][2]).toContain("Serie 1 · 89")
-    expect(blocks[0][2]).toContain("Serie 2 · 91")
-    expect(blocks[0][2]).not.toContain("Serie 1 · 93")
-    expect(blocks[1][2]).toContain("Serie 1 · 93")
+    // je Serie oben „Serie N“ ohne Umbruch, darunter die Summe (mit dem Wort der Stufe, wenn bewertet)
+    const rows = (block: string) =>
+      [...block.matchAll(/whitespace-nowrap">(Serie \d)<\/span><span[^>]*>([^<]*)</g)].map(
+        (m) => `${m[1]}|${m[2]}`
+      )
+    expect(rows(blocks[0][2])).toEqual(["Serie 1|89 · gut", "Serie 2|91"])
+    expect(rows(blocks[1][2])).toEqual(["Serie 1|93"])
   })
 
   it("zeigt die Frage des Fadens und bietet sie als Vorhaben nur, solange keines da ist", () => {
@@ -328,5 +332,32 @@ describe("Neuer Eintrag", () => {
     expect(marked).toContain('data-marked="true"')
     expect(marked).toContain('aria-label="Eintrag für Fr 16.10. · Luftpistole anlegen"')
     expect(marked).toContain("bg-accent-wash")
+  })
+
+  it("Abende ohne Eintrag: die ersten fünf, dann „Ältere Abende zeigen“; der Abend aus der Adresse ist immer sichtbar", () => {
+    const evenings = (markedIndex: number | null) =>
+      Array.from({ length: 8 }, (_, i) => ({
+        day: `2026-0${9 - Math.floor(i / 4)}-${String(20 - i).padStart(2, "0")}`,
+        family: { id: 1, slug: "lp", name: "Luftpistole" },
+        cards: [card(`k${i}`)],
+        marked: i === markedIndex,
+      }))
+    const render = (markedIndex: number | null) =>
+      renderToStaticMarkup(
+        createElement(NewEntryScreen, {
+          proposals: evenings(markedIndex),
+          marks: {},
+          families: [{ id: 1, slug: "lp", name: "Luftpistole" }],
+          today: "2026-10-28",
+          timeZone: ZONE,
+        })
+      )
+    const closed = render(null)
+    expect(closed.match(/data-proposal=/g)).toHaveLength(5)
+    expect(closed).toMatch(/data-older-evenings[^>]*>Ältere Abende zeigen \(3\)</)
+    const open = render(6)
+    expect(open.match(/data-proposal=/g)).toHaveLength(8)
+    expect(open).not.toContain("data-older-evenings")
+    expect(open).toMatch(/<h3[^>]*>[^<]*2026<\/h3>/)
   })
 })

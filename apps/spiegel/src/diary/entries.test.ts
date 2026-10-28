@@ -470,12 +470,17 @@ describe("Vorschläge", () => {
     const after = await newEntryView(db, site.ownerId, ZONE, null)
     expect(after.proposals.some((p) => p.day === day && p.family.id === site.familyId)).toBe(false)
   })
-  it("ein Abend älter als 30 Tage steht nur, wenn die Scheibe aus der Adresse dazugehört", async () => {
+  it("jeder Abend ohne Eintrag steht, egal wie alt, neueste zuerst", async () => {
     const { day, ms } = eveningMs(45)
     const c = await card(ms)
-    const of = (view: Awaited<ReturnType<typeof newEntryView>>) =>
-      view.proposals.find((p) => p.day === day && p.family.id === site.familyId)
-    expect(of(await newEntryView(db, site.ownerId, ZONE, null))).toBeUndefined()
-    expect(of(await newEntryView(db, site.ownerId, ZONE, c))).toMatchObject({ marked: true })
+    const old = await card(eveningMs(400).ms)
+    const view = await newEntryView(db, site.ownerId, ZONE, null)
+    const mine = view.proposals.filter((p) => p.family.id === site.familyId)
+    expect(mine.some((p) => p.day === day)).toBe(true)
+    expect(mine.some((p) => p.cards.some((x) => x.id === old))).toBe(true)
+    expect(mine.map((p) => p.day)).toEqual([...mine.map((p) => p.day)].sort().reverse())
+    expect(
+      (await newEntryView(db, site.ownerId, ZONE, c)).proposals.find((p) => p.day === day)
+    ).toMatchObject({ marked: true })
   })
 })

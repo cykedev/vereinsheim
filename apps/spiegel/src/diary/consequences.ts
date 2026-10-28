@@ -67,12 +67,14 @@ export function diaryCardRelease({
 /** einen gefüllten Abschnitt leeren; danach ist er wieder eine Zeile mit „+“ */
 export function diarySectionRemove({ name, day }: { name: string; day: string }): Decision {
   return {
-    title: `${name} entfernen?`,
-    about: `Du entfernst ${name} aus dem Eintrag vom ${day}.`,
-    happens: ["Die Werte sind dann weg. Der Abschnitt ist wieder eine Zeile mit „+“."],
+    title: `${name} leeren?`,
+    about: `Du leerst ${name} im Eintrag vom ${day}.`,
+    happens: [
+      "Was hier eingetragen ist, ist dann weg. Der Abschnitt ist wieder eine Zeile mit „+“.",
+    ],
     notHappening: ["Die übrigen Angaben im Eintrag bleiben."],
     undo: "Neu eintragen.",
-    confirmLabel: "Entfernen",
+    confirmLabel: "Leeren",
     destructive: true,
   }
 }

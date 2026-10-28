@@ -148,7 +148,7 @@ async function run(page: Page, { base, check, record }: Context) {
     `$("[data-proposal]")?.getAttribute("data-proposal") ?? null`
   )
   if (!proposal)
-    throw new Error("kein Vorschlag: das Demo-Konto hat in den letzten 30 Tagen keine Scheibe")
+    throw new Error("kein Vorschlag: das Demo-Konto hat keinen Abend mit Scheiben ohne Eintrag")
   const [day, familyId] = proposal.split("|")
   // oben „Heute“ mit genau einem Knopf, die Abende sind ganze Karten
   check(

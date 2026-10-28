@@ -442,7 +442,7 @@ export async function setExecution(
 
 export type DiarySection = "wellbeing" | "prognosis" | "feedback" | "disturbed" | "execution"
 
-/** einen Abschnitt leeren („Entfernen“); danach ist er wieder eine Zeile mit „+“ */
+/** einen Abschnitt leeren („… leeren“); danach ist er wieder eine Zeile mit „+“ */
 export async function clearSection(
   db: Db,
   userId: string,

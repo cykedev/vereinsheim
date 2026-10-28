@@ -10,13 +10,14 @@ import { DecisionDialog } from "@vereinsheim/ui/design2/decision-dialog"
 import { clearEntrySection } from "../actions"
 import { diarySectionRemove } from "../consequences"
 import type { DiarySection } from "../entries"
-import { ERRORS } from "../texts"
+import { ERRORS, SECTION_NAMES } from "../texts"
 
 const BOX = "rounded-2xl border border-border bg-card p-4"
 
 /**
  * Ein Abschnitt nach fester Regel: leer eine Zeile mit „+“, gefüllt offen. Ein Tipp auf „+“ öffnet ihn hier im
- * Browser; bleibt er leer, ist er nach dem Neuladen wieder eine Zeile. Gefüllt steht unten „Entfernen“ mit Rückfrage.
+ * Browser; bleibt er leer, ist er nach dem Neuladen wieder eine Zeile. Gefüllt steht unten „{Abschnitt} leeren“ mit
+ * Rückfrage.
  * Die Seite hängt nicht davon ab, was jemand bisher genutzt hat.
  */
 export function EntrySection({
@@ -85,12 +86,12 @@ export function EntrySection({
             onClick={() => setAsking(true)}
             className="inline-flex h-10 cursor-pointer items-center rounded-full px-3.5 text-[13px] font-semibold text-foreground-2 hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-60"
           >
-            {pending ? "Entfernen…" : "Entfernen"}
+            {pending ? `${SECTION_NAMES[section]} leeren…` : `${SECTION_NAMES[section]} leeren`}
           </button>
         </div>
       )}
       <DecisionDialog
-        decision={diarySectionRemove({ name: title, day })}
+        decision={diarySectionRemove({ name: SECTION_NAMES[section], day })}
         open={asking}
         onOpenChange={setAsking}
         onConfirm={() =>

@@ -101,9 +101,20 @@ export const NEW_TEXTS = {
   lead: "Leg einen Eintrag für heute an, etwa für Vorhaben und Prognose vor dem Training. Oder wähle einen Abend mit Scheiben.",
   today: "Heute",
   evenings: "Abende ohne Eintrag",
-  none: "In den letzten 30 Tagen gibt es keine Scheibe ohne Eintrag.",
+  none: "Jeder Abend mit Scheiben hat schon einen Eintrag.",
+  /** so viele Abende stehen zuerst, die übrigen hinter „Ältere Abende zeigen“ */
+  older: "Ältere Abende zeigen",
   create: "Anlegen",
   createFor: (day: string, family: string) => `Eintrag für ${day} · ${family} anlegen`,
   withCardsHint: "Die Scheiben dieses Tages kommen von selbst dazu, sobald Spiegel sie hat.",
   created: "Eintrag angelegt.",
+} as const
+
+/** der Name eines Abschnitts im Knopf „… leeren“ und in seiner Rückfrage */
+export const SECTION_NAMES = {
+  wellbeing: "Befinden",
+  prognosis: "Prognose",
+  feedback: "Feedback",
+  disturbed: "Störungen",
+  execution: "Ausführung",
 } as const

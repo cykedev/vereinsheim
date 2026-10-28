@@ -16,8 +16,8 @@ import { useStages } from "./useStages"
 
 /**
  * Ausführung je Serie: jede Scheibe des Eintrags ein eigener Block, im Kopf wie in der Scheibenliste (kleine Scheibe,
- * Uhrzeit, Ringe), darunter eingerückt ihre Serien mit Summe und fünf Stufen. So ist auch bei sechs Scheiben klar,
- * welche Serie zu welcher gehört.
+ * Uhrzeit, Ringe), darunter eingerückt ihre Serien („Serie 3“, darunter die Summe) mit fünf Stufen. So ist auch bei
+ * sechs Scheiben klar, welche Serie zu welcher gehört.
  */
 export function ExecutionSection({
   entryId,
@@ -51,22 +51,20 @@ export function ExecutionSection({
       day={day}
       filled={Object.values(values).some((value) => value !== null)}
     >
-      <div className="grid gap-3 pt-1">
+      {/* jede Scheibe ein Block (getrennt durch Linien), ihre Serien eingerückt darunter; die Summe steht in der
+          zweiten Zeile, damit „Serie 3“ auch bei 360 px neben den fünf Kreisen einzeilig bleibt */}
+      <div className="grid divide-y divide-border">
         {rated.map((card) => (
-          <div
-            key={card.id}
-            data-execution-card={card.id}
-            className="grid gap-1 rounded-xl border border-border px-2.5 py-3"
-          >
+          <div key={card.id} data-execution-card={card.id} className="grid gap-1 py-3 first:pt-1">
             <CardHead card={card} marks={marks} timeZone={timeZone} />
-            <div className="ml-1.5 grid divide-y divide-border border-l-2 border-line-strong pl-2.5">
+            <div className="grid divide-y divide-border border-l-2 border-line-strong pl-3">
               {series[card.id].map((s) => {
                 const key = `${card.id}|${s.series}`
                 return (
                   <StageRow
                     key={key}
-                    // die Einheit steht im Kopf der Scheibe; so bleibt die Zeile auch eingerückt einzeilig
-                    label={`Serie ${s.series}${s.result ? ` · ${formatValue(s.result.value, s.result.digits)}` : ""}`}
+                    label={`Serie ${s.series}`}
+                    detail={s.result ? formatValue(s.result.value, s.result.digits) : null}
                     words={QUALITY_WORDS}
                     value={shown[key] ?? null}
                     onSelect={(stage) => select(key, stage)}

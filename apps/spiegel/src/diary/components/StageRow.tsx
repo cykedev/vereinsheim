@@ -15,6 +15,7 @@ export function StageRow({
   words,
   value,
   mark = null,
+  detail = null,
   disabled = false,
   onSelect,
 }: {
@@ -23,6 +24,8 @@ export function StageRow({
   /** der Wert 0 bis 100; null ohne */
   value: number | null
   mark?: number | null
+  /** eine Angabe vor dem Wort der Stufe in der zweiten Zeile (die Summe einer Serie) */
+  detail?: string | null
   disabled?: boolean
   onSelect: (stage: Stage | null) => void
 }) {
@@ -33,9 +36,13 @@ export function StageRow({
   return (
     <div data-stage-row className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 py-1.5">
       <span className="grid min-w-0">
-        <span className="text-sm font-semibold">{label}</span>
+        <span className="text-sm font-semibold whitespace-nowrap">{label}</span>
         {/* ohne Wert kein Wort: „noch offen“ unter jeder Zeile war nur Rauschen */}
-        {word && <span className="text-[13px] text-muted-foreground">{word}</span>}
+        {(detail || word) && (
+          <span className="text-[13px] whitespace-nowrap text-muted-foreground tabular-nums">
+            {[detail, word].filter(Boolean).join(" · ")}
+          </span>
+        )}
       </span>
       <span role="group" aria-label={label} className="flex gap-1.5">
         {STAGES.map((stage) => (
