@@ -115,7 +115,8 @@ export function SeriesRows({
             )}
             data-entered-row={i + 1}
           >
-            <div className="flex items-center gap-3">
+            {/* passt auch in 360 px: das Summenfeld gibt nach, Name und Knopf nicht */}
+            <div className="flex items-center gap-2">
               <label htmlFor={sumId} className="w-16 shrink-0 text-sm font-semibold">
                 Serie {i + 1}
               </label>
@@ -126,7 +127,7 @@ export function SeriesRows({
                 autoComplete="off"
                 data-entry-field
                 className={cn(
-                  "h-11 w-28 text-center text-base tabular-nums",
+                  "h-11 w-0 max-w-28 min-w-0 grow text-center text-base tabular-nums",
                   row.open && "border-transparent bg-transparent font-semibold"
                 )}
                 value={row.open ? (computed ?? "") : row.sum}
@@ -150,7 +151,7 @@ export function SeriesRows({
               <Button
                 type="button"
                 variant="ghost"
-                className="ml-auto h-10 px-2 text-[13px]"
+                className="ml-auto h-10 shrink-0 px-2 text-[13px]"
                 aria-expanded={row.open}
                 aria-controls={`series-${i}-shots`}
                 disabled={disabled}
@@ -167,7 +168,7 @@ export function SeriesRows({
             {row.open && (
               <p
                 id={`${sumId}-from-shots`}
-                className="-mt-1 pl-19 text-[13px] text-muted-foreground"
+                className="-mt-1 pl-18 text-[13px] text-muted-foreground"
               >
                 aus den Schüssen
               </p>

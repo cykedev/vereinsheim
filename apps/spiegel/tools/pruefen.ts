@@ -1207,6 +1207,17 @@ async function handEntry(page: Page) {
       )
     )
 
+    // am Telefon nicht breiter als das Fenster, auch mit einer aufgeklappten Serie (sonst wird die ganze Seite breiter)
+    await page.click(`button("Schüsse einzeln", $('[data-entered-row="1"]'))`)
+    const width = await page.ev<number[]>(
+      `[innerWidth, visualViewport.width, document.documentElement.scrollWidth]`
+    )
+    check(
+      "Von Hand: am Telefon kein seitliches Scrollen, auch aufgeklappt",
+      width[0] === width[1] && width[2]! <= width[0]!,
+      width.join(" / ")
+    )
+    await page.click(`button("Schüsse einzeln", $('[data-entered-row="1"]'))`)
     await fill(page, "#series-0-sum", "98,5")
     await page.click(`button("Schüsse einzeln", $('[data-entered-row="2"]'))`)
     await fill(page, "#series-1-shot-0", "10,4")
