@@ -364,6 +364,8 @@ model User {
   // das Tagebuch ([[adr-033]]): Konto löschen nimmt es mit
   diarySettings      DiarySettings?
   diaryEntries       DiaryEntry[]
+  diaryGoals         DiaryGoal[]
+  diaryRoutines      DiaryRoutine[]
 }
 
 // benannter Zeitraum des Schützen („Vorbereitung Landesmeisterschaft“), Tage in der Anzeige-Zone
@@ -660,6 +662,8 @@ model CardProjection {
   marks        Json
   /// Grundlage der Werte (`CardDetail`); null vor Version 6
   detail       Json?
+  /// die Serien wie unter der Scheibe in beiden Wertungen (`ProjectedSeries[]`); null vor Version 7
+  series       Json?
   computedAt   DateTime @default(now()) @db.Timestamptz(3)
 
   @@index([version])
@@ -827,4 +831,86 @@ model DiarySeriesExecution {
   value   Int
 
   @@id([entryId, cardId, series])
+}
+
+// Art eines Ziels: Ergebnis (kann gemessen werden) oder Prozess (nie gemessen)
+enum DiaryGoalKind {
+  result
+  process
+}
+
+// was ein gemessenes Ziel zählt: Scheiben, Serien oder den Schnitt der Scheiben ab einer Ringzahl
+enum DiaryGoalMeasure {
+  card
+  series
+  average
+}
+
+// welche Scheiben ein Ziel zählt
+enum DiaryGoalCards {
+  all
+  training
+  competition
+}
+
+// in welcher Wertung ein Ziel zählt; eigene Werte, damit das Tagebuch keinen Typ des Ergebnisteils trägt
+enum DiaryGoalScoring {
+  rings
+  decimal
+}
+
+// ein Saisonziel: ein Satz in eigenen Worten, eine Disziplin, ein Zeitraum; ein Ergebnisziel kann eine Messung tragen.
+// Spiegel zeigt die Zahlen, „Hat es geklappt?“ beantwortet der Schütze
+model DiaryGoal {
+  id        String            @id @default(cuid())
+  userId    String
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // `Family.id`; null ohne Disziplin (die Seite bietet „Disziplin festlegen“, gemessen wird nur mit Disziplin)
+  familyId  Int?
+  title     String
+  note      String?
+  kind      DiaryGoalKind
+  // Tage in der Anzeige-Zone, beide eingeschlossen
+  from      DateTime          @db.Date
+  to        DateTime          @db.Date
+  // Messung: alle vier gesetzt oder keines (nur bei `result`)
+  measure   DiaryGoalMeasure?
+  // in der Wertung des Ziels, Zehntel als eine Nachkommastelle
+  threshold Decimal?          @db.Decimal(6, 1)
+  scoring   DiaryGoalScoring?
+  // Schusszahl einer Scheibe (`card`, `average`) oder einer Serie (`series`), die zählt
+  shots     Int?
+  cards     DiaryGoalCards    @default(all)
+  // „Hat es geklappt?“
+  outcome   DiaryOutcome?
+  // Schlüssel der Übernahme (`treffsicher:<id>`): ein zweiter Lauf ersetzt statt zu verdoppeln
+  importKey String?           @unique
+  // Papierkorb: 30 Tage, danach endgültig gelöscht
+  deletedAt DateTime?         @db.Timestamptz(3)
+  createdAt DateTime          @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime          @updatedAt @db.Timestamptz(3)
+
+  // Liste, Zeile auf Start
+  @@index([userId, to])
+}
+
+// ein Schuss-Ablauf: Name und Schritte, gelesen im Faden seiner Disziplin
+model DiaryRoutine {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // `Family.id`; null ohne Disziplin (im Faden unter „Ohne Disziplin“, die Seite bietet „Disziplin festlegen“)
+  familyId  Int?
+  name      String
+  // [{ "title": string, "description"?: string }] in Reihenfolge, geprüft mit zod (`routineSteps`)
+  steps     Json
+  // Schlüssel der Übernahme (`treffsicher:<id>`)
+  importKey String?   @unique
+  // Papierkorb: 30 Tage, danach endgültig gelöscht
+  deletedAt DateTime? @db.Timestamptz(3)
+  createdAt DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime  @updatedAt @db.Timestamptz(3)
+
+  // Faden je Disziplin
+  @@index([userId, familyId])
 }
