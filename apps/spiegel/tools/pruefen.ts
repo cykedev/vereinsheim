@@ -1262,7 +1262,9 @@ async function handEntry(page: Page) {
       await page.waitFor(`txt($('[role="alertdialog"]')).includes("Eingaben verwerfen?")`)
     )
     await page.key("Escape")
-    await page.waitFor(`!$('[role="alertdialog"]')`)
+    // erst, wenn die Rückfrage samt Abdunklung weg ist: Der Knopf klebt sichtbar unten, ein Klick käme sonst zu früh
+    await page.waitFor(`!$('[role="alertdialog"]') && !$$("dialog").some((d) => d.open)`)
+    await page.wait(400)
     await page.click(`$("[data-entered-save]")`)
     const back = await page.waitFor(`!!$("[data-card-entry]")`, 15_000)
     const shown = `(() => { const t = txt($("main") ?? document.body); return t.includes("40,2") && t.includes("Prüfhalle") })()`
@@ -1270,7 +1272,9 @@ async function handEntry(page: Page) {
     check(
       "Ändern: der neue Schuss und der Ort stehen auf der Seite",
       back && (first || (await page.waitFor(shown, 10_000))),
-      first ? "sofort" : "erst nach dem Nachladen"
+      first
+        ? "sofort"
+        : `erst nach dem Nachladen · ${await page.ev<string>(`location.pathname + " · " + $$('[role="alert"], [id$="-error"], [data-sonner-toast]').map(txt).filter(Boolean).join(" | ")`)}`
     )
 
     // Beleg: ein Foto hängt an, ein Meyton-Ausdruck nicht, Entfernen fragt erst

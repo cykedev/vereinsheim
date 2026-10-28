@@ -2,7 +2,7 @@
 
 import { ArrowLeft } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { useState, useTransition, type FormEvent, type ReactNode } from "react"
+import { useEffect, useState, useTransition, type FormEvent, type ReactNode } from "react"
 import { toast } from "sonner"
 
 import { getFieldError, getGeneralError } from "@vereinsheim/lib/forms/fieldErrors"
@@ -99,6 +99,10 @@ export function EnteredCardForm({
   const [choosing, setChoosing] = useState(false)
   const [pending, startTransition] = useTransition()
   const dirty = JSON.stringify(state) !== JSON.stringify(initial)
+  // ein Toast der vorigen Seite („Scheibe eingetragen.“) läge über „Speichern“: beim Öffnen schließen
+  useEffect(() => {
+    toast.dismiss()
+  }, [])
   useUnsavedChangesGuard({ enabled: dirty && !pending })
   const leave = useNavigationConfirm({ isDirty: dirty })
 
@@ -124,7 +128,7 @@ export function EnteredCardForm({
       }
       setResult(saved)
       if ("error" in saved || !saved.data) {
-        if (getGeneralError(saved)) toast.error(getGeneralError(saved))
+        // der Fehler steht an „Speichern“ in der klebenden Leiste; ein Toast läge genau über dem Knopf
         return
       }
       toast.success(mode === "edit" ? "Änderung gespeichert." : "Scheibe eingetragen.")
