@@ -121,6 +121,7 @@ app-übergreifende Komponenten gehören in diese Liste (in `MUST_MATCH` des Gate
 | Neu anlegen | `Plus`       |     | Zurück           | `ArrowLeft`                |
 | Konto       | `UserCircle` |     | Abmelden         | `LogOut`                   |
 | Mobil-Menü  | `Menu`/`X`   |     | PDF/Download     | `Download`                 |
+| Tagebuch    | `BookOpen`   |     |                  |                            |
 
 Marken-Logos (kollisionsfrei, je App eindeutig): **Treffsicher `Crosshair`**, **Ringwerk `CircleDot`**.
 `Target` ist Disziplinen, `Trophy` ist in Ringwerk Wettbewerb/Sieger — **keines davon als Logo**.
@@ -265,7 +266,10 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
 - **Tests gegen die Dev-Datenbank fassen nur eigene Zeilen an**: Die Dev-Datenbank ist eine Prod-Kopie. Eine Funktion,
   die über alle Zeilen läuft (etwa `rereadOutdatedPrintouts`), bekommt für Tests eine Grenze auf die eigene Anlage
   (`siteId`); mit einem Stub als Leser hätte der Test sonst echte Ausdrucke mit erfundenen Werten überschrieben
-  (aufgefallen beim Schreiben des Tests, Oktober 2026).
+  (aufgefallen beim Schreiben des Tests, Oktober 2026). Braucht ein Test einen Zustand fremder Zeilen (etwa „kein
+  anderes aktives Admin-Konto“), stellt er ihn in einer Transaktion her, die er am Ende mit einem Fehler zurückrollt,
+  und prüft darin die Funktion, die die Transaktion nimmt (`deleteAccountIn` in
+  `apps/spiegel/src/parts/account-actions.test.ts`). Echte Admins kurz zu deaktivieren hätte ihre Sitzungen beendet.
 
 - **Datenlage vor der Sichtprüfung abgleichen**: Bevor eine Änderung im Browser als geprüft gilt,
   die vorhandenen Dev-Daten gegen die zu prüfenden Zustände halten (z.B. „abgeschlossener

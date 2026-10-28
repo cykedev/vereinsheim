@@ -414,6 +414,23 @@ Stand mit `past` (`MAX_OBSERVED_LAG_MS`, SF-79).
   ohne Fortschreiben der Adresse. `proxy.ts` lässt `share/` frei (`src/proxy.test.ts`); die Kennung prüft `isShareId`,
   bevor eine Abfrage läuft. Skriptprüfung „Geteilte Scheibe“ in einem Fenster ohne Cookies
   (`newPage({ isolated: true })`).
+- **Tagebuch** ([[spiegel-diary]], [[adr-033]]): ein eigener Teil in drei Zonen, die `src/parts/boundary.test.ts` im
+  Gate prüft. Das Tagebuch (`src/diary/**`, `src/app/(app)/diary/**`) liest Scheiben nur über `src/lib/results-read.ts`
+  und greift auf kein Modell des Ergebnisteils zu; der Ergebnisteil importiert das Tagebuch nie, nur `@/parts/*`
+  (Zeilen `PartLine` an der Scheibe und auf Start, Kästen in Profil und Papierkorb, `diaryEnabled` für die Leiste,
+  `diaryJobs` beim Start und stündlich, Export und Konto löschen); der Admin importiert keines von beiden. Die Tabellen
+  `Diary*` haben keinen Fremdschlüssel auf Scheiben oder Familien, nur `User` kaskadiert. Je Konto abschaltbar
+  (`DiarySettings.enabled`, aus heißt: keine Leiste, keine Stellen, `/diary` führt ins Profil). Werte 0 bis 100, gezeigt
+  in fünf Stufen (`src/diary/scales.ts`). Scheiben vom selben Abend leitet `entryCards` (`src/diary/cards.ts`) beim
+  Lesen ab; gespeichert wird nur Verknüpfen und Lösen (`DiaryEntryCard.link`). Schreiben nur über `src/diary/entries.ts`
+  (serialisierbar, Zeile des Eintrags `FOR UPDATE`), die Actions prüfen Sitzung und Schalter. Texte in
+  `src/diary/texts.ts`, Folgen in `src/diary/consequences.ts`. Skriptprüfung im Abschnitt „Tagebuch“
+  (`tools/pruefen-diary.ts`), die am Ende alle Einträge des Demo-Kontos löscht und das Tagebuch ausschaltet.
+- **Deine Daten** (Profil, `src/parts/account.ts`): `GET /api/account/export` gibt eine JSON-Datei als Strom
+  (`resultsExport` in `src/lib/export/results.ts`, je 200 Scheiben eine Abfrage, und `diaryExport`), nur mit eigener
+  Sitzung. `deleteOwnAccount` (`src/parts/account-actions.ts`) prüft das Passwort, lehnt das einzige aktive Admin-Konto
+  ab (alle aktiven Admin-Zeilen `FOR UPDATE`) und löscht in einer Transaktion Zustimmungen, alle eigenen Scheiben über
+  `purgeCards` und das Konto; Tests dazu in einer Transaktion, die zurückrollt (die Dev-Datenbank hat echte Admins).
 - **Blättern hängt die Seite neu ein** (`key={card.id}`) und liest den Anker nur auf der eigenen Adresse (`useHash`): Next
   rendert die nächste Scheibe, solange die Adresse noch die der vorigen ist, und ihr `#position` war sonst der Reiter der
   nächsten.

@@ -53,7 +53,17 @@ relates_to: ["[[spiegel-assignment]]", "[[spiegel-bridge]]", "[[treffsicher-user
   ohne Anmeldung, ohne Namen, Sportpassnummer oder Konto, und kann nichts ändern. Der Dialog sagt das vorher, auch dass
   ein Link weitergegeben werden kann. „Teilen beenden“ und Löschen machen den Link sofort ungültig, neu teilen gibt einen
   neuen. Der Hinweistext (v2, „Deine Scheiben siehst nur du“) bleibt: Teilen ist eine eigene Handlung des Schützen.
-- **Export und Löschen auf Knopfdruck** (noch nicht gebaut, [[spiegel-roadmap]] „Offene Einzelpunkte“): JSON und CSV; Löschen entfernt Rohdaten (alle Zeilenversionen), Ableitungen und PDFs und setzt Grabsteine; aus den Backups auf dem Server verschwinden die Daten mit deren Rotation (14 Tage). **Ausnahme:** Kopien der Sicherungen auf dem Rechner des Betreibers (`vereinsheim local-pull` nach `./backups/`, `dev-restore`, lokaler Stack) rotieren nicht; dort bleiben auch gelöschte Daten, bis der Betreiber die Kopie ersetzt oder löscht.
+- **Export und Löschen auf Knopfdruck** (Profil, Kasten „Deine Daten“, über beide Teile, [[spiegel-diary]] „Deine Daten“):
+  „Herunterladen“ gibt eine JSON-Datei mit allen eigenen Scheiben samt Papierkorb, Angaben zu Ausdrucken und Belegen
+  (ohne die Dateien), Zustimmungen, Zeiträumen, Wertungen und dem Tagebuch. „Konto löschen“ fragt nach dem Passwort und
+  entfernt alle Scheiben mit Rohdaten, Ableitungen und Dateien, das Tagebuch und das Konto; Meldungen „nicht meine“
+  bleiben ohne Konto, damit die fremden Scheiben nicht zurückkommen. Das einzige aktive Admin-Konto lässt sich nicht
+  löschen. Aus den Backups auf dem Server verschwinden die Daten mit deren Rotation (14 Tage). **Ausnahme:** Kopien der
+  Sicherungen auf dem Rechner des Betreibers (`vereinsheim local-pull` nach `./backups/`, `dev-restore`, lokaler Stack)
+  rotieren nicht; dort bleiben auch gelöschte Daten, bis der Betreiber die Kopie ersetzt oder löscht. Ein Export als
+  CSV oder mit den Dateien (ZIP) ist offen.
+- **Das Tagebuch sieht nur der Schütze** ([[adr-033]], [[spiegel-diary]]): kein Admin, keine Zahl in der Übersicht. Es
+  ist je Konto abschaltbar; beim ersten Öffnen sagt ein Hinweis, wer es sieht.
 - **Keine echten personenbezogenen Daten im öffentlichen Repo:** Test-PDFs und Beispieldaten anonymisiert oder synthetisch ([[adr-029]]).
 
 ## Rollen

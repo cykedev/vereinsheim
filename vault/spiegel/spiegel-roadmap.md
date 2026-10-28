@@ -220,6 +220,11 @@ Ziel: **Mit Opt-in erscheint die Dienstagsscheibe von selbst in Spiegel; ohne Op
 - **Belege** (Stufe 1, Teil 1f aus [[adr-033]]): bis zu 10 Belege (Foto oder PDF) an jeder eigenen Scheibe, mit
   Originalnamen und Vorschaubild, mehrere in einem Zug, Zeile „Belege“ im Kasten „Diese Scheibe“
   ([[spiegel-navigation]] „Von Hand eintragen“). **Status:** umgesetzt (29. Oktober 2026).
+- **Tagebuch, Einträge** (Stufe 2, Teil 2a aus [[adr-033]]): Bereich „Tagebuch“ je Konto abschaltbar, Einträge je Abend
+  und Disziplin mit Vorhaben, Notiz, Befinden, Prognose, Feedback und Ausführung in fünf Stufen, Satzanfänge und Faden
+  der eigenen Fragen, Scheiben vom selben Abend beim Lesen abgeleitet, Zeilen an der Scheibe und auf Start, Papierkorb,
+  dazu Export und Konto löschen über beide Teile ([[spiegel-diary]]). **Status:** umgesetzt (28. Oktober 2026). Es folgen
+  2b (Saisonziele, Schuss-Abläufe, Anhänge) und 2c (Einflüsse, Selbstbild).
 
 ## Offene Einzelpunkte
 
@@ -298,7 +303,8 @@ Was zwischen den Features offen ist und keinen eigenen Abschnitt hat.
   die Tools setzen `CURRENT_CONSENT_VERSION`. Dabei das tote Feld `ConsentRow.siteName` samt Join entfernen.
 - **Neue Version des Hinweistexts:** Für eine künftige v3 gibt es keine Regel, wann eine erneute Zustimmung nötig ist
   und was bis dahin gilt ([[spiegel-privacy]]).
-- **Export (JSON/CSV) und Konto löschen** sind nicht gebaut; ein Admin kann ein Konto nur deaktivieren
+- **Export als CSV oder mit den Dateien (ZIP):** Export (JSON) und Konto löschen gibt es seit 2a über beide Teile
+  ([[spiegel-diary]] „Deine Daten“); Ausdrucke und Belege stehen darin nur als Angaben, ohne die Dateien
   ([[spiegel-privacy]]).
 - **Umbuchen zwischen zwei Konten** (SF-80): Stand eine Scheibe schon bei einem Konto und bucht die Aufsicht sie auf
   eine andere Nummer mit Zustimmung um, stellt Spiegel den neuen Stand in Quarantäne („SportpassID oder Besitzer
