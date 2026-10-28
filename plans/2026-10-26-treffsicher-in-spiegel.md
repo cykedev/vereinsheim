@@ -378,7 +378,11 @@ Holen“ ins Textbuch Spiegel (steht in `reports/2026-10-27-fetch-no-request-cap
 
 1. **1d Handeingabe** ist in `main` (`dbc9e45c`, Migration `20261028120000_hand_entry`, keine neue Brücke) und wartet
    aufs Release. Danach am iPhone prüfen: ein HEIC-Foto als Beleg und einen PDF-Beleg in Safari öffnen.
-2. **Stufe 2 Tagebuch:** Entwurf der Oberfläche mit dem User, während 1d gebaut wird; Teilpläne auf dem Basisbranch.
+2. **Stufe 2 Tagebuch:** 2a (Einträge, Faden, Papierkorb, Export) ist im Basisbranch, Migration
+   `20261028180000_diary_entries`. In der Dev-DB stehen 94 Vorschau-Einträge des Users aus Treffsicher
+   (`importKey` `preview:`); vor der Übernahme in Stufe 3 löschen mit
+   `delete from "DiaryEntry" where "importKey" like 'preview:%'`. Als Nächstes 2b (Saisonziele, Abläufe, Anhänge),
+   wieder mit Entwurf der Oberfläche vor dem Plan; Ergebnisziele misst Spiegel selbst.
 3. **Stufe 3 Übernahme**, dann **Stufe 4 Ruhestand**.
 
 Für später festgehalten: Randfall „Wertung endgültig gelöscht, Probe des Abends bleibt“: Holen öffnet die Probe, die
@@ -386,7 +390,8 @@ Sperre der Wertung bleibt; Reiter Lage der Skriptprüfung (`vault/incidents/prue
 `main` 177/178); Lage des Toasts in die Skriptprüfung aufnehmen; das Tracing aus `apps/spiegel/src/lib/printouts/files.ts`
 eingrenzen (zieht lokal `uploads/` nach `.next/standalone`, conventions §9); `printout-import` legt Aufträge an die
 Anlage an (mit dem Fenster gefahrlos); „Als Wertung zählen“ (SF-05) für Probe,
-die eigentlich die Wertung war.
+die eigentlich die Wertung war; ein Zeitfenster für `overviewCards` (rechnet wie Start über alle eigenen Scheiben,
+Befund aus dem Review von 2a).
 
 ## Stand
 
@@ -401,7 +406,7 @@ die eigentlich die Wertung war.
 | 1c   | `plans/2026-10-27-tis-1c-printout-values.md` | `feat/tis-1c-printout-values` (von `main`) | `tis-1c-printout-values` | in `main` (`88ea1140`); Luftgewehr-Fix, Leser v2        |
 | 1d   | `plans/2026-10-28-tis-1d-hand-entry.md`      | `feat/tis-1d-hand-entry` (von `main`)      | `tis-1d-hand-entry`      | in `main` (`dbc9e45c`), noch nicht deployt              |
 | 1e   |                                              |                                            |                          | in 1a-2                                                 |
-| 2a   | `plans/2026-10-28-tis-2a-diary-entries.md`   | `feat/tis-2a-diary-entries` (vom Basis)    | `tis-2a-diary-entries`   | Konzept und Plan freigegeben (28.10.), wird gebaut      |
+| 2a   | `plans/2026-10-28-tis-2a-diary-entries.md`   | `feat/tis-2a-diary-entries` (vom Basis)    | `tis-2a-diary-entries`   | im Basisbranch (`3fd30d85`), Plan entfernt              |
 | 3    |                                              |                                            |                          | offen                                                   |
 | 4    |                                              |                                            |                          | offen                                                   |
 
