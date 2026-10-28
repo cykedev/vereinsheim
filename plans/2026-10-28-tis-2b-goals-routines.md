@@ -72,6 +72,11 @@ export interface CardProjection {
   je Wertung, ohne Schüsse aus `sums.series` (`rings`, `decimalTenths / 10`). Die beiden Wertungen werden je Serie
   zusammengeführt.
 - `PROJECTION_VERSION` 6 → 7. `refreshProjections` holt beim Start alle Scheiben nach (wie bei jedem Anstieg).
+- **Spalte `CardProjection.series` (`Json?`, null vor Version 7)**, freigegeben von der Koordination am 28. Oktober
+  2026: Die Projektion steht in festen Spalten. `saveProjection` schreibt `series` (auch beim Nachrechnen über
+  `refreshProjections`, Test), `toOverview` in `reads.ts` liest sie; eine Zeile mit `series` null gilt als veraltet
+  (Version kleiner 7) und wird nachgerechnet, bis dahin zählt ein Ziel „Serie ab X“ die Scheibe unter „ohne Serien“
+  (Test in `measure.test.ts`).
 - `resultCardSeries` bleibt (die Seite eines Eintrags liest die Serien einer Scheibe weiter darüber).
 - Tests in `projection.test.ts`: Serien aus Schüssen an einer erzeugten Scheibe (Summe je Serie gegen
   `seriesCurve`), aus Summen (Fixture mit `SeriesSum` in Ringen und Zehnteln, eine Serie ohne Zehntel → `decimal`
@@ -266,7 +271,9 @@ Transaktion, die die Zeile `FOR UPDATE` sperrt und `userId` prüft, Fehler als T
   `restoreRoutine`, `purgeRoutineNow`.
 - Prüfung mit zod in `src/diary/goals/validation.ts` und `src/diary/routines/validation.ts`: Satz 1–200 Zeichen,
   `to` ≥ `from`, Disziplin aus `resultFamilies` oder keine (Pflicht nur mit Messung), Schwelle > 0, ganze Zahl bis 10 × Schusszahl bei `rings`, eine
-  Stelle bis 10,9 × Schusszahl bei `decimal`, Schusszahl 1–200.
+  Stelle bis 10,9 × Schusszahl bei `decimal`, Schusszahl 1–200. Die Messung ist ganz oder gar nicht gesetzt (`measure`,
+  `threshold`, `scoring`, `shots` alle vier oder keines, nur bei `result`), geprüft in der Validierung und in einem
+  Test.
 - Actions in `src/diary/goals/actions.ts` und `src/diary/routines/actions.ts` (`"use server"`, nur direkt deklarierte
   async-Funktionen), mit `guard()` wie `src/diary/actions.ts` (Sitzung, Schalter), `ActionResult`,
   `revalidatePath("/diary", "layout")` und `revalidatePath("/")` für die Zeile auf Start.

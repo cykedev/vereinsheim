@@ -684,6 +684,7 @@ export async function saveProjection(
     // die Lagen für die kleinen Scheiben der Übersichten, gelesen nur für die gezeigten Scheiben (`cardMarks` in reads)
     marks: cardMarks(shots) as unknown as Prisma.InputJsonArray,
     detail: projection.detail as unknown as Prisma.InputJsonObject,
+    series: projection.series as unknown as Prisma.InputJsonArray,
     computedAt: new Date(),
   }
   await tx.cardProjection.upsert({

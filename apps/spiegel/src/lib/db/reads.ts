@@ -11,6 +11,7 @@ import {
   type CardMark,
   type CardProjection,
   type ProjectedCard,
+  type ProjectedSeries,
 } from "@vereinsheim/shot-core/projection"
 import type { CardProvenance } from "@vereinsheim/shot-ui/detail"
 import type { NamedPeriod } from "@vereinsheim/shot-ui/period/calendar"
@@ -128,6 +129,7 @@ const OVERVIEW_SELECT = {
       values: true,
       records: true,
       detail: true,
+      series: true,
     },
   },
 } satisfies Prisma.CardSelect
@@ -146,6 +148,10 @@ function toOverview(rows: readonly OverviewRow[]): OverviewCard[] {
       values: row.projection.values as CardProjection["values"],
       records: row.projection.records as unknown as CardProjection["records"],
       ...(row.projection.detail ? { detail: row.projection.detail as unknown as CardDetail } : {}),
+      // null vor Version 7: Die Zeile ist veraltet und wird nachgerechnet (`refreshProjections`)
+      ...(row.projection.series
+        ? { series: row.projection.series as unknown as ProjectedSeries[] }
+        : {}),
     }
     const kind = kindOfRow(row, projection.probeOnly)
     // Wertung der Disziplin (Admin), wenn gesetzt; ein Training nur aus Probe hat keine

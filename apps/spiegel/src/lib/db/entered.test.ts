@@ -4,6 +4,7 @@ import { scoreFromCoordinates } from "@vereinsheim/shot-core/scoring"
 import { LG_10M } from "@vereinsheim/shot-core/targets"
 
 import { createPrismaClient } from "@/lib/db"
+import { Prisma } from "@/generated/prisma/client"
 import { generateSeason } from "../../../test/generate"
 import { createTestSite, type TestSite } from "../../../test/fixtures"
 import type { DetailsInput, EnteredShot } from "../entered/details"
@@ -146,6 +147,27 @@ describe("Scheiben in jeder Detailtiefe", () => {
     const values = await valuesOf(cardId)
     expect(values["result.rings"]?.value).toBe(378)
     expect(values["result.decimal"]?.value).toBe(395.5)
+  })
+
+  it("5a. die Serien stehen in beiden Wertungen in der Projektion, auch nach dem Nachrechnen einer Zeile vor Version 7", async () => {
+    const { cardId } = await saved({
+      series: [
+        { series: 1, rings: 93, decimalTenths: 978 },
+        { series: 2, rings: 95, decimalTenths: null },
+      ],
+    })
+    const series = [
+      { series: 1, shots: 10, rings: 93, decimal: 97.8 },
+      { series: 2, shots: 10, rings: 95, decimal: null },
+    ]
+    expect((await cardOf(cardId)).projection?.series).toEqual(series)
+    await db.cardProjection.update({
+      where: { cardId },
+      data: { version: "p6-alt", series: Prisma.DbNull },
+    })
+    expect((await cardOf(cardId)).projection?.series).toBeNull()
+    expect(await refreshProjections(db, { cardIds: [cardId] })).toBe(1)
+    expect((await cardOf(cardId)).projection?.series).toEqual(series)
   })
 
   it("6. Schüsse in ganzen Ringen: Innenzehner unbekannt, Zehner da", async () => {
