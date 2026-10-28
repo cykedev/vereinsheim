@@ -1,9 +1,9 @@
 ---
 id: spiegel-diary
 type: subsystem
-title: "Spiegel — Tagebuch: Einträge, Faden und Stellen"
+title: "Spiegel — Tagebuch: Einträge, Fragen und Stellen"
 aliases: [tagebuch, diary, treffsicher-2-0, trainingstagebuch-in-spiegel]
-keywords: [saisonziel, ziele, ziel, messung, scheibe ab, serie ab, schnitt ab, saison, hat es geklappt, schuss-ablauf, abläufe, ablauf, ohne disziplin, disziplin festlegen, tagebuch, eintrag, einträge, vorhaben, notiz, befinden, prognose, feedback, ausführung je serie, stufen, fünf stufen, 0 bis 100, faden, lernfrage, wie schaffe ich es, ich habe gelernt, hat es geklappt, was hat gestört, vorschlag, neuer eintrag, ohne scheibe, trockentraining, mentaltraining, dazugekommen, lösen, dazunehmen, vom selben abend, papierkorb, abschaltbar, hinweis, nur du siehst, zonen, grenze, nahtstellen, parts, results-read, partline, export, konto löschen, deine daten, stufe 2, 2a, treffsicher]
+keywords: [saisonziel, ziele, ziel, messung, scheibe ab, serie ab, schnitt ab, saison, hat es geklappt, schuss-ablauf, abläufe, ablauf, ohne disziplin, disziplin festlegen, tagebuch, eintrag, einträge, vorhaben, notiz, befinden, prognose, feedback, ausführung je serie, stufen, fünf stufen, 0 bis 100, faden, fragen, lernfrage, wie schaffe ich es, ich habe gelernt, hat es geklappt, was hat gestört, vorschlag, neuer eintrag, ohne scheibe, trockentraining, mentaltraining, dazugekommen, lösen, dazunehmen, vom selben abend, papierkorb, abschaltbar, hinweis, nur du siehst, zonen, grenze, nahtstellen, parts, results-read, partline, export, konto löschen, deine daten, stufe 2, 2a, treffsicher]
 part_of: ["[[spiegel]]"]
 governed_by: ["[[adr-033]]", "[[adr-030]]", "[[adr-029]]"]
 relates_to: ["[[spiegel-navigation]]", "[[spiegel-privacy]]", "[[spiegel-data-model]]", "[[spiegel-db-schema]]", "[[spiegel-roadmap]]", "[[spiegel-account-transfer]]"]
@@ -11,10 +11,10 @@ relates_to: ["[[spiegel-navigation]]", "[[spiegel-privacy]]", "[[spiegel-data-mo
 
 **TL;DR** Das Tagebuch ist der zweite Teil von Spiegel ([[adr-033]]) und Treffsicher 2.0: was in Treffsicher genutzt
 wurde, wird besser, was kaum genutzt wurde, wird einfacher oder fällt weg. Ein Eintrag gehört zu einem Abend und einer
-Disziplin, mit Vorhaben, Notiz, Vorher, Nachher und dem Faden der eigenen Fragen. Das Tagebuch ist je Konto
+Disziplin, mit Vorhaben, Notiz, Vorher, Nachher und den eigenen Fragen über die Zeit (Reiter „Fragen“). Das Tagebuch ist je Konto
 abschaltbar, liest Scheiben nur über eine schmale Schnittstelle und erscheint im Ergebnisteil nur an festen Stellen.
 Gebaut in Teil 2a (28. Oktober 2026) mit Export und Konto löschen über beide Teile; in 2b Ziele, die Spiegel misst,
-ohne zu urteilen, und Schuss-Abläufe oben im Faden.
+ohne zu urteilen, und Schuss-Abläufe in einem eigenen Reiter.
 
 # Spiegel — Tagebuch
 
@@ -26,14 +26,14 @@ Grundlage sind die Zählungen in der Prod-Kopie von Treffsicher (265 Einheiten i
   Liste.
 - Beobachtung, Erkenntnis und Lernfrage werden zusammen genutzt (24, vier Konten) und bauen über Monate aufeinander
   auf. Daraus werden die **Notiz** (immer sichtbar), zwei Satzanfänge unter Nachher („Ich habe gelernt, dass …“, „Wie
-  schaffe ich es, …?“) und der **Faden**.
+  schaffe ich es, …?“) und der Reiter **Fragen** (im Code der Faden, `thread`).
 - Befinden (39) füllen fast nur zwei Konten, Prognose (14) und Feedback (21) fast nur bei Wettkämpfen, Ausführung je
   Serie bei 180 von 1037 Serien. Sie bleiben als **Abschnitte**, die leer nur eine Zeile mit „+“ sind.
 - Jedes übrige Textfeld kam höchstens 18-mal vor. Es geht in der Notiz auf (Übernahme in Stufe 3).
 - Ziele (10 in 4 Konten, 8 Ergebnisziele, 7 mit einer Ringzahl im Titel, keines geändert) werden **gemessen**: Spiegel
   zählt, was die alten Titel nur sagten. Einheiten an Ziele anhaken fällt weg.
-- Abläufe (4 in 2 Konten, nie geändert) sind Lesetext: Sie stehen oben im **Faden** ihrer Disziplin und werden als ein
-  Textfeld bearbeitet.
+- Abläufe (4 in 2 Konten, nie geändert) sind Lesetext: Sie stehen im Reiter **Abläufe** unter ihrer Disziplin und
+  werden als ein Textfeld bearbeitet. „Fragen“ bleibt eine Zeitleiste.
 - Anhänge (69 an 56 Einheiten, jede mit Ergebnissen) bekommt das Tagebuch nicht: Sie werden Ausdruck oder Beleg der
   Scheibe (Teil 1f, Stufe 3).
 
@@ -66,10 +66,10 @@ in `SCALE_ASPECTS` (`src/diary/scales.ts`, Test je Abschnitt).
 
 Alle in einer Spalte (`PAGE_SINGLE`), Bereich „Tagebuch“ mit `BookOpen` ([[spiegel-navigation]]).
 
-- **`/diary`:** Kopf mit „Neuer Eintrag“, Umschalter „Einträge · Faden“, Einträge neueste oben nach Monat. Eine Karte
+- **`/diary`:** Kopf mit „Neuer Eintrag“ und den Reitern (unten), Einträge neueste oben nach Monat. Eine Karte
   ist ganz der Link; Titel ist das Vorhaben, sonst die Disziplin. Beim ersten Öffnen steht darüber der Hinweis „Nur du
   siehst dein Tagebuch“ bis „Verstanden“.
-- **`/diary/thread` (Faden):** je Disziplin die Einträge mit Frage als Zeitstrahl, neueste oben, die Disziplin mit der
+- **`/diary/thread` (Fragen):** je Disziplin die Einträge mit Frage als Zeitstrahl, neueste oben, die Disziplin mit der
   jüngsten Frage vorgewählt; darunter je Punkt „Ich habe gelernt, dass …“.
 - **`/diary/new`:** oben „Heute“ (Tag vorbelegt und änderbar, Art, Disziplin, ein Knopf „Anlegen“), der Weg für
   Vorhaben und Prognose vor dem Training; die Scheiben des Tages kommen von selbst dazu. Darunter „Abende ohne Eintrag“
@@ -78,7 +78,8 @@ Alle in einer Spalte (`PAGE_SINGLE`), Bereich „Tagebuch“ mit `BookOpen` ([[s
   Scheibe hervor (liegt er weiter hinten, ist alles offen) oder leitet in ihren Eintrag.
 - **`/diary/[id]`:** Rückweg, Tag, „Disziplin · Art“, die Scheiben wie in der Scheibenliste (kleine Scheibe, Uhrzeit,
   Ringe, die Zeile führt zur Scheibe) mit leisem „Scheiben ändern“, darunter Vorhaben und Notiz in einem Kasten, Vorher
-  (die letzte Frage derselben Disziplin mit „Als Vorhaben nehmen“, Befinden, Prognose mit erwartetem Ergebnis), Nachher
+  (die letzte Frage derselben Disziplin mit „Als Vorhaben nehmen“, nur solange das Vorhaben leer ist; Befinden,
+  Prognose mit erwartetem Ergebnis), Nachher
   („Hat es geklappt?“ mit Vorhaben oder gespeicherter Antwort, die Satzanfänge, „Was hat gestört?“, Feedback mit der
   Prognose gestrichelt, Ausführung je Serie als Block je Scheibe mit eingerückten Serien), am Ende „Dieser Eintrag“
   (Tag, Art und Disziplin nur ohne Scheiben änderbar, Löschen).
@@ -87,6 +88,8 @@ Alle in einer Spalte (`PAGE_SINGLE`), Bereich „Tagebuch“ mit `BookOpen` ([[s
   nicht davon ab, was jemand bisher genutzt hat (Konsistenz als Grundsatz, [[adr-035]]).
 - Texte sind gesteuerte Felder mit „Speichern“ und „Verwerfen“; wer mit Ungespeichertem geht, wird gefragt.
 
+- **Reiter** „Einträge · Fragen · Ziele · Abläufe“ (`DiaryHeader`), am Telefon in einer Zeile bis 360 px; der Knopf oben
+  folgt dem Reiter („Neuer Eintrag“, „Neues Ziel“, „Neuer Ablauf“).
 - **`/diary/goals` (Ziele):** dritter Reiter, Knopf „Neues Ziel“; Gruppen Laufend, Kommend, Vorbei; je Karte Satz,
   Disziplin und Ende, der Stand in einer Zeile und der Zustand (die Antwort, sonst läuft, beginnt am …, vorbei).
 - **`/diary/goals/[id]`:** für jedes Ziel dieselbe Folge: Stand, Notiz, „Hat es geklappt?“, Einträge im Zeitraum,
@@ -100,9 +103,11 @@ Alle in einer Spalte (`PAGE_SINGLE`), Bereich „Tagebuch“ mit `BookOpen` ([[s
   mit“: Scheibe, Serie oder Schnitt ab einer Ringzahl, Wertung und Schusszahl als eine Zeile mit „Ändern“ (vorbelegt
   aus `resultGoalDefaults`), welche Scheiben; darunter die Vorschau (`previewGoalAction`, 300 ms nach der letzten
   Änderung). Klebende Leiste, Wächter beim Verlassen.
-- **Faden mit Abläufen:** oben der Kasten „Abläufe“ der gewählten Disziplin (Zeile je Ablauf, „+“ legt an), Chips der
-  Disziplinen mit Frage oder Ablauf, zuletzt „Ohne Disziplin“ (`?family=none`, `NO_FAMILY` in `src/diary/paths.ts`),
-  wenn ein Ablauf keine hat; dort nur Abläufe.
+- **`/diary/routines` (Abläufe):** vierter Reiter, Knopf „Neuer Ablauf“; je Disziplin eine Gruppe nach Name,
+  „Ohne Disziplin“ zuletzt (auch eine Disziplin, die es für das Konto nicht mehr gibt, `routineGroups`); je Karte Name
+  und Zahl der Schritte. Die Rückwege von einem Ablauf führen hierher (`ROUTINES_PATH` in `src/diary/paths.ts`). Der
+  Reiter „Fragen“ zeigt keine Abläufe. In der Oberfläche heißt der Faden „Fragen“; Adresse und Namen im Code bleiben
+  `thread`.
 - **`/diary/routines/[id]`:** Leseseite mit nummerierten Schritten in weichen Kreisen, „Dieser Ablauf“ (Bearbeiten,
   Disziplin ändern oder festlegen an Ort und Stelle, Löschen). **`/diary/routines/new`, `…/[id]/edit`:** Name, bei neu die
   Disziplin, die Schritte als ein Textfeld (Absatz = Schritt, erste Zeile = Titel, `textToSteps`/`stepsToText`), der
@@ -119,7 +124,8 @@ Alle in einer Spalte (`PAGE_SINGLE`), Bereich „Tagebuch“ mit `BookOpen` ([[s
   gerundet. Spiegel urteilt nicht, die Zahlen stehen neben „Hat es geklappt?“.
 - Gelesen über `resultGoalCards` und `resultGoalDefaults` (`src/lib/results-read.ts`), Serien aus der Projektion.
 - Start: je Block nach der Zeile des Eintrags die des zuletzt angelegten laufenden Ziels mit Messung
-  (`startLines` gibt je Block eine Liste, `StartScreen` zeigt Titel, Zustand, Aktion).
+  (`startLines` gibt je Block eine Liste, `StartScreen` zeigt Titel, Zustand, Aktion): „Ziel ab 350 · 6 von 20
+  Scheiben ›“, „Ziel ab 91 · 31 von 56 Serien ›“, beim Schnitt „Ziel Schnitt 350 · bisher 347,2 ›“.
 
 ## Scheiben vom selben Abend
 
@@ -157,7 +163,7 @@ angeboten. Eine gelöschte Scheibe steht als „Scheibe gelöscht“. Das Einles
 - Ziele und Abläufe liegen gelöscht ebenso 30 Tage im Papierkorb (Abschnitt „Im Tagebuch“), `purgeExpiredDiaryTrash`
   löscht alle drei.
 - Löschen legt einen Eintrag 30 Tage in den Papierkorb („Eintrag gelöscht · Rückgängig“), danach löscht `diaryJobs`
-  ihn beim Start und stündlich endgültig. Im Papierkorb steht er nirgends sonst, auch nicht als Frage im Faden, und
+  ihn beim Start und stündlich endgültig. Im Papierkorb steht er nirgends sonst, auch nicht unter „Fragen“, und
   seine Scheiben sind frei (oben „Papierkorb“).
 - Nur der Schütze sieht sein Tagebuch, auch kein Admin ([[spiegel-privacy]]).
 

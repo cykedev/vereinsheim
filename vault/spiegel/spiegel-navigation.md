@@ -52,7 +52,7 @@ Reiter einer App; das Rückgrat ist die Liste der Scheiben. Die Seiten einer Sch
 | Profil | untere Leiste, für Admins oben die Bereiche des Admins | Seitenleiste | `/profile` |
 | Admin | in Profil oben (Abschnitt „Admin“ mit allen Bereichen), nur für Admins | letzter Eintrag der Seitenleiste, nur für Admins | `/admin{/users,/disciplines,/lists,/site}` |
 | Scheibe holen | Mitte der unteren Leiste, nur das Symbol (`ScanQrCode`), der Name für Screenreader | Pille „Scheibe holen“ in der Seitenleiste | `/scan` |
-| Tagebuch | nur mit Tagebuch: untere Leiste statt Scheiben (die stehen dann in Profil als „Alle Scheiben“) | nur mit Tagebuch: Seitenleiste nach Scheiben (`BookOpen`) | `/diary`, Faden `/diary/thread`, Neuer Eintrag `/diary/new`, Eintrag `/diary/<id>` ([[spiegel-diary]]) |
+| Tagebuch | nur mit Tagebuch: untere Leiste statt Scheiben (die stehen dann in Profil als „Alle Scheiben“) | nur mit Tagebuch: Seitenleiste nach Scheiben (`BookOpen`) | `/diary`, Fragen `/diary/thread`, Ziele `/diary/goals`, Abläufe `/diary/routines`, Neuer Eintrag `/diary/new`, Eintrag `/diary/<id>` ([[spiegel-diary]]) |
 
 Seiten ohne eigenen Bereich:
 

@@ -430,7 +430,8 @@ Stand mit `past` (`MAX_OBSERVED_LAG_MS`, SF-79).
   (`tools/pruefen-diary.ts`), die am Ende alle Einträge, Ziele und Abläufe des Demo-Kontos löscht und das Tagebuch
   ausschaltet. **Ziele** (`src/diary/goals/`): Spiegel misst (`measureGoal`, rein, über `resultGoalCards` und die Serien
   der Projektion) und urteilt nicht; „Hat es geklappt?“ antwortet der Schütze. **Abläufe** (`src/diary/routines/`) stehen
-  oben im Faden, ohne Disziplin unter „Ohne Disziplin“, bearbeitet als ein Text (`textToSteps`). Client-Komponenten des
+  im eigenen Reiter `/diary/routines` je Disziplin (`routineGroups`), ohne Disziplin unter „Ohne Disziplin“, bearbeitet
+  als ein Text (`textToSteps`); „Fragen“ (`/diary/thread`, im Code der Faden) zeigt keine Abläufe. Client-Komponenten des
   Tagebuchs importieren aus `queries.ts`, `goals/queries.ts` und `routines/queries.ts` nur Typen: Ein Wert daraus zieht
   die Datenbank ins Bündel des Browsers (`next build` scheitert mit `node:module`); geteilte Werte stehen in
   `src/diary/paths.ts` und `components/styles.ts`.

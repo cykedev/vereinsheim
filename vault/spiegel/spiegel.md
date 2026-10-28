@@ -37,7 +37,7 @@ Features, die Deploy-Vertrag, Schema oder ADRs berühren, laufen interaktiv stat
 8. [[spiegel-privacy]] — Datenschutz, Rollen, verdeckte Wertung.
 9. [[spiegel-roadmap]] und [[spiegel-open-questions]] — was wir wann bauen und was noch offen ist.
 10. [[spiegel-account-transfer]] — Abgleich der Konten vor der Übernahme aus Treffsicher, Zuordnung als Datei.
-11. [[spiegel-diary]] — das Tagebuch als zweiter Teil: Einträge, Faden, Stellen im Ergebnisteil, Deine Daten.
+11. [[spiegel-diary]] — das Tagebuch als zweiter Teil: Einträge, Fragen, Ziele, Abläufe, Stellen im Ergebnisteil, Deine Daten.
 
 ## Domänenwissen
 
