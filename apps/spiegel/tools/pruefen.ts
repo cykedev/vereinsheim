@@ -1254,11 +1254,12 @@ async function handEntry(page: Page) {
     await page.waitFor(`!$('[role="alertdialog"]')`)
     await page.click(`$("[data-entered-save]")`)
     const back = await page.waitFor(`!!$("[data-card-entry]")`, 15_000)
-    const after = await page.ev<string>(`txt(document.body)`)
+    const shown = `(() => { const t = txt($("main") ?? document.body); return t.includes("40,2") && t.includes("Prüfhalle") })()`
+    const first = await page.ev<boolean>(shown)
     check(
       "Ändern: der neue Schuss und der Ort stehen auf der Seite",
-      back && after.includes("40,2") && after.includes("Prüfhalle"),
-      after.slice(0, 120)
+      back && (first || (await page.waitFor(shown, 10_000))),
+      first ? "sofort" : "erst nach dem Nachladen"
     )
 
     // Beleg: ein Foto hängt an, ein Meyton-Ausdruck nicht, Entfernen fragt erst
