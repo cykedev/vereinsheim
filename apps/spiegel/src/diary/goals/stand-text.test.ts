@@ -103,6 +103,12 @@ describe("Sätze zum Stand", () => {
     expect(standLine(rule({ measure: "average" }), { ...none, cards: 0 })).toBe(
       "Noch keine Scheibe in diesem Zeitraum."
     )
+    // auf Start ein Satz statt „0 von 0“
+    expect(startState(rule(), { ...none, cards: 6 })).toBe("noch keine Scheibe zählt")
+    expect(startState(rule({ measure: "series" }), none)).toBe("noch keine Serie zählt")
+    expect(startState(rule({ measure: "average" }), { ...none, mean: null })).toBe(
+      "noch keine Scheibe zählt"
+    )
   })
 
   it("Kacheln: zuletzt, das Beste mit Tag, der Schnitt der gezählten", () => {

@@ -176,7 +176,7 @@ describe("Stellen für das Tagebuch", () => {
     ]
     expect(lines.map((line) => line.title)).toEqual(["Tagebuch", "Ziel ab 90"])
     expect(lines[1]).toMatchObject({ href: `/diary/goals/${latest.id}`, action: "" })
-    expect(lines[1].state).toMatch(/^\d+ von \d+ Serien?$/)
+    expect(lines[1].state).toMatch(/^(\d+ von \d+ Serien?|noch keine Serie zählt)$/)
     const average = await goal("Schnitt", {
       measure: "average",
       threshold: "350",
@@ -188,7 +188,7 @@ describe("Stellen für das Tagebuch", () => {
       `${day}|${slug}`
     ]
     expect(withAverage[1].title).toBe("Ziel Schnitt 350")
-    expect(withAverage[1].state).toMatch(/^(bisher \d+(,\d)?|noch keine Scheibe)$/)
+    expect(withAverage[1].state).toMatch(/^(bisher \d+(,\d)?|noch keine Scheibe zählt)$/)
     await db.diaryGoal.deleteMany({ where: { id: { in: [first.id, latest.id, average.id] } } })
   })
 })

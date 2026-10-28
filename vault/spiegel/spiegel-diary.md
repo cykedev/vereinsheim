@@ -125,7 +125,8 @@ Alle in einer Spalte (`PAGE_SINGLE`), Bereich „Tagebuch“ mit `BookOpen` ([[s
 - Gelesen über `resultGoalCards` und `resultGoalDefaults` (`src/lib/results-read.ts`), Serien aus der Projektion.
 - Start: je Block nach der Zeile des Eintrags die des zuletzt angelegten laufenden Ziels mit Messung
   (`startLines` gibt je Block eine Liste, `StartScreen` zeigt Titel, Zustand, Aktion): „Ziel ab 350 · 6 von 20
-  Scheiben ›“, „Ziel ab 91 · 31 von 56 Serien ›“, beim Schnitt „Ziel Schnitt 350 · bisher 347,2 ›“.
+  Scheiben ›“, „Ziel ab 91 · 31 von 56 Serien ›“, beim Schnitt „Ziel Schnitt 350 · bisher 347,2 ›“; zählt noch nichts,
+  „… · noch keine Scheibe zählt ›“ statt „0 von 0“.
 
 ## Scheiben vom selben Abend
 

@@ -98,10 +98,14 @@ export function basisLine(stand: GoalStand): string | null {
   ].join(" · ")
 }
 
-/** der Zustand der Zeile auf Start: „6 von 14 Scheiben“, beim Schnitt „bisher 352,9“ */
+/**
+ * der Zustand der Zeile auf Start: „6 von 14 Scheiben“, beim Schnitt „bisher 352,9“; zählt nichts, „noch keine Scheibe
+ * zählt“ (bei Serie „noch keine Serie zählt“) statt „0 von 0“
+ */
 export function startState(rule: GoalRule, stand: GoalStand): string {
-  if (rule.measure === "average")
-    return stand.mean === null ? "noch keine Scheibe" : `bisher ${meanText(stand.mean)}`
+  if (!stand.counted || (rule.measure === "average" && stand.mean === null))
+    return `noch keine ${unit(rule.measure === "series" ? "series" : "card", 1)} zählt`
+  if (rule.measure === "average") return `bisher ${meanText(stand.mean!)}`
   return `${stand.hits} von ${stand.counted} ${unit(rule.measure, stand.counted)}`
 }
 
