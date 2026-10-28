@@ -7,12 +7,14 @@ import { consentRows } from "@/lib/consent/queries"
 import { db } from "@/lib/db"
 import { trashCount } from "@/lib/db/reads"
 import { isAdmin, requireSession } from "@/lib/auth-helpers"
+import { profileParts } from "@/parts/profile"
 
 export const metadata: Metadata = { title: "Profil" }
 
 export default async function ProfileRoute() {
   const session = await requireSession()
   const timeZone = getDisplayTimeZone()
+  const parts = await profileParts(db, session.user.id)
   return (
     <ProfileScreen
       name={session.user.name ?? null}
@@ -20,6 +22,7 @@ export default async function ProfileRoute() {
       isAdmin={isAdmin(session.user.role)}
       sportpass={await consentRows(session.user.id, timeZone)}
       trashCount={await trashCount(db, session.user.id)}
+      diary={parts.diary}
     />
   )
 }

@@ -3,7 +3,7 @@
 import { signOut } from "next-auth/react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useState, type ReactNode } from "react"
 
 import { RouteLink } from "@vereinsheim/shot-ui/nav/RouteLink"
 import { Button } from "@vereinsheim/ui/button"
@@ -31,6 +31,7 @@ export function ProfileScreen({
   isAdmin,
   sportpass,
   trashCount,
+  diary,
 }: {
   name: string | null
   email: string
@@ -39,6 +40,8 @@ export function ProfileScreen({
   sportpass: ConsentRow[]
   /** Scheiben im Papierkorb */
   trashCount: number
+  /** Platz für das Tagebuch ([[adr-033]]): der Profil-Teil kennt nur den Platz */
+  diary?: ReactNode
 }) {
   const router = useRouter()
   const [leaving, setLeaving] = useState(false)
@@ -69,6 +72,8 @@ export function ProfileScreen({
             </div>
           </nav>
         )}
+
+        {diary}
 
         <SportpassConsents consents={sportpass} version={CURRENT_CONSENT_VERSION} />
 

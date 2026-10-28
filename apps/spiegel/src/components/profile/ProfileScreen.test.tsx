@@ -47,3 +47,20 @@ describe("Profil (Markup)", () => {
     expect(html).not.toContain('href="/admin')
   })
 })
+
+describe("Platz für das Tagebuch", () => {
+  it("steht vor der Zustimmung per Sportpass", () => {
+    const html = renderToStaticMarkup(
+      createElement(ProfileScreen, {
+        name: null,
+        email: "schuetze@example.com",
+        isAdmin: false,
+        sportpass: [],
+        trashCount: 0,
+        diary: createElement("div", { "data-diary-slot": true }),
+      })
+    )
+    expect(html).toContain("data-diary-slot")
+    expect(html.indexOf("data-diary-slot")).toBeLessThan(html.indexOf("Sportpass"))
+  })
+})
