@@ -351,8 +351,8 @@ Holen“ ins Textbuch Spiegel (steht in `reports/2026-10-27-fetch-no-request-cap
 
 ## Wie es weitergeht
 
-1. **1d Handeingabe** planen (mit dem User), eigenes Release auf `main`; dazu das Admin-Formular für Disziplinen ohne
-   Meyton-ID (3 eigene Ausdrucke blieben beim Import ohne passende Disziplin).
+1. **1d Handeingabe** ist in `main` (`dbc9e45c`, Migration `20261028120000_hand_entry`, keine neue Brücke) und wartet
+   aufs Release. Danach am iPhone prüfen: ein HEIC-Foto als Beleg und einen PDF-Beleg in Safari öffnen.
 2. **Stufe 2 Tagebuch:** Entwurf der Oberfläche mit dem User, während 1d gebaut wird; Teilpläne auf dem Basisbranch.
 3. **Stufe 3 Übernahme**, dann **Stufe 4 Ruhestand**.
 
@@ -374,7 +374,7 @@ die eigentlich die Wertung war.
 | 1b-2 | `plans/2026-10-27-tis-1b2-fetch-card.md`     | `feat/tis-1b2-fetch-card` (von `main`)     | tis-1b2-fetch-card       | in `main` (`053c11b8`), noch nicht deployt              |
 | 1c-0 | `plans/2026-10-27-tis-1c0-printout-check.md` | `feat/tis-1c0-printout-check` (von `main`) | tis-1c0-printout-check   | in `main` (`028234b0`); Ergebnis in [[meyton-printout]] |
 | 1c   | `plans/2026-10-27-tis-1c-printout-values.md` | `feat/tis-1c-printout-values` (von `main`) | `tis-1c-printout-values` | in `main` (`88ea1140`); Luftgewehr-Fix, Leser v2        |
-| 1d   | `plans/2026-10-28-tis-1d-hand-entry.md`      | `feat/tis-1d-hand-entry` (von `main`)      | `tis-1d-hand-entry`      | Entscheidungen da, Plan entsteht in der Kindsession     |
+| 1d   | `plans/2026-10-28-tis-1d-hand-entry.md`      | `feat/tis-1d-hand-entry` (von `main`)      | `tis-1d-hand-entry`      | in `main` (`dbc9e45c`), noch nicht deployt              |
 | 1e   |                                              |                                            |                          | in 1a-2                                                 |
 | 2    |                                              |                                            |                          | offen                                                   |
 | 3    |                                              |                                            |                          | offen                                                   |
