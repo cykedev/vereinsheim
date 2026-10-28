@@ -18,7 +18,7 @@ import { Label } from "@vereinsheim/ui/label"
 import type { CardKind } from "@/generated/prisma/enums"
 import { fetchCardById, fetchCardByLink, fetchCardByUpload } from "@/lib/fetch-card/actions"
 import type { LegacyRequest, NewCardChoice, NewCardOption } from "@/lib/fetch-card/queries"
-import { fetchErrorText, fetchToast, type FetchOutcome } from "@/lib/fetch-card/texts"
+import { fetchErrorText, fetchToast, HAND_INTRO, type FetchOutcome } from "@/lib/fetch-card/texts"
 import type { ActionResult } from "@/lib/types"
 
 import { CameraScan } from "./CameraScan"
@@ -42,7 +42,7 @@ function WayCard({
   error,
   children,
 }: {
-  way: Way
+  way: Way | "hand"
   title: string
   sentence?: string
   error: string | null
@@ -84,7 +84,8 @@ export function sheetPreset(
 /**
  * Seite „Scheibe holen“: Kamera, Link, PDF und ID in dieser Folge, jeder Weg gleich. Liegt die Scheibe schon in Spiegel,
  * öffnet Spiegel sie; sonst fragt das Blatt „Neue Scheibe“ nach Disziplin und Art und schickt dieselbe Quelle noch
- * einmal. Jeder Weg hat sein eigenes „läuft“ und seinen eigenen Fehler. Darunter ältere Aufträge, solange es welche gibt.
+ * einmal. Jeder Weg hat sein eigenes „läuft“ und seinen eigenen Fehler. Zuletzt „Von Hand eintragen“: dasselbe Blatt,
+ * danach das Formular (`/cards/new`). Darunter ältere Aufträge, solange es welche gibt.
  */
 export function ScanScreen({
   options,
@@ -107,6 +108,7 @@ export function ScanScreen({
   const [day, setDay] = useState(today)
   const [errors, setErrors] = useState<Partial<Record<Way, string>>>({})
   const [idState, setIdState] = useState<ActionResult<FetchOutcome> | null>(null)
+  const [handSheet, setHandSheet] = useState(false)
   const [sheet, setSheet] = useState<{
     source: Source
     idLine: string
@@ -365,6 +367,25 @@ export function ScanScreen({
           </form>
         </WayCard>
 
+        <WayCard
+          way="hand"
+          title="Von Hand eintragen"
+          sentence="Für eine Scheibe ohne Ausdruck, etwa von einer anderen Anlage oder vom Papier."
+          error={null}
+        >
+          <div>
+            <Button
+              type="button"
+              variant="outline"
+              className="h-10"
+              data-fetch-hand
+              onClick={() => setHandSheet(true)}
+            >
+              Eintragen
+            </Button>
+          </div>
+        </WayCard>
+
         <LegacyRequests requests={legacy} timeZone={timeZone} />
       </section>
 
@@ -380,6 +401,21 @@ export function ScanScreen({
           preset={sheetPreset(preset, sheet.disciplineId)}
           pending={pendingOf[sheet.source.way]}
           onCreate={(choice) => submit(sheet.source, choice)}
+        />
+      )}
+      {handSheet && (
+        <NewCardSheet
+          open
+          onClose={() => setHandSheet(false)}
+          relifts={false}
+          intro={HAND_INTRO}
+          confirmLabel="Weiter"
+          options={options}
+          preset={preset}
+          pending={false}
+          onCreate={(choice) =>
+            router.push(`/cards/new?discipline=${choice.disciplineId}&kind=${choice.kind}`)
+          }
         />
       )}
     </Page>

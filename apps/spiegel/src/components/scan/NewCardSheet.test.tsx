@@ -57,3 +57,25 @@ describe("Blatt „Neue Scheibe“ (Markup)", () => {
     expect(html).toContain("Diese Scheibe hattest du gelöscht. Spiegel holt sie wieder.")
   })
 })
+
+describe("Blatt „Neue Scheibe“ auf dem Weg von Hand (Markup)", () => {
+  it("eigener Satz, keine ID-Zeile, „Weiter“", () => {
+    const html = renderToStaticMarkup(
+      createElement(NewCardSheet, {
+        open: true,
+        onClose: () => {},
+        relifts: false,
+        intro: "Wähle Disziplin und Art. Danach trägst du die Werte ein.",
+        confirmLabel: "Weiter",
+        options: OPTIONS,
+        preset: { disciplineId: 1, kind: "training" },
+        pending: true,
+        onCreate: () => {},
+      })
+    )
+    expect(html).toContain("Wähle Disziplin und Art. Danach trägst du die Werte ein.")
+    expect(html).not.toContain("data-new-card-id")
+    expect(html).toContain(">Weiter<")
+    expect(html).not.toContain("Anlegen")
+  })
+})

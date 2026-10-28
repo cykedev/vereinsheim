@@ -97,5 +97,8 @@ export function newCardIntro(withValues: boolean): string {
     : "Diese Scheibe liegt noch nicht in Spiegel. Spiegel legt sie an und holt die Werte von der Anlage. Wähle Disziplin und Art. Liefert die Anlage die Scheibe, gilt ihre Disziplin."
 }
 
+/** der Satz oben im Blatt „Neue Scheibe“ auf dem Weg von Hand */
+export const HAND_INTRO = "Wähle Disziplin und Art. Danach trägst du die Werte ein."
+
 /** alle Fehlertexte, für die Tests der Schreibregeln */
 export const ALL_ERROR_TEXTS: readonly string[] = Object.values(ERROR_TEXT)

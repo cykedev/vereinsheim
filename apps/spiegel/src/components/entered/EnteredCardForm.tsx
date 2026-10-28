@@ -29,14 +29,12 @@ import {
   type FormDiscipline,
 } from "@/lib/entered/form"
 import type { NewCardOption } from "@/lib/fetch-card/queries"
+import { HAND_INTRO } from "@/lib/fetch-card/texts"
 import { PLACE_MAX } from "@/lib/entered/details"
 import type { ActionResult } from "@/lib/types"
 
 import { NewCardSheet } from "../scan/NewCardSheet"
 import { SeriesRows } from "./SeriesRows"
-
-/** Satz im Blatt „Neue Scheibe“ auf dem Weg von Hand */
-export const HAND_INTRO = "Wähle Disziplin und Art. Danach trägst du die Werte ein."
 
 const CARD = "grid gap-4 rounded-2xl border border-border bg-card p-4"
 const HEADING = "text-[13px] font-semibold text-muted-foreground"

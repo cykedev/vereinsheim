@@ -26,14 +26,24 @@ const render = (legacy: Parameters<typeof ScanScreen>[0]["legacy"] = []) =>
   )
 
 describe("Seite „Scheibe holen“ (Markup)", () => {
-  it("Titel, Satz und vier Wege in der Folge Kamera, Link, PDF, ID", () => {
+  it("Titel, Satz und fünf Wege in der Folge Kamera, Link, PDF, ID, von Hand", () => {
     const html = render()
     expect(html).toMatch(/<h1[^>]*>Scheibe holen<\/h1>/)
     expect(html).toContain("Liegt die Scheibe schon in Spiegel, öffnet Spiegel sie.")
     const ways = [...html.matchAll(/data-fetch-way="([a-z]+)"/g)].map((m) => m[1])
-    expect(ways).toEqual(["camera", "link", "upload", "id"])
-    for (const title of ["QR-Code scannen", "Link einfügen", "PDF hochladen", "ID eintippen"])
+    expect(ways).toEqual(["camera", "link", "upload", "id", "hand"])
+    for (const title of [
+      "QR-Code scannen",
+      "Link einfügen",
+      "PDF hochladen",
+      "ID eintippen",
+      "Von Hand eintragen",
+    ])
       expect(html).toContain(`>${title}</h2>`)
+    expect(html).toContain(
+      "Für eine Scheibe ohne Ausdruck, etwa von einer anderen Anlage oder vom Papier."
+    )
+    expect(html).toContain(">Eintragen</button>")
   })
 
   it("Felder mit Namen: Link, PDF, ID und Tag", () => {
