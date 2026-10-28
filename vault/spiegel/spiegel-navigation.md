@@ -334,8 +334,11 @@ Teil 1d, entschieden mit dem User am 28. Oktober 2026):
   senkrecht in mm mit Richtung. Fehler stehen am Feld. „Zurück“ mit Eingaben fragt (`enteredDiscard`).
 - **Ändern:** Zeile „Eintrag“ im Kasten „Diese Scheibe“ („Von Hand eingetragen“, „Aus Treffsicher übernommen“) mit
   „Ändern“ zu `/cards/<id>/edit`. Geänderte Werte sind eine neue Revision (`writeEnteredCard`), Tag, Uhrzeit und Ort
-  stehen an der Scheibe ohne Verlauf, wie Disziplin und Art. Kann das Formular nicht alle Angaben zeigen (Lage, Zeit
-  oder Probe an Schüssen), fehlt „Ändern“. Löschen wie jede Scheibe.
+  stehen an der Scheibe ohne Verlauf, wie Disziplin und Art. Kann das Formular die Angaben nicht genau so wieder
+  speichern (Lage, Zeit oder Probe an Schüssen, Summen mit Ringen und Zehnteln, Serien einer anderen Serienlänge als
+  heute, eine Mitte mit eigener Schusszahl), fehlt „Ändern“, und die Action lehnt ab (`detailsToForm` prüft den Weg
+  hin und zurück). Wechselt die Disziplin im Formular, bleibt alles Getippte (`fitToDiscipline`); zugeklappt gilt die
+  Summe aus den Schüssen (`toggleRow`). Bleiben Tag und Uhrzeit, bleibt der gespeicherte Beginn auf die Millisekunde. Löschen wie jede Scheibe.
 - **Ort einer Scheibe vom Ausdruck:** Zeile „Ort“ mit einem Blatt (`setCardPlace`). Scheiben der Anlage tragen ihren Ort
   über die Anlage und haben keine Zeile.
 - **Beleg** (Zeile „Beleg“, nur eingetragene Scheiben): ein Foto oder PDF, damit der Schütze später nachsehen kann. Der
