@@ -3,6 +3,7 @@
 import type { CardEntryInfo } from "@/lib/entered/queries"
 import type { CardEvidenceInfo } from "@/lib/evidence/queries"
 import type { CardFetchInfo } from "@/lib/fetch-card/queries"
+import type { PartLine } from "@/lib/part-line"
 import type { Share } from "@/lib/share-actions"
 
 import { CardDiscipline } from "./CardDiscipline"
@@ -12,6 +13,7 @@ import { CardFetch } from "./CardFetch"
 import { CardPlace } from "./CardPlace"
 import { CardPrintout } from "./CardPrintout"
 import { DeleteCard } from "./DeleteCard"
+import { PartLineRow } from "./PartLineRow"
 import { ShareCard } from "./ShareCard"
 
 /**
@@ -31,6 +33,7 @@ export function CardActions({
   share,
   onShareChange,
   back,
+  lines = [],
 }: {
   cardId: string
   /** Tag und Uhrzeit der Scheibe wie in Listen, für die Rückfragen */
@@ -47,6 +50,8 @@ export function CardActions({
   onShareChange: (share: Share | null) => void
   /** der Rückweg nach dem Löschen */
   back: string
+  /** Zeilen anderer Teile (das Tagebuch), ganz oben als erste fachliche Zeilen */
+  lines?: readonly PartLine[]
 }) {
   return (
     <section
@@ -58,6 +63,9 @@ export function CardActions({
         Diese Scheibe
       </h2>
       <div className="grid divide-y divide-border">
+        {lines.map((line) => (
+          <PartLineRow key={line.key} line={line} />
+        ))}
         {entry?.kind === "entered" && (
           <CardEntry cardId={cardId} from={entry.from} editable={entry.editable} />
         )}

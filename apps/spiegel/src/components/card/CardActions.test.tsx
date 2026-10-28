@@ -321,3 +321,39 @@ describe("Belege", () => {
     expect(html).not.toContain("Foto oder PDF anhängen")
   })
 })
+
+describe("Zeilen anderer Teile", () => {
+  it("stehen ganz oben im Kasten, mit Link als Aktion", () => {
+    const html = renderToStaticMarkup(
+      createElement(CardActions, {
+        cardId: "c1",
+        when: "Di 13.10.2026 · 19:12",
+        timeZone: "Europe/Berlin",
+        discipline: {
+          current: "LP 40",
+          family: "Luftpistole",
+          scoring: "rings",
+          stand: null,
+          options: [],
+        },
+        fetch: null,
+        entry: null,
+        share: null,
+        onShareChange: () => {},
+        back: "/cards",
+        lines: [
+          {
+            key: "diary",
+            title: "Tagebuch",
+            state: "Im Eintrag vom Di 13.10.",
+            href: "/diary/e1",
+            action: "Eintrag öffnen",
+          },
+        ],
+      })
+    )
+    expect(html).toContain('data-part-line="diary"')
+    expect(html).toMatch(/<a [^>]*href="\/diary\/e1"[^>]*>Eintrag öffnen<\/a>/)
+    expect(html.indexOf("data-part-line")).toBeLessThan(html.indexOf("data-card-discipline"))
+  })
+})

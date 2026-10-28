@@ -70,6 +70,7 @@ import {
 } from "@vereinsheim/shot-ui/view-state"
 import { ToggleChip } from "@vereinsheim/ui/design2/toggle-chip"
 
+import type { PartLine } from "@/lib/part-line"
 import { CardActions } from "@/components/card/CardActions"
 import type { CardEntryInfo } from "@/lib/entered/queries"
 import type { CardEvidenceInfo } from "@/lib/evidence/queries"
@@ -166,6 +167,8 @@ export function CardScreen({
     entry?: CardEntryInfo | null
     /** die Belege (`cardEvidenceList`) */
     evidence?: readonly CardEvidenceInfo[]
+    /** Zeilen anderer Teile im Kasten „Diese Scheibe“ (das Tagebuch, `@/parts/lines`) */
+    lines?: readonly PartLine[]
   } | null
   /** die Adresse dieser Seite, für Anker und Fortschreiben (`/cards/<id>` bzw. `/share/<uuid>`) */
   path: string
@@ -578,6 +581,7 @@ export function CardScreen({
             share={share}
             onShareChange={setShare}
             back={urlFromRoute(backRoute(route))}
+            lines={own.lines}
           />
         </>
       )}

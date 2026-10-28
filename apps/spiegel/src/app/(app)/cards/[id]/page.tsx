@@ -22,6 +22,7 @@ import { pageContext } from "@/lib/page-context"
 import { listable, withFamily } from "@/lib/pages"
 import { searchOf } from "@/lib/search"
 import { targetDisplay } from "@/lib/target-display"
+import { cardLines } from "@/parts/lines"
 
 export const metadata: Metadata = { title: "Scheibe" }
 
@@ -80,6 +81,7 @@ export default async function CardRoutePage({
         fetch: await cardFetchInfo(db, { cardId: id, ownerId }),
         entry: await cardEntryInfo(db, { cardId: id, ownerId, timeZone: context.timeZone }),
         evidence: await cardEvidenceList(db, { cardId: id, ownerId }),
+        lines: await cardLines(db, { ownerId, cardId: id, timeZone: context.timeZone }),
       }}
       path={`/cards/${encodeURIComponent(id)}`}
       context={context}

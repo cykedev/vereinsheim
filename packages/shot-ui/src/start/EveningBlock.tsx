@@ -48,6 +48,8 @@ export interface EveningBlockProps {
   actions?: ReactNode
   /** ein Hinweis unten, etwa ein Fehler beim Speichern */
   notice?: ReactNode
+  /** eine Zeile eines anderen Teils der App neben dem Weg in die Liste (das Tagebuch) */
+  extra?: ReactNode
   /** öffnet die Erklärung „Grundlage und Herkunft“ an der Grundlage des Abends; ohne kein „?“ */
   onHelp?: (id: string) => void
   className?: string
@@ -70,6 +72,7 @@ export function EveningBlock({
   listRoute,
   actions,
   notice,
+  extra,
   onHelp,
   className,
 }: EveningBlockProps) {
@@ -274,13 +277,16 @@ export function EveningBlock({
           )}
         </div>
       )}
-      <RouteLink
-        route={listRoute}
-        data-evening-list-link
-        className="justify-self-start text-[13px] font-semibold text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring"
-      >
-        Abend in Scheiben ›
-      </RouteLink>
+      <div className="flex flex-wrap gap-x-5 gap-y-1">
+        <RouteLink
+          route={listRoute}
+          data-evening-list-link
+          className="text-[13px] font-semibold text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring"
+        >
+          Abend in Scheiben ›
+        </RouteLink>
+        {extra}
+      </div>
     </section>
   )
 }

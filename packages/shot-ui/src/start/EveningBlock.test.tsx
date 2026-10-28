@@ -20,6 +20,7 @@ const render = (
   extra: {
     actions?: ReturnType<typeof h>
     notice?: ReturnType<typeof h>
+    extra?: ReturnType<typeof h>
     moreRecords?: number
   } = {}
 ) => {
@@ -404,5 +405,18 @@ describe("Grundlage, Grund und Herkunft auf Start", () => {
   it("ein neuer Rekord einer eingetragenen Scheibe nennt die Herkunft leise", () => {
     const records = html().slice(html().indexOf("data-new-records"))
     expect(records).toMatch(/Bestes Ergebnis, Scheibe zu 40 Schuss: [^·]*· eingetragen/)
+  })
+})
+
+describe("Zeile eines anderen Teils", () => {
+  it("steht neben dem Weg in die Liste, ohne sie fehlt sie", () => {
+    const cards = [lp(periodCard("a", 0, [95], { startedAtMs: at(25, 18) }))]
+    const html = render(cards, "decimal", {
+      extra: h("a", { href: "/diary/e1", "data-part": true }, "Tagebuch"),
+    })
+    expect(html).toMatch(
+      /data-evening-list-link[^>]*>Abend in Scheiben ›<\/a><a href="\/diary\/e1" data-part="true">/
+    )
+    expect(render(cards)).not.toContain("data-part")
   })
 })

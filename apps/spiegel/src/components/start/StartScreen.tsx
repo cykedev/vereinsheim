@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { useMemo } from "react"
 
 import type { Scoring } from "@vereinsheim/shot-core/metrics"
@@ -20,6 +21,7 @@ import { Page } from "@vereinsheim/ui/design2/page"
 import { useSavedChoice } from "@/components/shell/useSavedChoice"
 import { marksById } from "@/lib/marks"
 import type { PageContext } from "@/lib/page-context"
+import type { PartLine } from "@/lib/part-line"
 import type { FamilyOption } from "@/lib/pages"
 import { setFamilyScoring } from "@/lib/scoring-actions"
 
@@ -76,6 +78,7 @@ export function StartScreen({
   context,
   open,
   waiting = 0,
+  lines = {},
 }: {
   model: StartModel
   /** die Lagen der Scheiben des Abends, kompakt nach Id */
@@ -86,6 +89,8 @@ export function StartScreen({
   open: OpenItem[]
   /** eigene Scheiben, deren Disziplin ein Admin noch einordnen muss (`waitingForDiscipline`) */
   waiting?: number
+  /** Zeilen anderer Teile je Block (das Tagebuch), Schlüssel `Tag|Familie` */
+  lines?: Readonly<Record<string, PartLine>>
 }) {
   const { timeZone } = context
   const onHelp = useHelp()
@@ -114,6 +119,7 @@ export function StartScreen({
             open={open.length ? <OpenBox items={open} /> : undefined}
             evenings={model.blocks.map((block) => {
               const family = familyOf.get(block.family)
+              const line = lines[`${block.day}|${block.family}`]
               return (
                 <ScoredEveningBlock
                   key={block.family}
@@ -125,6 +131,17 @@ export function StartScreen({
                   cardRoute={cardRoute}
                   recordRoute={recordRoute}
                   onHelp={onHelp}
+                  extra={
+                    line && (
+                      <Link
+                        href={line.href}
+                        data-part-line={line.key}
+                        className="text-[13px] font-semibold text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring"
+                      >
+                        {`${line.title} · ${line.action} ›`}
+                      </Link>
+                    )
+                  }
                   listRoute={{
                     page: "cards",
                     query: { ...DEFAULT_LIST, family: block.family },
