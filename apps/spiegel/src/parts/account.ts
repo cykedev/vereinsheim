@@ -40,7 +40,7 @@ export function accountExport(
   })
 }
 
-export type AccountDeleteResult = "deleted" | "wrongPassword" | "lastAdmin" | "gone"
+export type AccountDeleteResult = "deleted" | "wrongPassword" | "lastAdmin" | "gone" | "changed"
 
 /**
  * Das eigene Konto löschen, mit dem Passwort bestätigt. Ein Admin-Konto nur, wenn ein anderes aktives bleibt. Eine
@@ -67,19 +67,31 @@ export async function deleteAccount(
   )
 }
 
-/** der Teil von `deleteAccount` in der Transaktion, nach der Prüfung des Passworts */
+/**
+ * der Teil von `deleteAccount` in der Transaktion, nach der Prüfung des Passworts. Die Sperren in einer Folge: Ist das
+ * Konto ein Admin, alle aktiven Admin-Zeilen nach Kennung in einer Anweisung (auch die eigene), so warten zwei Admins,
+ * die sich gleichzeitig löschen, aufeinander statt über Kreuz; dann die eigene Zeile. Hat sich die Rolle dazwischen
+ * geändert, geht es nicht.
+ */
 export async function deleteAccountIn(
   tx: Prisma.TransactionClient,
   userId: string
 ): Promise<AccountDeleteResult> {
-  const [row] = await tx.$queryRaw<{ role: string }[]>`
-    SELECT role::text AS role FROM "User" WHERE id = ${userId} FOR UPDATE`
-  if (!row) return "gone"
-  if (row.role === "ADMIN") {
+  const before = await tx.user.findUnique({
+    where: { id: userId },
+    select: { role: true, isActive: true },
+  })
+  if (!before) return "gone"
+  const admin = before.role === "ADMIN" && before.isActive
+  if (admin) {
     const admins = await tx.$queryRaw<{ id: string }[]>`
       SELECT id FROM "User" WHERE role = 'ADMIN' AND "isActive" ORDER BY id FOR UPDATE`
-    if (!admins.some((admin) => admin.id !== userId)) return "lastAdmin"
+    if (!admins.some((row) => row.id !== userId)) return "lastAdmin"
   }
+  const [row] = await tx.$queryRaw<{ role: string; isActive: boolean }[]>`
+    SELECT role::text AS role, "isActive" FROM "User" WHERE id = ${userId} FOR UPDATE`
+  if (!row) return "gone"
+  if ((row.role === "ADMIN" && row.isActive) !== admin) return "changed"
   await tx.sportpassConsent.deleteMany({ where: { userId } })
   const cards = await tx.card.findMany({ where: { ownerId: userId }, select: { id: true } })
   await purgeCards(

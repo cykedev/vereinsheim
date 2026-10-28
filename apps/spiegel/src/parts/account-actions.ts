@@ -16,7 +16,8 @@ export async function deleteOwnAccount(password: string): Promise<ActionResult> 
   const session = await getAuthSession()
   if (!session || session.user.mustChangePassword || typeof password !== "string")
     return { error: ACCOUNT_TEXTS.failed }
-  const result = await deleteAccount(db, session.user.id, password)
+  // ein Abbruch der Transaktion (Zeitgrenze, Verklemmung mit dem Einlesen) ist ein Ergebnis, kein Fehler der Seite
+  const result = await deleteAccount(db, session.user.id, password).catch(() => "failed" as const)
   switch (result) {
     case "deleted":
       sweepUploadsSoon(db)
@@ -26,6 +27,8 @@ export async function deleteOwnAccount(password: string): Promise<ActionResult> 
     case "lastAdmin":
       return { error: ACCOUNT_TEXTS.lastAdmin }
     case "gone":
+    case "changed":
+    case "failed":
       return { error: ACCOUNT_TEXTS.failed }
   }
 }

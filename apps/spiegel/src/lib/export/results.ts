@@ -86,11 +86,12 @@ export async function* resultsExport(
   let cursor: string | undefined
   let first = true
   for (;;) {
+    // nach der Kennung weiter, nicht über `cursor`: Löscht der Papierkorb die letzte Scheibe eines Stapels, endete der
+    // Export sonst still
     const cards = await db.card.findMany({
-      where: { ownerId: userId, ownerPending: false },
+      where: { ownerId: userId, ownerPending: false, ...(cursor ? { id: { gt: cursor } } : {}) },
       orderBy: { id: "asc" },
       take: batch,
-      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
       select: CARD_SELECT,
     })
     for (const card of cards) {

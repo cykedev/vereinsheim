@@ -107,6 +107,9 @@ export async function updateUser(
     // sonst beide noch einen anderen aktiven Admin
     const blocked = await db.$transaction(
       async (tx) => {
+        // dieselbe Sperre wie „Konto löschen“ (`deleteAccountIn`): Ein Admin, der sich gerade löscht, hält diese Zeilen,
+        // und ohne sie zählte diese Transaktion ihn noch mit
+        await tx.$queryRaw`SELECT id FROM "User" WHERE role = 'ADMIN' AND "isActive" ORDER BY id FOR UPDATE`
         const blocked = accountChangeBlocked({
           actorId: actor,
           target,
