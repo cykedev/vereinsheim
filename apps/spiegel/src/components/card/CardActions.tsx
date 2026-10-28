@@ -6,6 +6,7 @@ import type { Share } from "@/lib/share-actions"
 
 import { CardDiscipline } from "./CardDiscipline"
 import { CardEntry } from "./CardEntry"
+import { CardEvidence } from "./CardEvidence"
 import { CardFetch } from "./CardFetch"
 import { CardPlace } from "./CardPlace"
 import { CardPrintout } from "./CardPrintout"
@@ -13,7 +14,7 @@ import { DeleteCard } from "./DeleteCard"
 import { ShareCard } from "./ShareCard"
 
 /**
- * Kasten „Diese Scheibe“ am Ende der Seite einer Scheibe, nur für den Besitzer: Eintrag (eingetragene Scheiben), Ausdruck
+ * Kasten „Diese Scheibe“ am Ende der Seite einer Scheibe, nur für den Besitzer: Eintrag und Beleg (eingetragene Scheiben), Ausdruck
  * (mit ID oder PDF), der Auftrag an die Anlage (solange es etwas zu sagen gibt), Ort (vom Ausdruck), Disziplin, Teilen und
  * Löschen als Zeilen, fachlich vor destruktiv. Am Ende statt oben (Ausnahme zu conventions §2): Der Kopf der Seite ist voll, die
  * Aktionen braucht man selten, und jede Zeile zeigt, was gerade gilt.
@@ -54,7 +55,10 @@ export function CardActions({
       </h2>
       <div className="grid divide-y divide-border">
         {entry?.kind === "entered" && (
-          <CardEntry cardId={cardId} from={entry.from} editable={entry.editable} />
+          <>
+            <CardEntry cardId={cardId} from={entry.from} editable={entry.editable} />
+            <CardEvidence cardId={cardId} evidence={entry.evidence} timeZone={timeZone} />
+          </>
         )}
         {fetch && (fetch.hex || fetch.printouts.length > 0) && (
           <CardPrintout hex={fetch.hex} printouts={fetch.printouts} timeZone={timeZone} />

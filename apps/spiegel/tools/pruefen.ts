@@ -1158,6 +1158,10 @@ async function fetchCards(page: Page) {
   check("Aufräumen: keine Scheibe der Prüfung mehr da", left.length === 0, left.join(" · "))
 }
 
+/** ein Bild mit einem Pixel (PNG), als Beleg */
+const ONE_PIXEL_PNG =
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+
 /** in das Feld tippen: hineinklicken, ans Ende, `remove` Zeichen löschen, dann den Text */
 async function fill(page: Page, selector: string, text: string, remove = 0) {
   await page.click(`$(${JSON.stringify(selector)})`)
@@ -1170,11 +1174,13 @@ async function fill(page: Page, selector: string, text: string, remove = 0) {
  * Von Hand eintragen ([[adr-033]]): „Eintragen“ in „Scheibe holen“ öffnet das Blatt „Neue Scheibe“ mit „Weiter“, danach
  * das Formular. Eine Summe neben einer Serie mit Schüssen einzeln ist ein Fehler an der Summe; mit Schüssen in beiden
  * Serien speichert es, und die Seite zeigt „Von Hand eingetragen“ und das Ergebnis. Ändern übernimmt die Werte, ein neuer
- * Schuss und ein Ort landen auf der Seite. Mit Eingaben fragt „Zurück“ erst. Am Ende ist die Scheibe endgültig gelöscht.
+ * Schuss und ein Ort landen auf der Seite. Mit Eingaben fragt „Zurück“ erst. Ein Foto hängt als Beleg an, ein
+ * Meyton-Ausdruck nicht. Am Ende ist die Scheibe endgültig gelöscht.
  */
 async function handEntry(page: Page) {
   await page.viewport(390, 844)
   const created: string[] = []
+  const dir = await mkdtemp(join(tmpdir(), "spiegel-pruefen-hand-"))
   try {
     await page.goto(`${BASE}/scan`)
     await page.click(`button("Eintragen", $('[data-fetch-way="hand"]'))`)
@@ -1254,8 +1260,35 @@ async function handEntry(page: Page) {
       back && after.includes("40,2") && after.includes("Prüfhalle"),
       after.slice(0, 120)
     )
+
+    // Beleg: ein Foto hängt an, ein Meyton-Ausdruck nicht, Entfernen fragt erst
+    const photo = join(dir, "beleg.png")
+    await writeFile(photo, Buffer.from(ONE_PIXEL_PNG, "base64"))
+    await page.setFiles(`$("#card-evidence-file")`, [photo])
+    check(
+      "Beleg: ein Foto hängt an",
+      await page.waitFor(`txt($('[data-card-evidence="photo"]')).includes("Foto,")`, 15_000)
+    )
+    const printout = join(dir, "ausdruck.pdf")
+    await writeFile(printout, await samplePrintout({ hex: PROBE_LINK }))
+    await page.setFiles(`$("#card-evidence-file")`, [printout])
+    check(
+      "Beleg: ein Meyton-Ausdruck wird keiner, der Weg über „Scheibe holen“ steht da",
+      await page.waitFor(
+        `txt($("[data-evidence-error]")).includes("Ausdruck von Meyton") && !!$('[data-card-evidence="photo"]')`,
+        15_000
+      )
+    )
+    await page.click(`button("Entfernen", $("[data-card-evidence]"))`)
+    await page.waitFor(`!!$('[role="alertdialog"]')`)
+    await page.click(`button("Entfernen", $('[role="alertdialog"]'))`)
+    check(
+      "Beleg: entfernt nach der Rückfrage",
+      await page.waitFor(`!!$('[data-card-evidence="none"]')`, 10_000)
+    )
   } finally {
     await page.viewport(1280, 900)
+    await rm(dir, { recursive: true, force: true })
     for (const path of created) await removeProbeCard(page, path)
   }
 }

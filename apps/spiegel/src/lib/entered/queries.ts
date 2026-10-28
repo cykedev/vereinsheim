@@ -188,8 +188,21 @@ export async function cardForEdit(
 }
 
 /** was der Kasten „Diese Scheibe“ zu Eintrag und Ort zeigt */
+export interface CardEvidenceInfo {
+  id: string
+  kind: "photo" | "pdf"
+  size: number
+  storedAtMs: number
+}
+
 export type CardEntryInfo =
-  | { kind: "entered"; from: "manual" | "treffsicher"; editable: boolean }
+  | {
+      kind: "entered"
+      from: "manual" | "treffsicher"
+      editable: boolean
+      /** der Beleg; null ohne */
+      evidence: CardEvidenceInfo | null
+    }
   | { kind: "place"; place: string | null; places: string[] }
 
 /**
@@ -202,7 +215,11 @@ export async function cardEntryInfo(
 ): Promise<CardEntryInfo | null> {
   const row = await db.card.findFirst({
     where: { id: cardId, ownerId, ...VISIBLE_CARD },
-    select: { origin: true, place: true },
+    select: {
+      origin: true,
+      place: true,
+      evidence: { select: { id: true, contentType: true, size: true, storedAt: true } },
+    },
   })
   if (!row || row.origin === "raw") return null
   if (row.origin === "pdf")
@@ -212,5 +229,11 @@ export async function cardEntryInfo(
     kind: "entered",
     from: row.origin,
     editable: card !== null && detailsToForm(card.stored, card.discipline, card) !== null,
+    evidence: row.evidence && {
+      id: row.evidence.id,
+      kind: row.evidence.contentType === "application/pdf" ? "pdf" : "photo",
+      size: row.evidence.size,
+      storedAtMs: row.evidence.storedAt.getTime(),
+    },
   }
 }

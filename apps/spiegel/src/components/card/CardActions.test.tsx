@@ -12,6 +12,10 @@ vi.mock("@/lib/share-actions", () => ({
 }))
 vi.mock("@/lib/fetch-card/actions", () => ({ stopCardFetch: async () => ({ success: true }) }))
 vi.mock("@/lib/card-place-actions", () => ({ setCardPlace: async () => ({ success: true }) }))
+vi.mock("@/lib/entered/evidence-actions", () => ({
+  attachEvidence: async () => ({ success: true }),
+  removeEvidence: async () => ({ success: true }),
+}))
 vi.mock("@/lib/trash-actions", () => ({
   deleteCard: async () => ({ success: true }),
   restoreCard: async () => ({ success: true }),
@@ -181,7 +185,12 @@ describe("Kasten „Diese Scheibe“", () => {
 
 describe("Eintrag und Ort je Herkunft", () => {
   it("eingetragen: „Eintrag“ zuerst, mit „Ändern“ zum Formular; ohne Ort-Zeile", () => {
-    const html = render(null, { kind: "entered", from: "manual", editable: true })
+    const html = render(null, {
+      kind: "entered",
+      from: "manual",
+      editable: true,
+      evidence: null,
+    })
     expect(html.indexOf("data-card-entry")).toBeLessThan(html.indexOf("data-card-discipline"))
     expect(rowText(html, 'data-card-entry="manual"')).toContain("Eintrag Von Hand eingetragen")
     expect(html).toContain('href="/cards/c1/edit"')
@@ -189,7 +198,12 @@ describe("Eintrag und Ort je Herkunft", () => {
   })
 
   it("aus Treffsicher, nicht ganz zu zeigen: ohne „Ändern“", () => {
-    const html = render(null, { kind: "entered", from: "treffsicher", editable: false })
+    const html = render(null, {
+      kind: "entered",
+      from: "treffsicher",
+      editable: false,
+      evidence: null,
+    })
     expect(rowText(html, 'data-card-entry="treffsicher"')).toContain("Aus Treffsicher übernommen")
     expect(html).not.toContain("/edit")
   })
@@ -207,5 +221,36 @@ describe("Eintrag und Ort je Herkunft", () => {
     const html = render(null, null)
     expect(html).not.toContain("data-card-entry")
     expect(html).not.toContain("data-card-place")
+  })
+})
+
+describe("Beleg", () => {
+  const evidence = {
+    id: "cevidence00000000000000001",
+    kind: "photo" as const,
+    size: 1_234_567,
+    storedAtMs: Date.UTC(2026, 9, 28, 10),
+  }
+  it("ohne Beleg: Satz und „Foto oder PDF anhängen“, nach dem Eintrag", () => {
+    const html = render(null, { kind: "entered", from: "manual", editable: true, evidence: null })
+    expect(html.indexOf("data-card-entry")).toBeLessThan(html.indexOf("data-card-evidence"))
+    expect(rowText(html, 'data-card-evidence="none"')).toContain(
+      "Beleg Ein Foto vom Papier oder ein PDF, damit du später nachsehen kannst. Foto oder PDF anhängen"
+    )
+    expect(html).toContain('accept="image/*,application/pdf"')
+  })
+
+  it("mit Beleg: Art, Größe, Tag; Öffnen, Ersetzen, Entfernen", () => {
+    const html = render(null, { kind: "entered", from: "manual", editable: true, evidence })
+    const row = rowText(html, 'data-card-evidence="photo"')
+    expect(row).toContain("Foto, 1,2 MB, angehängt Mi 28.10.2026")
+    for (const action of ["Öffnen", "Ersetzen", "Entfernen"]) expect(row).toContain(action)
+    expect(html).toContain('href="/api/evidence/cevidence00000000000000001"')
+  })
+
+  it("keine Zeile bei Scheiben vom Ausdruck", () => {
+    expect(render(null, { kind: "place", place: null, places: [] })).not.toContain(
+      "data-card-evidence"
+    )
   })
 })
