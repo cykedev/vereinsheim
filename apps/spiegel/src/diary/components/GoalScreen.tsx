@@ -30,6 +30,7 @@ import { EntryText } from "./EntryText"
 import { GoalChart } from "./GoalChart"
 import { GoalState } from "./GoalList"
 import { OutcomeChoice } from "./OutcomeChoice"
+import { ROW_BUTTON } from "./styles"
 
 const BOX = "rounded-2xl border border-border bg-card p-4"
 const LINK =
@@ -188,10 +189,7 @@ export function GoalScreen({
               title={goal.kind === "result" ? GOAL_TEXTS.basicsResult : GOAL_TEXTS.basicsProcess}
               state=""
               action={
-                <Link
-                  href={edit}
-                  className="inline-flex h-10 items-center rounded-full px-3.5 text-[13px] font-semibold text-foreground-2 hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-ring"
-                >
+                <Link href={edit} className={ROW_BUTTON}>
                   {GOAL_TEXTS.change}
                 </Link>
               }

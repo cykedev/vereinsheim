@@ -81,6 +81,24 @@ beforeAll(async () => {
   await db.diaryScale.create({
     data: { entryId: entry.id, part: "wellbeing", aspect: "stress", value: 43 },
   })
+  await db.diaryGoal.create({
+    data: {
+      userId: site.ownerId,
+      title: "355 im Training",
+      kind: "result",
+      familyId: null,
+      from: new Date("2026-09-01T00:00:00Z"),
+      to: new Date("2027-08-31T00:00:00Z"),
+      measure: "card",
+      threshold: 355,
+      scoring: "rings",
+      shots: 40,
+      deletedAt: new Date(),
+    },
+  })
+  await db.diaryRoutine.create({
+    data: { userId: site.ownerId, name: "Mein Ablauf", steps: [{ title: "Atmen" }] },
+  })
 })
 afterAll(async () => {
   await site.remove()
@@ -120,6 +138,21 @@ describe("Export über beide Teile", () => {
       aspect: "stress",
       value: 43,
     })
+    expect(data.diary.goals).toHaveLength(1)
+    expect(data.diary.goals[0]).toMatchObject({
+      title: "355 im Training",
+      from: "2026-09-01",
+      to: "2027-08-31",
+      measure: "card",
+      threshold: 355,
+      scoring: "rings",
+      shots: 40,
+      cards: "all",
+    })
+    expect(data.diary.goals[0].deletedAt).not.toBeNull()
+    expect(data.diary.routines).toEqual([
+      expect.objectContaining({ name: "Mein Ablauf", steps: [{ title: "Atmen" }], familyId: null }),
+    ])
   })
 
   it("die Route: ohne Sitzung 401, sonst eine Datei, privat und ohne Cache", async () => {

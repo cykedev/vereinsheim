@@ -9,9 +9,11 @@ import { DecisionDialog } from "@vereinsheim/ui/design2/decision-dialog"
 
 import type { ActionResult } from "@/lib/types"
 
-import { diaryEntryPurgeNow, goalPurgeNow, type Decision } from "../consequences"
+import { diaryEntryPurgeNow, goalPurgeNow, routinePurgeNow, type Decision } from "../consequences"
 import { purgeGoalNowAction, restoreGoalAction } from "../goals/actions"
 import { GOAL_TEXTS } from "../goals/texts"
+import { purgeRoutineNowAction, restoreRoutineAction } from "../routines/actions"
+import { ROUTINE_TEXTS } from "../routines/texts"
 import { ERRORS } from "../texts"
 import type { DiaryTrashItem, DiaryTrashThing } from "../trash"
 import { purgeEntryNowAction, restoreEntryAction } from "../trash-actions"
@@ -23,11 +25,13 @@ import { purgeEntryNowAction, restoreEntryAction } from "../trash-actions"
 export function DiaryTrash({
   items,
   goals,
+  routines,
 }: {
   items: DiaryTrashItem[]
   goals: DiaryTrashThing[]
+  routines: DiaryTrashThing[]
 }) {
-  if (!items.length && !goals.length) return null
+  if (!items.length && !goals.length && !routines.length) return null
   return (
     <section data-diary-trash aria-labelledby="diary-trash-title" className="grid gap-3">
       <h2 id="diary-trash-title" className="text-[13px] font-semibold text-muted-foreground">
@@ -56,6 +60,18 @@ export function DiaryTrash({
             restore={() => restoreGoalAction(goal.id)}
             purge={() => purgeGoalNowAction(goal.id)}
             decision={goalPurgeNow({ title: goal.name })}
+          />
+        ))}
+        {routines.map((routine) => (
+          <TrashRow
+            key={routine.id}
+            kind="routine"
+            title={routine.name}
+            facts={ROUTINE_TEXTS.trashKind}
+            left={routine.left}
+            restore={() => restoreRoutineAction(routine.id)}
+            purge={() => purgeRoutineNowAction(routine.id)}
+            decision={routinePurgeNow({ name: routine.name })}
           />
         ))}
       </ul>

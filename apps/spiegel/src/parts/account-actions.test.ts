@@ -152,6 +152,18 @@ describe("deleteOwnAccount", () => {
       familyId: null,
       timeZone: "Europe/Berlin",
     })) as { id: string }
+    const goal = await db.diaryGoal.create({
+      data: {
+        userId: id,
+        title: "Ziel",
+        kind: "process",
+        from: new Date("2026-09-01T00:00:00Z"),
+        to: new Date("2027-08-31T00:00:00Z"),
+      },
+    })
+    const routine = await db.diaryRoutine.create({
+      data: { userId: id, name: "Ablauf", steps: [{ title: "Atmen" }] },
+    })
 
     as(id)
     expect(await deleteOwnAccount(PASSWORD)).toEqual({ success: true })
@@ -163,6 +175,8 @@ describe("deleteOwnAccount", () => {
     expect(await db.deleteLock.count({ where: { userId: id } })).toBe(0)
     expect(await db.diarySettings.count({ where: { userId: id } })).toBe(0)
     expect(await db.diaryEntry.count({ where: { id: entry.id } })).toBe(0)
+    expect(await db.diaryGoal.count({ where: { id: goal.id } })).toBe(0)
+    expect(await db.diaryRoutine.count({ where: { id: routine.id } })).toBe(0)
     expect(
       await db.tombstone.findFirst({ where: { sourceId: site.sourceId, scheibenId: 999_001 } })
     ).toMatchObject({ userId: null, sportpassId: BigInt(4_711_000_001) })

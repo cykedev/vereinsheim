@@ -21,7 +21,7 @@ export async function trashParts(
   ])
   return {
     lead: PROFILE_TEXTS.trashLead,
-    content: <DiaryTrash items={items} goals={things.goals} />,
+    content: <DiaryTrash items={items} goals={things.goals} routines={things.routines} />,
     count: items.length + things.goals.length + things.routines.length,
   }
 }

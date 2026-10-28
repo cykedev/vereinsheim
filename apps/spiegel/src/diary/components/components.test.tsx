@@ -277,6 +277,9 @@ describe("Liste und Faden", () => {
       createElement(ThreadView, {
         families: [{ id: 1, slug: "lp", name: "Luftpistole" }],
         family: { id: 1, slug: "lp", name: "Luftpistole" },
+        withoutFamily: false,
+        noFamily: false,
+        routines: [],
         items: [
           { entryId: "b", day: "2026-06-09", question: "öfters zu akzeptieren?", learned: null },
           {
