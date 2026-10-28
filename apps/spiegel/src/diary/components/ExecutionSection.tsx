@@ -1,27 +1,30 @@
 "use client"
 
-import { formatTimeOfDay } from "@vereinsheim/lib/format"
+import type { CardMark } from "@vereinsheim/shot-core/projection"
+import { formatValue } from "@vereinsheim/shot-ui/format"
 
 import type { ResultCard, ResultSeries } from "@/lib/results-read"
 
 import { saveExecution } from "../actions"
 import { QUALITY_WORDS } from "../scales"
-import { resultText } from "../summaries"
 import { ENTRY_TEXTS } from "../texts"
 
+import { CardHead } from "./CardHead"
 import { EntrySection } from "./EntrySection"
 import { StageRow } from "./StageRow"
 import { useStages } from "./useStages"
 
 /**
- * Ausführung je Serie: je Scheibe des Eintrags ihre Serien mit Summe und fünf Stufen. Mit mehreren Scheiben steht über
- * jeder ihre Uhrzeit und ihr Ergebnis.
+ * Ausführung je Serie: jede Scheibe des Eintrags ein eigener Block, im Kopf wie in der Scheibenliste (kleine Scheibe,
+ * Uhrzeit, Ringe), darunter eingerückt ihre Serien mit Summe und fünf Stufen. So ist auch bei sechs Scheiben klar,
+ * welche Serie zu welcher gehört.
  */
 export function ExecutionSection({
   entryId,
   day,
   cards,
   series,
+  marks,
   values,
   timeZone,
 }: {
@@ -29,6 +32,7 @@ export function ExecutionSection({
   day: string
   cards: ResultCard[]
   series: Record<string, ResultSeries[]>
+  marks: Record<string, CardMark[]>
   /** Wert je `cardId|series` */
   values: Readonly<Record<string, number | null>>
   timeZone: string
@@ -47,31 +51,32 @@ export function ExecutionSection({
       day={day}
       filled={Object.values(values).some((value) => value !== null)}
     >
-      {rated.map((card) => (
-        <div key={card.id} className="grid">
-          {rated.length > 1 && (
-            <h4 className="pt-2 text-sm font-semibold tabular-nums">
-              {`${card.timeUnknown ? "Uhrzeit unbekannt" : formatTimeOfDay(new Date(card.startedAtMs), timeZone)}${
-                card.result ? ` · ${resultText(card.result)}` : ""
-              }`}
-            </h4>
-          )}
-          <div className="grid divide-y divide-border">
-            {series[card.id].map((s) => {
-              const key = `${card.id}|${s.series}`
-              return (
-                <StageRow
-                  key={key}
-                  label={`Serie ${s.series}${s.result ? ` · ${resultText(s.result)}` : ""}`}
-                  words={QUALITY_WORDS}
-                  value={shown[key] ?? null}
-                  onSelect={(stage) => select(key, stage)}
-                />
-              )
-            })}
+      <div className="grid gap-3 pt-1">
+        {rated.map((card) => (
+          <div
+            key={card.id}
+            data-execution-card={card.id}
+            className="grid gap-1 rounded-xl border border-border p-3"
+          >
+            <CardHead card={card} marks={marks} timeZone={timeZone} />
+            <div className="ml-3 grid divide-y divide-border border-l-2 border-line-strong pl-3">
+              {series[card.id].map((s) => {
+                const key = `${card.id}|${s.series}`
+                return (
+                  <StageRow
+                    key={key}
+                    // die Einheit steht im Kopf der Scheibe; so bleibt die Zeile auch eingerückt einzeilig
+                    label={`Serie ${s.series}${s.result ? ` · ${formatValue(s.result.value, s.result.digits)}` : ""}`}
+                    words={QUALITY_WORDS}
+                    value={shown[key] ?? null}
+                    onSelect={(stage) => select(key, stage)}
+                  />
+                )
+              })}
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
       {error && (
         <p role="alert" className="text-sm text-destructive">
           {error}

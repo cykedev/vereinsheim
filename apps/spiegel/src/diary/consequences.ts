@@ -58,7 +58,7 @@ export function diaryCardRelease({
       "Die Scheibe bleibt in Spiegel, mit allen Schüssen.",
       "Die übrigen Angaben im Eintrag bleiben.",
     ],
-    undo: "Die Scheibe unter „Vom selben Abend“ wieder dazunehmen.",
+    undo: "Im Blatt „Scheiben ändern“ wieder anhaken.",
     confirmLabel: "Lösen",
     destructive: executions > 0,
   }
@@ -92,12 +92,13 @@ export function diaryEntryDelete({
     happens: [
       "Er liegt 30 Tage im Papierkorb (im Profil). So lange steht er nirgends, auch nicht auf Start und an den Scheiben.",
       "Danach löscht Spiegel ihn endgültig, mit Notiz, Befinden, Prognose und Feedback.",
+      "Seine Scheiben sind sofort frei. Sie kommen in einen anderen Eintrag dieses Abends oder in einen neuen.",
     ],
     notHappening: [
       "Die Scheiben bleiben in Spiegel, mit allen Schüssen.",
       "Deine anderen Einträge bleiben.",
     ],
-    undo: "30 Tage lang im Papierkorb wiederherstellen.",
+    undo: "30 Tage lang im Papierkorb wiederherstellen. Dann kommen die Scheiben zurück, die in keinem anderen Eintrag stecken.",
     confirmLabel: "Löschen",
     destructive: true,
   }

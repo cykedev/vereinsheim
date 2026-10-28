@@ -51,14 +51,18 @@ describe("entryCards", () => {
     expect(set(map, "e")).toEqual({ linked: [], added: [], offered: ["c"] })
   })
 
-  it("ein Eintrag im Papierkorb zählt nicht mit und hält seine verknüpften Scheiben", () => {
-    const links: CardLinkRow[] = [{ cardId: "c", entryId: "old", link: "linked" }]
+  it("ein Eintrag im Papierkorb hält keine Scheibe: auch die verknüpfte ist frei und kommt dazu", () => {
+    const links: CardLinkRow[] = [
+      { cardId: "c", entryId: "old", link: "linked" },
+      { cardId: "r", entryId: "old", link: "released" },
+    ]
     const map = entryCards([entry("old", { deleted: true }), entry("e")], links, [
       card("c"),
       card("d"),
+      card("r"),
     ])
-    expect(set(map, "old")).toEqual({ linked: ["c"], added: [], offered: [] })
-    expect(set(map, "e")).toEqual({ linked: [], added: ["d"], offered: [] })
+    expect(set(map, "old")).toEqual({ linked: [], added: [], offered: [] })
+    expect(set(map, "e")).toEqual({ linked: [], added: ["c", "d", "r"], offered: [] })
   })
 
   it("verknüpft nie über Abend oder Disziplin hinweg, und nie ohne Disziplin", () => {
@@ -126,14 +130,21 @@ describe("cardPlace", () => {
     ).toEqual({ kind: "offered", entryId: "e2" })
   })
 
-  it("fest in einem Eintrag im Papierkorb: dort, ohne Angebot anderswo", () => {
+  it("verknüpft mit einem Eintrag im Papierkorb: frei, also im offenen Eintrag des Abends", () => {
     expect(
       cardPlace(
         card("c"),
         [entry("e1", { deleted: true }), entry("e2")],
         [{ cardId: "c", entryId: "e1", link: "linked" }]
       )
-    ).toEqual({ kind: "trash", entryId: "e1" })
+    ).toEqual({ kind: "entry", entryId: "e2" })
+    expect(
+      cardPlace(
+        card("c"),
+        [entry("e1", { deleted: true })],
+        [{ cardId: "c", entryId: "e1", link: "linked" }]
+      )
+    ).toEqual({ kind: "none" })
   })
 
   it("ohne Eintrag des Abends: nirgends", () => {

@@ -7,7 +7,7 @@ import { writeEnteredCard } from "@/lib/db/entered"
 import { createTestSite, type TestSite } from "../../test/fixtures"
 
 import { createFromEvening, createWithout } from "./entries"
-import { diaryList, entryForCard, threadView } from "./queries"
+import { diaryList, entryForCard, newEntryView, threadView } from "./queries"
 import { ERRORS } from "./texts"
 import {
   deleteEntry,
@@ -69,7 +69,7 @@ async function entryWithCard(daysAgo: number) {
 }
 
 describe("Papierkorb der Einträge", () => {
-  it("löscht, steht nirgends mehr, behält die Scheibe und kommt zurück", async () => {
+  it("löscht, steht nirgends mehr, gibt die Scheibe frei und bekommt sie beim Wiederherstellen zurück", async () => {
     const { id, cardId } = await entryWithCard(2)
     await db.diaryEntry.update({ where: { id }, data: { question: "ruhig zu bleiben?" } })
     expect(await deleteEntry(db, site.ownerId, id)).toBeNull()
@@ -79,13 +79,39 @@ describe("Papierkorb der Einträge", () => {
     expect((await threadView(db, site.ownerId, null)).items.some((i) => i.entryId === id)).toBe(
       false
     )
+    // die Zeile bleibt für das Wiederherstellen, hält die Scheibe aber nicht
     expect(await db.diaryEntryCard.count({ where: { entryId: id, link: "linked" } })).toBe(1)
     expect(await db.card.count({ where: { id: cardId } })).toBe(1)
+    expect(
+      (await newEntryView(db, site.ownerId, ZONE, cardId)).proposals.some((p) => p.marked)
+    ).toBe(true)
     const items = await diaryTrash(db, site.ownerId, ZONE)
     expect(items.find((i) => i.entryId === id)).toMatchObject({ left: "noch 30 Tage" })
     expect(items.find((i) => i.entryId === id)?.facts).toMatch(/1 Scheibe$/)
-    expect(await restoreEntry(db, site.ownerId, id)).toBeNull()
-    expect(await restoreEntry(db, site.ownerId, id)).toBe(TRASH_ERRORS.notInTrash)
+    expect(await restoreEntry(db, site.ownerId, id, ZONE)).toBeNull()
+    expect(await restoreEntry(db, site.ownerId, id, ZONE)).toBe(TRASH_ERRORS.notInTrash)
+    expect(await entryForCard(db, site.ownerId, cardId, ZONE)).toMatchObject({ entryId: id })
+  })
+
+  it("eine Scheibe, die inzwischen in einem anderen Eintrag steckt, bleibt dort", async () => {
+    const { id, cardId, day } = await entryWithCard(4)
+    expect(await deleteEntry(db, site.ownerId, id)).toBeNull()
+    // ein neuer Eintrag des Abends trägt die freie Scheibe von selbst
+    const other = (await createWithout(db, site.ownerId, {
+      day,
+      kind: "shooting",
+      familyId: site.familyId,
+      timeZone: ZONE,
+    })) as { id: string }
+    expect(await entryForCard(db, site.ownerId, cardId, ZONE)).toMatchObject({ entryId: other.id })
+    expect(await restoreEntry(db, site.ownerId, id, ZONE)).toBeNull()
+    expect(await entryForCard(db, site.ownerId, cardId, ZONE)).toMatchObject({ entryId: other.id })
+    expect(await db.diaryEntryCard.findUnique({ where: { cardId } })).toMatchObject({
+      entryId: other.id,
+      link: "linked",
+    })
+    // liegt der andere im Papierkorb, kommt sie wieder in den zurückgekehrten
+    expect(await deleteEntry(db, site.ownerId, other.id)).toBeNull()
     expect(await entryForCard(db, site.ownerId, cardId, ZONE)).toMatchObject({ entryId: id })
   })
 
@@ -110,7 +136,7 @@ describe("Papierkorb der Einträge", () => {
       where: { id: created.id },
       data: { deletedAt: new Date(Date.now() - 31 * DAY_MS) },
     })
-    expect(await restoreEntry(db, site.ownerId, created.id)).toBe(TRASH_ERRORS.expired)
+    expect(await restoreEntry(db, site.ownerId, created.id, ZONE)).toBe(TRASH_ERRORS.expired)
     expect(await purgeExpiredDiaryTrash(db, { nowMs: Date.now() })).toBeGreaterThanOrEqual(1)
     expect(await db.diaryEntry.count({ where: { id: created.id } })).toBe(0)
   })

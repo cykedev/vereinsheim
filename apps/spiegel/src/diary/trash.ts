@@ -1,10 +1,12 @@
 // Papierkorb für Einträge wie für Scheiben ([[spiegel-privacy]]): Löschen setzt `deletedAt`, 30 Tage lässt sich der
-// Eintrag wiederherstellen, danach löscht `purgeExpiredDiaryTrash` ihn endgültig. Er behält seine Scheiben; die
-// Scheiben selbst bleiben immer.
+// Eintrag wiederherstellen, danach löscht `purgeExpiredDiaryTrash` ihn endgültig. Im Papierkorb hält er keine Scheibe
+// fest (`activeLinks`), seine Zeilen bleiben für das Wiederherstellen; die Scheiben selbst bleiben immer.
 
 import type { Db } from "@/lib/db"
 import { resultFamilies } from "@/lib/results-read"
 
+import { entryCards } from "./cards"
+import { eveningOf } from "./entries"
 import { dayLabel } from "./summaries"
 import { ERRORS } from "./texts"
 import { dayOfDate } from "./validation"
@@ -28,25 +30,60 @@ export async function deleteEntry(db: Db, userId: string, entryId: string): Prom
   return count === 1 ? null : ERRORS.missing
 }
 
-/** aus dem Papierkorb zurück, solange die 30 Tage nicht um sind */
+/**
+ * Aus dem Papierkorb zurück, solange die 30 Tage nicht um sind. Seine Scheiben waren frei: Zurück kommen nur die, die
+ * inzwischen in keinem anderen Eintrag stecken. Was ein anderer Eintrag des Abends von selbst trägt, bekommt dafür
+ * eine feste Zeile, sonst nähme der zurückgekehrte Eintrag es ihm weg (zwei Einträge bieten nur noch an). Die Zeilen
+ * des Eintrags, die keine andere Zuordnung ersetzt hat, gelten wieder.
+ */
 export async function restoreEntry(
   db: Db,
   userId: string,
   entryId: string,
+  timeZone: string,
   nowMs = Date.now()
 ): Promise<string | null> {
   const row = await db.diaryEntry.findFirst({
     where: { id: entryId, userId },
-    select: { deletedAt: true },
+    select: { deletedAt: true, day: true, familyId: true },
   })
   if (!row) return ERRORS.missing
   if (!row.deletedAt) return TRASH_ERRORS.notInTrash
   if (endsAt(row.deletedAt) <= nowMs) return TRASH_ERRORS.expired
-  const { count } = await db.diaryEntry.updateMany({
-    where: { id: entryId, userId, deletedAt: row.deletedAt },
-    data: { deletedAt: null },
-  })
-  return count === 1 ? null : ERRORS.missing
+  const deletedAt = row.deletedAt
+  const evening =
+    row.familyId === null
+      ? null
+      : await eveningOf(db, userId, dayOfDate(row.day), row.familyId, timeZone)
+  const held = evening
+    ? [
+        ...entryCards(
+          evening.entries,
+          evening.links,
+          evening.cards.map((c) => ({ id: c.id, day: c.day, familyId: c.family!.id }))
+        ),
+      ].flatMap(([id, set]) => (id === entryId ? [] : set.added.map((cardId) => ({ id, cardId }))))
+    : []
+  try {
+    return await db.$transaction(
+      async (tx) => {
+        for (const { id, cardId } of held)
+          await tx.diaryEntryCard.upsert({
+            where: { cardId },
+            create: { cardId, entryId: id, link: "linked" },
+            update: { entryId: id, link: "linked" },
+          })
+        const { count } = await tx.diaryEntry.updateMany({
+          where: { id: entryId, userId, deletedAt },
+          data: { deletedAt: null },
+        })
+        return count === 1 ? null : ERRORS.missing
+      },
+      { isolationLevel: "Serializable" }
+    )
+  } catch {
+    return ERRORS.failed
+  }
 }
 
 /** sofort endgültig löschen, nur aus dem Papierkorb; Werte, Verknüpfungen und Ausführung gehen mit (Kaskade) */

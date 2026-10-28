@@ -72,15 +72,16 @@ describe("Stellen für das Tagebuch", () => {
     const day = formatIsoDate(new Date(Date.now() - 5 * 86_400_000), ZONE)
     const c = await card(day)
     const blocks = [{ day, familySlug: slug, cardIds: [c] }]
-    expect(await cardLines(db, { ownerId: site.ownerId, cardId: c, timeZone: ZONE })).toEqual([
-      {
-        key: "diary",
-        title: "Tagebuch",
-        state: "Noch in keinem Eintrag.",
-        href: `/diary/new?card=${c}`,
-        action: "Eintrag anlegen",
-      },
-    ])
+    const [create] = await cardLines(db, { ownerId: site.ownerId, cardId: c, timeZone: ZONE })
+    expect(create).toMatchObject({
+      key: "diary",
+      title: "Tagebuch",
+      state: "Noch in keinem Eintrag.",
+      href: `/diary/new?card=${c}`,
+      action: "Eintrag anlegen",
+    })
+    // legt direkt an (Server Action), der Link bleibt der Weg ohne Skript
+    expect(typeof create.run).toBe("function")
     expect(
       (await startLines(db, { ownerId: site.ownerId, blocks, timeZone: ZONE }))[`${day}|${slug}`]
     ).toMatchObject({
@@ -104,7 +105,7 @@ describe("Stellen für das Tagebuch", () => {
     })
   })
 
-  it("jede Zeile führt dorthin, wo sich etwas tun lässt: gelöst zum Eintrag, im Papierkorb zum Papierkorb", async () => {
+  it("jede Zeile führt dorthin, wo sich etwas tun lässt: gelöst zum Eintrag, im Papierkorb frei", async () => {
     await setDiaryEnabled(db, site.ownerId, true)
     const day = formatIsoDate(new Date(Date.now() - 6 * 86_400_000), ZONE)
     const c = await card(day)
@@ -117,6 +118,7 @@ describe("Stellen für das Tagebuch", () => {
     expect(await releaseCard(db, site.ownerId, entry.id, c)).toBeNull()
     const [offered] = await cardLines(db, { ownerId: site.ownerId, cardId: c, timeZone: ZONE })
     expect(offered).toMatchObject({ href: `/diary/${entry.id}`, action: "Eintrag öffnen" })
+    expect(offered.run).toBeUndefined()
     expect(offered.state).toMatch(
       /^Noch in keinem Eintrag\. Der Eintrag vom \S+ \d\d\.\d\d\. bietet sie an\.$/
     )
@@ -124,20 +126,14 @@ describe("Stellen für das Tagebuch", () => {
       (await startLines(db, { ownerId: site.ownerId, blocks, timeZone: ZONE }))[`${day}|${slug}`]
     ).toMatchObject({ href: `/diary/${entry.id}`, action: "Eintrag öffnen" })
 
-    const d = await card(day)
+    // im Papierkorb hält der Eintrag die Scheibe nicht: „Eintrag anlegen“ legt direkt an
     await db.diaryEntryCard.update({ where: { cardId: c }, data: { link: "linked" } })
-    await db.diaryEntryCard.create({ data: { cardId: d, entryId: entry.id, link: "linked" } })
     expect(await deleteEntry(db, site.ownerId, entry.id)).toBeNull()
-    const [trash] = await cardLines(db, { ownerId: site.ownerId, cardId: c, timeZone: ZONE })
-    expect(trash).toMatchObject({ href: "/profile/trash", action: "Papierkorb öffnen" })
-    expect(trash.state).toMatch(/^Im Eintrag vom \S+ \d\d\.\d\d\.\. Er liegt im Papierkorb\.$/)
-    // stecken alle Scheiben des Blocks in einem Eintrag im Papierkorb, steht auf Start keine Zeile
+    const [free] = await cardLines(db, { ownerId: site.ownerId, cardId: c, timeZone: ZONE })
+    expect(free).toMatchObject({ state: "Noch in keinem Eintrag.", action: "Eintrag anlegen" })
+    expect(typeof free.run).toBe("function")
     expect(
-      await startLines(db, {
-        ownerId: site.ownerId,
-        blocks: [{ day, familySlug: slug, cardIds: [c, d] }],
-        timeZone: ZONE,
-      })
-    ).toEqual({})
+      (await startLines(db, { ownerId: site.ownerId, blocks, timeZone: ZONE }))[`${day}|${slug}`]
+    ).toMatchObject({ action: "Eintrag anlegen" })
   })
 })

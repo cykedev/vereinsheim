@@ -20,7 +20,7 @@ export interface Proposal<C extends ProposalCard = ProposalCard> {
 
 /**
  * `entries`: die Einträge des Kontos (auch im Papierkorb), `linked`: Kennungen der Scheiben mit einer Zeile `linked`
- * (sie stecken fest in einem Eintrag, auch in einem im Papierkorb). Neueste Abende zuerst, an einem Abend nach Name der
+ * eines Eintrags, der nicht im Papierkorb liegt (sie stecken fest in ihm). Neueste Abende zuerst, an einem Abend nach Name der
  * Disziplin. Scheiben ohne Disziplin fehlen: Ein Eintrag mit Scheiben braucht eine.
  */
 export function proposals<C extends ProposalCard>(

@@ -1,6 +1,5 @@
 "use client"
 
-import Link from "next/link"
 import { useMemo } from "react"
 
 import type { Scoring } from "@vereinsheim/shot-core/metrics"
@@ -15,6 +14,7 @@ import { EveningBlock, type EveningBlockProps } from "@vereinsheim/shot-ui/start
 import { FormLine } from "@vereinsheim/shot-ui/start/FormLine"
 import type { StartModel } from "@vereinsheim/shot-ui/start/model"
 
+import { PartLineAction } from "@/components/card/PartLineAction"
 import { NoCards } from "@/components/shell/NoCards"
 import { useHelp } from "@vereinsheim/ui/design2/help-sheet"
 import { Page } from "@vereinsheim/ui/design2/page"
@@ -133,13 +133,12 @@ export function StartScreen({
                   onHelp={onHelp}
                   extra={
                     line && (
-                      <Link
-                        href={line.href}
-                        data-part-line={line.key}
+                      <PartLineAction
+                        line={line}
                         className="text-[13px] font-semibold text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring"
                       >
                         {`${line.title} · ${line.action} ›`}
-                      </Link>
+                      </PartLineAction>
                     )
                   }
                   listRoute={{

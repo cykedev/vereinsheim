@@ -14,6 +14,9 @@ import { LIST_TEXTS } from "../texts"
 const PRIMARY =
   "inline-flex h-10 items-center justify-center gap-2 justify-self-start rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-90 focus-visible:outline-2 focus-visible:outline-ring"
 
+/** so viele kleine Scheiben je Eintrag in der Liste, darüber „+N“ */
+export const LIST_IMAGES = 5
+
 /** Kopf von Tagebuch und Faden: Titel und „Neuer Eintrag“, darunter „Einträge · Faden“ */
 export function DiaryHeader({ current }: { current: "entries" | "thread" }) {
   return (
@@ -54,7 +57,8 @@ export function DiaryHeader({ current }: { current: "entries" | "thread" }) {
 
 /**
  * Die Einträge nach Monat, neueste oben. Die ganze Karte ist der Link (conventions §7): Titel ist das Vorhaben, sonst
- * die Disziplin; darunter Tag und Scheiben, dann der Anfang der Notiz; rechts bis zu zwei kleine Scheiben.
+ * die Disziplin; darunter Tag und Scheiben, dann der Anfang der Notiz; rechts bis zu fünf kleine Scheiben, darüber
+ * hinaus „+N“.
  */
 export function DiaryList({
   entries,
@@ -111,8 +115,8 @@ export function DiaryList({
                         </span>
                       )}
                     </span>
-                    <span className="flex gap-1">
-                      {entry.cards.slice(0, 2).map((card) => {
+                    <span className="flex max-w-[8.75rem] flex-wrap justify-end gap-1">
+                      {entry.cards.slice(0, LIST_IMAGES).map((card) => {
                         const shots = markShots(marks[card.id] ?? [])
                         return card.targetId ? (
                           <MiniTarget
@@ -124,6 +128,11 @@ export function DiaryList({
                           />
                         ) : null
                       })}
+                      {entry.cards.length > LIST_IMAGES && (
+                        <span className="flex size-11 items-center justify-center rounded-full bg-surface-2 text-[13px] font-semibold text-foreground-2 tabular-nums">
+                          {`+${entry.cards.length - LIST_IMAGES}`}
+                        </span>
+                      )}
                       {entry.kind !== "shooting" && (
                         <span className="flex size-11 items-center justify-center rounded-full bg-surface-2 text-muted-foreground">
                           <BookOpen aria-hidden className="size-5" />

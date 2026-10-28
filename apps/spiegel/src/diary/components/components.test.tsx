@@ -45,7 +45,7 @@ const entry = (over: Partial<EntryView> = {}): EntryView => ({
   expectedScore: null,
   scales: [],
   executions: [],
-  cards: { linked: [], added: [], offered: [] },
+  cards: { linked: [], added: [], offered: [], elsewhere: [] },
   series: {},
   thread: null,
   competition: false,
@@ -108,7 +108,12 @@ describe("Seite eines Eintrags", () => {
     expect(html).toContain('aria-label="Befinden eintragen"')
     expect(html).not.toContain("Hat es geklappt?")
     expect(html).toContain("Noch keine Scheibe. Sie kommt von selbst dazu")
-    expect(html).toContain("Notiz: Was ist passiert? Gern in Stichpunkten.")
+    expect(html).toContain("Was ist passiert? Gern in Stichpunkten.")
+    expect(html).not.toContain("Notiz: ")
+    // Vorhaben und Notiz in einem Kasten, gleich gebaut
+    const box = html.match(/<div data-intention[\s\S]*?data-entry-text="note"/)?.[0] ?? ""
+    expect(box).toContain(">Vorhaben<")
+    expect(box).toContain(">Notiz<")
   })
 
   it("Vorhaben vor der Notiz, Notiz vor Vorher, Satzanfänge in Nachher", () => {
@@ -138,7 +143,7 @@ describe("Seite eines Eintrags", () => {
     )
   })
 
-  it("Scheiben: verknüpft, gelöscht, dazugekommen, vom selben Abend; Ausführung nur mit Serien", () => {
+  it("Scheiben wie in der Liste, ohne Lösen und Herkunft; „Scheiben ändern“; Ausführung je Scheibe", () => {
     const html = screen(
       entry({
         cards: {
@@ -150,6 +155,7 @@ describe("Seite eines Eintrags", () => {
             card("c2", { startedAtMs: Date.UTC(2026, 2, 13, 19, 30), provenance: "measured" }),
           ],
           offered: [card("c3")],
+          elsewhere: [{ card: card("c4"), entryId: "e9", title: "Ruhe im Kopf" }],
         },
         series: {
           c1: [{ series: 1, shots: 10, result: { value: 89, scoring: "rings", digits: 0 } }],
@@ -159,13 +165,47 @@ describe("Seite eines Eintrags", () => {
       })
     )
     expect(html).toContain("19:55")
-    expect(html).toContain("374,3 Ringe · vom Ausdruck")
+    expect(html.match(/<a [^>]*data-entry-card="c1"[^>]*>/)?.[0]).toContain('href="/cards/c1"')
+    expect(html).toContain("374,3 Ringe")
+    expect(html).not.toContain("vom Ausdruck")
+    expect(html).not.toContain("dazugekommen")
+    expect(html).not.toContain(">Lösen<")
     expect(html).toContain("Scheibe gelöscht")
-    expect(html).toContain("dazugekommen")
-    expect(html).toContain("Vom selben Abend")
-    expect(html).toContain(">Dazunehmen<")
+    expect(html).toMatch(/data-change-cards[^>]*>Scheiben ändern</)
     expect(html).toContain('data-section="execution"')
     expect(html).toContain("Kommt von den Scheiben.")
+  })
+
+  it("Ausführung: jede Scheibe ein Block mit Kopf, ihre Serien eingerückt darunter", () => {
+    const html = screen(
+      entry({
+        cards: {
+          linked: [
+            { id: "c1", card: card("c1") },
+            { id: "c2", card: card("c2", { startedAtMs: Date.UTC(2026, 2, 13, 19, 30) }) },
+          ],
+          added: [],
+          offered: [],
+          elsewhere: [],
+        },
+        series: {
+          c1: [
+            { series: 1, shots: 10, result: { value: 89, scoring: "rings", digits: 0 } },
+            { series: 2, shots: 10, result: { value: 91, scoring: "rings", digits: 0 } },
+          ],
+          c2: [{ series: 1, shots: 10, result: { value: 93, scoring: "rings", digits: 0 } }],
+        },
+        executions: [{ cardId: "c1", series: 1, value: 70 }],
+      })
+    )
+    const blocks = [
+      ...html.matchAll(/data-execution-card="(c\d)"([\s\S]*?)(?=data-execution-card=|$)/g),
+    ]
+    expect(blocks.map((m) => m[1])).toEqual(["c1", "c2"])
+    expect(blocks[0][2]).toContain("Serie 1 · 89")
+    expect(blocks[0][2]).toContain("Serie 2 · 91")
+    expect(blocks[0][2]).not.toContain("Serie 1 · 93")
+    expect(blocks[1][2]).toContain("Serie 1 · 93")
   })
 
   it("zeigt die Frage des Fadens und bietet sie als Vorhaben nur, solange keines da ist", () => {
@@ -251,7 +291,7 @@ describe("Liste und Faden", () => {
 })
 
 describe("Neuer Eintrag", () => {
-  it("der markierte Vorschlag hat den gefüllten Knopf", () => {
+  it("oben „Heute“ mit genau einem Knopf, darunter die Abende als ganze Karten, der markierte hervorgehoben", () => {
     const html = renderToStaticMarkup(
       createElement(NewEntryScreen, {
         proposals: [
@@ -274,8 +314,18 @@ describe("Neuer Eintrag", () => {
         timeZone: ZONE,
       })
     )
-    expect(html).toMatch(/data-proposal="2026-10-16\|1" data-marked="true"[\s\S]*?bg-primary/)
-    expect(html).toContain("Ohne Scheibe")
-    expect(html).toContain("Die Scheiben kommen von selbst dazu, sobald Spiegel sie hat.")
+    // „Heute“ steht oben, mit Tag von heute und dem Satz zu den Scheiben
+    expect(html.indexOf(">Heute<")).toBeLessThan(html.indexOf(">Abende ohne Eintrag<"))
+    expect(html).toContain('value="2026-10-28"')
+    expect(html).toContain(
+      "Die Scheiben dieses Tages kommen von selbst dazu, sobald Spiegel sie hat."
+    )
+    expect(html).not.toContain("Ohne Scheibe")
+    // genau ein „Anlegen“; die Karten sind selbst der Knopf
+    expect(html.match(/>Anlegen</g)).toHaveLength(1)
+    const marked = html.match(/<button [^>]*data-proposal="2026-10-16\|1"[^>]*>/)?.[0] ?? ""
+    expect(marked).toContain('data-marked="true"')
+    expect(marked).toContain('aria-label="Eintrag für Fr 16.10. · Luftpistole anlegen"')
+    expect(marked).toContain("bg-accent-wash")
   })
 })

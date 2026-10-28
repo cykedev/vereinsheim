@@ -34,19 +34,26 @@ export interface EntryCardSet {
 
 const evening = (day: string, familyId: number | null) => `${day}|${familyId}`
 
+/** die Zeilen, die gelten: Ein Eintrag im Papierkorb hält keine Scheibe fest, seine Zeilen bleiben für das Wiederherstellen */
+export const activeLinks = (entries: readonly EntryRef[], links: readonly CardLinkRow[]) => {
+  const deleted = new Set(entries.filter((entry) => entry.deleted).map((entry) => entry.id))
+  return links.filter((row) => !deleted.has(row.entryId))
+}
+
 /**
  * Je Eintrag seine Scheiben:
- * - eine Zeile `linked` hält die Scheibe in ihrem Eintrag, auch wenn er im Papierkorb liegt;
+ * - eine Zeile `linked` hält die Scheibe in ihrem Eintrag; liegt er im Papierkorb, ist die Scheibe frei;
  * - eine Scheibe ohne Zeile gehört zum einzigen Eintrag ihres Abends und ihrer Disziplin, der nicht im Papierkorb
  *   liegt; gibt es mehrere, bietet jeder sie an;
  * - eine gelöste Scheibe kommt nicht von selbst wieder, jeder Eintrag ihres Abends und ihrer Disziplin bietet sie an.
- * Einträge im Papierkorb nehmen nichts dazu und bieten nichts an.
+ * Einträge im Papierkorb halten, nehmen und bieten nichts; ihre Zeilen zählen nicht.
  */
 export function entryCards(
   entries: readonly EntryRef[],
-  links: readonly CardLinkRow[],
+  allLinks: readonly CardLinkRow[],
   cards: readonly CardRef[]
 ): Map<string, EntryCardSet> {
+  const links = activeLinks(entries, allLinks)
   const result = new Map<string, EntryCardSet>(
     entries.map((entry) => [entry.id, { linked: [], added: [], offered: [] }])
   )
@@ -70,16 +77,13 @@ export function entryCards(
   return result
 }
 
-/**
- * Der Eintrag einer Scheibe für die Stellen an Scheibe und Start: der fest verknüpfte, wenn er nicht im Papierkorb
- * liegt, sonst der abgeleitete; null ohne.
- */
+/** Der Eintrag einer Scheibe: der fest verknüpfte (nicht im Papierkorb), sonst der abgeleitete; null ohne. */
 export function entryOfCard(
   card: CardRef,
   entries: readonly EntryRef[],
   links: readonly CardLinkRow[]
 ): string | null {
-  const row = links.find((link) => link.cardId === card.id)
+  const row = activeLinks(entries, links).find((link) => link.cardId === card.id)
   if (row?.link === "linked")
     return entries.find((entry) => entry.id === row.entryId && !entry.deleted)?.id ?? null
   for (const [entryId, set] of entryCards(entries, links, [card]))
@@ -89,29 +93,20 @@ export function entryOfCard(
 
 /**
  * Wo eine Scheibe im Tagebuch steht, für die Stellen an Scheibe und Start: in einem Eintrag (fest oder dazugekommen),
- * nur angeboten (gelöst oder mehrere Einträge des Abends; der erste bietet sie zum Dazunehmen an), fest in einem
- * Eintrag im Papierkorb, oder nirgends. So führt jede Zeile dorthin, wo sich etwas tun lässt.
+ * nur angeboten (gelöst, oder mehrere Einträge des Abends; der erste bietet sie zum Dazunehmen an), oder nirgends. Ein
+ * Eintrag im Papierkorb hält sie nicht. So führt jede Zeile dorthin, wo sich etwas tun lässt.
  */
 export type CardPlace =
-  | { kind: "entry"; entryId: string }
-  | { kind: "offered"; entryId: string }
-  | { kind: "trash"; entryId: string }
-  | { kind: "none" }
+  { kind: "entry"; entryId: string } | { kind: "offered"; entryId: string } | { kind: "none" }
 
 export function cardPlace(
   card: CardRef,
   entries: readonly EntryRef[],
   links: readonly CardLinkRow[]
 ): CardPlace {
-  const row = links.find((link) => link.cardId === card.id)
-  if (row?.link === "linked") {
-    const entry = entries.find((e) => e.id === row.entryId)
-    if (entry) return { kind: entry.deleted ? "trash" : "entry", entryId: entry.id }
-  }
-  let offered: string | null = null
-  for (const [entryId, set] of entryCards(entries, links, [card])) {
-    if (set.added.includes(card.id)) return { kind: "entry", entryId }
-    if (offered === null && set.offered.includes(card.id)) offered = entryId
-  }
-  return offered === null ? { kind: "none" } : { kind: "offered", entryId: offered }
+  const entryId = entryOfCard(card, entries, links)
+  if (entryId) return { kind: "entry", entryId }
+  for (const [id, set] of entryCards(entries, links, [card]))
+    if (set.offered.includes(card.id)) return { kind: "offered", entryId: id }
+  return { kind: "none" }
 }

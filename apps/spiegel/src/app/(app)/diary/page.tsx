@@ -4,7 +4,7 @@ import { cn } from "@vereinsheim/lib/utils"
 import { PAGE_SINGLE } from "@vereinsheim/shot-ui/layout/columns"
 import { Page } from "@vereinsheim/ui/design2/page"
 
-import { DiaryHeader, DiaryList } from "@/diary/components/DiaryList"
+import { DiaryHeader, DiaryList, LIST_IMAGES } from "@/diary/components/DiaryList"
 import { DiaryNotice } from "@/diary/components/DiaryNotice"
 import { requireDiary } from "@/diary/page-guard"
 import { diaryList } from "@/diary/queries"
@@ -19,7 +19,7 @@ export default async function DiaryRoute() {
   const entries = await diaryList(db, userId, timeZone)
   const marks = await resultMarks(db, {
     ownerId: userId,
-    ids: entries.flatMap((entry) => entry.cards.slice(0, 2).map((card) => card.id)),
+    ids: entries.flatMap((entry) => entry.cards.slice(0, LIST_IMAGES).map((card) => card.id)),
   })
   return (
     <Page>

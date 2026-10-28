@@ -13,6 +13,7 @@ import {
 } from "@/lib/results-read"
 
 import {
+  activeLinks,
   cardPlace,
   entryCards,
   entryOfCard,
@@ -22,7 +23,7 @@ import {
 } from "./cards"
 import { proposals, type Proposal } from "./proposals"
 import type { ScalePart } from "./scales"
-import type { DiaryKindValue } from "./summaries"
+import { entryTitle, type DiaryKindValue } from "./summaries"
 import { dayOfDate } from "./validation"
 
 export interface Family {
@@ -113,6 +114,8 @@ export interface EntryCardView {
   linked: { id: string; card: ResultCard | null }[]
   added: ResultCard[]
   offered: ResultCard[]
+  /** Scheiben dieses Tages und dieser Disziplin, die in einem anderen Eintrag stecken, mit dessen Titel */
+  elsewhere: { card: ResultCard; entryId: string; title: string }[]
 }
 
 export interface EntryView {
@@ -166,6 +169,25 @@ export async function entryView(
     .map((id) => ({ id, card: cardOf.get(id) ?? null }))
     .sort((a, b) => (a.card?.startedAtMs ?? Infinity) - (b.card?.startedAtMs ?? Infinity))
   const own = [...pick(set.linked), ...pick(set.added)]
+  const others = cards
+    .filter((card) => card.day === day && row.familyId !== null && card.family?.id === row.familyId)
+    .map((card) => ({ card, entryId: entryOfCard(toCardRef(card), entries, links) }))
+    .filter((x): x is { card: ResultCard; entryId: string } => !!x.entryId && x.entryId !== row.id)
+  const titles = new Map(
+    (
+      await db.diaryEntry.findMany({
+        where: { userId, id: { in: others.map((x) => x.entryId) } },
+        select: { id: true, intention: true, kind: true },
+      })
+    ).map((e) => [
+      e.id,
+      entryTitle({
+        intention: e.intention,
+        family: row.familyId === null ? null : (families.get(row.familyId)?.name ?? null),
+        kind: e.kind,
+      }),
+    ])
+  )
   const series: Record<string, ResultSeries[]> = {}
   for (const card of own)
     series[card.id] = (await resultCardSeries(db, { ownerId: userId, cardId: card.id })) ?? []
@@ -183,7 +205,14 @@ export async function entryView(
     expectedScore: row.expectedScore === null ? null : Number(row.expectedScore),
     scales: row.scales.map((s) => ({ part: s.part, aspect: s.aspect, value: s.value })),
     executions: row.executions.map((e) => ({ cardId: e.cardId, series: e.series, value: e.value })),
-    cards: { linked, added: pick(set.added), offered: pick(set.offered) },
+    cards: {
+      linked,
+      added: pick(set.added),
+      offered: pick(set.offered),
+      elsewhere: others
+        .sort((a, b) => a.card.startedAtMs - b.card.startedAtMs)
+        .map((x) => ({ ...x, title: titles.get(x.entryId) ?? "" })),
+    },
     series,
     thread,
     competition: own.some((card) => card.kind === "competition"),
@@ -280,7 +309,11 @@ export async function newEntryView(
       card.startedAtMs >= nowMs - (PROPOSAL_DAYS + 1) * 86_400_000 ||
       (marked && card.day === marked.day && card.family?.id === marked.family?.id)
   )
-  const linked = new Set(links.filter((l) => l.link === "linked").map((l) => l.cardId))
+  const linked = new Set(
+    activeLinks(entries, links)
+      .filter((l) => l.link === "linked")
+      .map((l) => l.cardId)
+  )
   return {
     proposals: proposals(recent, entries, linked, markedCardId),
     families,
@@ -322,7 +355,7 @@ export async function cardPlaceOf(
 /**
  * Je Abend und Disziplin (Familie über ihre Kennung), wohin die Zeile auf Start führt: in den Eintrag der neuesten
  * Scheibe, die in einem steckt, sonst in den, der sie anbietet, sonst zum Anlegen mit der neuesten Scheibe, die in
- * keinem Eintrag steht. Stecken alle in Einträgen im Papierkorb, keine Zeile (null).
+ * keinem Eintrag steht; ohne eigene Scheibe mit Disziplin keine Zeile (null).
  */
 export async function eveningEntries(
   db: Db,

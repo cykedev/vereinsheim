@@ -11,6 +11,7 @@ import type { ActionResult } from "@/lib/types"
 import {
   addCard,
   clearSection,
+  createForCard,
   createFromEvening,
   createWithout,
   releaseCard,
@@ -25,7 +26,7 @@ import {
 } from "./entries"
 import type { ScalePart, Stage } from "./scales"
 import { diarySettings } from "./settings"
-import { ERRORS } from "./texts"
+import { ERRORS, NEW_TEXTS } from "./texts"
 import { TEXT_FIELDS, type TextField } from "./validation"
 
 // Aus dem Browser: Sitzung, Tagebuch eingeschaltet, Kennungen der Form nach; die Regeln stehen in `entries.ts`.
@@ -59,6 +60,19 @@ export async function createEntryFromEvening(
   if ("error" in result) return result
   revalidatePath("/", "layout")
   return { success: true, data: { id: result.id } }
+}
+
+/** „Eintrag anlegen“ an einer Scheibe: legt an (oder findet den Eintrag) und nennt das Ziel für den Browser */
+export async function createEntryForCard(
+  cardId: string
+): Promise<ActionResult<{ href: string; toast?: string }>> {
+  const g = await guard()
+  if ("error" in g) return g
+  if (!isId(cardId)) return { error: ERRORS.missing }
+  const result = await createForCard(db, g.userId, cardId, g.timeZone)
+  if ("error" in result) return result
+  revalidatePath("/", "layout")
+  return { success: true, data: { href: `/diary/${result.id}`, toast: NEW_TEXTS.created } }
 }
 
 export async function createEntryWithout(input: {

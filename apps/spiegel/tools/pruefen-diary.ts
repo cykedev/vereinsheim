@@ -150,9 +150,16 @@ async function run(page: Page, { base, check, record }: Context) {
   if (!proposal)
     throw new Error("kein Vorschlag: das Demo-Konto hat in den letzten 30 Tagen keine Scheibe")
   const [day, familyId] = proposal.split("|")
-  await page.click(`button("Anlegen", $("[data-proposal]"))`)
+  // oben „Heute“ mit genau einem Knopf, die Abende sind ganze Karten
   check(
-    "Tagebuch: „Anlegen“ am ersten Vorschlag öffnet den Eintrag mit seinen Scheiben",
+    "Tagebuch: „Neuer Eintrag“ hat oben „Heute“ und genau ein „Anlegen“",
+    await page.ev<boolean>(
+      `txt($("[data-new-without]")).startsWith("Heute") && $$("button").filter((b) => txt(b) === "Anlegen").length === 1`
+    )
+  )
+  await page.click(`$("[data-proposal]")`)
+  check(
+    "Tagebuch: ein Tipp auf die Karte des ersten Abends öffnet den Eintrag mit seinen Scheiben",
     (await page.waitFor(`${ENTRY_PATH}.test(location.pathname)`, 10_000)) &&
       (await page.waitFor(`$$("[data-entry-card]").length > 0`)),
     proposal
@@ -295,21 +302,33 @@ async function run(page: Page, { base, check, record }: Context) {
   )
   await page.goto(`${base}/`)
   const start = await page.ev<string[]>(
-    `$$("a").filter((a) => txt(a).startsWith("Tagebuch · Eintrag")).map((a) => txt(a) + " " + a.getAttribute("href"))`
+    `$$("a, button").filter((a) => txt(a).startsWith("Tagebuch · Eintrag")).map((a) => txt(a) + " " + (a.getAttribute("href") ?? "Knopf"))`
   )
   check("Tagebuch: auf Start je Block eine Zeile zum Eintrag", start.length > 0, start.join(" | "))
 
-  // Scheibe lösen: danach nur noch angeboten, die Zeile an der Scheibe führt in den Eintrag, der sie anbietet
+  // Scheiben ändern: im Blatt abhaken löst, danach nur noch angeboten (im Blatt ohne Haken)
   await page.goto(`${base}/diary/${first}`)
-  await page.click(`button("Lösen", $('[data-entry-card="${cardId}"]'))`)
-  await confirm(page, "Lösen")
   check(
-    "Tagebuch: eine gelöste Scheibe steht nur noch unter „Vom selben Abend“",
-    await page.waitFor(
-      `!!$('[data-offered] [data-offered-card="${cardId}"]') && !$('[data-entry-card="${cardId}"]')`,
-      10_000
+    "Tagebuch: Scheiben im Eintrag wie in der Liste, ohne „Lösen“ und Herkunft, die Zeile führt zur Scheibe",
+    await page.ev<boolean>(
+      `$('[data-entry-card="${cardId}"]')?.getAttribute("href") === "/cards/${cardId}" && !button("Lösen") && !/vom Ausdruck|eingetragen/.test(txt($("[data-entry-cards]")))`
     )
   )
+  await page.click(`$("[data-change-cards]")`)
+  await page.waitFor(`!!sheet() && !!$("[data-cards-sheet]", sheet())`)
+  const box = `$('[data-sheet-card="${cardId}"] input', sheet())`
+  const checkedBefore = await page.ev<boolean>(`${box}.checked`)
+  await page.click(box)
+  check(
+    "Tagebuch: im Blatt „Scheiben ändern“ nimmt ein Haken weg die Scheibe aus dem Eintrag",
+    checkedBefore &&
+      (await page.waitFor(
+        `!${box}.checked && !$('[data-entry-cards] [data-entry-card="${cardId}"]')`,
+        10_000
+      ))
+  )
+  await page.click(`button("Fertig", sheet())`)
+  await page.waitFor(`!sheet()`)
   await page.goto(`${base}/cards/${cardId}`)
   check(
     "Tagebuch: an der gelösten Scheibe „bietet sie an“ mit „Eintrag öffnen“ in diesen Eintrag",
@@ -339,6 +358,19 @@ async function run(page: Page, { base, check, record }: Context) {
   await page.goto(`${base}/profile/trash`)
   const trashed = await page.ev<number>(`$$("[data-diary-trash] [data-trash-entry]").length`)
   check("Tagebuch: der Eintrag liegt im Papierkorb", trashed === 1, trashed)
+
+  // im Papierkorb hält er keine Scheibe: an der Scheibe legt „Eintrag anlegen“ direkt an und öffnet ihn
+  await page.goto(`${base}/cards/${cardId}`)
+  await page.click(`button("Eintrag anlegen", $("[data-card-actions]"))`)
+  check(
+    "Tagebuch: „Eintrag anlegen“ an der Scheibe legt direkt an, ohne Zwischenseite",
+    (await page.waitFor(
+      `${ENTRY_PATH}.test(location.pathname) && location.pathname !== "/diary/${first}"`,
+      10_000
+    )) && (await page.waitFor(`!!$('[data-entry-card="${cardId}"]')`, 10_000)),
+    await page.ev<string>(`location.pathname`)
+  )
+  await page.goto(`${base}/profile/trash`)
   await page.click(`button("Endgültig löschen", $("[data-diary-trash] [data-trash-entry]"))`)
   await confirm(page, "Endgültig löschen")
   check(

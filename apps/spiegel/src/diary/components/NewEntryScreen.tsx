@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, ChevronRight } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState, useTransition } from "react"
@@ -27,14 +27,13 @@ import { ENTRY_TEXTS, ERRORS, KIND_CHOICES, NEW_TEXTS } from "../texts"
 
 const PRIMARY =
   "inline-flex h-10 shrink-0 cursor-pointer items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-90 focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-60"
-const QUIET =
-  "inline-flex h-10 shrink-0 cursor-pointer items-center rounded-full border border-line-strong px-3.5 text-[13px] font-semibold text-primary hover:bg-accent-wash focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-60"
 const FIELD =
   "h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-2 focus-visible:outline-ring"
 
 /**
- * „Neuer Eintrag“: je Abend und Disziplin der letzten 30 Tage mit Scheiben ohne Eintrag ein Vorschlag (der jüngste oder
- * der aus der Adresse mit gefülltem Knopf), darunter ein Eintrag ohne Scheibe. Anlegen öffnet den Eintrag.
+ * „Neuer Eintrag“: oben „Heute“ (Tag vorbelegt und änderbar, Art, Disziplin, ein Knopf), der Weg für Vorhaben und
+ * Prognose vor dem Training; die Scheiben des Tages kommen von selbst dazu. Darunter die Abende der letzten 30 Tage mit
+ * Scheiben ohne Eintrag als Karten, die ganz anlegen (die aus der Adresse hervorgehoben). Anlegen öffnet den Eintrag.
  */
 export function NewEntryScreen({
   proposals,
@@ -57,7 +56,8 @@ export function NewEntryScreen({
   }>({
     day: today,
     kind: "shooting",
-    familyId: families[0]?.id ?? null,
+    // die Disziplin des jüngsten Abends, sonst die erste
+    familyId: proposals[0]?.family.id ?? families[0]?.id ?? null,
   })
   const [error, setError] = useState<{ where: string; text: string } | null>(null)
   const [pending, startTransition] = useTransition()
@@ -72,10 +72,6 @@ export function NewEntryScreen({
       toast.success(NEW_TEXTS.created)
       router.push(`/diary/${result.data!.id}`)
     })
-  const primaryIndex = Math.max(
-    0,
-    proposals.findIndex((p) => p.marked)
-  )
   const time = (card: ResultCard) =>
     card.timeUnknown ? "Uhrzeit unbekannt" : formatTimeOfDay(new Date(card.startedAtMs), timeZone)
 
@@ -96,83 +92,18 @@ export function NewEntryScreen({
           <p className="text-foreground-2">{NEW_TEXTS.lead}</p>
         </div>
 
-        <section aria-labelledby="evenings-title" className="grid gap-3">
-          <h2 id="evenings-title" className="text-[15px] font-semibold">
-            {NEW_TEXTS.evenings}
-          </h2>
-          {proposals.length === 0 && (
-            <p className="text-sm text-muted-foreground">{NEW_TEXTS.none}</p>
-          )}
-          <ul className="grid gap-3">
-            {proposals.map((proposal, i) => {
-              const key = `${proposal.day}|${proposal.family.id}`
-              const cards = proposal.cards
-              return (
-                <li
-                  key={key}
-                  data-proposal={key}
-                  data-marked={proposal.marked || undefined}
-                  className={cn(
-                    "grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border bg-card p-4",
-                    i === primaryIndex ? "border-line-strong" : "border-border",
-                    proposal.marked && "bg-accent-wash"
-                  )}
-                >
-                  <span className="grid min-w-0 gap-2">
-                    <span className="text-[15px] font-semibold">
-                      {dayLabel(proposal.day, timeZone)}
-                      <span className="font-normal text-foreground-2">{` · ${proposal.family.name}`}</span>
-                    </span>
-                    <span className="text-[13px] text-foreground-2 tabular-nums">
-                      {cards.length === 1
-                        ? `1 Scheibe · ${time(cards[0])}`
-                        : `${cards.length} Scheiben · ${time(cards[0])} bis ${time(cards[cards.length - 1])}`}
-                    </span>
-                    <span className="flex flex-wrap gap-1">
-                      {cards.map((card) => {
-                        const shots = markShots(marks[card.id] ?? [])
-                        return card.targetId ? (
-                          <MiniTarget
-                            key={card.id}
-                            target={TARGETS[card.targetId]}
-                            shots={shots}
-                            placeholder={shots.length === 0}
-                            className="size-10"
-                          />
-                        ) : null
-                      })}
-                    </span>
-                    {error?.where === key && (
-                      <span role="alert" className="text-sm text-destructive">
-                        {error.text}
-                      </span>
-                    )}
-                  </span>
-                  <button
-                    type="button"
-                    disabled={pending}
-                    onClick={() =>
-                      create(key, () => createEntryFromEvening(proposal.day, proposal.family.id))
-                    }
-                    className={i === primaryIndex ? PRIMARY : QUIET}
-                  >
-                    {NEW_TEXTS.create}
-                  </button>
-                </li>
-              )
-            })}
-          </ul>
-        </section>
-
         <form
           data-new-without
-          className="grid gap-4 rounded-2xl border border-border bg-card p-4"
+          aria-labelledby="today-title"
+          className="grid gap-4 rounded-2xl border border-line-strong bg-card p-4"
           onSubmit={(event) => {
             event.preventDefault()
-            create("without", () => createEntryWithout(form))
+            create("today", () => createEntryWithout(form))
           }}
         >
-          <h2 className="text-[15px] font-semibold">{NEW_TEXTS.without}</h2>
+          <h2 id="today-title" className="text-[15px] font-semibold">
+            {NEW_TEXTS.today}
+          </h2>
           <label className="grid gap-1.5 text-sm font-semibold">
             {ENTRY_TEXTS.day}
             <input
@@ -192,9 +123,6 @@ export function NewEntryScreen({
               onChange={(kind) => setForm({ ...form, kind })}
               wrap
             />
-            {form.kind === "shooting" && (
-              <span className="text-[13px] text-muted-foreground">{NEW_TEXTS.withCardsHint}</span>
-            )}
           </div>
           <label className="grid gap-1.5 text-sm font-semibold">
             {ENTRY_TEXTS.family}
@@ -216,15 +144,85 @@ export function NewEntryScreen({
               ))}
             </select>
           </label>
-          {error?.where === "without" && (
+          {form.kind === "shooting" && (
+            <p className="text-[13px] text-muted-foreground">{NEW_TEXTS.withCardsHint}</p>
+          )}
+          {error?.where === "today" && (
             <p role="alert" className="text-sm text-destructive">
               {error.text}
             </p>
           )}
-          <button type="submit" disabled={pending} className={cn(QUIET, "justify-self-start")}>
+          <button type="submit" disabled={pending} className={cn(PRIMARY, "justify-self-start")}>
             {NEW_TEXTS.create}
           </button>
         </form>
+
+        <section aria-labelledby="evenings-title" className="grid gap-3">
+          <h2 id="evenings-title" className="text-[15px] font-semibold">
+            {NEW_TEXTS.evenings}
+          </h2>
+          {proposals.length === 0 && (
+            <p className="text-sm text-muted-foreground">{NEW_TEXTS.none}</p>
+          )}
+          <ul className="grid gap-3">
+            {proposals.map((proposal) => {
+              const key = `${proposal.day}|${proposal.family.id}`
+              const cards = proposal.cards
+              const label = dayLabel(proposal.day, timeZone)
+              return (
+                <li key={key}>
+                  {/* die ganze Karte legt an (conventions §7), ohne eigenen Knopf */}
+                  <button
+                    type="button"
+                    data-proposal={key}
+                    data-marked={proposal.marked || undefined}
+                    disabled={pending}
+                    aria-label={NEW_TEXTS.createFor(label, proposal.family.name)}
+                    onClick={() =>
+                      create(key, () => createEntryFromEvening(proposal.day, proposal.family.id))
+                    }
+                    className={cn(
+                      "grid w-full cursor-pointer grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border bg-card p-4 text-left hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-60",
+                      proposal.marked ? "border-line-strong bg-accent-wash" : "border-border"
+                    )}
+                  >
+                    <span className="grid min-w-0 gap-2">
+                      <span className="text-[15px] font-semibold">
+                        {label}
+                        <span className="font-normal text-foreground-2">{` · ${proposal.family.name}`}</span>
+                      </span>
+                      <span className="text-[13px] text-foreground-2 tabular-nums">
+                        {cards.length === 1
+                          ? `1 Scheibe · ${time(cards[0])}`
+                          : `${cards.length} Scheiben · ${time(cards[0])} bis ${time(cards[cards.length - 1])}`}
+                      </span>
+                      <span className="flex flex-wrap gap-1">
+                        {cards.map((card) => {
+                          const shots = markShots(marks[card.id] ?? [])
+                          return card.targetId ? (
+                            <MiniTarget
+                              key={card.id}
+                              target={TARGETS[card.targetId]}
+                              shots={shots}
+                              placeholder={shots.length === 0}
+                              className="size-10"
+                            />
+                          ) : null
+                        })}
+                      </span>
+                    </span>
+                    <ChevronRight aria-hidden className="size-5 text-muted-foreground" />
+                  </button>
+                  {error?.where === key && (
+                    <p role="alert" className="pt-1 text-sm text-destructive">
+                      {error.text}
+                    </p>
+                  )}
+                </li>
+              )
+            })}
+          </ul>
+        </section>
       </section>
     </Page>
   )

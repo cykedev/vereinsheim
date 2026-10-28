@@ -31,6 +31,7 @@ import { ThreadHint } from "./ThreadHint"
 
 const BOX = "rounded-2xl border border-border bg-card p-4"
 const H2 = "font-display text-xl font-bold tracking-tight"
+const LABEL = "text-[12px] font-semibold tracking-wide text-muted-foreground uppercase"
 
 const valuesOf = (entry: EntryView, part: ScalePart) =>
   Object.fromEntries(entry.scales.filter((s) => s.part === part).map((s) => [s.aspect, s.value]))
@@ -123,34 +124,38 @@ export function EntryScreen({
             marks={marks}
             executions={executions}
             dayLabel={dayLabel}
+            familyName={entry.family?.name ?? ""}
             timeZone={timeZone}
           />
         )}
 
-        <div data-intention className="grid gap-1 rounded-2xl bg-accent-wash px-4 py-3">
-          <span className="text-[12px] font-semibold tracking-wide text-muted-foreground uppercase">
-            {ENTRY_TEXTS.intention}
-          </span>
-          <EntryText
-            name="intention"
-            placeholder={ENTRY_TEXTS.intentionEmpty}
-            value={entry.intention}
-            rows={1}
-            save={text("intention")}
-            savedText={ENTRY_TEXTS.intentionSaved}
-            onDirty={onDirty}
-          />
+        {/* Vorhaben und Notiz in einem Kasten, gleich gebaut: Überschrift, darunter das Feld */}
+        <div data-intention className="grid gap-3 rounded-2xl bg-accent-wash px-4 py-3">
+          <div className="grid gap-1">
+            <span className={LABEL}>{ENTRY_TEXTS.intention}</span>
+            <EntryText
+              name="intention"
+              placeholder={ENTRY_TEXTS.intentionEmpty}
+              value={entry.intention}
+              rows={1}
+              save={text("intention")}
+              savedText={ENTRY_TEXTS.intentionSaved}
+              onDirty={onDirty}
+            />
+          </div>
+          <div className="grid gap-1">
+            <span className={LABEL}>{ENTRY_TEXTS.note}</span>
+            <EntryText
+              name="note"
+              placeholder={ENTRY_TEXTS.noteEmpty}
+              value={entry.note}
+              rows={4}
+              save={text("note")}
+              savedText={ENTRY_TEXTS.noteSaved}
+              onDirty={onDirty}
+            />
+          </div>
         </div>
-
-        <EntryText
-          name="note"
-          placeholder={ENTRY_TEXTS.noteEmpty}
-          value={entry.note}
-          rows={4}
-          save={text("note")}
-          savedText={ENTRY_TEXTS.noteSaved}
-          onDirty={onDirty}
-        />
 
         <div className="grid gap-3">
           <h2 className={H2}>{ENTRY_TEXTS.before}</h2>
@@ -263,6 +268,7 @@ export function EntryScreen({
               day={dayLabel}
               cards={ownCards}
               series={entry.series}
+              marks={marks}
               values={Object.fromEntries(
                 entry.executions.map((e) => [`${e.cardId}|${e.series}`, e.value])
               )}

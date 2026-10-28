@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache"
 
+import { getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
+
 import { shooterId } from "@/lib/action-guards"
 import { db } from "@/lib/db"
 import type { ActionResult } from "@/lib/types"
@@ -12,13 +14,15 @@ import { deleteEntry, purgeEntryNow, restoreEntry } from "./trash"
 
 // Papierkorb der Einträge aus dem Browser: nur eigene, Tagebuch eingeschaltet; danach Tagebuch, Start, Scheiben neu
 
-async function run(change: (userId: string) => Promise<string | null>): Promise<ActionResult> {
+async function run(
+  change: (userId: string, timeZone: string) => Promise<string | null>
+): Promise<ActionResult> {
   const userId = await shooterId()
   if (!userId) return { error: ERRORS.session }
   if (!(await diarySettings(db, userId)).enabled) return { error: ERRORS.off }
   let error: string | null
   try {
-    error = await change(userId)
+    error = await change(userId, getDisplayTimeZone())
   } catch {
     return { error: ERRORS.failed }
   }
@@ -37,7 +41,7 @@ export async function deleteEntryAction(entryId: string): Promise<ActionResult> 
 
 export async function restoreEntryAction(entryId: string): Promise<ActionResult> {
   if (!isId(entryId)) return { error: ERRORS.missing }
-  return run((userId) => restoreEntry(db, userId, entryId))
+  return run((userId, timeZone) => restoreEntry(db, userId, entryId, timeZone))
 }
 
 export async function purgeEntryNowAction(entryId: string): Promise<ActionResult> {

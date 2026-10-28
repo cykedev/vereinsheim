@@ -2,6 +2,7 @@
 // (je Block des letzten Abends) bekommen hier allgemeine Zeilen. Ist das Tagebuch aus, kommen keine. Jede Zeile führt
 // dorthin, wo sich etwas tun lässt (`cardPlace`).
 
+import { createEntryForCard } from "@/diary/actions"
 import { cardPlaceOf, eveningEntries } from "@/diary/queries"
 import { diarySettings } from "@/diary/settings"
 import { dayLabel } from "@/diary/summaries"
@@ -12,7 +13,7 @@ const TITLE = "Tagebuch"
 
 /**
  * die Zeile „Tagebuch“ an einer eigenen Scheibe: im Eintrag „Eintrag öffnen“, angeboten der Eintrag, der sie anbietet,
- * in einem Eintrag im Papierkorb der Papierkorb, sonst „Eintrag anlegen“
+ * sonst „Eintrag anlegen“, das den Eintrag direkt anlegt und öffnet
  */
 export async function cardLines(
   db: Db,
@@ -34,24 +35,18 @@ export async function cardLines(
           "Eintrag öffnen"
         ),
       ]
-    case "trash":
-      return [
-        line(
-          `Im Eintrag vom ${when}. Er liegt im Papierkorb.`,
-          "/profile/trash",
-          "Papierkorb öffnen"
-        ),
-      ]
     case "none":
       return [
-        line(
-          "Noch in keinem Eintrag.",
-          `/diary/new?card=${encodeURIComponent(query.cardId)}`,
-          "Eintrag anlegen"
-        ),
+        {
+          ...line("Noch in keinem Eintrag.", newHref(query.cardId), "Eintrag anlegen"),
+          run: createEntryForCard.bind(null, query.cardId),
+        },
       ]
   }
 }
+
+/** ohne Skript der Weg über „Neuer Eintrag“ mit dem Abend dieser Scheibe */
+const newHref = (cardId: string) => `/diary/new?card=${encodeURIComponent(cardId)}`
 
 const line = (state: string, href: string, action: string): PartLine => ({
   key: "diary",
@@ -63,8 +58,7 @@ const line = (state: string, href: string, action: string): PartLine => ({
 
 /**
  * Je Block auf Start (Abend und Familie) eine Zeile: der Eintrag der neuesten Scheibe des Blocks, die in einem steckt
- * oder angeboten ist, sonst „Eintrag anlegen“ mit der neuesten freien Scheibe; stecken alle in Einträgen im Papierkorb,
- * keine. Schlüssel `Tag|Familie`.
+ * oder angeboten ist, sonst „Eintrag anlegen“ mit der neuesten freien Scheibe (legt direkt an). Schlüssel `Tag|Familie`.
  */
 export async function startLines(
   db: Db,
@@ -94,8 +88,9 @@ export async function startLines(
             key,
             title: TITLE,
             state: "",
-            href: `/diary/new?card=${encodeURIComponent(target.cardId)}`,
+            href: newHref(target.cardId),
             action: "Eintrag anlegen",
+            run: createEntryForCard.bind(null, target.cardId),
           }
   }
   return lines

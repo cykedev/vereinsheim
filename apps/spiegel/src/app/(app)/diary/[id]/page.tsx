@@ -20,6 +20,9 @@ export default async function EntryRoute({ params }: { params: Promise<{ id: str
   const cardIds = [
     ...entry.cards.linked.flatMap(({ card }) => (card ? [card.id] : [])),
     ...entry.cards.added.map((card) => card.id),
+    // für das Blatt „Scheiben ändern“
+    ...entry.cards.offered.map((card) => card.id),
+    ...entry.cards.elsewhere.map(({ card }) => card.id),
   ]
   const [marks, families] = await Promise.all([
     resultMarks(db, { ownerId: userId, ids: cardIds }),

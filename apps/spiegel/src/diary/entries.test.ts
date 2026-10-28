@@ -9,6 +9,7 @@ import { createTestSite, type TestSite } from "../../test/fixtures"
 import {
   addCard,
   clearSection,
+  createForCard,
   createFromEvening,
   createWithout,
   ENTRY_ERRORS,
@@ -418,6 +419,42 @@ describe("der Faden", () => {
     expect(thread.family?.id).toBe(site.familyId)
     expect(thread.items.map((i) => i.entryId).slice(0, 2)).toEqual([next.id, old.id])
     expect(thread.items.some((i) => i.entryId === deleted.id)).toBe(false)
+  })
+})
+
+describe("Anlegen an einer Scheibe und der Schusstag", () => {
+  it("„Eintrag anlegen“ legt direkt an, ein zweites Mal kommt derselbe Eintrag", async () => {
+    const { ms } = eveningMs(13)
+    const c = await card(ms)
+    const first = (await createForCard(db, site.ownerId, c, ZONE)) as { id: string }
+    expect(first.id).toBeTruthy()
+    expect(await createForCard(db, site.ownerId, c, ZONE)).toEqual({ id: first.id })
+    expect((await view(first.id)).cards.linked.map((x) => x.card?.id)).toEqual([c])
+    expect(await createForCard(db, site.ownerId, await card(ms, otherId), ZONE)).toEqual({
+      error: ENTRY_ERRORS.noCard,
+    })
+  })
+
+  it("eine Scheibe kommt in den Eintrag ihres Schusstags, nicht in den des Eingangs", async () => {
+    // ein Eintrag für heute und einer für den Tag vor zwölf Tagen; die Scheibe kommt heute an, geschossen damals
+    const today = formatIsoDate(new Date(), ZONE)
+    const { day, ms } = eveningMs(14)
+    const now = (await createWithout(db, site.ownerId, {
+      day: today,
+      kind: "shooting",
+      familyId: site.familyId,
+      timeZone: ZONE,
+    })) as { id: string }
+    const then = (await createWithout(db, site.ownerId, {
+      day,
+      kind: "shooting",
+      familyId: site.familyId,
+      timeZone: ZONE,
+    })) as { id: string }
+    const c = await card(ms)
+    expect((await view(then.id)).cards.added.map((x) => x.id)).toContain(c)
+    expect((await view(now.id)).cards.added.map((x) => x.id)).not.toContain(c)
+    await db.diaryEntry.deleteMany({ where: { id: { in: [now.id, then.id] } } })
   })
 })
 

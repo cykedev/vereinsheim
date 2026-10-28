@@ -8,7 +8,7 @@ import type { Prisma } from "@/generated/prisma/client"
 import type { Db } from "@/lib/db"
 import { resultCardSeries, resultCards, resultFamilies } from "@/lib/results-read"
 
-import { entryCards, type CardLinkRow } from "./cards"
+import { cardPlace, entryCards, type CardLinkRow } from "./cards"
 import { lastQuestion } from "./queries"
 import { isAspectOf, stageOf, valueOfStage, type ScalePart, type Stage } from "./scales"
 import { ERRORS } from "./texts"
@@ -60,7 +60,7 @@ async function run(db: Db, change: (tx: Tx) => Promise<string | null>): Promise<
 }
 
 /** die Scheiben des Kontos, die zum Abend und zur Disziplin eines Eintrags gehören könnten, und ihre Zeilen */
-async function eveningOf(
+export async function eveningOf(
   db: Db,
   userId: string,
   day: string,
@@ -93,6 +93,25 @@ async function eveningOf(
 }
 
 /**
+ * „Eintrag anlegen“ an einer Scheibe (Seite der Scheibe, Start): steckt sie schon in einem Eintrag oder bietet einer sie
+ * an, dieser; sonst ein neuer Eintrag aus ihrem Abend und ihrer Disziplin. Ohne Zwischenseite.
+ */
+export async function createForCard(
+  db: Db,
+  userId: string,
+  cardId: string,
+  timeZone: string
+): Promise<{ id: string } | { error: string }> {
+  const [card] = await resultCards(db, { ownerId: userId, timeZone, ids: [cardId] })
+  if (!card) return { error: ENTRY_ERRORS.noCard }
+  if (!card.family) return { error: ENTRY_ERRORS.family }
+  const { entries, links } = await eveningOf(db, userId, card.day, card.family.id, timeZone)
+  const place = cardPlace({ id: card.id, day: card.day, familyId: card.family.id }, entries, links)
+  if (place.kind !== "none") return { id: place.entryId }
+  return createFromEvening(db, userId, { day: card.day, familyId: card.family.id, timeZone })
+}
+
+/**
  * Ein Eintrag aus dem Vorschlag eines Abends: verknüpft alle Scheiben dieses Abends und dieser Disziplin, die in
  * keinem Eintrag fest stecken. Gibt es für den Abend schon einen Eintrag dieser Disziplin, oder steckt jede Scheibe
  * schon fest, geht es nicht.
@@ -111,8 +130,9 @@ export async function createFromEvening(
       where: { userId, day: dateOfDay(input.day), familyId: input.familyId, deletedAt: null },
     })
     if (open > 0) return ENTRY_ERRORS.taken
+    // Zeilen eines Eintrags im Papierkorb halten nichts fest; die neue Zeile ersetzt sie
     const rows = await tx.diaryEntryCard.findMany({
-      where: { cardId: { in: cards.map((c) => c.id) }, entry: { userId } },
+      where: { cardId: { in: cards.map((c) => c.id) }, entry: { userId, deletedAt: null } },
       select: { cardId: true, link: true },
     })
     const fixed = new Set(rows.filter((r) => r.link === "linked").map((r) => r.cardId))
@@ -237,8 +257,12 @@ export async function addCard(
       card.family?.id !== entry.familyId
     )
       return ENTRY_ERRORS.notHere
-    const row = await tx.diaryEntryCard.findUnique({ where: { cardId } })
-    if (row?.link === "linked" && row.entryId !== entryId) return ENTRY_ERRORS.taken
+    const row = await tx.diaryEntryCard.findUnique({
+      where: { cardId },
+      select: { entryId: true, link: true, entry: { select: { deletedAt: true } } },
+    })
+    if (row?.link === "linked" && row.entryId !== entryId && !row.entry.deletedAt)
+      return ENTRY_ERRORS.taken
     await tx.diaryEntryCard.upsert({
       where: { cardId },
       create: { cardId, entryId, link: "linked" },
@@ -264,9 +288,13 @@ export async function releaseCard(
   const own = (await resultCards(db, { ownerId: userId, timeZone, ids: [cardId] })).length > 0
   return run(db, async (tx) => {
     if (!(await lockEntry(tx, userId, entryId))) return ERRORS.missing
-    const row = await tx.diaryEntryCard.findUnique({ where: { cardId } })
+    const row = await tx.diaryEntryCard.findUnique({
+      where: { cardId },
+      select: { entryId: true, link: true, entry: { select: { deletedAt: true } } },
+    })
     if (!own && row?.entryId !== entryId) return ENTRY_ERRORS.noCard
-    if (row && row.entryId !== entryId && row.link === "linked") return ENTRY_ERRORS.notHere
+    if (row && row.entryId !== entryId && row.link === "linked" && !row.entry.deletedAt)
+      return ENTRY_ERRORS.notHere
     await tx.diaryEntryCard.upsert({
       where: { cardId },
       create: { cardId, entryId, link: "released" },
