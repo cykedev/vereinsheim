@@ -275,6 +275,10 @@ Entschieden mit dem User am 28. Oktober 2026:
   Tagebuch eine Zeile zum Eintrag setzt. Der Ergebnisteil kennt nur die Stelle, nicht das Tagebuch; das Gate bleibt.
 - **Erst ein Designkonzept, dann Plan und Bau** (User): je Teil ein Konzept als Artifact mit den Screens am Telefon und
   am Desktop; Bedienbarkeit, schön, professionell und nützlich zählen am meisten. Geplant wird erst nach der Freigabe.
+- **Treffsicher 2.0** (User): Treffsicher war eine lange Test- und Evaluationsphase. Das Tagebuch entwickelt daraus
+  sinnvoll weiter: Was genutzt wurde, wird besser; was kaum genutzt wurde, wird einfacher oder fällt weg. Grundlage ist
+  die Nutzung aller Konten (Zählung und Inhalte, nur als Muster). Keine Sonderbehandlung für übernommene Daten: ein
+  Modell und eine Anzeige für alle; Werte wie Befinden bleiben intern auf 0–100, die Oberfläche zeigt fünf Stufen.
 
 ### Stufe 3 · Die Daten ziehen um
 
