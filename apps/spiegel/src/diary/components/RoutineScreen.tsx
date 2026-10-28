@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowLeft, Plus, Trash2 } from "lucide-react"
+import { ArrowLeft, Trash2 } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState, useTransition } from "react"
@@ -26,11 +26,8 @@ import type { RoutineView } from "../routines/queries"
 import { ROUTINE_TEXTS } from "../routines/texts"
 import { ERRORS } from "../texts"
 
-import { ROW_BUTTON } from "./styles"
-
-const BOX = "rounded-2xl border border-border bg-card p-4"
-const CHIP =
-  "inline-flex h-8 cursor-pointer items-center rounded-full border border-line-strong px-3 text-[13px] font-semibold text-foreground-2 focus-visible:outline-2 focus-visible:outline-ring aria-pressed:border-primary aria-pressed:bg-accent-wash aria-pressed:text-foreground"
+import { PlusRow } from "./FormParts"
+import { BOX, CHIP, ROW_BUTTON } from "./styles"
 
 /**
  * Ein Ablauf zum Lesen, gut am Stand auf dem Telefon: nummerierte Schritte in weichen Kreisen, Titel fett, die
@@ -62,25 +59,13 @@ export function RoutineScreen({ routine, families }: { routine: RoutineView; fam
         </div>
 
         {!routine.family && !familyOpen && (
-          <div
-            data-plus-row="family"
-            className={`${BOX} flex items-center justify-between gap-3 py-3`}
-          >
-            <span className="grid min-w-0">
-              <span className="text-[15px] font-semibold">{ROUTINE_TEXTS.setFamily}</span>
-              <span className="text-[13px] text-muted-foreground">
-                {ROUTINE_TEXTS.setFamilyHint}
-              </span>
-            </span>
-            <button
-              type="button"
-              aria-label={ROUTINE_TEXTS.setFamily}
-              onClick={() => setFamilyOpen(true)}
-              className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full border border-line-strong text-primary hover:bg-accent-wash focus-visible:outline-2 focus-visible:outline-ring"
-            >
-              <Plus aria-hidden className="size-4" />
-            </button>
-          </div>
+          <PlusRow
+            name="family"
+            title={ROUTINE_TEXTS.setFamily}
+            hint={ROUTINE_TEXTS.setFamilyHint}
+            onClick={() => setFamilyOpen(true)}
+            boxed
+          />
         )}
 
         <ol data-routine-steps className={`${BOX} grid divide-y divide-border py-1`}>
@@ -200,7 +185,7 @@ function RoutineFamily({
               }
               className="inline-flex h-10 cursor-pointer items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-90 focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-60"
             >
-              {pending ? "Speichern…" : "Speichern"}
+              {pending ? "Speichern…" : ROUTINE_TEXTS.save}
             </button>
             <button
               type="button"
@@ -211,7 +196,7 @@ function RoutineFamily({
               }}
               className="inline-flex h-10 cursor-pointer items-center rounded-md px-4 text-sm font-medium hover:bg-surface-2"
             >
-              Abbrechen
+              {ROUTINE_TEXTS.cancel}
             </button>
           </div>
         </div>
@@ -243,13 +228,13 @@ function DeleteRoutine({
       action={
         <button
           type="button"
-          aria-label="Ablauf löschen"
+          aria-label={ROUTINE_TEXTS.removeLabel}
           disabled={pending}
           onClick={() => setOpen(true)}
           className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-full px-3.5 text-[13px] font-semibold text-destructive hover:bg-destructive-wash focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-60"
         >
           <Trash2 aria-hidden className="size-4" />
-          {pending ? "Löschen…" : "Löschen"}
+          {pending ? "Löschen…" : ROUTINE_TEXTS.remove}
         </button>
       }
     >

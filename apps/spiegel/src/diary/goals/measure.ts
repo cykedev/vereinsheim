@@ -81,10 +81,16 @@ export function measureGoal(rule: GoalRule, cards: readonly GoalCard[]): GoalSta
         left.noSeries++
         continue
       }
+      const before = points.length
       for (const series of card.series) {
         const value = series[rule.scoring]
         if (series.shots === rule.shots && value !== null)
           points.push(point(card, series.series, value))
+      }
+      // keine Serie der Scheibe zählt: andere Schusszahl, oder die passenden haben in dieser Wertung keinen Wert
+      if (points.length === before) {
+        if (card.series.some((series) => series.shots === rule.shots)) left.noValue++
+        else left.otherShots++
       }
       continue
     }

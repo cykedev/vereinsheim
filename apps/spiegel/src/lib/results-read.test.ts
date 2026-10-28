@@ -225,7 +225,7 @@ describe("resultGoalCards", () => {
     })
 
   it("liefert eigene, sichtbare Scheiben der Familie im Zeitraum mit Ergebnis und Serien", async () => {
-    const { cards } = await june()
+    const cards = await june()
     expect(cards.map((c) => c.id).sort()).toEqual([sums, shots, probe].sort())
     const fromSums = cards.find((c) => c.id === sums)!
     expect(fromSums).toMatchObject({ day: "2026-06-02", kind: "training", shots: 20, rings: 189 })
@@ -242,29 +242,17 @@ describe("resultGoalCards", () => {
     })
   })
 
-  it("nennt die Wertung der Familie und die häufigsten Schusszahlen", async () => {
-    const result = await june()
-    expect(result.scoring).toBe("rings")
-    expect(result.usualShots).toBe(20)
-    expect(result.usualSeriesShots).toBe(10)
-  })
-
   it("Vorgaben je Familie in einem Durchgang, gleich denen von resultGoalCards", async () => {
     const defaults = (await resultGoalDefaults(db, site.ownerId)).find(
       (d) => d.familyId === site.familyId
     )
-    const goal = await june()
-    expect(defaults).toMatchObject({
-      scoring: goal.scoring,
-      usualShots: goal.usualShots,
-      usualSeriesShots: goal.usualSeriesShots,
-    })
+    expect(defaults).toMatchObject({ scoring: "rings", usualShots: 20, usualSeriesShots: 10 })
     expect(defaults?.latestMs).toBeGreaterThanOrEqual(JUNE + 2 * DAY)
     expect((await resultGoalDefaults(db, otherId)).map((d) => d.familyId)).toEqual([site.familyId])
   })
 
   it("grenzt nach Beginn ein", async () => {
-    const { cards } = await resultGoalCards(db, {
+    const cards = await resultGoalCards(db, {
       ownerId: site.ownerId,
       familyId: site.familyId,
       fromMs: JUNE + DAY - 1,

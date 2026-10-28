@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowLeft, BookOpen, ChevronRight, Plus } from "lucide-react"
+import { ArrowLeft, BookOpen, ChevronRight } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useCallback, useState } from "react"
@@ -20,7 +20,13 @@ import { goalDiscard } from "../consequences"
 import { saveGoalNote, saveGoalOutcome } from "../goals/actions"
 import { goalHeadMeta, goalPhaseText } from "../goals/labels"
 import type { GoalView } from "../goals/queries"
-import { basisLine, bigNumber, standTiles, thresholdText } from "../goals/stand-text"
+import {
+  basisLine,
+  bigNumber,
+  nothingCounted,
+  standTiles,
+  thresholdText,
+} from "../goals/stand-text"
 import { GOAL_TEXTS } from "../goals/texts"
 import type { EntrySummary } from "../queries"
 import { dayLabel, entryLine, entryTitle } from "../summaries"
@@ -30,48 +36,13 @@ import { EntryText } from "./EntryText"
 import { GoalChart } from "./GoalChart"
 import { GoalState } from "./GoalList"
 import { OutcomeChoice } from "./OutcomeChoice"
-import { ROW_BUTTON } from "./styles"
+import { PlusRow } from "./FormParts"
+import { BOX, ROW_BUTTON } from "./styles"
 
-const BOX = "rounded-2xl border border-border bg-card p-4"
 const LINK =
   "text-[13px] font-semibold text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring"
 /** so viele Einträge stehen zuerst, die übrigen hinter „Alle … zeigen“ */
 const FIRST_ENTRIES = 5
-
-/** eine Zeile mit „+“, die etwas festlegt (Disziplin, Messung, Notiz), gebaut wie ein leerer Abschnitt */
-function PlusRow({
-  title,
-  hint,
-  href,
-  onClick,
-  name,
-}: {
-  title: string
-  hint: string
-  href?: string
-  onClick?: () => void
-  name: string
-}) {
-  const plus =
-    "flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full border border-line-strong text-primary hover:bg-accent-wash focus-visible:outline-2 focus-visible:outline-ring"
-  return (
-    <div data-plus-row={name} className="flex items-center justify-between gap-3">
-      <span className="grid min-w-0">
-        <span className="text-[15px] font-semibold">{title}</span>
-        <span className="text-[13px] text-muted-foreground">{hint}</span>
-      </span>
-      {href ? (
-        <Link href={href} aria-label={title} className={plus}>
-          <Plus aria-hidden className="size-4" />
-        </Link>
-      ) : (
-        <button type="button" aria-label={title} onClick={onClick} className={plus}>
-          <Plus aria-hidden className="size-4" />
-        </button>
-      )}
-    </div>
-  )
-}
 
 /**
  * Die Seite eines Ziels, für jedes Ziel gleich gebaut: Stand, Notiz, „Hat es geklappt?“, Einträge im Zeitraum, „Dieses
@@ -220,7 +191,10 @@ function GoalStand({ goal, edit, timeZone }: { goal: GoalView; edit: string; tim
         <h2 id="goal-stand-title" className="text-[15px] font-semibold">
           {GOAL_TEXTS.stand}
         </h2>
-        <GoalState text={goalPhaseText(goal, timeZone)} running={goal.phase.phase === "running"} />
+        <GoalState
+          text={goalPhaseText(goal, timeZone)}
+          running={goal.phase.phase === "running" && !goal.outcome}
+        />
       </div>
       {!goal.family && (
         <PlusRow
@@ -277,11 +251,12 @@ function GoalStand({ goal, edit, timeZone }: { goal: GoalView; edit: string; tim
                 points={stand.points}
                 threshold={rule.threshold}
                 thresholdLabel={thresholdText(rule.threshold, rule.scoring)}
+                digits={rule.scoring === "decimal" ? 1 : 0}
                 timeZone={timeZone}
               />
             </div>
           ) : (
-            <p className="text-sm text-foreground-2">{GOAL_TEXTS.noCard}</p>
+            <p className="text-sm text-foreground-2">{nothingCounted(rule, stand)}</p>
           )}
           <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
             {basis && <span className="text-[12px] text-muted-foreground">{basis}</span>}

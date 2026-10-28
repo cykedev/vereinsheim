@@ -20,12 +20,34 @@ const unit = (measure: GoalMeasure, n: number) =>
 const meanOf = (stand: GoalStand) =>
   stand.points.length ? stand.points.reduce((s, p) => s + p.value, 0) / stand.points.length : null
 
+/** gezählt wird nichts: im Zeitraum keine Scheibe, oder es gibt welche und keine zählt */
+export function nothingCounted(rule: GoalRule, stand: GoalStand): string {
+  if (!stand.cards) return "Noch keine Scheibe in diesem Zeitraum."
+  return rule.measure === "series"
+    ? "Noch zählt keine Serie in diesem Zeitraum."
+    : "Noch zählt keine Scheibe in diesem Zeitraum."
+}
+
+/** warum Scheiben nicht zählen, als Aufzählung („5 mit anderer Schusszahl, 1 ohne Ergebnis“); leer, wenn alle zählen */
+function reasons(stand: GoalStand): string[] {
+  return (
+    [
+      [stand.left.otherShots, "mit anderer Schusszahl"],
+      [stand.left.noValue, "ohne Ergebnis"],
+      [stand.left.noSeries, "ohne Serien"],
+    ] as const
+  )
+    .filter(([n]) => n > 0)
+    .map(([n, why]) => `${n} ${why}`)
+}
+
 /** die Zeile in der Liste und im Formular: „6 von 14 Scheiben ab 355“, „Schnitt 352,9 über 41 Scheiben“ */
 export function standLine(rule: GoalRule, stand: GoalStand): string {
   if (rule.measure === "average")
     return stand.mean === null
-      ? "Noch keine Scheibe in diesem Zeitraum."
+      ? nothingCounted(rule, stand)
       : `Schnitt ${meanText(stand.mean)} über ${stand.counted} ${unit("card", stand.counted)}`
+  if (!stand.counted) return nothingCounted(rule, stand)
   return `${stand.hits} von ${stand.counted} ${unit(rule.measure, stand.counted)} ab ${thresholdText(rule.threshold, rule.scoring)}`
 }
 
@@ -85,6 +107,8 @@ export function startState(rule: GoalRule, stand: GoalStand): string {
 
 /** der Satz unter dem Formular: was die Messung mit den Scheiben im Zeitraum ergäbe */
 export function previewLine(rule: GoalRule, stand: GoalStand): string {
-  if (!stand.counted) return "Bisher keine Scheibe in diesem Zeitraum."
+  if (!stand.cards) return "Bisher keine Scheibe in diesem Zeitraum."
+  if (!stand.counted)
+    return `Bisher zählt keine der ${stand.cards} ${unit("card", stand.cards)}: ${reasons(stand).join(", ")}.`
   return `Bisher in diesem Zeitraum: ${standLine(rule, stand)}.`
 }

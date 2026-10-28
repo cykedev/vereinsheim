@@ -76,7 +76,10 @@ export async function updateRoutine(
     select: { familyId: true },
   })
   if (!row) return { error: ROUTINE_ERRORS.missing }
-  const parsed = parseRoutine({ ...raw, familyId: row.familyId }, await familiesOf(db, userId))
+  // die gespeicherte Disziplin gilt weiter, auch wenn sie nicht mehr angeboten wird
+  const families = await familiesOf(db, userId)
+  if (row.familyId !== null) families.add(row.familyId)
+  const parsed = parseRoutine({ ...raw, familyId: row.familyId }, families)
   if ("invalid" in parsed) return { error: ERRORS.failed }
   if ("fieldErrors" in parsed) return parsed
   const error = await run(db, async (tx) => {

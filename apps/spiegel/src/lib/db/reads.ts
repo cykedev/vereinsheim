@@ -129,7 +129,6 @@ const OVERVIEW_SELECT = {
       values: true,
       records: true,
       detail: true,
-      series: true,
     },
   },
 } satisfies Prisma.CardSelect
@@ -148,10 +147,6 @@ function toOverview(rows: readonly OverviewRow[]): OverviewCard[] {
       values: row.projection.values as CardProjection["values"],
       records: row.projection.records as unknown as CardProjection["records"],
       ...(row.projection.detail ? { detail: row.projection.detail as unknown as CardDetail } : {}),
-      // null vor Version 7: Die Zeile ist veraltet und wird nachgerechnet (`refreshProjections`)
-      ...(row.projection.series
-        ? { series: row.projection.series as unknown as ProjectedSeries[] }
-        : {}),
     }
     const kind = kindOfRow(row, projection.probeOnly)
     // Wertung der Disziplin (Admin), wenn gesetzt; ein Training nur aus Probe hat keine
@@ -507,6 +502,24 @@ export async function ownCardShare(
  * sichtbare (`pending`: nur wartende, für „Offen“); nach Id. Eine Übersicht liest sie getrennt, damit Start für die Rechnung über die ganze Familie nicht
  * die Lagen jeder Scheibe lädt.
  */
+/**
+ * Die Serien aus der Projektion, nur eigene, sichtbare Scheiben (für die Ziele des Tagebuchs über `results-read`); null
+ * vor Version 7, solange `refreshProjections` die Zeile nicht nachgerechnet hat. Die Übersichten lesen sie nicht.
+ */
+export async function seriesOfCards(
+  db: Db,
+  query: { ownerId: string; ids: readonly string[] }
+): Promise<Record<string, ProjectedSeries[] | null>> {
+  if (!query.ids.length) return {}
+  const rows = await db.cardProjection.findMany({
+    where: { cardId: { in: [...query.ids] }, card: { ownerId: query.ownerId, deletedAt: null } },
+    select: { cardId: true, series: true },
+  })
+  return Object.fromEntries(
+    rows.map((row) => [row.cardId, (row.series as unknown as ProjectedSeries[] | null) ?? null])
+  )
+}
+
 export async function marksOfCards(
   db: Db,
   query: { ownerId: string; ids: readonly string[]; pending?: boolean }

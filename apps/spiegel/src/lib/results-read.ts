@@ -13,7 +13,13 @@ import { eveningDay } from "@vereinsheim/shot-ui/period/calendar"
 import { shownShots } from "@vereinsheim/shot-ui/shots"
 
 import type { Db } from "@/lib/db"
-import { cardWithShots, marksOfCards, type OverviewCard } from "@/lib/db/reads"
+import {
+  cardWithShots,
+  familyCards,
+  marksOfCards,
+  seriesOfCards,
+  type OverviewCard,
+} from "@/lib/db/reads"
 import { overviewCards } from "@/lib/overview"
 import { listable, withFamily } from "@/lib/pages"
 
@@ -158,45 +164,36 @@ export interface GoalCard {
 }
 
 /**
- * Die sichtbaren eigenen Scheiben einer Familie mit Beginn im Zeitraum, aus der Projektion (ohne Schüsse), dazu die
- * Wertung der Familie und die häufigste Schusszahl ihrer Scheiben und ihrer Serien (über alle Scheiben der Familie
- * außer nur Probe; null ohne)
+ * Die sichtbaren eigenen Scheiben einer Familie mit Beginn im Zeitraum, aus der Projektion (ohne Schüsse) über den Index
+ * je Familie; die Serien in einer eigenen Abfrage, nur für diese Scheiben
  */
 export async function resultGoalCards(
   db: Db,
   query: { ownerId: string; familyId: number; fromMs: number; toMs: number; timeZone: string }
-): Promise<{
-  cards: GoalCard[]
-  scoring: Scoring
-  usualShots: number | null
-  usualSeriesShots: number | null
-}> {
-  const { shown, scoringOf } = await overviewCards(db, query.ownerId)
-  const family = shown.filter((card) => card.familyId === query.familyId && card.family)
-  const counted = family.filter((card) => !card.projection.probeOnly)
-  const cards = family.filter(
-    (card) => card.startedAtMs >= query.fromMs && card.startedAtMs < query.toMs
+): Promise<GoalCard[]> {
+  const cards = listable(
+    await familyCards(db, {
+      ownerId: query.ownerId,
+      familyId: query.familyId,
+      fromMs: query.fromMs,
+      toMs: query.toMs,
+    })
   )
-  return {
-    cards: cards.map((card) => ({
-      id: card.id,
-      day: eveningDay(card.startedAtMs, query.timeZone),
-      startedAtMs: card.startedAtMs,
-      kind: card.kind,
-      probeOnly: card.projection.probeOnly,
-      shots: card.projection.printedShots,
-      rings: card.projection.values["result.rings"]?.value ?? null,
-      decimal: card.projection.values["result.decimal"]?.value ?? null,
-      series: card.projection.series ?? null,
-    })),
-    scoring: family[0]?.family ? scoringOf(family[0].family.slug) : "decimal",
-    usualShots: modalLength(
-      counted.map((card) => card.projection.printedShots).filter((shots) => shots > 0)
-    ),
-    usualSeriesShots: modalLength(
-      counted.flatMap((card) => (card.projection.series ?? []).map((series) => series.shots))
-    ),
-  }
+  const series = await seriesOfCards(db, {
+    ownerId: query.ownerId,
+    ids: cards.map((card) => card.id),
+  })
+  return cards.map((card) => ({
+    id: card.id,
+    day: eveningDay(card.startedAtMs, query.timeZone),
+    startedAtMs: card.startedAtMs,
+    kind: card.kind,
+    probeOnly: card.projection.probeOnly,
+    shots: card.projection.printedShots,
+    rings: card.projection.values["result.rings"]?.value ?? null,
+    decimal: card.projection.values["result.decimal"]?.value ?? null,
+    series: series[card.id] ?? null,
+  }))
 }
 
 /** was ein neues Ziel je Familie vorbelegt: Wertung, häufigste Schusszahl je Scheibe und je Serie, neueste Scheibe */
@@ -211,6 +208,10 @@ export interface GoalDefaults {
 /** die Vorgaben eines Ziels für jede Familie mit eigenen Scheiben, in einem Durchgang */
 export async function resultGoalDefaults(db: Db, ownerId: string): Promise<GoalDefaults[]> {
   const { shown, scoringOf } = await overviewCards(db, ownerId)
+  const series = await seriesOfCards(db, {
+    ownerId,
+    ids: shown.filter((card) => !card.projection.probeOnly).map((card) => card.id),
+  })
   const byFamily = new Map<number, OverviewCard[]>()
   for (const card of shown)
     if (card.familyId !== null && card.family)
@@ -224,7 +225,7 @@ export async function resultGoalDefaults(db: Db, ownerId: string): Promise<GoalD
         counted.map((card) => card.projection.printedShots).filter((shots) => shots > 0)
       ),
       usualSeriesShots: modalLength(
-        counted.flatMap((card) => (card.projection.series ?? []).map((series) => series.shots))
+        counted.flatMap((card) => (series[card.id] ?? []).map((s) => s.shots))
       ),
       latestMs: Math.max(...cards.map((card) => card.startedAtMs)),
     }

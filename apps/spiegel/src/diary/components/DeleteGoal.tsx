@@ -33,13 +33,13 @@ export function DeleteGoal({ goalId, title }: { goalId: string; title: string })
       action={
         <button
           type="button"
-          aria-label="Ziel löschen"
+          aria-label={GOAL_TEXTS.removeLabel}
           disabled={pending}
           onClick={() => setOpen(true)}
           className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-full px-3.5 text-[13px] font-semibold text-destructive hover:bg-destructive-wash focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-60"
         >
           <Trash2 aria-hidden className="size-4" />
-          {pending ? "Löschen…" : "Löschen"}
+          {pending ? "Löschen…" : GOAL_TEXTS.remove}
         </button>
       }
     >

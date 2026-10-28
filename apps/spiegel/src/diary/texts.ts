@@ -11,6 +11,8 @@ export const PROFILE_TEXTS = {
   turnedOn: "Tagebuch eingeschaltet.",
   turnedOff: "Tagebuch ausgeschaltet.",
   allCards: "Alle Scheiben",
+  /** Überschrift des Tagebuchs im Papierkorb */
+  trashHeading: "Im Tagebuch",
   /** der Satz oben im Papierkorb, wenn auch Einträge darin liegen können */
   trashLead:
     "Gelöschte Scheiben, Einträge, Ziele und Abläufe liegen hier 30 Tage und zählen nirgends mit. Danach werden sie endgültig gelöscht.",

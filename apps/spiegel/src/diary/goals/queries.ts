@@ -1,8 +1,9 @@
 // Was die Seiten der Ziele lesen: die Liste in Gruppen, ein Ziel mit Stand und Einträgen im Zeitraum, die Vorgaben des
 // Formulars und die Zeile auf Start. Scheiben nur über `resultGoalCards` (die schmale Schnittstelle).
 
-import { formatIsoDate, zonedDayStartMs } from "@vereinsheim/lib/format"
+import { zonedDayStartMs } from "@vereinsheim/lib/format"
 import { DEFAULT_PROGRESS, urlFromRoute } from "@vereinsheim/shot-ui/nav/routes"
+import { eveningDay } from "@vereinsheim/shot-ui/period/calendar"
 
 import type { Db } from "@/lib/db"
 import {
@@ -54,9 +55,8 @@ type GoalRow = {
   createdAt: Date
 }
 
-/** heute als ISO-Tag in der Anzeige-Zone */
-export const todayIn = (timeZone: string, nowMs = Date.now()) =>
-  formatIsoDate(new Date(nowMs), timeZone)
+/** heute als Abend in der Anzeige-Zone (vor 4 Uhr der Vortag), wie die Scheiben zählen */
+export const todayIn = (timeZone: string, nowMs = Date.now()) => eveningDay(nowMs, timeZone)
 
 /** die Regel der Messung eines Ziels; null ohne Messung oder ohne Disziplin */
 function ruleOf(row: GoalRow): GoalRule | null {
@@ -89,7 +89,7 @@ async function cardsByFamily(
   }
   const out = new Map<number, GoalCard[]>()
   for (const [familyId, range] of ranges) {
-    const { cards } = await resultGoalCards(db, {
+    const cards = await resultGoalCards(db, {
       ownerId: userId,
       familyId,
       // ein Tag mehr an beiden Enden: Der Abend zählt nach seinem Tag, ein Beginn kurz nach Mitternacht gehört davor
@@ -295,7 +295,7 @@ export async function goalPreview(
   rule: GoalRule,
   timeZone: string
 ): Promise<GoalStand> {
-  const { cards } = await resultGoalCards(db, {
+  const cards = await resultGoalCards(db, {
     ownerId: userId,
     familyId,
     fromMs: zonedDayStartMs(rule.from, timeZone) - DAY_MS,

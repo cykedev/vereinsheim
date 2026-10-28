@@ -12,7 +12,7 @@ import { entryLine, entryTitle } from "../summaries"
 import { GOAL_TEXTS } from "../goals/texts"
 import { LIST_TEXTS } from "../texts"
 
-export const PRIMARY =
+const PRIMARY =
   "inline-flex h-10 items-center justify-center gap-2 justify-self-start rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-90 focus-visible:outline-2 focus-visible:outline-ring"
 
 /** so viele kleine Scheiben je Eintrag in der Liste, darüber „+N“ */

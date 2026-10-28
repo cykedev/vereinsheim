@@ -8,13 +8,13 @@ import { resultFamilies } from "@/lib/results-read"
 
 import { ENTRY_ERRORS } from "../entries"
 import { ERRORS } from "../texts"
+import { DIARY_TRASH_DAYS } from "../trash"
 import { dateOfDay, outcomeInput, textInput } from "../validation"
 import { GOAL_ERRORS } from "./texts"
 import { parseGoal, type GoalData, type GoalFieldErrors } from "./validation"
 
 type Tx = Prisma.TransactionClient
 
-export const GOAL_TRASH_DAYS = 30
 const DAY_MS = 86_400_000
 
 export const GOAL_TRASH_ERRORS = {
@@ -53,8 +53,10 @@ const columns = (data: GoalData) => ({
   cards: data.measure?.cards ?? ("all" as const),
 })
 
-async function checked(db: Db, userId: string, raw: unknown) {
+/** prüft gegen die Disziplinen zur Wahl; die gespeicherte eines Ziels gilt weiter, auch wenn sie nicht mehr angeboten wird */
+async function checked(db: Db, userId: string, raw: unknown, stored: number | null = null) {
   const families = new Set((await resultFamilies(db, userId)).map((family) => family.id))
+  if (stored !== null) families.add(stored)
   return parseGoal(raw, families)
 }
 
@@ -85,7 +87,12 @@ export async function updateGoal(
   goalId: string,
   raw: unknown
 ): Promise<null | GoalWrite> {
-  const parsed = await checked(db, userId, raw)
+  const row = await db.diaryGoal.findFirst({
+    where: { id: goalId, userId, deletedAt: null },
+    select: { familyId: true },
+  })
+  if (!row) return { error: GOAL_ERRORS.missing }
+  const parsed = await checked(db, userId, raw, row.familyId)
   if ("invalid" in parsed) return { error: ERRORS.failed }
   if ("fieldErrors" in parsed) return parsed
   const error = await run(db, async (tx) => {
@@ -149,7 +156,8 @@ export async function restoreGoal(
     select: { deletedAt: true },
   })
   if (!row) return GOAL_TRASH_ERRORS.notInTrash
-  if (row.deletedAt!.getTime() + GOAL_TRASH_DAYS * DAY_MS <= nowMs) return GOAL_TRASH_ERRORS.expired
+  if (row.deletedAt!.getTime() + DIARY_TRASH_DAYS * DAY_MS <= nowMs)
+    return GOAL_TRASH_ERRORS.expired
   const { count } = await db.diaryGoal.updateMany({
     where: { id: goalId, userId, deletedAt: row.deletedAt },
     data: { deletedAt: null },

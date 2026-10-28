@@ -50,6 +50,8 @@ export const GOAL_TEXTS = {
   basicsProcess: "Satz und Zeitraum",
   change: "Ändern",
   remove: "Löschen",
+  /** Name des Knopfs „Löschen“ für Screenreader */
+  removeLabel: "Ziel löschen",
   removeState:
     "Danach liegt das Ziel 30 Tage im Papierkorb im Profil. Scheiben und Einträge bleiben.",
   deleted: "Ziel gelöscht",
@@ -63,7 +65,7 @@ export const GOAL_FORM_TEXTS = {
   titleNew: "Neues Ziel",
   titleEdit: "Ziel ändern",
   sentence: "Was willst du erreichen?",
-  sentencePlaceholder: "zum Beispiel: 355 im Training regelmäßig schießen",
+  sentencePlaceholder: "zum Beispiel: 355 regelmäßig schießen",
   kind: "Art",
   result: "Ergebnisziel",
   process: "Prozessziel",

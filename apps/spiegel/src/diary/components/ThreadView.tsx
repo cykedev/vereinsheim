@@ -59,10 +59,9 @@ export function ThreadView({
           )}
         </nav>
       )}
+      {noFamily && <p className="text-sm text-foreground-2">{ROUTINE_TEXTS.noFamilyLead}</p>}
       <RoutineBox family={family} noFamily={noFamily} routines={routines} />
-      {noFamily ? (
-        <p className="text-sm text-foreground-2">{ROUTINE_TEXTS.noFamilyLead}</p>
-      ) : !family || items.length === 0 ? (
+      {noFamily ? null : !family || items.length === 0 ? (
         <p className="text-sm text-muted-foreground">{LIST_TEXTS.threadEmpty}</p>
       ) : (
         <>

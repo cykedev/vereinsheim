@@ -3,7 +3,7 @@
 import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useEffect, useId, useState, useTransition } from "react"
+import { useEffect, useId, useState, useTransition, type MouseEvent } from "react"
 import { toast } from "sonner"
 
 import { getErrorMessage, getFieldError } from "@vereinsheim/lib/forms/fieldErrors"
@@ -24,12 +24,8 @@ import { textToSteps } from "../routines/steps"
 import { ROUTINE_FORM_TEXTS as T, ROUTINE_TEXTS } from "../routines/texts"
 import { ERRORS } from "../texts"
 
-const BOX = "rounded-2xl border border-border bg-card p-4"
-const LABEL = "text-[12px] font-semibold tracking-wide text-muted-foreground uppercase"
-const FIELD =
-  "rounded-xl border border-border bg-background px-3 py-2 text-[15px] outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 aria-invalid:border-destructive"
-const CHIP =
-  "inline-flex h-8 cursor-pointer items-center rounded-full border border-line-strong px-3 text-[13px] font-semibold text-foreground-2 focus-visible:outline-2 focus-visible:outline-ring aria-pressed:border-primary aria-pressed:bg-accent-wash aria-pressed:text-foreground"
+import { FieldText, StickySaveBar } from "./FormParts"
+import { BOX, CHIP, FIELD, LABEL } from "./styles"
 
 /**
  * „Neuer Ablauf“ und „Ablauf bearbeiten“: Name, bei neu die Disziplin, die Schritte als ein Textfeld (Absatz = Schritt,
@@ -75,7 +71,7 @@ export function RoutineForm({
     result && "error" in result && typeof result.error === "string"
       ? (getErrorMessage(result) ?? ERRORS.failed)
       : null
-  const goBack = (event: React.MouseEvent) => {
+  const goBack = (event: MouseEvent) => {
     if (!dirty) return
     event.preventDefault()
     leave.requestNavigation(() => router.push(back))
@@ -172,30 +168,15 @@ export function RoutineForm({
           </div>
         </div>
 
-        <div className="sticky bottom-[calc(var(--app-bar,0px)+env(safe-area-inset-bottom))] z-10 -mx-4 border-t border-border bg-background px-4 py-3 after:absolute after:inset-x-0 after:top-full after:h-4 after:bg-background">
-          {general && (
-            <p role="alert" className="pb-2 text-sm text-destructive">
-              {general}
-            </p>
-          )}
-          <div className="flex items-center justify-end gap-2">
-            <Link
-              href={back}
-              onClick={goBack}
-              className="inline-flex h-11 items-center rounded-md px-4 text-sm font-medium hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-ring"
-            >
-              {T.discard}
-            </Link>
-            <button
-              type="submit"
-              data-routine-save
-              disabled={pending}
-              className="inline-flex h-11 cursor-pointer items-center rounded-md bg-primary px-6 text-sm font-medium text-primary-foreground hover:opacity-90 focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-60"
-            >
-              {pending ? "Speichern…" : routine ? T.save : T.create}
-            </button>
-          </div>
-        </div>
+        <StickySaveBar
+          name="routine"
+          error={general}
+          back={back}
+          onBack={goBack}
+          cancel={T.cancel}
+          save={routine ? T.save : T.create}
+          pending={pending}
+        />
       </form>
       <DecisionDialog
         decision={routineDiscard()}
@@ -204,14 +185,5 @@ export function RoutineForm({
         onConfirm={leave.confirm}
       />
     </Page>
-  )
-}
-
-function FieldText({ message }: { message: string | undefined }) {
-  if (!message) return null
-  return (
-    <p role="alert" className="text-sm text-destructive">
-      {message}
-    </p>
   )
 }

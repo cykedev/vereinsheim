@@ -4,6 +4,7 @@ import type { GoalRule, GoalStand } from "./measure"
 import {
   basisLine,
   bigNumber,
+  nothingCounted,
   previewLine,
   standLine,
   standTiles,
@@ -87,8 +88,19 @@ describe("Sätze zum Stand", () => {
     })
     expect(bigNumber(rule(), none)).toBeNull()
     expect(standTiles(rule(), none, (d) => d)).toBeNull()
-    expect(previewLine(rule(), none)).toBe("Bisher keine Scheibe in diesem Zeitraum.")
-    expect(standLine(rule({ measure: "average" }), none)).toBe(
+    expect(previewLine(rule(), { ...none, cards: 0 })).toBe(
+      "Bisher keine Scheibe in diesem Zeitraum."
+    )
+    expect(
+      previewLine(rule(), { ...none, cards: 6, left: { noValue: 1, otherShots: 5, noSeries: 0 } })
+    ).toBe("Bisher zählt keine der 6 Scheiben: 5 mit anderer Schusszahl, 1 ohne Ergebnis.")
+    expect(nothingCounted(rule(), { ...none, cards: 6 })).toBe(
+      "Noch zählt keine Scheibe in diesem Zeitraum."
+    )
+    expect(nothingCounted(rule({ measure: "series" }), { ...none, cards: 6 })).toBe(
+      "Noch zählt keine Serie in diesem Zeitraum."
+    )
+    expect(standLine(rule({ measure: "average" }), { ...none, cards: 0 })).toBe(
       "Noch keine Scheibe in diesem Zeitraum."
     )
   })

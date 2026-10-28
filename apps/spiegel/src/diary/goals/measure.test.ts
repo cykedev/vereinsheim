@@ -108,6 +108,16 @@ describe("measureGoal: Serie ab X", () => {
     expect(stand.hits).toBe(3)
     expect(stand.left).toEqual({ noValue: 0, otherShots: 0, noSeries: 2 })
   })
+
+  it("eine Scheibe, deren Serien alle nicht passen, steht in der Grundlage", () => {
+    const cards = [
+      card(2, 365, { series: [{ series: 1, shots: 20, rings: 180, decimal: 185 }] }),
+      card(3, 360, { series: [{ series: 1, shots: 10, rings: null, decimal: 95.5 }] }),
+    ]
+    const stand = measureGoal(rule({ measure: "series", threshold: 92, shots: 10 }), cards)
+    expect(stand.counted).toBe(0)
+    expect(stand.left).toEqual({ noValue: 1, otherShots: 1, noSeries: 0 })
+  })
 })
 
 describe("measureGoal: Schnitt ab X", () => {

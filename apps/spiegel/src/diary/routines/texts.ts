@@ -23,6 +23,10 @@ export const ROUTINE_TEXTS = {
   set: "Festlegen",
   familySaved: "Disziplin geändert.",
   remove: "Löschen",
+  /** Name des Knopfs „Löschen“ für Screenreader */
+  removeLabel: "Ablauf löschen",
+  save: "Speichern",
+  cancel: "Abbrechen",
   removeState: "Danach liegt der Ablauf 30 Tage im Papierkorb im Profil.",
   deleted: "Ablauf gelöscht",
   trashKind: "Ablauf",
@@ -37,7 +41,7 @@ export const ROUTINE_FORM_TEXTS = {
   steps: "Schritte",
   hint: (n: number) =>
     `Jeder Absatz ist ein Schritt. Die erste Zeile ist sein Titel, was darunter steht, die Erklärung. Gerade: ${n === 1 ? "1 Schritt" : `${n} Schritte`}.`,
-  discard: "Verwerfen",
+  cancel: "Abbrechen",
   save: "Speichern",
   create: "Ablauf anlegen",
   created: "Ablauf angelegt.",

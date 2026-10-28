@@ -14,7 +14,7 @@ import { purgeGoalNowAction, restoreGoalAction } from "../goals/actions"
 import { GOAL_TEXTS } from "../goals/texts"
 import { purgeRoutineNowAction, restoreRoutineAction } from "../routines/actions"
 import { ROUTINE_TEXTS } from "../routines/texts"
-import { ERRORS } from "../texts"
+import { ERRORS, PROFILE_TEXTS } from "../texts"
 import type { DiaryTrashItem, DiaryTrashThing } from "../trash"
 import { purgeEntryNowAction, restoreEntryAction } from "../trash-actions"
 
@@ -35,7 +35,7 @@ export function DiaryTrash({
   return (
     <section data-diary-trash aria-labelledby="diary-trash-title" className="grid gap-3">
       <h2 id="diary-trash-title" className="text-[13px] font-semibold text-muted-foreground">
-        Im Tagebuch
+        {PROFILE_TEXTS.trashHeading}
       </h2>
       <ul className="grid gap-3">
         {items.map((item) => (

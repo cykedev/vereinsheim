@@ -55,7 +55,7 @@ export function GoalList({
                       <span className="text-sm tabular-nums">{goalListStand(goal)}</span>
                       <GoalState
                         text={goalListState(goal, timeZone)}
-                        running={goal.phase.phase === "running"}
+                        running={goal.phase.phase === "running" && !goal.outcome}
                       />
                     </span>
                   </Link>
