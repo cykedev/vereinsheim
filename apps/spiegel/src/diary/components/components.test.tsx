@@ -79,12 +79,13 @@ describe("StageRow", () => {
     expect(html).toContain(">mittel<")
   })
 
-  it("ohne Wert „noch offen“, mit Prognose deren Wort und die Stufe gestrichelt", () => {
+  it("ohne Wert kein Wort, mit Prognose deren Wort und die Stufe gestrichelt", () => {
     const words = ["schlecht", "mäßig", "mittel", "gut", "sehr gut"]
     const open = renderToStaticMarkup(
       createElement(StageRow, { label: "Technik", words, value: null, onSelect: () => {} })
     )
-    expect(open).toContain(">noch offen<")
+    expect(open).not.toContain("noch offen")
+    expect(open).not.toContain("text-[13px] text-muted-foreground")
     expect(open).not.toContain('aria-pressed="true"')
     const marked = renderToStaticMarkup(
       createElement(StageRow, {
@@ -107,7 +108,7 @@ describe("Seite eines Eintrags", () => {
       expect(html).toMatch(new RegExp(`data-section="${section}" data-empty="true"`))
     expect(html).toContain('aria-label="Befinden eintragen"')
     expect(html).not.toContain("Hat es geklappt?")
-    expect(html).toContain("Noch keine Scheibe. Sie kommt von selbst dazu")
+    expect(html).toContain("Noch keine Scheibe. Die Scheiben dieses Tages kommen von selbst dazu")
     expect(html).toContain("Was ist passiert? Gern in Stichpunkten.")
     expect(html).not.toContain("Notiz: ")
     // Vorhaben und Notiz in einem Kasten, gleich gebaut
@@ -173,7 +174,7 @@ describe("Seite eines Eintrags", () => {
     expect(html).toContain("Scheibe gelöscht")
     expect(html).toMatch(/data-change-cards[^>]*>Scheiben ändern</)
     expect(html).toContain('data-section="execution"')
-    expect(html).toContain("Kommt von den Scheiben.")
+    expect(html).toContain("Kommen von den Scheiben dieses Eintrags.")
   })
 
   it("Ausführung: jede Scheibe ein Block mit Kopf, ihre Serien eingerückt darunter", () => {

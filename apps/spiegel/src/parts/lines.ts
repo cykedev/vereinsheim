@@ -30,7 +30,7 @@ export async function cardLines(
     case "offered":
       return [
         line(
-          `Noch in keinem Eintrag. Der Eintrag vom ${when} bietet sie an.`,
+          `Noch in keinem Eintrag. Im Eintrag vom ${when} unter „Scheiben ändern“ anhaken.`,
           `/diary/${place.entryId}`,
           "Eintrag öffnen"
         ),

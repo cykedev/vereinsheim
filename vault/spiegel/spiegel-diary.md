@@ -89,7 +89,8 @@ Zeile `linked` hält eine Scheibe fest (Anlegen aus einem Abend, Anhaken), `rele
 angeboten. Eine gelöschte Scheibe steht als „Scheibe gelöscht“. Das Einlesen bleibt frei vom Tagebuch.
 
 - **Scheiben ändern:** ein Blatt mit allen Scheiben dieses Tages und dieser Disziplin zum An- und Abhaken; eine, die in
-  einem anderen Eintrag steckt, mit dessen Titel und ohne Haken. Wer bewertete Serien abhakt, wird erst gefragt.
+  einem anderen Eintrag steckt, mit dessen Titel und ohne Haken. Wer bewertete Serien abhakt, wird erst gefragt („Scheibe aus dem Eintrag nehmen?“). In der Oberfläche heißt Lösen
+  „herausnehmen“, Verknüpfen „anhaken“.
 - **Papierkorb:** Ein Eintrag im Papierkorb hält keine Scheibe fest (`activeLinks`), auch keine von Hand verknüpfte.
   Seine Zeilen bleiben gespeichert, bis eine andere Zuordnung sie ersetzt (Primärschlüssel `cardId`). Beim
   Wiederherstellen (`restoreEntry`) bekommt, was ein anderer Eintrag des Abends inzwischen von selbst trägt, eine feste
@@ -98,8 +99,8 @@ angeboten. Eine gelöschte Scheibe steht als „Scheibe gelöscht“. Das Einles
 ## Stellen im Ergebnisteil
 
 - Seite einer Scheibe, Kasten „Diese Scheibe“, ganz oben die Zeile „Tagebuch“ (`cardLines`, Ort aus `cardPlace`): im
-  Eintrag „Im Eintrag vom Fr 13.03.“ mit „Eintrag öffnen“; nur angeboten „Noch in keinem Eintrag. Der Eintrag vom …
-  bietet sie an.“ mit „Eintrag öffnen“; sonst „Noch in keinem Eintrag.“ mit „Eintrag anlegen“, das den Eintrag direkt
+  Eintrag „Im Eintrag vom Fr 13.03.“ mit „Eintrag öffnen“; nur angeboten „Noch in keinem Eintrag. Im Eintrag vom …
+  unter „Scheiben ändern“ anhaken.“ mit „Eintrag öffnen“; sonst „Noch in keinem Eintrag.“ mit „Eintrag anlegen“, das den Eintrag direkt
   anlegt und öffnet (`PartLine.run`, eine Server Action; `PartLineAction` zeigt dann einen Knopf). Die geteilte Seite
   zeigt keine.
 - Start, je Block neben „Abend in Scheiben ›“: „Tagebuch · Eintrag öffnen ›“ oder „… anlegen ›“ (`startLines`, anlegen

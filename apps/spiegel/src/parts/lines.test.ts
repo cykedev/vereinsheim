@@ -120,7 +120,7 @@ describe("Stellen für das Tagebuch", () => {
     expect(offered).toMatchObject({ href: `/diary/${entry.id}`, action: "Eintrag öffnen" })
     expect(offered.run).toBeUndefined()
     expect(offered.state).toMatch(
-      /^Noch in keinem Eintrag\. Der Eintrag vom \S+ \d\d\.\d\d\. bietet sie an\.$/
+      /^Noch in keinem Eintrag\. Im Eintrag vom \S+ \d\d\.\d\d\. unter „Scheiben ändern“ anhaken\.$/
     )
     expect(
       (await startLines(db, { ownerId: site.ownerId, blocks, timeZone: ZONE }))[`${day}|${slug}`]

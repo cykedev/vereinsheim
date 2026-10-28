@@ -72,8 +72,17 @@ export function NewEntryScreen({
       toast.success(NEW_TEXTS.created)
       router.push(`/diary/${result.data!.id}`)
     })
-  const time = (card: ResultCard) =>
-    card.timeUnknown ? "Uhrzeit unbekannt" : formatTimeOfDay(new Date(card.startedAtMs), timeZone)
+  // Zahl und Uhrzeiten nur der Scheiben mit bekannter Uhrzeit: „2 Scheiben · 19:17“, nicht „unbekannt bis 19:17“
+  const cardsText = (cards: ResultCard[]) => {
+    const times = cards
+      .filter((card) => !card.timeUnknown)
+      .map((card) => formatTimeOfDay(new Date(card.startedAtMs), timeZone))
+    const count = cards.length === 1 ? "1 Scheibe" : `${cards.length} Scheiben`
+    if (!times.length) return count
+    return times.length === 1
+      ? `${count} · ${times[0]}`
+      : `${count} · ${times[0]} bis ${times[times.length - 1]}`
+  }
 
   return (
     <Page>
@@ -192,9 +201,7 @@ export function NewEntryScreen({
                         <span className="font-normal text-foreground-2">{` · ${proposal.family.name}`}</span>
                       </span>
                       <span className="text-[13px] text-foreground-2 tabular-nums">
-                        {cards.length === 1
-                          ? `1 Scheibe · ${time(cards[0])}`
-                          : `${cards.length} Scheiben · ${time(cards[0])} bis ${time(cards[cards.length - 1])}`}
+                        {cardsText(cards)}
                       </span>
                       <span className="flex flex-wrap gap-1">
                         {cards.map((card) => {

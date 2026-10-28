@@ -29,16 +29,13 @@ export function StageRow({
   const shown = value === null ? null : stageOf(value)
   const marked = mark === null ? null : stageOf(mark)
   const word =
-    shown !== null
-      ? words[shown - 1]
-      : marked !== null
-        ? `Prognose: ${words[marked - 1]}`
-        : "noch offen"
+    shown !== null ? words[shown - 1] : marked !== null ? `Prognose: ${words[marked - 1]}` : null
   return (
     <div data-stage-row className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 py-1.5">
       <span className="grid min-w-0">
         <span className="text-sm font-semibold">{label}</span>
-        <span className="text-[13px] text-muted-foreground">{word}</span>
+        {/* ohne Wert kein Wort: „noch offen“ unter jeder Zeile war nur Rauschen */}
+        {word && <span className="text-[13px] text-muted-foreground">{word}</span>}
       </span>
       <span role="group" aria-label={label} className="flex gap-1.5">
         {STAGES.map((stage) => (

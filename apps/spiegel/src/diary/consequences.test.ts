@@ -58,9 +58,9 @@ describe("Folgen im Tagebuch", () => {
   it("nennt beim Lösen die Ausführung nur, wenn es eine gibt, und ist nur dann destruktiv", () => {
     const plain = diaryCardRelease({ when: "Fr 13.03.2026 · 19:55", executions: 0 })
     const rated = diaryCardRelease({ when: "Fr 13.03.2026 · 19:55", executions: 2 })
-    expect(plain.about).toBe("Du löst die Scheibe vom Fr 13.03.2026 um 19:55 aus diesem Eintrag.")
+    expect(plain.about).toBe("Du nimmst die Scheibe vom Fr 13.03.2026 um 19:55 aus diesem Eintrag.")
     expect(plain.happens).toHaveLength(1)
-    expect(rated.happens).toContain("Die Ausführung ihrer Serien geht mit.")
+    expect(rated.happens).toContain("Deine Bewertung ihrer Serien (Ausführung) ist dann weg.")
     expect([plain.destructive, rated.destructive]).toEqual([false, true])
   })
 

@@ -331,9 +331,9 @@ async function run(page: Page, { base, check, record }: Context) {
   await page.waitFor(`!sheet()`)
   await page.goto(`${base}/cards/${cardId}`)
   check(
-    "Tagebuch: an der gelösten Scheibe „bietet sie an“ mit „Eintrag öffnen“ in diesen Eintrag",
+    "Tagebuch: an der herausgenommenen Scheibe „unter „Scheiben ändern“ anhaken“ mit „Eintrag öffnen“ in diesen Eintrag",
     await page.ev<boolean>(
-      `txt($("[data-card-actions]")).includes("bietet sie an") && link("Eintrag öffnen", $("[data-card-actions]"))?.getAttribute("href") === "/diary/${first}"`
+      `txt($("[data-card-actions]")).includes("unter „Scheiben ändern“ anhaken") && link("Eintrag öffnen", $("[data-card-actions]"))?.getAttribute("href") === "/diary/${first}"`
     )
   )
 

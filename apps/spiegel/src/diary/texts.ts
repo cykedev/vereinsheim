@@ -48,7 +48,7 @@ export const ENTRY_TEXTS = {
   executionHint: "Wie gut war die Technik? Unabhängig vom Ergebnis.",
   cardGone: "Scheibe gelöscht",
   noCard:
-    "Noch keine Scheibe. Sie kommt von selbst dazu, sobald Spiegel eine von diesem Abend hat.",
+    "Noch keine Scheibe. Die Scheiben dieses Tages kommen von selbst dazu, sobald Spiegel sie hat.",
   changeCards: "Scheiben ändern",
   changeCardsLead: (day: string, family: string) =>
     `Alle Scheiben vom ${day} in ${family}. Ein Haken nimmt eine Scheibe in diesen Eintrag.`,
@@ -56,7 +56,7 @@ export const ENTRY_TEXTS = {
   done: "Fertig",
   thisEntry: "Dieser Eintrag",
   basics: "Tag, Art und Disziplin",
-  basicsFromCards: "Kommt von den Scheiben.",
+  basicsFromCards: "Kommen von den Scheiben dieses Eintrags.",
   change: "Ändern",
   day: "Tag",
   kind: "Art",

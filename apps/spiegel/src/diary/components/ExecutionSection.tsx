@@ -56,10 +56,10 @@ export function ExecutionSection({
           <div
             key={card.id}
             data-execution-card={card.id}
-            className="grid gap-1 rounded-xl border border-border p-3"
+            className="grid gap-1 rounded-xl border border-border px-2.5 py-3"
           >
             <CardHead card={card} marks={marks} timeZone={timeZone} />
-            <div className="ml-3 grid divide-y divide-border border-l-2 border-line-strong pl-3">
+            <div className="ml-1.5 grid divide-y divide-border border-l-2 border-line-strong pl-2.5">
               {series[card.id].map((s) => {
                 const key = `${card.id}|${s.series}`
                 return (

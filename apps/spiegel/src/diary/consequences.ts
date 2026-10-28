@@ -48,18 +48,18 @@ export function diaryCardRelease({
   executions: number
 }): Decision {
   return {
-    title: "Scheibe lösen?",
-    about: `Du löst die Scheibe vom ${when.replace(" · ", " um ")} aus diesem Eintrag.`,
+    title: "Scheibe aus dem Eintrag nehmen?",
+    about: `Du nimmst die Scheibe vom ${when.replace(" · ", " um ")} aus diesem Eintrag.`,
     happens: [
       "Die Scheibe steht dann in keinem Eintrag. Von selbst kommt sie nicht wieder dazu.",
-      ...(executions > 0 ? ["Die Ausführung ihrer Serien geht mit."] : []),
+      ...(executions > 0 ? ["Deine Bewertung ihrer Serien (Ausführung) ist dann weg."] : []),
     ],
     notHappening: [
       "Die Scheibe bleibt in Spiegel, mit allen Schüssen.",
       "Die übrigen Angaben im Eintrag bleiben.",
     ],
     undo: "Im Blatt „Scheiben ändern“ wieder anhaken.",
-    confirmLabel: "Lösen",
+    confirmLabel: "Herausnehmen",
     destructive: executions > 0,
   }
 }

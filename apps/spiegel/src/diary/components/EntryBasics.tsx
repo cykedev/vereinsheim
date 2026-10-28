@@ -20,7 +20,7 @@ const FIELD =
   "h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-2 focus-visible:outline-ring"
 
 /**
- * Zeile „Tag, Art und Disziplin“ im Kasten „Dieser Eintrag“: mit Scheiben „Kommt von den Scheiben.“, ohne Scheiben
+ * Zeile „Tag, Art und Disziplin“ im Kasten „Dieser Eintrag“: mit Scheiben „Kommen von den Scheiben dieses Eintrags.“, ohne Scheiben
  * änderbar (Tag, Art, Disziplin; bei „Mit Scheiben“ Pflicht).
  */
 export function EntryBasics({
