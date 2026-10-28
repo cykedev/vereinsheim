@@ -279,6 +279,11 @@ Entschieden mit dem User am 28. Oktober 2026:
   sinnvoll weiter: Was genutzt wurde, wird besser; was kaum genutzt wurde, wird einfacher oder fällt weg. Grundlage ist
   die Nutzung aller Konten (Zählung und Inhalte, nur als Muster). Keine Sonderbehandlung für übernommene Daten: ein
   Modell und eine Anzeige für alle; Werte wie Befinden bleiben intern auf 0–100, die Oberfläche zeigt fünf Stufen.
+- **Designkonzept 2a, Runde 3** (https://claude.ai/artifact/2m3QyyCkx7LNnchg9Nk5Te), Rückmeldung des Users: Vorhaben als
+  erste Zeile, darunter die Notiz; Vorher mit dem Faden (letzte Lernfrage, „Als Vorhaben nehmen“) und Befinden; Nachher
+  mit „Hat es geklappt?“, den Satzanfängen „Ich habe gelernt, dass …“ und „Wie schaffe ich es, …?“ und „Was hat
+  gestört?“ (immer, eingeklappt). Der Faden der Lernfragen als Zeitstrahl wird eine eigene Ansicht, schon in 2a. Leere
+  Abschnitte sind eine Zeile mit „+“, gefüllte offen; die Seite hängt nicht von der Nutzung ab.
 
 ### Stufe 3 · Die Daten ziehen um
 
