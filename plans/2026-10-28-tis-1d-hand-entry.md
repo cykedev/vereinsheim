@@ -284,7 +284,7 @@ geändert"`, `kindChoice` beim Anlegen. `timeUnknown` schreibt `writeEnteredCard
 | … undo | Unter der Disziplin auf „Ignorieren“ tippen. Dann ist sie nicht mehr wählbar. |
 | … Knopf | Anlegen |
 | Admin, Formular, Feld neu | Serienlänge |
-| Admin, Kopftext (ersetzt „Neue Disziplinen legt Spiegel selbst an, …“) | Meyton nennt jede Disziplin mit Nummer und Namen. Hier legst du fest, wie Spiegel ihre Scheiben zeigt und zählt. Disziplinen von Meyton legt Spiegel selbst an, sobald die erste Scheibe kommt; andere legst du unten an. |
+| Admin, Kopftext (ersetzt „Neue Disziplinen legt Spiegel selbst an, …“) | Meyton nennt jede Disziplin mit Nummer und Namen. Hier legst du fest, wie Spiegel ihre Scheiben zeigt und zählt. Disziplinen von Meyton legt Spiegel selbst an, sobald die erste Scheibe kommt. Andere legst du unten an. |
 
 ## Offene Fragen (Empfehlung zuerst)
 
