@@ -2,7 +2,7 @@ import { db } from "@/lib/db"
 import { refreshStaleDisciplineCards, refreshStaleProjections } from "@/lib/db/cards"
 import { purgeExpiredTrash } from "@/lib/db/trash"
 import { rereadOutdatedKeys } from "@/lib/ingest/reread"
-import { sweepPrintoutsSoon } from "@/lib/printouts/files"
+import { sweepUploadsSoon } from "@/lib/uploads"
 import { readerBundleMissing } from "@/lib/printouts/reader"
 import { rereadOutdatedPrintouts } from "@/lib/printouts/reread"
 import { ensureSeedAdmin } from "@/lib/startup"
@@ -22,7 +22,7 @@ function emptyExpiredTrash() {
         error instanceof Error ? error.name : "unbekannter Fehler"
       )
     )
-    .finally(() => sweepPrintoutsSoon(db))
+    .finally(() => sweepUploadsSoon(db))
 }
 
 /** Scheiben mit veralteter Zuordnung ihrer Disziplin nachrechnen; ins Log nur Zahlen und den Namen eines Fehlers */

@@ -7,7 +7,7 @@ import { isCardIdInput, shooterId } from "@/lib/action-guards"
 import { db } from "@/lib/db"
 import { lockCard, purgeCards } from "@/lib/db/purge"
 import { trashEndsAt } from "@/lib/db/trash"
-import { sweepPrintoutsSoon } from "@/lib/printouts/files"
+import { sweepUploadsSoon } from "@/lib/uploads"
 import type { ActionResult } from "@/lib/types"
 
 // Löschen mit Papierkorb: nur eigene Scheiben, jede Action
@@ -87,6 +87,6 @@ export async function purgeCardNow(cardId: string): Promise<ActionResult> {
     return null
   })
   // die Dateien ihrer Ausdrucke
-  if ("success" in result) sweepPrintoutsSoon(db)
+  if ("success" in result) sweepUploadsSoon(db)
   return result
 }
