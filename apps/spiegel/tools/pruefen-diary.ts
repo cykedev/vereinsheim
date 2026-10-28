@@ -299,7 +299,7 @@ async function run(page: Page, { base, check, record }: Context) {
   )
   check("Tagebuch: auf Start je Block eine Zeile zum Eintrag", start.length > 0, start.join(" | "))
 
-  // Scheibe lösen: danach nur noch angeboten, an der Scheibe „Eintrag anlegen“
+  // Scheibe lösen: danach nur noch angeboten, die Zeile an der Scheibe führt in den Eintrag, der sie anbietet
   await page.goto(`${base}/diary/${first}`)
   await page.click(`button("Lösen", $('[data-entry-card="${cardId}"]'))`)
   await confirm(page, "Lösen")
@@ -312,8 +312,10 @@ async function run(page: Page, { base, check, record }: Context) {
   )
   await page.goto(`${base}/cards/${cardId}`)
   check(
-    "Tagebuch: an der gelösten Scheibe „Eintrag anlegen“",
-    await page.ev<boolean>(`!!link("Eintrag anlegen", $("[data-card-actions]"))`)
+    "Tagebuch: an der gelösten Scheibe „bietet sie an“ mit „Eintrag öffnen“ in diesen Eintrag",
+    await page.ev<boolean>(
+      `txt($("[data-card-actions]")).includes("bietet sie an") && link("Eintrag öffnen", $("[data-card-actions]"))?.getAttribute("href") === "/diary/${first}"`
+    )
   )
 
   // löschen, rückgängig, wieder löschen, im Papierkorb endgültig

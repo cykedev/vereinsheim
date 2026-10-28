@@ -76,7 +76,7 @@ async function eveningOf(
       select: { id: true, day: true, familyId: true, deletedAt: true },
     }),
     db.diaryEntryCard.findMany({
-      where: { cardId: { in: cards.map((c) => c.id) } },
+      where: { cardId: { in: cards.map((c) => c.id) }, entry: { userId } },
       select: { cardId: true, entryId: true, link: true },
     }),
   ])
@@ -112,7 +112,7 @@ export async function createFromEvening(
     })
     if (open > 0) return ENTRY_ERRORS.taken
     const rows = await tx.diaryEntryCard.findMany({
-      where: { cardId: { in: cards.map((c) => c.id) } },
+      where: { cardId: { in: cards.map((c) => c.id) }, entry: { userId } },
       select: { cardId: true, link: true },
     })
     const fixed = new Set(rows.filter((r) => r.link === "linked").map((r) => r.cardId))
@@ -203,6 +203,9 @@ export async function setBasics(
   if (fixed > 0 || (own && own.added.length > 0)) return ENTRY_ERRORS.hasCards
   return run(db, async (tx) => {
     if (!(await lockEntry(tx, userId, entryId))) return ERRORS.missing
+    // noch einmal unter der Sperre: „Dazunehmen“ kann inzwischen eine Scheibe verknüpft haben
+    if (await tx.diaryEntryCard.count({ where: { entryId, link: "linked" } }))
+      return ENTRY_ERRORS.hasCards
     await tx.diaryEntry.update({
       where: { id: entryId },
       data: { day: dateOfDay(basics.day), kind: basics.kind, familyId: basics.familyId },
@@ -235,13 +238,7 @@ export async function addCard(
     )
       return ENTRY_ERRORS.notHere
     const row = await tx.diaryEntryCard.findUnique({ where: { cardId } })
-    if (row?.link === "linked" && row.entryId !== entryId) {
-      const other = await tx.diaryEntry.findUnique({
-        where: { id: row.entryId },
-        select: { deletedAt: true },
-      })
-      if (other) return ENTRY_ERRORS.taken
-    }
+    if (row?.link === "linked" && row.entryId !== entryId) return ENTRY_ERRORS.taken
     await tx.diaryEntryCard.upsert({
       where: { cardId },
       create: { cardId, entryId, link: "linked" },
@@ -253,18 +250,22 @@ export async function addCard(
 
 /**
  * Eine Scheibe aus dem Eintrag lösen (auch eine dazugekommene oder eine, die es nicht mehr gibt): Zeile `released`, die
- * Ausführung ihrer Serien in diesem Eintrag geht mit
+ * Ausführung ihrer Serien in diesem Eintrag geht mit. Nur eine eigene Scheibe oder eine mit einer Zeile in diesem
+ * Eintrag (eine gelöschte hat nur noch die Zeile); eine fremde Kennung schreibt nichts.
  */
 export async function releaseCard(
   db: Db,
   userId: string,
   entryId: string,
-  cardId: string
+  cardId: string,
+  timeZone = "UTC"
 ): Promise<string | null> {
   if (typeof cardId !== "string" || !cardId || cardId.length > 64) return ENTRY_ERRORS.noCard
+  const own = (await resultCards(db, { ownerId: userId, timeZone, ids: [cardId] })).length > 0
   return run(db, async (tx) => {
     if (!(await lockEntry(tx, userId, entryId))) return ERRORS.missing
     const row = await tx.diaryEntryCard.findUnique({ where: { cardId } })
+    if (!own && row?.entryId !== entryId) return ENTRY_ERRORS.noCard
     if (row && row.entryId !== entryId && row.link === "linked") return ENTRY_ERRORS.notHere
     await tx.diaryEntryCard.upsert({
       where: { cardId },

@@ -138,7 +138,7 @@ describe("Scheiben vom selben Abend", () => {
       (await eveningEntries(db, site.ownerId, [{ day, familySlug, cardIds: [later] }], ZONE)).get(
         `${day}|${familySlug}`
       )
-    ).toBe(id)
+    ).toEqual({ entryId: id })
   })
 
   it("zwei Einträge am selben Tag: die Scheibe wird in beiden nur angeboten", async () => {
@@ -212,6 +212,30 @@ describe("Scheiben vom selben Abend", () => {
     expect(await addCard(db, site.ownerId, e.id, await card(otherDay, otherId), ZONE)).toBe(
       ENTRY_ERRORS.noCard
     )
+  })
+
+  it("löst keine fremde Scheibe: keine Zeile, eine fremde Zeile bleibt", async () => {
+    const { day, ms } = eveningMs(9)
+    const e = (await createWithout(db, site.ownerId, {
+      day,
+      kind: "shooting",
+      familyId: site.familyId,
+      timeZone: ZONE,
+    })) as { id: string }
+    const foreign = await card(ms, otherId)
+    expect(await releaseCard(db, site.ownerId, e.id, foreign, ZONE)).toBe(ENTRY_ERRORS.noCard)
+    expect(await db.diaryEntryCard.count({ where: { cardId: foreign } })).toBe(0)
+    const theirs = await db.diaryEntry.create({
+      data: { userId: otherId, day: new Date(`${day}T00:00:00.000Z`), familyId: site.familyId },
+    })
+    await db.diaryEntryCard.create({
+      data: { cardId: foreign, entryId: theirs.id, link: "released" },
+    })
+    expect(await releaseCard(db, site.ownerId, e.id, foreign, ZONE)).toBe(ENTRY_ERRORS.noCard)
+    expect(await db.diaryEntryCard.findUnique({ where: { cardId: foreign } })).toMatchObject({
+      entryId: theirs.id,
+    })
+    await db.diaryEntry.delete({ where: { id: theirs.id } })
   })
 })
 
@@ -408,5 +432,13 @@ describe("Vorschläge", () => {
     await createFromEvening(db, site.ownerId, { day, familyId: site.familyId, timeZone: ZONE })
     const after = await newEntryView(db, site.ownerId, ZONE, null)
     expect(after.proposals.some((p) => p.day === day && p.family.id === site.familyId)).toBe(false)
+  })
+  it("ein Abend älter als 30 Tage steht nur, wenn die Scheibe aus der Adresse dazugehört", async () => {
+    const { day, ms } = eveningMs(45)
+    const c = await card(ms)
+    const of = (view: Awaited<ReturnType<typeof newEntryView>>) =>
+      view.proposals.find((p) => p.day === day && p.family.id === site.familyId)
+    expect(of(await newEntryView(db, site.ownerId, ZONE, null))).toBeUndefined()
+    expect(of(await newEntryView(db, site.ownerId, ZONE, c))).toMatchObject({ marked: true })
   })
 })

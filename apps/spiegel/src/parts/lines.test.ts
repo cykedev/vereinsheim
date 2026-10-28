@@ -2,7 +2,8 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest"
 
 import { formatIsoDate } from "@vereinsheim/lib/format"
 
-import { createWithout } from "@/diary/entries"
+import { createFromEvening, createWithout, releaseCard } from "@/diary/entries"
+import { deleteEntry } from "@/diary/trash"
 import { setDiaryEnabled } from "@/diary/settings"
 import { createPrismaClient } from "@/lib/db"
 import { writeEnteredCard } from "@/lib/db/entered"
@@ -101,5 +102,42 @@ describe("Stellen für das Tagebuch", () => {
       href: `/diary/${entry.id}`,
       action: "Eintrag öffnen",
     })
+  })
+
+  it("jede Zeile führt dorthin, wo sich etwas tun lässt: gelöst zum Eintrag, im Papierkorb zum Papierkorb", async () => {
+    await setDiaryEnabled(db, site.ownerId, true)
+    const day = formatIsoDate(new Date(Date.now() - 6 * 86_400_000), ZONE)
+    const c = await card(day)
+    const blocks = [{ day, familySlug: slug, cardIds: [c] }]
+    const entry = (await createFromEvening(db, site.ownerId, {
+      day,
+      familyId: site.familyId,
+      timeZone: ZONE,
+    })) as { id: string }
+    expect(await releaseCard(db, site.ownerId, entry.id, c)).toBeNull()
+    const [offered] = await cardLines(db, { ownerId: site.ownerId, cardId: c, timeZone: ZONE })
+    expect(offered).toMatchObject({ href: `/diary/${entry.id}`, action: "Eintrag öffnen" })
+    expect(offered.state).toMatch(
+      /^Noch in keinem Eintrag\. Der Eintrag vom \S+ \d\d\.\d\d\. bietet sie an\.$/
+    )
+    expect(
+      (await startLines(db, { ownerId: site.ownerId, blocks, timeZone: ZONE }))[`${day}|${slug}`]
+    ).toMatchObject({ href: `/diary/${entry.id}`, action: "Eintrag öffnen" })
+
+    const d = await card(day)
+    await db.diaryEntryCard.update({ where: { cardId: c }, data: { link: "linked" } })
+    await db.diaryEntryCard.create({ data: { cardId: d, entryId: entry.id, link: "linked" } })
+    expect(await deleteEntry(db, site.ownerId, entry.id)).toBeNull()
+    const [trash] = await cardLines(db, { ownerId: site.ownerId, cardId: c, timeZone: ZONE })
+    expect(trash).toMatchObject({ href: "/profile/trash", action: "Papierkorb öffnen" })
+    expect(trash.state).toMatch(/^Im Eintrag vom \S+ \d\d\.\d\d\.\. Er liegt im Papierkorb\.$/)
+    // stecken alle Scheiben des Blocks in einem Eintrag im Papierkorb, steht auf Start keine Zeile
+    expect(
+      await startLines(db, {
+        ownerId: site.ownerId,
+        blocks: [{ day, familySlug: slug, cardIds: [c, d] }],
+        timeZone: ZONE,
+      })
+    ).toEqual({})
   })
 })

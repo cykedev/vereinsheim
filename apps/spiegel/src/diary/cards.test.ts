@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest"
 
-import { entryCards, entryOfCard, type CardLinkRow, type CardRef, type EntryRef } from "./cards"
+import {
+  cardPlace,
+  entryCards,
+  entryOfCard,
+  type CardLinkRow,
+  type CardRef,
+  type EntryRef,
+} from "./cards"
 
 const DAY = "2026-10-20"
 const entry = (id: string, over: Partial<EntryRef> = {}): EntryRef => ({
@@ -95,5 +102,42 @@ describe("entryOfCard", () => {
     expect(
       entryOfCard(card("c"), [entry("e")], [{ cardId: "c", entryId: "e", link: "released" }])
     ).toBeNull()
+  })
+})
+
+describe("cardPlace", () => {
+  it("fest oder dazugekommen: im Eintrag", () => {
+    expect(cardPlace(card("c"), [entry("e")], [])).toEqual({ kind: "entry", entryId: "e" })
+    expect(
+      cardPlace(
+        card("c"),
+        [entry("e1"), entry("e2")],
+        [{ cardId: "c", entryId: "e2", link: "linked" }]
+      )
+    ).toEqual({ kind: "entry", entryId: "e2" })
+  })
+
+  it("gelöst oder bei mehreren Einträgen: angeboten im ersten offenen Eintrag", () => {
+    expect(
+      cardPlace(card("c"), [entry("e")], [{ cardId: "c", entryId: "e", link: "released" }])
+    ).toEqual({ kind: "offered", entryId: "e" })
+    expect(
+      cardPlace(card("c"), [entry("e1", { deleted: true }), entry("e2"), entry("e3")], [])
+    ).toEqual({ kind: "offered", entryId: "e2" })
+  })
+
+  it("fest in einem Eintrag im Papierkorb: dort, ohne Angebot anderswo", () => {
+    expect(
+      cardPlace(
+        card("c"),
+        [entry("e1", { deleted: true }), entry("e2")],
+        [{ cardId: "c", entryId: "e1", link: "linked" }]
+      )
+    ).toEqual({ kind: "trash", entryId: "e1" })
+  })
+
+  it("ohne Eintrag des Abends: nirgends", () => {
+    expect(cardPlace(card("c"), [entry("e", { day: "2026-10-21" })], [])).toEqual({ kind: "none" })
+    expect(cardPlace(card("c", { familyId: null }), [entry("e")], [])).toEqual({ kind: "none" })
   })
 })

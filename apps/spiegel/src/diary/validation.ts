@@ -17,8 +17,8 @@ export const TEXT_FIELDS = ["intention", "note", "learned", "question", "disturb
 export type TextField = (typeof TEXT_FIELDS)[number]
 
 /**
- * das erwartete Ergebnis: „340“, „340,5“ oder „340.5“, höchstens eine Nachkommastelle, 0 bis 999,9 (wie
- * `Decimal(5,1)`); leer → null. Ungültig → undefined
+ * das erwartete Ergebnis: „340“, „340,5“ oder „340.5“, höchstens eine Nachkommastelle, 0 bis 999,9 (bewusst
+ * enger als `Decimal(5,1)`); leer → null. Ungültig → undefined
  */
 export function parseExpectedScore(raw: string): number | null | undefined {
   const text = raw.trim()

@@ -200,7 +200,10 @@ export function EntryScreen({
         <div className="grid gap-3">
           <h2 className={H2}>{ENTRY_TEXTS.after}</h2>
           <div className={`${BOX} grid gap-4`}>
-            {entry.intention && <OutcomeChoice entryId={entry.id} value={entry.outcome} />}
+            {/* gefragt mit Vorhaben; eine gespeicherte Antwort bleibt sichtbar, auch wenn das Vorhaben geleert ist */}
+            {(entry.intention || entry.outcome) && (
+              <OutcomeChoice entryId={entry.id} value={entry.outcome} />
+            )}
             <EntryText
               name="learned"
               label={ENTRY_TEXTS.learned}

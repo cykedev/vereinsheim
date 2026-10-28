@@ -42,13 +42,13 @@ export function TrashScreen({
 
         {parts?.content}
 
-        {items.length || parts?.count ? (
+        {items.length ? (
           <ul className="grid gap-3">
             {items.map((item) => (
               <TrashRow key={item.cardId} item={item} />
             ))}
           </ul>
-        ) : (
+        ) : parts?.count ? null : (
           <div data-trash-empty className="rounded-2xl border border-border bg-card p-6">
             <h2 className="font-display text-xl font-bold tracking-tight">
               Der Papierkorb ist leer

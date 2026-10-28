@@ -3,10 +3,63 @@ id: spiegel-diary
 type: subsystem
 title: "Spiegel — Tagebuch: Einträge, Faden und Stellen"
 aliases: [tagebuch, diary, treffsicher-2-0, trainingstagebuch-in-spiegel]
-keywords: [tagebuch, eintrag, einträge, vorhaben, notiz, befinden, prognose, feedback, ausführung je serie, stufen, fünf stufen, 0 bis 100, faden, lernfrage, wie schaffe ich es, ich habe gelernt, hat es geklappt, was hat gestört, vorschlag, neuer eintrag, ohne scheibe, trockentraining, mentaltraining, dazugekommen, lösen, dazunehmen, vom selben abend, papierkorb, abschaltbar, hinweis, nur du siehst, zonen, grenze, nahtstellen, parts, results-read, partline, export, konto löschen, deine daten, stufe 2, 2a, treffsicher]
+keywords:
+  [
+    tagebuch,
+    eintrag,
+    einträge,
+    vorhaben,
+    notiz,
+    befinden,
+    prognose,
+    feedback,
+    ausführung je serie,
+    stufen,
+    fünf stufen,
+    0 bis 100,
+    faden,
+    lernfrage,
+    wie schaffe ich es,
+    ich habe gelernt,
+    hat es geklappt,
+    was hat gestört,
+    vorschlag,
+    neuer eintrag,
+    ohne scheibe,
+    trockentraining,
+    mentaltraining,
+    dazugekommen,
+    lösen,
+    dazunehmen,
+    vom selben abend,
+    papierkorb,
+    abschaltbar,
+    hinweis,
+    nur du siehst,
+    zonen,
+    grenze,
+    nahtstellen,
+    parts,
+    results-read,
+    partline,
+    export,
+    konto löschen,
+    deine daten,
+    stufe 2,
+    2a,
+    treffsicher,
+  ]
 part_of: ["[[spiegel]]"]
 governed_by: ["[[adr-033]]", "[[adr-030]]", "[[adr-029]]"]
-relates_to: ["[[spiegel-navigation]]", "[[spiegel-privacy]]", "[[spiegel-data-model]]", "[[spiegel-db-schema]]", "[[spiegel-roadmap]]", "[[spiegel-account-transfer]]"]
+relates_to:
+  [
+    "[[spiegel-navigation]]",
+    "[[spiegel-privacy]]",
+    "[[spiegel-data-model]]",
+    "[[spiegel-db-schema]]",
+    "[[spiegel-roadmap]]",
+    "[[spiegel-account-transfer]]",
+  ]
 ---
 
 **TL;DR** Das Tagebuch ist der zweite Teil von Spiegel ([[adr-033]]) und Treffsicher 2.0: was in Treffsicher genutzt
@@ -40,11 +93,11 @@ in `SCALE_ASPECTS` (`src/diary/scales.ts`, Test je Abschnitt).
 
 ## Drei Zonen im Code
 
-| Zone | Ordner | darf importieren |
-| --- | --- | --- |
-| Tagebuch | `src/diary/**`, `src/app/(app)/diary/**` | Pakete, aus dem Ergebnisteil nur `results-read`, `auth-helpers`, `action-guards`, `db`, `types`, `page-context`, den generierten Client, `components/shell/` und `components/card/ActionRow` |
-| Nahtstellen | `src/parts/**`, `src/instrumentation-node.ts` | beide Teile |
-| Ergebnisteil | alles übrige, dazu `packages/shot-*` | nie das Tagebuch, nur `@/parts/*` als Stelle |
+| Zone         | Ordner                                        | darf importieren                                                                                                                                                                             |
+| ------------ | --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Tagebuch     | `src/diary/**`, `src/app/(app)/diary/**`      | Pakete, aus dem Ergebnisteil nur `results-read`, `auth-helpers`, `action-guards`, `db`, `types`, `page-context`, den generierten Client, `components/shell/` und `components/card/ActionRow` |
+| Nahtstellen  | `src/parts/**`, `src/instrumentation-node.ts` | beide Teile                                                                                                                                                                                  |
+| Ergebnisteil | alles übrige, dazu `packages/shot-*`          | nie das Tagebuch, nur `@/parts/*` als Stelle                                                                                                                                                 |
 
 - Das Gate ist ein Test in `pnpm check` (`src/parts/boundary.test.ts`): Importe nach der Tabelle, kein Zugriff des
   Tagebuchs auf ein Modell des Ergebnisteils über Prisma, kein Import von Nahtstellen oder Tagebuch im Admin.
@@ -85,9 +138,14 @@ angeboten. Eine gelöschte Scheibe steht als „Scheibe gelöscht“. Das Einles
 
 ## Stellen im Ergebnisteil
 
-- Seite einer Scheibe, Kasten „Diese Scheibe“, ganz oben: „Tagebuch“ mit „Im Eintrag vom Fr 13.03.“ und „Eintrag
-  öffnen“, sonst „Noch in keinem Eintrag.“ und „Eintrag anlegen“ (`cardLines`). Die geteilte Seite zeigt keine.
-- Start, je Block neben „Abend in Scheiben ›“: „Tagebuch · Eintrag öffnen ›“ oder „… anlegen ›“ (`startLines`).
+- Seite einer Scheibe, Kasten „Diese Scheibe“, ganz oben die Zeile „Tagebuch“ (`cardLines`). Jede führt dorthin, wo
+  sich etwas tun lässt (`cardPlace` in `src/diary/cards.ts`): im Eintrag „Im Eintrag vom Fr 13.03.“ mit „Eintrag
+  öffnen“; nur angeboten (gelöst, oder mehrere Einträge des Abends) „Noch in keinem Eintrag. Der Eintrag vom … bietet
+  sie an.“ mit „Eintrag öffnen“; fest in einem Eintrag im Papierkorb „Im Eintrag vom …. Er liegt im Papierkorb.“ mit
+  „Papierkorb öffnen“; sonst „Noch in keinem Eintrag.“ mit „Eintrag anlegen“ (auch für einen Abend, der älter als 30
+  Tage ist). Die geteilte Seite zeigt keine.
+- Start, je Block neben „Abend in Scheiben ›“: „Tagebuch · Eintrag öffnen ›“ oder „… anlegen ›“ (`startLines`); stecken
+  alle Scheiben des Blocks in Einträgen im Papierkorb, keine Zeile.
 - Profil: Kasten „Tagebuch“ mit Ein- und Ausschalten; ist es an, am Telefon „Alle Scheiben“, weil die Liste der
   Scheiben dann nicht in der Leiste steht. Papierkorb: „Einträge im Tagebuch“.
 

@@ -40,6 +40,10 @@ export const DIARY_MAY_IMPORT: readonly string[] = [
 const RESULT_MODELS =
   /\b(?:db|tx)\.(?:card|cardRevision|seriesSum|shot|cardProjection|cardEvidence|printout|rawRow|rawSnapshot|rawColumnSet|tombstone|deleteLock|cardRequest|sportpassConsent|discipline|family|familyScoring|ranking|source|site|bridge|bridgePairing|clockReading)\b/
 
+/** dieselben Tabellen in rohem SQL (`$queryRaw`, `$executeRaw`): Postgres nennt sie in Anführungszeichen */
+const RESULT_TABLES =
+  /"(?:Card|CardRevision|SeriesSum|Shot|CardProjection|CardEvidence|Printout|RawRow|RawSnapshot|RawColumnSet|Tombstone|DeleteLock|CardRequest|SportpassConsent|Discipline|Family|FamilyScoring|Ranking|Source|Site|Bridge|BridgePairing|ClockReading)"/
+
 const IMPORT =
   /(?:import|export)\s[^'"]*?from\s*["']([^"']+)["']|import\(\s*["']([^"']+)["']\s*\)|^\s*import\s*["']([^"']+)["']/gm
 
@@ -70,7 +74,7 @@ const isTest = (file: string) => /\.test\.tsx?$/.test(file)
  * - Ergebnisteil und Admin importieren nichts aus dem Tagebuch (nur die Nahtstellen dürfen),
  * - der Admin importiert keine Nahtstelle (er sieht vom Tagebuch nichts),
  * - das Tagebuch importiert aus dem Ergebnisteil nur `DIARY_MAY_IMPORT` und greift auf kein Modell des Ergebnisteils
- *   zu. Tests des Tagebuchs dürfen Scheiben anlegen, um etwas zu prüfen.
+ *   zu, weder über Prisma noch in rohem SQL. Tests des Tagebuchs dürfen Scheiben anlegen, um etwas zu prüfen.
  */
 export function boundaryViolations(files: readonly { file: string; source: string }[]): string[] {
   const violations: string[] = []
@@ -85,7 +89,11 @@ export function boundaryViolations(files: readonly { file: string; source: strin
       if (zone === "diary" && !isTest(file) && target !== "diary" && !allowedForDiary(path))
         violations.push(`${file}: Tagebuch importiert aus dem Ergebnisteil (${path})`)
     }
-    if (zone === "diary" && !isTest(file) && RESULT_MODELS.test(source))
+    if (
+      zone === "diary" &&
+      !isTest(file) &&
+      (RESULT_MODELS.test(source) || RESULT_TABLES.test(source))
+    )
       violations.push(`${file}: Tagebuch greift auf ein Modell des Ergebnisteils zu`)
   }
   return violations

@@ -128,6 +128,22 @@ describe("boundaryViolations", () => {
         { file: "src/diary/queries.ts", source: `await db.diaryEntry.findMany()` },
       ])
     ).toEqual([])
+    expect(
+      boundaryViolations([
+        {
+          file: "src/diary/entries.ts",
+          source: 'await tx.$queryRaw`SELECT id FROM "Card" WHERE "ownerId" = ${userId}`',
+        },
+      ])
+    ).toHaveLength(1)
+    expect(
+      boundaryViolations([
+        {
+          file: "src/diary/entries.ts",
+          source: 'await tx.$queryRaw`SELECT id FROM "DiaryEntry" WHERE id = ${id} FOR UPDATE`',
+        },
+      ])
+    ).toEqual([])
   })
 
   it("lässt Tests des Tagebuchs Scheiben anlegen", () => {

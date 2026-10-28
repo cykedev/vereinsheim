@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache"
 
 import { getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
 
-import { shooterId } from "@/lib/action-guards"
+import { isRowId, shooterId } from "@/lib/action-guards"
 import { db } from "@/lib/db"
 import type { ActionResult } from "@/lib/types"
 
@@ -54,6 +54,7 @@ export async function createEntryFromEvening(
 ): Promise<ActionResult<{ id: string }>> {
   const g = await guard()
   if ("error" in g) return g
+  if (typeof day !== "string" || !isRowId(familyId)) return { error: ERRORS.failed }
   const result = await createFromEvening(db, g.userId, { day, familyId, timeZone: g.timeZone })
   if ("error" in result) return result
   revalidatePath("/", "layout")
@@ -67,7 +68,15 @@ export async function createEntryWithout(input: {
 }): Promise<ActionResult<{ id: string }>> {
   const g = await guard()
   if ("error" in g) return g
-  const result = await createWithout(db, g.userId, { ...input, timeZone: g.timeZone })
+  if (typeof input !== "object" || input === null) return { error: ERRORS.failed }
+  const { day, kind, familyId } = input
+  if (
+    typeof day !== "string" ||
+    typeof kind !== "string" ||
+    (familyId !== null && !isRowId(familyId))
+  )
+    return { error: ERRORS.failed }
+  const result = await createWithout(db, g.userId, { day, kind, familyId, timeZone: g.timeZone })
   if ("error" in result) return result
   revalidatePath("/", "layout")
   return { success: true, data: { id: result.id } }
@@ -84,7 +93,7 @@ export async function releaseEntryCard(entryId: string, cardId: string): Promise
   const g = await guard()
   if ("error" in g) return g
   if (!isId(entryId) || !isId(cardId)) return { error: ERRORS.missing }
-  return done(await releaseCard(db, g.userId, entryId, cardId), true)
+  return done(await releaseCard(db, g.userId, entryId, cardId, g.timeZone), true)
 }
 
 export async function saveEntryText(

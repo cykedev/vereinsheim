@@ -86,3 +86,32 @@ export function entryOfCard(
     if (set.added.includes(card.id)) return entryId
   return null
 }
+
+/**
+ * Wo eine Scheibe im Tagebuch steht, für die Stellen an Scheibe und Start: in einem Eintrag (fest oder dazugekommen),
+ * nur angeboten (gelöst oder mehrere Einträge des Abends; der erste bietet sie zum Dazunehmen an), fest in einem
+ * Eintrag im Papierkorb, oder nirgends. So führt jede Zeile dorthin, wo sich etwas tun lässt.
+ */
+export type CardPlace =
+  | { kind: "entry"; entryId: string }
+  | { kind: "offered"; entryId: string }
+  | { kind: "trash"; entryId: string }
+  | { kind: "none" }
+
+export function cardPlace(
+  card: CardRef,
+  entries: readonly EntryRef[],
+  links: readonly CardLinkRow[]
+): CardPlace {
+  const row = links.find((link) => link.cardId === card.id)
+  if (row?.link === "linked") {
+    const entry = entries.find((e) => e.id === row.entryId)
+    if (entry) return { kind: entry.deleted ? "trash" : "entry", entryId: entry.id }
+  }
+  let offered: string | null = null
+  for (const [entryId, set] of entryCards(entries, links, [card])) {
+    if (set.added.includes(card.id)) return { kind: "entry", entryId }
+    if (offered === null && set.offered.includes(card.id)) offered = entryId
+  }
+  return offered === null ? { kind: "none" } : { kind: "offered", entryId: offered }
+}

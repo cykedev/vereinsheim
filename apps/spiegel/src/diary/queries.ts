@@ -12,7 +12,14 @@ import {
   type ResultSeries,
 } from "@/lib/results-read"
 
-import { entryCards, entryOfCard, type CardLinkRow, type EntryRef } from "./cards"
+import {
+  cardPlace,
+  entryCards,
+  entryOfCard,
+  type CardLinkRow,
+  type CardPlace,
+  type EntryRef,
+} from "./cards"
 import { proposals, type Proposal } from "./proposals"
 import type { ScalePart } from "./scales"
 import type { DiaryKindValue } from "./summaries"
@@ -45,15 +52,15 @@ const toCardRef = (card: ResultCard) => ({
   familyId: card.family?.id ?? null,
 })
 
-/** Einträge, Zeilen und Scheiben eines Kontos, aus denen `entryCards` rechnet */
-async function linkData(db: Db, userId: string, timeZone: string) {
+/** Einträge, Zeilen und Scheiben eines Kontos, aus denen `entryCards` rechnet; mit `ids` nur diese Scheiben */
+async function linkData(db: Db, userId: string, timeZone: string, ids?: readonly string[]) {
   const [entries, links, cards] = await Promise.all([
     db.diaryEntry.findMany({ where: { userId }, select: ENTRY_REF }),
     db.diaryEntryCard.findMany({
       where: { entry: { userId } },
       select: { cardId: true, entryId: true, link: true },
     }),
-    resultCards(db, { ownerId: userId, timeZone }),
+    resultCards(db, { ownerId: userId, timeZone, ids }),
   ])
   return { entries: entries.map(toRef), links: links as CardLinkRow[], cards }
 }
@@ -266,8 +273,12 @@ export async function newEntryView(
     linkData(db, userId, timeZone),
     resultFamilies(db, userId),
   ])
+  // der Abend der Scheibe aus der Adresse steht auch, wenn er älter ist: Die Zeile an der Scheibe führt hierher
+  const marked = cards.find((card) => card.id === markedCardId)
   const recent = cards.filter(
-    (card) => card.startedAtMs >= nowMs - (PROPOSAL_DAYS + 1) * 86_400_000
+    (card) =>
+      card.startedAtMs >= nowMs - (PROPOSAL_DAYS + 1) * 86_400_000 ||
+      (marked && card.day === marked.day && card.family?.id === marked.family?.id)
   )
   const linked = new Set(links.filter((l) => l.link === "linked").map((l) => l.cardId))
   return {
@@ -284,7 +295,7 @@ export async function entryForCard(
   cardId: string,
   timeZone: string
 ): Promise<{ entryId: string; day: string } | null> {
-  const { entries, links, cards } = await linkData(db, userId, timeZone)
+  const { entries, links, cards } = await linkData(db, userId, timeZone, [cardId])
   const card = cards.find((c) => c.id === cardId)
   if (!card) return null
   const entryId = entryOfCard(toCardRef(card), entries, links)
@@ -292,22 +303,56 @@ export async function entryForCard(
   return entry ? { entryId: entry.id, day: entry.day } : null
 }
 
-/** je Abend und Disziplin (Familie über ihre Kennung) der Eintrag, der nicht im Papierkorb liegt, wenn es genau einen gibt */
+/** wo eine eigene Scheibe im Tagebuch steht (`cardPlace`), mit dem Tag des Eintrags; null ohne eigene Scheibe */
+export async function cardPlaceOf(
+  db: Db,
+  userId: string,
+  cardId: string,
+  timeZone: string
+): Promise<{ place: CardPlace; day: string | null } | null> {
+  const { entries, links, cards } = await linkData(db, userId, timeZone, [cardId])
+  const card = cards.find((c) => c.id === cardId)
+  if (!card) return null
+  const place = cardPlace(toCardRef(card), entries, links)
+  const day =
+    place.kind === "none" ? null : (entries.find((e) => e.id === place.entryId)?.day ?? null)
+  return { place, day }
+}
+
+/**
+ * Je Abend und Disziplin (Familie über ihre Kennung), wohin die Zeile auf Start führt: in den Eintrag der neuesten
+ * Scheibe, die in einem steckt, sonst in den, der sie anbietet, sonst zum Anlegen mit der neuesten Scheibe, die in
+ * keinem Eintrag steht. Stecken alle in Einträgen im Papierkorb, keine Zeile (null).
+ */
 export async function eveningEntries(
   db: Db,
   userId: string,
   evenings: readonly { day: string; familySlug: string; cardIds: readonly string[] }[],
   timeZone: string
-): Promise<Map<string, string | null>> {
-  const { entries, links, cards } = await linkData(db, userId, timeZone)
-  const result = new Map<string, string | null>()
+): Promise<Map<string, { entryId: string } | { cardId: string } | null>> {
+  const { entries, links, cards } = await linkData(
+    db,
+    userId,
+    timeZone,
+    evenings.flatMap((evening) => evening.cardIds)
+  )
+  const result = new Map<string, { entryId: string } | { cardId: string } | null>()
   for (const evening of evenings) {
-    // der Eintrag der neuesten Scheibe des Abends, die in einem steckt
-    const own = cards
+    const places = cards
       .filter((card) => evening.cardIds.includes(card.id))
       .sort((a, b) => b.startedAtMs - a.startedAtMs)
-    const found = own.map((card) => entryOfCard(toCardRef(card), entries, links)).find(Boolean)
-    result.set(`${evening.day}|${evening.familySlug}`, found ?? null)
+      .map((card) => ({ cardId: card.id, place: cardPlace(toCardRef(card), entries, links) }))
+    const pick = (kind: CardPlace["kind"]) => places.find((p) => p.place.kind === kind)
+    const found = pick("entry") ?? pick("offered")
+    const free = pick("none")
+    result.set(
+      `${evening.day}|${evening.familySlug}`,
+      found && found.place.kind !== "none"
+        ? { entryId: found.place.entryId }
+        : free
+          ? { cardId: free.cardId }
+          : null
+    )
   }
   return result
 }
