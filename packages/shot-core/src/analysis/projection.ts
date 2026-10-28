@@ -22,6 +22,7 @@ import {
   type SumSource,
 } from "../metrics"
 import { byStart, cardShots, probeOnlyCard, shotCountOf } from "./card-shots"
+import { seriesCurve } from "./course"
 import { pooledValue } from "./levels"
 import { cardValues, type CardValue, type PeriodCard, type VolumeBucket } from "./period"
 import {
@@ -38,9 +39,9 @@ import {
  * ändert; dann werden alle Projektionen neu gerechnet. 2: Lagen für die kleinen Scheiben. 3: ohne verdächtige Schüsse
  * (SF-15). 4: Zehner und Innenzehner je Serie, Folge ab 9, schwächster Schuss, Spanne der Serien. 5: Streuung der
  * Schusswerte (`sd`) der Kennzahlen, die sich über Schüsse mitteln. 6: Angaben ohne Einzelschüsse (Summen, Trefferlage
- * als Summe), die Grundlage (`detail`), nur Probe erst mit einem Schuss.
+ * als Summe), die Grundlage (`detail`), nur Probe erst mit einem Schuss. 7: die Serien in beiden Wertungen (`series`).
  */
-const PROJECTION_VERSION = 6
+const PROJECTION_VERSION = 7
 
 const CARD_METRICS = METRICS.filter((metric) => metric.scopes.includes("card"))
 const RESULT_RINGS = metricByKey("result.rings") as MetricDefinition
@@ -84,6 +85,19 @@ export interface CardProjection {
   records: Record<Scoring, RecordCandidates | null>
   /** fehlt in Projektionen vor Version 6, bis `refreshProjections` sie nachrechnet; `cardProjection` liefert sie immer */
   detail?: CardDetail
+  /**
+   * die Serien wie unter der Scheibe (bei nur Probe die Probe): aus den Schüssen, ohne Schüsse aus den Serien-Summen;
+   * leer ohne Serien. Fehlt in Projektionen vor Version 7, bis `refreshProjections` sie nachrechnet
+   */
+  series?: ProjectedSeries[]
+}
+
+/** eine Serie einer Scheibe: Nummer, Schusszahl und Summe je Wertung; null, wenn einem Schuss der Wert fehlt */
+export interface ProjectedSeries {
+  series: number
+  shots: number
+  rings: number | null
+  decimal: number | null
 }
 
 /** eine Scheibe, wie sie die Übersichten aus der Datenbank lesen: ihre Merkmale und die Projektion, ohne Schüsse */
@@ -183,7 +197,33 @@ export function cardProjection(input: PeriodCard): CardProjection {
       rings: cardRecordCandidates(card, "rings", true),
     },
     detail: cardDetail(card),
+    series: projectedSeries(card),
   }
+}
+
+/** die Serien einer Scheibe in beiden Wertungen, dieselbe Regel wie unter der Scheibe */
+function projectedSeries(card: PeriodCard): ProjectedSeries[] {
+  const shown = asOnPrintout(card.shots)
+  const rings = seriesCurve(shown, "rings")
+  if (rings.length) {
+    const decimal = new Map(
+      seriesCurve(shown, "decimal").map((point) => [point.series, point.total])
+    )
+    return rings.map((point) => ({
+      series: point.series,
+      shots: point.shots,
+      rings: point.total,
+      decimal: decimal.get(point.series) ?? null,
+    }))
+  }
+  return [...(card.sums?.series ?? [])]
+    .sort((a, b) => a.series - b.series)
+    .map((sum) => ({
+      series: sum.series,
+      shots: sum.shots,
+      rings: sum.rings,
+      decimal: sum.decimalTenths === null ? null : sum.decimalTenths / 10,
+    }))
 }
 
 /** eine Scheibe mit Schüssen als Eingabe der Übersichten: ihre Merkmale und ihre Projektion (Tests) */

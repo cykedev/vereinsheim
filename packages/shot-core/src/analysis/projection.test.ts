@@ -36,6 +36,7 @@ import {
   recordsInView,
   type ProjectedCard,
 } from "./projection"
+import { seriesCurve } from "./course"
 import { FLAG_COUNTED_AS_MATCH, periodRecords } from "./records"
 import { scoreFromCoordinates } from "../scoring"
 import { LP_10M } from "../targets"
@@ -267,8 +268,8 @@ describe("Projektion je Scheibe (ADR-031)", () => {
     // Wird dieser Test rot, rechnet die Projektion anders als die gespeicherten: PROJECTION_VERSION (oder die
     // `version` der geänderten Kennzahl) erhöhen, damit `refreshProjections` sie neu rechnet, dann beide Werte setzen.
     expect({ version: projectionVersion(), output }).toEqual({
-      version: "p6-2c317885",
-      output: "90929-da977734",
+      version: "p7-2c317885",
+      output: "97806-35d987f8",
     })
   })
 
@@ -276,6 +277,50 @@ describe("Projektion je Scheibe (ADR-031)", () => {
     const probe = cardProjection(special[0])
     expect(probe).toMatchObject({ probeOnly: true, suspicious: false, printedShots: 10 })
     expect(cardProjection(special[2]).suspicious).toBe(true)
+  })
+})
+
+describe("Serien in der Projektion", () => {
+  const fromShots = (shots: readonly MetricShot[]) => {
+    const rings = seriesCurve(asOnPrintout(shots), "rings")
+    const decimal = seriesCurve(asOnPrintout(shots), "decimal")
+    return rings.map((point, i) => ({
+      series: point.series,
+      shots: point.shots,
+      rings: point.total,
+      decimal: decimal[i].total,
+    }))
+  }
+
+  it("aus den Schüssen wie unter der Scheibe, in beiden Wertungen", () => {
+    const match = special.find((c) => c.id === "match") as PeriodCard
+    const series = cardProjection(match).series
+    expect(series).toHaveLength(4)
+    expect(series).toEqual(fromShots(match.shots))
+    expect(series?.[0]).toMatchObject({ series: 1, shots: 10 })
+    expect(series?.[0].decimal).not.toBeNull()
+  })
+
+  it("nur Probe: die Probe wie Wertung", () => {
+    const probe = special[0]
+    expect(cardProjection(probe).series).toEqual(fromShots(probe.shots))
+    expect(cardProjection(probe).series).toHaveLength(1)
+  })
+
+  it("ohne Schüsse aus den Serien-Summen, eine fehlende Wertung bleibt null", () => {
+    expect(cardProjection(SERIES_TENTHS).series).toEqual([
+      { series: 1, shots: 10, rings: null, decimal: 98.4 },
+      { series: 2, shots: 10, rings: null, decimal: 99.1 },
+      { series: 3, shots: 10, rings: null, decimal: 97.7 },
+      { series: 4, shots: 10, rings: null, decimal: 100.2 },
+    ])
+  })
+
+  it("Schüsse gehen vor Summen; nur ein Gesamtergebnis oder keine Werte: keine Serien", () => {
+    expect(cardProjection(CASCADE).series).toEqual(fromShots(CASCADE.shots))
+    expect(cardProjection(CASCADE).series?.[0]).toMatchObject({ rings: 94, decimal: null })
+    expect(cardProjection(TOTAL_RINGS).series).toEqual([])
+    expect(cardProjection(EMPTY).series).toEqual([])
   })
 })
 
