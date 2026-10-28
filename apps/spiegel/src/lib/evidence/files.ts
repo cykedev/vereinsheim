@@ -10,9 +10,6 @@ import type { Db } from "@/lib/db"
 
 import { removeOrphanFiles, SHA256, TMP_PREFIX, uploadDir } from "../printouts/files"
 
-/** so groß darf ein Beleg sein: Luft unter den 5 MiB je Anfrage (Caddy) für das Formular */
-export const EVIDENCE_MAX_BYTES = 4 * 1024 * 1024
-
 export const EVIDENCE_TYPES = {
   "application/pdf": "pdf",
   "image/jpeg": "jpg",
