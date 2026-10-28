@@ -273,6 +273,8 @@ Entschieden mit dem User am 28. Oktober 2026:
   Formular wie in Treffsicher.
 - **Verweis über eine Stelle:** Die Seite einer Scheibe (Kasten „Diese Scheibe“) und Start haben eine Stelle, an die das
   Tagebuch eine Zeile zum Eintrag setzt. Der Ergebnisteil kennt nur die Stelle, nicht das Tagebuch; das Gate bleibt.
+- **Erst ein Designkonzept, dann Plan und Bau** (User): je Teil ein Konzept als Artifact mit den Screens am Telefon und
+  am Desktop; Bedienbarkeit, schön, professionell und nützlich zählen am meisten. Geplant wird erst nach der Freigabe.
 
 ### Stufe 3 · Die Daten ziehen um
 
