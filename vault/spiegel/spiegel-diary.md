@@ -3,7 +3,7 @@ id: spiegel-diary
 type: subsystem
 title: "Spiegel — Tagebuch: Einträge, Faden und Stellen"
 aliases: [tagebuch, diary, treffsicher-2-0, trainingstagebuch-in-spiegel]
-keywords: [tagebuch, eintrag, einträge, vorhaben, notiz, befinden, prognose, feedback, ausführung je serie, stufen, fünf stufen, 0 bis 100, faden, lernfrage, wie schaffe ich es, ich habe gelernt, hat es geklappt, was hat gestört, vorschlag, neuer eintrag, ohne scheibe, trockentraining, mentaltraining, dazugekommen, lösen, dazunehmen, vom selben abend, papierkorb, abschaltbar, hinweis, nur du siehst, zonen, grenze, nahtstellen, parts, results-read, partline, export, konto löschen, deine daten, stufe 2, 2a, treffsicher]
+keywords: [saisonziel, ziele, ziel, messung, scheibe ab, serie ab, schnitt ab, saison, hat es geklappt, schuss-ablauf, abläufe, ablauf, ohne disziplin, disziplin festlegen, tagebuch, eintrag, einträge, vorhaben, notiz, befinden, prognose, feedback, ausführung je serie, stufen, fünf stufen, 0 bis 100, faden, lernfrage, wie schaffe ich es, ich habe gelernt, hat es geklappt, was hat gestört, vorschlag, neuer eintrag, ohne scheibe, trockentraining, mentaltraining, dazugekommen, lösen, dazunehmen, vom selben abend, papierkorb, abschaltbar, hinweis, nur du siehst, zonen, grenze, nahtstellen, parts, results-read, partline, export, konto löschen, deine daten, stufe 2, 2a, treffsicher]
 part_of: ["[[spiegel]]"]
 governed_by: ["[[adr-033]]", "[[adr-030]]", "[[adr-029]]"]
 relates_to: ["[[spiegel-navigation]]", "[[spiegel-privacy]]", "[[spiegel-data-model]]", "[[spiegel-db-schema]]", "[[spiegel-roadmap]]", "[[spiegel-account-transfer]]"]
@@ -13,7 +13,8 @@ relates_to: ["[[spiegel-navigation]]", "[[spiegel-privacy]]", "[[spiegel-data-mo
 wurde, wird besser, was kaum genutzt wurde, wird einfacher oder fällt weg. Ein Eintrag gehört zu einem Abend und einer
 Disziplin, mit Vorhaben, Notiz, Vorher, Nachher und dem Faden der eigenen Fragen. Das Tagebuch ist je Konto
 abschaltbar, liest Scheiben nur über eine schmale Schnittstelle und erscheint im Ergebnisteil nur an festen Stellen.
-Gebaut in Teil 2a (28. Oktober 2026) mit Export und Konto löschen über beide Teile.
+Gebaut in Teil 2a (28. Oktober 2026) mit Export und Konto löschen über beide Teile; in 2b Ziele, die Spiegel misst,
+ohne zu urteilen, und Schuss-Abläufe oben im Faden.
 
 # Spiegel — Tagebuch
 
@@ -29,6 +30,12 @@ Grundlage sind die Zählungen in der Prod-Kopie von Treffsicher (265 Einheiten i
 - Befinden (39) füllen fast nur zwei Konten, Prognose (14) und Feedback (21) fast nur bei Wettkämpfen, Ausführung je
   Serie bei 180 von 1037 Serien. Sie bleiben als **Abschnitte**, die leer nur eine Zeile mit „+“ sind.
 - Jedes übrige Textfeld kam höchstens 18-mal vor. Es geht in der Notiz auf (Übernahme in Stufe 3).
+- Ziele (10 in 4 Konten, 8 Ergebnisziele, 7 mit einer Ringzahl im Titel, keines geändert) werden **gemessen**: Spiegel
+  zählt, was die alten Titel nur sagten. Einheiten an Ziele anhaken fällt weg.
+- Abläufe (4 in 2 Konten, nie geändert) sind Lesetext: Sie stehen oben im **Faden** ihrer Disziplin und werden als ein
+  Textfeld bearbeitet.
+- Anhänge (69 an 56 Einheiten, jede mit Ergebnissen) bekommt das Tagebuch nicht: Sie werden Ausdruck oder Beleg der
+  Scheibe (Teil 1f, Stufe 3).
 
 ## Zahlen und Stufen
 
@@ -80,6 +87,40 @@ Alle in einer Spalte (`PAGE_SINGLE`), Bereich „Tagebuch“ mit `BookOpen` ([[s
   nicht davon ab, was jemand bisher genutzt hat (Konsistenz als Grundsatz, [[adr-035]]).
 - Texte sind gesteuerte Felder mit „Speichern“ und „Verwerfen“; wer mit Ungespeichertem geht, wird gefragt.
 
+- **`/diary/goals` (Ziele):** dritter Reiter, Knopf „Neues Ziel“; Gruppen Laufend, Kommend, Vorbei; je Karte Satz,
+  Disziplin und Ende, der Stand in einer Zeile und der Zustand (die Antwort, sonst läuft, beginnt am …, vorbei).
+- **`/diary/goals/[id]`:** für jedes Ziel dieselbe Folge: Stand, Notiz, „Hat es geklappt?“, Einträge im Zeitraum,
+  „Dieses Ziel“ (Ändern, Löschen). „Stand“ zeigt mit Messung die große Zahl, die letzten zehn, das Beste, den Schnitt,
+  den Verlauf mit der Linie des Ziels (Treffer in Gold), die Grundlage (nur wenn etwas nicht zählt) und „Im Fortschritt
+  ansehen“ (freier Zeitraum, Disziplin, Art). Ohne Disziplin „Disziplin festlegen“, ein Ergebnisziel ohne Messung
+  „Messung festlegen“, ein Prozessziel nur einen Satz. Die Einträge im Zeitraum sind die der Disziplin (ohne Disziplin
+  alle), die ersten fünf, dann „Alle n Einträge zeigen“.
+- **`/diary/goals/new`, `/diary/goals/[id]/edit` (`GoalForm`):** Satz, Ergebnis- oder Prozessziel, Disziplin (abwählbar),
+  Zeitraum (laufende oder nächste Saison vom 1. September bis 31. August, oder frei), beim Ergebnisziel „Spiegel misst
+  mit“: Scheibe, Serie oder Schnitt ab einer Ringzahl, Wertung und Schusszahl als eine Zeile mit „Ändern“ (vorbelegt
+  aus `resultGoalDefaults`), welche Scheiben; darunter die Vorschau (`previewGoalAction`, 300 ms nach der letzten
+  Änderung). Klebende Leiste, Wächter beim Verlassen.
+- **Faden mit Abläufen:** oben der Kasten „Abläufe“ der gewählten Disziplin (Zeile je Ablauf, „+“ legt an), Chips der
+  Disziplinen mit Frage oder Ablauf, zuletzt „Ohne Disziplin“ (`?family=none`, `NO_FAMILY` in `src/diary/paths.ts`),
+  wenn ein Ablauf keine hat; dort nur Abläufe.
+- **`/diary/routines/[id]`:** Leseseite mit nummerierten Schritten in weichen Kreisen, „Dieser Ablauf“ (Bearbeiten,
+  Disziplin ändern oder festlegen an Ort und Stelle, Löschen). **`/diary/routines/new`, `…/[id]/edit`:** Name, bei neu die
+  Disziplin, die Schritte als ein Textfeld (Absatz = Schritt, erste Zeile = Titel, `textToSteps`/`stepsToText`), der
+  Hinweis zählt die Schritte.
+
+## Ziele: messen, nicht urteilen
+
+- Modell `DiaryGoal`: Satz, Notiz, Art (`result`, `process`), `familyId` (null ohne Disziplin), Zeitraum (`from`, `to`,
+  Tage), die Messung ganz oder gar nicht (`measure`, `threshold`, `scoring`, `shots`; dazu `cards`), Antwort, Papierkorb.
+- Die Messung ist rein (`measureGoal` in `src/diary/goals/measure.ts`): Eine Scheibe zählt im Zeitraum (Abend) und in
+  der Art, nicht nur Probe; bei Scheibe und Schnitt mit genau der Schusszahl und einem Wert in der Wertung, bei Serie
+  jede Serie mit der Schusszahl. Was nicht zählt, nennt die Grundlage (ohne Ergebnis, andere Schusszahl, ohne Serien;
+  `series` null vor Projektion 7 gilt als ohne Serien). Ein Wert in Zehnteln wird vor dem Vergleich auf eine Stelle
+  gerundet. Spiegel urteilt nicht, die Zahlen stehen neben „Hat es geklappt?“.
+- Gelesen über `resultGoalCards` und `resultGoalDefaults` (`src/lib/results-read.ts`), Serien aus der Projektion.
+- Start: je Block nach der Zeile des Eintrags die des zuletzt angelegten laufenden Ziels mit Messung
+  (`startLines` gibt je Block eine Liste, `StartScreen` zeigt Titel, Zustand, Aktion).
+
 ## Scheiben vom selben Abend
 
 Abgeleitet beim Lesen, nie beim Laden geschrieben (`entryCards` in `src/diary/cards.ts`, reine Funktion), nach dem
@@ -113,6 +154,8 @@ angeboten. Eine gelöschte Scheibe steht als „Scheibe gelöscht“. Das Einles
 
 - `DiarySettings.enabled`, für neue Konten aus. Aus heißt: kein Bereich, keine Stellen, `/diary` führt ins Profil. Die
   Einträge bleiben.
+- Ziele und Abläufe liegen gelöscht ebenso 30 Tage im Papierkorb (Abschnitt „Im Tagebuch“), `purgeExpiredDiaryTrash`
+  löscht alle drei.
 - Löschen legt einen Eintrag 30 Tage in den Papierkorb („Eintrag gelöscht · Rückgängig“), danach löscht `diaryJobs`
   ihn beim Start und stündlich endgültig. Im Papierkorb steht er nirgends sonst, auch nicht als Frage im Faden, und
   seine Scheiben sind frei (oben „Papierkorb“).
@@ -133,5 +176,5 @@ Kasten „Deine Daten“ im Profil, über beide Teile (`src/parts/account.ts`):
 
 ## Was folgt
 
-Saisonziele, Schuss-Abläufe und Anhänge in 2b, Einflüsse und Selbstbild in 2c, die Übernahme der Einträge aus
+Einflüsse und Selbstbild in 2c, mehrere Belege je Scheibe in 1f, die Übernahme von Einträgen, Zielen und Abläufen aus
 Treffsicher in Stufe 3 (`importKey`, [[spiegel-account-transfer]]).

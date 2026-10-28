@@ -53,6 +53,10 @@ Gesamtergebnis und eine Trefferlage als Summe tragen (`PeriodCard.sums`, `CardSu
   Gesamtergebnis), wie viele Schüsse eine Lage und eine Zeit haben, die Mitte aus Lagen je Schuss oder aus der
   Trefferlage mit ihrer Schusszahl. `pooledCenter` führt Mitten gewichtet mit ihrer Schusszahl zusammen, nur für
   Versatz und Richtung; Urteile nehmen nur Lagen je Schuss.
+- **Serien in der Projektion** (`CardProjection.series`, `ProjectedSeries`, `PROJECTION_VERSION` 7): je Serie Nummer,
+  Schusszahl und Summe in ganzen Ringen und in Zehnteln, wie unter der Scheibe (`seriesCurve` über die Schüsse wie am
+  Ausdruck, ohne Schüsse die Serien-Summen). So zählen Ziele des Tagebuchs („Serie ab X“) ohne Schüsse zu lesen
+  ([[spiegel-diary]]).
 - **Schusszahl:** `shotCountOf` zählt die Schüsse wie am Ausdruck, ohne sie die Schusszahl der Summen (Umfang,
   `printedShots`). „Nur Probe“ ist eine Scheibe erst mit mindestens einem Schuss; eine ohne Werte zählt in keiner Zahl.
   Probe neben Summen der Wertung (Probe je Schuss, Wertung nur als Summe) zählt nicht; es zählt die Wertung aus den

@@ -427,7 +427,13 @@ Stand mit `past` (`MAX_OBSERVED_LAG_MS`, SF-79).
   „Eintrag anlegen“ an Scheibe und Start ist eine Server Action in `PartLine.run` (`PartLineAction`). Schreiben nur über `src/diary/entries.ts`
   (serialisierbar, Zeile des Eintrags `FOR UPDATE`), die Actions prüfen Sitzung und Schalter. Texte in
   `src/diary/texts.ts`, Folgen in `src/diary/consequences.ts`. Skriptprüfung im Abschnitt „Tagebuch“
-  (`tools/pruefen-diary.ts`), die am Ende alle Einträge des Demo-Kontos löscht und das Tagebuch ausschaltet.
+  (`tools/pruefen-diary.ts`), die am Ende alle Einträge, Ziele und Abläufe des Demo-Kontos löscht und das Tagebuch
+  ausschaltet. **Ziele** (`src/diary/goals/`): Spiegel misst (`measureGoal`, rein, über `resultGoalCards` und die Serien
+  der Projektion) und urteilt nicht; „Hat es geklappt?“ antwortet der Schütze. **Abläufe** (`src/diary/routines/`) stehen
+  oben im Faden, ohne Disziplin unter „Ohne Disziplin“, bearbeitet als ein Text (`textToSteps`). Client-Komponenten des
+  Tagebuchs importieren aus `queries.ts`, `goals/queries.ts` und `routines/queries.ts` nur Typen: Ein Wert daraus zieht
+  die Datenbank ins Bündel des Browsers (`next build` scheitert mit `node:module`); geteilte Werte stehen in
+  `src/diary/paths.ts` und `components/styles.ts`.
 - **Deine Daten** (Profil, `src/parts/account.ts`): `GET /api/account/export` gibt eine JSON-Datei als Strom
   (`resultsExport` in `src/lib/export/results.ts`, je 200 Scheiben eine Abfrage, und `diaryExport`), nur mit eigener
   Sitzung. `deleteOwnAccount` (`src/parts/account-actions.ts`) prüft das Passwort, lehnt das einzige aktive Admin-Konto
