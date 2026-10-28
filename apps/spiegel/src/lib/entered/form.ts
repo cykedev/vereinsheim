@@ -114,6 +114,16 @@ export function parseValue(text: string, mode: ValueMode, shots: number): Parsed
     : { ok: true, value: { rings: null, decimalTenths } }
 }
 
+/**
+ * ein Schuss ist fertig getippt, das Formular springt weiter: in Zehnteln mit der Stelle nach dem Komma („10,4“), in
+ * ganzen Ringen eine Ziffer außer der 1 oder „10“ (nach „1“ kann noch die 0 kommen; eine 1 bestätigt Enter)
+ */
+export function shotComplete(text: string, mode: ValueMode): boolean {
+  const raw = text.trim()
+  if (mode === "rings") return /^(10|[02-9])$/.test(raw)
+  return /^\d{1,2}[.,]\d$/.test(raw) && parseValue(raw, mode, 1).ok
+}
+
 /** ein Wert als Text des Felds: Zehntel mit Komma („10,4“), Ringe ganz; ohne Wert leer */
 export function valueText(value: Value, mode: ValueMode): string {
   if (mode === "decimal" && value.decimalTenths !== null)

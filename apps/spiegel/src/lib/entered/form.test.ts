@@ -9,6 +9,7 @@ import {
   parseValue,
   problemText,
   seriesSumText,
+  shotComplete,
   seriesTotalText,
   startedAtOf,
   TEXTS,
@@ -37,6 +38,18 @@ const errorsOf = (state: EnteredFormState, discipline = LG40) => {
   if (result.ok) throw new Error("keine Fehler")
   return result.errors
 }
+
+describe("shotComplete", () => {
+  it("Zehntel nach der Stelle hinter dem Komma, Ringe nach einer Ziffer außer 1 oder nach 10", () => {
+    expect(shotComplete("10,4", "decimal")).toBe(true)
+    expect(shotComplete("9.8", "decimal")).toBe(true)
+    expect(shotComplete("10,", "decimal")).toBe(false)
+    expect(shotComplete("11,0", "decimal")).toBe(false)
+    expect(shotComplete("9", "rings")).toBe(true)
+    expect(shotComplete("1", "rings")).toBe(false)
+    expect(shotComplete("10", "rings")).toBe(true)
+  })
+})
 
 describe("parseValue", () => {
   it("Zehntel mit Komma oder Punkt, „97“ ist 97,0, nie gerundet", () => {

@@ -331,7 +331,14 @@ Teil 1d, entschieden mit dem User am 28. Oktober 2026):
   Disziplin). Eine Disziplin ohne Serienlänge hat nur das Gesamtergebnis. Leere Serien am Ende zählen nicht, eine Lücke
   ist ein Fehler. Schüsse einzeln in allen gefüllten Serien oder in keiner, wie das Modell aus 1a-1 es verlangt (in der
   Prod-Kopie von Treffsicher hat keine Einheit Schüsse nur in einigen Serien). Trefferlage als Summe waagrecht und
-  senkrecht in mm mit Richtung. Fehler stehen am Feld. „Zurück“ mit Eingaben fragt (`enteredDiscard`).
+  senkrecht in mm mit Richtung. Fehler stehen am Feld, ein Wert, der nicht passt, schon
+  beim Verlassen des Felds. „Zurück“ mit Eingaben fragt (`enteredDiscard`).
+- **Schnell zu tippen** (Wunsch des Users vom 28. Oktober 2026: richtig gut aussehen, extrem gut bedienbar): je Serie
+  eine Zeile mit Name, Summe und „Schüsse einzeln“; aufgeklappt zehn Felder in zwei Reihen auf einer leicht abgesetzten
+  Fläche, Name und Summe bleiben auf derselben Linie wie in den übrigen Serien. Ein fertiger Schuss springt ins
+  nächste Feld (`shotComplete`: in Zehnteln nach der Stelle hinter dem Komma, in ganzen Ringen nach einer Ziffer außer
+  der 1 oder nach 10), Enter ebenso; nach dem letzten Schuss einer Serie klappt die nächste leere auf. Gesamt und
+  „Speichern“ kleben über der unteren Leiste.
 - **Ändern:** Zeile „Eintrag“ im Kasten „Diese Scheibe“ („Von Hand eingetragen“, „Aus Treffsicher übernommen“) mit
   „Ändern“ zu `/cards/<id>/edit`. Geänderte Werte sind eine neue Revision (`writeEnteredCard`), Tag, Uhrzeit und Ort
   stehen an der Scheibe ohne Verlauf, wie Disziplin und Art. Kann das Formular die Angaben nicht genau so wieder

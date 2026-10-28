@@ -270,11 +270,6 @@ export function EnteredCardForm({
                 errorOf={errorOf}
                 onChange={(rows) => set("series", rows)}
               />
-              {total && (
-                <p data-entered-total className="text-sm font-semibold tabular-nums">
-                  {total}
-                </p>
-              )}
             </>
           ) : (
             <div className="flex flex-wrap gap-3">
@@ -284,9 +279,9 @@ export function EnteredCardForm({
                 errorOf("total"),
                 <Input
                   id="entered-total"
-                  inputMode="decimal"
+                  inputMode={form.values === "rings" ? "numeric" : "decimal"}
                   autoComplete="off"
-                  className="w-32 tabular-nums"
+                  className="h-11 w-32 text-center text-base tabular-nums"
                   value={form.total}
                   disabled={pending}
                   onChange={(e) => set("total", e.target.value)}
@@ -379,15 +374,22 @@ export function EnteredCardForm({
           })}
         </section>
 
-        <div className="grid max-w-lg gap-2">
+        {/* Gesamt und Speichern kleben über der unteren Leiste: bei 60 Schuss bleibt beides im Blick. Darunter füllt
+            `after` den Platz neben dem erhabenen Knopf der Leiste, sonst schiene der Inhalt dort durch */}
+        <div className="sticky bottom-[calc(var(--app-bar,0px)+env(safe-area-inset-bottom))] z-10 -mx-4 max-w-[calc(32rem+2rem)] border-t border-border bg-background px-4 py-3 after:absolute after:inset-x-0 after:top-full after:h-4 after:bg-background">
           {general && (
-            <p role="alert" className="text-sm text-destructive">
+            <p role="alert" className="pb-2 text-sm text-destructive">
               {general}
             </p>
           )}
-          <Button type="submit" data-entered-save className="h-11" disabled={pending}>
-            {pending ? "Speichern…" : "Speichern"}
-          </Button>
+          <div className="flex items-center gap-3">
+            <p data-entered-total className="min-w-0 flex-1 text-sm font-semibold tabular-nums">
+              {total}
+            </p>
+            <Button type="submit" data-entered-save className="h-11 px-6" disabled={pending}>
+              {pending ? "Speichern…" : "Speichern"}
+            </Button>
+          </div>
         </div>
       </form>
 
