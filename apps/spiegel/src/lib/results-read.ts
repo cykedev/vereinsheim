@@ -1,0 +1,169 @@
+// Die schmale Schnittstelle des Ergebnisteils für andere Teile (das Tagebuch, [[adr-033]]): nur lesend, nur eigene,
+// sichtbare Scheiben, nur was ein anderer Teil von einer Scheibe braucht. Der Ergebnisteil kennt keinen Leser davon.
+
+import { seriesCurve } from "@vereinsheim/shot-core/analysis"
+import type { Scoring } from "@vereinsheim/shot-core/metrics"
+import type { CardMark } from "@vereinsheim/shot-core/projection"
+import type { TargetId } from "@vereinsheim/shot-core/targets"
+import type { CardProvenance } from "@vereinsheim/shot-ui/detail"
+import { cardListModel } from "@vereinsheim/shot-ui/list/evenings"
+import { DEFAULT_LIST } from "@vereinsheim/shot-ui/nav/routes"
+import { eveningDay } from "@vereinsheim/shot-ui/period/calendar"
+import { shownShots } from "@vereinsheim/shot-ui/shots"
+
+import type { Db } from "@/lib/db"
+import { cardWithShots, marksOfCards, type OverviewCard } from "@/lib/db/reads"
+import { overviewCards } from "@/lib/overview"
+import { listable, withFamily } from "@/lib/pages"
+
+/** ein Wert in einer Wertung mit den Stellen, in denen ihn die Liste zeigt */
+export interface ResultValue {
+  value: number
+  scoring: Scoring
+  digits: number
+}
+
+/** eine eigene Scheibe, wie sie ein anderer Teil sieht */
+export interface ResultCard {
+  id: string
+  /** der Abend (ISO-Tag, vor 4 Uhr der Vortag) */
+  day: string
+  startedAtMs: number
+  timeUnknown: boolean
+  family: { id: number; slug: string; name: string } | null
+  targetId: TargetId | null
+  kind: OverviewCard["kind"]
+  probeOnly: boolean
+  provenance: CardProvenance
+  /** das Ergebnis wie vorn in der Liste der Scheiben; null ohne Wert */
+  result: ResultValue | null
+  /** Wertungsschüsse, bei nur Probe die Probe */
+  shots: number
+}
+
+/**
+ * Die eigenen, sichtbaren Scheiben (wie in Liste und Start), mit `ids` nur diese, mit `fromMs`/`toMs` nur die mit
+ * Beginn in diesem Zeitraum. Das Ergebnis rechnet das Modell der Liste je Familie in der Wertung der Familie, damit es
+ * dasselbe ist wie in der Liste. Fremde, wartende und gelöschte Scheiben fehlen.
+ */
+export async function resultCards(
+  db: Db,
+  query: {
+    ownerId: string
+    timeZone: string
+    ids?: readonly string[]
+    fromMs?: number
+    toMs?: number
+  }
+): Promise<ResultCard[]> {
+  const { shown, scoringOf } = await overviewCards(db, query.ownerId)
+  const wanted = query.ids ? new Set(query.ids) : null
+  const cards = shown.filter(
+    (card) =>
+      (!wanted || wanted.has(card.id)) &&
+      (query.fromMs === undefined || card.startedAtMs >= query.fromMs) &&
+      (query.toMs === undefined || card.startedAtMs < query.toMs)
+  )
+  const input = withFamily(listable(shown))
+  const results = new Map<
+    string,
+    { row: { result: number | null; resultScoring: Scoring }; digits: number }
+  >()
+  for (const family of new Set(cards.flatMap((card) => (card.family ? [card.family.slug] : [])))) {
+    const model = cardListModel(
+      input,
+      { ...DEFAULT_LIST, family },
+      { timeZone: query.timeZone, nowMs: Date.now(), named: [], scoring: scoringOf(family) }
+    )
+    for (const evening of model.evenings)
+      for (const row of evening.rows)
+        results.set(row.id, { row, digits: model.digits.result[row.resultScoring] })
+  }
+  return cards.map((card) => {
+    const listed = results.get(card.id)
+    return {
+      id: card.id,
+      day: eveningDay(card.startedAtMs, query.timeZone),
+      startedAtMs: card.startedAtMs,
+      timeUnknown: card.timeUnknown === true,
+      family:
+        card.family && card.familyId !== null
+          ? { id: card.familyId, slug: card.family.slug, name: card.family.name }
+          : null,
+      targetId: card.targetId,
+      kind: card.kind,
+      probeOnly: card.projection.probeOnly,
+      provenance: card.provenance,
+      result:
+        listed && listed.row.result !== null
+          ? { value: listed.row.result, scoring: listed.row.resultScoring, digits: listed.digits }
+          : null,
+      shots: card.projection.printedShots,
+    }
+  })
+}
+
+/** eine Serie einer Scheibe: Nummer, Schusszahl und Summe in der Wertung der Scheibe */
+export interface ResultSeries {
+  series: number
+  shots: number
+  result: ResultValue | null
+}
+
+/**
+ * Die Serien einer eigenen Scheibe wie unter ihrer Scheibe: aus den Schüssen (wie am Ausdruck), ohne Schüsse aus den
+ * Serien-Summen; ohne Serien leer, ohne Scheibe (fremd, wartend, gelöscht) null.
+ */
+export async function resultCardSeries(
+  db: Db,
+  query: { ownerId: string; cardId: string }
+): Promise<ResultSeries[] | null> {
+  const card = await cardWithShots(db, query)
+  if (!card) return null
+  const scoring = card.scoring
+  const digits = scoring === "rings" ? 0 : 1
+  const fromShots = seriesCurve(shownShots(card), scoring)
+  if (fromShots.length)
+    return fromShots.map((point) => ({
+      series: point.series,
+      shots: point.shots,
+      result: point.total === null ? null : { value: point.total, scoring, digits },
+    }))
+  return (card.sums?.series ?? []).map((sum) => {
+    const value =
+      scoring === "rings" ? sum.rings : sum.decimalTenths === null ? null : sum.decimalTenths / 10
+    return {
+      series: sum.series,
+      shots: sum.shots,
+      result: value === null ? null : { value, scoring, digits },
+    }
+  })
+}
+
+/** die Lagen der kleinen Scheiben (`MiniTarget`), nur eigene, sichtbare Scheiben */
+export function resultMarks(
+  db: Db,
+  query: { ownerId: string; ids: readonly string[] }
+): Promise<Record<string, CardMark[]>> {
+  return marksOfCards(db, query)
+}
+
+/**
+ * Die Familien, die ein anderer Teil anbieten kann: die der eingeordneten, nicht ignorierten Disziplinen und die der
+ * eigenen Scheiben, nach Name
+ */
+export async function resultFamilies(
+  db: Db,
+  ownerId: string
+): Promise<{ id: number; slug: string; name: string }[]> {
+  return db.family.findMany({
+    where: {
+      OR: [
+        { disciplines: { some: { confirmedAt: { not: null }, ignoredAt: null } } },
+        { cards: { some: { ownerId } } },
+      ],
+    },
+    orderBy: { name: "asc" },
+    select: { id: true, slug: true, name: true },
+  })
+}
