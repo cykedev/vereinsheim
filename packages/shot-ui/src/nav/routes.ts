@@ -460,6 +460,8 @@ export type Route =
   | { page: "profile" }
   | { page: "trash" }
   | { page: "admin"; section: string | null }
+  /** das Tagebuch ([[adr-033]]); seine Unterseiten kennt das Modell nicht, sie gehören zum Bereich Tagebuch */
+  | { page: "diary" }
   | { page: "unknown"; path: string }
 
 export type ListRoute = Extract<Route, { page: "cards" }>
@@ -521,6 +523,8 @@ export function routeFromUrl(pathname: string, search: string, hash: string): Ro
     case "admin":
       if (second === undefined) return { page: "admin", section: null }
       return SLUG.test(second) ? { page: "admin", section: second } : unknown
+    case "diary":
+      return second === undefined ? { page: "diary" } : unknown
     default:
       return unknown
   }
@@ -568,6 +572,8 @@ export function urlFromRoute(route: Route): string {
       return "/profile/trash"
     case "admin":
       return route.section ? `/admin/${route.section}` : "/admin"
+    case "diary":
+      return "/diary"
     case "unknown":
       return route.path
   }

@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 
 import { areaLinks } from "../nav/areas"
-import { AppFrame, type AppFrameProps } from "./AppFrame"
+import { AppFrame, barAreaOf, type AppFrameProps } from "./AppFrame"
 
 const render = (patch: Partial<AppFrameProps> = {}) =>
   renderToStaticMarkup(
@@ -127,6 +127,46 @@ describe("Rahmen der App", () => {
     expect(render({ isAdmin: false, sidebarFooter: footer })).toMatch(
       /data-area="profile"(?:(?!<\/nav>)[\s\S])*<\/nav><div data-sidebar-footer="true"/
     )
+  })
+
+  it("mit Tagebuch: in den Leisten des Telefons statt Scheiben, in der Seitenleiste nach Scheiben", () => {
+    const diary = render({ diary: true, current: "diary" })
+    expect(areasIn(diary, "data-app-bar")).toEqual([
+      "start",
+      "diary",
+      "scan",
+      "progress",
+      "profile",
+    ])
+    expect(areasIn(diary, "data-app-rail")).toEqual([
+      "start",
+      "diary",
+      "scan",
+      "progress",
+      "profile",
+    ])
+    expect(areasIn(diary, "data-app-sidebar")).toEqual([
+      "start",
+      "cards",
+      "diary",
+      "progress",
+      "compare",
+      "scan",
+      "profile",
+      "admin",
+    ])
+    expect(diary).toMatch(
+      /data-area="diary"[^>]*href="\/diary"|href="\/diary"[^>]*data-area="diary"/
+    )
+  })
+
+  it("mit Tagebuch markieren die Leisten des Telefons bei den Scheiben Profil", () => {
+    expect(barAreaOf("cards", true)).toBe("profile")
+    expect(barAreaOf("cards", false)).toBe("cards")
+    expect(barAreaOf("diary", true)).toBe("diary")
+    expect(barAreaOf("admin", false)).toBe("profile")
+    expect(barAreaOf("compare", true)).toBe("progress")
+    expect(barAreaOf(null, true)).toBeNull()
   })
 
   it("ohne Admin-Recht kein Admin", () => {

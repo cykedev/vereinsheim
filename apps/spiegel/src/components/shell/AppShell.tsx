@@ -12,6 +12,7 @@ import { routeFromUrl, urlFromRoute, type Route } from "@vereinsheim/shot-ui/nav
 
 import { ThemeSwitch } from "@vereinsheim/ui/design2/theme-switch"
 import { isAdminPath } from "@/lib/admin-path"
+import { isDiaryPath } from "@/lib/diary-path"
 
 import { HelpProvider } from "@vereinsheim/ui/design2/help-sheet"
 import { UndoHost } from "@vereinsheim/ui/design2/undo"
@@ -27,11 +28,14 @@ const memoryKey = (route: Route | null) => (route ? urlFromRoute(route) : "")
 export function AppShell({
   isAdmin,
   openCount,
+  diary = false,
   children,
 }: {
   isAdmin: boolean
   /** Zahl der offenen Dinge am Start-Symbol (wartende erste Scheiben) */
   openCount: number
+  /** das Tagebuch ist eingeschaltet ([[adr-033]]) */
+  diary?: boolean
   children: React.ReactNode
 }) {
   const router = useRouter()
@@ -73,11 +77,15 @@ export function AppShell({
     <RouteLinkProvider value={links}>
       <HelpProvider onHelp={setHelpId}>
         <AppFrame
-          // Unterseiten von Admin (Konten) kennt das Routen-Modell nicht; sie gehören zu Admin
-          current={areaOf(route) ?? (isAdminPath(pathname) ? "admin" : null)}
+          // Unterseiten von Admin (Konten) und vom Tagebuch kennt das Routen-Modell nicht; sie gehören zu ihrem Bereich
+          current={
+            areaOf(route) ??
+            (isAdminPath(pathname) ? "admin" : isDiaryPath(pathname) ? "diary" : null)
+          }
           links={areaLinks(memory, family)}
           openCount={openCount}
           isAdmin={isAdmin}
+          diary={diary}
           sidebarFooter={<ThemeSwitch />}
         >
           {/* im Rahmen, damit der Hinweis „Rückgängig“ über der unteren Leiste steht (`--app-bar`) */}

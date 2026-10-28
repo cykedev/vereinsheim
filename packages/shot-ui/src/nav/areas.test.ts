@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest"
 
 import { areaLinks, areaOf, type AreaMemory } from "./areas"
-import { DEFAULT_LIST, DEFAULT_PROGRESS, urlFromRoute, type CardRoute, type Route } from "./routes"
+import {
+  DEFAULT_LIST,
+  DEFAULT_PROGRESS,
+  routeFromUrl,
+  urlFromRoute,
+  type CardRoute,
+  type Route,
+} from "./routes"
 
 const card = (origin: CardRoute["origin"]): CardRoute => ({
   page: "card",
@@ -94,5 +101,15 @@ describe("Bereiche der Navigation", () => {
       progress: null,
     }
     expect(urlFromRoute(areaLinks(memory, null).cards)).toBe("/cards?family=lg-freihand")
+  })
+})
+
+describe("Tagebuch", () => {
+  it("hat eine Adresse und einen Bereich; seine Unterseiten kennt das Modell nicht", () => {
+    expect(routeFromUrl("/diary", "", "")).toEqual({ page: "diary" })
+    expect(urlFromRoute({ page: "diary" })).toBe("/diary")
+    expect(areaOf({ page: "diary" })).toBe("diary")
+    expect(routeFromUrl("/diary/thread", "", "").page).toBe("unknown")
+    expect(areaLinks({ cards: null, progress: null }, null).diary).toEqual({ page: "diary" })
   })
 })

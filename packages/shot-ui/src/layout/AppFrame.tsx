@@ -3,6 +3,7 @@
 import { AppFrame as Frame, type FrameItem } from "@vereinsheim/ui/design2/app-frame"
 import {
   ArrowLeftRight,
+  BookOpen,
   ChartLine,
   CircleUser,
   House,
@@ -20,6 +21,7 @@ import type { Route } from "../nav/routes"
 const ITEMS: Readonly<Record<Area, { label: string; short: string; Icon: LucideIcon }>> = {
   start: { label: "Start", short: "Start", Icon: House },
   cards: { label: "Scheiben", short: "Scheiben", Icon: List },
+  diary: { label: "Tagebuch", short: "Tagebuch", Icon: BookOpen },
   scan: { label: "Scheibe holen", short: "Holen", Icon: ScanQrCode },
   progress: { label: "Fortschritt", short: "Fortschritt", Icon: ChartLine },
   compare: { label: "Vergleichen", short: "Vergleichen", Icon: ArrowLeftRight },
@@ -29,6 +31,19 @@ const ITEMS: Readonly<Record<Area, { label: string; short: string; Icon: LucideI
 
 /** die untere und die schmale Leiste: Scheibe holen in der Mitte, Admin steckt in Profil */
 const BAR: readonly Area[] = ["start", "cards", "scan", "progress", "profile"]
+/** mit Tagebuch steht es statt Scheiben in der Leiste; die Scheiben stehen dann am Telefon in Profil ([[adr-033]]) */
+const DIARY_BAR: readonly Area[] = ["start", "diary", "scan", "progress", "profile"]
+
+/**
+ * der Bereich, den die Leisten des Telefons markieren: Admin steckt in Profil, Vergleichen gehört zum Fortschritt, mit
+ * Tagebuch stehen die Scheiben in Profil
+ */
+export function barAreaOf(current: Area | null, diary: boolean): Area | null {
+  if (current === "admin") return "profile"
+  if (current === "compare") return "progress"
+  if (diary && current === "cards") return "profile"
+  return current
+}
 
 export interface AppFrameProps {
   /** der Bereich der gezeigten Seite; null: keiner */
@@ -39,6 +54,8 @@ export interface AppFrameProps {
   openCount: number
   /** nur ein Admin sieht Admin */
   isAdmin: boolean
+  /** das Tagebuch ist eingeschaltet: es steht in der Leiste statt Scheiben und in der Seitenleiste nach Scheiben */
+  diary?: boolean
   /** unten in der Seitenleiste, etwa die Darstellung; nicht in den Leisten des Telefons */
   sidebarFooter?: ReactNode
   children?: ReactNode
@@ -47,13 +64,15 @@ export interface AppFrameProps {
 /**
  * Rahmen von Spiegel: der allgemeine Rahmen aus Design 2 (`@vereinsheim/ui/design2/app-frame`) mit den Bereichen
  * von Spiegel. Scheibe holen ist die Aktion in der Mitte (am Telefon nur das Symbol, der Name für Screenreader, in der
- * Seitenleiste als Pille); Admin steckt auf dem Telefon in Profil.
+ * Seitenleiste als Pille); Admin steckt auf dem Telefon in Profil. Mit Tagebuch steht es in den Leisten des Telefons
+ * statt Scheiben und in der Seitenleiste nach Scheiben ([[adr-033]]).
  */
 export function AppFrame({
   current,
   links,
   openCount,
   isAdmin,
+  diary = false,
   sidebarFooter,
   children,
 }: AppFrameProps) {
@@ -68,14 +87,15 @@ export function AppFrame({
   return (
     <Frame
       brand="Spiegel"
-      primary={(["start", "cards", "progress"] as const).map(item)}
+      primary={(diary
+        ? (["start", "cards", "diary", "progress"] as const)
+        : (["start", "cards", "progress"] as const)
+      ).map(item)}
       secondary={isAdmin ? [item("profile"), item("admin")] : [item("profile")]}
       action={item("scan")}
-      bar={[...BAR]}
+      bar={[...(diary ? DIARY_BAR : BAR)]}
       current={current}
-      // auf dem Telefon steckt Admin in Profil: ist Admin offen, ist dort Profil der Bereich.
-      // Vergleichen gehört zum Fortschritt
-      barCurrent={current === "admin" ? "profile" : current === "compare" ? "progress" : current}
+      barCurrent={barAreaOf(current, diary)}
       renderLink={({ key }, props) => <RouteLink route={links[key as Area]} {...props} />}
       sidebarFooter={sidebarFooter}
     >

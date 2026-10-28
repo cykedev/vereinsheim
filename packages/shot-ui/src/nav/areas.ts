@@ -13,7 +13,8 @@ import {
 } from "./routes"
 
 /** die Bereiche der Navigation; Admin sieht nur ein Admin */
-export type Area = "start" | "cards" | "scan" | "progress" | "compare" | "profile" | "admin"
+export type Area =
+  "start" | "cards" | "diary" | "scan" | "progress" | "compare" | "profile" | "admin"
 
 /** der Bereich einer Herkunft: die Liste und ein direkter Link gehören zu Scheiben */
 const originArea = (origin: CardOrigin): Area =>
@@ -36,6 +37,8 @@ export function areaOf(route: Route): Area | null {
       return "profile"
     case "admin":
       return "admin"
+    case "diary":
+      return "diary"
     case "card":
       return originArea(route.origin)
     case "compare":
@@ -86,6 +89,7 @@ export function areaLinks(memory: AreaMemory, family: string | null): Record<Are
       page: "compare",
       query: { ...DEFAULT_COMPARE, family: progressFamily } as CompareQuery,
     },
+    diary: { page: "diary" },
     profile: { page: "profile" },
     admin: { page: "admin", section: null },
   }
