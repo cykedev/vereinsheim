@@ -9,7 +9,7 @@ import { writeEnteredCard, type EnteredCardInput } from "./db/entered"
 import type { DetailsInput } from "./entered/details"
 import { overviewCards } from "./overview"
 import { listable, withFamily } from "./pages"
-import { resultCards, resultCardSeries, resultFamilies } from "./results-read"
+import { resultCards, resultCardSeries, resultFamilies, resultGoalCards } from "./results-read"
 
 const db = createPrismaClient()
 const ZONE = "Europe/Berlin"
@@ -175,6 +175,83 @@ describe("resultCards", () => {
     expect(await resultCardSeries(db, { ownerId: site.ownerId, cardId: total })).toEqual([])
     expect(await resultCardSeries(db, { ownerId: site.ownerId, cardId: foreign })).toBeNull()
     expect(await resultCardSeries(db, { ownerId: site.ownerId, cardId: deleted })).toBeNull()
+  })
+})
+
+describe("resultGoalCards", () => {
+  // eigene Abende im Juni, damit die Scheiben oben nicht in den Zeitraum fallen
+  const JUNE = Date.UTC(2026, 5, 2, 17)
+  const DAY = 86_400_000
+  let sums: string
+  let shots: string
+  let probe: string
+
+  beforeAll(async () => {
+    sums = await card(JUNE, {
+      series: [
+        { series: 1, shots: 10, rings: 94 },
+        { series: 2, shots: 10, rings: 95 },
+      ],
+    })
+    shots = await card(JUNE + DAY, {
+      shots: [
+        ...TEN(9).map((ring) => ({ series: 1, ring, decimalTenths: null })),
+        ...TEN(10).map((ring) => ({ series: 2, ring, decimalTenths: null })),
+      ],
+    })
+    probe = await card(
+      JUNE + 2 * DAY,
+      { total: { shots: 30, rings: 270 } },
+      { kind: "competition" }
+    )
+    await card(JUNE + DAY, { total: { shots: 20, rings: 180 } }, { ownerId: otherId })
+    const gone = await card(JUNE + 3 * DAY, { total: { shots: 20, rings: 170 } })
+    await db.card.update({ where: { id: gone }, data: { deletedAt: new Date() } })
+  })
+
+  const june = () =>
+    resultGoalCards(db, {
+      ownerId: site.ownerId,
+      familyId: site.familyId,
+      fromMs: JUNE - 1,
+      toMs: JUNE + 5 * DAY,
+      timeZone: ZONE,
+    })
+
+  it("liefert eigene, sichtbare Scheiben der Familie im Zeitraum mit Ergebnis und Serien", async () => {
+    const { cards } = await june()
+    expect(cards.map((c) => c.id).sort()).toEqual([sums, shots, probe].sort())
+    const fromSums = cards.find((c) => c.id === sums)!
+    expect(fromSums).toMatchObject({ day: "2026-06-02", kind: "training", shots: 20, rings: 189 })
+    expect(fromSums.decimal).toBeNull()
+    expect(fromSums.series).toEqual([
+      { series: 1, shots: 10, rings: 94, decimal: null },
+      { series: 2, shots: 10, rings: 95, decimal: null },
+    ])
+    expect(cards.find((c) => c.id === shots)!.series?.map((s) => s.rings)).toEqual([90, 100])
+    expect(cards.find((c) => c.id === probe)).toMatchObject({
+      kind: "competition",
+      rings: 270,
+      series: [],
+    })
+  })
+
+  it("nennt die Wertung der Familie und die häufigsten Schusszahlen", async () => {
+    const result = await june()
+    expect(result.scoring).toBe("rings")
+    expect(result.usualShots).toBe(20)
+    expect(result.usualSeriesShots).toBe(10)
+  })
+
+  it("grenzt nach Beginn ein", async () => {
+    const { cards } = await resultGoalCards(db, {
+      ownerId: site.ownerId,
+      familyId: site.familyId,
+      fromMs: JUNE + DAY - 1,
+      toMs: JUNE + DAY + 1,
+      timeZone: ZONE,
+    })
+    expect(cards.map((c) => c.id)).toEqual([shots])
   })
 })
 

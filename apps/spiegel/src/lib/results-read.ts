@@ -3,7 +3,8 @@
 
 import { seriesCurve } from "@vereinsheim/shot-core/analysis"
 import type { Scoring } from "@vereinsheim/shot-core/metrics"
-import type { CardMark } from "@vereinsheim/shot-core/projection"
+import type { CardMark, ProjectedSeries } from "@vereinsheim/shot-core/projection"
+import { modalLength } from "@vereinsheim/shot-core/stats"
 import type { TargetId } from "@vereinsheim/shot-core/targets"
 import type { CardProvenance } from "@vereinsheim/shot-ui/detail"
 import { cardListModel } from "@vereinsheim/shot-ui/list/evenings"
@@ -138,6 +139,64 @@ export async function resultCardSeries(
       result: value === null ? null : { value, scoring, digits },
     }
   })
+}
+
+/** eine eigene Scheibe einer Familie, wie ein Ziel sie zählt: Ergebnis und Serien in beiden Wertungen */
+export interface GoalCard {
+  id: string
+  /** der Abend (ISO-Tag, vor 4 Uhr der Vortag) */
+  day: string
+  startedAtMs: number
+  kind: OverviewCard["kind"]
+  probeOnly: boolean
+  /** Schüsse wie am Ausdruck */
+  shots: number
+  rings: number | null
+  decimal: number | null
+  /** null, solange die Projektion älter als Version 7 ist und noch nachgerechnet wird */
+  series: ProjectedSeries[] | null
+}
+
+/**
+ * Die sichtbaren eigenen Scheiben einer Familie mit Beginn im Zeitraum, aus der Projektion (ohne Schüsse), dazu die
+ * Wertung der Familie und die häufigste Schusszahl ihrer Scheiben und ihrer Serien (über alle Scheiben der Familie
+ * außer nur Probe; null ohne)
+ */
+export async function resultGoalCards(
+  db: Db,
+  query: { ownerId: string; familyId: number; fromMs: number; toMs: number; timeZone: string }
+): Promise<{
+  cards: GoalCard[]
+  scoring: Scoring
+  usualShots: number | null
+  usualSeriesShots: number | null
+}> {
+  const { shown, scoringOf } = await overviewCards(db, query.ownerId)
+  const family = shown.filter((card) => card.familyId === query.familyId && card.family)
+  const counted = family.filter((card) => !card.projection.probeOnly)
+  const cards = family.filter(
+    (card) => card.startedAtMs >= query.fromMs && card.startedAtMs < query.toMs
+  )
+  return {
+    cards: cards.map((card) => ({
+      id: card.id,
+      day: eveningDay(card.startedAtMs, query.timeZone),
+      startedAtMs: card.startedAtMs,
+      kind: card.kind,
+      probeOnly: card.projection.probeOnly,
+      shots: card.projection.printedShots,
+      rings: card.projection.values["result.rings"]?.value ?? null,
+      decimal: card.projection.values["result.decimal"]?.value ?? null,
+      series: card.projection.series ?? null,
+    })),
+    scoring: family[0]?.family ? scoringOf(family[0].family.slug) : "decimal",
+    usualShots: modalLength(
+      counted.map((card) => card.projection.printedShots).filter((shots) => shots > 0)
+    ),
+    usualSeriesShots: modalLength(
+      counted.flatMap((card) => (card.projection.series ?? []).map((series) => series.shots))
+    ),
+  }
 }
 
 /** die Lagen der kleinen Scheiben (`MiniTarget`), nur eigene, sichtbare Scheiben */
