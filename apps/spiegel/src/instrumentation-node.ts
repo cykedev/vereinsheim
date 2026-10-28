@@ -6,6 +6,7 @@ import { sweepUploadsSoon } from "@/lib/uploads"
 import { readerBundleMissing } from "@/lib/printouts/reader"
 import { rereadOutdatedPrintouts } from "@/lib/printouts/reread"
 import { ensureSeedAdmin } from "@/lib/startup"
+import { diaryJobs } from "@/parts/jobs"
 
 const HOUR_MS = 3_600_000
 
@@ -88,6 +89,9 @@ export async function registerNode() {
   // Papierkorb samt Ausdrucken, Zuordnungen der Disziplinen und Neulesen: beim Start und danach stündlich; `unref` hält den Prozess nicht am Leben
   emptyExpiredTrash()
   setInterval(emptyExpiredTrash, HOUR_MS).unref()
+  // Papierkorb des Tagebuchs ([[adr-033]])
+  diaryJobs(db)
+  setInterval(() => diaryJobs(db), HOUR_MS).unref()
   refreshDisciplines()
   setInterval(refreshDisciplines, HOUR_MS).unref()
   // neue Version des Adapters: ruhende ScheibenIDs neu lesen ([[adr-027]], jeder Probe-Block eine Scheibe)

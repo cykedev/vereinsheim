@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
+import { DeleteEntry } from "@/diary/components/DeleteEntry"
 import { EntryScreen } from "@/diary/components/EntryScreen"
 import { requireDiary } from "@/diary/page-guard"
 import { entryView } from "@/diary/queries"
@@ -32,6 +33,13 @@ export default async function EntryRoute({ params }: { params: Promise<{ id: str
       dayLabel={dayLabel(entry.day, timeZone)}
       threadDayLabel={entry.thread ? dayLabel(entry.thread.day, timeZone) : null}
       timeZone={timeZone}
+      actions={
+        <DeleteEntry
+          entryId={entry.id}
+          day={dayLabel(entry.day, timeZone)}
+          family={entry.family?.name ?? null}
+        />
+      }
       key={entry.id}
     />
   )

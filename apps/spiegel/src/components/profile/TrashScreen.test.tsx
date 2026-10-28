@@ -41,3 +41,20 @@ describe("Papierkorb", () => {
     expect(section).not.toContain("<button")
   })
 })
+
+describe("Platz für das Tagebuch", () => {
+  it("anderer Satz oben, der Abschnitt vor den Scheiben, nicht leer mit Einträgen", () => {
+    const html = render({
+      items: [],
+      blocked: [],
+      parts: {
+        lead: "Gelöschte Scheiben und Einträge liegen hier 30 Tage.",
+        content: createElement("section", { "data-diary-slot": true }),
+        count: 1,
+      },
+    })
+    expect(html).toContain("Gelöschte Scheiben und Einträge liegen hier 30 Tage.")
+    expect(html).toContain("data-diary-slot")
+    expect(html).not.toContain("Der Papierkorb ist leer")
+  })
+})

@@ -6,6 +6,7 @@ import { db } from "@/lib/db"
 import { blockedCards, trashCards } from "@/lib/db/reads"
 import { pageContext } from "@/lib/page-context"
 import { blockedItems, trashItems } from "@/lib/trash-view"
+import { trashParts } from "@/parts/trash"
 
 export const metadata: Metadata = { title: "Papierkorb" }
 
@@ -17,10 +18,12 @@ export default async function TrashRoute() {
     trashCards(db, session.user.id),
     blockedCards(db, session.user.id),
   ])
+  const parts = await trashParts(db, session.user.id, timeZone)
   return (
     <TrashScreen
       items={trashItems(trash, timeZone, nowMs)}
       blocked={blockedItems(blocked, timeZone)}
+      parts={parts}
     />
   )
 }

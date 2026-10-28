@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useState, useTransition, type ReactNode } from "react"
 
 import { getErrorMessage } from "@vereinsheim/lib/forms/fieldErrors"
 import { Button } from "@vereinsheim/ui/button"
@@ -17,7 +17,16 @@ import type { BlockedItem, TrashItem } from "@/lib/trash-view"
  * Papierkorb: gelöschte Scheiben 30 Tage mit „Wiederherstellen“ und „Endgültig löschen“, darunter, was nicht
  * von selbst wiederkommt (endgültig gelöscht, als „nicht meine“ gemeldet), ohne Knopf.
  */
-export function TrashScreen({ items, blocked }: { items: TrashItem[]; blocked: BlockedItem[] }) {
+export function TrashScreen({
+  items,
+  blocked,
+  parts,
+}: {
+  items: TrashItem[]
+  blocked: BlockedItem[]
+  /** Platz für das Tagebuch ([[adr-033]]): ein anderer Satz oben, ein Abschnitt und wie viel darin liegt */
+  parts?: { lead: string | null; content: ReactNode; count: number }
+}) {
   return (
     <Page>
       <section data-trash-page className={cn("grid gap-6", PAGE_SINGLE)}>
@@ -26,12 +35,14 @@ export function TrashScreen({ items, blocked }: { items: TrashItem[]; blocked: B
             Papierkorb
           </h1>
           <p className="text-foreground-2">
-            Gelöschte Scheiben liegen hier 30 Tage und zählen nirgends mit. Danach werden sie
-            endgültig gelöscht.
+            {parts?.lead ??
+              "Gelöschte Scheiben liegen hier 30 Tage und zählen nirgends mit. Danach werden sie endgültig gelöscht."}
           </p>
         </div>
 
-        {items.length ? (
+        {parts?.content}
+
+        {items.length || parts?.count ? (
           <ul className="grid gap-3">
             {items.map((item) => (
               <TrashRow key={item.cardId} item={item} />
