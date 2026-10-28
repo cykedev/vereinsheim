@@ -539,6 +539,9 @@ model Card {
   lifesignAt        DateTime?       @db.Timestamptz(3)
   // Versatz der Uhr des Stands, gemessen am laufenden Lebenszeichen (SF-73); ab fünf Minuten ausgeglichen
   clockOffsetMs     Int?
+  // die Uhrzeit ist nicht bekannt (von Hand ohne Uhrzeit eingetragen): `startedAt` ist 12 Uhr des Tags in der
+  // Anzeige-Zone, gezeigt wird nur der Tag
+  timeUnknown       Boolean         @default(false)
   createdAt         DateTime        @default(now()) @db.Timestamptz(3)
   updatedAt         DateTime        @updatedAt @db.Timestamptz(3)
   revisions         CardRevision[]  @relation("Revisions")
@@ -546,6 +549,7 @@ model Card {
   projection        CardProjection?
   printouts         Printout[]
   requests          CardRequest[]
+  evidence          CardEvidence?
 
   @@unique([sourceId, scheibenId, cycle, block])
   // Liste, Fortschritt, Blättern: Scheiben eines Schützen in einer Familie nach Beginn
@@ -659,6 +663,22 @@ model CardProjection {
 }
 
 // gespeicherter Meyton-Ausdruck mit gelesener ID im Fuß und Erstellzeit (meyton-pdf)
+// Beleg einer eingetragenen Scheibe ([[adr-033]]): ein Foto oder PDF je Scheibe; die Datei liegt unter
+// `UPLOAD_DIR/evidence/<sha256>.<Endung>`, gleiche Bytes ergeben dieselbe Datei
+model CardEvidence {
+  id          String   @id @default(cuid())
+  cardId      String   @unique
+  card        Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  sha256      String
+  // application/pdf, image/jpeg, image/png oder image/webp, geprüft an den ersten Bytes
+  contentType String
+  size        Int
+  storedAt    DateTime @default(now()) @db.Timestamptz(3)
+
+  // Aufräumen der Dateien: zeigt noch eine Zeile auf diese Datei
+  @@index([sha256])
+}
+
 model Printout {
   id            String                @id @default(cuid())
   cardId        String
