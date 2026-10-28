@@ -201,7 +201,7 @@ export function EveningBlock({
                 <span data-start-meta className="text-[13px] text-muted-foreground">
                   {[time, KIND_TEXT[row.kind], provenance].filter(Boolean).join(" · ")}
                 </span>
-                {/* umbrechen nur zwischen den Wertungen, jede bleibt beisammen (kein „ganze / Ringe“) */}
+                {/* umbrechen nur zwischen den Wertungen, jede bleibt beisammen (kein „ganze / Ringe“); ein Grund bricht um */}
                 <span
                   data-start-result
                   className="flex flex-wrap items-baseline gap-x-1.5 tabular-nums"
@@ -215,10 +215,13 @@ export function EveningBlock({
                         {` ${name(row.resultScoring)}`}
                       </span>
                     )}
-                    {reason && (
-                      <span className="text-[13px] text-muted-foreground">{` ${reason}`}</span>
-                    )}
                   </span>
+                  {/* der Grund darf umbrechen: in einer schmalen Kachel liefe „wartet auf die Anlage“ sonst hinaus */}
+                  {reason && (
+                    <span data-result-reason className="min-w-0 text-[13px] text-muted-foreground">
+                      {reason}
+                    </span>
+                  )}
                   {second && (
                     <span
                       data-other-result

@@ -331,6 +331,10 @@ describe("Grundlage, Grund und Herkunft auf Start", () => {
   it("die Kachel einer wartenden: „–“ mit Grund, die Herkunft in der Zeile", () => {
     expect(tile("w")).toMatch(/data-start-meta="true"[^>]*>[^<]* · Training · vom Ausdruck</)
     expect(tile("w")).toContain("wartet auf die Anlage")
+    // der Grund steht nicht im Block, der nicht umbricht: sonst läuft er in einer schmalen Kachel hinaus
+    expect(tile("w")).toMatch(
+      /<span data-result-reason="true" class="min-w-0[^"]*">wartet auf die Anlage</
+    )
     expect(tile("w")).toMatch(/aria-label="[^"]*vom Ausdruck, Ergebnis – \(wartet auf die Anlage\)/)
     expect(tile("s")).toMatch(/ · eingetragen</)
     expect(tile("m")).not.toMatch(/gemessen/)
