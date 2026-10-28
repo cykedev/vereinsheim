@@ -141,16 +141,22 @@ model DiaryEntry {
   @@index([userId, familyId, day])
 }
 
-// eine Scheibe gehört höchstens zu einem Eintrag
+// was der Schütze an einer Scheibe entschieden hat: von Hand verknüpft oder gelöst
+enum DiaryCardLink {
+  linked
+  released
+}
+
+// eine Scheibe steckt höchstens in einem Eintrag. Gespeichert wird nur, was der Schütze tut: Anlegen und Dazunehmen
+// verknüpfen, Lösen löst. Ohne Zeile gehört eine Scheibe zum einzigen Eintrag ihres Abends und ihrer Disziplin, der
+// nicht im Papierkorb liegt; das leitet `entryCards` beim Lesen ab („dazugekommen“), ohne zu schreiben
 model DiaryEntryCard {
-  cardId     String     @id
-  entryId    String
-  entry      DiaryEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
-  // von selbst dazugekommen (gleicher Abend und Disziplin, genau ein Eintrag); zeigt „dazugekommen“
-  automatic  Boolean    @default(false)
-  // gelöst: kommt nicht von selbst wieder, lässt sich von Hand dazunehmen
-  releasedAt DateTime?  @db.Timestamptz(3)
-  createdAt  DateTime   @default(now()) @db.Timestamptz(3)
+  cardId    String        @id
+  entryId   String
+  entry     DiaryEntry    @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  link      DiaryCardLink
+  createdAt DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime      @updatedAt @db.Timestamptz(3)
 
   @@index([entryId])
 }
@@ -220,6 +226,7 @@ Schema, `--script`), angewandt mit `migrate deploy` (Dev-Datenbank nie zurückse
 CREATE TYPE "DiaryKind" AS ENUM ('shooting', 'dry', 'mental');
 CREATE TYPE "DiaryOutcome" AS ENUM ('yes', 'partly', 'no');
 CREATE TYPE "DiaryScalePart" AS ENUM ('wellbeing', 'prognosis', 'feedback');
+CREATE TYPE "DiaryCardLink" AS ENUM ('linked', 'released');
 
 -- CreateTable
 CREATE TABLE "DiarySettings" (
@@ -254,9 +261,9 @@ CREATE TABLE "DiaryEntry" (
 CREATE TABLE "DiaryEntryCard" (
     "cardId" TEXT NOT NULL,
     "entryId" TEXT NOT NULL,
-    "automatic" BOOLEAN NOT NULL DEFAULT false,
-    "releasedAt" TIMESTAMPTZ(3),
+    "link" "DiaryCardLink" NOT NULL,
     "createdAt" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMPTZ(3) NOT NULL,
     CONSTRAINT "DiaryEntryCard_pkey" PRIMARY KEY ("cardId")
 );
 
@@ -402,7 +409,8 @@ Scheiben ohne Eintrag, der jüngste mit gefülltem Knopf. Darunter „Ohne Schei
 1. Rückweg „Tagebuch“, `h1` Tag, Metazeile „Disziplin · Art“ (Art der Scheiben: Training, Wettkampf; sonst
    Trockentraining, Mentaltraining).
 2. Kasten der Scheiben: je Scheibe kleine Scheibe, Uhrzeit, Ergebnis, Herkunft wenn nicht gemessen, „Lösen“; von selbst
-   dazugekommene mit „dazugekommen“; gelöschte als „Scheibe gelöscht“.
+   abgeleitete mit „dazugekommen“; gelöschte als „Scheibe gelöscht“; bei mehreren Einträgen des Abends „Vom selben Abend“
+   mit „Dazunehmen“.
 3. Vorhaben als eine Zeile (leer: „Was nimmst du dir vor?“).
 4. Notiz, immer sichtbar, mehrzeilig.
 5. Vorher: die letzte Frage derselben Disziplin aus einem früheren Eintrag („Deine Frage vom 9. Juni“) mit „Als Vorhaben
@@ -427,11 +435,15 @@ Bedienung:
   etwas geändert, stehen „Speichern“ und „Verwerfen“ darunter; Toast nach dem Speichern. Verlassen der Seite mit
   Ungespeichertem fragt (`useUnsavedChangesGuard`, `useNavigationConfirm`, `diaryDiscard`).
 - **„Hat es geklappt?“** `Segmented` Ja, Teilweise, Nein, speichert beim Tippen.
-- **Scheiben vom selben Abend:** Gibt es an einem Tag genau einen Eintrag (nicht im Papierkorb) einer Disziplin,
-  verbindet `linkNewCards(db, userId)` neue Scheiben dieses Abends und dieser Disziplin von selbst (`automatic`), außer
-  sie wurden gelöst. Gibt es mehrere, bietet jeder Eintrag sie unter „Vom selben Abend“ mit „Dazunehmen“ an.
-  `linkNewCards` läuft beim Laden der Seiten des Tagebuchs und in `cardLines`/`startLines` (idempotent, eine Abfrage
-  über die Scheiben der letzten 30 Tage ohne Zeile in `DiaryEntryCard`).
+- **Scheiben vom selben Abend** (entschieden mit dem User am 28. Oktober 2026): abgeleitet beim Lesen, nie beim Laden
+  geschrieben. Gibt es an einem Tag genau einen Eintrag einer Disziplin, der nicht im Papierkorb liegt, gehört jede
+  Scheibe dieses Abends und dieser Disziplin ohne Zeile in `DiaryEntryCard` dazu und zeigt „dazugekommen“. Eine Zeile
+  `linked` hält eine Scheibe fest in ihrem Eintrag (Anlegen aus dem Vorschlag, „Dazunehmen“), eine Zeile `released` hält
+  sie aus jedem Eintrag heraus, bis sie von Hand dazugenommen wird. Gibt es an dem Tag mehrere Einträge der Disziplin,
+  bietet jeder die Scheiben ohne Zeile unter „Vom selben Abend“ mit „Dazunehmen“ an. Die Regel ist eine reine Funktion
+  (`entryCards` in `src/diary/cards.ts`: Einträge, Zeilen und Scheiben des Abends → je Eintrag fest, dazugekommen,
+  angeboten); Liste, Eintrag, Vorschläge, Faden und die Stellen rufen sie. Kein Schreibzugriff im Render, das Einlesen
+  bleibt frei vom Tagebuch.
 
 **Papierkorb:** Löschen setzt `deletedAt` (Rückfrage, danach „Eintrag gelöscht · Rückgängig“ über `useUndo`). Der
 Eintrag behält seine Scheiben. `/profile/trash` zeigt „Einträge im Tagebuch“ mit „Wiederherstellen“ und „Endgültig
@@ -617,7 +629,7 @@ Neu:
 - `apps/spiegel/src/parts/`: `lines.ts`, `nav.ts`, `profile.tsx`, `trash.tsx`, `jobs.ts`, `account.ts`,
   `account-actions.ts`, `boundary.test.ts` (+ Tests)
 - `apps/spiegel/src/diary/`: `settings.ts`, `scales.ts` (Aspekte, Stufe ↔ Wert, Wörter), `queries.ts` (Liste, Faden,
-  Eintrag, letzte Frage), `proposals.ts` (rein), `link.ts` (`linkNewCards`), `trash.ts`, `summaries.ts` (rein: Zeilen
+  Eintrag, letzte Frage), `proposals.ts` (rein), `cards.ts` (rein: `entryCards`), `trash.ts`, `summaries.ts` (rein: Zeilen
   der Liste), `validation.ts` (zod), `actions.ts` (`"use server"`), `consequences.ts`, `texts.ts`, `export.ts`;
   `components/`: `DiarySwitch`, `DiaryNotice`, `DiaryList`, `ThreadView`, `NewEntryScreen`, `EntryScreen`,
   `EntryCards`, `EntryText` (Feld mit Speichern/Verwerfen), `EntrySection` (Zeile mit „+“ oder offen), `StageRow`,
@@ -678,11 +690,14 @@ Geändert:
 7. `validation.ts`, `summaries.ts`, `proposals.ts` mit Tests: Texte leer → null, höchstens 2.000 Zeichen, Zeilenumbrüche
    bleiben; erwartetes Ergebnis „340“, „340,5“, „340.5“, „340,55“ Fehler; Zeilen der Liste aus den Texten oben;
    Vorschläge je Abend und Disziplin, ohne Scheiben in Einträgen, neueste zuerst, `card` markiert seine Gruppe.
-8. `queries.ts`, `link.ts`, `actions.ts` mit Tests gegen die Dev-Datenbank (nur eigene Zeilen): Anlegen aus Vorschlag
+8. `cards.ts` (rein) mit Tests: genau ein Eintrag → Scheibe ohne Zeile dazugekommen; zwei Einträge desselben Abends und
+   derselben Disziplin → die Scheibe nur angeboten, in beiden; `linked` bleibt in ihrem Eintrag, auch bei zwei Einträgen;
+   `released` weder dazugekommen noch angeboten außer zum Dazunehmen von Hand; ein Eintrag im Papierkorb zählt nicht mit
+   und hält seine `linked`-Scheiben; andere Disziplin oder anderer Abend nie. Dann `queries.ts`, `actions.ts` mit Tests gegen die Dev-Datenbank (nur eigene Zeilen): Anlegen aus Vorschlag
    (fremde Scheibe abgelehnt, eine Scheibe in zwei Einträgen abgelehnt, Prüfung und Schreiben in einer Transaktion),
-   ohne Scheibe (Disziplin Pflicht bei `shooting`, Tag nicht in der Zukunft); `linkNewCards` (genau ein Eintrag →
-   verbunden mit `automatic`, zwei → nicht, gelöst → nicht wieder, Papierkorb zählt nicht); Lösen nimmt die Ausführung
-   der Scheibe mit; `setScale` (Mitte gespeichert, gleiche Stufe → weg, genauer Wert bleibt, bis eine andere Stufe
+   ohne Scheibe (Disziplin Pflicht bei `shooting`, Tag nicht in der Zukunft); Lösen schreibt `released` (auch für eine
+   dazugekommene) und nimmt die Ausführung der Scheibe mit; Dazunehmen schreibt `linked`; Lesen schreibt nichts (Zählung
+   der Zeilen vor und nach dem Laden einer Seite gleich); `setScale` (Mitte gespeichert, gleiche Stufe → weg, genauer Wert bleibt, bis eine andere Stufe
    getippt wird); `setExecution` nur für Serien verbundener Scheiben; Texte speichern; „Als Vorhaben nehmen“; letzte
    Frage derselben Disziplin aus einem früheren, nicht gelöschten Eintrag; Faden je Disziplin, neueste oben; Löschen,
    Wiederherstellen, endgültig; fremder Eintrag „Diesen Eintrag gibt es nicht mehr.“; jede Action prüft
@@ -728,7 +743,7 @@ Geändert:
 
 - `pnpm check` im Worktree grün (lint, format, test, tsc, `next build` aller Apps), Vault-Lint grün; `turbo run test
 lint --dry=json` zeigt die Änderung in `packages/shot-ui` in den Hashes von Spiegel und Treffsicher.
-- Gegenprobe des Gates (Aufgabe 3) und Mutationen: `resultCards` ohne Filter auf `ownerId` → rot; `linkNewCards` ohne
+- Gegenprobe des Gates (Aufgabe 3) und Mutationen: `resultCards` ohne Filter auf `ownerId` → rot; `entryCards` ohne
   Prüfung „genau ein Eintrag“ → rot.
 - Browser mit Dev-Server aus dem Worktree auf Port 3022 (`next dev --port 3022`, die erzeugte `AGENTS.md` löschen),
   Demo-Konto: Telefon (390 px) und Desktop, hell und dunkel, die Wege aus Aufgabe 15 von Hand und gegen das
@@ -740,26 +755,13 @@ lint --dry=json` zeigt die Änderung in `packages/shot-ui` in den Hashes von Spi
 
 Keine neue Brücke. Migration ja (additiv, nur neue Tabellen).
 
-## Offene Fragen an die Koordination
+## Entscheidungen
 
-Die sechs Fragen des ersten Entwurfs, neu bewertet:
+Freigegeben vom User am 28. Oktober 2026 (Konzept Runde 4 und dieser Plan):
 
-1. **Export und Konto löschen** gibt es in Spiegel noch nicht. Weiter offen. Empfehlung: in 2a als Teil C; Alternative
-   eigener Teil 2a-2.
-2. **Export nur als JSON, ohne Dateien.** Weiter offen. Empfehlung: so lassen, ZIP mit Dateien später.
-3. **Einheiten „Training“ oder „Wettkampf“ ganz ohne Ergebnis** haben keine Scheibe für die Art. Weiter offen, betrifft
-   Stufe 3. Empfehlung: Zeile „Art: Wettkampf“ in der Notiz, als normaler Inhalt (wie die übrigen Texte ohne Feld).
-4. **„Disziplin“ als Wort für die Familie:** entschieden (Konzept).
-5. **Gate als Test in `pnpm check`:** weiter offen. Empfehlung: so, es läuft vor jedem Commit.
-6. **Einträge löschen:** entschieden, mit Papierkorb wie Scheiben (30 Tage, Rückgängig, Scheiben bleiben verbunden).
-
-Aus dem Konzept, Runde 4, noch beim User:
-
-7. **Faden neueste oben** (wie jede Liste) oder von alt nach neu (liest sich wie eine Geschichte)?
-8. **Ein gefüllter Abschnitt lässt sich nicht zuklappen**, nur leeren („Entfernen“).
-
-Neu aus dem Plan:
-
-9. **Scheiben vom selben Abend verbinden** ohne Zugriff des Ergebnisteils auf das Tagebuch: `linkNewCards` läuft beim
-   Laden der Seiten des Tagebuchs und an den Stellen, nicht beim Einlesen. Eine Scheibe steht also erst „dazugekommen“
-   im Eintrag, wenn eine dieser Seiten geladen wurde. Empfehlung: so, das Einlesen bleibt frei vom Tagebuch.
+- Export und Konto löschen in 2a als Teil C. Export nur als JSON, ohne Dateien; ZIP später.
+- Einheiten „Training“ oder „Wettkampf“ ganz ohne Ergebnis (Stufe 3): Zeile „Art: Wettkampf“ in der Notiz.
+- „Disziplin“ als Wort für die Familie. Gate als Test in `pnpm check`. Einträge löschen mit Papierkorb.
+- Faden: neueste Frage oben. Gefüllte Abschnitte sind nicht zuklappbar, nur leerbar („Entfernen“).
+- Scheiben vom selben Abend werden beim Lesen abgeleitet, nicht beim Laden geschrieben; gespeichert werden nur
+  Verknüpfen von Hand und Lösen (`DiaryEntryCard.link`). Bei zwei Einträgen am selben Tag wird die Scheibe nur angeboten.
