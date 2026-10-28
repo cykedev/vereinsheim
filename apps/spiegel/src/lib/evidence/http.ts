@@ -1,6 +1,6 @@
 // Die Datei eines Belegs über HTTP (`GET /api/evidence/<id>`): `Request` hinein, `Response` heraus, ohne Next, wie bei
 // den Ausdrucken (`printouts/http.ts`). Nur für den Besitzer einer sichtbaren Scheibe, nie auf der geteilten Seite; sonst
-// 404, ohne zu sagen, ob es den Beleg gibt. Das Bild oder PDF läuft in einer Sandbox, ohne Skripte.
+// 404, ohne zu sagen, ob es den Beleg gibt. Ein Bild läuft in einer Sandbox, ohne Skripte.
 
 import type { Db } from "@/lib/db"
 
@@ -10,11 +10,10 @@ import { EVIDENCE_TYPES, readEvidenceBytes, type EvidenceType } from "./files"
 /** die Form einer Kennung aus `cuid()`; alles andere fragt die Datenbank gar nicht erst */
 const EVIDENCE_ID = /^c[a-z0-9]{20,}$/
 
-const NO_STORE = {
-  "Cache-Control": "private, no-store",
-  "X-Content-Type-Options": "nosniff",
-  "Content-Security-Policy": "sandbox",
-}
+const NO_STORE = { "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff" }
+/** ein Bild in einer Sandbox ohne Skripte; ein PDF ohne, sonst zeigt Chrome es nicht an (wie die Ausdrucke) */
+const sandboxFor = (type: EvidenceType): Record<string, string> =>
+  type === "application/pdf" ? {} : { "Content-Security-Policy": "sandbox" }
 
 const status = (code: number) => new Response(null, { status: code, headers: NO_STORE })
 
@@ -54,6 +53,7 @@ export async function evidenceResponse(
     status: 200,
     headers: {
       ...NO_STORE,
+      ...sandboxFor(file.type),
       "Content-Type": file.type,
       "Content-Disposition": `inline; filename="beleg.${EVIDENCE_TYPES[file.type]}"`,
       "Content-Length": String(file.bytes.length),

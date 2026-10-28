@@ -2,6 +2,7 @@
 // Vorschläge und eine eingetragene Scheibe zum Ändern. Nur eigene Scheiben, wie die Seite einer Scheibe.
 
 import { plannedShotsOf, seriesShotsOf } from "@vereinsheim/shot-core/discipline"
+import { TARGETS } from "@vereinsheim/shot-core/targets"
 import { formatIsoDate, formatTimeOfDay } from "@vereinsheim/lib/format"
 
 import type { CardKind } from "@/generated/prisma/client"
@@ -64,9 +65,10 @@ export async function entryDiscipline(
       familyId: { not: null },
       targetId: { not: null },
     },
-    select: DISCIPLINE_SELECT,
+    select: { ...DISCIPLINE_SELECT, targetId: true },
   })
-  return row ? entryDisciplineOf(row) : null
+  // wie im Blatt „Neue Scheibe“: nur ein Scheibenbild, das Spiegel kennt
+  return row?.targetId && Object.hasOwn(TARGETS, row.targetId) ? entryDisciplineOf(row) : null
 }
 
 /** die eigenen Orte, zuletzt genutzte zuerst, jeder einmal (ohne Groß- und Kleinschreibung) */
@@ -99,6 +101,9 @@ export interface CardForEdit {
   day: string
   time: string
   place: string
+  /** Beginn wie gespeichert: bleiben Tag und Uhrzeit, bleibt er (auch mit Sekunden aus Treffsicher) */
+  startedAtMs: number
+  timeUnknown: boolean
   stored: StoredDetails
 }
 
@@ -128,6 +133,7 @@ export async function cardForEdit(
           totalShots: true,
           centerXUm: true,
           centerYUm: true,
+          centerShots: true,
           seriesSums: { orderBy: { series: "asc" } },
           shots: {
             orderBy: { seq: "asc" },
@@ -137,6 +143,8 @@ export async function cardForEdit(
               decimalTenths: true,
               stellung: true,
               xUm: true,
+              yUm: true,
+              distanceTenthsUm: true,
               firedAt: true,
               innerTen: true,
             },
@@ -156,8 +164,11 @@ export async function cardForEdit(
         }
       : null
   const center =
-    revision && revision.centerXUm !== null && revision.centerYUm !== null
-      ? { xUm: revision.centerXUm, yUm: revision.centerYUm }
+    revision &&
+    revision.centerXUm !== null &&
+    revision.centerYUm !== null &&
+    revision.centerShots !== null
+      ? { xUm: revision.centerXUm, yUm: revision.centerYUm, shots: revision.centerShots }
       : null
   return {
     id: card.id,
@@ -167,13 +178,20 @@ export async function cardForEdit(
     day: formatIsoDate(card.startedAt, timeZone),
     time: card.timeUnknown ? "" : formatTimeOfDay(card.startedAt, timeZone),
     place: card.place ?? "",
+    startedAtMs: card.startedAt.getTime(),
+    timeUnknown: card.timeUnknown,
     stored: {
       shots: (revision?.shots ?? []).map((shot) => ({
         series: shot.series,
         ring: shot.ring,
         decimalTenths: shot.decimalTenths,
         probe: shot.stellung === 0,
-        more: shot.xUm !== null || shot.firedAt !== null || shot.innerTen === true,
+        more:
+          shot.xUm !== null ||
+          shot.yUm !== null ||
+          shot.distanceTenthsUm !== null ||
+          shot.firedAt !== null ||
+          shot.innerTen === true,
       })),
       series: (revision?.seriesSums ?? []).map((sum) => ({
         series: sum.series,

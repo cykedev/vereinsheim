@@ -191,7 +191,8 @@ const NewDisciplineSchema = z.object({
 /**
  * Eine Disziplin ohne Meyton anlegen ([[adr-033]]): für Scheiben von Hand, von fremden Anlagen und aus Treffsicher.
  * Eingeordnet und wählbar (Scheibenbild und Familie sind Pflicht); der Name ist auf der Anlage eindeutig, ohne Groß- und
- * Kleinschreibung, geprüft unter einer Sperre, damit zwei Admins nicht denselben anlegen.
+ * Kleinschreibung, geprüft unter einer Sperre, damit zwei Admins nicht denselben anlegen. Eine Disziplin, die das
+ * Einlesen zur selben Zeit von Meyton anlegt, sieht die Sperre nicht; die trägt ihre Meyton-ID.
  */
 export async function createDiscipline(input: {
   name: string

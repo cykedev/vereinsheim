@@ -152,7 +152,8 @@ export const DEFAULT_SERIES_SHOTS = 10
  * Zahl des Admins (0 heißt keine), sonst 10, wenn die Schusszahl ein Vielfaches von 10 ist, sonst unbekannt
  */
 export function seriesShotsOf(override: number | null, plannedShots: number | null): number | null {
-  if (override !== null && override > 0) return override
+  if (override === 0) return null
+  if (override !== null) return override
   return plannedShots !== null && plannedShots > 0 && plannedShots % DEFAULT_SERIES_SHOTS === 0
     ? DEFAULT_SERIES_SHOTS
     : null

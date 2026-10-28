@@ -4,6 +4,7 @@ import { checkDetails, type DetailsInput, type DetailsProblem } from "./details"
 import {
   detailsToForm,
   emptyForm,
+  fitToDiscipline,
   formToDetails,
   parseValue,
   problemText,
@@ -11,6 +12,7 @@ import {
   seriesTotalText,
   startedAtOf,
   TEXTS,
+  toggleRow,
   type EnteredFormState,
   type FormDiscipline,
   type StoredDetails,
@@ -65,7 +67,7 @@ describe("parseValue", () => {
   it("Grenzen: ein Schuss 10,9 bzw. 10, eine Summe je Schuss", () => {
     expect(parseValue("10,9", "decimal", 1).ok).toBe(true)
     expect(parseValue("11", "decimal", 1)).toEqual({ ok: false, error: TEXTS.shotMax })
-    expect(parseValue("11", "rings", 1)).toEqual({ ok: false, error: TEXTS.shotMax })
+    expect(parseValue("11", "rings", 1)).toEqual({ ok: false, error: TEXTS.shotMaxRings })
     expect(parseValue("109,1", "decimal", 10)).toEqual({ ok: false, error: TEXTS.sumMax(10) })
     expect(parseValue("101", "rings", 10)).toEqual({ ok: false, error: TEXTS.sumMax(10) })
   })
@@ -192,7 +194,9 @@ function stored(input: DetailsInput, discipline = LG40): StoredDetails {
       decimalTenths: s.decimalTenths,
     })),
     total: sums?.total ?? null,
-    center: sums?.center ? { xUm: sums.center.xUm, yUm: sums.center.yUm } : null,
+    center: sums?.center
+      ? { xUm: sums.center.xUm, yUm: sums.center.yUm, shots: sums.center.shots }
+      : null,
   }
 }
 const when = { day: "2026-10-20", time: "19:30", place: "Schützenhaus" }
@@ -217,6 +221,8 @@ describe("detailsToForm", () => {
       LG40,
     ],
     ["Gesamtergebnis", { total: { rings: 371 } }, LP_RINGS],
+    ["Mitte genau 0/0", { total: { rings: 371 }, center: { xUm: 0, yUm: 0 } }, LP_RINGS],
+    ["Mitte auf den µm", { total: { rings: 371 }, center: { xUm: 1234, yUm: -5 } }, LP_RINGS],
     ["Gesamtergebnis mit eigener Schusszahl", { total: { decimalTenths: 1903, shots: 20 } }, LG40],
     [
       "mit Trefferlage",
@@ -243,6 +249,22 @@ describe("detailsToForm", () => {
     expect(state?.series.map((row) => row.sum)).toEqual(["95", "", "", ""])
   })
 
+  it("was das Formular nicht ohne Verlust speichern kann: null", () => {
+    // Serien mit Ringen und Zehnteln (die Demo-Scheibe von Hand): das Formular trägt nur eins
+    const both = stored({ series: [{ series: 1, rings: 88, decimalTenths: 921 }] })
+    expect(detailsToForm(both, LG40, when)).toBeNull()
+    // Serien zu zehn gespeichert, die Disziplin hat inzwischen 20 je Serie oder keine Serien
+    const tens = stored({ series: [{ series: 1, rings: 95 }] }, LP_RINGS)
+    expect(detailsToForm(tens, { ...LP_RINGS, seriesShots: 20 }, when)).toBeNull()
+    expect(detailsToForm(tens, { ...LP_RINGS, seriesShots: null }, when)).toBeNull()
+    // eine Mitte mit eigener Schusszahl
+    const center = stored(
+      { total: { rings: 371 }, center: { xUm: 100, yUm: 100, shots: 30 } },
+      LP_RINGS
+    )
+    expect(detailsToForm(center, LP_RINGS, when)).toBeNull()
+  })
+
   it("was das Formular nicht zeigen kann: null", () => {
     const placed = stored({
       shots: [{ series: 1, ring: 10, decimalTenths: null, xUm: 100, yUm: 100 }],
@@ -251,6 +273,47 @@ describe("detailsToForm", () => {
     expect(detailsToForm(placed, LG40, when)).toBeNull()
     const probe = stored({ shots: [{ series: null, ring: 9, decimalTenths: null, probe: true }] })
     expect(detailsToForm(probe, LG40, when)).toBeNull()
+  })
+})
+
+describe("fitToDiscipline", () => {
+  it("andere Disziplin: Getipptes bleibt, leere Zeilen und Felder folgen ihr", () => {
+    const LG60 = { ...LG40, plannedShots: 60 }
+    const state = form({
+      series: [
+        { sum: "", open: true, shots: ["10,1", ...Array(9).fill("")] },
+        ...rows("98", "", ""),
+      ],
+    })
+    const fitted = fitToDiscipline(state, LG60)
+    expect(fitted.series).toHaveLength(6)
+    expect(fitted.series[0]!.shots).toHaveLength(10)
+    expect(fitted.series[0]!.shots[0]).toBe("10,1")
+    expect(fitted.series[1]!.sum).toBe("98")
+    const five = fitToDiscipline(state, { ...LG40, plannedShots: 20, seriesShots: 5 })
+    expect(five.series).toHaveLength(4)
+    expect(five.series[0]!.shots).toHaveLength(5)
+    expect(
+      fitToDiscipline(form({ series: rows("1", "2", "3", "4", "5") }), LG40).series
+    ).toHaveLength(5)
+  })
+})
+
+describe("toggleRow", () => {
+  it("zuklappen nimmt die Summe aus den Schüssen mit, aufklappen legt Felder an", () => {
+    const open = { sum: "", open: true, shots: ["10,4", "9,8", ""] }
+    expect(toggleRow(open, "decimal", LG40)).toEqual({ ...open, open: false, sum: "20,2" })
+    const closed = { sum: "98", open: false, shots: [] }
+    const opened = toggleRow(closed, "rings", LP_RINGS)
+    expect(opened.open).toBe(true)
+    expect(opened.shots).toHaveLength(10)
+    const state = form({
+      series: [
+        ...rows("98", "97", "96"),
+        toggleRow({ sum: "", open: true, shots: Array(10).fill("10,0") }, "decimal", LG40),
+      ],
+    })
+    expect(details(state).series).toHaveLength(4)
   })
 })
 
@@ -276,6 +339,10 @@ describe("startedAtOf", () => {
     expect(startedAtOf("2026-10-29", "", "Europe/Berlin", TODAY)).toEqual({
       ok: false,
       errors: { day: TEXTS.dayFuture },
+    })
+    expect(startedAtOf("2026-02-31", "", "Europe/Berlin", TODAY)).toEqual({
+      ok: false,
+      errors: { day: TEXTS.dayMissing },
     })
     expect(startedAtOf("2026-10-20", "25:00", "Europe/Berlin", TODAY)).toEqual({
       ok: false,

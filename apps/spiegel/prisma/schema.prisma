@@ -662,7 +662,6 @@ model CardProjection {
   @@index([version])
 }
 
-// gespeicherter Meyton-Ausdruck mit gelesener ID im Fuß und Erstellzeit (meyton-pdf)
 // Beleg einer eingetragenen Scheibe ([[adr-033]]): ein Foto oder PDF je Scheibe; die Datei liegt unter
 // `UPLOAD_DIR/evidence/<sha256>.<Endung>`, gleiche Bytes ergeben dieselbe Datei
 model CardEvidence {
@@ -679,6 +678,7 @@ model CardEvidence {
   @@index([sha256])
 }
 
+// gespeicherter Meyton-Ausdruck mit gelesener ID im Fuß und Erstellzeit (meyton-pdf)
 model Printout {
   id            String                @id @default(cuid())
   cardId        String

@@ -13,7 +13,14 @@ import type { ActionResult } from "@/lib/types"
 
 import { requestSiteId } from "../card-requests/queries"
 import { writeEnteredCard } from "../db/entered"
-import { formToDetails, problemText, startedAtOf, TEXTS, type EnteredFormState } from "./form"
+import {
+  detailsToForm,
+  formToDetails,
+  problemText,
+  startedAtOf,
+  TEXTS,
+  type EnteredFormState,
+} from "./form"
 import { cardForEdit, entryDiscipline } from "./queries"
 
 // „Ergebnis eintragen“ ([[adr-033]]): eine Scheibe von Hand anlegen oder eine eingetragene ändern. Die Action prüft
@@ -66,11 +73,15 @@ export async function saveEnteredCard(input: {
     const timeZone = getDisplayTimeZone()
 
     let target: { cardId?: string; disciplineId: number; kind: CardKind; kindChoice?: CardKind }
+    let kept: { day: string; time: string; startedAtMs: number; timeUnknown: boolean } | null = null
     let discipline
     if (input.cardId !== undefined) {
       if (!isCardIdInput(input.cardId)) return { error: GONE }
       const card = await cardForEdit(db, { cardId: input.cardId, ownerId, timeZone })
       if (!card) return { error: GONE }
+      // was das Formular nicht ganz zeigen kann, überschreibt es auch nicht (ein alter Tab, eine gebaute Anfrage)
+      if (!detailsToForm(card.stored, card.discipline, card)) return { error: TEXTS.notEditable }
+      kept = card
       discipline = card.discipline
       target = { cardId: card.id, disciplineId: card.discipline.id, kind: card.kind }
     } else {
@@ -93,8 +104,10 @@ export async function saveEnteredCard(input: {
       ...target,
       ownerId,
       origin: "manual",
-      startedAtMs: when.startedAtMs,
-      timeUnknown: when.timeUnknown,
+      // Tag und Uhrzeit unverändert: der gespeicherte Beginn bleibt auf die Millisekunde
+      ...(kept && kept.day === form.day && kept.time === form.time.trim()
+        ? { startedAtMs: kept.startedAtMs, timeUnknown: kept.timeUnknown }
+        : { startedAtMs: when.startedAtMs, timeUnknown: when.timeUnknown }),
       place: form.place,
       details: details.details,
       reason: target.cardId ? "von Hand geändert" : "von Hand eingetragen",

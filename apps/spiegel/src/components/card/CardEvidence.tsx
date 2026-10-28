@@ -46,9 +46,16 @@ export function CardEvidence({
   const [error, setError] = useState<string | null>(null)
   const [asking, setAsking] = useState(false)
   const [pending, startTransition] = useTransition()
+  // „…“ nur am Knopf der Aktion, die läuft; der andere ist nur gesperrt (conventions §9)
+  const [running, setRunning] = useState<"attach" | "remove" | null>(null)
+  const attaching = pending && running === "attach"
 
-  const run = (action: () => Promise<Parameters<typeof getErrorMessage>[0]>) =>
+  const run = (
+    which: "attach" | "remove",
+    action: () => Promise<Parameters<typeof getErrorMessage>[0]>
+  ) =>
     startTransition(async () => {
+      setRunning(which)
       setError(null)
       let result
       try {
@@ -73,7 +80,7 @@ export function CardEvidence({
           // dieselbe Datei noch einmal wählen löst wieder ein `change` aus
           event.target.value = ""
           if (!chosen) return
-          run(async () => {
+          run("attach", async () => {
             const prepared = await prepareEvidence(chosen)
             if (!prepared.ok) return { error: prepared.error }
             const form = new FormData()
@@ -85,7 +92,7 @@ export function CardEvidence({
       />
       <label htmlFor="card-evidence-file" className={PICK}>
         <Paperclip aria-hidden className="size-4" />
-        {pending ? "Wird angehängt…" : label}
+        {attaching ? "Wird angehängt…" : label}
       </label>
     </span>
   )
@@ -139,7 +146,7 @@ export function CardEvidence({
           decision={evidenceRemove({ kind: evidence.kind })}
           open={asking}
           onOpenChange={setAsking}
-          onConfirm={() => run(() => removeEvidence(cardId))}
+          onConfirm={() => run("remove", () => removeEvidence(cardId))}
         />
       )}
     </ActionRow>

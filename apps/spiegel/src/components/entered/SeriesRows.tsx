@@ -9,6 +9,7 @@ import { Input } from "@vereinsheim/ui/input"
 import {
   emptyRow,
   seriesSumText,
+  toggleRow,
   type FormDiscipline,
   type SeriesRow,
   type ValueMode,
@@ -57,7 +58,6 @@ export function SeriesRows({
                 inputMode="decimal"
                 autoComplete="off"
                 className="w-28 tabular-nums"
-                aria-label={`Serie ${i + 1}, Summe`}
                 value={row.open ? (computed ?? "") : row.sum}
                 readOnly={row.open}
                 disabled={disabled}
@@ -77,13 +77,7 @@ export function SeriesRows({
                 aria-expanded={row.open}
                 aria-controls={`series-${i}-shots`}
                 disabled={disabled}
-                onClick={() =>
-                  set(i, {
-                    ...row,
-                    open: !row.open,
-                    shots: row.shots.length ? row.shots : emptyRow(discipline).shots,
-                  })
-                }
+                onClick={() => set(i, toggleRow(row, mode, discipline))}
               >
                 {row.open ? (
                   <ChevronDown aria-hidden className="size-4" />

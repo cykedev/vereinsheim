@@ -153,6 +153,50 @@ describe("saveEnteredCard", () => {
     })
   })
 
+  it("was das Formular nicht ganz zeigen kann, überschreibt es nicht; der Beginn bleibt, wenn Tag und Uhrzeit bleiben", async () => {
+    const placed = await writeEnteredCard(db, {
+      ownerId,
+      origin: "manual",
+      disciplineId,
+      startedAtMs: Date.UTC(2026, 9, 18, 17, 0, 42, 123),
+      kind: "training",
+      details: {
+        shots: [{ series: 1, ring: 10, decimalTenths: null, xUm: 500, yUm: -300 }],
+        series: [{ series: 1, shots: 1, rings: 10 }],
+      },
+      reason: "Test",
+    })
+    if (placed.kind !== "saved") throw new Error(placed.kind)
+    expect(
+      await saveEnteredCard({ cardId: placed.cardId, form: form({ series: sums("98") }) })
+    ).toEqual({
+      error: TEXTS.notEditable,
+    })
+    expect(
+      (await db.shot.findMany({ where: { cardId: placed.cardId } })).map((s) => s.xUm)
+    ).toEqual([500])
+
+    const plain = await writeEnteredCard(db, {
+      ownerId,
+      origin: "manual",
+      disciplineId,
+      startedAtMs: Date.UTC(2026, 9, 18, 17, 0, 42, 123),
+      kind: "training",
+      details: { series: [{ series: 1, decimalTenths: 980 }] },
+      reason: "Test",
+    })
+    if (plain.kind !== "saved") throw new Error(plain.kind)
+    const edit = await cardForEdit(db, { cardId: plain.cardId, ownerId, timeZone: TZ })
+    expect(edit).toMatchObject({ day: "2026-10-18", time: "19:00" })
+    await saveEnteredCard({
+      cardId: plain.cardId,
+      form: form({ day: "2026-10-18", time: "19:00", series: sums("98,0"), place: "Halle" }),
+    })
+    const kept = await db.card.findUniqueOrThrow({ where: { id: plain.cardId } })
+    expect(kept.startedAt.getTime()).toBe(Date.UTC(2026, 9, 18, 17, 0, 42, 123))
+    expect(kept.place).toBe("Halle")
+  })
+
   it("eine Scheibe vom Ausdruck lässt sich hier nicht ändern", async () => {
     const pdf = await writeEnteredCard(db, {
       ownerId,

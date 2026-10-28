@@ -66,6 +66,30 @@ describe("evidenceResponse", () => {
     expect(new Uint8Array(await response.arrayBuffer())).toEqual(PNG)
   })
 
+  it("ein PDF ohne Sandbox, damit der Browser es anzeigt", async () => {
+    const pdf = new TextEncoder().encode("%PDF-1.4\n%%EOF\n")
+    const sha = createHash("sha256").update(`${randomUUID()}-pdf`).digest("hex")
+    await writeEvidenceFile(sha, "application/pdf", pdf)
+    const other = await db.card.create({
+      data: {
+        disciplineId: site.disciplineId,
+        ownerId: site.ownerId,
+        startedAt: new Date(),
+        kind: "training",
+        state: "final",
+        complete: false,
+        origin: "manual",
+      },
+    })
+    const { id } = await db.cardEvidence.create({
+      data: { cardId: other.id, sha256: sha, contentType: "application/pdf", size: pdf.length },
+    })
+    const response = await evidenceResponse(db, id, site.ownerId)
+    expect(response.headers.get("content-type")).toBe("application/pdf")
+    expect(response.headers.get("content-security-policy")).toBeNull()
+    expect(response.headers.get("x-content-type-options")).toBe("nosniff")
+  })
+
   it("ohne Sitzung 401, fremd, unbekannt oder im Papierkorb 404", async () => {
     expect((await evidenceResponse(db, evidenceId, null)).status).toBe(401)
     expect((await evidenceResponse(db, evidenceId, "someone-else")).status).toBe(404)

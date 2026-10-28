@@ -5,7 +5,13 @@
 import { zonedWallTimeMs } from "@vereinsheim/lib/format"
 import { MAX_DECIMAL_TENTHS } from "@vereinsheim/shot-core/targets"
 
-import { PLACE_MAX, type DetailsInput, type DetailsProblem, type EnteredShot } from "./details"
+import {
+  checkDetails,
+  PLACE_MAX,
+  type DetailsInput,
+  type DetailsProblem,
+  type EnteredShot,
+} from "./details"
 
 export type ValueMode = "decimal" | "rings"
 export type ResultMode = "series" | "total"
@@ -57,6 +63,7 @@ export const TEXTS = {
   decimal: "Gib den Wert mit höchstens einer Stelle nach dem Komma ein, etwa 10,4.",
   rings: "Gib ganze Ringe ein, etwa 97. Für Zehntel oben „Zehnteln“ wählen.",
   shotMax: "Ein Schuss hat höchstens 10,9.",
+  shotMaxRings: "Ein Schuss hat höchstens 10 Ringe.",
   sumMax: (shots: number) => `So viel geht mit ${shots} Schuss nicht.`,
   gap: (series: number) => `Trag Serie ${series} ein oder lass die Serien danach leer.`,
   mixed: "Trag die Schüsse in jeder Serie einzeln ein, oder in keiner.",
@@ -90,7 +97,10 @@ type Parsed = { ok: true; value: Value | null } | { ok: false; error: string }
 export function parseValue(text: string, mode: ValueMode, shots: number): Parsed {
   const raw = text.trim()
   if (!raw) return { ok: true, value: null }
-  const tooMuch = { ok: false as const, error: shots === 1 ? TEXTS.shotMax : TEXTS.sumMax(shots) }
+  const tooMuch = {
+    ok: false as const,
+    error: shots > 1 ? TEXTS.sumMax(shots) : mode === "rings" ? TEXTS.shotMaxRings : TEXTS.shotMax,
+  }
   if (mode === "rings") {
     if (!/^\d{1,5}$/.test(raw)) return { ok: false, error: TEXTS.rings }
     const rings = Number(raw)
@@ -162,6 +172,19 @@ function filled(row: SeriesRow): boolean {
   return row.open ? row.shots.some((shot) => shot.trim()) : row.sum.trim() !== ""
 }
 
+/**
+ * „Schüsse einzeln“ auf- oder zuklappen: aufgeklappt zählen die Schüsse, zugeklappt die Summe. Beim Zuklappen wird die
+ * Summe aus den Schüssen zur Summe der Zeile, damit nichts Getipptes verschwindet.
+ */
+export function toggleRow(row: SeriesRow, mode: ValueMode, discipline: FormDiscipline): SeriesRow {
+  return {
+    ...row,
+    open: !row.open,
+    sum: row.open ? (seriesSumText(row, mode) ?? row.sum) : row.sum,
+    shots: row.shots.length ? row.shots : emptyRow(discipline).shots,
+  }
+}
+
 /** so viele Serien zeigt das Formular am Anfang: die Schusszahl in Serien, ohne feste Schusszahl eine */
 export function defaultSeriesCount(discipline: FormDiscipline): number {
   const { plannedShots, seriesShots } = discipline
@@ -174,6 +197,32 @@ export const emptyRow = (discipline: FormDiscipline): SeriesRow => ({
   open: false,
   shots: Array.from({ length: discipline.seriesShots ?? 0 }, () => ""),
 })
+
+/**
+ * Eingaben auf eine andere Disziplin übertragen: nichts Getipptes geht verloren, die Zahl der Serien und der Felder je
+ * Serie folgt der neuen Disziplin, wo sie leer sind
+ */
+export function fitToDiscipline(
+  form: EnteredFormState,
+  discipline: FormDiscipline
+): EnteredFormState {
+  const lastFilled = (values: readonly boolean[]) => values.lastIndexOf(true) + 1
+  const rows = Math.max(defaultSeriesCount(discipline), lastFilled(form.series.map(filled)))
+  const shotsOf = (row: SeriesRow) => {
+    const length = Math.max(
+      discipline.seriesShots ?? 0,
+      lastFilled(row.shots.map((s) => s.trim() !== ""))
+    )
+    return Array.from({ length }, (_, i) => row.shots[i] ?? "")
+  }
+  return {
+    ...form,
+    series: Array.from({ length: rows }, (_, i) => {
+      const row = form.series[i] ?? emptyRow(discipline)
+      return { ...row, shots: shotsOf(row) }
+    }),
+  }
+}
 
 /** ein leeres Formular: heute, Werte wie die Wertung der Disziplin, Serien, wenn die Disziplin welche hat */
 export function emptyForm(discipline: FormDiscipline, today: string): EnteredFormState {
@@ -193,7 +242,7 @@ export function emptyForm(discipline: FormDiscipline, today: string): EnteredFor
 function parseMm(text: string): { ok: true; um: number | null } | { ok: false; error: string } {
   const raw = text.trim()
   if (!raw) return { ok: true, um: null }
-  const match = /^(\d{1,3})(?:[.,](\d{1,2}))?$/.exec(raw)
+  const match = /^(\d{1,3})(?:[.,](\d{1,3}))?$/.exec(raw)
   if (!match) return { ok: false, error: TEXTS.centerFormat }
   const um = Number(match[1]) * 1000 + Number((match[2] ?? "").padEnd(3, "0"))
   return um > CENTER_MAX_UM ? { ok: false, error: TEXTS.centerMax } : { ok: true, um }
@@ -317,7 +366,7 @@ export interface StoredDetails {
     decimalTenths: number | null
   }[]
   total: { shots: number; rings: number | null; decimalTenths: number | null } | null
-  center: { xUm: number; yUm: number } | null
+  center: { xUm: number; yUm: number; shots: number } | null
 }
 
 /**
@@ -326,6 +375,41 @@ export interface StoredDetails {
  * Serien): Ändern ginge dann mit Verlust.
  */
 export function detailsToForm(
+  stored: StoredDetails,
+  discipline: FormDiscipline,
+  when: { day: string; time: string; place: string }
+): EnteredFormState | null {
+  const state = formOf(stored, discipline, when)
+  return state && sameDetails(state, stored, discipline) ? state : null
+}
+
+/** speichert das Formular genau die gespeicherten Angaben (Werte, Schusszahlen, Mitte)? */
+function sameDetails(
+  state: EnteredFormState,
+  stored: StoredDetails,
+  discipline: FormDiscipline
+): boolean {
+  const out = formToDetails(state, discipline)
+  if (!out.ok) return false
+  const checked = checkDetails(out.details, discipline)
+  if (!checked.ok) return false
+  const { shots, sums } = checked.details
+  const key = (value: unknown) => JSON.stringify(value)
+  return (
+    key(shots.map((s) => [s.series, s.ring, s.decimalTenths])) ===
+      key(stored.shots.map((s) => [s.series, s.ring, s.decimalTenths])) &&
+    key((sums?.series ?? []).map((s) => [s.series, s.shots, s.rings, s.decimalTenths])) ===
+      key(stored.series.map((s) => [s.series, s.shots, s.rings, s.decimalTenths])) &&
+    key(sums?.total ? [sums.total.shots, sums.total.rings, sums.total.decimalTenths] : null) ===
+      key(
+        stored.total ? [stored.total.shots, stored.total.rings, stored.total.decimalTenths] : null
+      ) &&
+    key(sums?.center ? [sums.center.xUm, sums.center.yUm, sums.center.shots] : null) ===
+      key(stored.center ? [stored.center.xUm, stored.center.yUm, stored.center.shots] : null)
+  )
+}
+
+function formOf(
   stored: StoredDetails,
   discipline: FormDiscipline,
   when: { day: string; time: string; place: string }
@@ -350,9 +434,9 @@ export function detailsToForm(
   const base = emptyForm(discipline, when.day)
   const center: CenterFields = stored.center
     ? {
-        x: stored.center.xUm ? mmText(Math.abs(stored.center.xUm)) : "",
+        x: mmText(Math.abs(stored.center.xUm)),
         xDir: stored.center.xUm < 0 ? "left" : "right",
-        y: stored.center.yUm ? mmText(Math.abs(stored.center.yUm)) : "",
+        y: mmText(Math.abs(stored.center.yUm)),
         yDir: stored.center.yUm < 0 ? "down" : "up",
       }
     : base.center
@@ -394,13 +478,11 @@ export function detailsToForm(
   return state
 }
 
-/** µm als mm-Text mit Komma, höchstens zwei Stellen */
+/** µm als mm-Text mit Komma, auf den µm genau (höchstens drei Stellen) */
 function mmText(um: number): string {
-  const hundredths = Math.round(um / 10)
-  const whole = Math.floor(hundredths / 100)
-  const rest = hundredths % 100
-  if (!rest) return String(whole)
-  return `${whole},${String(rest).padStart(2, "0").replace(/0$/, "")}`
+  const whole = Math.floor(um / 1000)
+  const rest = um % 1000
+  return rest ? `${whole},${String(rest).padStart(3, "0").replace(/0+$/, "")}` : String(whole)
 }
 
 /** Beginn der Scheibe aus Tag und Uhrzeit in der Zone; ohne Uhrzeit 12 Uhr und `timeUnknown` */
@@ -410,7 +492,9 @@ export function startedAtOf(
   timeZone: string,
   today: string
 ): { ok: true; startedAtMs: number; timeUnknown: boolean } | { ok: false; errors: FormErrors } {
-  if (!DAY.test(day) || Number.isNaN(Date.parse(`${day}T00:00:00Z`)))
+  // ein Tag, den es gibt: Date.parse nähme auch den 31. Februar (und rechnete ihn in den März)
+  const noon = new Date(`${day}T12:00:00Z`)
+  if (!DAY.test(day) || Number.isNaN(noon.getTime()) || noon.toISOString().slice(0, 10) !== day)
     return { ok: false, errors: { day: TEXTS.dayMissing } }
   if (day > today) return { ok: false, errors: { day: TEXTS.dayFuture } }
   const clock = time.trim()

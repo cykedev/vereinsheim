@@ -23,6 +23,7 @@ import type { CardKind } from "@/generated/prisma/enums"
 import { enteredDiscard } from "@/lib/admin/consequences"
 import { saveEnteredCard } from "@/lib/entered/actions"
 import {
+  fitToDiscipline,
   seriesTotalText,
   type CenterFields,
   type EnteredFormState,
@@ -83,6 +84,12 @@ export function EnteredCardForm({
 }) {
   const router = useRouter()
   const [state, setForm] = useState(initial)
+  // eine andere Disziplin aus dem Blatt: die Eingaben bleiben, Serien und Felder folgen ihr
+  const [shownDiscipline, setShownDiscipline] = useState(discipline.id)
+  if (shownDiscipline !== discipline.id) {
+    setShownDiscipline(discipline.id)
+    setForm((current) => fitToDiscipline(current, discipline))
+  }
   // eine Disziplin ohne Serien (auch nach einer anderen Wahl) hat nur das Gesamtergebnis
   const form: EnteredFormState =
     discipline.seriesShots === null && state.result === "series"
