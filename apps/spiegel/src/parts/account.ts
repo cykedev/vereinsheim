@@ -1,8 +1,12 @@
 // Nahtstelle für das Konto über beide Teile ([[adr-033]] „Export und Löschen umfassen beide Teile“): der Export als
-// eine Datei mit dem Ergebnisteil und dem Tagebuch als eigenem Teil.
+// eine Datei mit dem Ergebnisteil und dem Tagebuch als eigenem Teil, und das Löschen des Kontos.
+
+import bcrypt from "bcryptjs"
 
 import { diaryExport } from "@/diary/export"
+import type { Prisma } from "@/generated/prisma/client"
 import type { Db } from "@/lib/db"
+import { purgeCards } from "@/lib/db/purge"
 import { resultsExport, toJson } from "@/lib/export/results"
 
 /** der Export als Strom: `{"format":"spiegel-export","version":1,…,"results":…,"diary":…}` */
@@ -34,4 +38,55 @@ export function accountExport(
       await iterator.return(undefined)
     },
   })
+}
+
+export type AccountDeleteResult = "deleted" | "wrongPassword" | "lastAdmin" | "gone"
+
+/**
+ * Das eigene Konto löschen, mit dem Passwort bestätigt. Ein Admin-Konto nur, wenn ein anderes aktives bleibt. Eine
+ * Transaktion: Kontozeile sperren (ein Admin sperrt alle aktiven Admin-Konten, sonst sähen zwei gleichzeitig je das
+ * andere), Zustimmungen löschen (danach nimmt das Einlesen nichts mehr an), alle eigenen Scheiben über `purgeCards`
+ * mit allem, was daran hängt, dann die Kontozeile. Die Kaskade nimmt Tagebuch, Zeiträume, Wertungen, Aufträge und
+ * Sperren mit; Meldungen „nicht meine“ bleiben ohne Konto. Die Dateien räumt danach `sweepUploadsSoon` auf.
+ */
+export async function deleteAccount(
+  db: Db,
+  userId: string,
+  password: string
+): Promise<AccountDeleteResult> {
+  const user = await db.user.findUnique({
+    where: { id: userId },
+    select: { passwordHash: true },
+  })
+  if (!user) return "gone"
+  if (!(await bcrypt.compare(password, user.passwordHash))) return "wrongPassword"
+  return db.$transaction(
+    (tx) => deleteAccountIn(tx, userId),
+    // ein großes Konto hat Tausende Scheiben, jede mit Rohdaten
+    { timeout: 300_000, maxWait: 10_000 }
+  )
+}
+
+/** der Teil von `deleteAccount` in der Transaktion, nach der Prüfung des Passworts */
+export async function deleteAccountIn(
+  tx: Prisma.TransactionClient,
+  userId: string
+): Promise<AccountDeleteResult> {
+  const [row] = await tx.$queryRaw<{ role: string }[]>`
+    SELECT role::text AS role FROM "User" WHERE id = ${userId} FOR UPDATE`
+  if (!row) return "gone"
+  if (row.role === "ADMIN") {
+    const admins = await tx.$queryRaw<{ id: string }[]>`
+      SELECT id FROM "User" WHERE role = 'ADMIN' AND "isActive" ORDER BY id FOR UPDATE`
+    if (!admins.some((admin) => admin.id !== userId)) return "lastAdmin"
+  }
+  await tx.sportpassConsent.deleteMany({ where: { userId } })
+  const cards = await tx.card.findMany({ where: { ownerId: userId }, select: { id: true } })
+  await purgeCards(
+    tx,
+    cards.map((card) => card.id),
+    { lock: true }
+  )
+  await tx.user.delete({ where: { id: userId } })
+  return "deleted"
 }

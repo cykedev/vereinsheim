@@ -822,3 +822,41 @@ export function evidenceRemove({
     destructive: true,
   }
 }
+
+/** das eigene Konto löschen, mit beiden Teilen (Scheiben und Tagebuch, [[adr-033]]); bestätigt mit dem Passwort */
+export function accountDelete({ email }: { email: string }): Decision {
+  return {
+    title: "Konto löschen?",
+    about: `Du löschst dein Konto ${email}.`,
+    check: "Lade vorher deine Daten herunter, wenn du sie behalten willst.",
+    happens: [
+      "Spiegel löscht sofort alle deine Scheiben, mit Schüssen, Ausdrucken und Belegen.",
+      "Spiegel löscht dein Tagebuch mit allen Einträgen.",
+      "Deine Sportpassnummer ist danach mit keinem Konto mehr verbunden. Spiegel holt keine Scheiben mehr von der Anlage.",
+      "Du wirst abgemeldet. Mit dieser E-Mail kannst du dich nicht mehr anmelden.",
+    ],
+    notHappening: [
+      "An der Meyton-Anlage ändert sich nichts.",
+      "Die Sicherungen auf dem Server behalten die Daten noch bis zu 14 Tage. Danach sind sie auch dort weg.",
+    ],
+    undo: "Das lässt sich nicht rückgängig machen. Ein neues Konto legt der Admin an.",
+    confirmLabel: "Konto endgültig löschen",
+    destructive: true,
+  }
+}
+
+/** Texte rund um „Konto löschen“ im Kasten „Deine Daten“ (Profil) */
+export const ACCOUNT_TEXTS = {
+  title: "Deine Daten",
+  download: "Herunterladen",
+  downloadText:
+    "Alle Scheiben und das Tagebuch in einer Datei (JSON). Ausdrucke und Belege als PDF oder Foto sind nicht darin.",
+  delete: "Konto löschen",
+  deleteText: "Löscht dein Konto mit allen Scheiben und dem Tagebuch.",
+  password: "Dein Passwort",
+  wrongPassword: "Das Passwort stimmt nicht.",
+  lastAdminTitle: "Konto löschen geht gerade nicht",
+  lastAdmin:
+    "Dieses Konto ist das einzige mit der Rolle Admin. Erst ein zweites Admin-Konto anlegen. Dann geht es.",
+  failed: "Das geht gerade nicht. Lade die Seite neu.",
+} as const

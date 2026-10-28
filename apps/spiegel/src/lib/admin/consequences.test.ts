@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest"
 
 import {
+  ACCOUNT_TEXTS,
   accountChange,
+  accountDelete,
   accountChangesOf,
   bridgeRemove,
   bridgeRevoke,
@@ -745,6 +747,7 @@ describe("Schreibregeln", () => {
       "Beleg entfernen",
       evidenceRemove({ when: "Di 13.10.2026 · 19:12", name: "Liste.pdf", kind: "pdf", others: 2 }),
     ],
+    ["Konto löschen", accountDelete({ email: "schuetze@example.com" })],
   ]
 
   it.each(decisions)("%s: keine Semikolons, keine alten Wörter", (_name, decision) => {
@@ -955,5 +958,29 @@ describe("Eingabe von Hand", () => {
       "Die anderen 2 Belege bleiben.",
       "Die Werte der Scheibe bleiben, wie sie sind.",
     ])
+  })
+})
+
+describe("Konto löschen", () => {
+  it("im Wortlaut des Textbuchs, endgültig und mit dem Rat, vorher herunterzuladen", () => {
+    const decision = accountDelete({ email: "schuetze@example.com" })
+    wellFormed(decision)
+    expect(decision).toMatchObject({
+      title: "Konto löschen?",
+      about: "Du löschst dein Konto schuetze@example.com.",
+      check: "Lade vorher deine Daten herunter, wenn du sie behalten willst.",
+      undo: "Das lässt sich nicht rückgängig machen. Ein neues Konto legt der Admin an.",
+      confirmLabel: "Konto endgültig löschen",
+      destructive: true,
+    })
+    expect(decision.happens).toContain("Spiegel löscht dein Tagebuch mit allen Einträgen.")
+    expect(decision.notHappening).toContain("An der Meyton-Anlage ändert sich nichts.")
+  })
+
+  it("die übrigen Texte ohne alte Wörter", () => {
+    for (const text of Object.values(ACCOUNT_TEXTS)) expect(text).not.toMatch(OLD_WORDS)
+    expect(ACCOUNT_TEXTS.lastAdmin).toBe(
+      "Dieses Konto ist das einzige mit der Rolle Admin. Erst ein zweites Admin-Konto anlegen. Dann geht es."
+    )
   })
 })

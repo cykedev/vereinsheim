@@ -16,13 +16,14 @@ import { ADMIN_SECTIONS } from "@/lib/admin/sections"
 import type { ConsentRow } from "@/lib/consent/queries"
 import { CURRENT_CONSENT_VERSION } from "@/lib/consent/texts"
 
+import { OwnData } from "./OwnData"
 import { SportpassConsents } from "./SportpassConsents"
 
 const PILL =
   "inline-flex h-10 items-center rounded-full border border-line-strong px-3.5 text-[13px] font-semibold text-primary hover:bg-accent-wash focus-visible:outline-2 focus-visible:outline-ring"
 
 /**
- * Profil: Konto, für Admins am Telefon oben die Bereiche des Admins, Zustimmung per Sportpass, Einstellung des Geräts (Darstellung), Abmelden. Die Wertung hat jede Scheibe und jede Familie selbst (Seite der
+ * Profil: Konto, für Admins am Telefon oben die Bereiche des Admins, Zustimmung per Sportpass, Einstellung des Geräts (Darstellung), Deine Daten (Export, Konto löschen), Abmelden. Die Wertung hat jede Scheibe und jede Familie selbst (Seite der
  * Scheibe, Liste, Fortschritt). Dazu der Papierkorb.
  */
 export function ProfileScreen({
@@ -32,6 +33,7 @@ export function ProfileScreen({
   sportpass,
   trashCount,
   diary,
+  lastAdmin = false,
 }: {
   name: string | null
   email: string
@@ -42,6 +44,8 @@ export function ProfileScreen({
   trashCount: number
   /** Platz für das Tagebuch ([[adr-033]]): der Profil-Teil kennt nur den Platz */
   diary?: ReactNode
+  /** das einzige aktive Admin-Konto: Konto löschen geht nicht */
+  lastAdmin?: boolean
 }) {
   const router = useRouter()
   const [leaving, setLeaving] = useState(false)
@@ -81,6 +85,8 @@ export function ProfileScreen({
           <h2 className="text-[15px] font-semibold">Dieses Gerät</h2>
           <ThemeSwitch className="max-w-xs" />
         </div>
+
+        <OwnData email={email} lastAdmin={lastAdmin} />
 
         <div className="flex flex-wrap items-center gap-3">
           <RouteLink route={{ page: "trash" }} className={PILL}>
