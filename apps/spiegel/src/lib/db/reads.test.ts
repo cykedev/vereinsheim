@@ -829,10 +829,12 @@ describe("wartet eine Scheibe vom Ausdruck noch auf die Anlage?", () => {
 })
 
 describe("timeKnown", () => {
-  it("nur eine Scheibe vom Ausdruck ohne Ausdruck hat keine bekannte Uhrzeit", () => {
-    expect(timeKnown({ origin: "pdf", printouts: 0 })).toBe(false)
-    expect(timeKnown({ origin: "pdf", printouts: 1 })).toBe(true)
-    expect(timeKnown({ origin: "raw", printouts: 0 })).toBe(true)
-    expect(timeKnown({ origin: "manual", printouts: 0 })).toBe(true)
+  it("eine Scheibe vom Ausdruck ohne Ausdruck und eine ohne Uhrzeit eingetragene haben keine bekannte Uhrzeit", () => {
+    const known = { timeUnknown: false }
+    expect(timeKnown({ origin: "pdf", printouts: 0, ...known })).toBe(false)
+    expect(timeKnown({ origin: "pdf", printouts: 1, ...known })).toBe(true)
+    expect(timeKnown({ origin: "raw", printouts: 0, ...known })).toBe(true)
+    expect(timeKnown({ origin: "manual", printouts: 0, ...known })).toBe(true)
+    expect(timeKnown({ origin: "manual", printouts: 0, timeUnknown: true })).toBe(false)
   })
 })

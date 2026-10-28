@@ -45,6 +45,8 @@ export interface EnteredCardInput {
   importKey?: string | null
   /** Standnummer, nur vom Ausdruck; fehlt: nicht anfassen */
   stand?: string | null
+  /** die Uhrzeit ist nicht bekannt (`Card.timeUnknown`); fehlt: beim Anlegen bekannt, beim Ändern nicht anfassen */
+  timeUnknown?: boolean
   details: DetailsInput
   reason: string
 }
@@ -188,6 +190,7 @@ export async function writeEnteredCardIn(tx: Tx, input: EnteredCardInput): Promi
         ownerPending: false,
         state: "final",
         place: place.place ?? null,
+        timeUnknown: input.timeUnknown ?? false,
         importKey,
         ...stand,
         ...(input.kindChoice ? { kindChoice: input.kindChoice } : {}),
@@ -217,6 +220,7 @@ export async function writeEnteredCardIn(tx: Tx, input: EnteredCardInput): Promi
       ...features(next),
       ...stand,
       ...(place.place === undefined ? {} : { place: place.place }),
+      ...(input.timeUnknown === undefined ? {} : { timeUnknown: input.timeUnknown }),
     },
   })
   const current = card.currentRevision

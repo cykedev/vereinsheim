@@ -58,13 +58,20 @@ export interface OverviewCard extends ProjectedCard {
 /**
  * ob die Uhrzeit einer Scheibe bekannt ist: nicht bei einer Scheibe vom Ausdruck ohne Ausdruck, also aus einer getippten
  * ID, solange die Anlage sie nicht geliefert hat (ihr Beginn ist 12 Uhr des Tags als Platzhalter). Mit Ausdruck gilt die
- * Druckzeit, mit Rohdaten der Beginn der Anlage.
+ * Druckzeit, mit Rohdaten der Beginn der Anlage. Von Hand ohne Uhrzeit eingetragen trägt die Scheibe `timeUnknown`.
  */
-export const timeKnown = (row: { origin: CardOrigin; printouts: number }): boolean =>
-  !(row.origin === "pdf" && row.printouts === 0)
+export const timeKnown = (row: {
+  origin: CardOrigin
+  printouts: number
+  timeUnknown: boolean
+}): boolean => !row.timeUnknown && !(row.origin === "pdf" && row.printouts === 0)
 
-const timeUnknownOf = (row: { origin: CardOrigin; _count: { printouts: number } }) =>
-  timeKnown({ origin: row.origin, printouts: row._count.printouts })
+const timeUnknownOf = (row: {
+  origin: CardOrigin
+  timeUnknown: boolean
+  _count: { printouts: number }
+}) =>
+  timeKnown({ origin: row.origin, printouts: row._count.printouts, timeUnknown: row.timeUnknown })
     ? {}
     : { timeUnknown: true as const }
 
@@ -96,6 +103,7 @@ const listOf = (ranking: { id: number; name: string } | null): CardList | null =
 const OVERVIEW_SELECT = {
   id: true,
   origin: true,
+  timeUnknown: true,
   _count: { select: { printouts: true } },
   startedAt: true,
   kind: true,
@@ -302,6 +310,7 @@ export async function latestCardStart(db: Db, ownerId: string): Promise<number |
 const PAGE_CARD_SELECT = {
   id: true,
   origin: true,
+  timeUnknown: true,
   _count: { select: { printouts: true } },
   place: true,
   startedAt: true,

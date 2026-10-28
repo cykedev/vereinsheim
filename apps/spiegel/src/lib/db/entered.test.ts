@@ -224,6 +224,24 @@ describe("Ändern", () => {
     expect(again).toMatchObject({ kind: "saved", change: "unchanged", number: 2 })
   })
 
+  it("ohne Uhrzeit: gesetzt beim Anlegen, beim Ändern ohne Angabe unberührt, mit Angabe neu", async () => {
+    const first = await saved({ total: { rings: 380 } }, { timeUnknown: true })
+    const timeUnknownOf = async () =>
+      (await db.card.findUniqueOrThrow({ where: { id: first.cardId } })).timeUnknown
+    expect(await timeUnknownOf()).toBe(true)
+    await writeEnteredCard(db, input({ total: { rings: 381 } }, { cardId: first.cardId }))
+    expect(await timeUnknownOf()).toBe(true)
+    await writeEnteredCard(
+      db,
+      input({ total: { rings: 381 } }, { cardId: first.cardId, timeUnknown: false })
+    )
+    expect(await timeUnknownOf()).toBe(false)
+    const known = await saved({ total: { rings: 380 } })
+    expect((await db.card.findUniqueOrThrow({ where: { id: known.cardId } })).timeUnknown).toBe(
+      false
+    )
+  })
+
   it("vom Ausdruck nicht von Hand, die Brücke nie, eine fremde gar nicht", async () => {
     expect(
       await writeEnteredCard(db, input({ total: { rings: 370 } }, { cardId: ids.empty }))
