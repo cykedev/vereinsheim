@@ -1,4 +1,4 @@
-// Dateien der Belege eingetragener Scheiben ([[adr-033]]): `UPLOAD_DIR/evidence/<sha256>.<Endung>`, im selben Volume wie
+// Dateien der Belege einer Scheibe ([[adr-033]]): `UPLOAD_DIR/evidence/<sha256>.<Endung>`, im selben Volume wie
 // die Ausdrucke und mit ihm im Backup. Gleiche Bytes ergeben dieselbe Datei. Gelöscht wird eine Datei nur über
 // `removeOrphanEvidenceFiles`, wie bei den Ausdrucken erst, wenn keine Zeile `CardEvidence` mehr auf sie zeigt.
 
@@ -17,6 +17,9 @@ export const EVIDENCE_TYPES = {
   "image/webp": "webp",
 } as const
 export type EvidenceType = keyof typeof EVIDENCE_TYPES
+
+/** die Form einer Kennung aus `cuid()`; alles andere fragt die Datenbank gar nicht erst */
+export const EVIDENCE_ID = /^c[a-z0-9]{20,}$/
 
 const EVIDENCE_FILE = /^([0-9a-f]{64})\.(?:pdf|jpg|png|webp)$/
 

@@ -5,10 +5,7 @@
 import type { Db } from "@/lib/db"
 
 import { VISIBLE_CARD } from "../db/visible"
-import { EVIDENCE_TYPES, readEvidenceBytes, type EvidenceType } from "./files"
-
-/** die Form einer Kennung aus `cuid()`; alles andere fragt die Datenbank gar nicht erst */
-const EVIDENCE_ID = /^c[a-z0-9]{20,}$/
+import { EVIDENCE_ID, EVIDENCE_TYPES, readEvidenceBytes, type EvidenceType } from "./files"
 
 const NO_STORE = { "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff" }
 /** ein Bild in einer Sandbox ohne Skripte; ein PDF ohne, sonst zeigt Chrome es nicht an (wie die Ausdrucke) */

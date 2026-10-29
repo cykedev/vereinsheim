@@ -12,7 +12,7 @@ vi.mock("@/lib/share-actions", () => ({
 }))
 vi.mock("@/lib/fetch-card/actions", () => ({ stopCardFetch: async () => ({ success: true }) }))
 vi.mock("@/lib/card-place-actions", () => ({ setCardPlace: async () => ({ success: true }) }))
-vi.mock("@/lib/entered/evidence-actions", () => ({
+vi.mock("@/lib/evidence/actions", () => ({
   attachEvidence: async () => ({ success: true }),
   removeEvidence: async () => ({ success: true }),
 }))

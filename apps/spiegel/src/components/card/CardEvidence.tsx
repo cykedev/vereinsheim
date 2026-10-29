@@ -9,7 +9,7 @@ import { formatDecimal, formatWeekdayDate } from "@vereinsheim/lib/format"
 import { DecisionDialog } from "@vereinsheim/ui/design2/decision-dialog"
 
 import { evidenceRemove } from "@/lib/admin/consequences"
-import { attachEvidence, removeEvidence } from "@/lib/entered/evidence-actions"
+import { attachEvidence, removeEvidence } from "@/lib/evidence/actions"
 import type { CardEvidenceInfo } from "@/lib/entered/queries"
 import { prepareEvidence } from "@/lib/evidence/shrink"
 import { EVIDENCE_TEXTS } from "@/lib/evidence/texts"
@@ -155,7 +155,7 @@ export function CardEvidence({
           decision={evidenceRemove({ when, name: null, kind: evidence.kind, others: 0 })}
           open={asking}
           onOpenChange={setAsking}
-          onConfirm={() => run("remove", () => removeEvidence(cardId))}
+          onConfirm={() => run("remove", () => removeEvidence(evidence.id))}
         />
       )}
     </ActionRow>

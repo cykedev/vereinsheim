@@ -1,5 +1,6 @@
 // Aufräumen der hochgeladenen Dateien im Hintergrund: Ausdrucke und Belege ohne Zeile (`removeOrphanFiles`). Läuft beim
-// Start, stündlich nach dem Papierkorb, nach „Nicht meine“ und nach dem endgültigen Löschen.
+// Start, stündlich nach dem Papierkorb, nach „Nicht meine“, nach dem endgültigen Löschen und nach dem Entfernen eines
+// Belegs.
 
 import type { Db } from "@/lib/db"
 
