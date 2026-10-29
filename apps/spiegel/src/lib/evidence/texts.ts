@@ -58,7 +58,7 @@ const dateien = (n: number) => (n === 1 ? "1 Datei" : `${n} Dateien`)
 export function evidenceCountText(n: number): string {
   if (n === 0) return EVIDENCE_EMPTY
   if (n >= EVIDENCE_LIMIT)
-    return `${dateien(n)}, mehr gehen nicht an eine Scheibe. Entferne einen, um einen neuen anzuhängen.`
+    return `${dateien(n)}, mehr gehen nicht an eine Scheibe. Entferne eine, um eine neue anzuhängen.`
   return dateien(n)
 }
 

@@ -315,7 +315,7 @@ describe("Belege", () => {
     }))
     const html = render(null, null, ten)
     expect(rowText(html, 'data-card-evidence="10"')).toContain(
-      "10 Dateien, mehr gehen nicht an eine Scheibe. Entferne einen, um einen neuen anzuhängen."
+      "10 Dateien, mehr gehen nicht an eine Scheibe. Entferne eine, um eine neue anzuhängen."
     )
     expect(html).not.toContain("card-evidence-file")
     expect(html).not.toContain("Foto oder PDF anhängen")

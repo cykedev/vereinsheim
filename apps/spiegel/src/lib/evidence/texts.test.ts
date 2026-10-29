@@ -28,7 +28,7 @@ describe("Texte der Belege im Wortlaut des Textbuchs", () => {
     expect(evidenceCountText(1)).toBe("1 Datei")
     expect(evidenceCountText(3)).toBe("3 Dateien")
     expect(evidenceCountText(10)).toBe(
-      "10 Dateien, mehr gehen nicht an eine Scheibe. Entferne einen, um einen neuen anzuhängen."
+      "10 Dateien, mehr gehen nicht an eine Scheibe. Entferne eine, um eine neue anzuhängen."
     )
   })
 
