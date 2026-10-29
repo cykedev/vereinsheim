@@ -138,9 +138,10 @@ export function startModel(input: StartInput): StartModel {
     // Werte je Scheibe in der Wertung, ohne Einschießen (wie im Fortschritt mit seiner Grundeinstellung)
     const meanMetric = inScoring(metricByKey("result.decimalMean")!, scoring)
     const values = projectedValues(ofFamily, meanMetric, scoring)
+    // die Grundlage nur über die Scheiben, die zählen: Einschießen steht in den Kacheln, zählt aber nicht
     const basis = periodBasis(
       tonight
-        .filter((c) => c.family === family)
+        .filter((c) => c.family === family && !c.card.warmup)
         .map((c) => fromProjection({ ...c.card, provenance: c.provenance, waiting: c.waiting })),
       new Set(values.filter((v) => ids.has(v.id)).map((v) => v.id)),
       meanMetric

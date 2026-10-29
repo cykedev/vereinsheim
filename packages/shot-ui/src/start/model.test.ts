@@ -277,3 +277,37 @@ describe("Start: Grundlage des Abends", () => {
     })
   })
 })
+
+describe("Start: Einschießen", () => {
+  // Einschießen Ø 8,0 (beim Lesen markiert), danach die Wertung Ø 9,5
+  const warmup: ListInputCard = {
+    card: {
+      ...projected(periodCard("e", 0, [80, 80], { startedAtMs: at(29, 18), probe: true })),
+      warmup: true,
+    },
+    family: "lg-freihand",
+  }
+  const scored = lg(periodCard("w", 0, [95, 95], { startedAtMs: at(29, 19) }))
+
+  it("der Abend zeigt beide Kacheln, rechnet Ø und Grundlage ohne das Einschießen; die Schusszahl zählt beide", () => {
+    const block = model([...before(5), warmup, scored]).blocks[0]
+    expect(block.rows.map((r) => r.id)).toEqual(["e", "w"])
+    expect(block.mean).not.toBeNull()
+    expect(block.mean).toBeCloseTo(9.5, 9)
+    expect(block.basis).toBeNull()
+    expect(block.shots).toBe(4)
+    // die Folge der Scheiben (Streifen) und die neuen Rekorde ohne Einschießen
+    expect(block.strip.map((p) => p.id)).not.toContain("e")
+    expect(block.records.map((r) => r.record.cardId)).not.toContain("e")
+  })
+
+  it("ein Abend nur mit Probe zählt wie ein Training", () => {
+    const block = model([
+      ...before(5),
+      lg(periodCard("t", 0, [96, 98], { startedAtMs: at(29, 18), probe: true })),
+    ]).blocks[0]
+    expect(block.mean).not.toBeNull()
+    expect(block.mean).toBeCloseTo(9.7, 9)
+    expect(block.strip.map((p) => p.id)).toContain("t")
+  })
+})
