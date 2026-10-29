@@ -14,10 +14,15 @@ vi.mock("next/link", () => ({
 
 const { AppShell, statisticsMemory } = await import("./AppShell")
 
-const render = (isAdmin: boolean, pathname = "/sessions", search = "") => {
+const render = (
+  isAdmin: boolean,
+  pathname = "/sessions",
+  search = "",
+  moved: { spiegelUrl: string | null } | null = null
+) => {
   nav.pathname = pathname
   nav.search = search
-  return renderToStaticMarkup(h(AppShell, { isAdmin, children: h("p", null, "Inhalt") }))
+  return renderToStaticMarkup(h(AppShell, { isAdmin, moved, children: h("p", null, "Inhalt") }))
 }
 
 /** die Einträge einer Leiste in ihrer Reihenfolge */
@@ -73,5 +78,36 @@ describe("AppShell", () => {
     const html = render(false, "/statistics", "range=6m&family=lg&pick=abc")
     expect(html).toMatch(/<a href="\/statistics\?range=6m&amp;family=lg" data-area="statistics"/)
     expect(statisticsMemory(new URLSearchParams("pick=abc"))).toBe("/statistics")
+  })
+
+  describe("Konto nach Spiegel umgezogen", () => {
+    const SPIEGEL = { spiegelUrl: "http://localhost:3002" }
+
+    it("die Aktion führt als „Zu Spiegel“ zu Spiegel, in jeder Leiste", () => {
+      const html = render(false, "/sessions", "", SPIEGEL)
+      const links = [...html.matchAll(/<a [^>]*data-area="new"[^>]*>/g)].map((m) => m[0])
+      expect(links).toHaveLength(3)
+      for (const link of links) expect(link).toContain('href="http://localhost:3002"')
+      expect(html).not.toContain('href="/sessions/new"')
+      // in der unteren und der schmalen Leiste als Name des Symbols, in der Seitenleiste als Text
+      expect(html.match(/data-area="new" aria-label="Zu Spiegel"/g)).toHaveLength(2)
+      expect(html).toContain("Zu Spiegel</a>")
+    })
+
+    it("nicht umgezogen bleibt die Aktion Neue Einheit", () => {
+      expect(render(false)).toMatch(/<a href="\/sessions\/new" data-area="new"/)
+    })
+
+    it("ohne Adresse keine Aktion, die Leiste hat vier Einträge", () => {
+      const html = render(false, "/sessions", "", { spiegelUrl: null })
+      expect(html).not.toContain('data-area="new"')
+      expect(keysIn(html, "data-app-bar")).toEqual(["start", "sessions", "statistics", "profile"])
+    })
+
+    it("/sessions/new gehört zum Tagebuch, die Aktion ist nie die gezeigte Seite", () => {
+      const html = render(false, "/sessions/new", "", SPIEGEL)
+      expect(html).toMatch(/data-area="sessions" aria-current="page"/)
+      expect(html).not.toMatch(/data-area="new" aria-current="page"/)
+    })
   })
 })

@@ -79,3 +79,12 @@ export function barAreaOf(area: Area | null): Area | null {
   if (area === null) return null
   return BAR.includes(area) ? area : "profile"
 }
+
+/**
+ * der Bereich einer Adresse für ein Konto: Ist es nach Spiegel umgezogen, zeigt `/sessions/new` die Seite „Das geht
+ * jetzt in Spiegel.“ und gehört zum Tagebuch; die Aktion „Zu Spiegel“ ist nie die gezeigte Seite
+ */
+export function currentArea(pathname: string, moved: boolean): Area | null {
+  const area = areaOf(pathname)
+  return moved && area === "new" ? "sessions" : area
+}
