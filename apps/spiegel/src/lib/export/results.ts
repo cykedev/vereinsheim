@@ -70,7 +70,10 @@ const CARD_SELECT = {
   printouts: {
     select: { footerId: true, printedAt: true, fileName: true, size: true, storedAt: true },
   },
-  evidence: { select: { contentType: true, size: true, storedAt: true } },
+  evidence: {
+    select: { fileName: true, contentType: true, size: true, storedAt: true },
+    orderBy: { storedAt: "asc" },
+  },
 } as const
 
 /**
