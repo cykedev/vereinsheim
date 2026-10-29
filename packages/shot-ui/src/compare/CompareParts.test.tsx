@@ -102,6 +102,17 @@ describe("CompareControls", () => {
     expect(html).toContain("var(--compare-a)")
   })
 
+  it("die Art des Vergleichs ist eine Zeile, die wischt, wie Reiter", () => {
+    // das Markup maskiert „&“ und „>“ im Attribut
+    const bar = (render().match(/aria-label="Was vergleichen"[^>]*class="([^"]+)"/)?.[1] ?? "")
+      .replaceAll("&amp;", "&")
+      .replaceAll("&gt;", ">")
+      .split(" ")
+    for (const cls of ["overflow-x-auto", "min-w-0", "max-w-full", "[&>button]:whitespace-nowrap"])
+      expect(bar).toContain(cls)
+    expect(bar).not.toContain("flex-wrap")
+  })
+
   it("zwei Scheiben: mit Familie, ohne Art", () => {
     const html = render({ type: "cards", family: null, a: "c2", b: "c1" })
     expect(html).toContain("LP Freihand")

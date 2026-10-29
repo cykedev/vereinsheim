@@ -60,7 +60,8 @@ function SideChip({
 }
 
 /**
- * Kopf der Seite Vergleichen: oben die Art des Vergleichs, darunter in einer Zeile die Familie, die Chips der Seiten A
+ * Kopf der Seite Vergleichen: oben die Art des Vergleichs als Reiter in der Seite (eine Zeile, die wischt; sie schaltet
+ * die Ansicht um), darunter in einer Zeile die Familie, die Chips der Seiten A
  * und B, bei Wettkampf und Training ein Chip für den Zeitraum, bei zwei Zeiträumen die Art für beide Seiten und am Ende
  * `actions` (in der App die Wertung der Familie, wie im Fortschritt). Ein Wechsel der Art beginnt mit ihren Vorgaben,
  * bei zwei Scheiben mit den beiden neuesten der Familie (`newest`); ein Wechsel der Familie bei zwei Scheiben ebenso.
@@ -106,7 +107,9 @@ export function CompareControls({
         options={COMPARE_TYPES}
         value={query.type}
         onChange={changeType}
-        wrap
+        scroll
+        // so breit wie die Reiter; im Raster sonst über die ganze Spalte
+        className="justify-self-start"
       />
       <div className="flex flex-wrap items-center gap-2">
         <CardFilters
