@@ -319,9 +319,14 @@ Ringwerk ohne Uploads-Tar (`restore.sh` lehnt einen ab: Ringwerk hat kein Upload
 `restore.sh`:
 
 1. Stellt sicher, dass `db` healthy läuft
-2. Kopiert Dump in den db-Container
-3. `pg_restore --clean --if-exists --no-owner --role=<app>`
+2. Spielt den Dump in eine frische Datenbank `<app>_restore` (Owner `<app>`, `PUBLIC` ohne Rechte):
+   `pg_restore --no-owner --role=<app> --exit-on-error` (`restore_db` in `scripts/lib/restore-db.sh`)
+3. Erst wenn das gelingt: `DROP DATABASE <app> WITH (FORCE)` und `<app>_restore` wird zu `<app>`. Danach steht genau
+   der Stand des Dumps da, auch wenn das Schema der laufenden Datenbank neuer ist (etwa nach einem Rollback). Ein
+   kaputter Dump bricht ab und lässt die laufende Datenbank unberührt ([[restore-clean-mixed-schema]]).
 4. Optional: extrahiert Uploads-Tar ins zugehörige Volume
+
+`vereinsheim dev-restore` und `local-up --restore` spielen über dieselbe Funktion ein.
 
 ### Restore-Test (regelmäßig empfohlen)
 

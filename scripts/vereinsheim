@@ -31,6 +31,9 @@ BACKUP_DIR_DEFAULT="/var/backups/vereinsheim"
 # Apps des Stacks (APPS, UPLOAD_APPS, in_list): eine Liste für das CLI und alle Skripte
 # shellcheck source=lib/apps.sh
 source "$SCRIPT_DIR/lib/apps.sh"
+# Einspielen eines Dumps über eine frische Datenbank (restore_db), für dev-restore und local-up --restore
+# shellcheck source=lib/restore-db.sh
+source "$SCRIPT_DIR/lib/restore-db.sh"
 
 # ---------- Colors ----------
 if [[ -t 1 ]]; then
@@ -728,16 +731,10 @@ _local_up_with_restore() {
 	for i in "${!restore_apps[@]}"; do
 		app="${restore_apps[$i]}"
 		info "Restore $app …"
-		dump_abs="$(cd "$(dirname "${restore_dumps[$i]}")" && pwd)/$(basename "${restore_dumps[$i]}")"
-		local_compose cp "$dump_abs" db:/tmp/restore.dump
-		local_compose exec -T db pg_restore \
-			-U postgres \
-			-d "$app" \
-			--clean --if-exists \
-			--no-owner \
-			--role="$app" \
-			/tmp/restore.dump
-		local_compose exec -T db rm -f /tmp/restore.dump
+		restore_db local_compose "$app" "${restore_dumps[$i]}" || {
+			err "Restore von $app gescheitert."
+			exit 1
+		}
 		ok "$app restored."
 	done
 
@@ -892,21 +889,16 @@ cmd_dev_restore() {
 	fi
 	ok "Dev-DB healthy."
 
-	# Pro App restoren — gleiche Flags wie der Prod-Restore (restore.sh):
-	# --clean --if-exists --no-owner --role=<app>.
+	# Pro App wie der Prod-Restore (restore.sh): erst in eine frische Datenbank, dann tauschen. Die Dev-Datenbank
+	# hat danach genau den Stand des Dumps, auch wenn der Branch ein neueres Schema hat.
 	for i in "${!restore_apps[@]}"; do
 		app="${restore_apps[i]}"
 		dump="${restore_dumps[i]}"
 		info "Restore $app aus $(basename "$dump") …"
-		dev_compose cp "$dump" db:/tmp/restore.dump
-		dev_compose exec -T db pg_restore \
-			-U postgres \
-			-d "$app" \
-			--clean --if-exists \
-			--no-owner \
-			--role="$app" \
-			/tmp/restore.dump
-		dev_compose exec -T db rm -f /tmp/restore.dump
+		restore_db dev_compose "$app" "$dump" || {
+			err "Restore von $app gescheitert, die Dev-Datenbank $app ist unverändert."
+			return 1
+		}
 		ok "$app restored."
 	done
 

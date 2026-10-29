@@ -6,7 +6,9 @@
 #   - initialer Cutover von alter Umgebung auf VPS
 #   - Recovery aus einem Backup
 #
-# Postgres wird automatisch hochgefahren, falls nicht aktiv.
+# Postgres wird automatisch hochgefahren, falls nicht aktiv. Der Dump landet erst in einer frischen Datenbank und
+# ersetzt die laufende nur, wenn er sich ganz einspielen lässt (scripts/lib/restore-db.sh): danach steht genau sein
+# Stand da, auch wenn das Schema der laufenden Datenbank neuer ist (etwa nach einem Rollback).
 #
 # ENV_FILE (Vorgabe .env), COMPOSE_PROJECT_NAME und COMPOSE_FILE aus der Umgebung:
 # so prüft tools/stack-e2e/ops.sh den Restore gegen den Teststack.
@@ -17,6 +19,8 @@ ENV_FILE="${ENV_FILE:-.env}"
 compose() { docker compose --env-file "$ENV_FILE" "$@"; }
 # shellcheck source=lib/apps.sh
 . scripts/lib/apps.sh
+# shellcheck source=lib/restore-db.sh
+. scripts/lib/restore-db.sh
 
 usage() {
 	cat <<-EOF
@@ -74,19 +78,8 @@ for _ in $(seq 1 30); do
 	sleep 1
 done
 
-echo "==> Copying dump into db container"
-compose cp "$DUMP_ABS" db:/tmp/restore.dump
-
-echo "==> Restoring into database '$APP' (--clean --if-exists, role=$APP)"
-compose exec -T db pg_restore \
-	-U postgres \
-	-d "$APP" \
-	--clean --if-exists \
-	--no-owner \
-	--role="$APP" \
-	/tmp/restore.dump
-
-compose exec -T db rm -f /tmp/restore.dump
+echo "==> Restoring into a fresh database, then replacing '$APP' (role=$APP)"
+restore_db compose "$APP" "$DUMP_ABS"
 
 if [[ -n "$UPLOADS" ]]; then
 	UPLOADS_ABS="$(realpath "$UPLOADS")"

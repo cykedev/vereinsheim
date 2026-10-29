@@ -22,6 +22,7 @@ trap 'rm -rf "$WORK"' EXIT
 
 compose() { docker compose --env-file "$ENV_FILE" "$@"; }
 sql() { compose exec -T db psql -U postgres -d postgres -Atc "$1"; }
+spiegel_sql() { compose exec -T db psql -U postgres -d spiegel -v ON_ERROR_STOP=1 -Atc "$1"; }
 cli() { ./scripts/vereinsheim "$@"; }
 
 PROBLEMS=()
@@ -197,10 +198,44 @@ rm -f "$bad"
 [[ "$(sql "SELECT count(*) FROM pg_database WHERE datname LIKE 'restore_probe_%'")" == "0" ]] ||
 	problem "Restore-Probe hat nach dem Fehler Wegwerf-Datenbanken stehen lassen"
 
-echo "==> Restore von Spiegel"
+# Stand des Backups: Spiegel hat sich seither nicht geändert
+dump_migrations="$(spiegel_sql "SELECT count(*) FROM _prisma_migrations")"
+
+echo "==> Restore von Spiegel mit abgeschnittenem Dump"
+head -c "$(($(wc -c <"$good") / 2))" "$good" >"$bad"
+if run ./scripts/restore.sh spiegel "$bad"; then
+	problem "restore.sh spielte einen abgeschnittenen Dump ein"
+else
+	expect_text "die Datenbank spiegel ist unverändert" "Restore abgeschnitten"
+	[[ "$(spiegel_sql "SELECT count(*) FROM _prisma_migrations")" == "$dump_migrations" ]] ||
+		problem "Restore mit abgeschnittenem Dump hat die Datenbank spiegel verändert"
+	echo "  bricht ab, Datenbank unverändert"
+fi
+rm -f "$bad"
+[[ "$(sql "SELECT count(*) FROM pg_database WHERE datname = 'spiegel_restore'")" == "0" ]] ||
+	problem "restore.sh hat spiegel_restore stehen lassen"
+
+echo "==> Restore von Spiegel auf ein neueres Schema"
+# wie nach einem Rollback: eine Tabelle, die der Dump nicht kennt, mit Fremdschlüssel auf eine Tabelle des Dumps,
+# eine Spalte mehr und eine Migration mehr
+spiegel_sql "SET ROLE spiegel;
+	CREATE TABLE e2e_newer (id int PRIMARY KEY, \"userId\" text REFERENCES \"User\"(id));
+	ALTER TABLE \"User\" ADD COLUMN e2e_extra text;
+	INSERT INTO _prisma_migrations (id, checksum, migration_name) VALUES ('e2e-newer', '0', '99999999999999_e2e_newer')" \
+	>/dev/null || problem "neueres Schema in spiegel ließ sich nicht anlegen"
 docker run --rm -v "${COMPOSE_PROJECT_NAME}_uploads_spiegel:/d" alpine rm -f /d/printouts/e2e-marker.txt
 spiegel_tar="$(ls -t "$BACKUP_DIR"/uploads-spiegel-*.tar.gz | head -n 1)"
 if run ./scripts/restore.sh spiegel "$good" "$spiegel_tar"; then
+	newer="$(spiegel_sql "SELECT (to_regclass('public.e2e_newer') IS NULL)::text || ' ' ||
+		(SELECT count(*) FROM information_schema.columns WHERE table_name = 'User' AND column_name = 'e2e_extra') || ' ' ||
+		(SELECT count(*) FROM _prisma_migrations)")"
+	[[ "$newer" == "true 0 $dump_migrations" ]] ||
+		problem "nach dem Restore nicht der Stand des Dumps (Tabelle weg, Spalten, Migrationen: $newer, erwartet true 0 $dump_migrations)"
+	owner="$(sql "SELECT pg_get_userbyid(datdba) || ' ' || datacl::text FROM pg_database WHERE datname = 'spiegel'")"
+	[[ "$owner" == "spiegel {spiegel=CTc/spiegel}" ]] || problem "Datenbank spiegel nach dem Restore: Owner und Rechte $owner"
+	[[ "$(sql "SELECT count(*) FROM pg_database WHERE datname = 'spiegel_restore'")" == "0" ]] ||
+		problem "restore.sh hat spiegel_restore stehen lassen"
+	echo "  Stand des Dumps, Owner spiegel, PUBLIC ohne Rechte"
 	compose up -d migrate-spiegel app-spiegel >/dev/null 2>&1
 	[[ "$(wait_spiegel)" == "200" ]] || problem "Spiegel nach dem Restore nicht erreichbar"
 	if docker run --rm -v "${COMPOSE_PROJECT_NAME}_uploads_spiegel:/d:ro" alpine test -f /d/printouts/e2e-marker.txt; then

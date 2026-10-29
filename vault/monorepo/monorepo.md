@@ -114,7 +114,9 @@ Die `vereinsheim`-CLI (ADR-011) ist das Ops-Frontend: `vereinsheim dev-setup`, `
 
 Gemeinsamer Postgres (drei DBs `ringwerk`, `treffsicher`, `spiegel`, über `dev/db-init` isoliert,
 ADR-002) im Root-`docker-compose.dev.yml`; `vereinsheim dev-restore [app]` spielt `backups/*.dump` per
-`pg_restore` in die Dev-DBs (`vereinsheim local-up --restore` dasselbe für den lokalen Prod-Stack). Ein
+`pg_restore` in die Dev-DBs (`vereinsheim local-up --restore` dasselbe für den lokalen Prod-Stack). Beide spielen in
+eine frische Datenbank und tauschen sie danach gegen die alte: Hat der Branch ein neueres Schema, steht danach genau
+der Stand des Dumps da, und `prisma migrate deploy` holt die neuen Migrationen nach. Ein
 Kommando → alle Apps lokal mit Prod-Daten.
 
 ## 7. Deploy bleibt vertragsgleich → Live ohne Probleme
