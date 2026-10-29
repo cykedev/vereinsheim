@@ -111,7 +111,8 @@ export function influenceSentence(
 ): string {
   const words = ASPECT_WORDS[aspect]
   const { high, low } = row
-  if (row.entered && !high.n && !low.n) return ANALYSIS_TEXTS.allSame
+  // mit nur einem Eintrag gibt es keine Mitte, über und unter der etwas läge: dann fehlen Einträge
+  if (row.entered > 1 && !high.n && !low.n) return ANALYSIS_TEXTS.allSame
   if (high.n < MIN_SIDE && low.n < MIN_SIDE)
     return `Über der Mitte ${high.n === 1 ? "liegt" : "liegen"} ${entries(high.n)}, darunter ${low.n}. Für ein Urteil braucht es auf jeder Seite ${MIN_SIDE}.`
   if (low.n < MIN_SIDE)

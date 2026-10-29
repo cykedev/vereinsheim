@@ -3,7 +3,8 @@
 // mit der Frage des ersten, Fragen (`/diary/thread`), die Zeilen an Scheibe und Start, Scheibe lösen, Löschen mit Rückgängig, Papierkorb,
 // Export und der Dialog „Konto löschen“ mit falschem Passwort; Ziele (anlegen mit Messung und Vorschau, Stand, Notiz,
 // „Hat es geklappt?“, ändern, Zeile auf Start, Löschen mit Rückgängig) und Abläufe im eigenen Reiter (fünf Reiter in
-// einer Zeile, anlegen als Text, Leseseite, bearbeiten, Wächter, Fragen ohne Abläufe, Löschen mit Rückgängig). Am Ende sind alle Einträge, Ziele und Abläufe des
+// einer Zeile, anlegen als Text, Leseseite, bearbeiten, Wächter, Fragen ohne Abläufe, Löschen mit Rückgängig) und die
+// Auswertung (Reiter, Leersätze, Befinden an einem Eintrag, Zeile „Energie“ und ihre Seite, Blatt der Hilfe). Am Ende sind alle Einträge, Ziele und Abläufe des
 // Demo-Kontos endgültig gelöscht und das Tagebuch ist aus, auch nach einem Abbruch.
 
 import type { Page } from "@vereinsheim/pruefen/browser"
@@ -430,6 +431,7 @@ async function run(page: Page, { base, check, record }: Context) {
 
   await goals(page, { base, check, record })
   await routines(page, { base, check, record })
+  await analysis(page, { base, check, record })
 
   // Konto löschen: nur der Dialog, mit falschem Passwort
   await page.goto(`${base}/profile`)
@@ -720,4 +722,96 @@ async function routines(page: Page, { base, check, record }: Context) {
     "Abläufe: Rückgängig bringt den Ablauf zurück in den Reiter",
     await page.waitFor(`!!$('[data-routine="${id}"]')`, 10_000)
   )
+}
+
+/**
+ * Auswertung: Reiter, ohne Befinden die Leersätze, dann Befinden an einem Eintrag mit Scheibe, die Zeile „Energie“, die
+ * Seite des Merkmals mit Rückweg, das Blatt der Hilfe, kein seitliches Scrollen. Schreibt nur das Befinden eines
+ * Eintrags, den `cleanUp` ohnehin löscht.
+ */
+async function analysis(page: Page, { base, check, record }: Context) {
+  await page.goto(`${base}/diary`)
+  await page.click(`link("Auswertung", $("[data-diary-switch]"))`)
+  check(
+    "Auswertung: fünfter Reiter, erreichbar und gewählt",
+    (await page.waitFor(`location.pathname === "/diary/analysis"`, 10_000)) &&
+      (await page.waitFor(
+        `$('[data-diary-switch] a[aria-current="page"]')?.textContent === "Auswertung"`
+      ))
+  )
+  const empty = await page.ev<boolean[]>(
+    `["Noch kein Eintrag mit Befinden.", "Noch keine bewertete Serie.", "Noch kein Eintrag mit erwartetem Ergebnis.",
+      "Noch kein Eintrag mit Prognose und Feedback."].map((t) => txt(document.body).includes(t))`
+  )
+  check(
+    "Auswertung: ohne Befinden stehen Einflüsse und Selbstbild mit allen Leersätzen da",
+    (await page.ev<boolean>(`!!$("[data-influences]") && !!$("[data-self-image]")`)) &&
+      empty.every(Boolean),
+    empty.join(", ")
+  )
+
+  // Befinden an einem Eintrag mit Scheibe
+  await page.goto(`${base}/diary`)
+  const entry = await page.ev<string | null>(
+    `$$("[data-diary-entry]").find((a) => !txt(a).includes("Trockentraining"))?.getAttribute("data-diary-entry") ?? null`
+  )
+  if (!entry) throw new Error("Auswertung: kein Eintrag mit Scheibe übrig")
+  await page.goto(`${base}/diary/${entry}`)
+  const wellbeing = `$('[data-section="wellbeing"]')`
+  await page.click(`button("Befinden eintragen")`)
+  for (let i = 0; i < 4; i++) {
+    const row = `$$("[data-stage-row]", ${wellbeing})[${i}]`
+    await page.click(`$('[data-stage="4"]', ${row})`)
+    await page.waitFor(`$('[data-stage="4"]', ${row}).ariaPressed === "true"`)
+    await page.wait(300)
+  }
+
+  await page.goto(`${base}/diary/analysis`)
+  const energy = await page.ev<{ pill: string; text: string; basis: string }>(
+    `(() => { const line = $('[data-influence="energy"]')
+      return { pill: txt(line && $("[data-pill]", line)), text: txt(line), basis: txt($("[data-influence-basis]")) } })()`
+  )
+  check(
+    "Auswertung: nach dem Befinden steht „Energie“ mit „Noch kein Urteil“ und dem Grund",
+    energy.pill === "Noch kein Urteil" &&
+      (energy.text.includes("Für ein Urteil braucht es") ||
+        energy.basis.includes("zählt nicht mit")),
+    energy
+  )
+  const family = await page.ev<string | null>(
+    `new URL($('[data-influence="energy"]').href).searchParams.get("family")`
+  )
+  await page.click(`$('[data-influence="energy"]')`)
+  check(
+    "Auswertung: ein Tipp auf „Energie“ öffnet seine Seite mit Rückweg",
+    (await page.waitFor(`location.pathname === "/diary/analysis/energy"`, 10_000)) &&
+      (await page.ev<boolean>(`!!link("Auswertung", $("[data-factor-page]"))`)),
+    await page.ev<string>(`location.href`)
+  )
+  await page.click(`link("Auswertung", $("[data-factor-page]"))`)
+  check(
+    "Auswertung: der Rückweg führt zurück, mit derselben Disziplin",
+    (await page.waitFor(`location.pathname === "/diary/analysis"`, 10_000)) &&
+      (await page.ev<string | null>(`new URL(location.href).searchParams.get("family")`)) ===
+        family,
+    family
+  )
+
+  await page.click(`button("Erklärung: Einflüsse")`, { settle: 300 })
+  const help = await page.ev<string>(`txt(sheet())`)
+  await page.click(`button("Schließen", sheet())`, { settle: 300 })
+  check(
+    "Auswertung: „?“ an Einflüsse öffnet das Blatt mit der Form und schließt",
+    help.includes("Deine Form ist der Schnitt") && (await page.ev<boolean>(`!sheet()`)),
+    help.slice(0, 80)
+  )
+
+  record(
+    await noSideScroll(page, {
+      base,
+      paths: ["/diary/analysis", "/diary/analysis/energy"],
+      widths: [390, 360],
+    })
+  )
+  await page.viewport(390, 844)
 }

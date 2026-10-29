@@ -159,6 +159,15 @@ describe("Texte der Auswertung", () => {
         low: { n: 0, mean: null },
       })
     ).toBe(ANALYSIS_TEXTS.allSame)
+    expect(
+      influenceSentence("energy", {
+        entered: 1,
+        high: { n: 0, mean: null },
+        low: { n: 0, mean: null },
+      })
+    ).toBe(
+      "Über der Mitte liegen 0 Einträge, darunter 0. Für ein Urteil braucht es auf jeder Seite 5."
+    )
   })
 
   it("nennt die Grundlage nur, wenn etwas nicht zählt", () => {
