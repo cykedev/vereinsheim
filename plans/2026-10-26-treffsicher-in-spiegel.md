@@ -414,15 +414,17 @@ Holen“ ins Textbuch Spiegel (steht in `reports/2026-10-27-fetch-no-request-cap
 
 1. **1d Handeingabe** ist in `main` (`dbc9e45c`, Migration `20261028120000_hand_entry`, keine neue Brücke) und wartet
    aufs Release. Danach am iPhone prüfen: ein HEIC-Foto als Beleg und einen PDF-Beleg in Safari öffnen.
-2. **Stufe 2 Tagebuch:** 2a (Einträge, Fragen, Papierkorb, Export) und 2b (Ziele, Abläufe) sind im Basisbranch,
-   Migrationen `20261028180000_diary_entries` und `20261029090000_diary_goals_routines`. Der Reiter „Faden“ heißt in
-   der Oberfläche „Fragen“ (im Code `thread`), Abläufe haben einen eigenen Reiter. 2b hebt die Projektion auf Version 7
-   (Serien): vor dem Release `projection-check dump|compare` auf der Prod-Kopie. In der Dev-DB stehen Vorschau-Daten
-   des Users (`importKey` `preview:`): 94 Einträge, 10 Ziele, 2 Abläufe; vor der Übernahme in Stufe 3 löschen mit
-   `delete from "DiaryEntry" where "importKey" like 'preview:%'` und denselben Befehlen für `"DiaryGoal"` und
-   `"DiaryRoutine"`. 2c (Auswertung: Einflüsse, Selbstbild, Vorschau mit den Daten des Users) ist entschieden, der
-   Teilplan folgt; parallel der Teil „Reiter“ nach `main`, danach den Basisbranch auf `main` rebasen. 1f (mehrere
-   Belege je Scheibe) geht als eigener Teil nach `main`.
+2. **Stufe 2 Tagebuch** ist fertig im Basisbranch: 2a (Einträge, Fragen, Papierkorb, Export), 2b (Ziele, Abläufe) und
+   2c (Reiter „Auswertung“: Einflüsse gegen die Form, Selbstbild), Migrationen `20261028180000_diary_entries` und
+   `20261029090000_diary_goals_routines`, 2c ohne Migration. 2b hebt die Projektion auf Version 7 (Serien): vor dem
+   Release `projection-check dump|compare` auf der Prod-Kopie. Teil R (Reiter in einer Zeile, `TabBar`, mit R2 für die
+   Art des Vergleichs) ist in `main` (`290da9e5`) und wartet aufs Release von Spiegel und Ringwerk (Ringwerk an einem
+   Tag ohne Wettkampf). In der Dev-DB stehen Vorschau-Daten des Users aus dem Werkzeug von 2c
+   (`pnpm --filter spiegel diary-preview`): 94 Einträge (`preview:`), 24 Scheiben „aus Treffsicher“
+   (`treffsicher:preview-`), dazu 10 erfundene Ziele und 2 Abläufe aus 2b (`preview:`). Vor der Übernahme in Stufe 3
+   löschen mit `pnpm --filter spiegel diary-preview --delete --to <E-Mail in Spiegel>`. Bericht der Datenprüfung:
+   `reports/tis-2c/data-check.md` (lokal). Als Nächstes 1f (mehrere Belege je Scheibe, Konzept zuerst, nach `main`) und
+   Stufe 3.
 3. **Stufe 3 Übernahme**, dann **Stufe 4 Ruhestand**.
 
 Für später festgehalten: Randfall „Wertung endgültig gelöscht, Probe des Abends bleibt“: Holen öffnet die Probe, die
@@ -449,7 +451,7 @@ Befund aus dem Review von 2a).
 | 1f   |                                              |                                            |                          | entschieden (28.10.), Konzept offen                     |
 | 2a   | `plans/2026-10-28-tis-2a-diary-entries.md`   | `feat/tis-2a-diary-entries` (vom Basis)    | `tis-2a-diary-entries`   | im Basisbranch (`3fd30d85`), Plan entfernt              |
 | 2b   | `plans/2026-10-28-tis-2b-goals-routines.md`  | `feat/tis-2b-goals-routines` (vom Basis)   | `tis-2b-goals-routines`  | im Basisbranch (`b51a030b`), Plan entfernt              |
-| 2c   | `plans/2026-10-29-tis-2c-diary-analysis.md`  | `feat/tis-2c-diary-analysis` (vom Basis)   | `tis-2c-diary-analysis`  | in Arbeit (29.10.)                                      |
+| 2c   | `plans/2026-10-29-tis-2c-diary-analysis.md`  | `feat/tis-2c-diary-analysis` (vom Basis)   | `tis-2c-diary-analysis`  | im Basisbranch (`69bedd2a`), Plan entfernt              |
 | R    | `plans/2026-10-29-tis-r-tab-bar.md`          | `feat/tis-r-tab-bar` (von `main`)          | `tis-r-tab-bar`          | in `main` (`290da9e5`, mit R2), noch nicht deployt     |
 | 3    |                                              |                                            |                          | offen                                                   |
 | 4    |                                              |                                            |                          | offen                                                   |
