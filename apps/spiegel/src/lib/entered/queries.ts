@@ -243,15 +243,16 @@ export async function cardEntryInfo(
   if (row.origin === "pdf")
     return { kind: "place", place: row.place, places: await ownPlaces(db, ownerId) }
   const card = await cardForEdit(db, { cardId, ownerId, timeZone })
+  const evidence = row.evidence[0] ?? null
   return {
     kind: "entered",
     from: row.origin,
     editable: card !== null && detailsToForm(card.stored, card.discipline, card) !== null,
-    evidence: row.evidence && {
-      id: row.evidence.id,
-      kind: row.evidence.contentType === "application/pdf" ? "pdf" : "photo",
-      size: row.evidence.size,
-      storedAtMs: row.evidence.storedAt.getTime(),
+    evidence: evidence && {
+      id: evidence.id,
+      kind: evidence.contentType === "application/pdf" ? "pdf" : "photo",
+      size: evidence.size,
+      storedAtMs: evidence.storedAt.getTime(),
     },
   }
 }

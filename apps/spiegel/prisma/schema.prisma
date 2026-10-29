@@ -549,7 +549,7 @@ model Card {
   projection        CardProjection?
   printouts         Printout[]
   requests          CardRequest[]
-  evidence          CardEvidence?
+  evidence          CardEvidence[]
 
   @@unique([sourceId, scheibenId, cycle, block])
   // Liste, Fortschritt, Blättern: Scheiben eines Schützen in einer Familie nach Beginn
@@ -662,18 +662,23 @@ model CardProjection {
   @@index([version])
 }
 
-// Beleg einer eingetragenen Scheibe ([[adr-033]]): ein Foto oder PDF je Scheibe; die Datei liegt unter
-// `UPLOAD_DIR/evidence/<sha256>.<Endung>`, gleiche Bytes ergeben dieselbe Datei
+// Belege einer Scheibe ([[adr-033]], Nachtrag 1f): bis zu `EVIDENCE_LIMIT` (10) Fotos oder PDFs je eigener Scheibe, in der
+// Folge des Anhängens. Die Datei liegt unter `UPLOAD_DIR/evidence/<sha256>.<ext>`; gleiche Bytes ergeben dieselbe Datei,
+// an einer Scheibe hängt jede Datei höchstens einmal
 model CardEvidence {
   id          String   @id @default(cuid())
-  cardId      String   @unique
+  cardId      String
   card        Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
   sha256      String
   // application/pdf, image/jpeg, image/png oder image/webp, geprüft an den ersten Bytes
   contentType String
   size        Int
+  // der Name der Datei, wie der Browser sie geschickt hat (`evidenceFileName`); null bei Belegen von vor den Namen
+  fileName    String?
   storedAt    DateTime @default(now()) @db.Timestamptz(3)
 
+  // eine Datei hängt an einer Scheibe nur einmal; der Index dient auch dem Lesen je Scheibe und der Kaskade
+  @@unique([cardId, sha256])
   // Aufräumen der Dateien: zeigt noch eine Zeile auf diese Datei
   @@index([sha256])
 }

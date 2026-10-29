@@ -63,7 +63,8 @@ export async function attachEvidence(form: FormData): Promise<ActionResult> {
       })
       if (!card) return false
       const data = { sha256, contentType: type, size: bytes.length, storedAt: new Date() }
-      await tx.cardEvidence.upsert({ where: { cardId }, create: { cardId, ...data }, update: data })
+      await tx.cardEvidence.deleteMany({ where: { cardId } })
+      await tx.cardEvidence.create({ data: { cardId, ...data } })
       return true
     })
     return saved ? { success: true } : { error: GONE }

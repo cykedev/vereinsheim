@@ -63,7 +63,7 @@ const form = (cardId: string, bytes: Uint8Array<ArrayBuffer>, name = "beleg.jpg"
   data.set("file", new File([bytes], name))
   return data
 }
-const evidenceOf = (cardId: string) => db.cardEvidence.findUnique({ where: { cardId } })
+const evidenceOf = (cardId: string) => db.cardEvidence.findFirst({ where: { cardId } })
 
 describe("attachEvidence", () => {
   it("ein Foto, nach dem Typ der Bytes; ein zweites ersetzt es", async () => {
