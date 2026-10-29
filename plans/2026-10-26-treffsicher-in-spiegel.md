@@ -430,8 +430,11 @@ Holen“ ins Textbuch Spiegel (steht in `reports/2026-10-27-fetch-no-request-cap
    2c (Reiter „Auswertung“: Einflüsse gegen die Form, Selbstbild), Migrationen `20261028180000_diary_entries` und
    `20261029090000_diary_goals_routines`, 2c ohne Migration. 2b hebt die Projektion auf Version 7 (Serien): vor dem
    Release `projection-check dump|compare` auf der Prod-Kopie. Teil R (Reiter in einer Zeile, `TabBar`, mit R2 für die
-   Art des Vergleichs) ist in `main` (`290da9e5`) und wartet aufs Release von Spiegel und Ringwerk (Ringwerk an einem
-   Tag ohne Wettkampf). In der Dev-DB stehen Vorschau-Daten des Users aus dem Werkzeug von 2c
+   Art des Vergleichs) und 1f (bis zu 10 Belege an jeder eigenen Scheibe, Migration `20261029120000_evidence_list`)
+   sind in `main` (`39dca9f4`) und warten aufs Release von Spiegel und Ringwerk (Ringwerk an einem Tag ohne
+   Wettkampf). **1d und 1f gehen zusammen in ein Release:** Ein Image mit 1d ohne 1f entfernte an einer Scheibe mit
+   mehreren Belegen alle auf einmal. Offen für später: Vorschaubilder der Belege laden je Besuch die ganze Datei
+   (`private, no-store`), ein Zwischenspeicher als eigener kleiner Schritt (User, 29. Oktober 2026). In der Dev-DB stehen Vorschau-Daten des Users aus dem Werkzeug von 2c
    (`pnpm --filter spiegel diary-preview`): 94 Einträge (`preview:`), 24 Scheiben „aus Treffsicher“
    (`treffsicher:preview-`), dazu 10 erfundene Ziele und 2 Abläufe aus 2b (`preview:`). Vor der Übernahme in Stufe 3
    löschen mit `pnpm --filter spiegel diary-preview --delete --to <E-Mail in Spiegel>`. Bericht der Datenprüfung:
@@ -460,7 +463,7 @@ Befund aus dem Review von 2a).
 | 1c   | `plans/2026-10-27-tis-1c-printout-values.md` | `feat/tis-1c-printout-values` (von `main`) | `tis-1c-printout-values` | in `main` (`88ea1140`); Luftgewehr-Fix, Leser v2        |
 | 1d   | `plans/2026-10-28-tis-1d-hand-entry.md`      | `feat/tis-1d-hand-entry` (von `main`)      | `tis-1d-hand-entry`      | in `main` (`dbc9e45c`), noch nicht deployt              |
 | 1e   |                                              |                                            |                          | in 1a-2                                                 |
-| 1f   | `plans/2026-10-29-tis-1f-evidence-list.md`   | `feat/tis-1f-evidence-list` (von `main`)   |                          | Plan vorgelegt (29.10.)                                 |
+| 1f   | `plans/2026-10-29-tis-1f-evidence-list.md`   | `feat/tis-1f-evidence-list` (von `main`)   | `tis-1f-evidence-list`   | in `main` (`39dca9f4`), noch nicht deployt              |
 | 2a   | `plans/2026-10-28-tis-2a-diary-entries.md`   | `feat/tis-2a-diary-entries` (vom Basis)    | `tis-2a-diary-entries`   | im Basisbranch (`3fd30d85`), Plan entfernt              |
 | 2b   | `plans/2026-10-28-tis-2b-goals-routines.md`  | `feat/tis-2b-goals-routines` (vom Basis)   | `tis-2b-goals-routines`  | im Basisbranch (`b51a030b`), Plan entfernt              |
 | 2c   | `plans/2026-10-29-tis-2c-diary-analysis.md`  | `feat/tis-2c-diary-analysis` (vom Basis)   | `tis-2c-diary-analysis`  | im Basisbranch (`69bedd2a`), Plan entfernt              |
