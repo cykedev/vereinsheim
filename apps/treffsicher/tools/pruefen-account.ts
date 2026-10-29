@@ -3,6 +3,7 @@
 //   Befinden, Prognose und Feedback, Trefferlage); die neueste Einheit hat zwei Anhänge (kleine Bilder im Upload-Verzeichnis),
 // - `pruefen-admin@treffsicher.test` (Admin) für die Abläufe unter Admin,
 // - `pruefen-ziel@treffsicher.test` (Mitglied, aktiv), das die Prüfung deaktiviert und wieder aktiviert.
+// Keines ist nach Spiegel umgezogen; den Abschnitt „Nur lesend“ setzt `pruefen-moved.ts` selbst und hebt ihn auf.
 // Nur gegen eine Datenbank auf diesem Rechner. Die Zugangsdaten stehen als PRUEFEN_EMAIL/PRUEFEN_PASSWORD und
 // PRUEFEN_ADMIN_EMAIL/PRUEFEN_ADMIN_PASSWORD in apps/treffsicher/.env; fehlt ein Passwort dort, erzeugt das Skript eins
 // und schreibt es dazu. `pruefen` ruft `prepareTestAccounts` selbst vor jedem Lauf auf.
@@ -101,7 +102,14 @@ async function account(
   const user = await testDb().user.upsert({
     where: { email },
     create: { email, name, role, passwordHash },
-    update: { name, role, passwordHash, isActive: true, sessionVersion: { increment: 1 } },
+    update: {
+      name,
+      role,
+      passwordHash,
+      isActive: true,
+      sessionVersion: { increment: 1 },
+      movedToSpiegelAt: null,
+    },
   })
   return user.id
 }

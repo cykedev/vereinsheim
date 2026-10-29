@@ -34,6 +34,7 @@ import {
   PRUEFEN_EMAIL,
   PRUEFEN_TARGET_EMAIL,
 } from "./pruefen-account"
+import { movedFlow } from "./pruefen-moved"
 import { statisticsFlow, statisticsPictures } from "./pruefen-statistik"
 
 config({ path: join(import.meta.dirname, "..", ".env"), quiet: true })
@@ -369,6 +370,10 @@ async function main() {
     await section("Anhang löschen", () => attachmentFlow(page, newestSessionId))
     // als Letztes: meldet den Admin an
     await section("Konto deaktivieren", () => accountFlow(page))
+    // danach: meldet Mitglied und Admin als umgezogen an und setzt beide am Ende zurück
+    await section("Nur lesend", () =>
+      movedFlow({ page, base: BASE, check, record, login, newestSessionId })
+    )
     // React meldet in der Entwicklung manches über console.error; jede Meldung zählt, damit keine untergeht
     check("Keine Skriptfehler", page.errors.length === 0, page.errors.slice(0, 5).join(" · "))
     check("Keine Browser-Dialoge", page.dialogs.length === 0, page.dialogs.slice(0, 5).join(" · "))
