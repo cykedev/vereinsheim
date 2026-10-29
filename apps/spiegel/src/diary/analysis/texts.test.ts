@@ -222,10 +222,10 @@ describe("Texte der Auswertung", () => {
 
   it("nennt das Mittel von erwartet und geschossen", () => {
     expect(expectedMean(-5, 3)).toBe(
-      "Im Mittel 5,0 Ringe unter deiner Erwartung. 3 Einträge. Für mehr als die Zahl reicht das nicht."
+      "Im Mittel 5,0 Ringe unter deiner Erwartung. Nur 3 Einträge. Für ein Urteil reicht das nicht."
     )
     expect(expectedMean(0.02, 1)).toBe(
-      "Im Mittel genau wie erwartet. 1 Eintrag. Für mehr als die Zahl reicht das nicht."
+      "Im Mittel genau wie erwartet. Nur 1 Eintrag. Für ein Urteil reicht das nicht."
     )
   })
 })

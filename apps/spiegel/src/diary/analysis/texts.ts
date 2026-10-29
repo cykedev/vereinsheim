@@ -194,7 +194,7 @@ export function expectedMean(mean: number, n: number): string {
   const first = rounded
     ? "Im Mittel genau wie erwartet."
     : `Im Mittel ${formatValue(Math.abs(mean), 1)} Ringe ${mean < 0 ? "unter" : "über"} deiner Erwartung.`
-  return `${first} ${entries(n)}. Für mehr als die Zahl reicht das nicht.`
+  return `${first} Nur ${entries(n)}. Für ein Urteil reicht das nicht.`
 }
 
 /** die Grundlage von „Erwartet und geschossen“; null, wenn keiner fehlt */
