@@ -284,7 +284,8 @@ async function tabs(page: Page, competitionPaths: string[]) {
         return { rows: new Set(links.map((l) => Math.round(l.getBoundingClientRect().top))).size,
           current: active?.getAttribute("href") ?? null,
           inView: !!a && a.left >= c.left - 1 && a.right <= c.right + 1,
-          vv: innerWidth === Math.round(visualViewport.width),
+          // Breite ohne Scrollbar auf beiden Seiten: am Desktop zieht visualViewport sie ab, innerWidth nicht
+          vv: document.documentElement.clientWidth === Math.round(visualViewport.width),
           sw: document.documentElement.scrollWidth <= innerWidth,
           hrefs: links.map((l) => l.getAttribute("href")) }
       })()`)
