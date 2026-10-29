@@ -2150,6 +2150,94 @@ async function progress(page: Page) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
+ * Einschießen (Probe vor einer Wertung desselben Abends): Die Liste nennt es beim Wort, seine Zahlen stehen leise, der
+ * Abstand sagt den Grund; ein Training ganz im Probe-Modus trägt nur „Probe“. Der Fortschritt zählt es ohne den
+ * Schalter nicht, der Kopf sagt es mit „?“, der Schalter im Blatt „Filter“ schreibt `warmup=1` und zählt es mit. Eine
+ * alte Adresse mit `sighters` öffnet mit der Vorgabe. Braucht die Demo-Daten (`seed:own --demo`).
+ */
+async function warmup(page: Page) {
+  const missingData =
+    "Demo-Daten ohne Einschießen bzw. ohne Training im Probe-Modus; vorher seed:own --demo"
+  for (const width of [390, 360]) {
+    await page.viewport(width, 844)
+    await page.goto(`${BASE}/cards`)
+    const list = await page.ev<{
+      warm: boolean
+      quiet: boolean
+      reason: string
+      probe: boolean
+    }>(`(() => {
+      const row = $$("[data-card-row]").find((r) => $("[data-warmup-word]", r))
+      const cells = row ? ["[data-rings]", "[data-decimal]", "[data-mean]"].map((c) => $(c, row)) : []
+      const probe = $$("[data-card-row]").some((r) => $('[data-kind="probe"]', r) && !$("[data-warmup-word]", r))
+      return { warm: !!row,
+        quiet: cells.length === 3 && cells.every((c) => c && c.classList.contains("text-muted-foreground")),
+        reason: row ? ($("[data-delta] [title]", row)?.getAttribute("title") ?? "") : "", probe }
+    })()`)
+    check(
+      `${width} px: Scheiben nennen das Einschießen, Zahlen leise, Abstand mit Grund, ein Training im Probe-Modus ohne das Wort`,
+      list.warm && list.quiet && list.reason.includes("Einschießen zählt nicht") && list.probe,
+      list.warm && list.probe ? list : missingData
+    )
+  }
+  record(await noSideScroll(page, { base: BASE, paths: ["/cards"], widths: [390, 360] }))
+
+  await page.viewport(390, 844)
+  await page.goto(`${BASE}/progress?range=all`)
+  const count = `txt($("[data-period-count]"))`
+  const points = `$$("[data-card-point]").length`
+  const before = { head: await page.ev<string>(count), points: await page.ev<number>(points) }
+  const help = await page.ev<boolean>(`!!$('[data-help="einschiessen"]')`)
+  if (help) await page.click(`$('[data-help="einschiessen"]')`, { settle: 400 })
+  const sheet = help ? await page.ev<string>(`txt($("dialog[open] h2"))`) : ""
+  if (help) await page.key("Escape")
+  check(
+    "Fortschritt „Alles“: der Kopf nennt das Einschießen, das „?“ öffnet „Einschießen“",
+    before.head.includes("Einschießen nicht gezählt") && sheet === "Einschießen",
+    { ...before, sheet }
+  )
+  const picker = `$("[data-period-picker]").closest("dialog")`
+  const box = `$$("[data-period-picker] label").find((l) => txt(l).startsWith("Einschießen mitzählen"))`
+  await page.click(`$("[data-period-chip]")`, { settle: 300 })
+  const off = await page.ev<boolean | null>(`${box}?.querySelector("input")?.checked ?? null`)
+  await page.click(box, { settle: 150 })
+  await page.click(`button("Übernehmen", ${picker})`, { settle: 300 })
+  await page.waitFor(`location.search.includes("warmup=1")`, 10_000)
+  await page.waitFor(`!${count}.includes("Einschießen")`, 10_000)
+  const on = {
+    chip: await page.ev<string>(`txt($("[data-period-chip]"))`),
+    head: await page.ev<string>(count),
+    points: await page.ev<number>(points),
+  }
+  check(
+    "Blatt „Filter“: „Einschießen mitzählen“ aus, angehakt schreibt die Adresse warmup=1, der Chip sagt „mit Einschießen“, mehr Punkte",
+    off === false &&
+      on.chip.endsWith("mit Einschießen") &&
+      !on.head.includes("Einschießen") &&
+      on.points > before.points,
+    { off, ...on, before: before.points }
+  )
+  await page.click(`$("[data-period-chip]")`, { settle: 300 })
+  await page.click(box, { settle: 150 })
+  await page.click(`button("Übernehmen", ${picker})`, { settle: 300 })
+  await page.waitFor(`!location.search.includes("warmup=1")`, 10_000)
+  record(
+    await noSideScroll(page, { base: BASE, paths: ["/progress?range=all"], widths: [390, 360] })
+  )
+
+  const errors = page.errors.length
+  await page.goto(`${BASE}/progress?sighters=0`)
+  const old = await page.ev<string>(`txt($("[data-period-chip]"))`)
+  check(
+    "eine alte Adresse mit sighters=0 lädt ohne Fehler, Einschießen zählt nicht",
+    !old.includes("mit Einschießen") && page.errors.length === errors,
+    old
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
  * Das Trefferbild über den Zeitraum (L9) und die Reiter Präzision und Lage: Umschalten schreibt `show=target`, Zurück
  * stellt den Verlauf her; Satz, Legende und Grundlage ohne Fachbegriffe; die Form als Ellipse; ein Punkt der Lage über
  * Zeit wählt die Scheibe der Ablesung; am Telefon kein seitliches Scrollen und über dem Bild höchstens zwei Zeilen
@@ -2875,6 +2963,7 @@ async function main() {
     await section("Blättern", () => paging(page, href))
     await section("Rückwege", () => backPaths(page))
     await section("Fortschritt", () => progress(page))
+    await section("Einschießen", () => warmup(page))
     await section("Trefferbild über den Zeitraum", () => periodPattern(page))
     await section("Vergleichen", () => compare(page, href))
     await section("Reiter", () => tabBars(page))
