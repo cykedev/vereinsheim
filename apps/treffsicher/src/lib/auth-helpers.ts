@@ -21,7 +21,14 @@ export async function getAuthSession(): Promise<Session | null> {
   // Dann würden FK-Fehler in Schreib-Operationen entstehen.
   const user = await db.user.findUnique({
     where: { id: session.user.id },
-    select: { id: true, name: true, role: true, isActive: true, sessionVersion: true },
+    select: {
+      id: true,
+      name: true,
+      role: true,
+      isActive: true,
+      sessionVersion: true,
+      movedToSpiegelAt: true,
+    },
   })
 
   if (!user || !user.isActive) {
@@ -37,5 +44,7 @@ export async function getAuthSession(): Promise<Session | null> {
   // Rolle aus DB priorisieren (JWT kann veraltet sein).
   session.user.name = user.name
   session.user.role = user.role
+  // Konto nach Spiegel umgezogen ([[adr-033]]): liest nur noch, siehe `lib/moved/`
+  session.user.movedToSpiegel = user.movedToSpiegelAt !== null
   return session
 }

@@ -92,7 +92,27 @@ describe("getAuthSession", () => {
     expect(result?.user.role).toBe("ADMIN")
     expect(findUniqueMock).toHaveBeenCalledWith({
       where: { id: "user-1" },
-      select: { id: true, name: true, role: true, isActive: true, sessionVersion: true },
+      select: {
+        id: true,
+        name: true,
+        role: true,
+        isActive: true,
+        sessionVersion: true,
+        movedToSpiegelAt: true,
+      },
     })
+  })
+
+  it("weiß aus der Datenbank, ob das Konto nach Spiegel umgezogen ist", async () => {
+    const row = { id: "user-1", name: "Name", role: "USER", isActive: true, sessionVersion: 4 }
+    getServerSessionMock.mockImplementation(async () => ({
+      user: { id: "user-1", sessionVersion: 4, role: "USER", name: "Name", movedToSpiegel: false },
+    }))
+
+    findUniqueMock.mockResolvedValueOnce({ ...row, movedToSpiegelAt: new Date("2026-10-29") })
+    expect((await getAuthSession())?.user.movedToSpiegel).toBe(true)
+
+    findUniqueMock.mockResolvedValueOnce({ ...row, movedToSpiegelAt: null })
+    expect((await getAuthSession())?.user.movedToSpiegel).toBe(false)
   })
 })
