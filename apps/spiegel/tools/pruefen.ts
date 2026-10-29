@@ -643,6 +643,67 @@ async function phoneNoSideScroll(page: Page) {
   )
 }
 
+/** Zustand der Reiterleiste: eine Zeile, die gezeigte Seite markiert und im Bild, die Seite scrollt nicht seitlich */
+const tabBarState = () => `(() => {
+  const bar = $("[data-tab-bar]")
+  const links = bar ? $$("a", bar) : []
+  const active = bar ? $("[aria-current]", bar) : null
+  const a = active?.getBoundingClientRect(), c = bar?.getBoundingClientRect()
+  return { rows: new Set(links.map((l) => Math.round(l.getBoundingClientRect().top))).size,
+    current: active ? txt(active) : null,
+    inView: !!a && !!c && a.left >= c.left - 1 && a.right <= c.right + 1,
+    vv: innerWidth === Math.round(visualViewport.width),
+    sw: document.documentElement.scrollWidth <= innerWidth,
+    url: location.pathname }
+})()`
+
+interface TabBarState {
+  rows: number
+  current: string | null
+  inView: boolean
+  vv: boolean
+  sw: boolean
+  url: string
+}
+
+const tabBarOk = (s: TabBarState, current: string) =>
+  s.rows === 1 && s.current === current && s.inView && s.vv && s.sw
+
+/**
+ * Reiter am Telefon: Fortschritt und Vergleichen bei 360 und 390 px in einer Zeile, der gezeigte Reiter markiert und
+ * im Bild, kein seitliches Scrollen der Seite. Danach die Leiste ans Ende geschoben, „Vergleichen“ angetippt: auch auf
+ * der neuen Seite steht der gewählte Reiter im Bild.
+ */
+async function tabBars(page: Page) {
+  for (const width of [360, 390]) {
+    await page.viewport(width, 844)
+    for (const [path, current] of [
+      ["/progress", "Zeitraum"],
+      ["/compare", "Vergleichen"],
+    ] as const) {
+      await page.goto(`${BASE}${path}`)
+      const s = await page.ev<TabBarState>(tabBarState())
+      check(
+        `${width} px: ${path} Reiter in einer Zeile, „${current}“ markiert und im Bild, die Seite scrollt nicht seitlich`,
+        tabBarOk(s, current),
+        s
+      )
+    }
+  }
+  await page.viewport(360, 844)
+  await page.goto(`${BASE}/progress`)
+  await page.ev(`(() => { const bar = $("[data-tab-bar]"); bar.scrollLeft = bar.scrollWidth })()`)
+  await page.click(`$$("[data-tab-bar] a").find((a) => txt(a) === "Vergleichen")`, { settle: 300 })
+  await page.waitFor(`location.pathname === "/compare"`, 15_000)
+  await page.waitFor(`txt($("[data-tab-bar] [aria-current]")) === "Vergleichen"`, 5_000)
+  const after = await page.ev<TabBarState>(tabBarState())
+  check(
+    "360 px: „Vergleichen“ angetippt, auf der neuen Seite steht der gewählte Reiter im Bild",
+    after.url === "/compare" && tabBarOk(after, "Vergleichen"),
+    after
+  )
+}
+
 /**
  * Die Prüfungen aus `@vereinsheim/pruefen/common`, die jede App mit Design 2 laufen lässt: Darstellung ohne Aufblitzen,
  * die untere Leiste verdeckt nichts, Fokus im Dialog „Scheibe löschen“, die Liste der Scheiben als Zeilen.
@@ -2705,6 +2766,7 @@ async function main() {
     await section("Fortschritt", () => progress(page))
     await section("Trefferbild über den Zeitraum", () => periodPattern(page))
     await section("Vergleichen", () => compare(page, href))
+    await section("Reiter", () => tabBars(page))
     await section("Detailtiefen", () => detailLevels(page, href))
     await section("Eine Scheibe sagt, was sie zeigt", () => singleCardHints(page, href))
     await section("Sprache und Hilfe", () => language(page))
