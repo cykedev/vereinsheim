@@ -397,6 +397,11 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
   deshalb erst nach Migration und `db:generate` in einen Commit. Aufgefallen im Oktober 2026 in Treffsicher
   (`movedToSpiegelAt`, [[treffsicher-read-only]]).
 
+- **Prettier im Paket aufrufen, nicht vom Root**: Der Root hat keine Prettier-Konfiguration, `pnpm exec prettier --write
+  <pfad>` vom Root formatiert deshalb mit den Vorgaben von Prettier (andere Zeilenbreite) und `format:check` des Pakets
+  wird rot. Formatieren mit `cd <app oder paket> && pnpm exec prettier --write <datei>`. Aufgefallen im Oktober 2026
+  beim Umbenennen einer Option über alle Schichten.
+
 ## 10. Design 2 (alle Apps, ADR-030, ADR-032)
 
 - **Tokens aus `@vereinsheim/ui/design2.css`**: dieselben Namen, die die
