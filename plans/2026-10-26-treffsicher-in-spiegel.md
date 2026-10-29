@@ -415,6 +415,18 @@ Entschieden mit dem User am 29. Oktober 2026 (Planung Stufe 3):
     Migration und ein Release vor dem ersten Umzug.
   - Reihenfolge: 3c und 3e nach `main`, parallel; 3a plant danach und nimmt 3e (das Merkmal) nach dem Rebase auf.
 
+Entschieden mit dem User am 29. Oktober 2026 (Plan 3a, je mit der Empfehlung), nach einer Zählung über alle 9 Zeilen der
+Zuordnung (265 Einheiten in 6 Konten: 141 neue Scheiben, 54 mit passender Scheibe, 52 an Abenden nur aus Probe,
+2 unsicher, 13 ohne Ergebnis, 4 mit unbekannter Familie):
+
+- **Unsichere Dublette: beide behalten.** Keine passende gewertete Scheibe am Abend → die Scheibe aus Treffsicher
+  entsteht trotzdem, der Bericht nennt den Fall. Weicht ab von ADR-033 („Offen“ mit Folgen-Dialog); der Nachtrag kommt
+  mit der Übernahme von 3a.
+- **Familie unbekannt: stoppen**, Zuordnung mit `--family "<Name>=<Kennung>"`; ebenso ohne Disziplin mit der Schusszahl.
+- **Neues Konto:** Rolle immer Schütze, aktiv oder deaktiviert wie in Treffsicher, Name und Passwort mit.
+- **Zweiter Lauf: Geändertes bleibt** (Scheiben über die Herkunft, Tagebuch über `updatedAt` gegen `movedToSpiegelAt`).
+- Kein Designkonzept: 3a hat keine neue Oberfläche, nur Ausgabe und Bericht des CLI.
+
 ### Stufe 4 · Ruhestand von Treffsicher
 
 Erst nur lesend mit Hinweis und Weiterleitung, dann abgeschaltet. Berührt Deploy-Vertrag, Caddy und das CLI. Mit dem
@@ -498,7 +510,7 @@ Befund aus dem Review von 2a).
 | 2b   | `plans/2026-10-28-tis-2b-goals-routines.md`  | `feat/tis-2b-goals-routines` (vom Basis)   | `tis-2b-goals-routines`  | im Basisbranch (`b51a030b`), Plan entfernt              |
 | 2c   | `plans/2026-10-29-tis-2c-diary-analysis.md`  | `feat/tis-2c-diary-analysis` (vom Basis)   | `tis-2c-diary-analysis`  | im Basisbranch (`69bedd2a`), Plan entfernt              |
 | R    | `plans/2026-10-29-tis-r-tab-bar.md`          | `feat/tis-r-tab-bar` (von `main`)          | `tis-r-tab-bar`          | in `main` (`290da9e5`, mit R2), noch nicht deployt; Plan entfernt |
-| 3a   |                                              | (vom Basis)                                |                          | entschieden (29.10.), Plan offen                        |
+| 3a   | `plans/2026-10-29-tis-3a-transfer.md`        | `feat/tis-3a-transfer` (vom Basis)         | `tis-3a-transfer`        | Plan geschrieben, wartet auf Freigabe                   |
 | 3b   |                                              | (vom Basis)                                |                          | entschieden (29.10.), Plan nach 3a                      |
 | 3c   | `plans/2026-10-29-tis-3c-warmup.md`          | `feat/tis-3c-warmup` (von `main`)          | `tis-3c-warmup`          | in `main` (`52dffad1`), noch nicht deployt; Plan entfernt |
 | 3d   |                                              | (vom Basis)                                |                          | entschieden (29.10.), Plan offen                        |
