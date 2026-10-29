@@ -96,6 +96,8 @@ export interface TransferInput {
   readPrintout?: (bytes: Uint8Array, fileName: string, timeZone: string) => Promise<StoreResult>
   /** Datei eines Belegs speichern; ohne `writeEvidenceFile` */
   writeEvidence?: (sha256: string, type: EvidenceType, bytes: Uint8Array) => Promise<void>
+  /** Zeitgrenze der Transaktion; ohne 300 s (Tests kürzer) */
+  timeoutMs?: number
 }
 
 /** ein fester Grund, aus dem der Lauf vor dem Schreiben abbricht; ohne E-Mails */
@@ -107,6 +109,8 @@ export type TransferAbort =
   | { kind: "badFamilyOption"; unknownSlugs: string[]; duplicateNames: string[] }
   | { kind: "unknownFamily"; names: Record<string, number> }
   | { kind: "noDiscipline"; cases: { family: string; shots: number; sessions: number }[] }
+  /** nach dem Merkmal in Treffsicher ist der Commit in Spiegel gescheitert */
+  | { kind: "markedNotSaved" }
 
 type Tally<K extends string> = Record<K, number>
 
@@ -287,7 +291,9 @@ const blankReport = (dryRun: boolean): Omit<TransferReport, "check"> => ({
 /**
  * Ein Konto aus Treffsicher übernehmen. Bricht vor dem Schreiben mit festem Grund ab (`TransferAbort`); sonst eine
  * Transaktion, die `dryRun` am Ende zurückrollt. Nach einem echten Lauf ist das Konto in Treffsicher umgezogen
- * (`markMoved` als letzter Schritt in der Transaktion: scheitert es, bleibt nichts halb).
+ * (`markMoved` als letzter Schritt in der Transaktion: scheitert es, bleibt nichts halb; nach dem Commit wäre ein
+ * Lauf, dessen Merkmal scheitert, im nächsten jünger als das alte Merkmal, und alles gälte als geändert). Scheitert
+ * der Commit nach dem Merkmal, meldet der Lauf `markedNotSaved`.
  */
 export async function runTransfer(db: Db, input: TransferInput): Promise<TransferOutcome> {
   const raw = await input.source.readAccount(input.from)
@@ -499,7 +505,7 @@ export async function runTransfer(db: Db, input: TransferInput): Promise<Transfe
     }
 
   const lastRunAt = account.user.movedToSpiegelAt ? new Date(account.user.movedToSpiegelAt) : null
-  const done: { check?: CheckResult } = {}
+  const done: { check?: CheckResult; marked?: true } = {}
   try {
     await db.$transaction(
       async (tx) => {
@@ -518,10 +524,13 @@ export async function runTransfer(db: Db, input: TransferInput): Promise<Transfe
         })
         if (input.dryRun) throw new DryRun()
         await input.source.markMoved(account.user.id, new Date())
+        done.marked = true
       },
-      { timeout: TIMEOUT_MS, maxWait: 10_000 }
+      { timeout: input.timeoutMs ?? TIMEOUT_MS, maxWait: 10_000 }
     )
   } catch (error) {
+    // das Merkmal steht in Treffsicher, aber Spiegel hat nichts gespeichert: laut melden, nie still
+    if (done.marked) return { kind: "aborted", abort: { kind: "markedNotSaved" } }
     if (!(error instanceof DryRun)) throw error
   }
   return { kind: "done", report: { ...report, check: done.check! } }

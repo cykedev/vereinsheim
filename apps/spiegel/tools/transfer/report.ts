@@ -35,6 +35,11 @@ export function abortText(abort: TransferAbort): string {
         ...Object.entries(abort.names).map(([name, n]) => `  ${name}: ${n}`),
         'Zuordnung angeben: --family "<Name>=<Kennung der Familie>"',
       ].join("\n")
+    case "markedNotSaved":
+      return [
+        "Merkmal in Treffsicher gesetzt, Übernahme in Spiegel nicht gespeichert.",
+        "Lauf wiederholen oder: pnpm --filter treffsicher moved --clear <E-Mail in Treffsicher>",
+      ].join("\n")
     case "noDiscipline":
       return [
         "Keine Disziplin der ersten Anlage passt zur Schusszahl (unter Admin → Disziplinen anlegen):",

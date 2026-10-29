@@ -384,6 +384,38 @@ describe("runTransfer: zweiter Lauf", () => {
   })
 })
 
+describe("runTransfer: Merkmal in Treffsicher", () => {
+  it("scheitert das Merkmal, ist in Spiegel nichts geschrieben", async () => {
+    const c = newCase("merkmal")
+    c.account([c.session("s1", "2026-09-01")])
+    c.source.markMoved = async () => {
+      throw new Error("psql nicht erreichbar")
+    }
+    await expect(c.run()).rejects.toThrow("psql nicht erreichbar")
+    expect(await db.user.findUnique({ where: { email: c.to } })).toBeNull()
+    expect(await db.card.count({ where: { importKey: `treffsicher:${c.id("s1")}` } })).toBe(0)
+    expect(await db.diaryEntry.count({ where: { importKey: `treffsicher:${c.id("s1")}` } })).toBe(0)
+  })
+
+  it("scheitert der Commit nach dem Merkmal, sagt der Lauf es und nichts ist geschrieben", async () => {
+    const c = newCase("commit")
+    c.account([c.session("s1", "2026-09-02")])
+    const mark = c.source.markMoved.bind(c.source)
+    // das Merkmal gelingt, braucht aber länger als die Transaktion darf
+    c.source.markMoved = async (userId, at) => {
+      await mark(userId, at)
+      await new Promise((resolve) => setTimeout(resolve, 3_000))
+    }
+    expect(await c.run({ timeoutMs: 2_000 })).toEqual({
+      kind: "aborted",
+      abort: { kind: "markedNotSaved" },
+    })
+    expect(c.source.accounts.get(c.from)!.user.movedToSpiegelAt).not.toBeNull()
+    expect(await db.user.findUnique({ where: { email: c.to } })).toBeNull()
+    expect(await db.card.count({ where: { importKey: `treffsicher:${c.id("s1")}` } })).toBe(0)
+  }, 15_000)
+})
+
 describe("runTransfer: Abbruch vor dem Schreiben", () => {
   it("ohne Konto in Treffsicher", async () => {
     const c = newCase("ohne")
