@@ -16,6 +16,7 @@ export type EvidenceProblem = "tooLarge" | "unreadable" | "printout" | "duplicat
 
 export const EVIDENCE_EMPTY = "Fotos oder PDFs zu dieser Scheibe, etwa eine Ergebnisliste."
 export const EVIDENCE_GONE = "Diese Scheibe gibt es nicht mehr."
+export const EVIDENCE_NO_SESSION = "Das geht gerade nicht. Lade die Seite neu."
 export const EVIDENCE_REMOVE_FAILED = "Das ließ sich nicht entfernen. Bitte noch einmal versuchen."
 
 /** der Grund, warum eine Datei nicht angehängt ist, mit ihrem Namen */
@@ -35,13 +36,18 @@ export function evidenceProblemText(problem: EvidenceProblem, name: string): str
   }
 }
 
+const LIMIT_SENTENCE = `An einer Scheibe hängen höchstens ${EVIDENCE_LIMIT} Belege.`
+
 /** die Dateien, die über der Grenze nicht angehängt sind, in einem Satz */
 export function limitText(names: readonly string[]): string {
-  const limit = `An einer Scheibe hängen höchstens ${EVIDENCE_LIMIT} Belege.`
+  const limit = LIMIT_SENTENCE
   return names.length === 1
     ? `„${shortName(names[0]!)}“ ist nicht angehängt. ${limit}`
     : `${names.length} Dateien sind nicht angehängt. ${limit}`
 }
+
+/** ein Satz von `limitText`: Der Browser fasst die Grenze für alle Dateien in einem Satz zusammen */
+export const isLimitText = (text: string) => text.endsWith(LIMIT_SENTENCE)
 
 /** „1 Datei angehängt.“, „3 Dateien angehängt.“ */
 export const attachedText = (n: number) => `${dateien(n)} angehängt.`

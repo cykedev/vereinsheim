@@ -14,6 +14,15 @@ describe("Name eines Belegs", () => {
     expect(evidenceFileName("Liste\u0000\u0007.pdf")).toBe("Liste.pdf")
     expect(evidenceFileName("rechnung\u202Efdp.exe")).toBe("rechnungfdp.exe")
     expect(evidenceFileName("a\u200Bb.png")).toBe("ab.png")
+    expect(evidenceFileName("\uFEFFListe.pdf")).toBe("Liste.pdf")
+  })
+
+  it("lässt Verbinder in Emoji stehen, ersetzt einzelne Surrogate", () => {
+    const family = "\u{1F468}\u200D\u{1F469}\u200D\u{1F467}"
+    expect(evidenceFileName(`${family}.jpg`)).toBe(`${family}.jpg`)
+    const name = evidenceFileName("a\uD800b.jpg")!
+    expect(name).toBe("a\uFFFDb.jpg")
+    expect(() => encodeURIComponent(name)).not.toThrow()
   })
 
   it("setzt Unicode in NFC", () => {

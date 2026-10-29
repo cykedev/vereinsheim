@@ -165,6 +165,8 @@ describe("attachEvidence", () => {
       error: "„elf.jpg“ ist nicht angehängt. An einer Scheibe hängen höchstens 10 Belege.",
     })
     expect(await rowsOf(id)).toHaveLength(EVIDENCE_LIMIT)
+    // die volle Scheibe liest die Datei gar nicht erst
+    expect(await readdir(evidenceDir()).catch(() => [])).not.toContain(`${sha(jpeg(600))}.jpg`)
   })
 
   it("Grenze: mit 9 zwei zugleich, genau eine hängt an", async () => {

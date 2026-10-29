@@ -10,32 +10,22 @@ import { DecisionDialog } from "@vereinsheim/ui/design2/decision-dialog"
 
 import { evidenceRemove } from "@/lib/admin/consequences"
 import { attachEvidence, removeEvidence } from "@/lib/evidence/actions"
-import { evidenceFileName } from "@/lib/evidence/name"
+import { attachAll, reportLines } from "@/lib/evidence/attach-all"
 import type { CardEvidenceInfo } from "@/lib/evidence/queries"
-import { isPdfFile, prepareEvidence } from "@/lib/evidence/shrink"
+import { prepareEvidence } from "@/lib/evidence/shrink"
 import {
-  attachedText,
   attachingText,
-  EVIDENCE_GONE,
   EVIDENCE_LIMIT,
   EVIDENCE_REMOVE_FAILED,
   evidenceCountText,
   evidenceMeta,
   evidenceName,
-  evidenceProblemText,
-  limitText,
 } from "@/lib/evidence/texts"
 
 import { ActionRow } from "./ActionRow"
 
 const PICK =
   "inline-flex h-10 cursor-pointer items-center gap-2 rounded-full px-3.5 text-[13px] font-semibold text-foreground peer-focus-visible:outline-2 peer-focus-visible:outline-ring peer-disabled:cursor-default peer-disabled:opacity-60 hover:bg-surface-2"
-
-/** was nach dem Anhängen unter der Liste steht, wenn nicht alles ging */
-interface Report {
-  attached: number
-  lines: string[]
-}
 
 /**
  * Belege als Zeile im Kasten „Diese Scheibe“ jeder eigenen Scheibe: Fotos oder PDFs, etwa eine Ergebnisliste, bis zu
@@ -56,7 +46,7 @@ export function CardEvidence({
   timeZone: string
 }) {
   const router = useRouter()
-  const [report, setReport] = useState<Report | null>(null)
+  const [report, setReport] = useState<string[] | null>(null)
   const [asking, setAsking] = useState<CardEvidenceInfo | null>(null)
   const [open, setOpen] = useState(false)
   const [progress, setProgress] = useState({ k: 1, n: 1 })
@@ -65,66 +55,47 @@ export function CardEvidence({
   const [running, setRunning] = useState<"attach" | "remove" | null>(null)
   const attaching = pending && running === "attach"
 
-  const attach = (files: File[]) =>
+  // Knopf, Fortschritt und Bericht sofort, nicht erst mit dem Ende der Transition (conventions §9)
+  const attach = (files: File[]) => {
+    setRunning("attach")
+    setReport(null)
+    setProgress({ k: 1, n: files.length })
     startTransition(async () => {
-      setRunning("attach")
-      setReport(null)
-      let free = EVIDENCE_LIMIT - evidence.length
-      let attached = 0
-      const lines: string[] = []
-      const overLimit: string[] = []
-      for (const [i, file] of files.entries()) {
-        const name = evidenceName({
-          name: evidenceFileName(file.name),
-          kind: isPdfFile(file) ? "pdf" : "photo",
-        })
-        if (free <= 0) {
-          overLimit.push(name)
-          continue
-        }
-        setProgress({ k: i + 1, n: files.length })
-        const prepared = await prepareEvidence(file)
-        if (!prepared.ok) {
-          lines.push(evidenceProblemText(prepared.problem, name))
-          continue
-        }
-        const form = new FormData()
-        form.set("cardId", cardId)
-        form.set("file", prepared.file)
-        let result
-        try {
-          result = await attachEvidence(form)
-        } catch {
-          result = { error: evidenceProblemText("failed", name) }
-        }
-        if ("error" in result) {
-          const text = getErrorMessage(result) ?? evidenceProblemText("failed", name)
-          lines.push(text)
-          if (text === EVIDENCE_GONE) break
-        } else {
-          attached += 1
-          free -= 1
-        }
-      }
-      if (overLimit.length) lines.push(limitText(overLimit))
-      setReport(lines.length ? { attached, lines } : null)
+      const result = await attachAll(files, {
+        free: EVIDENCE_LIMIT - evidence.length,
+        prepare: prepareEvidence,
+        attach: async (file) => {
+          const form = new FormData()
+          form.set("cardId", cardId)
+          form.set("file", file)
+          const answer = await attachEvidence(form)
+          if (!("error" in answer)) return { success: true }
+          const text = getErrorMessage(answer)
+          // ohne Satz gilt es als gescheitert, mit dem Namen der Datei (`attachAll`)
+          if (!text) throw new Error("ohne Satz")
+          return { error: text }
+        },
+        onProgress: (k, n) => setProgress({ k, n }),
+      })
+      setReport(result.lines.length ? reportLines(result) : null)
       router.refresh()
     })
+  }
 
-  const remove = (item: CardEvidenceInfo) =>
+  const remove = (item: CardEvidenceInfo) => {
+    setRunning("remove")
+    setReport(null)
     startTransition(async () => {
-      setRunning("remove")
-      setReport(null)
       let result
       try {
         result = await removeEvidence(item.id)
       } catch {
         result = { error: EVIDENCE_REMOVE_FAILED }
       }
-      if ("error" in result)
-        setReport({ attached: 0, lines: [getErrorMessage(result) ?? EVIDENCE_REMOVE_FAILED] })
+      if ("error" in result) setReport([getErrorMessage(result) ?? EVIDENCE_REMOVE_FAILED])
       router.refresh()
     })
+  }
 
   return (
     <ActionRow
@@ -203,8 +174,7 @@ export function CardEvidence({
           data-evidence-report
           className="grid gap-1 rounded-xl bg-warning-wash px-3 py-2 text-sm text-foreground"
         >
-          {report.attached > 0 && <p>{attachedText(report.attached)}</p>}
-          {report.lines.map((line, i) => (
+          {report.map((line, i) => (
             <p key={i}>{line}</p>
           ))}
         </div>

@@ -1237,7 +1237,10 @@ async function evidenceList(page: Page, href: string) {
   let known: string[] = []
   try {
     await page.goto(`${BASE}${href}`)
-    await page.waitFor(`!!$("[data-card-evidence]")`)
+    if (!(await page.waitFor(`!!$("[data-card-evidence]")`))) {
+      check("Belege: die Zeile steht an der gemessenen Scheibe", false)
+      return
+    }
     known = await hrefs()
     const before = known.length
     if (before >= 10) {
@@ -1248,7 +1251,13 @@ async function evidenceList(page: Page, href: string) {
     await writeFile(photo, Buffer.from(ONE_PIXEL_PNG, "base64"))
     const printout = join(dir, "print_ausdruck.pdf")
     await writeFile(printout, await samplePrintout({ hex: PROBE_LINK }))
+    const label = `txt($('label[for="card-evidence-file"]'))`
     await page.setFiles(`$("#card-evidence-file")`, [photo, printout])
+    check(
+      "Belege: der Knopf sagt, welche Datei gerade angehängt wird",
+      await page.waitFor(`${label}.includes("wird angehängt…")`, 3_000),
+      await page.ev<string>(label)
+    )
     const done = await page.waitFor(
       `${items}.length === ${before + 1} && !!$("[data-evidence-report]")`,
       20_000
@@ -1292,21 +1301,31 @@ async function evidenceList(page: Page, href: string) {
         dialog.includes("Die Werte der Scheibe bleiben, wie sie sind."),
       dialog
     )
-    await page.click(`button("Entfernen", $('[role="alertdialog"]'))`)
+    await page.click(`button("Entfernen", $('[role="alertdialog"]'))`, { settle: 0 })
+    const whileRemoving = await page.ev<string>(label)
+    check(
+      "Belege: beim Entfernen steht am Knopf zum Anhängen kein „…“",
+      whileRemoving === "Foto oder PDF anhängen",
+      whileRemoving
+    )
     check(
       "Belege: nach der Rückfrage entfernt",
       await page.waitFor(`${items}.length === ${before}`, 10_000)
     )
   } finally {
-    // jeder Beleg, der in der Prüfung dazukam, geht über die Oberfläche wieder weg
-    for (let round = 0; round < 10; round++) {
-      const extra = (await hrefs()).findIndex((link) => !known.includes(link))
-      if (extra < 0) break
-      const count = (await hrefs()).length
-      await page.click(`$("[data-evidence-remove]", ${items}[${extra}])`)
-      await page.waitFor(`!!$('[role="alertdialog"]')`)
-      await page.click(`button("Entfernen", $('[role="alertdialog"]'))`)
-      await page.waitFor(`${items}.length === ${count - 1}`, 10_000)
+    // jeder Beleg, der in der Prüfung dazukam, geht über die Oberfläche wieder weg; ein Fehler dabei verdeckt keinen davor
+    try {
+      for (let round = 0; round < 10; round++) {
+        const extra = (await hrefs()).findIndex((link) => !known.includes(link))
+        if (extra < 0) break
+        const count = (await hrefs()).length
+        await page.click(`$("[data-evidence-remove]", ${items}[${extra}])`)
+        await page.waitFor(`!!$('[role="alertdialog"]')`)
+        await page.click(`button("Entfernen", $('[role="alertdialog"]'))`)
+        await page.waitFor(`${items}.length === ${count - 1}`, 10_000)
+      }
+    } catch (error) {
+      check("Belege: Aufräumen", false, error instanceof Error ? error.message : String(error))
     }
     await page.viewport(1280, 900)
     await rm(dir, { recursive: true, force: true })

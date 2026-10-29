@@ -9,8 +9,11 @@ const EXTENSION_MAX = 10
 
 const ELLIPSIS = "…"
 
-/** Steuer- und Formatzeichen, auch Richtungszeichen wie U+202E, die einen Namen anders aussehen ließen */
-const INVISIBLE = /[\p{Cc}\p{Cf}]/gu
+/**
+ * Steuerzeichen, Richtungszeichen wie U+202E (sie ließen einen Namen anders aussehen), Leerzeichen ohne Breite und das
+ * BOM; Verbinder wie U+200D bleiben, sie gehören zu Emoji und manchen Schriften
+ */
+const INVISIBLE = /[\p{Cc}\u200B\u200E\u200F\u202A-\u202E\u2060\u2066-\u2069\uFEFF]/gu
 
 /** Stamm und Endung (mit Punkt); ohne Endung, wenn der Punkt fehlt, vorn steht oder die Endung zu lang ist */
 function splitName(name: string): { stem: string; extension: string } {
@@ -33,7 +36,8 @@ function shortenEnd(name: string, max: number): string {
 
 /** der Name einer Datei zum Speichern: nur der letzte Teil eines Pfads, ohne unsichtbare Zeichen, gekürzt; leer → null */
 export function evidenceFileName(raw: string): string | null {
-  const last = raw.normalize("NFC").split(/[/\\]/).pop() ?? ""
+  // `toWellFormed`: ein einzelnes Surrogat ließe `encodeURIComponent` im Kopf der Antwort werfen
+  const last = raw.toWellFormed().normalize("NFC").split(/[/\\]/).pop() ?? ""
   const clean = last.replace(INVISIBLE, "").replace(/\s+/gu, " ").trim()
   if (!clean) return null
   return shortenEnd(clean, EVIDENCE_NAME_MAX)

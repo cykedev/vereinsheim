@@ -21,6 +21,7 @@ import {
   EVIDENCE_GONE,
   EVIDENCE_LIMIT,
   EVIDENCE_MAX_BYTES,
+  EVIDENCE_NO_SESSION,
   EVIDENCE_REMOVE_FAILED,
   evidenceName,
   evidenceProblemText,
@@ -33,8 +34,6 @@ import {
 // `CardEvidence`, nie eine Revision. Der Typ zählt an den Bytes, nie am Namen. Ein PDF, in dem Spiegel einen
 // Meyton-Ausdruck erkennt, wird kein Beleg: Unter „Scheibe holen“ bringt es seine Werte mit. Der Browser schickt jede
 // Datei in einer eigenen Anfrage. Die Actions prüfen selbst und werfen nie; ins Log nur der Name eines Fehlers.
-
-const NO_SESSION = "Das geht gerade nicht. Lade die Seite neu."
 
 /** eine eigene, sichtbare Scheibe */
 const ownCard = (cardId: string, ownerId: string): Prisma.CardWhereInput => ({
@@ -56,30 +55,24 @@ async function attachRow(
     fileName: string | null
   }
 ): Promise<Attached> {
-  try {
-    return await db.$transaction(async (tx) => {
-      if (!(await lockCard(tx, data.cardId))) return "gone"
-      const card = await tx.card.findFirst({
-        where: ownCard(data.cardId, ownerId),
-        select: { _count: { select: { evidence: true } } },
-      })
-      if (!card) return "gone"
-      if (card._count.evidence >= EVIDENCE_LIMIT) return "limit"
-      if (
-        await tx.cardEvidence.findFirst({
-          where: { cardId: data.cardId, sha256: data.sha256 },
-          select: { id: true },
-        })
-      )
-        return "duplicate"
-      await tx.cardEvidence.create({ data })
-      return "attached"
+  return db.$transaction(async (tx) => {
+    if (!(await lockCard(tx, data.cardId))) return "gone"
+    const card = await tx.card.findFirst({
+      where: ownCard(data.cardId, ownerId),
+      select: { _count: { select: { evidence: true } } },
     })
-  } catch (error) {
-    // zwei gleiche Dateien zugleich: die zweite scheitert am Index (Scheibe, Prüfsumme)
-    if ((error as { code?: unknown } | null)?.code === "P2002") return "duplicate"
-    throw error
-  }
+    if (!card) return "gone"
+    if (card._count.evidence >= EVIDENCE_LIMIT) return "limit"
+    if (
+      await tx.cardEvidence.findFirst({
+        where: { cardId: data.cardId, sha256: data.sha256 },
+        select: { id: true },
+      })
+    )
+      return "duplicate"
+    await tx.cardEvidence.create({ data })
+    return "attached"
+  })
 }
 
 /** ein Foto oder PDF an eine eigene Scheibe hängen. Felder `cardId` und `file`; der Fehler ist ein fertiger Satz */
@@ -87,7 +80,7 @@ export async function attachEvidence(form: FormData): Promise<ActionResult> {
   let name = "Datei"
   try {
     const ownerId = await shooterId()
-    if (!ownerId) return { error: NO_SESSION }
+    if (!ownerId) return { error: EVIDENCE_NO_SESSION }
     const cardId = form.get("cardId")
     if (!isCardIdInput(cardId)) return { error: EVIDENCE_GONE }
     const file = form.get("file")
@@ -144,7 +137,7 @@ export async function attachEvidence(form: FormData): Promise<ActionResult> {
 export async function removeEvidence(evidenceId: string): Promise<ActionResult> {
   try {
     const ownerId = await shooterId()
-    if (!ownerId) return { error: NO_SESSION }
+    if (!ownerId) return { error: EVIDENCE_NO_SESSION }
     if (typeof evidenceId !== "string" || !EVIDENCE_ID.test(evidenceId))
       return { error: EVIDENCE_GONE }
     const { count } = await db.cardEvidence.deleteMany({
