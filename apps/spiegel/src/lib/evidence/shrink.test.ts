@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 
-import { fitWithin, isPdfFile, prepareEvidence, SHRINK_STEPS } from "./shrink"
-import { EVIDENCE_MAX_BYTES, EVIDENCE_TEXTS } from "./texts"
+import { fitWithin, isPdfFile, jpegNameOf, prepareEvidence, SHRINK_STEPS } from "./shrink"
+import { EVIDENCE_MAX_BYTES } from "./texts"
 
 describe("Beleg im Browser vorbereiten", () => {
   it("die lange Kante auf höchstens die Grenze, Seitenverhältnis bleibt, nie größer", () => {
@@ -20,6 +20,14 @@ describe("Beleg im Browser vorbereiten", () => {
     const small = new File(["%PDF-1.4"], "scan.pdf", { type: "application/pdf" })
     expect(await prepareEvidence(small)).toEqual({ ok: true, file: small })
     const big = new File([new Uint8Array(EVIDENCE_MAX_BYTES + 1)], "scan.pdf")
-    expect(await prepareEvidence(big)).toEqual({ ok: false, error: EVIDENCE_TEXTS.tooLarge })
+    expect(await prepareEvidence(big)).toEqual({ ok: false, problem: "tooLarge" })
+  })
+
+  it("ein neu gezeichnetes Foto behält den Stamm des Originals mit der Endung .jpg", () => {
+    expect(jpegNameOf("IMG_2041.HEIC")).toBe("IMG_2041.jpg")
+    expect(jpegNameOf(".jpg")).toBe("beleg.jpg")
+    expect(jpegNameOf("")).toBe("beleg.jpg")
+    expect(jpegNameOf("foto.final.png")).toBe("foto.final.jpg")
+    expect(jpegNameOf("Ergebnisliste")).toBe("Ergebnisliste.jpg")
   })
 })

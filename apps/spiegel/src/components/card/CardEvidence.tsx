@@ -82,7 +82,13 @@ export function CardEvidence({
           if (!chosen) return
           run("attach", async () => {
             const prepared = await prepareEvidence(chosen)
-            if (!prepared.ok) return { error: prepared.error }
+            if (!prepared.ok)
+              return {
+                error:
+                  prepared.problem === "tooLarge"
+                    ? EVIDENCE_TEXTS.tooLarge
+                    : EVIDENCE_TEXTS.unreadable,
+              }
             const form = new FormData()
             form.set("cardId", cardId)
             form.set("file", prepared.file)
