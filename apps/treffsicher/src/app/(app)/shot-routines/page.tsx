@@ -28,7 +28,10 @@ export default async function ShotRoutinesPage() {
     <div className="space-y-6">
       <PageHeader
         title="Schuss-Abläufe"
-        description="Lege Abläufe mit ihren Schritten an und verfeinere sie laufend."
+        // umgezogen: kein Satz, der Anlegen und Bearbeiten anbietet; der Hinweis darüber sagt, wo das jetzt geht
+        description={
+          readOnly ? undefined : "Lege Abläufe mit ihren Schritten an und verfeinere sie laufend."
+        }
         action={
           readOnly ? undefined : (
             <CreateItemLinkButton href="/shot-routines/new" label="Neuer Ablauf" />

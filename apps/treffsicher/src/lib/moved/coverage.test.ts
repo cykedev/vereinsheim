@@ -199,6 +199,22 @@ beforeEach(() => {
 })
 
 describe("Schreibwege eines umgezogenen Kontos", () => {
+  it("Route Handler lesen nur, bis auf die Anmeldung", () => {
+    const methods = sourceFiles(join(SRC, "app"))
+      .filter((path) => path.endsWith("/route.ts"))
+      .map((path) => {
+        const text = readFileSync(path, "utf8")
+        const found = [...text.matchAll(/\b(GET|POST|PUT|PATCH|DELETE)\b/g)].map((m) => m[1])
+        return `${relative(SRC, path)}: ${[...new Set(found)].sort().join(",")}`
+      })
+      .sort()
+    expect(methods).toEqual([
+      "app/(app)/sessions/[id]/export/pdf/route.ts: GET",
+      "app/api/auth/[...nextauth]/route.ts: GET,POST",
+      "app/api/uploads/[...path]/route.ts: GET",
+    ])
+  })
+
   it('nur die sechs Fassaden tragen "use server"', () => {
     const files = sourceFiles(SRC).filter((path) =>
       /^\s*["']use server["']/m.test(readFileSync(path, "utf8"))

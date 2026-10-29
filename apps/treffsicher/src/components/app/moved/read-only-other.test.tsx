@@ -2,6 +2,7 @@ import { createElement as h } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it, vi } from "vitest"
 
+import type { Discipline } from "@/generated/prisma/client"
 import type { GoalWithAssignments } from "@/lib/goals/types"
 import { MOVED_PAGES, MOVED_TEXTS, type MovedPageKind } from "@/lib/moved/texts"
 
@@ -22,12 +23,17 @@ vi.mock("@/lib/account/actions", () => ({ changeOwnPassword: vi.fn() }))
 vi.mock("@/lib/disciplines/actions", () => ({
   createDiscipline: vi.fn(),
   updateDiscipline: vi.fn(),
+  setFavouriteDiscipline: vi.fn(),
+  toggleHiddenDiscipline: vi.fn(),
+  setDisciplineArchived: vi.fn(),
+  deleteDiscipline: vi.fn(),
 }))
 
 const { GoalCardSection } = await import("../goals/GoalCardSection")
 const { ProfileScreen } = await import("../profile/ProfileScreen")
 const { DisciplineForm } = await import("../disciplines/DisciplineForm")
 const { MovedPage } = await import("./MovedPage")
+const { DisciplineDetailActions } = await import("../disciplines/DisciplineDetailActions")
 
 const GOAL: GoalWithAssignments = {
   id: "g1",
@@ -111,5 +117,39 @@ describe("Disziplin eines umgezogenen Admins", () => {
     expect(renderToStaticMarkup(h(DisciplineForm, { canCreateSystem: true }))).toContain(
       "Sichtbarkeit"
     )
+  })
+})
+
+describe("Aktionen einer Disziplin", () => {
+  const DISCIPLINE = {
+    id: "d1",
+    name: "Luftgewehr",
+    isSystem: true,
+    isArchived: false,
+  } as Discipline
+  const actions = (moved: boolean, canManage: boolean) =>
+    renderToStaticMarkup(
+      h(DisciplineDetailActions, {
+        discipline: DISCIPLINE,
+        moved,
+        canManage,
+        canDelete: canManage,
+        favourite: false,
+        hidden: false,
+      })
+    )
+
+  it("umgezogen ohne Favorit und Ausblenden, ohne Bearbeiten, mit Zurück", () => {
+    const html = actions(true, false)
+    expect(html).not.toContain("Favorit")
+    expect(html).not.toContain("blenden")
+    expect(html).not.toContain('href="/disciplines/d1/edit"')
+    expect(html).toContain('href="/disciplines"')
+  })
+
+  it("nicht umgezogen mit den Einstellungen des Kontos", () => {
+    const html = actions(false, true)
+    expect(html).toContain("Favorit")
+    expect(html).toContain('href="/disciplines/d1/edit"')
   })
 })

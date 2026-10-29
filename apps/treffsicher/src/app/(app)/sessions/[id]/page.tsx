@@ -75,31 +75,33 @@ export default async function SessionDetailPage({ params }: { params: Promise<{ 
           </Card>
         )}
 
-        {viewModel.hasAttachmentSection && (
-          <SessionDetailSectionCard
-            title="Anhänge"
-            icon={Paperclip}
-            headerSuffix={
-              sessionRecord.attachments.length > 0 ? (
-                <span className="text-base font-normal text-muted-foreground">
-                  ({sessionRecord.attachments.length})
-                </span>
-              ) : undefined
-            }
-          >
-            <AttachmentSection
-              readOnly={readOnly}
-              sessionId={sessionRecord.id}
-              attachments={sessionRecord.attachments.map((attachment) => ({
-                id: attachment.id,
-                filePath: attachment.filePath,
-                fileType: attachment.fileType,
-                originalName: attachment.originalName,
-                label: attachment.label,
-              }))}
-            />
-          </SessionDetailSectionCard>
-        )}
+        {/* ohne Anhänge bliebe die Karte für ein umgezogenes Konto leer */}
+        {viewModel.hasAttachmentSection &&
+          !(readOnly && sessionRecord.attachments.length === 0) && (
+            <SessionDetailSectionCard
+              title="Anhänge"
+              icon={Paperclip}
+              headerSuffix={
+                sessionRecord.attachments.length > 0 ? (
+                  <span className="text-base font-normal text-muted-foreground">
+                    ({sessionRecord.attachments.length})
+                  </span>
+                ) : undefined
+              }
+            >
+              <AttachmentSection
+                readOnly={readOnly}
+                sessionId={sessionRecord.id}
+                attachments={sessionRecord.attachments.map((attachment) => ({
+                  id: attachment.id,
+                  filePath: attachment.filePath,
+                  fileType: attachment.fileType,
+                  originalName: attachment.originalName,
+                  label: attachment.label,
+                }))}
+              />
+            </SessionDetailSectionCard>
+          )}
 
         <SessionDetailSectionCard title="Befinden" icon={Heart} help="wellbeing">
           <WellbeingSection

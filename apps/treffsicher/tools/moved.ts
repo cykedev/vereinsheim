@@ -38,8 +38,10 @@ export async function setMovedByEmail(
 
 async function main() {
   const args = process.argv.slice(2)
-  const email = args.find((arg) => !arg.startsWith("--"))
-  if (!email) {
+  const email = args.find((arg) => !arg.startsWith("-"))
+  // ein vertippter Schalter setzte sonst das Merkmal, statt es aufzuheben
+  const unknown = args.filter((arg) => arg.startsWith("-") && arg !== "--clear")
+  if (!email || unknown.length > 0) {
     process.stderr.write("Aufruf: pnpm --filter treffsicher moved [--clear] <E-Mail>\n")
     process.exit(1)
   }

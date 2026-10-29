@@ -58,6 +58,27 @@ export async function movedFlow({ page, base, check, record, login, newestSessio
       )
     }
 
+    for (const path of ["/goals", "/shot-routines", "/disciplines"]) {
+      await page.goto(`${base}${path}`)
+      const create = await page.ev<number>(`$$('[data-app-content] a[href$="/new"]').length`)
+      check(`Nur lesend: ${path} ohne Knopf zum Anlegen`, create === 0, create)
+    }
+    await page.goto(`${base}/disciplines`)
+    const system = await page.ev<string | null>(
+      `$$('[data-app-content] a[href^="/disciplines/"]').find((a) => txt(a).includes("Standard"))?.getAttribute("href") ?? null`
+    )
+    if (system) {
+      await page.goto(`${base}${system}`)
+      const actions = await page.ev<string[]>(
+        `$$("[data-app-content] button, [data-app-content] a").map((el) => el.getAttribute("aria-label") ?? txt(el))`
+      )
+      check(
+        "Nur lesend: eine Disziplin ohne Favorit, Ausblenden und Bearbeiten",
+        !actions.some((label) => /Favorit|blenden|bearbeiten|archivieren|löschen/i.test(label)),
+        actions
+      )
+    } else check("Nur lesend: eine Disziplin der Anlage in der Liste", false)
+
     await page.goto(`${base}${session}`)
     const detail = await page.ev<{ edit: number; file: number; change: string[]; pdf: boolean }>(`({
       edit: $$('a[href$="/edit"]').length,

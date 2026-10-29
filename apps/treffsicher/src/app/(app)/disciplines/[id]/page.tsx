@@ -1,7 +1,6 @@
 import type { Metadata } from "next"
 import { notFound, redirect } from "next/navigation"
-import Link from "next/link"
-import { ArrowLeft, CheckCircle2, Gauge, Pencil, Target } from "lucide-react"
+import { CheckCircle2, Gauge, Target } from "lucide-react"
 import { getAuthSession } from "@/lib/auth-helpers"
 import {
   getDisciplineForDetail,
@@ -9,14 +8,8 @@ import {
   getFavouriteDisciplineId,
   getHiddenDisciplineIds,
 } from "@/lib/disciplines/actions"
-import { DetailActionBar } from "@vereinsheim/ui/shell/DetailActionBar"
-import { ArchiveDisciplineButton } from "@/components/app/disciplines/ArchiveDisciplineButton"
-import { disciplineActivate, disciplineArchive, disciplineDelete } from "@/lib/consequences"
-import { DeleteDisciplineButton } from "@/components/app/disciplines/DeleteDisciplineButton"
-import { FavouriteDisciplineButton } from "@/components/app/disciplines/FavouriteDisciplineButton"
-import { HideDisciplineButton } from "@/components/app/disciplines/HideDisciplineButton"
+import { DisciplineDetailActions } from "@/components/app/disciplines/DisciplineDetailActions"
 import { Badge } from "@vereinsheim/ui/badge"
-import { Button } from "@vereinsheim/ui/button"
 import { Card, CardContent } from "@vereinsheim/ui/design2/card"
 import { Separator } from "@vereinsheim/ui/separator"
 import { disciplineWritable } from "@/lib/moved/rules"
@@ -60,51 +53,14 @@ export default async function DisciplineDetailPage({
     <div className="space-y-6">
       <div className="space-y-3">
         <div className="flex items-start justify-end">
-          <DetailActionBar>
-            {!moved && !discipline.isArchived && (
-              <FavouriteDisciplineButton
-                disciplineId={discipline.id}
-                initialFavourite={favouriteDisciplineId === discipline.id}
-              />
-            )}
-            {!moved && !discipline.isArchived && (
-              <HideDisciplineButton disciplineId={discipline.id} initialHidden={isHidden} />
-            )}
-            {canManage && (
-              <Button variant="ghost" size="icon" asChild>
-                <Link href={`/disciplines/${discipline.id}/edit`} aria-label="Disziplin bearbeiten">
-                  <Pencil className="h-4 w-4" />
-                </Link>
-              </Button>
-            )}
-            {canManage && (
-              <ArchiveDisciplineButton
-                disciplineId={discipline.id}
-                isArchived={discipline.isArchived}
-                decision={
-                  discipline.isArchived
-                    ? disciplineActivate({ name: discipline.name, system: discipline.isSystem })
-                    : disciplineArchive({
-                        name: discipline.name,
-                        system: discipline.isSystem,
-                        favourite: favouriteDisciplineId === discipline.id,
-                      })
-                }
-              />
-            )}
-            {canManage && canDelete && (
-              <DeleteDisciplineButton
-                disciplineId={discipline.id}
-                decision={disciplineDelete({ name: discipline.name, system: discipline.isSystem })}
-              />
-            )}
-            <Button variant="ghost" size="sm" className="px-2 sm:px-3" asChild>
-              <Link href="/disciplines" aria-label="Zurück zu Disziplinen">
-                <ArrowLeft className="h-4 w-4 sm:mr-1.5" />
-                <span className="hidden sm:inline">Zurück</span>
-              </Link>
-            </Button>
-          </DetailActionBar>
+          <DisciplineDetailActions
+            discipline={discipline}
+            moved={moved}
+            canManage={canManage}
+            canDelete={canDelete}
+            favourite={favouriteDisciplineId === discipline.id}
+            hidden={isHidden}
+          />
         </div>
 
         <div className="space-y-1">

@@ -31,9 +31,12 @@ export function GoalBackButton({ href }: { href: string }) {
 
 /** die Leiste eines Ziels für ein Konto, das nach Spiegel umgezogen ist: nur Zurück */
 export function GoalReadOnlyActions({ backHref }: { backHref?: string }) {
+  if (!backHref) return null
   return (
     <div className="flex items-start justify-end">
-      <DetailActionBar>{backHref && <GoalBackButton href={backHref} />}</DetailActionBar>
+      <DetailActionBar>
+        <GoalBackButton href={backHref} />
+      </DetailActionBar>
     </div>
   )
 }

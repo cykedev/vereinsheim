@@ -33,7 +33,10 @@ export default async function GoalsPage() {
     <div className="space-y-6">
       <PageHeader
         title="Saisonziele"
-        description="Lege Ziele an und öffne sie für Bearbeiten, Zuweisen und Löschen."
+        // umgezogen: kein Satz, der Anlegen und Bearbeiten anbietet; der Hinweis darüber sagt, wo das jetzt geht
+        description={
+          readOnly ? undefined : "Lege Ziele an und öffne sie für Bearbeiten, Zuweisen und Löschen."
+        }
         action={
           readOnly ? undefined : <CreateItemLinkButton href="/goals/new" label="Neues Ziel" />
         }

@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation"
 import { Archive, ArchiveRestore } from "lucide-react"
 import { Button } from "@vereinsheim/ui/button"
 import { DecisionDialog, type Decision } from "@vereinsheim/ui/design2/decision-dialog"
+import { toast } from "sonner"
+import { getErrorMessage } from "@vereinsheim/lib/forms/fieldErrors"
 import { setDisciplineArchived } from "@/lib/disciplines/actions"
 
 interface Props {
@@ -24,8 +26,11 @@ export function ArchiveDisciplineButton({ disciplineId, isArchived, decision }: 
 
   function handleToggleArchive(): void {
     startTransition(async () => {
-      await setDisciplineArchived(disciplineId, nextArchived)
+      const result = await setDisciplineArchived(disciplineId, nextArchived)
       setOpen(false)
+      // etwa ein Konto, das nach Spiegel umgezogen ist, während die Seite offen war
+      const error = getErrorMessage(result)
+      if (error) toast.error(error)
       router.refresh()
     })
   }

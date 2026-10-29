@@ -50,9 +50,11 @@ export default async function DisciplinesPage() {
       <PageHeader
         title="Disziplinen"
         description={
-          isAdmin
-            ? "Verwalte System- und eigene Disziplinen, setze Favoriten und archiviere bei Bedarf."
-            : "Nutze System-Disziplinen, verwalte eigene Disziplinen und setze deinen Favoriten."
+          moved
+            ? undefined
+            : isAdmin
+              ? "Verwalte System- und eigene Disziplinen, setze Favoriten und archiviere bei Bedarf."
+              : "Nutze System-Disziplinen, verwalte eigene Disziplinen und setze deinen Favoriten."
         }
         action={
           createLabel ? (
