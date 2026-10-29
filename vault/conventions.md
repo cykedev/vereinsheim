@@ -391,6 +391,12 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
   Leiste schließt Toasts beim Öffnen (`toast.dismiss()`) und zeigt Fehler an der Leiste statt als Toast. Aufgefallen
   in der Skriptprüfung (Oktober 2026), die zu schnell für einen Menschen klickt, aber dasselbe sieht.
 
+- **Prisma 7 prüft ein `select` nicht gegen das Schema**: Eine Spalte, die der erzeugte Client noch nicht kennt, nimmt
+  `select: { neu: true }` ohne Fehler an; ihr Wert hat den Typ `never`, und `wert !== null` übersetzt. tsc und Tests mit
+  gemockter Datenbank bleiben grün, erst die Abfrage zur Laufzeit scheitert. Code, der eine neue Spalte liest, kommt
+  deshalb erst nach Migration und `db:generate` in einen Commit. Aufgefallen im Oktober 2026 in Treffsicher
+  (`movedToSpiegelAt`, [[treffsicher-read-only]]).
+
 ## 10. Design 2 (alle Apps, ADR-030, ADR-032)
 
 - **Tokens aus `@vereinsheim/ui/design2.css`**: dieselben Namen, die die
