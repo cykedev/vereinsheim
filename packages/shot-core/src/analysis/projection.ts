@@ -102,6 +102,8 @@ export interface ProjectedCard {
    */
   scoring?: Scoring
   projection: CardProjection
+  /** Einschießen (`warmupIds`): beim Lesen gesetzt (`markWarmup`), nie in der Projektion gespeichert */
+  warmup?: true
 }
 
 /** FNV-1a über 32 Bit, als acht Hex-Ziffern: kurz, stabil und ohne Abhängigkeit (Browser und Server) */

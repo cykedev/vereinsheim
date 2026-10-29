@@ -72,6 +72,7 @@
     "./compare/model": "./src/compare/model.ts",
     "./compare/words": "./src/compare/words.ts",
     "./period/calendar": "./src/period/calendar.ts",
+    "./period/warmup": "./src/period/warmup.ts",
     "./period/state": "./src/period/state.ts",
     "./period/model": "./src/period/model.ts",
     "./period/basis": "./src/period/basis.ts",
