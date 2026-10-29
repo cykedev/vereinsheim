@@ -12,6 +12,7 @@ import { PageHeader } from "@vereinsheim/ui/design2/page-header"
 
 import { getAuthSession } from "@/lib/auth-helpers"
 import { getDashboardData } from "@/lib/dashboard/queries"
+import { MOVED_TEXTS } from "@/lib/moved/texts"
 import { GOAL_TYPE_LABELS } from "@/components/app/goals/goal-card-section/format"
 import { SessionsList } from "@/components/app/sessions/list/SessionsList"
 
@@ -39,6 +40,7 @@ export default async function DashboardPage() {
 
   const displayTimeZone = getDisplayTimeZone()
   const displayName = session.user.name ?? session.user.email
+  const readOnly = session.user.movedToSpiegel
 
   const { recentSessions, activeGoals, sessionsLast30Days, sessionsTotal } = await getDashboardData(
     session.user.id,
@@ -59,10 +61,14 @@ export default async function DashboardPage() {
         {recentSessions.length === 0 ? (
           <EmptyState
             title="Noch keine Einheiten vorhanden"
-            description="Starte mit deiner ersten Einheit."
             icon={BookOpen}
-            actionLabel="Neue Einheit"
-            actionHref="/sessions/new"
+            {...(readOnly
+              ? { description: MOVED_TEXTS.emptyHint }
+              : {
+                  description: "Starte mit deiner ersten Einheit.",
+                  actionLabel: "Neue Einheit",
+                  actionHref: "/sessions/new",
+                })}
           />
         ) : (
           <>

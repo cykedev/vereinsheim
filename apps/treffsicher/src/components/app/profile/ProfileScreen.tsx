@@ -3,6 +3,7 @@ import Link from "next/link"
 import { ThemeSwitch } from "@vereinsheim/ui/design2/theme-switch"
 
 import { AREAS, type Area } from "@/components/app/shell/areas"
+import { MOVED_TEXTS } from "@/lib/moved/texts"
 
 import { PasswordForm } from "./PasswordForm"
 import { SignOutButton } from "./SignOutButton"
@@ -14,17 +15,20 @@ const pill =
   "inline-flex h-10 items-center gap-2 rounded-full border border-line-strong px-3.5 text-[13px] font-semibold text-primary hover:bg-accent-wash focus-visible:outline-2 focus-visible:outline-ring"
 
 /**
- * Profil: Konto, Darstellung des Geräts, Passwort, Abmelden. Unter 1024 px dazu die Bereiche, die nicht in der unteren
+ * Profil: Konto, Darstellung des Geräts, Passwort, Abmelden. Ein Konto, das nach Spiegel umgezogen ist (`moved`),
+ * ändert sein Passwort dort; der Kasten sagt das statt des Formulars. Unter 1024 px dazu die Bereiche, die nicht in der unteren
  * Leiste stehen (Ziele, Ablauf, Disziplinen, Admin für Admins); ab 1024 px stehen sie in der Seitenleiste.
  */
 export function ProfileScreen({
   name,
   email,
   isAdmin,
+  moved = false,
 }: {
   name: string | null
   email: string | null
   isAdmin: boolean
+  moved?: boolean
 }) {
   const more = isAdmin ? [...MORE, "admin" as const] : MORE
   return (
@@ -60,10 +64,12 @@ export function ProfileScreen({
         <div className="grid gap-1">
           <h2 className="text-[15px] font-semibold">Passwort ändern</h2>
           <p className="text-sm text-muted-foreground">
-            Nach dem Speichern meldet Treffsicher dieses Konto auf allen Geräten ab.
+            {moved
+              ? MOVED_TEXTS.password
+              : "Nach dem Speichern meldet Treffsicher dieses Konto auf allen Geräten ab."}
           </p>
         </div>
-        <PasswordForm />
+        {!moved && <PasswordForm />}
       </div>
 
       <div>

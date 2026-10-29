@@ -25,11 +25,18 @@ interface Props {
   initialData?: Discipline
   disciplineId?: string
   canCreateSystem?: boolean
+  /** Admin, dessen Konto nach Spiegel umgezogen ist: legt nur noch Disziplinen der Anlage an */
+  systemOnly?: boolean
 }
 
 // Formular für neue oder bestehende Disziplin.
 // Im Bearbeiten-Modus (disciplineId gesetzt) wird updateDiscipline mit bind verwendet.
-export function DisciplineForm({ initialData, disciplineId, canCreateSystem = false }: Props) {
+export function DisciplineForm({
+  initialData,
+  disciplineId,
+  canCreateSystem = false,
+  systemOnly = false,
+}: Props) {
   const router = useRouter()
 
   // Im Bearbeiten-Modus die action via bind an die ID binden
@@ -147,6 +154,8 @@ export function DisciplineForm({ initialData, disciplineId, canCreateSystem = fa
           {disciplineId ? (
             // Beim Bearbeiten bleibt der Disziplin-Typ unveraendert.
             <input type="hidden" name="isSystem" value={initialData?.isSystem ? "true" : "false"} />
+          ) : systemOnly ? (
+            <input type="hidden" name="isSystem" value="true" />
           ) : canCreateSystem ? (
             <div className="space-y-2">
               <Label htmlFor="isSystem">Sichtbarkeit</Label>

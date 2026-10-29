@@ -5,6 +5,7 @@ import { Goal } from "lucide-react"
 import { getAuthSession } from "@/lib/auth-helpers"
 import { formatDateOnly, getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
 import { getGoalsWithAssignments } from "@/lib/goals/actions"
+import { MOVED_TEXTS } from "@/lib/moved/texts"
 import { CreateItemLinkButton } from "@/components/app/sessions/CreateItemLinkButton"
 import { PageHeader } from "@vereinsheim/ui/design2/page-header"
 import { Badge } from "@vereinsheim/ui/badge"
@@ -25,6 +26,7 @@ export default async function GoalsPage() {
   const session = await getAuthSession()
   if (!session) redirect("/login")
 
+  const readOnly = session.user.movedToSpiegel
   const goals = await getGoalsWithAssignments()
 
   return (
@@ -32,16 +34,22 @@ export default async function GoalsPage() {
       <PageHeader
         title="Saisonziele"
         description="Lege Ziele an und öffne sie für Bearbeiten, Zuweisen und Löschen."
-        action={<CreateItemLinkButton href="/goals/new" label="Neues Ziel" />}
+        action={
+          readOnly ? undefined : <CreateItemLinkButton href="/goals/new" label="Neues Ziel" />
+        }
       />
 
       {goals.length === 0 ? (
         <EmptyState
           title="Noch keine Saisonziele vorhanden"
-          description="Lege dein erstes Ziel an."
           icon={Goal}
-          actionLabel="Neues Ziel"
-          actionHref="/goals/new"
+          {...(readOnly
+            ? { description: MOVED_TEXTS.emptyHint }
+            : {
+                description: "Lege dein erstes Ziel an.",
+                actionLabel: "Neues Ziel",
+                actionHref: "/goals/new",
+              })}
         />
       ) : (
         <div className="space-y-4">

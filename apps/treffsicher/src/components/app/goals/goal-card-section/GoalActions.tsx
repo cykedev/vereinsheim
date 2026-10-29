@@ -17,6 +17,27 @@ interface Props {
   deleteDecision: Decision
 }
 
+/** Zurück zur Liste der Ziele */
+export function GoalBackButton({ href }: { href: string }) {
+  return (
+    <Button variant="ghost" size="sm" className="px-2 sm:px-3" asChild>
+      <Link href={href} aria-label="Zurück zu Zielen">
+        <ArrowLeft className="h-4 w-4 sm:mr-1.5" />
+        <span className="hidden sm:inline">Zurück</span>
+      </Link>
+    </Button>
+  )
+}
+
+/** die Leiste eines Ziels für ein Konto, das nach Spiegel umgezogen ist: nur Zurück */
+export function GoalReadOnlyActions({ backHref }: { backHref?: string }) {
+  return (
+    <div className="flex items-start justify-end">
+      <DetailActionBar>{backHref && <GoalBackButton href={backHref} />}</DetailActionBar>
+    </div>
+  )
+}
+
 // Aktionsleiste bündelt Bearbeiten/Zuweisen/Löschen, damit Card-Header aufgeräumt bleibt.
 export function GoalActions({
   pending,
@@ -69,14 +90,7 @@ export function GoalActions({
           onOpenChange={setOpen}
           onConfirm={onDelete}
         />
-        {backHref && (
-          <Button variant="ghost" size="sm" className="px-2 sm:px-3" asChild>
-            <Link href={backHref} aria-label="Zurück zu Zielen">
-              <ArrowLeft className="h-4 w-4 sm:mr-1.5" />
-              <span className="hidden sm:inline">Zurück</span>
-            </Link>
-          </Button>
-        )}
+        {backHref && <GoalBackButton href={backHref} />}
       </DetailActionBar>
     </div>
   )

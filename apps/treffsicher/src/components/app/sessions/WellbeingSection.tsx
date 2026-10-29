@@ -9,6 +9,8 @@ import type { Wellbeing } from "@/generated/prisma/client"
 interface Props {
   sessionId: string
   initialData: Wellbeing | null
+  /** Konto nach Spiegel umgezogen: nur lesen, ohne „erfassen“ und „Bearbeiten“ */
+  readOnly?: boolean
 }
 
 const fields = [
@@ -22,7 +24,7 @@ const fields = [
 // Zeigt je nach Datenlage: leeren Zustand → "Erfassen", oder Lesemodus → "Bearbeiten".
 // Wechsel in den Bearbeitungsmodus öffnet das WellbeingForm inline.
 // Nach dem Speichern: router.refresh() synchronisiert den Server-Zustand.
-export function WellbeingSection({ sessionId, initialData }: Props) {
+export function WellbeingSection({ sessionId, initialData, readOnly = false }: Props) {
   const router = useRouter()
   const [editing, setEditing] = useState(false)
 
@@ -48,9 +50,11 @@ export function WellbeingSection({ sessionId, initialData }: Props) {
     return (
       <div className="space-y-3">
         <p className="text-sm text-muted-foreground">Noch nicht erfasst.</p>
-        <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
-          Befinden erfassen
-        </Button>
+        {!readOnly && (
+          <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
+            Befinden erfassen
+          </Button>
+        )}
       </div>
     )
   }
@@ -81,9 +85,11 @@ export function WellbeingSection({ sessionId, initialData }: Props) {
           })}
         </div>
       </div>
-      <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
-        Bearbeiten
-      </Button>
+      {!readOnly && (
+        <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
+          Bearbeiten
+        </Button>
+      )}
     </div>
   )
 }

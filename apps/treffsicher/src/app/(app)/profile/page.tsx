@@ -16,6 +16,7 @@ export default async function ProfilePage() {
       name={session.user.name ?? null}
       email={session.user.email ?? null}
       isAdmin={session.user.role === "ADMIN"}
+      moved={session.user.movedToSpiegel}
     />
   )
 }

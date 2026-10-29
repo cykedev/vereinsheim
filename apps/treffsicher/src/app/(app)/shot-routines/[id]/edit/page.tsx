@@ -5,6 +5,7 @@ import { getShotRoutineById } from "@/lib/shot-routines/actions"
 import { ShotRoutineEditor } from "@/components/app/shot-routines/ShotRoutineEditor"
 import type { RoutineStep } from "@/lib/shot-routines/actions"
 import { PageHeader } from "@vereinsheim/ui/design2/page-header"
+import { MovedPage } from "@/components/app/moved/MovedPage"
 
 export const metadata: Metadata = {
   title: "Ablauf bearbeiten",
@@ -13,6 +14,7 @@ export const metadata: Metadata = {
 export default async function EditShotRoutinePage({ params }: { params: Promise<{ id: string }> }) {
   const session = await getAuthSession()
   if (!session) redirect("/login")
+  if (session.user.movedToSpiegel) return <MovedPage kind="routineEdit" />
 
   const { id } = await params
   const routine = await getShotRoutineById(id)

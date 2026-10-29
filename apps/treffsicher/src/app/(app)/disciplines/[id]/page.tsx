@@ -19,6 +19,7 @@ import { Badge } from "@vereinsheim/ui/badge"
 import { Button } from "@vereinsheim/ui/button"
 import { Card, CardContent } from "@vereinsheim/ui/design2/card"
 import { Separator } from "@vereinsheim/ui/separator"
+import { disciplineWritable } from "@/lib/moved/rules"
 
 const scoringTypeLabel: Record<string, string> = {
   WHOLE: "Ganzringe",
@@ -47,7 +48,11 @@ export default async function DisciplineDetailPage({
 
   if (!discipline) notFound()
 
-  const canManage = !discipline.isSystem || session.user.role === "ADMIN"
+  // Konto nach Spiegel umgezogen: keine Einstellungen des Kontos mehr, ändern nur ein Admin an der Disziplin der Anlage
+  const moved = session.user.movedToSpiegel
+  const canManage =
+    (!discipline.isSystem || session.user.role === "ADMIN") &&
+    disciplineWritable({ moved, isAdmin: session.user.role === "ADMIN" }, discipline)
   const usage = canManage ? await getDisciplineUsage(discipline.id) : null
   const canDelete = usage?.canDelete ?? false
 
@@ -56,13 +61,13 @@ export default async function DisciplineDetailPage({
       <div className="space-y-3">
         <div className="flex items-start justify-end">
           <DetailActionBar>
-            {!discipline.isArchived && (
+            {!moved && !discipline.isArchived && (
               <FavouriteDisciplineButton
                 disciplineId={discipline.id}
                 initialFavourite={favouriteDisciplineId === discipline.id}
               />
             )}
-            {!discipline.isArchived && (
+            {!moved && !discipline.isArchived && (
               <HideDisciplineButton disciplineId={discipline.id} initialHidden={isHidden} />
             )}
             {canManage && (

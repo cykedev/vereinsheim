@@ -25,6 +25,7 @@ export default async function GoalDetailPage({ params }: { params: Promise<{ id:
         sessions={sessions}
         backHref="/goals"
         displayTimeZone={displayTimeZone}
+        readOnly={session.user.movedToSpiegel}
       />
     </div>
   )

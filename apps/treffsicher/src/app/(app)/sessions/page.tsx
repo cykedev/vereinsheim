@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { getAuthSession } from "@/lib/auth-helpers"
 import { redirect } from "next/navigation"
 import { getSessions } from "@/lib/sessions/actions"
+import { MOVED_TEXTS } from "@/lib/moved/texts"
 import { getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
 import { BookOpen } from "lucide-react"
 import { SESSION_TYPE_LABELS } from "@/lib/sessions/presentation"
@@ -37,6 +38,7 @@ export default async function SessionsPage({
   const displayTimeZone = getDisplayTimeZone()
   const session = await getAuthSession()
   if (!session) redirect("/login")
+  const readOnly = session.user.movedToSpiegel
 
   const resolvedSearchParams = await searchParams
   const sessions = await getSessions()
@@ -96,10 +98,14 @@ export default async function SessionsPage({
         sessions.length === 0 ? (
           <EmptyState
             title="Noch keine Einheiten vorhanden"
-            description="Starte mit deiner ersten Einheit."
             icon={BookOpen}
-            actionLabel="Neue Einheit"
-            actionHref="/sessions/new"
+            {...(readOnly
+              ? { description: MOVED_TEXTS.emptyHint }
+              : {
+                  description: "Starte mit deiner ersten Einheit.",
+                  actionLabel: "Neue Einheit",
+                  actionHref: "/sessions/new",
+                })}
           />
         ) : (
           <EmptyState title="Keine Einheiten für die gewählten Filter." />

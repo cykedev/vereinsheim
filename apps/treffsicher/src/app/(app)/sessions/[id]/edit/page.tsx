@@ -6,6 +6,7 @@ import { getDisciplines } from "@/lib/disciplines/actions"
 import { getGoalsForSelection } from "@/lib/goals/actions"
 import { SessionForm } from "@/components/app/session-form/SessionForm"
 import { PageHeader } from "@vereinsheim/ui/design2/page-header"
+import { MovedPage } from "@/components/app/moved/MovedPage"
 
 export const metadata: Metadata = {
   title: "Einheit bearbeiten",
@@ -14,6 +15,7 @@ export const metadata: Metadata = {
 export default async function EditSessionPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await getAuthSession()
   if (!session) redirect("/login")
+  if (session.user.movedToSpiegel) return <MovedPage kind="sessionEdit" />
 
   const { id } = await params
   const [sessionRecord, disciplines, goals] = await Promise.all([

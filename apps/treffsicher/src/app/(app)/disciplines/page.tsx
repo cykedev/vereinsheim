@@ -13,6 +13,7 @@ import { Card, CardContent } from "@vereinsheim/ui/design2/card"
 import { EmptyState } from "@vereinsheim/ui/empty-state"
 import { CreateItemLinkButton } from "@/components/app/sessions/CreateItemLinkButton"
 import { PageHeader } from "@vereinsheim/ui/design2/page-header"
+import { MOVED_TEXTS } from "@/lib/moved/texts"
 
 const scoringTypeLabel: Record<string, string> = {
   WHOLE: "Ganzringe",
@@ -27,6 +28,15 @@ export default async function DisciplinesPage() {
   const session = await getAuthSession()
   if (!session) redirect("/login")
   const isAdmin = session.user.role === "ADMIN"
+  // Konto nach Spiegel umgezogen: Mitglieder legen nichts mehr an, ein Admin nur noch Disziplinen der Anlage
+  const moved = session.user.movedToSpiegel
+  const createLabel = moved
+    ? isAdmin
+      ? MOVED_TEXTS.newSystemDiscipline
+      : null
+    : isAdmin
+      ? "Neue (System-)Disziplin"
+      : "Neue Disziplin"
 
   const [disciplines, favouriteDisciplineId, hiddenIds] = await Promise.all([
     getDisciplinesForManagement(),
@@ -45,20 +55,23 @@ export default async function DisciplinesPage() {
             : "Nutze System-Disziplinen, verwalte eigene Disziplinen und setze deinen Favoriten."
         }
         action={
-          <CreateItemLinkButton
-            href="/disciplines/new"
-            label={isAdmin ? "Neue (System-)Disziplin" : "Neue Disziplin"}
-          />
+          createLabel ? (
+            <CreateItemLinkButton href="/disciplines/new" label={createLabel} />
+          ) : undefined
         }
       />
 
       {disciplines.length === 0 ? (
         <EmptyState
           title="Noch keine Disziplinen vorhanden"
-          description="Lege deine erste Disziplin an."
           icon={Target}
-          actionLabel={isAdmin ? "Neue (System-)Disziplin" : "Neue Disziplin"}
-          actionHref="/disciplines/new"
+          {...(createLabel
+            ? {
+                description: moved ? undefined : "Lege deine erste Disziplin an.",
+                actionLabel: createLabel,
+                actionHref: "/disciplines/new",
+              }
+            : { description: MOVED_TEXTS.emptyHint })}
         />
       ) : (
         <div className="space-y-2">

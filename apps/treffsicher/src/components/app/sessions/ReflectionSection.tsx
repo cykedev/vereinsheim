@@ -9,13 +9,15 @@ import type { Reflection } from "@/generated/prisma/client"
 interface Props {
   sessionId: string
   initialData: Reflection | null
+  /** Konto nach Spiegel umgezogen: nur lesen, ohne „erfassen“ und „Bearbeiten“ */
+  readOnly?: boolean
 }
 
 // Section-Wrapper für die Reflexion.
 // Zeigt je nach Datenlage: leeren Zustand → "Erfassen", oder Lesemodus → "Bearbeiten".
 // Wechsel in den Bearbeitungsmodus öffnet das ReflectionForm inline.
 // Nach dem Speichern: router.refresh() synchronisiert den Server-Zustand.
-export function ReflectionSection({ sessionId, initialData }: Props) {
+export function ReflectionSection({ sessionId, initialData, readOnly = false }: Props) {
   const router = useRouter()
   const [editing, setEditing] = useState(false)
 
@@ -41,9 +43,11 @@ export function ReflectionSection({ sessionId, initialData }: Props) {
     return (
       <div className="space-y-3">
         <p className="text-sm text-muted-foreground">Noch nicht erfasst.</p>
-        <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
-          Reflexion erfassen
-        </Button>
+        {!readOnly && (
+          <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
+            Reflexion erfassen
+          </Button>
+        )}
       </div>
     )
   }
@@ -110,9 +114,11 @@ export function ReflectionSection({ sessionId, initialData }: Props) {
       {/* Fallback wenn alles leer (nur routineFollowed gesetzt) */}
       {!hasContent && <p className="text-sm text-muted-foreground">Keine weiteren Angaben.</p>}
 
-      <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
-        Bearbeiten
-      </Button>
+      {!readOnly && (
+        <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
+          Bearbeiten
+        </Button>
+      )}
     </div>
   )
 }

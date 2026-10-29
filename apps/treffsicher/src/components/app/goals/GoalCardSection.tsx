@@ -10,7 +10,10 @@ import {
   type GoalSessionOption,
   type GoalWithAssignments,
 } from "@/lib/goals/actions"
-import { GoalActions } from "@/components/app/goals/goal-card-section/GoalActions"
+import {
+  GoalActions,
+  GoalReadOnlyActions,
+} from "@/components/app/goals/goal-card-section/GoalActions"
 import { GoalAssignmentsForm } from "@/components/app/goals/goal-card-section/GoalAssignmentsForm"
 import { GoalEditForm } from "@/components/app/goals/goal-card-section/GoalEditForm"
 import { GoalSummary } from "@/components/app/goals/goal-card-section/GoalSummary"
@@ -23,9 +26,17 @@ interface Props {
   sessions: GoalSessionOption[]
   backHref?: string
   displayTimeZone: string
+  /** Konto nach Spiegel umgezogen: das Ziel lesen, nicht bearbeiten, zuweisen oder löschen */
+  readOnly?: boolean
 }
 
-export function GoalCardSection({ goal, sessions, backHref, displayTimeZone }: Props) {
+export function GoalCardSection({
+  goal,
+  sessions,
+  backHref,
+  displayTimeZone,
+  readOnly = false,
+}: Props) {
   const router = useRouter()
   const [editingGoal, setEditingGoal] = useState(false)
   const [editingAssignments, setEditingAssignments] = useState(false)
@@ -127,19 +138,23 @@ export function GoalCardSection({ goal, sessions, backHref, displayTimeZone }: P
     <div className="space-y-3">
       {message && <p className="text-sm text-destructive">{message}</p>}
       <div className="space-y-2">
-        <GoalActions
-          pending={pending}
-          backHref={backHref}
-          onEditGoal={() => setEditingGoal(true)}
-          onEditAssignments={openAssignmentsEditor}
-          onDelete={handleDelete}
-          deleteDecision={goalDelete({
-            title: goal.title,
-            from: formatDateOnly(goal.dateFrom, displayTimeZone),
-            to: formatDateOnly(goal.dateTo, displayTimeZone),
-            sessions: goal.sessionCount,
-          })}
-        />
+        {readOnly ? (
+          <GoalReadOnlyActions backHref={backHref} />
+        ) : (
+          <GoalActions
+            pending={pending}
+            backHref={backHref}
+            onEditGoal={() => setEditingGoal(true)}
+            onEditAssignments={openAssignmentsEditor}
+            onDelete={handleDelete}
+            deleteDecision={goalDelete({
+              title: goal.title,
+              from: formatDateOnly(goal.dateFrom, displayTimeZone),
+              to: formatDateOnly(goal.dateTo, displayTimeZone),
+              sessions: goal.sessionCount,
+            })}
+          />
+        )}
         <GoalSummary goal={goal} displayTimeZone={displayTimeZone} />
       </div>
     </div>

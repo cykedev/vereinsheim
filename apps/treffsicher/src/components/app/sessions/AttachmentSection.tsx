@@ -22,13 +22,15 @@ interface AttachmentData {
 interface Props {
   sessionId: string
   attachments: AttachmentData[]
+  /** Konto nach Spiegel umgezogen: Anhänge ansehen, nicht hochladen oder löschen */
+  readOnly?: boolean
 }
 
 /**
  * Interaktiver Bereich für Datei-Anhänge einer Einheit.
  * Zeigt bestehende Anhänge (Bildvorschau / PDF-Link) und ermöglicht Upload und Löschung.
  */
-export function AttachmentSection({ sessionId, attachments }: Props) {
+export function AttachmentSection({ sessionId, attachments, readOnly = false }: Props) {
   const [isPending, startTransition] = useTransition()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [message, setMessage] = useState<string | null>(null)
@@ -108,16 +110,18 @@ export function AttachmentSection({ sessionId, attachments }: Props) {
                   <span className="min-w-0 truncate text-xs text-muted-foreground">
                     {attachment.label ?? attachment.originalName}
                   </span>
-                  <Button
-                    variant="ghost"
-                    size="xs"
-                    className="h-7 shrink-0 text-destructive hover:text-destructive"
-                    disabled={isPending}
-                    aria-label={`Anhang ${attachment.originalName} löschen`}
-                    onClick={() => setDeleteCandidate(attachment)}
-                  >
-                    Löschen
-                  </Button>
+                  {!readOnly && (
+                    <Button
+                      variant="ghost"
+                      size="xs"
+                      className="h-7 shrink-0 text-destructive hover:text-destructive"
+                      disabled={isPending}
+                      aria-label={`Anhang ${attachment.originalName} löschen`}
+                      onClick={() => setDeleteCandidate(attachment)}
+                    >
+                      Löschen
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -126,32 +130,34 @@ export function AttachmentSection({ sessionId, attachments }: Props) {
       )}
 
       {/* Upload-Formular */}
-      <form onSubmit={handleUpload} className="space-y-1">
-        <Label htmlFor="file" className="text-sm">
-          Datei anhängen
-        </Label>
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <Input
-            ref={fileInputRef}
-            id="file"
-            name="file"
-            type="file"
-            accept="image/jpeg,image/png,image/webp,application/pdf"
-            disabled={isPending}
-            className="flex-1"
-          />
-          <Button
-            type="submit"
-            disabled={isPending}
-            variant="outline"
-            size="sm"
-            className="shrink-0"
-          >
-            {isPending ? "Wird hochgeladen…" : "Hochladen"}
-          </Button>
-        </div>
-        <p className="text-xs text-muted-foreground">JPEG, PNG, WebP oder PDF — max. 10 MB</p>
-      </form>
+      {!readOnly && (
+        <form onSubmit={handleUpload} className="space-y-1">
+          <Label htmlFor="file" className="text-sm">
+            Datei anhängen
+          </Label>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <Input
+              ref={fileInputRef}
+              id="file"
+              name="file"
+              type="file"
+              accept="image/jpeg,image/png,image/webp,application/pdf"
+              disabled={isPending}
+              className="flex-1"
+            />
+            <Button
+              type="submit"
+              disabled={isPending}
+              variant="outline"
+              size="sm"
+              className="shrink-0"
+            >
+              {isPending ? "Wird hochgeladen…" : "Hochladen"}
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">JPEG, PNG, WebP oder PDF — max. 10 MB</p>
+        </form>
+      )}
 
       {/* bleibt eingehängt, damit der Fokus beim Schließen zum Knopf zurückkehrt */}
       <DecisionDialog

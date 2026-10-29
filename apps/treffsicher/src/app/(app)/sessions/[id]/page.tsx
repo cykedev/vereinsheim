@@ -32,13 +32,19 @@ export default async function SessionDetailPage({ params }: { params: Promise<{ 
   const sessionRecord = await getSessionById(id)
   if (!sessionRecord) notFound()
 
+  // Konto nach Spiegel umgezogen: alles lesen, nichts ändern
+  const readOnly = session.user.movedToSpiegel
   const viewModel = buildSessionDetailViewModel(sessionRecord)
   const rings = sessionRingDistribution(viewModel.scoringShots)
 
   return (
     <ExplainProvider>
       <div className="space-y-6">
-        <SessionDetailHeader session={sessionRecord} displayTimeZone={displayTimeZone} />
+        <SessionDetailHeader
+          session={sessionRecord}
+          displayTimeZone={displayTimeZone}
+          readOnly={readOnly}
+        />
 
         <Separator />
 
@@ -82,6 +88,7 @@ export default async function SessionDetailPage({ params }: { params: Promise<{ 
             }
           >
             <AttachmentSection
+              readOnly={readOnly}
               sessionId={sessionRecord.id}
               attachments={sessionRecord.attachments.map((attachment) => ({
                 id: attachment.id,
@@ -95,18 +102,30 @@ export default async function SessionDetailPage({ params }: { params: Promise<{ 
         )}
 
         <SessionDetailSectionCard title="Befinden" icon={Heart} help="wellbeing">
-          <WellbeingSection sessionId={sessionRecord.id} initialData={sessionRecord.wellbeing} />
+          <WellbeingSection
+            sessionId={sessionRecord.id}
+            initialData={sessionRecord.wellbeing}
+            readOnly={readOnly}
+          />
         </SessionDetailSectionCard>
 
         {viewModel.hasPrognosisFeedback && (
           <SessionDetailSectionCard title="Prognose" icon={Gauge}>
-            <PrognosisSection sessionId={sessionRecord.id} initialData={sessionRecord.prognosis} />
+            <PrognosisSection
+              sessionId={sessionRecord.id}
+              initialData={sessionRecord.prognosis}
+              readOnly={readOnly}
+            />
           </SessionDetailSectionCard>
         )}
 
         {viewModel.hasPrognosisFeedback && (
           <SessionDetailSectionCard title="Feedback" icon={CheckCircle2}>
-            <FeedbackSection sessionId={sessionRecord.id} initialData={sessionRecord.feedback} />
+            <FeedbackSection
+              sessionId={sessionRecord.id}
+              initialData={sessionRecord.feedback}
+              readOnly={readOnly}
+            />
           </SessionDetailSectionCard>
         )}
 
@@ -118,7 +137,11 @@ export default async function SessionDetailPage({ params }: { params: Promise<{ 
         )}
 
         <SessionDetailSectionCard title="Reflexion" icon={MessageSquare}>
-          <ReflectionSection sessionId={sessionRecord.id} initialData={sessionRecord.reflection} />
+          <ReflectionSection
+            sessionId={sessionRecord.id}
+            initialData={sessionRecord.reflection}
+            readOnly={readOnly}
+          />
         </SessionDetailSectionCard>
       </div>
     </ExplainProvider>

@@ -39,15 +39,20 @@ export default async function ShotRoutineDetailPage({
       <div className="space-y-3">
         <div className="flex items-start justify-end">
           <DetailActionBar>
-            <Button variant="ghost" size="icon" asChild>
-              <Link href={`/shot-routines/${id}/edit`} aria-label="Ablauf bearbeiten">
-                <Pencil className="h-4 w-4" />
-              </Link>
-            </Button>
-            <DeleteShotRoutineButton
-              routineId={id}
-              decision={routineDelete({ name: routine.name, steps: steps.length })}
-            />
+            {/* Konto nach Spiegel umgezogen: nur lesen */}
+            {!session.user.movedToSpiegel && (
+              <>
+                <Button variant="ghost" size="icon" asChild>
+                  <Link href={`/shot-routines/${id}/edit`} aria-label="Ablauf bearbeiten">
+                    <Pencil className="h-4 w-4" />
+                  </Link>
+                </Button>
+                <DeleteShotRoutineButton
+                  routineId={id}
+                  decision={routineDelete({ name: routine.name, steps: steps.length })}
+                />
+              </>
+            )}
             <Button variant="ghost" size="sm" className="px-2 sm:px-3" asChild>
               <Link href="/shot-routines" aria-label="Zurück zu Abläufen">
                 <ArrowLeft className="h-4 w-4 sm:mr-1.5" />

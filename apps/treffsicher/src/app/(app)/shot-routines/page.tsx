@@ -6,6 +6,7 @@ import { getAuthSession } from "@/lib/auth-helpers"
 import { formatDateOnly, getDisplayTimeZone } from "@vereinsheim/lib/dateTime"
 import { getShotRoutines } from "@/lib/shot-routines/actions"
 import type { RoutineStep } from "@/lib/shot-routines/actions"
+import { MOVED_TEXTS } from "@/lib/moved/texts"
 import { CreateItemLinkButton } from "@/components/app/sessions/CreateItemLinkButton"
 import { PageHeader } from "@vereinsheim/ui/design2/page-header"
 import { Card, CardContent } from "@vereinsheim/ui/design2/card"
@@ -20,6 +21,7 @@ export default async function ShotRoutinesPage() {
   const session = await getAuthSession()
   if (!session) redirect("/login")
 
+  const readOnly = session.user.movedToSpiegel
   const routines = await getShotRoutines()
 
   return (
@@ -27,16 +29,24 @@ export default async function ShotRoutinesPage() {
       <PageHeader
         title="Schuss-Abläufe"
         description="Lege Abläufe mit ihren Schritten an und verfeinere sie laufend."
-        action={<CreateItemLinkButton href="/shot-routines/new" label="Neuer Ablauf" />}
+        action={
+          readOnly ? undefined : (
+            <CreateItemLinkButton href="/shot-routines/new" label="Neuer Ablauf" />
+          )
+        }
       />
 
       {routines.length === 0 ? (
         <EmptyState
           title="Noch kein Ablauf vorhanden"
-          description="Erstelle deinen ersten Schuss-Ablauf."
           icon={ListChecks}
-          actionLabel="Neuer Ablauf"
-          actionHref="/shot-routines/new"
+          {...(readOnly
+            ? { description: MOVED_TEXTS.emptyHint }
+            : {
+                description: "Erstelle deinen ersten Schuss-Ablauf.",
+                actionLabel: "Neuer Ablauf",
+                actionHref: "/shot-routines/new",
+              })}
         />
       ) : (
         <div className="space-y-2">

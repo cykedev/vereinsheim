@@ -5,6 +5,7 @@ import { getDisciplines, getFavouriteDisciplineId } from "@/lib/disciplines/acti
 import { getGoalsForSelection } from "@/lib/goals/actions"
 import { SessionForm } from "@/components/app/session-form/SessionForm"
 import { PageHeader } from "@vereinsheim/ui/design2/page-header"
+import { MovedPage } from "@/components/app/moved/MovedPage"
 
 export const metadata: Metadata = {
   title: "Neue Einheit",
@@ -13,6 +14,7 @@ export const metadata: Metadata = {
 export default async function NewSessionPage() {
   const session = await getAuthSession()
   if (!session) redirect("/login")
+  if (session.user.movedToSpiegel) return <MovedPage kind="sessionNew" />
 
   const [disciplines, favouriteDisciplineId, goals] = await Promise.all([
     getDisciplines(),

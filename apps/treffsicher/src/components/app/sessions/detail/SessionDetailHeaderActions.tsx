@@ -10,13 +10,20 @@ interface Props {
   sessionId: string
   isFavourite: boolean
   deleteDecision: Decision
+  /** Konto nach Spiegel umgezogen: nur PDF und Zurück */
+  readOnly?: boolean
 }
 
 // Header-Aktionen bleiben icon-first, damit auf kleinen Breiten alle Kernaktionen sichtbar bleiben.
-export function SessionDetailHeaderActions({ sessionId, isFavourite, deleteDecision }: Props) {
+export function SessionDetailHeaderActions({
+  sessionId,
+  isFavourite,
+  deleteDecision,
+  readOnly = false,
+}: Props) {
   return (
     <DetailActionBar>
-      <FavouriteButton sessionId={sessionId} initialFavourite={isFavourite} />
+      {!readOnly && <FavouriteButton sessionId={sessionId} initialFavourite={isFavourite} />}
       <Button variant="ghost" size="sm" className="px-2 sm:px-3" asChild>
         <Link
           href={`/sessions/${sessionId}/export/pdf`}
@@ -27,12 +34,16 @@ export function SessionDetailHeaderActions({ sessionId, isFavourite, deleteDecis
           <span className="hidden sm:inline">PDF</span>
         </Link>
       </Button>
-      <Button variant="ghost" size="icon" asChild>
-        <Link href={`/sessions/${sessionId}/edit`} aria-label="Bearbeiten">
-          <Pencil className="h-4 w-4" />
-        </Link>
-      </Button>
-      <DeleteSessionButton sessionId={sessionId} decision={deleteDecision} />
+      {!readOnly && (
+        <>
+          <Button variant="ghost" size="icon" asChild>
+            <Link href={`/sessions/${sessionId}/edit`} aria-label="Bearbeiten">
+              <Pencil className="h-4 w-4" />
+            </Link>
+          </Button>
+          <DeleteSessionButton sessionId={sessionId} decision={deleteDecision} />
+        </>
+      )}
       <Button variant="ghost" size="sm" className="px-2 sm:px-3" asChild>
         <Link href="/sessions" aria-label="Zurück zu Einheiten">
           <ArrowLeft className="h-4 w-4 sm:mr-1.5" />

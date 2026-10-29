@@ -9,10 +9,12 @@ import { SessionDetailHeaderActions } from "@/components/app/sessions/detail/Ses
 interface Props {
   session: SessionDetail
   displayTimeZone: string
+  /** Konto nach Spiegel umgezogen: keine Aktionen zum Ändern */
+  readOnly?: boolean
 }
 
 // Header bündelt Typ/Datum/Meta und hält Aktionen separat, damit Detailseiten oben stabil bleiben.
-export function SessionDetailHeader({ session, displayTimeZone }: Props) {
+export function SessionDetailHeader({ session, displayTimeZone, readOnly = false }: Props) {
   return (
     <div className="space-y-3">
       <div className="flex items-start justify-between gap-2">
@@ -22,6 +24,7 @@ export function SessionDetailHeader({ session, displayTimeZone }: Props) {
         <SessionDetailHeaderActions
           sessionId={session.id}
           isFavourite={session.isFavourite}
+          readOnly={readOnly}
           deleteDecision={sessionDelete({
             when: `${formatWeekdayDate(session.date, displayTimeZone)} um ${formatTimeOfDay(session.date, displayTimeZone)}`,
             discipline: session.discipline?.name ?? null,

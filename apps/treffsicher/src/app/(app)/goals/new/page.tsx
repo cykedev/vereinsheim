@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "@vereinsheim/ui/select"
 import { PageHeader } from "@vereinsheim/ui/design2/page-header"
+import { MovedPage } from "@/components/app/moved/MovedPage"
 
 export const metadata: Metadata = {
   title: "Neues Ziel",
@@ -28,6 +29,7 @@ export default async function NewGoalPage({
 }) {
   const session = await getAuthSession()
   if (!session) redirect("/login")
+  if (session.user.movedToSpiegel) return <MovedPage kind="goalNew" />
   const { error } = await searchParams
 
   return (
