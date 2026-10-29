@@ -35,10 +35,13 @@ export function evidenceText(evidence: CardEvidenceInfo, timeZone: string): stri
  */
 export function CardEvidence({
   cardId,
+  when,
   evidence,
   timeZone,
 }: {
   cardId: string
+  /** Tag und Uhrzeit der Scheibe wie in Listen, für die Rückfrage */
+  when: string
   evidence: CardEvidenceInfo | null
   timeZone: string
 }) {
@@ -149,7 +152,7 @@ export function CardEvidence({
       )}
       {evidence && (
         <DecisionDialog
-          decision={evidenceRemove({ kind: evidence.kind })}
+          decision={evidenceRemove({ when, name: null, kind: evidence.kind, others: 0 })}
           open={asking}
           onOpenChange={setAsking}
           onConfirm={() => run("remove", () => removeEvidence(cardId))}

@@ -790,14 +790,34 @@ export function enteredDiscard(): Decision {
   }
 }
 
-/** den Beleg (Foto oder PDF) einer eingetragenen Scheibe entfernen */
-export function evidenceRemove({ kind }: { kind: "photo" | "pdf" }): Decision {
+/** einen Beleg (Foto oder PDF) einer eigenen Scheibe entfernen; `others` sind die Belege, die an ihr bleiben */
+export function evidenceRemove({
+  when,
+  name,
+  kind,
+  others,
+}: {
+  /** Tag und Uhrzeit der Scheibe wie in Listen */
+  when: string
+  /** der Name der Datei; null bei Belegen ohne Namen */
+  name: string | null
+  kind: "photo" | "pdf"
+  others: number
+}): Decision {
+  const what = name ? `„${name}“` : kind === "pdf" ? "ein PDF" : "ein Foto"
   return {
     title: "Beleg entfernen?",
-    about: `An dieser Scheibe hängt ${kind === "pdf" ? "ein PDF" : "ein Foto"}.`,
-    happens: ["Spiegel entfernt den Beleg von der Scheibe."],
-    notHappening: ["Die Werte der Scheibe bleiben, wie sie sind."],
-    undo: "Den Beleg wieder anhängen, solange du die Datei noch hast.",
+    about: `An der Scheibe vom ${spoken(when)} hängt ${what}.`,
+    happens: ["Spiegel entfernt diese eine Datei von der Scheibe."],
+    notHappening: [
+      ...(others === 1
+        ? ["Der andere Beleg bleibt."]
+        : others > 1
+          ? [`Die anderen ${others} Belege bleiben.`]
+          : []),
+      "Die Werte der Scheibe bleiben, wie sie sind.",
+    ],
+    undo: "Die Datei wieder anhängen, solange du sie noch hast.",
     confirmLabel: "Entfernen",
     destructive: true,
   }

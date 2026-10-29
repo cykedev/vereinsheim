@@ -57,7 +57,12 @@ export function CardActions({
         {entry?.kind === "entered" && (
           <>
             <CardEntry cardId={cardId} from={entry.from} editable={entry.editable} />
-            <CardEvidence cardId={cardId} evidence={entry.evidence} timeZone={timeZone} />
+            <CardEvidence
+              cardId={cardId}
+              when={when}
+              evidence={entry.evidence}
+              timeZone={timeZone}
+            />
           </>
         )}
         {fetch && (fetch.hex || fetch.printouts.length > 0) && (

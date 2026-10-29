@@ -741,7 +741,10 @@ describe("Schreibregeln", () => {
     ["Disziplin zeigen", disciplineShow({ name: "LG Schach 6x6", cards: 3, visible: false })],
     ["Familie entfernen", familyRemove({ name: "Zimmerstutzen" })],
     ["Eingaben verwerfen", enteredDiscard()],
-    ["Beleg entfernen", evidenceRemove({ kind: "pdf" })],
+    [
+      "Beleg entfernen",
+      evidenceRemove({ when: "Di 13.10.2026 · 19:12", name: "Liste.pdf", kind: "pdf", others: 2 }),
+    ],
   ]
 
   it.each(decisions)("%s: keine Semikolons, keine alten Wörter", (_name, decision) => {
@@ -910,19 +913,47 @@ describe("Folgen beim Einordnen einer Disziplin", () => {
 })
 
 describe("Eingabe von Hand", () => {
-  it("verwerfen und Beleg entfernen im Wortlaut des Textbuchs", () => {
+  it("verwerfen im Wortlaut des Textbuchs", () => {
     wellFormed(enteredDiscard())
     expect(enteredDiscard()).toMatchObject({
       title: "Eingaben verwerfen?",
       about: "Du hast Werte eingetragen, aber nicht gespeichert.",
       confirmLabel: "Verwerfen",
     })
-    expect(evidenceRemove({ kind: "photo" }).about).toBe("An dieser Scheibe hängt ein Foto.")
-    expect(evidenceRemove({ kind: "pdf" })).toMatchObject({
-      about: "An dieser Scheibe hängt ein PDF.",
-      happens: ["Spiegel entfernt den Beleg von der Scheibe."],
+  })
+
+  const when = "Di 13.10.2026 · 19:12"
+  it("Beleg entfernen nennt den Namen, Tag und Uhrzeit der Scheibe", () => {
+    const d = evidenceRemove({ when, name: "IMG_2041.jpg", kind: "photo", others: 0 })
+    wellFormed(d)
+    expect(d).toEqual({
+      title: "Beleg entfernen?",
+      about: "An der Scheibe vom Di 13.10.2026 um 19:12 hängt „IMG_2041.jpg“.",
+      happens: ["Spiegel entfernt diese eine Datei von der Scheibe."],
       notHappening: ["Die Werte der Scheibe bleiben, wie sie sind."],
+      undo: "Die Datei wieder anhängen, solange du sie noch hast.",
       confirmLabel: "Entfernen",
+      destructive: true,
     })
+  })
+
+  it("Beleg ohne Namen: Foto oder PDF", () => {
+    expect(evidenceRemove({ when, name: null, kind: "photo", others: 0 }).about).toBe(
+      "An der Scheibe vom Di 13.10.2026 um 19:12 hängt ein Foto."
+    )
+    expect(evidenceRemove({ when, name: null, kind: "pdf", others: 0 }).about).toBe(
+      "An der Scheibe vom Di 13.10.2026 um 19:12 hängt ein PDF."
+    )
+  })
+
+  it("die anderen Belege bleiben, in Einzahl und Mehrzahl", () => {
+    expect(evidenceRemove({ when, name: "a.pdf", kind: "pdf", others: 1 }).notHappening).toEqual([
+      "Der andere Beleg bleibt.",
+      "Die Werte der Scheibe bleiben, wie sie sind.",
+    ])
+    expect(evidenceRemove({ when, name: "a.pdf", kind: "pdf", others: 2 }).notHappening).toEqual([
+      "Die anderen 2 Belege bleiben.",
+      "Die Werte der Scheibe bleiben, wie sie sind.",
+    ])
   })
 })
