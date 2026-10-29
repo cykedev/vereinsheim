@@ -124,7 +124,7 @@ und über `nav/navigate`.
     Scheibe passte nicht mehr unter die Sprungleiste.
   - Admin sieht nur ein Admin; auf dem Telefon steckt Admin in Profil, und ist Admin offen, ist dort Profil markiert.
     Profil nennt dafür ganz oben alle Bereiche des Admins (Übersicht, Konten, Disziplinen, Listen, Anlage und Brücke,
-    `ADMIN_SECTIONS`), so ist jeder zwei Tipps entfernt. Jede Admin-Seite trägt dieselben Reiter (`AdminTabs`), auch
+    `ADMIN_SECTIONS`), so ist jeder zwei Tipps entfernt. Jede Admin-Seite trägt dieselben Reiter (`AdminTabs`, eine Zeile, die wischt), auch
     Konto, Disziplin und Liste; dort ist der Reiter ihres Bereichs markiert und führt zurück. Listen und Disziplinen
     sind gleich gebaut: Liste in Abschnitten, jede Zeile führt auf ihr Blatt, dort Einstellen mit den Folgen.
   - Platz der Leiste: `--app-bar` (72 px), gesetzt in `design2.css` an `:root`, solange der Rahmen da ist. Die Pille

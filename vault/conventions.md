@@ -66,6 +66,11 @@ app-übergreifende Komponenten gehören in diese Liste (in `MUST_MATCH` des Gate
   lang und oben voll (Rückweg, Titel, Beobachtungen, Sprungleiste). Ihre seltenen Aktionen (Disziplin, Teilen, Löschen)
   stehen am Ende im Kasten „Diese Scheibe“ (`CardActions`), je eine Zeile mit Zustand und Aktion rechts, fachlich vor
   destruktiv.
+- **Reiter:** `<TabBar>` aus `@vereinsheim/ui/design2/tab-bar` für die Seiten eines Bereichs (Links), in allen Apps
+  **eine Zeile, die wischt**; nie mehrzeilig. Der gezeigte Reiter ist in der Farbe der App markiert und rückt ins Bild,
+  auf einer Unterseite ist der Reiter ihres Bereichs markiert (`detail`) und führt zurück. Reiter in einer Seite (die
+  Analyse) sind `Segmented scroll`. Auswahlen (`Segmented`, mit `wrap` für viele oder lange Möglichkeiten) sind keine
+  Reiter und dürfen umbrechen. Entschieden am 29. Oktober 2026.
 - **Leerzustände:** `<EmptyState title description icon actionLabel actionHref />`. Kein inline
   `Keine … vorhanden`.
 - **Bestätigungen:** `<DecisionDialog>` mit den Folgen aus `lib/consequences.ts` der App (§10 „Kein Knopf ohne
@@ -200,7 +205,9 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
   Palette-Klassen und `dark:`-Varianten (§4, Farbe aus den Tokens), Opazitäts-Modifier auf `text-muted-foreground`
   (§3), inline `new Intl.*` und `toLocale*String()` (§6), ASCII-Ellipsen (§3), „… →"-Buttons (§7) und Symbolknöpfe
   (`<Button size="icon…">`, auch über mehrere Zeilen) mit einer Klasse `size-`, `h-` oder `w-` unter 6, auch halbe
-  Stufen, `px` und `[Npx]` unter 24 px (§10; der kleinste ist `icon-xs`). Rohe `<button>` sieht diese Regel nicht. Ausgenommen von `dark:` sind nur die shadcn-Primitives in `packages/ui/src/ui` und Ringwerks
+  Stufen, `px` und `[Npx]` unter 24 px (§10; der kleinste ist `icon-xs`). Rohe `<button>` sieht diese Regel nicht.
+  Reiterleisten von Hand (§2): der Stil der gezeigten Seite mit Fläche (`aria-[current=page]:bg-…`) außerhalb von
+  `design2/tab-bar` und `design2/app-frame`. Ausgenommen von `dark:` sind nur die shadcn-Primitives in `packages/ui/src/ui` und Ringwerks
   `components/ui/checkbox.tsx`, die ihre Varianten aus dem Generator mitbringen.
   Die Muster sind bewusst eng: ein „→" **darf** als Inhalt in Protokolltexten stehen. Wer eine Regel ergänzt, prüft sie
   gegen eine Probe-Datei mit absichtlichen Verstößen **und** gegen den grünen Ist-Zustand.
@@ -384,7 +391,7 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
   Möglichkeiten wie Listen und Merkmale, Schalter-Chip, weicher Kreis
   `round-toggle` für eine Einstellung neben einer großen Zahl oder in einer Filterzeile: 32 px, innen die Kartenfläche, Rahmen
   `line-strong`, Gold nur für das Hervorgehobene; dazu für jede App: Darstellung `theme` und `theme-switch` mit eigenem
-  Schlüssel je App, `toaster`, Rahmen `app-frame`, Seite `page`, `decision-dialog`, `undo`, Hilfe `help` und
+  Schlüssel je App, `toaster`, Rahmen `app-frame`, Reiter `tab-bar`, Seite `page`, `decision-dialog`, `undo`, Hilfe `help` und
   `help-sheet`, das Maß der Leisten `bar`, Ringwert-Farben als Hex `score-colors`; Liste in `packages/ui/CLAUDE.md`).
   Die Schreibregeln teilen alle Apps über `@vereinsheim/lib/wording` (Semikolon, drei Punkte), die Skriptprüfung über
   `@vereinsheim/pruefen`. Was
