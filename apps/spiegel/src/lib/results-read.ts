@@ -8,7 +8,7 @@ import {
   type MetricDefinition,
   type Scoring,
 } from "@vereinsheim/shot-core/metrics"
-import type { CardMark, ProjectedSeries } from "@vereinsheim/shot-core/projection"
+import type { CardMark, CardProjection, ProjectedSeries } from "@vereinsheim/shot-core/projection"
 import { modalLength } from "@vereinsheim/shot-core/stats"
 import type { TargetId } from "@vereinsheim/shot-core/targets"
 import type { CardProvenance } from "@vereinsheim/shot-ui/detail"
@@ -55,6 +55,32 @@ export interface ResultCard {
   result: ResultValue | null
   /** Wertungsschüsse, bei nur Probe die Probe */
   shots: number
+  /** Gesamtergebnis in ganzen Ringen und in Zehnteln (Zehntel × 10); null, wo die Scheibe es nicht hat */
+  totals: CardTotals
+  /** der Schlüssel der Übernahme, null ohne */
+  importKey: string | null
+}
+
+/** das Gesamtergebnis einer Scheibe in beiden Wertungen, unabhängig von der Wertung ihrer Familie */
+export interface CardTotals {
+  rings: number | null
+  decimalTenths: number | null
+}
+
+/**
+ * Das Gesamtergebnis aus der Projektion, auf demselben Weg wie die Spalte Ergebnis der Liste (`result.decimal` in der
+ * Wertung): ganze Ringe, Zehntel als ganze Zahl; null, wo die Projektion keinen Wert hat
+ */
+export function cardTotals(projection: Pick<CardProjection, "values">): CardTotals {
+  const result = metricByKey("result.decimal") as MetricDefinition
+  const value = (scoring: Scoring) =>
+    projection.values[inScoring(result, scoring).key]?.value ?? null
+  const rings = value("rings")
+  const decimal = value("decimal")
+  return {
+    rings: rings === null ? null : Math.round(rings),
+    decimalTenths: decimal === null ? null : Math.round(decimal * 10),
+  }
 }
 
 /**
@@ -116,6 +142,8 @@ export async function resultCards(
           ? { value: listed.row.result, scoring: listed.row.resultScoring, digits: listed.digits }
           : null,
       shots: card.projection.printedShots,
+      totals: cardTotals(card.projection),
+      importKey: card.importKey,
     }
   })
 }

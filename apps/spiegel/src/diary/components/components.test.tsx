@@ -30,6 +30,8 @@ const card = (id: string, over: Partial<ResultCard> = {}): ResultCard => ({
   provenance: "printout",
   result: { value: 374.3, scoring: "decimal", digits: 1 },
   shots: 40,
+  totals: { rings: 365, decimalTenths: 3743 },
+  importKey: null,
   ...over,
 })
 const entry = (over: Partial<EntryView> = {}): EntryView => ({

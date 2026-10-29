@@ -54,6 +54,8 @@ export interface OverviewCard extends ProjectedCard {
   waiting?: false
   /** die Uhrzeit ist nicht bekannt (`timeKnown`); nur dann gesetzt */
   timeUnknown?: true
+  /** Schlüssel der Übernahme aus Treffsicher (`Card.importKey`); null ohne */
+  importKey: string | null
 }
 
 /**
@@ -104,6 +106,7 @@ const listOf = (ranking: { id: number; name: string } | null): CardList | null =
 const OVERVIEW_SELECT = {
   id: true,
   origin: true,
+  importKey: true,
   timeUnknown: true,
   _count: { select: { printouts: true } },
   startedAt: true,
@@ -169,6 +172,7 @@ function toOverview(rows: readonly OverviewRow[]): OverviewCard[] {
         list: listOf(row.ranking),
         provenance: provenanceOf(row.origin),
         ...timeUnknownOf(row),
+        importKey: row.importKey,
         projection,
       },
     ]

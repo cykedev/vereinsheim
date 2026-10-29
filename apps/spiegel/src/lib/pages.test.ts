@@ -24,6 +24,7 @@ const card = (
   family: family ? { slug: family, name: family.toUpperCase() } : null,
   list: null,
   provenance: "measured",
+  importKey: null,
   projection: {
     version: "p",
     probeOnly: false,
