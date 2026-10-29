@@ -142,13 +142,25 @@ describe("Texte der Auswertung", () => {
       })
     ).toBe("Guter Schlaf: gleichauf mit deiner Form (6). Schlechter: 0,10 über (6).")
     expect(
-      influenceSentence("energy", { entered: 9, high: { n: 6, mean: 0.2 }, low: { n: 3, mean: 0 } })
+      influenceSentence("energy", {
+        entered: 12,
+        high: { n: 6, mean: 0.2 },
+        low: { n: 3, mean: 0 },
+      })
     ).toBe("Unter der Mitte liegen erst 3 Einträge. Für ein Urteil braucht es 5.")
     expect(
-      influenceSentence("energy", { entered: 7, high: { n: 1, mean: 0.2 }, low: { n: 6, mean: 0 } })
+      influenceSentence("energy", {
+        entered: 12,
+        high: { n: 1, mean: 0.2 },
+        low: { n: 6, mean: 0 },
+      })
     ).toBe("Über der Mitte liegt erst 1 Eintrag. Für ein Urteil braucht es 5.")
     expect(
-      influenceSentence("energy", { entered: 6, high: { n: 3, mean: 0.2 }, low: { n: 2, mean: 0 } })
+      influenceSentence("energy", {
+        entered: 12,
+        high: { n: 3, mean: 0.2 },
+        low: { n: 2, mean: 0 },
+      })
     ).toBe(
       "Über der Mitte liegen 3 Einträge, darunter 2. Für ein Urteil braucht es auf jeder Seite 5."
     )
@@ -165,9 +177,14 @@ describe("Texte der Auswertung", () => {
         high: { n: 0, mean: null },
         low: { n: 0, mean: null },
       })
-    ).toBe(
-      "Über der Mitte liegen 0 Einträge, darunter 0. Für ein Urteil braucht es auf jeder Seite 5."
-    )
+    ).toBe("Erst 1 Eintrag mit Befinden. Für ein Urteil braucht es 10.")
+    expect(
+      influenceSentence("energy", {
+        entered: 0,
+        high: { n: 0, mean: null },
+        low: { n: 0, mean: null },
+      })
+    ).toBe("Noch kein Eintrag mit einem Wert für Energie. Für ein Urteil braucht es 10.")
   })
 
   it("nennt die Grundlage nur, wenn etwas nicht zählt", () => {
