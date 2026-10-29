@@ -1,15 +1,19 @@
 import { describe, expect, it } from "vitest"
 
-import type { ProjectedCard } from "@vereinsheim/shot-core/projection"
-
-import { markWarmup } from "./warmup"
+import { markWarmup, type WarmupCard } from "./warmup"
 
 const ZONE = "Europe/Berlin"
 
-type Card = ProjectedCard & { family: string | null }
+type Card = WarmupCard & { family: string | null }
 
 /** eine Scheibe zu `iso` (UTC) in der Familie lp, ohne Werte; nur die Felder, die die Regel liest, zählen */
-const card = (id: string, iso: string, probeOnly: boolean, family: string | null = "lp"): Card => ({
+const card = (
+  id: string,
+  iso: string,
+  probeOnly: boolean,
+  family: string | null = "lp",
+  extra: Partial<WarmupCard> & { printedShots?: number } = {}
+): Card => ({
   id,
   startedAtMs: Date.parse(iso),
   kind: "training",
@@ -20,10 +24,13 @@ const card = (id: string, iso: string, probeOnly: boolean, family: string | null
     version: "test",
     probeOnly,
     suspicious: false,
-    printedShots: 10,
+    printedShots: extra.printedShots ?? 10,
     values: {},
     records: { decimal: null, rings: null },
   },
+  ...(extra.provenance ? { provenance: extra.provenance } : {}),
+  ...(extra.waiting === false ? { waiting: false as const } : {}),
+  ...(extra.timeUnknown ? { timeUnknown: true as const } : {}),
 })
 
 const marked = (cards: readonly Card[]) =>
@@ -79,5 +86,27 @@ describe("markWarmup: Abend in der Anzeige-Zone, vor 4 Uhr der Vortag", () => {
     expect("warmup" in markWarmup([stale], { timeZone: ZONE, familyOf: (c) => c.family })[0]).toBe(
       false
     )
+  })
+
+  it("ein leerer Stand nach einem Training im Probe-Modus macht kein Einschießen", () => {
+    const probe = card("p", "2026-03-10T18:00:00Z", true)
+    const empty = { printedShots: 0, provenance: "measured" as const }
+    expect(marked([probe, card("leer", "2026-03-10T18:30:00Z", false, "lp", empty)])).toEqual([])
+    // ein Ausdruck ohne Werte, der nicht mehr wartet, ebenso
+    const done = { printedShots: 0, provenance: "printout" as const, waiting: false as const }
+    expect(marked([probe, card("pdf", "2026-03-10T18:30:00Z", false, "lp", done)])).toEqual([])
+    // ein Ausdruck, der noch auf die Anlage wartet, ist die Wertung des Abends
+    const waiting = { printedShots: 0, provenance: "printout" as const }
+    expect(marked([probe, card("scan", "2026-03-10T18:30:00Z", false, "lp", waiting)])).toEqual([
+      "p",
+    ])
+  })
+
+  it("eine Scheibe ohne bekannte Uhrzeit ist weder Einschießen noch Wertung (12 Uhr ist ein Platzhalter)", () => {
+    // von Hand ohne Uhrzeit: 12 Uhr MEZ; die Probe um 10 Uhr läge sonst davor
+    const noon = card("hand", "2026-03-10T11:00:00Z", false, "lp", { timeUnknown: true })
+    expect(marked([card("p", "2026-03-10T09:00:00Z", true), noon])).toEqual([])
+    const probeNoon = card("q", "2026-03-10T11:00:00Z", true, "lp", { timeUnknown: true })
+    expect(marked([probeNoon, card("w", "2026-03-10T18:00:00Z", false)])).toEqual([])
   })
 })

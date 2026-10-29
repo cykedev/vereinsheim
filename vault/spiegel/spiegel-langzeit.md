@@ -158,7 +158,9 @@ bleibt der eingebaute Vergleich.
   Abends (vor 4 Uhr der Vortag) in derselben Familie beginnt, ist Einschießen (`warmupIds` im Fachkern). Es zählt in
   Fortschritt, Vergleichen und Start (Schnitte, Form, Formband, Rekorde) nur mit „Einschießen mitzählen“ (Vorgabe aus,
   `includeWarmup`, Adresse `warmup=1`). Jede andere Scheibe nur aus Probe zählt immer wie ein Training, auch Probe nach
-  der letzten Wertung des Abends. Die Regel gilt beim Lesen: `overviewCards` markiert über `markWarmup` (`shot-ui`) mit
+  der letzten Wertung des Abends. Als Wertung zählt dafür eine Scheibe mit Wertungsschuss oder ein Ausdruck, der noch
+  auf die Anlage wartet; ein leerer Stand macht kein Einschießen, eine Scheibe ohne bekannte Uhrzeit (12 Uhr als
+  Platzhalter) ist weder Einschießen noch Wertung. Die Regel gilt beim Lesen: `overviewCards` markiert über `markWarmup` (`shot-ui`) mit
   den sichtbaren Scheiben; eine gelöschte Wertung macht kein Einschießen. Der Kopf nennt es („14 Scheiben, 2
   Einschießen nicht gezählt“, dahinter „?“ zur Hilfe „Einschießen“), Umfang, Wochen und Kalender zählen alle Scheiben.
   Im Verlauf steht Einschießen mit Schalter hohl wie jede Scheibe nur aus Probe.
