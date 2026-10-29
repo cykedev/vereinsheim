@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest"
 import { listOnEvening } from "../nav/navigate"
 import { DEFAULT_LIST, type ListQuery } from "../nav/routes"
 import { NOW, periodCard, projected, TZ } from "../period/testSeason"
+import { WARMUP_REASON } from "../period/warmup"
 import {
   cardListModel,
   eveningDay,
@@ -504,5 +505,36 @@ describe("eine Scheibe der Brücke ohne Schuss", () => {
       .find((r) => r.id === "leer")!
     expect(row.reasons).toMatchObject({ rings: "noch kein Schuss", shots: "noch kein Schuss" })
     expect("provenance" in row).toBe(false)
+  })
+})
+
+describe("Einschießen in der Liste", () => {
+  // ein Abend: Wertung Ø 9,5, Einschießen Ø 8,0 (beim Lesen markiert), Wertung Ø 10,0
+  const evening: ListInputCard[] = [
+    lg(periodCard("w1", 1, [95, 95], { startedAtMs: at(16) })),
+    {
+      card: {
+        ...projected(periodCard("e", 1, [80, 80], { startedAtMs: at(17), probe: true })),
+        warmup: true,
+      },
+      family: "lg-freihand",
+    },
+    lg(periodCard("w2", 1, [100, 100], { startedAtMs: at(18) })),
+  ]
+  const rows = cardListModel(evening, query(), context).evenings.flatMap((e) => e.rows)
+  const row = (id: string) => rows.find((r) => r.id === id)!
+
+  it("der Abstand rechnet ohne Einschießen: 10,0 gegen 9,5, nicht gegen 8,75", () => {
+    expect(row("w2").delta?.n).toBe(1)
+    expect(row("w2").delta?.delta).toBeCloseTo(0.5, 9)
+  })
+
+  it("die Zeile des Einschießens steht in der Liste, ohne Abstand, mit Grund", () => {
+    expect(rows.map((r) => r.id)).toEqual(["w2", "e", "w1"])
+    expect(row("e").warmup).toBe(true)
+    expect(row("e").delta).toBeNull()
+    expect(row("e").reasons).toEqual({ delta: WARMUP_REASON })
+    expect(row("e").mean).toBeCloseTo(8, 9)
+    expect("warmup" in row("w2")).toBe(false)
   })
 })

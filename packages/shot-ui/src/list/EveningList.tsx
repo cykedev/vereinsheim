@@ -104,6 +104,7 @@ export function EveningList({
       formatWeekdayDate(noonOf(day, timeZone), timeZone),
       time,
       KIND_TEXT[row.kind],
+      row.warmup ? "Einschießen, zählt nicht" : null,
       quietProvenance(row.provenance),
       row.result === null
         ? `ohne Ergebnis${resultReason(row) ? ` (${resultReason(row)})` : ""}`
@@ -252,7 +253,7 @@ export function EveningList({
                               {time ?? <Dash reason={TIME_UNKNOWN} />}
                             </td>
                             <td className={cn(CELL, "text-muted-foreground")}>
-                              <KindMark kind={row.kind} />
+                              <KindMark kind={row.kind} warmup={row.warmup} />
                               {row.provenance && (
                                 <span
                                   data-provenance-word
@@ -266,6 +267,7 @@ export function EveningList({
                             {(["rings", "decimal"] as const).map((scoring) => {
                               const value =
                                 row.resultScoring === scoring ? row.result : row.otherResult
+                              // Einschießen zählt nicht: seine Zahlen leise, auch die Wertung der Scheibe
                               const ofCard = row.ofCard && row.resultScoring === scoring
                               return (
                                 <td
@@ -277,7 +279,11 @@ export function EveningList({
                                   className={cn(
                                     CELL,
                                     "text-right whitespace-nowrap",
-                                    ofCard ? "font-semibold" : "text-foreground-2"
+                                    row.warmup
+                                      ? "text-muted-foreground"
+                                      : ofCard
+                                        ? "font-semibold"
+                                        : "text-foreground-2"
                                   )}
                                 >
                                   {value === null ? (
@@ -288,7 +294,14 @@ export function EveningList({
                                 </td>
                               )
                             })}
-                            <td data-mean className={cn(CELL, "text-right")}>
+                            <td
+                              data-mean
+                              className={cn(
+                                CELL,
+                                "text-right",
+                                row.warmup && "text-muted-foreground"
+                              )}
+                            >
                               {row.mean === null ? (
                                 <Dash reason={row.reasons?.mean} />
                               ) : (

@@ -45,4 +45,14 @@ describe("Art in den Listen", () => {
     expect(html.match(/Wettkampf nur Probe/g)).toHaveLength(2)
     expect(html).toContain('<span class="sr-only">Wettkampf nur Probe</span>')
   })
+
+  it("Einschießen: darunter leise das Wort, der Screenreader hört es nach der Art", () => {
+    const html = renderToStaticMarkup(h(KindMark, { kind: "probe", warmup: true }))
+    expect(visible(html)).toBe("ProbeEinschießen")
+    expect(html).toContain(
+      '<span data-warmup-word="true" aria-hidden="true" class="block text-xs text-muted-foreground">Einschießen</span>'
+    )
+    expect(html).toContain('<span class="sr-only">Training nur Probe, Einschießen</span>')
+    expect(renderToStaticMarkup(h(KindMark, { kind: "probe" }))).not.toContain("Einschießen")
+  })
 })

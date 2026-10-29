@@ -133,7 +133,7 @@ export function CardList({
                   </button>
                 </td>
                 <td className="px-1 py-1.5 text-center text-muted-foreground">
-                  <KindMark kind={itemKind(card)} />
+                  <KindMark kind={itemKind(card)} warmup={card.warmup} />
                 </td>
                 <td className="px-2 py-1.5 text-right">
                   {value

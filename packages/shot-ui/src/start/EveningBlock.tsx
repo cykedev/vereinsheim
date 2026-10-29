@@ -188,7 +188,7 @@ export function EveningBlock({
               <RouteLink
                 route={cardRoute(row.id)}
                 data-start-card={row.id}
-                aria-label={`Scheibe${time ? ` um ${time}` : ""}, ${KIND_TEXT[row.kind]}${provenance ? `, ${provenance}` : ""}, Ergebnis ${result}${row.result === null ? (reason ? ` (${reason})` : "") : ` ${name(row.resultScoring)}`}${second ? `, ${second}` : ""}`}
+                aria-label={`Scheibe${time ? ` um ${time}` : ""}, ${KIND_TEXT[row.kind]}${row.warmup ? ", Einschießen, zählt nicht" : ""}${provenance ? `, ${provenance}` : ""}, Ergebnis ${result}${row.result === null ? (reason ? ` (${reason})` : "") : ` ${name(row.resultScoring)}`}${second ? `, ${second}` : ""}`}
                 className="row-span-2 grid grid-cols-[auto_minmax(0,1fr)] grid-rows-subgrid gap-x-3 gap-y-0.5 rounded-xl border border-line-strong p-2 hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-ring"
               >
                 {/* ohne Lagen je Schuss die Scheibe leise, ohne Mitte wie die kleinen Scheiben gemessener Scheiben */}
@@ -199,7 +199,9 @@ export function EveningBlock({
                   className="row-span-2 size-14 self-start"
                 />
                 <span data-start-meta className="text-[13px] text-muted-foreground">
-                  {[time, KIND_TEXT[row.kind], provenance].filter(Boolean).join(" · ")}
+                  {[time, KIND_TEXT[row.kind], row.warmup ? "Einschießen" : null, provenance]
+                    .filter(Boolean)
+                    .join(" · ")}
                 </span>
                 {/* umbrechen nur zwischen den Wertungen, jede bleibt beisammen (kein „ganze / Ringe“); ein Grund bricht um */}
                 <span

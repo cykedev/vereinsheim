@@ -19,7 +19,12 @@ const LIST: ListRoute = {
 
 const at = (hourUtc: number, minute = 0, day = 29) => Date.UTC(2026, 8, day, hourUtc, minute)
 /** Scheiben mit Schüssen: das Modell bekommt ihre Projektion, die kleinen Scheiben ihre Lagen */
-type RawInput = { card: PeriodCard; family: string; scoring?: "decimal" | "rings" }[]
+type RawInput = {
+  card: PeriodCard
+  family: string
+  scoring?: "decimal" | "rings"
+  warmup?: true
+}[]
 const INPUT: RawInput = [
   { card: periodCard("a", 1, [100, 102, 98], { startedAtMs: at(16, 30) }), family: "lg-freihand" },
   { card: periodCard("b", 1, [101, 103], { startedAtMs: at(17, 45) }), family: "lg-freihand" },
@@ -38,7 +43,11 @@ const render = (
   const model = cardListModel(
     input.map((c) => ({
       family: c.family,
-      card: { ...projected(c.card), ...(c.scoring ? { scoring: c.scoring } : {}) },
+      card: {
+        ...projected(c.card),
+        ...(c.scoring ? { scoring: c.scoring } : {}),
+        ...(c.warmup ? { warmup: c.warmup } : {}),
+      },
     })),
     { ...DEFAULT_LIST, family: "lg-freihand" },
     { timeZone: TZ, nowMs: NOW, named: [], scoring }
@@ -357,5 +366,52 @@ describe("Herkunft und Gründe in den Zeilen", () => {
       /aria-label="[^"]*Training, vom Ausdruck, ohne Ergebnis \(wartet auf die Anlage\)/
     )
     expect(rowOf("s")).toMatch(/aria-label="[^"]*Training, eingetragen, Ergebnis 380,0/)
+  })
+})
+
+describe("Einschießen in der Scheiben-Liste", () => {
+  // ein Abend: Einschießen, danach die Wertung; ein Abend davor nur mit Probe (ein Training im Probe-Modus)
+  const html = render("decimal", [
+    {
+      card: periodCard("e", 1, [80, 82, 81], { startedAtMs: at(16), probe: true }),
+      family: "lg-freihand",
+      warmup: true,
+    },
+    { card: periodCard("w", 1, [100, 101, 99], { startedAtMs: at(17) }), family: "lg-freihand" },
+    {
+      card: periodCard("t", 3, [96, 97], { startedAtMs: at(16, 0, 27), probe: true }),
+      family: "lg-freihand",
+    },
+  ])
+  const rowOf = (id: string) => {
+    const start = html.indexOf(`data-card-row="${id}"`)
+    return html.slice(start, html.indexOf("</tr>", start))
+  }
+  const cell = (row: string, attribute: string) =>
+    row.match(new RegExp(`<td ${attribute}[^>]*>`))?.[0] ?? ""
+
+  it("das Wort nur an der Einschieß-Zeile; ein Training im Probe-Modus trägt nur „Probe“", () => {
+    expect(rowOf("e")).toContain("data-warmup-word")
+    expect(rowOf("w")).not.toContain("data-warmup-word")
+    expect(rowOf("t")).toContain('data-kind="probe"')
+    expect(rowOf("t")).not.toContain("data-warmup-word")
+    expect([...html.matchAll(/data-warmup-word/g)]).toHaveLength(1)
+  })
+
+  it("Ergebnis und Ø des Einschießens stehen leise, nicht fett", () => {
+    for (const attribute of ["data-rings", "data-decimal", "data-mean"]) {
+      const td = cell(rowOf("e"), attribute)
+      expect(td, attribute).toContain("text-muted-foreground")
+      expect(td, attribute).not.toContain("font-semibold")
+      expect(cell(rowOf("t"), attribute), attribute).not.toContain("text-muted-foreground")
+    }
+    expect(rowOf("e")).toContain('title="Einschießen zählt nicht"')
+  })
+
+  it("der Name des Links nennt das Einschießen", () => {
+    expect(rowOf("e")).toMatch(
+      /aria-label="[^"]*Training nur Probe, Einschießen, zählt nicht, [^"]*"/
+    )
+    expect(rowOf("t")).not.toMatch(/aria-label="[^"]*Einschießen/)
   })
 })

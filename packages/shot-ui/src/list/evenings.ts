@@ -29,6 +29,7 @@ import {
   isProbeOnly,
   type CardKind,
 } from "../period/model"
+import { WARMUP_REASON } from "../period/warmup"
 
 /** eine Liste aus Meyton (`Rangliste`): Kennung für die Adresse, Name wie Meyton ihn schreibt */
 export interface ListOption {
@@ -82,6 +83,8 @@ export interface ListRow {
   provenance?: CardProvenance
   /** die Uhrzeit ist nicht bekannt; nur dann gesetzt */
   timeUnknown?: true
+  /** Einschießen (`warmupIds`): steht in der Liste, zählt im Abstand nicht; nur dann gesetzt */
+  warmup?: true
   /** warum eine Zahl fehlt; nur, wenn eine fehlt */
   reasons?: RowReasons
 }
@@ -210,7 +213,8 @@ export function cardListModel(
   const resultMetric = (scoring: Scoring) => inScoring(metricByKey("result.decimal")!, scoring)
   const other = (scoring: Scoring): Scoring => (scoring === "rings" ? "decimal" : "rings")
   const meanMetric = inScoring(metricByKey("result.decimalMean")!, context.scoring)
-  // der Abstand rechnet über die Familie in der Art, auch vor dem Zeitraum (wie die Seite eines Zeitraums)
+  // der Abstand rechnet über die Familie in der Art, auch vor dem Zeitraum, ohne Einschießen (wie die Seite eines
+  // Zeitraums)
   const deltas = deltasBefore(
     projectedValues(ofKind, metricByKey("result.decimalMean")!, context.scoring),
     new Set(shown.map((c) => c.id)),
@@ -250,7 +254,13 @@ export function cardListModel(
       ...(value("decimal") === null ? { decimal: reasonFor(resultMetric("decimal")) } : {}),
       ...(mean === null ? { mean: reasonFor(meanMetric) } : {}),
       ...(delta === null
-        ? { delta: mean === null ? reasonFor(meanMetric) : "keine Scheibe davor" }
+        ? {
+            delta: card.warmup
+              ? WARMUP_REASON
+              : mean === null
+                ? reasonFor(meanMetric)
+                : "keine Scheibe davor",
+          }
         : {}),
       ...(card.projection.printedShots === 0 ? { shots: reasonFor(resultMetric("rings")) } : {}),
     }
@@ -267,6 +277,7 @@ export function cardListModel(
       shots: card.projection.printedShots,
       ...(provenance !== "measured" ? { provenance } : {}),
       ...(timeUnknown.has(card.id) ? { timeUnknown: true as const } : {}),
+      ...(card.warmup ? { warmup: true as const } : {}),
       ...(Object.keys(reasons).length ? { reasons } : {}),
     }
     const evening = days.get(day) ?? { day, rows: [], shots: 0, others: [] }

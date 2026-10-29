@@ -12,10 +12,10 @@ export const KIND_TEXT: Readonly<Record<CardKind, string>> = {
 
 /**
  * Art einer Scheibe in einer Zeile der Listen: Wettkampf als goldener Pokal (wie der Kreis der Art), Training ohne
- * Zeichen (das Übliche), nur aus Probe dahinter das Wort „Probe“, auch beim Wettkampf. Den vollen Namen hört der
- * Screenreader.
+ * Zeichen (das Übliche), nur aus Probe dahinter das Wort „Probe“, auch beim Wettkampf; Einschießen darunter leise das
+ * Wort „Einschießen“. Den vollen Namen hört der Screenreader.
  */
-export function KindMark({ kind }: { kind: CardKind }) {
+export function KindMark({ kind, warmup = false }: { kind: CardKind; warmup?: boolean }) {
   const competition = kind === "competition" || kind === "competition-probe"
   const probe = kind === "probe" || kind === "competition-probe"
   // der Name als Tooltip am sichtbaren Zeichen, das Screenreader übergehen: sie hören ihn einmal
@@ -28,7 +28,14 @@ export function KindMark({ kind }: { kind: CardKind }) {
           {probe && "Probe"}
         </span>
       )}
-      <span className="sr-only">{KIND_TEXT[kind]}</span>
+      {warmup && (
+        <span data-warmup-word aria-hidden="true" className="block text-xs text-muted-foreground">
+          Einschießen
+        </span>
+      )}
+      <span className="sr-only">
+        {warmup ? `${KIND_TEXT[kind]}, Einschießen` : KIND_TEXT[kind]}
+      </span>
     </span>
   )
 }

@@ -12,7 +12,7 @@ import { startModel } from "./model"
 
 const at = (day: number, hour: number) => Date.UTC(2026, 8, day, hour - 2)
 /** Scheiben mit Schüssen: das Modell bekommt ihre Projektion, die kleinen Scheiben ihre Lagen */
-type Raw = { card: PeriodCard; family: string }
+type Raw = { card: PeriodCard; family: string; warmup?: true }
 const lp = (card: PeriodCard): Raw => ({ card, family: "lp-freihand" })
 const render = (
   cards: Raw[],
@@ -24,7 +24,10 @@ const render = (
   } = {}
 ) => {
   const model = startModel({
-    cards: cards.map((c) => ({ ...c, card: projected(c.card) })),
+    cards: cards.map(({ warmup, ...c }) => ({
+      ...c,
+      card: { ...projected(c.card), ...(warmup ? { warmup } : {}) },
+    })),
     timeZone: TZ,
     nowMs: NOW,
     named: [],
@@ -191,6 +194,21 @@ describe("Block des letzten Abends auf Start", () => {
     expect(text(tiles)).toContain("18:00 · Wettkampf nur Probe")
     expect(text(tiles)).toContain("19:00 · Training nur Probe")
     expect(tiles).toMatch(/aria-label="Scheibe um 18:00, Wettkampf nur Probe,/)
+  })
+
+  it("Einschießen nennt die Kachel in der Metazeile und im Namen des Links", () => {
+    const tiles = render([
+      {
+        ...lp(periodCard("e", 0, [80, 82], { startedAtMs: at(25, 18), probe: true })),
+        warmup: true,
+      },
+      lp(periodCard("w", 0, [94, 94], { startedAtMs: at(25, 19) })),
+    ])
+    expect(text(tiles)).toContain("18:00 · Training nur Probe · Einschießen")
+    expect(text(tiles)).not.toContain("19:00 · Training · Einschießen")
+    expect(tiles).toMatch(
+      /aria-label="Scheibe um 18:00, Training nur Probe, Einschießen, zählt nicht,/
+    )
   })
 
   it("Kacheln einer Zeile teilen zwei Zeilen: Uhrzeit und Art, darunter das Ergebnis auf einer Linie, auch wenn ein Text umbricht", () => {
