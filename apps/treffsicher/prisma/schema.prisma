@@ -76,6 +76,9 @@ model User {
   favouriteDiscipline   Discipline? @relation("UserFavouriteDiscipline", fields: [favouriteDisciplineId], references: [id], onDelete: SetNull)
   // Ausgeblendete Disziplinen — bleiben in Einheiten sichtbar, fehlen in der Auswahl
   hiddenDisciplines     Discipline[] @relation("UserHiddenDisciplines")
+  // Konto ist nach Spiegel umgezogen ([[adr-033]], Stufe 3): Treffsicher zeigt es nur noch lesend. Gesetzt und
+  // aufgehoben nur von der Übernahme in Spiegels CLI; null heißt nicht umgezogen
+  movedToSpiegelAt DateTime?
 }
 
 // ─────────────────────────────────────────────
