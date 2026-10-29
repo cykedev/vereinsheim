@@ -133,7 +133,7 @@ export async function placeAttachment(
       day: string
       scoring: "WHOLE" | "TENTH"
       shots: number
-      total: { rings?: number; decimalTenths?: number } | null
+      total: { rings?: number | null; decimalTenths?: number | null } | null
     } | null
     attachment: PreparedAttachment
   }

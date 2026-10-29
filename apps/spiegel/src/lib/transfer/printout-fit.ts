@@ -16,7 +16,7 @@ export function printoutFits(
     day: string
     scoring: "WHOLE" | "TENTH"
     shots: number
-    total: { rings?: number; decimalTenths?: number } | null
+    total: { rings?: number | null; decimalTenths?: number | null } | null
   },
   timeZone: string
 ): boolean {
@@ -27,5 +27,5 @@ export function printoutFits(
   if (reading.shots.length !== unit.shots) return false
   const wanted = unit.scoring === "WHOLE" ? unit.total?.rings : unit.total?.decimalTenths
   const printed = unit.scoring === "WHOLE" ? reading.total.rings : reading.total.decimalTenths
-  return wanted !== undefined && wanted === printed
+  return wanted !== undefined && wanted !== null && wanted === printed
 }

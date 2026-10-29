@@ -31,7 +31,10 @@ export interface EveningCard {
  */
 export function decideCard(
   session: { type: TreffsicherSessionType; scoring: "WHOLE" | "TENTH" },
-  details: { shots: number; total: { rings?: number; decimalTenths?: number } | null } | null,
+  details: {
+    shots: number
+    total: { rings?: number | null; decimalTenths?: number | null } | null
+  } | null,
   evening: readonly EveningCard[]
 ): CardDecision {
   if (session.type !== "TRAINING" && session.type !== "WETTKAMPF")
