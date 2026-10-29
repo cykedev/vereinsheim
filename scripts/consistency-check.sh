@@ -3,7 +3,7 @@
 #
 # FATAL (Exit 1):
 #   - die app-lokalen Shared-Dateien weichen zwischen den Apps ab
-#   - Verstöße gegen die Regeln von Design 2 (ADR-030/032, vault/conventions.md §3/§4/§6/§7/§10) in den Apps
+#   - Verstöße gegen die Regeln von Design 2 (ADR-030/032, vault/conventions.md §2/§3/§4/§6/§7/§10) in den Apps
 #     und in den geteilten UI-Paketen
 # WARN (nicht blockierend):
 #   - gemeinsame Dependencies haben unterschiedliche Versionen
@@ -95,7 +95,7 @@ if [[ "$(echo "$dep_report" | sed -n 's/^__COUNT__ //p')" != "0" ]]; then
 fi
 
 echo "== Konventionen von Design 2 (fatal) =="
-# Diese Regeln stehen in vault/conventions.md §3/§4/§6/§7/§10 und werden im Code
+# Diese Regeln stehen in vault/conventions.md §2/§3/§4/§6/§7/§10 und werden im Code
 # eingehalten. Ohne Gate driften sie zurueck — deshalb fatal.
 #
 # Wichtig bei den Mustern: eng genug halten, damit legitime Faelle nicht
@@ -161,10 +161,16 @@ for dir in "${targets[@]}"; do
     }
     END { print $n // 0 }' 2>/dev/null | awk '{s+=$1} END {print s+0}')
   [[ "$n" != "0" ]] && report "$name" "$n Symbolknopf/-knoepfe unter 24 px (§10)"
+
+  # §2: Reiter sind TabBar (eine Zeile, die wischt). Eine Reiterleiste von Hand erkennt man am Stil der gezeigten
+  # Seite mit Flaeche; ihn setzen nur TabBar und der Rahmen der App.
+  n=$({ grep -rn --include='*.tsx' -E 'aria-\[current=page\]:bg-' "$dir" 2>/dev/null || true; } \
+    | { grep -vE '\.test\.tsx:|packages/ui/src/design2/(tab-bar|app-frame)\.tsx:' || true; } | wc -l | tr -d ' ')
+  [[ "$n" != "0" ]] && report "$name" "$n Reiterleiste(n) von Hand — TabBar aus @vereinsheim/ui/design2/tab-bar (§2)"
 done
 
 if [[ "$conv_fail" == "0" ]]; then
-  echo "  ok   alle Konventions-Checks (§3/§4/§6/§7/§10) in ${#targets[@]} Verzeichnissen"
+  echo "  ok   alle Konventions-Checks (§2/§3/§4/§6/§7/§10) in ${#targets[@]} Verzeichnissen"
 fi
 
 echo "== Anti-Pattern (Warnungen) =="
