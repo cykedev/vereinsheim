@@ -7,6 +7,8 @@ import { TARGETS } from "@vereinsheim/shot-core/targets"
 import { MiniTarget } from "@vereinsheim/shot-ui/target/MiniTarget"
 import { EmptyState } from "@vereinsheim/ui/empty-state"
 
+import { ANALYSIS_TEXTS } from "../analysis/texts"
+import { ANALYSIS_PATH } from "../paths"
 import type { EntrySummary } from "../queries"
 import { entryLine, entryTitle } from "../summaries"
 import { GOAL_TEXTS } from "../goals/texts"
@@ -19,15 +21,22 @@ const PRIMARY =
 /** so viele kleine Scheiben je Eintrag in der Liste, darüber „+N“ */
 export const LIST_IMAGES = 5
 
-/** der Knopf oben je Reiter: Einträge und Fragen legen einen Eintrag an, Ziele ein Ziel, Abläufe einen Ablauf */
+/**
+ * der Knopf oben je Reiter: Einträge, Fragen und Auswertung legen einen Eintrag an, Ziele ein Ziel, Abläufe einen
+ * Ablauf
+ */
 const NEW_BUTTON = {
   entries: ["/diary/new", LIST_TEXTS.newEntry],
   thread: ["/diary/new", LIST_TEXTS.newEntry],
   goals: ["/diary/goals/new", GOAL_TEXTS.newGoal],
   routines: ["/diary/routines/new", ROUTINE_TEXTS.newRoutine],
+  analysis: ["/diary/new", LIST_TEXTS.newEntry],
 } as const
 
-/** Kopf des Tagebuchs: Titel und der Knopf des Reiters, darunter „Einträge · Fragen · Ziele · Abläufe“ */
+/**
+ * Kopf des Tagebuchs: Titel und der Knopf des Reiters, darunter „Einträge · Fragen · Ziele · Abläufe · Auswertung“. Ist
+ * die Leiste breiter als die Seite (Telefon), wischt sie in sich.
+ */
 export function DiaryHeader({ current }: { current: keyof typeof NEW_BUTTON }) {
   const [href, label] = NEW_BUTTON[current]
   return (
@@ -44,7 +53,7 @@ export function DiaryHeader({ current }: { current: keyof typeof NEW_BUTTON }) {
       <nav
         aria-label={LIST_TEXTS.title}
         data-diary-switch
-        className="flex gap-1 justify-self-start rounded-full bg-surface-2 p-1 text-[13px] font-semibold"
+        className="flex max-w-full gap-1 justify-self-start overflow-x-auto rounded-full bg-surface-2 p-1 text-[13px] font-semibold [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {(
           [
@@ -52,13 +61,14 @@ export function DiaryHeader({ current }: { current: keyof typeof NEW_BUTTON }) {
             ["thread", "/diary/thread", LIST_TEXTS.thread],
             ["goals", "/diary/goals", GOAL_TEXTS.tab],
             ["routines", "/diary/routines", ROUTINE_TEXTS.tab],
+            ["analysis", ANALYSIS_PATH, ANALYSIS_TEXTS.tab],
           ] as const
         ).map(([key, href, label]) => (
           <Link
             key={key}
             href={href}
             aria-current={current === key ? "page" : undefined}
-            className="rounded-full px-3.5 py-1.5 text-foreground-2 focus-visible:outline-2 focus-visible:outline-ring aria-[current=page]:bg-card aria-[current=page]:text-foreground aria-[current=page]:shadow-sm"
+            className="shrink-0 rounded-full px-3.5 py-1.5 whitespace-nowrap text-foreground-2 focus-visible:outline-2 focus-visible:outline-ring aria-[current=page]:bg-card aria-[current=page]:text-foreground aria-[current=page]:shadow-sm"
           >
             {label}
           </Link>

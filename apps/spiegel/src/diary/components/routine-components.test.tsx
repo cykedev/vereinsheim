@@ -14,7 +14,7 @@ const { DiaryHeader } = await import("./DiaryList")
 const LP = { id: 1, slug: "lp", name: "Luftpistole" }
 
 describe("Reiter „Abläufe“", () => {
-  it("vier Reiter, bei Abläufen „Neuer Ablauf“ oben", () => {
+  it("fünf Reiter, bei Abläufen „Neuer Ablauf“ oben", () => {
     const html = renderToStaticMarkup(createElement(DiaryHeader, { current: "routines" }))
     expect([...html.matchAll(/<a[^>]*href="(\/diary[^"]*)"/g)].map((m) => m[1])).toEqual([
       "/diary/routines/new",
@@ -22,6 +22,7 @@ describe("Reiter „Abläufe“", () => {
       "/diary/thread",
       "/diary/goals",
       "/diary/routines",
+      "/diary/analysis",
     ])
     expect(html).toMatch(/<a(?=[^>]*href="\/diary\/routines")(?=[^>]*aria-current="page")/)
     expect(html).toContain("Neuer Ablauf")

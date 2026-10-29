@@ -2,7 +2,7 @@
 // Telefon einschalten, Hinweis, ein Eintrag aus dem ersten Vorschlag, Texte, Befinden, Satzanfänge, ein zweiter Eintrag
 // mit der Frage des ersten, Fragen (`/diary/thread`), die Zeilen an Scheibe und Start, Scheibe lösen, Löschen mit Rückgängig, Papierkorb,
 // Export und der Dialog „Konto löschen“ mit falschem Passwort; Ziele (anlegen mit Messung und Vorschau, Stand, Notiz,
-// „Hat es geklappt?“, ändern, Zeile auf Start, Löschen mit Rückgängig) und Abläufe im eigenen Reiter (vier Reiter in
+// „Hat es geklappt?“, ändern, Zeile auf Start, Löschen mit Rückgängig) und Abläufe im eigenen Reiter (fünf Reiter in
 // einer Zeile, anlegen als Text, Leseseite, bearbeiten, Wächter, Fragen ohne Abläufe, Löschen mit Rückgängig). Am Ende sind alle Einträge, Ziele und Abläufe des
 // Demo-Kontos endgültig gelöscht und das Tagebuch ist aus, auch nach einem Abbruch.
 
@@ -16,7 +16,7 @@ interface Context {
 }
 
 const DIALOG = `$('[role="alertdialog"]')`
-const ENTRY_PATH = String.raw`/^\/diary\/(?!new$|thread$)[^/]+$/`
+const ENTRY_PATH = String.raw`/^\/diary\/(?!new$|thread$|goals$|routines$|analysis$)[^/]+$/`
 
 /** in ein Feld tippen: hineinklicken, ans Ende, tippen */
 async function typeInto(page: Page, selector: string, text: string) {
@@ -613,15 +613,14 @@ async function routines(page: Page, { base, check, record }: Context) {
   for (const width of [390, 360]) {
     await page.viewport(width, 844)
     await page.goto(`${base}/diary/routines`)
-    const tabs = await page.ev<{ rows: number; right: number; inner: number; visual: number }>(
+    const tabs = await page.ev<{ rows: number; count: number; inner: number; visual: number }>(
       `(() => { const links = $$("[data-diary-switch] a")
         return { rows: new Set(links.map((a) => Math.round(a.getBoundingClientRect().top))).size,
-          right: Math.max(...links.map((a) => a.getBoundingClientRect().right)),
-          inner: innerWidth, visual: visualViewport.width } })()`
+          count: links.length, inner: innerWidth, visual: visualViewport.width } })()`
     )
     check(
-      `Abläufe: Telefon ${width} px, die vier Reiter in einer Zeile ohne seitliches Scrollen`,
-      tabs.rows === 1 && tabs.inner === tabs.visual && tabs.right <= tabs.inner,
+      `Abläufe: Telefon ${width} px, die fünf Reiter in einer Zeile, die Seite nicht breiter`,
+      tabs.rows === 1 && tabs.count === 5 && tabs.inner === tabs.visual,
       JSON.stringify(tabs)
     )
   }

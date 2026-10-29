@@ -12,7 +12,7 @@ vi.mock("next/navigation", () => ({
 
 const { StageRow } = await import("./StageRow")
 const { EntryScreen } = await import("./EntryScreen")
-const { DiaryList } = await import("./DiaryList")
+const { DiaryHeader, DiaryList } = await import("./DiaryList")
 const { ThreadView } = await import("./ThreadView")
 const { NewEntryScreen } = await import("./NewEntryScreen")
 
@@ -234,6 +234,18 @@ describe("Seite eines Eintrags", () => {
 })
 
 describe("Liste und Faden", () => {
+  it("fünf Reiter, gewählt „Auswertung“ mit „Neuer Eintrag“ oben; die Leiste wischt in sich", () => {
+    const html = renderToStaticMarkup(createElement(DiaryHeader, { current: "analysis" }))
+    const switchHtml = html.slice(html.indexOf("data-diary-switch"))
+    expect(
+      [...switchHtml.matchAll(/<a[^>]*href="([^"]*)"[^>]*>([^<]*)</g)].map((m) => m[2])
+    ).toEqual(["Einträge", "Fragen", "Ziele", "Abläufe", "Auswertung"])
+    expect(html).toMatch(/<a(?=[^>]*href="\/diary\/analysis")(?=[^>]*aria-current="page")/)
+    expect(html.match(/aria-current="page"/g)).toHaveLength(1)
+    expect(html).toMatch(/<a[^>]*href="\/diary\/new"[^>]*>.*Neuer Eintrag/)
+    expect(html).toMatch(/data-diary-switch[^>]*overflow-x-auto/)
+  })
+
   it("leer: der Leerzustand mit „Neuer Eintrag“", () => {
     const html = renderToStaticMarkup(
       createElement(DiaryList, { entries: [], marks: {}, timeZone: ZONE })
