@@ -13,6 +13,7 @@ MOC-Hub der Treffsicher-App (Training). Führt die App-Guides und die fachlichen
 ## Guides & Notes
 
 - [[treffsicher-design2]] — Treffsicher in Design 2 (Rahmen, Darstellung, Dialoge, Hilfe)
+- [[treffsicher-read-only]] — Treffsicher lesend je Konto: ein Konto, das nach Spiegel umgezogen ist
 - [[dark-mode-only]] — dark-mode-only (abgelöst)
 - [[file-attachments]] — file-attachments
 - [[mental-modules]] — mental-modules

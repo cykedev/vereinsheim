@@ -124,7 +124,8 @@ app-übergreifende Komponenten gehören in diese Liste (in `MUST_MATCH` des Gate
 
 Marken-Logos (kollisionsfrei, je App eindeutig): **Treffsicher `Crosshair`**, **Ringwerk `CircleDot`**.
 `Target` ist Disziplinen, `Trophy` ist in Ringwerk Wettbewerb/Sieger — **keines davon als Logo**.
-Admin ist `Shield` (letzter Haupt-Nav-Eintrag), PDF/Download ist `Download`.
+Admin ist `Shield` (letzter Haupt-Nav-Eintrag), PDF/Download ist `Download`. Ein Link zu einer anderen App
+(Treffsicher „Zu Spiegel“ für ein umgezogenes Konto) ist `ArrowUpRight` und öffnet im selben Tab.
 
 ### Farben: semantische Tokens statt Palette
 

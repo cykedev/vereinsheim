@@ -1807,3 +1807,60 @@ Worten“.
 |---|---|---|
 | So liest du die Analyse, „Sicher“ und „kann Zufall sein“ | „Weil auf einer Scheibe mehrere Tests laufen, zeigt trotzdem etwa jede fünfte ganz normale Scheibe irgendwo ein „sicher versetzt“, „gestreckt“, „klar“ oder einen Ausreißer.“ | „Weil auf einer Scheibe mehrere Tests laufen, zeigt trotzdem etwa jede fünfte ganz normale Scheibe irgendwo ein „sicher versetzt“, „gestreckt“, „klar“ oder einen Ausreißer. Mit einer Pause ist es etwa jede vierte, denn auch jede Pause bekommt einen Test.“ |
 | Beobachtungen in Worten, So liest du es | „Weil mehrere Tests laufen, trifft es bei etwa jeder fünften ganz normalen Scheibe einmal zufällig zu.“ | „Weil mehrere Tests laufen, trifft es bei etwa jeder fünften ganz normalen Scheibe einmal zufällig zu. Mit einer Pause ist es etwa jede vierte.“ |
+
+## Treffsicher: Nur noch lesend (3e)
+
+**Status: freigegeben am 29. Oktober 2026** mit dem Konzept 3c/3e, umgesetzt auf `feat/tis-3e-read-only`, nicht
+released.
+
+Grund: Ein Konto, das nach Spiegel umgezogen ist, liest in Treffsicher nur noch ([[treffsicher-read-only]]). Bisher gab
+es dafür keine Texte. Anrede „du“ wie überall in Treffsicher.
+
+### 1. Hinweis auf Start
+
+- **Titel:** Dein Tagebuch ist jetzt in Spiegel.
+- **Satz:** Alle deine Einheiten, Ziele und Abläufe sind dorthin umgezogen. Hier kannst du noch alles nachlesen, aber
+  nichts mehr ändern.
+- **Knopf:** Zu Spiegel
+- **leise:** Anmelden mit deinem Konto von Spiegel
+
+### 2. Hinweis auf allen anderen Seiten
+
+- **Zeile:** Dein Tagebuch ist jetzt in Spiegel. Hier kannst du nur noch lesen.
+- **Knopf:** Zu Spiegel
+
+### 3. Rahmen
+
+- **Aktion in der Mitte und Pille der Seitenleiste:** Zu Spiegel (alt: Neue Einheit)
+- **unter dem Symbol:** Spiegel (alt: Neu)
+
+### 4. Ablehnung des Servers (jede Änderung)
+
+Dein Tagebuch ist jetzt in Spiegel. Hier kannst du nichts mehr ändern.
+
+### 5. Seite statt Formular
+
+Titel der Seite wie bisher, darunter eine Karte **Das geht jetzt in Spiegel.** mit dem Satz:
+
+- **Neue Einheit:** Dein Tagebuch ist umgezogen. Neue Einträge legst du in Spiegel unter „Tagebuch“ an.
+- **Einheit bearbeiten:** Dein Tagebuch ist umgezogen. Deine Einträge änderst du in Spiegel unter „Tagebuch“.
+- **Neues Ziel:** Deine Ziele sind mit umgezogen. Neue Ziele legst du in Spiegel unter „Tagebuch“ an, im Reiter „Ziele“.
+- **Neuer Schuss-Ablauf:** Deine Abläufe sind mit umgezogen. Neue legst du in Spiegel unter „Tagebuch“ an, im Reiter
+  „Abläufe“.
+- **Schuss-Ablauf bearbeiten:** Deine Abläufe sind mit umgezogen. Du änderst sie in Spiegel unter „Tagebuch“, im Reiter
+  „Abläufe“.
+- **Neue Disziplin:** Dein Tagebuch ist mit deinen eigenen Disziplinen umgezogen. Hier legst du keine neue mehr an.
+- **Disziplin bearbeiten:** Dein Tagebuch ist mit deinen eigenen Disziplinen umgezogen. Hier änderst du sie nicht mehr.
+
+### 6. Leere Listen
+
+alt: „Starte mit deiner ersten Einheit.“ (und je Liste) → neu: **Neues legst du jetzt in Spiegel an.**
+
+### 7. Profil, Kasten „Passwort ändern“
+
+alt: „Nach dem Speichern meldet Treffsicher dieses Konto auf allen Geräten ab.“ und das Formular → neu: **Dein Passwort
+änderst du jetzt in Spiegel, im Profil. In Treffsicher meldest du dich weiter mit deinem bisherigen Passwort an.**
+
+### 8. Disziplinen, Kopfaktion für umgezogene Admins
+
+alt: „Neue (System-)Disziplin“ → neu: **Neue System-Disziplin**

@@ -134,6 +134,21 @@ Details: vault/apps/treffsicher/treffsicher-technical-constraints.md#design--ui
 
 ---
 
+## Konto umgezogen
+
+Ein Konto, das nach Spiegel umgezogen ist (`User.movedToSpiegelAt`, gesetzt nur von der Übernahme), liest nur noch
+(vault/apps/treffsicher/treffsicher-read-only.md):
+
+- `getAuthSession` setzt `session.user.movedToSpiegel`; Seiten und Actions fragen nur dieses Feld
+- Jede Fassade mit `"use server"`, die eigene Daten ändert, ruft als erste Zeile `refuseIfMoved()` bzw.
+  `refuseDisciplineIfMoved()` (`src/lib/moved/guard.ts`); **eine neue Action braucht einen Eintrag in
+  `src/lib/moved/coverage-table.ts`**, sonst wird `coverage.test.ts` rot
+- Client-Komponenten bekommen `readOnly` (Profil: `moved`) von ihrer Seite; die alten Adressen zum Anlegen und
+  Bearbeiten zeigen `MovedPage`
+- Dev: `pnpm --filter treffsicher moved [--clear] <E-Mail>`; `SPIEGEL_URL` ist das Ziel von „Zu Spiegel“
+
+---
+
 ## Gotchas
 
 - `.env` + Uploads-Verzeichnis niemals einchecken; Migrationsdateien (`prisma/migrations/`) immer einchecken

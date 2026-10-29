@@ -26,6 +26,9 @@ Spiegel, Trefferfarben von Spiegel auch im PDF, Folgen vor jedem Bestätigen, Hi
 - Das Layout `(app)/layout.tsx` setzt `Page` mit einer festen Spalte (`grid-cols-1`): Breite Tabellen scrollen in
   sich, nicht die Seite.
 - `src/proxy.ts`: ein Konto ohne Admin-Rolle geht auf `/admin…` zum Start (`isAdminPath`).
+- Konto nach Spiegel umgezogen (`AppShell` mit `moved`): Die Aktion in der Mitte heißt „Zu Spiegel“ (`ArrowUpRight`,
+  unter dem Symbol „Spiegel“) und ist ein Link im selben Tab, ohne Adresse entfällt sie. `/sessions/new` gehört dann zum
+  Tagebuch (`currentArea`). Hinweis und Seiten: [[treffsicher-read-only]].
 
 ## Darstellung, Profil, Anmeldung
 
@@ -67,8 +70,9 @@ fehlt ein Papierkorb, eigener Plan).
 
 `pnpm --filter treffsicher pruefen` (mit `--start` gegen den eigenen Build auf :3011) prüft im Browser Rahmen, Breiten
 375 bis 1280 px ohne seitliches Scrollen, Umschalter im eigenen Feld, die untere Leiste, Darstellung ohne Aufblitzen,
-Fokus im Dialog, Admin ohne Rolle, Hilfe, „Anhang löschen“ und „Konto deaktivieren“ (Seite und Datenbank). Vor jedem
-Lauf setzt `tools/pruefen-account.ts` drei Prüfkonten in der lokalen Dev-Datenbank zurück (`pruefen@`,
+Fokus im Dialog, Admin ohne Rolle, Hilfe, „Anhang löschen“, „Konto deaktivieren“ (Seite und Datenbank) und „Nur
+lesend“ (`tools/pruefen-moved.ts`: Mitglied und Admin umgezogen, Hinweis, keine Knöpfe zum Ändern, Seiten statt
+Formularen, Admin bedienbar; am Ende beide wieder nicht umgezogen). Vor jedem Lauf setzt `tools/pruefen-account.ts` drei Prüfkonten in der lokalen Dev-Datenbank zurück (`pruefen@`,
 `pruefen-admin@`, `pruefen-ziel@treffsicher.test`, Zugangsdaten in `apps/treffsicher/.env`).
 
 Dazu lädt sie jede Hauptseite und eine Einheit in einem Tab im Hintergrund und meldet eine versteckte zweite Kopie des

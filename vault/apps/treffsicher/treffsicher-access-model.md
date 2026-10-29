@@ -10,3 +10,5 @@ documented_in: ["[[treffsicher-requirements#Nutzerverwaltung & Sicherheit]]"]
 ---
 
 **TL;DR** Keine Selbstregistrierung (Rollen ADMIN/USER, kein MANAGER); strikte Per-User-Isolation via userId (Kontrast zu ringwerk); Seed-Admin via ADMIN_*.
+
+Ein Konto, das nach Spiegel umgezogen ist, liest nur noch; Admin bleibt für Admins bedienbar ([[treffsicher-read-only]]).

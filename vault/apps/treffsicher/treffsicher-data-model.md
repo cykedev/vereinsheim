@@ -33,6 +33,7 @@ User
   ├── createdAt, isActive (Boolean — deaktiviert statt gelöscht)
   ├── sessionVersion (Int — invalidiert alte Sessions)
   ├── favouriteDisciplineId? (→ Discipline), hiddenDisciplines (→ Discipline[])
+  ├── movedToSpiegelAt? (DateTime — nach Spiegel umgezogen, nur lesend; setzt nur die Übernahme, [[treffsicher-read-only]])
   │
   ├── Sessions (Einheiten)
   │     ├── id, userId
@@ -130,6 +131,7 @@ DISPLAY_TIME_ZONE=          # Anzeige-Zeitzone (IANA, z.B. Europe/Berlin); die D
 ADMIN_EMAIL=                # E-Mail des ersten Admin-Accounts (wird beim ersten Start angelegt)
 ADMIN_PASSWORD=             # Passwort des ersten Admin-Accounts (min. 12 Zeichen)
 AUTH_TRUST_PROXY_HEADERS=   # true nur bei vertrauenswürdigem Reverse Proxy (für IP-Rate-Limit)
+SPIEGEL_URL=                # Adresse von Spiegel für „Zu Spiegel“ (Konto umgezogen); in compose.yml aus SPIEGEL_HOST, ohne sie in Dev http://localhost:3002, in Produktion kein Knopf
 AUTH_RATE_LIMIT_MAX_BUCKETS= # Max. Buckets für Login-Rate-Limit, Tabelle `LoginRateLimitBucket` (Standard: 10000)
 PRISMA_AUTO_RESOLVE_FAILED_MIGRATIONS=         # true: bekannte P3009-Fälle automatisch auflösen
 PRISMA_AUTO_RESOLVE_UNKNOWN_FAILED_MIGRATIONS= # false (sicherer Default): unbekannte Fälle stoppen
@@ -145,6 +147,8 @@ PRISMA_AUTO_RESOLVE_UNKNOWN_FAILED_MIGRATIONS= # false (sicherer Default): unbek
 - **Admin-Funktionen**: Nutzer anlegen, bearbeiten (Name, E-Mail, Rolle, Status), deaktivieren, Passwort zurücksetzen
 - **Nutzer-Funktion**: Eigenes Passwort ändern unter `/profile` (aktuelles Passwort erforderlich)
 - **Session-Invalidierung**: Passwortwechsel/-Reset erhöht `sessionVersion` — alte JWTs werden ungültig
+- **Konto umgezogen** (`movedToSpiegelAt`): liest nur noch, ändert auch das eigene Passwort nicht mehr; der Admin-Bereich
+  bleibt für Admins bedienbar ([[treffsicher-read-only]])
 
 ---
 
