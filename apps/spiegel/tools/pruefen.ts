@@ -2199,7 +2199,7 @@ async function compare(page: Page, href: string) {
   await page.viewport(1280, 900)
   await page.goto(`${BASE}/progress`)
   const toCompare = await page.ev<string | null>(
-    `$$("[data-progress-switch] a").find((a) => txt(a) === "Vergleichen")?.getAttribute("href") ?? null`
+    `$$("nav[aria-label='Fortschritt'] a").find((a) => txt(a) === "Vergleichen")?.getAttribute("href") ?? null`
   )
   check(
     "Fortschritt: Umschalter „Zeitraum · Vergleichen“ führt auf die Seite",
@@ -2248,7 +2248,9 @@ async function compare(page: Page, href: string) {
       pressed,
     }
   )
-  const switcher = await page.ev<string>(`txt($("[data-progress-switch] [aria-current=page]"))`)
+  const switcher = await page.ev<string>(
+    `txt($("nav[aria-label='Fortschritt'] [aria-current=page]"))`
+  )
   check(
     "Umschalter oben: „Vergleichen“ ist die gezeigte Seite",
     switcher === "Vergleichen",

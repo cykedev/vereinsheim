@@ -29,4 +29,10 @@ describe("ProgressSwitch", () => {
     )
     expect(render("progress")).toMatch(/aria-current="page"[^>]*>Zeitraum</)
   })
+
+  it("Reiter in der Farbe der App, keine weiße Pille", () => {
+    const html = render("progress")
+    expect(html).toContain("aria-[current=page]:bg-primary")
+    expect(html).not.toContain("bg-card")
+  })
 })
