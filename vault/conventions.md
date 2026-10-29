@@ -68,9 +68,10 @@ app-übergreifende Komponenten gehören in diese Liste (in `MUST_MATCH` des Gate
   destruktiv.
 - **Reiter:** `<TabBar>` aus `@vereinsheim/ui/design2/tab-bar` für die Seiten eines Bereichs (Links), in allen Apps
   **eine Zeile, die wischt**; nie mehrzeilig. Der gezeigte Reiter ist in der Farbe der App markiert und rückt ins Bild,
-  auf einer Unterseite ist der Reiter ihres Bereichs markiert (`detail`) und führt zurück. Reiter in einer Seite (die
-  Analyse) sind `Segmented scroll`. Auswahlen (`Segmented`, mit `wrap` für viele oder lange Möglichkeiten) sind keine
-  Reiter und dürfen umbrechen. Entschieden am 29. Oktober 2026.
+  auf einer Unterseite ist der Reiter ihres Bereichs markiert (`detail`) und führt zurück. Reiter in einer Seite sind
+  `Segmented scroll`: Eine Auswahl, die die Ansicht der Seite umschaltet, gilt als Reiter (die Analyse, die Art des
+  Vergleichs). Auswahlen, die nur filtern oder einstellen (`Segmented`, mit `wrap` für viele oder lange Möglichkeiten
+  wie Listen und Merkmale), sind keine Reiter und dürfen umbrechen. Entschieden am 29. Oktober 2026.
 - **Leerzustände:** `<EmptyState title description icon actionLabel actionHref />`. Kein inline
   `Keine … vorhanden`.
 - **Bestätigungen:** `<DecisionDialog>` mit den Folgen aus `lib/consequences.ts` der App (§10 „Kein Knopf ohne
