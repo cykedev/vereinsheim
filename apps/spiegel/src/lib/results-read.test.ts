@@ -1,5 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 
+import { metricByKey, type MetricDefinition } from "@vereinsheim/shot-core/metrics"
+import { projectedValues } from "@vereinsheim/shot-core/projection"
 import { cardListModel } from "@vereinsheim/shot-ui/list/evenings"
 import { DEFAULT_LIST } from "@vereinsheim/shot-ui/nav/routes"
 
@@ -13,6 +15,7 @@ import {
   resultCards,
   resultCardSeries,
   resultFamilies,
+  resultFormCards,
   resultGoalCards,
   resultGoalDefaults,
 } from "./results-read"
@@ -260,6 +263,117 @@ describe("resultGoalCards", () => {
       timeZone: ZONE,
     })
     expect(cards.map((c) => c.id)).toEqual([shots])
+  })
+})
+
+describe("resultFormCards", () => {
+  // eigene Abende im Juli, damit die übrigen Scheiben dieser Datei davor liegen
+  const JULY = Date.UTC(2026, 6, 2, 17)
+  const DAY = 86_400_000
+  let shots: string
+  let probe: string
+  let sums: string
+  let otherFamily: number
+
+  beforeAll(async () => {
+    shots = await card(JULY, {
+      shots: [
+        ...TEN(9).map((ring) => ({ series: 1, ring, decimalTenths: null })),
+        ...[10, 10, 10, 10, 10, 9, 9, 9, 9, 9].map((ring) => ({
+          series: 2,
+          ring,
+          decimalTenths: null,
+        })),
+      ],
+    })
+    probe = await card(JULY + DAY, {
+      shots: TEN(8).map((ring) => ({ series: null, ring, decimalTenths: null, probe: true })),
+    })
+    sums = await card(JULY + 2 * DAY, {
+      series: [
+        { series: 1, shots: 10, rings: 94 },
+        { series: 2, shots: 10, rings: 95 },
+      ],
+    })
+    const family = await db.family.create({
+      data: { slug: `lg-${site.siteId}`, name: `Luftgewehr ${site.siteId}` },
+    })
+    otherFamily = family.id
+    const discipline = await db.discipline.create({
+      data: {
+        siteId: site.siteId,
+        meytonId: null,
+        name: "LG 20 eingetragen",
+        familyId: family.id,
+        targetId: "lg-10m",
+        plannedShots: 20,
+        seriesShots: 10,
+        officialScoring: "rings",
+        confirmedAt: new Date(),
+      },
+    })
+    await card(JULY + DAY, { total: { shots: 20, rings: 190 } }, { disciplineId: discipline.id })
+    const gone = await card(JULY + 3 * DAY, { total: { shots: 20, rings: 170 } })
+    await db.card.update({ where: { id: gone }, data: { deletedAt: new Date() } })
+  })
+  afterAll(async () => {
+    await db.card.deleteMany({ where: { discipline: { familyId: otherFamily } } })
+    await db.discipline.deleteMany({ where: { familyId: otherFamily } })
+    await db.family.delete({ where: { id: otherFamily } })
+  })
+
+  it("liefert die sichtbaren eigenen Scheiben der Familie in zeitlicher Folge", async () => {
+    const { scoring, cards } = await resultFormCards(db, {
+      ownerId: site.ownerId,
+      familyId: site.familyId,
+      timeZone: ZONE,
+    })
+    expect(scoring).toBe("rings")
+    const july = cards.filter((c) => c.startedAtMs >= JULY)
+    expect(july.map((c) => c.id)).toEqual([shots, probe, sums])
+    expect(cards.map((c) => c.startedAtMs)).toEqual(
+      [...cards.map((c) => c.startedAtMs)].sort((a, b) => a - b)
+    )
+    expect(july.map((c) => c.day)).toEqual(["2026-07-02", "2026-07-03", "2026-07-04"])
+    expect(july.map((c) => c.probeOnly)).toEqual([false, true, false])
+  })
+
+  it("nimmt den Ø je Schuss der Projektion, auch für nur Probe, und die Serien je Schuss", async () => {
+    const { cards } = await resultFormCards(db, {
+      ownerId: site.ownerId,
+      familyId: site.familyId,
+      timeZone: ZONE,
+    })
+    const { shown } = await overviewCards(db, site.ownerId)
+    const metric = metricByKey("result.decimalMean") as MetricDefinition
+    const expected = new Map(
+      projectedValues(
+        shown.filter((c) => c.familyId === site.familyId),
+        metric,
+        "rings",
+        { includeProbeOnly: true }
+      ).map((v) => [v.id, v])
+    )
+    for (const id of [shots, probe, sums]) {
+      const formCard = cards.find((c) => c.id === id)!
+      const value = expected.get(id)!
+      expect(formCard.mean).not.toBeNull()
+      expect(formCard.mean!.value).toBe(value.value)
+      expect(formCard.mean!.n).toBe(value.n)
+      expect(formCard.mean!.sd).toBe(value.sd)
+    }
+    const fromShots = cards.find((c) => c.id === shots)!
+    expect(fromShots.mean).toMatchObject({ value: 9.25, n: 20 })
+    expect(fromShots.mean!.sd).toBeGreaterThan(0)
+    expect(fromShots.series).toEqual([
+      { series: 1, shots: 10, mean: 9 },
+      { series: 2, shots: 10, mean: 9.5 },
+    ])
+    expect(cards.find((c) => c.id === probe)!.mean).toMatchObject({ value: 8, n: 10 })
+    const fromSums = cards.find((c) => c.id === sums)!
+    expect(fromSums.mean).toMatchObject({ value: 9.45, n: 20 })
+    expect(fromSums.mean!.sd).toBeUndefined()
+    expect(fromSums.series![0].mean).toBeCloseTo(9.4, 9)
   })
 })
 

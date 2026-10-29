@@ -2,7 +2,12 @@
 // sichtbare Scheiben, nur was ein anderer Teil von einer Scheibe braucht. Der Ergebnisteil kennt keinen Leser davon.
 
 import { seriesCurve } from "@vereinsheim/shot-core/analysis"
-import type { Scoring } from "@vereinsheim/shot-core/metrics"
+import {
+  inScoring,
+  metricByKey,
+  type MetricDefinition,
+  type Scoring,
+} from "@vereinsheim/shot-core/metrics"
 import type { CardMark, ProjectedSeries } from "@vereinsheim/shot-core/projection"
 import { modalLength } from "@vereinsheim/shot-core/stats"
 import type { TargetId } from "@vereinsheim/shot-core/targets"
@@ -10,6 +15,7 @@ import type { CardProvenance } from "@vereinsheim/shot-ui/detail"
 import { cardListModel } from "@vereinsheim/shot-ui/list/evenings"
 import { DEFAULT_LIST } from "@vereinsheim/shot-ui/nav/routes"
 import { eveningDay } from "@vereinsheim/shot-ui/period/calendar"
+import { byStart } from "@vereinsheim/shot-ui/period/item"
 import { shownShots } from "@vereinsheim/shot-ui/shots"
 
 import type { Db } from "@/lib/db"
@@ -194,6 +200,64 @@ export async function resultGoalCards(
     decimal: card.projection.values["result.decimal"]?.value ?? null,
     series: series[card.id] ?? null,
   }))
+}
+
+/** eine eigene Scheibe einer Familie, wie die Auswertung des Tagebuchs sie braucht; Werte in der Wertung der Familie */
+export interface FormCard {
+  id: string
+  /** der Abend (ISO-Tag, vor 4 Uhr der Vortag) */
+  day: string
+  startedAtMs: number
+  kind: OverviewCard["kind"]
+  probeOnly: boolean
+  /** Ø je Schuss (`result.decimalMean` bzw. `result.ringsMean`) mit Schusszahl und Streuung der Schusswerte; null ohne */
+  mean: { value: number; n: number; sd?: number | null } | null
+  /** die Serien der Projektion mit Ø je Schuss in der Wertung der Familie; null vor Projektion 7 */
+  series: { series: number; shots: number; mean: number | null }[] | null
+}
+
+/**
+ * Alle sichtbaren eigenen Scheiben einer Familie in zeitlicher Folge (bei gleichem Beginn nach Kennung) und die
+ * Wertung der Familie. Der Ø je Schuss kommt aus der Projektion, bei „nur Probe“ über die Probe.
+ */
+export async function resultFormCards(
+  db: Db,
+  query: { ownerId: string; familyId: number; timeZone: string }
+): Promise<{ scoring: Scoring; cards: FormCard[] }> {
+  const { shown, scoringOf } = await overviewCards(db, query.ownerId)
+  const cards = shown.filter((card) => card.familyId === query.familyId).sort(byStart)
+  const slug = cards[0]?.family?.slug
+  const scoring: Scoring = slug ? scoringOf(slug) : "decimal"
+  const key = inScoring(metricByKey("result.decimalMean") as MetricDefinition, scoring).key
+  const series = await seriesOfCards(db, {
+    ownerId: query.ownerId,
+    ids: cards.map((card) => card.id),
+  })
+  return {
+    scoring,
+    cards: cards.map((card) => {
+      const entry = card.projection.values[key]
+      const mean: FormCard["mean"] = entry ? { value: entry.value, n: entry.n } : null
+      if (mean && entry.sd !== undefined) mean.sd = entry.sd
+      return {
+        id: card.id,
+        day: eveningDay(card.startedAtMs, query.timeZone),
+        startedAtMs: card.startedAtMs,
+        kind: card.kind,
+        probeOnly: card.projection.probeOnly,
+        mean,
+        series:
+          series[card.id]?.map((s) => {
+            const total = scoring === "rings" ? s.rings : s.decimal
+            return {
+              series: s.series,
+              shots: s.shots,
+              mean: total === null || !s.shots ? null : total / s.shots,
+            }
+          }) ?? null,
+      }
+    }),
+  }
 }
 
 /** was ein neues Ziel je Familie vorbelegt: Wertung, häufigste Schusszahl je Scheibe und je Serie, neueste Scheibe */
