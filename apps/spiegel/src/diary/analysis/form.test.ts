@@ -6,7 +6,7 @@ import { DELTA_WINDOW, deltasBefore } from "@vereinsheim/shot-ui/period/model"
 
 import type { FormCard } from "@/lib/results-read"
 
-import { countedCards, entryValue, formBefore, formDistance } from "./form"
+import { entryValue, formBefore, formDistance } from "./form"
 
 const DAY = 86_400_000
 const START = Date.UTC(2026, 0, 5, 17)
@@ -28,21 +28,12 @@ function card(
     day: dayOf(i),
     startedAtMs: START + i * DAY,
     kind: "training",
-    probeOnly: false,
+    warmup: false,
     mean: mean === null ? null : { value: mean, n, sd },
     series: null,
     ...rest,
   }
 }
-
-describe("countedCards", () => {
-  it("zählt an einem Abend mit Wertung nur die Wertung, an einem ohne die Probe", () => {
-    const block = card(0, 9.1, { probeOnly: true, n: 10 })
-    const scored = card(0, 9.4, { startedAtMs: START + 3_600_000 })
-    const training = card(1, 9.2, { probeOnly: true })
-    expect(countedCards([block, scored, training])).toEqual([scored, training])
-  })
-})
 
 describe("formBefore", () => {
   const cards = [9.0, 9.2, 9.4, 9.6, 9.8, 9.1].map((v, i) => card(i, v))

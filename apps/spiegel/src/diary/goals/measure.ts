@@ -42,7 +42,7 @@ export interface GoalStand {
   mean: number | null
   /** in zeitlicher Folge */
   points: GoalPoint[]
-  /** Scheiben im Zeitraum und in der Art, ohne nur Probe */
+  /** Scheiben im Zeitraum und in der Art, ohne Einschießen */
   cards: number
   /** Scheiben davon, die nicht zählen, nach Grund */
   left: { noValue: number; otherShots: number; noSeries: number }
@@ -61,7 +61,7 @@ export function measureGoal(rule: GoalRule, cards: readonly GoalCard[]): GoalSta
   const points: GoalPoint[] = []
   const inPeriod = cards
     .filter((card) => card.day >= rule.from && card.day <= rule.to)
-    .filter((card) => inKind(card, rule.cards) && !card.probeOnly)
+    .filter((card) => inKind(card, rule.cards) && !card.warmup)
     .sort((a, b) => a.startedAtMs - b.startedAtMs)
   const point = (card: GoalCard, series: number | null, raw: number): GoalPoint => {
     const value = rounded(raw, rule.scoring)

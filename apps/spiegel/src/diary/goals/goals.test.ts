@@ -237,7 +237,7 @@ describe("Ziele lesen", () => {
   })
 
   it("Vorgaben des Formulars: Wertung und Schusszahl der Disziplin", async () => {
-    const families = await goalFormFamilies(db, site.ownerId)
+    const families = await goalFormFamilies(db, site.ownerId, ZONE)
     expect(families.find((f) => f.family.id === site.familyId)).toMatchObject({
       scoring: "rings",
       shots: 40,

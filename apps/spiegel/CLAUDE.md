@@ -437,8 +437,9 @@ Stand mit `past` (`MAX_OBSERVED_LAG_MS`, SF-79).
   die Datenbank ins Bündel des Browsers (`next build` scheitert mit `node:module`); geteilte Werte stehen in
   `src/diary/paths.ts` und `components/styles.ts`. **Auswertung** (`src/diary/analysis/`, `/diary/analysis`): Einflüsse
   gegen die Form (Abstand des Ø je Schuss zum Schnitt der fünf gezählten Scheiben vor dem Abend) und Selbstbild, alles
-  beim Lesen gerechnet aus `resultFormCards`; Abend-Regel: je Abend und Familie zählen die Scheiben mit Wertung, ohne
-  Wertung die „nur Probe“ (`countedCards`). Die Reiter sind `TabBar` in der Client-Hülle `DiaryTabs` (wie `AdminTabs`:
+  beim Lesen gerechnet aus `resultFormCards`; es zählt jede Scheibe außer dem Einschießen (`warmup` aus
+  `overviewCards`, dieselbe Regel wie im Fortschritt, auch für Ziele über `resultGoalCards`; keine eigene Regel im
+  Tagebuch). Die Reiter sind `TabBar` in der Client-Hülle `DiaryTabs` (wie `AdminTabs`:
   `renderLink` geht nicht von der Server-Komponente aus). Das Vorschau-Werkzeug schreibt über `src/parts/transfer/diary-preview.ts`.
 - **Deine Daten** (Profil, `src/parts/account.ts`): `GET /api/account/export` gibt eine JSON-Datei als Strom
   (`resultsExport` in `src/lib/export/results.ts`, je 200 Scheiben eine Abfrage, und `diaryExport`), nur mit eigener

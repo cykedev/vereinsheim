@@ -219,3 +219,67 @@ describe("factorView", () => {
     ).toBeNull()
   })
 })
+
+describe("Einschießen in der Auswertung", () => {
+  // eine eigene Familie: fünf Abende mit 9,0 je Schuss im März, dann ein Abend mit Probe (6), Wertung (10) und Probe
+  // danach (8). Einschießen zählt nicht, die Probe nach der letzten Wertung schon: (200 + 80) / 30 Schuss.
+  let family: { id: number; slug: string }
+  let entryId: string
+
+  async function shotCard(
+    at: string,
+    shots: { ring: number; probe?: boolean; series: number | null }[]
+  ) {
+    const result = await writeEnteredCard(db, {
+      ownerId: site.ownerId,
+      origin: "manual",
+      disciplineId: (await db.discipline.findFirstOrThrow({ where: { familyId: family.id } })).id,
+      startedAtMs: Date.parse(at),
+      kind: "training",
+      details: { shots: shots.map((shot) => ({ decimalTenths: null, ...shot })) },
+      reason: "eingetragen",
+    })
+    if (result.kind !== "saved") throw new Error(`nicht gespeichert: ${result.kind}`)
+  }
+  const shots = (n: number, ring: number, series: number | null, probe = false) =>
+    Array.from({ length: n }, () => ({ ring, series, probe }))
+
+  beforeAll(async () => {
+    const created = await db.family.create({
+      data: { slug: `kk-analysis-${site.siteId}`, name: `Kleinkaliber ${site.siteId}` },
+    })
+    family = { id: created.id, slug: created.slug }
+    await db.discipline.create({
+      data: {
+        siteId: site.siteId,
+        meytonId: null,
+        name: "LP 20 Einschießen",
+        familyId: family.id,
+        targetId: "lp-10m",
+        plannedShots: 20,
+        seriesShots: 10,
+        officialScoring: "rings",
+        confirmedAt: new Date(),
+      },
+    })
+    for (const day of ["2026-03-02", "2026-03-03", "2026-03-04", "2026-03-05", "2026-03-06"])
+      await shotCard(`${day}T17:00:00Z`, [...shots(10, 9, 1), ...shots(10, 9, 2)])
+    await shotCard("2026-03-09T17:00:00Z", shots(10, 6, null, true))
+    await shotCard("2026-03-09T18:00:00Z", [...shots(10, 10, 1), ...shots(10, 10, 2)])
+    await shotCard("2026-03-09T19:00:00Z", shots(10, 8, null, true))
+    entryId = await entry("2026-03-09", { familyId: family.id, energy: 60 })
+  })
+  afterAll(async () => {
+    await db.card.deleteMany({ where: { discipline: { familyId: family.id } } })
+    await db.discipline.deleteMany({ where: { familyId: family.id } })
+    await db.family.delete({ where: { id: family.id } })
+  })
+
+  it("zählt Probe nach der letzten Wertung des Abends, Probe davor nicht", async () => {
+    const view = await analysisView(db, site.ownerId, { family: family.slug, season: null }, ZONE)
+    const energy = view.influences.rows.find((r) => r.aspect === "energy")!
+    expect(energy.points.map((p) => p.entryId)).toEqual([entryId])
+    // nur die Wertung ergäbe 1,0, alle drei Scheiben −0,5
+    expect(energy.points[0].distance).toBeCloseTo(280 / 30 - 9, 9)
+  })
+})

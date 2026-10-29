@@ -220,7 +220,6 @@ export async function goalView(
             ...DEFAULT_PROGRESS,
             family: family.slug,
             kind: row.kind === "result" && rule ? rule.cards : "all",
-            includeProbeOnly: false,
             choice: { type: "free", from, to: today < to ? (today < from ? from : today) : to },
           },
         })
@@ -262,10 +261,14 @@ export interface FamilyDefaults {
  * die Disziplinen zur Wahl mit ihren Vorgaben, die der neuesten eigenen Scheibe zuerst; ohne eigene Scheiben die
  * Vorgaben 40 und 10 Schuss in Zehnteln
  */
-export async function goalFormFamilies(db: Db, userId: string): Promise<FamilyDefaults[]> {
+export async function goalFormFamilies(
+  db: Db,
+  userId: string,
+  timeZone: string
+): Promise<FamilyDefaults[]> {
   const [families, defaults] = await Promise.all([
     resultFamilies(db, userId),
-    resultGoalDefaults(db, userId),
+    resultGoalDefaults(db, userId, timeZone),
   ])
   const byFamily = new Map(defaults.map((d) => [d.familyId, d]))
   return families

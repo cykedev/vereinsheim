@@ -12,7 +12,7 @@ import { SCALE_ASPECTS, type ScaleAspect, type ScalePart } from "../scales"
 import { dayOfDate } from "../validation"
 
 import { executionCheck, type ExecutionResult, type RatedCard } from "./execution"
-import { countedCards, entryValue, formBefore, formDistance } from "./form"
+import { entryValue, formBefore, formDistance } from "./form"
 import {
   influenceRows,
   type InfluenceInput,
@@ -122,7 +122,8 @@ async function analysis(
   const { scoring, cards: formCards } = family
     ? await resultFormCards(db, { ownerId: userId, familyId: family.id, timeZone })
     : { scoring: "decimal" as const, cards: [] }
-  const counted = countedCards(formCards)
+  // Einschießen zählt nicht, jede andere Scheibe schon (die Regel der Übersichten, `markWarmup`)
+  const counted = formCards.filter((card) => !card.warmup)
   const countedOf = new Map(counted.map((card) => [card.id, card]))
 
   const inputs: InfluenceInput[] = []

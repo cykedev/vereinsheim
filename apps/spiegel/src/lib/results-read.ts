@@ -16,6 +16,7 @@ import { cardListModel } from "@vereinsheim/shot-ui/list/evenings"
 import { DEFAULT_LIST } from "@vereinsheim/shot-ui/nav/routes"
 import { eveningDay } from "@vereinsheim/shot-ui/period/calendar"
 import { byStart } from "@vereinsheim/shot-ui/period/item"
+import { markWarmup } from "@vereinsheim/shot-ui/period/warmup"
 import { shownShots } from "@vereinsheim/shot-ui/shots"
 
 import type { Db } from "@/lib/db"
@@ -47,6 +48,8 @@ export interface ResultCard {
   targetId: TargetId | null
   kind: OverviewCard["kind"]
   probeOnly: boolean
+  /** Einschießen: nur Probe vor einer Wertung ihres Abends in ihrer Familie (`markWarmup`); zählt nicht */
+  warmup: boolean
   provenance: CardProvenance
   /** das Ergebnis wie vorn in der Liste der Scheiben; null ohne Wert */
   result: ResultValue | null
@@ -69,7 +72,7 @@ export async function resultCards(
     toMs?: number
   }
 ): Promise<ResultCard[]> {
-  const { shown, scoringOf } = await overviewCards(db, query.ownerId)
+  const { shown, scoringOf } = await overviewCards(db, query.ownerId, query.timeZone)
   const wanted = query.ids ? new Set(query.ids) : null
   const cards = shown.filter(
     (card) =>
@@ -106,6 +109,7 @@ export async function resultCards(
       targetId: card.targetId,
       kind: card.kind,
       probeOnly: card.projection.probeOnly,
+      warmup: card.warmup === true,
       provenance: card.provenance,
       result:
         listed && listed.row.result !== null
@@ -160,7 +164,8 @@ export interface GoalCard {
   day: string
   startedAtMs: number
   kind: OverviewCard["kind"]
-  probeOnly: boolean
+  /** Einschießen (`markWarmup`): zählt für kein Ziel */
+  warmup: boolean
   /** Schüsse wie am Ausdruck */
   shots: number
   rings: number | null
@@ -171,19 +176,23 @@ export interface GoalCard {
 
 /**
  * Die sichtbaren eigenen Scheiben einer Familie mit Beginn im Zeitraum, aus der Projektion (ohne Schüsse) über den Index
- * je Familie; die Serien in einer eigenen Abfrage, nur für diese Scheiben
+ * je Familie; die Serien in einer eigenen Abfrage, nur für diese Scheiben. Das Einschießen gilt je Abend in `timeZone`
+ * über die gelesenen Scheiben: Der Zeitraum muss die Abende, die zählen, ganz enthalten.
  */
 export async function resultGoalCards(
   db: Db,
   query: { ownerId: string; familyId: number; fromMs: number; toMs: number; timeZone: string }
 ): Promise<GoalCard[]> {
-  const cards = listable(
-    await familyCards(db, {
-      ownerId: query.ownerId,
-      familyId: query.familyId,
-      fromMs: query.fromMs,
-      toMs: query.toMs,
-    })
+  const cards = markWarmup(
+    listable(
+      await familyCards(db, {
+        ownerId: query.ownerId,
+        familyId: query.familyId,
+        fromMs: query.fromMs,
+        toMs: query.toMs,
+      })
+    ),
+    { timeZone: query.timeZone, familyOf: (card) => card.family?.slug ?? null }
   )
   const series = await seriesOfCards(db, {
     ownerId: query.ownerId,
@@ -194,7 +203,7 @@ export async function resultGoalCards(
     day: eveningDay(card.startedAtMs, query.timeZone),
     startedAtMs: card.startedAtMs,
     kind: card.kind,
-    probeOnly: card.projection.probeOnly,
+    warmup: card.warmup === true,
     shots: card.projection.printedShots,
     rings: card.projection.values["result.rings"]?.value ?? null,
     decimal: card.projection.values["result.decimal"]?.value ?? null,
@@ -209,7 +218,8 @@ export interface FormCard {
   day: string
   startedAtMs: number
   kind: OverviewCard["kind"]
-  probeOnly: boolean
+  /** Einschießen (`markWarmup`): zählt in der Auswertung nicht */
+  warmup: boolean
   /** Ø je Schuss (`result.decimalMean` bzw. `result.ringsMean`) mit Schusszahl und Streuung der Schusswerte; null ohne */
   mean: { value: number; n: number; sd?: number | null } | null
   /** die Serien der Projektion mit Ø je Schuss in der Wertung der Familie; null vor Projektion 7 */
@@ -218,13 +228,14 @@ export interface FormCard {
 
 /**
  * Alle sichtbaren eigenen Scheiben einer Familie in zeitlicher Folge (bei gleichem Beginn nach Kennung) und die
- * Wertung der Familie. Der Ø je Schuss kommt aus der Projektion, bei „nur Probe“ über die Probe.
+ * Wertung der Familie. Der Ø je Schuss kommt aus der Projektion, bei „nur Probe“ über die Probe; `warmup` markiert das
+ * Einschießen im Abend in `timeZone`.
  */
 export async function resultFormCards(
   db: Db,
   query: { ownerId: string; familyId: number; timeZone: string }
 ): Promise<{ scoring: Scoring; cards: FormCard[] }> {
-  const { shown, scoringOf } = await overviewCards(db, query.ownerId)
+  const { shown, scoringOf } = await overviewCards(db, query.ownerId, query.timeZone)
   const cards = shown.filter((card) => card.familyId === query.familyId).sort(byStart)
   const slug = cards[0]?.family?.slug
   const scoring: Scoring = slug ? scoringOf(slug) : "decimal"
@@ -244,7 +255,7 @@ export async function resultFormCards(
         day: eveningDay(card.startedAtMs, query.timeZone),
         startedAtMs: card.startedAtMs,
         kind: card.kind,
-        probeOnly: card.projection.probeOnly,
+        warmup: card.warmup === true,
         mean,
         series:
           series[card.id]?.map((s) => {
@@ -269,19 +280,26 @@ export interface GoalDefaults {
   latestMs: number
 }
 
-/** die Vorgaben eines Ziels für jede Familie mit eigenen Scheiben, in einem Durchgang */
-export async function resultGoalDefaults(db: Db, ownerId: string): Promise<GoalDefaults[]> {
-  const { shown, scoringOf } = await overviewCards(db, ownerId)
+/**
+ * die Vorgaben eines Ziels für jede Familie mit eigenen Scheiben, in einem Durchgang; Schusszahlen aus den Scheiben, die
+ * ein Ziel zählt (ohne Einschießen, Abend in `timeZone`)
+ */
+export async function resultGoalDefaults(
+  db: Db,
+  ownerId: string,
+  timeZone: string
+): Promise<GoalDefaults[]> {
+  const { shown, scoringOf } = await overviewCards(db, ownerId, timeZone)
   const series = await seriesOfCards(db, {
     ownerId,
-    ids: shown.filter((card) => !card.projection.probeOnly).map((card) => card.id),
+    ids: shown.filter((card) => !card.warmup).map((card) => card.id),
   })
   const byFamily = new Map<number, OverviewCard[]>()
   for (const card of shown)
     if (card.familyId !== null && card.family)
       byFamily.set(card.familyId, [...(byFamily.get(card.familyId) ?? []), card])
   return [...byFamily].map(([familyId, cards]) => {
-    const counted = cards.filter((card) => !card.projection.probeOnly)
+    const counted = cards.filter((card) => !card.warmup)
     return {
       familyId,
       scoring: scoringOf(cards[0].family!.slug),

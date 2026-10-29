@@ -17,17 +17,6 @@ const MEAN = metricByKey("result.decimalMean") as MetricDefinition
 /** der Ø je Schuss in der Wertung, über die Schüsse gemittelt (auf ihrem Raster) */
 const meanIn = (scoring: Scoring) => inScoring(MEAN, scoring)
 
-/**
- * Welche Scheiben zählen: je Abend die mit Wertung; ein Abend ohne Wertung zählt seine Scheiben „nur Probe“ (ein
- * Training, im Probe-Modus gedruckt). Probe-Blöcke vor einer Wertung bleiben so draußen. Die Folge bleibt.
- */
-export function countedCards<T extends { day: string; probeOnly: boolean }>(
-  cards: readonly T[]
-): T[] {
-  const scored = new Set(cards.filter((card) => !card.probeOnly).map((card) => card.day))
-  return cards.filter((card) => !card.probeOnly || !scored.has(card.day))
-}
-
 const valuesOf = (cards: readonly FormCard[]): CardValue[] =>
   cards.flatMap((card) =>
     card.mean ? [{ id: card.id, atMs: card.startedAtMs, ...card.mean }] : []

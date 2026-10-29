@@ -8,7 +8,6 @@ import { z } from "zod"
 
 import { plannedShotsOf } from "@vereinsheim/shot-core/discipline"
 
-import { countedCards } from "@/diary/analysis/form"
 import {
   entryFromSession,
   executionsOnCard,
@@ -339,7 +338,7 @@ export async function runPreview(
           const rated = s.series.some((x) => !x.isPractice && x.executionQuality !== null)
           let rows: { cardId: string; series: number; value: number }[] = []
           if (rated) {
-            const counted = countedCards(existing)
+            const counted = existing.filter((card) => !card.warmup)
             const target =
               created ??
               (key && (perEvening.get(key) ?? 0) > 1

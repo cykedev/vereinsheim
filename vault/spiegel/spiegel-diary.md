@@ -3,10 +3,10 @@ id: spiegel-diary
 type: subsystem
 title: "Spiegel — Tagebuch: Einträge, Fragen, Auswertung und Stellen"
 aliases: [tagebuch, diary, treffsicher-2-0, trainingstagebuch-in-spiegel]
-keywords: [auswertung, einflüsse, selbstbild, form, abstand zur form, merkst du, erwartet und geschossen, vorher und nachher, vorschau, diary-preview, nur probe, abend-regel, saisonziel, ziele, ziel, messung, scheibe ab, serie ab, schnitt ab, saison, hat es geklappt, schuss-ablauf, abläufe, ablauf, ohne disziplin, disziplin festlegen, tagebuch, eintrag, einträge, vorhaben, notiz, befinden, prognose, feedback, ausführung je serie, stufen, fünf stufen, 0 bis 100, faden, fragen, lernfrage, wie schaffe ich es, ich habe gelernt, hat es geklappt, was hat gestört, vorschlag, neuer eintrag, ohne scheibe, trockentraining, mentaltraining, dazugekommen, lösen, dazunehmen, vom selben abend, papierkorb, abschaltbar, hinweis, nur du siehst, zonen, grenze, nahtstellen, parts, results-read, partline, export, konto löschen, deine daten, stufe 2, 2a, treffsicher]
+keywords: [auswertung, einflüsse, selbstbild, form, abstand zur form, merkst du, erwartet und geschossen, vorher und nachher, vorschau, diary-preview, nur probe, einschießen, warmup, saisonziel, ziele, ziel, messung, scheibe ab, serie ab, schnitt ab, saison, hat es geklappt, schuss-ablauf, abläufe, ablauf, ohne disziplin, disziplin festlegen, tagebuch, eintrag, einträge, vorhaben, notiz, befinden, prognose, feedback, ausführung je serie, stufen, fünf stufen, 0 bis 100, faden, fragen, lernfrage, wie schaffe ich es, ich habe gelernt, hat es geklappt, was hat gestört, vorschlag, neuer eintrag, ohne scheibe, trockentraining, mentaltraining, dazugekommen, lösen, dazunehmen, vom selben abend, papierkorb, abschaltbar, hinweis, nur du siehst, zonen, grenze, nahtstellen, parts, results-read, partline, export, konto löschen, deine daten, stufe 2, 2a, treffsicher]
 part_of: ["[[spiegel]]"]
 governed_by: ["[[adr-033]]", "[[adr-030]]", "[[adr-029]]"]
-relates_to: ["[[spiegel-navigation]]", "[[spiegel-privacy]]", "[[spiegel-data-model]]", "[[spiegel-db-schema]]", "[[spiegel-roadmap]]", "[[spiegel-account-transfer]]"]
+relates_to: ["[[spiegel-navigation]]", "[[spiegel-privacy]]", "[[spiegel-data-model]]", "[[spiegel-db-schema]]", "[[spiegel-roadmap]]", "[[spiegel-account-transfer]]", "[[spiegel-langzeit]]"]
 ---
 
 **TL;DR** Das Tagebuch ist der zweite Teil von Spiegel ([[adr-033]]) und Treffsicher 2.0: was in Treffsicher genutzt
@@ -120,7 +120,7 @@ Alle in einer Spalte (`PAGE_SINGLE`), Bereich „Tagebuch“ mit `BookOpen` ([[s
 - Modell `DiaryGoal`: Satz, Notiz, Art (`result`, `process`), `familyId` (null ohne Disziplin), Zeitraum (`from`, `to`,
   Tage), die Messung ganz oder gar nicht (`measure`, `threshold`, `scoring`, `shots`; dazu `cards`), Antwort, Papierkorb.
 - Die Messung ist rein (`measureGoal` in `src/diary/goals/measure.ts`): Eine Scheibe zählt im Zeitraum (Abend) und in
-  der Art, nicht nur Probe; bei Scheibe und Schnitt mit genau der Schusszahl und einem Wert in der Wertung, bei Serie
+  der Art, kein Einschießen (`warmup`, dieselbe Regel wie im Fortschritt); bei Scheibe und Schnitt mit genau der Schusszahl und einem Wert in der Wertung, bei Serie
   jede Serie mit der Schusszahl. Was nicht zählt, nennt die Grundlage (ohne Ergebnis, andere Schusszahl, ohne Serien;
   `series` null vor Projektion 7 gilt als ohne Serien). Ein Wert in Zehnteln wird vor dem Vergleich auf eine Stelle
   gerundet. Spiegel urteilt nicht, die Zahlen stehen neben „Hat es geklappt?“.
@@ -138,9 +138,11 @@ Disziplin (Chips der Disziplinen mit Einträgen, `?family=`) und Zeitraum („Al
 gerechnet (`src/diary/analysis/`), ohne Schema. Die Scheiben einer Familie liest `resultFormCards` aus
 `results-read.ts`: Ø je Schuss der Projektion mit Schusszahl und Streuung der Schusswerte, die Serien je Schuss.
 
-- **Welche Scheiben zählen (Abend-Regel):** je Abend und Familie die Scheiben mit Wertung; ein Abend ohne Wertung zählt
-  seine Scheiben „nur Probe“ (`countedCards`). So zählen Trainings, die im Probe-Modus gedruckt sind, und kurze
-  Probe-Blöcke vor einer Wertung bleiben draußen. Gilt für Form, Wert eines Eintrags und Ausführung.
+- **Welche Scheiben zählen:** alle außer dem Einschießen, dieselbe Regel wie in den Übersichten ([[spiegel-langzeit]]):
+  Eine Scheibe nur aus Probe vor einer Wertung ihres Abends in derselben Familie zählt nicht, jede andere Scheibe nur
+  aus Probe zählt wie ein Training, auch Probe nach der letzten Wertung des Abends. `resultFormCards` liefert sie mit
+  `warmup` aus `overviewCards` (Abend in der Anzeige-Zone); das Tagebuch hat keine eigene Regel. Gilt für Form, Wert
+  eines Eintrags und Ausführung, ebenso für die Ziele (`resultGoalCards`) und das Vorschau-Werkzeug.
 - **Form und Abstand** (`form.ts`): Die Form vor einem Abend ist der Schnitt über die Schüsse der fünf letzten gezählten
   Scheiben derselben Familie vor diesem Abend (`DELTA_WINDOW`, `pooledValue`), auch vor dem Zeitraum und aus anderen
   Einträgen; Scheiben desselben Abends zählen nie. Der Wert eines Eintrags ist der Ø je Schuss über seine gezählten

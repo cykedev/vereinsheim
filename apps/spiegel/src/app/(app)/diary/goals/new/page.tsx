@@ -12,7 +12,7 @@ export const metadata: Metadata = { title: "Neues Ziel" }
 export default async function NewGoalRoute() {
   const { userId, timeZone } = await requireDiary()
   const today = todayIn(timeZone)
-  const families = await goalFormFamilies(db, userId)
+  const families = await goalFormFamilies(db, userId, timeZone)
   return (
     <GoalForm
       goalId={null}

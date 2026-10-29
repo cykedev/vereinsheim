@@ -15,7 +15,7 @@ export default async function EditGoalRoute({ params }: { params: Promise<{ id: 
   const { id } = await params
   const [goal, families] = await Promise.all([
     goalForEdit(db, userId, id),
-    goalFormFamilies(db, userId),
+    goalFormFamilies(db, userId, timeZone),
   ])
   if (!goal) notFound()
   const today = todayIn(timeZone)

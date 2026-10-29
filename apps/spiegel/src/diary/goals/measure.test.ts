@@ -11,7 +11,7 @@ const card = (day: number, rings: number | null, extra: Partial<GoalCard> = {}):
   day: `2026-10-${String(day).padStart(2, "0")}`,
   startedAtMs: Date.UTC(2026, 9, day, 18),
   kind: "training",
-  probeOnly: false,
+  warmup: false,
   shots: 40,
   rings,
   decimal: rings === null ? null : rings + 9.5,
@@ -37,7 +37,7 @@ describe("measureGoal: Scheibe ab X", () => {
     card(4, 360),
     card(5, 354),
     card(6, 362, { kind: "competition" }),
-    card(7, 370, { probeOnly: true }),
+    card(7, 370, { warmup: true }),
     card(8, null),
     card(9, 380, { shots: 20 }),
     card(32, 390, { day: "2026-11-01" }),
@@ -52,7 +52,7 @@ describe("measureGoal: Scheibe ab X", () => {
     expect(stand.mean).toBeNull()
   })
 
-  it("nennt, was nicht zählt; nur Probe und Scheiben außerhalb des Zeitraums gar nicht", () => {
+  it("nennt, was nicht zählt; Einschießen und Scheiben außerhalb des Zeitraums gar nicht", () => {
     const stand = measureGoal(rule(), cards)
     expect(stand.cards).toBe(7)
     expect(stand.left).toEqual({ noValue: 1, otherShots: 1, noSeries: 0 })

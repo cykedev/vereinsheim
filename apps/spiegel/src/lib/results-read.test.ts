@@ -127,7 +127,7 @@ describe("resultCards", () => {
   })
 
   it("rechnet das Ergebnis wie die Liste der Scheiben", async () => {
-    const { shown, scoringOf } = await overviewCards(db, site.ownerId)
+    const { shown, scoringOf } = await overviewCards(db, site.ownerId, ZONE)
     const family = shown.find((c) => c.id === sums)!.family!.slug
     const model = cardListModel(
       withFamily(listable(shown)),
@@ -246,12 +246,14 @@ describe("resultGoalCards", () => {
   })
 
   it("Vorgaben je Familie in einem Durchgang, gleich denen von resultGoalCards", async () => {
-    const defaults = (await resultGoalDefaults(db, site.ownerId)).find(
+    const defaults = (await resultGoalDefaults(db, site.ownerId, ZONE)).find(
       (d) => d.familyId === site.familyId
     )
     expect(defaults).toMatchObject({ scoring: "rings", usualShots: 20, usualSeriesShots: 10 })
     expect(defaults?.latestMs).toBeGreaterThanOrEqual(JUNE + 2 * DAY)
-    expect((await resultGoalDefaults(db, otherId)).map((d) => d.familyId)).toEqual([site.familyId])
+    expect((await resultGoalDefaults(db, otherId, ZONE)).map((d) => d.familyId)).toEqual([
+      site.familyId,
+    ])
   })
 
   it("grenzt nach Beginn ein", async () => {
@@ -335,7 +337,8 @@ describe("resultFormCards", () => {
       [...cards.map((c) => c.startedAtMs)].sort((a, b) => a - b)
     )
     expect(july.map((c) => c.day)).toEqual(["2026-07-02", "2026-07-03", "2026-07-04"])
-    expect(july.map((c) => c.probeOnly)).toEqual([false, true, false])
+    // nur Probe allein an einem Abend ist kein Einschießen
+    expect(july.map((c) => c.warmup)).toEqual([false, false, false])
   })
 
   it("nimmt den Ø je Schuss der Projektion, auch für nur Probe, und die Serien je Schuss", async () => {
@@ -344,14 +347,14 @@ describe("resultFormCards", () => {
       familyId: site.familyId,
       timeZone: ZONE,
     })
-    const { shown } = await overviewCards(db, site.ownerId)
+    const { shown } = await overviewCards(db, site.ownerId, ZONE)
     const metric = metricByKey("result.decimalMean") as MetricDefinition
     const expected = new Map(
       projectedValues(
         shown.filter((c) => c.familyId === site.familyId),
         metric,
         "rings",
-        { includeProbeOnly: true }
+        { includeWarmup: true }
       ).map((v) => [v.id, v])
     )
     for (const id of [shots, probe, sums]) {
@@ -374,6 +377,77 @@ describe("resultFormCards", () => {
     expect(fromSums.mean).toMatchObject({ value: 9.45, n: 20 })
     expect(fromSums.mean!.sd).toBeUndefined()
     expect(fromSums.series![0].mean).toBeCloseTo(9.4, 9)
+  })
+})
+
+describe("Einschießen", () => {
+  // ein Abend im August (Berlin, UTC+2): Probe um 18 Uhr, Wertung um 19 Uhr, Probe um 0:30 Uhr (zählt zum Abend davor);
+  // dazu Probe allein am 6. August
+  const AUGUST = Date.UTC(2026, 7, 4, 16)
+  const HOUR = 3_600_000
+  const probeShots = (ring: number) =>
+    TEN(ring).map((r) => ({ series: null, ring: r, decimalTenths: null, probe: true }))
+  let before: string
+  let scored: string
+  let after: string
+  let alone: string
+
+  beforeAll(async () => {
+    before = await card(AUGUST, { shots: probeShots(6) })
+    scored = await card(AUGUST + HOUR, {
+      shots: [
+        ...TEN(10).map((ring) => ({ series: 1, ring, decimalTenths: null })),
+        ...TEN(10).map((ring) => ({ series: 2, ring, decimalTenths: null })),
+      ],
+    })
+    after = await card(AUGUST + 6.5 * HOUR, { shots: probeShots(7) })
+    alone = await card(AUGUST + 48 * HOUR, { shots: probeShots(8) })
+  })
+
+  const ids = () => [before, scored, after, alone]
+  const warmupOf = (cards: readonly { id: string; warmup: boolean }[]) =>
+    ids().map((id) => cards.find((c) => c.id === id)?.warmup)
+
+  it("markiert in allen Lesern nur die Probe vor der Wertung des Abends", async () => {
+    const expected = [true, false, false, false]
+    const { cards: form } = await resultFormCards(db, {
+      ownerId: site.ownerId,
+      familyId: site.familyId,
+      timeZone: ZONE,
+    })
+    expect(warmupOf(form)).toEqual(expected)
+    expect(
+      warmupOf(await resultCards(db, { ownerId: site.ownerId, timeZone: ZONE, ids: ids() }))
+    ).toEqual(expected)
+    const goal = await resultGoalCards(db, {
+      ownerId: site.ownerId,
+      familyId: site.familyId,
+      fromMs: AUGUST - 24 * HOUR,
+      toMs: AUGUST + 72 * HOUR,
+      timeZone: ZONE,
+    })
+    expect(warmupOf(goal)).toEqual(expected)
+  })
+
+  it("rechnet den Abend in der Zone des Aufrufers", async () => {
+    // Probe am 8. August um 2:30 Uhr UTC, Wertung um 17 Uhr UTC: in Berlin 4:30 Uhr, also derselbe Abend wie die Wertung
+    // (Einschießen); in UTC vor 4 Uhr, also der Abend davor (kein Einschießen)
+    const early = await card(Date.UTC(2026, 7, 8, 2, 30), { shots: probeShots(6) })
+    const late = await card(Date.UTC(2026, 7, 8, 17), {
+      shots: TEN(9).map((ring) => ({ series: 1, ring, decimalTenths: null })),
+    })
+    const read = async (timeZone: string) =>
+      (await resultCards(db, { ownerId: site.ownerId, timeZone, ids: [early, late] }))
+        .sort((x, y) => x.startedAtMs - y.startedAtMs)
+        .map((c) => [c.day, c.warmup])
+    expect(await read(ZONE)).toEqual([
+      ["2026-08-08", true],
+      ["2026-08-08", false],
+    ])
+    expect(await read("UTC")).toEqual([
+      ["2026-08-07", false],
+      ["2026-08-08", false],
+    ])
   })
 })
 

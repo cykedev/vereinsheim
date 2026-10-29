@@ -26,6 +26,7 @@ const card = (id: string, over: Partial<ResultCard> = {}): ResultCard => ({
   targetId: "lp-10m",
   kind: "training",
   probeOnly: false,
+  warmup: false,
   provenance: "printout",
   result: { value: 374.3, scoring: "decimal", digits: 1 },
   shots: 40,
