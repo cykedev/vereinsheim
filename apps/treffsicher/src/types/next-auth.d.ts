@@ -9,6 +9,8 @@ declare module "next-auth" {
       id: string
       role: string
       sessionVersion: number
+      // Konto ist nach Spiegel umgezogen und liest nur noch (aus der Datenbank, `getAuthSession`)
+      movedToSpiegel: boolean
     } & DefaultSession["user"]
   }
 }

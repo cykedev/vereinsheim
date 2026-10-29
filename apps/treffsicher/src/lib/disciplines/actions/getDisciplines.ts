@@ -103,11 +103,14 @@ export async function getFavouriteDisciplineIdAction(): Promise<string | null> {
 
   if (favouriteDiscipline) return favouriteDiscipline.id
 
-  // Verwaisten Favoriten direkt bereinigen, damit Folgeabfragen keinen toten Verweis mitschleppen.
-  await db.user.update({
-    where: { id: session.user.id },
-    data: { favouriteDisciplineId: null },
-  })
+  // Verwaisten Favoriten direkt bereinigen, damit Folgeabfragen keinen toten Verweis mitschleppen. Ein umgezogenes
+  // Konto ändert nichts mehr in Treffsicher, auch nicht beim Lesen ([[adr-033]]).
+  if (!session.user.movedToSpiegel) {
+    await db.user.update({
+      where: { id: session.user.id },
+      data: { favouriteDisciplineId: null },
+    })
+  }
   return null
 }
 

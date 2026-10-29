@@ -10,6 +10,12 @@ const { compareMock, hashMock, getAuthSessionMock, validationMock, findUniqueMoc
     updateMock: vi.fn(),
   }))
 
+// Die Prüfung für umgezogene Konten hat eigene Tests (`moved/guard.test.ts`, `moved/coverage.test.ts`)
+vi.mock("@/lib/moved/guard", () => ({
+  refuseIfMoved: async () => null,
+  refuseDisciplineIfMoved: async () => null,
+}))
+
 vi.mock("bcryptjs", () => ({
   default: {
     compare: compareMock,

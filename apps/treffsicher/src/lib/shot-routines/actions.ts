@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { db } from "@/lib/db"
 import { getAuthSession } from "@/lib/auth-helpers"
+import { refuseIfMoved } from "@/lib/moved/guard"
 import type { ShotRoutine } from "@/generated/prisma/client"
 import type { ActionResult } from "@/lib/types"
 
@@ -94,6 +95,8 @@ export async function createShotRoutine(
   _prevState: ActionResult | null,
   formData: FormData
 ): Promise<ActionResult> {
+  const refused = await refuseIfMoved()
+  if (refused) return refused
   const session = await getAuthSession()
   if (!session) return { error: "Nicht angemeldet" }
 
@@ -126,6 +129,8 @@ export async function updateShotRoutine(
   _prevState: ActionResult | null,
   formData: FormData
 ): Promise<ActionResult> {
+  const refused = await refuseIfMoved()
+  if (refused) return refused
   const session = await getAuthSession()
   if (!session) return { error: "Nicht angemeldet" }
 
@@ -160,6 +165,8 @@ export async function updateShotRoutine(
  * Löscht einen Schuss-Ablauf nach Ownership-Check.
  */
 export async function deleteShotRoutine(id: string): Promise<ActionResult> {
+  const refused = await refuseIfMoved()
+  if (refused) return refused
   const session = await getAuthSession()
   if (!session) return { error: "Nicht angemeldet" }
 

@@ -19,6 +19,7 @@ import {
   setDisciplineArchivedAction,
   updateDisciplineAction,
 } from "@/lib/disciplines/actions/mutateDiscipline"
+import { refuseDisciplineIfMoved, refuseIfMoved } from "@/lib/moved/guard"
 import type { ActionResult, DisciplineUsage } from "@/lib/disciplines/types"
 
 export type { ActionResult } from "@/lib/disciplines/types"
@@ -45,6 +46,8 @@ export async function getFavouriteDisciplineId(): Promise<string | null> {
 }
 
 export async function setFavouriteDiscipline(disciplineId: string): Promise<ActionResult> {
+  const refused = await refuseIfMoved()
+  if (refused) return refused
   return setFavouriteDisciplineAction(disciplineId)
 }
 
@@ -53,6 +56,8 @@ export async function getHiddenDisciplineIds(): Promise<string[]> {
 }
 
 export async function toggleHiddenDiscipline(disciplineId: string): Promise<ActionResult> {
+  const refused = await refuseIfMoved()
+  if (refused) return refused
   return toggleHiddenDisciplineAction(disciplineId)
 }
 
@@ -60,6 +65,8 @@ export async function createDiscipline(
   prevState: ActionResult | null,
   formData: FormData
 ): Promise<ActionResult> {
+  const refused = await refuseDisciplineIfMoved({ isSystem: formData.get("isSystem") === "true" })
+  if (refused) return refused
   return createDisciplineAction(prevState, formData)
 }
 
@@ -72,10 +79,14 @@ export async function updateDiscipline(
   prevState: ActionResult | null,
   formData: FormData
 ): Promise<ActionResult> {
+  const refused = await refuseDisciplineIfMoved({ id })
+  if (refused) return refused
   return updateDisciplineAction(id, prevState, formData)
 }
 
 export async function archiveDiscipline(id: string): Promise<ActionResult> {
+  const refused = await refuseDisciplineIfMoved({ id })
+  if (refused) return refused
   return archiveDisciplineAction(id)
 }
 
@@ -83,9 +94,13 @@ export async function setDisciplineArchived(
   id: string,
   nextArchived: boolean
 ): Promise<ActionResult> {
+  const refused = await refuseDisciplineIfMoved({ id })
+  if (refused) return refused
   return setDisciplineArchivedAction(id, nextArchived)
 }
 
 export async function deleteDiscipline(id: string): Promise<ActionResult> {
+  const refused = await refuseDisciplineIfMoved({ id })
+  if (refused) return refused
   return deleteDisciplineAction(id)
 }

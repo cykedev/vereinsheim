@@ -8,6 +8,8 @@ const {
   findUniqueMock,
   sessionCountMock,
   shotRoutineCountMock,
+  userFindUniqueMock,
+  userUpdateMock,
 } = vi.hoisted(() => ({
   requireAuthSessionMock: vi.fn(),
   canManageDisciplineMock: vi.fn(),
@@ -16,6 +18,8 @@ const {
   findUniqueMock: vi.fn(),
   sessionCountMock: vi.fn(),
   shotRoutineCountMock: vi.fn(),
+  userFindUniqueMock: vi.fn(),
+  userUpdateMock: vi.fn(),
 }))
 
 vi.mock("@/lib/disciplines/actions/shared", () => ({
@@ -36,6 +40,10 @@ vi.mock("@/lib/db", () => ({
     shotRoutine: {
       count: shotRoutineCountMock,
     },
+    user: {
+      findUnique: userFindUniqueMock,
+      update: userUpdateMock,
+    },
   },
 }))
 
@@ -45,6 +53,7 @@ import {
   getDisciplineForDetailAction,
   getDisciplineUsageAction,
   getDisciplinesForManagementAction,
+  getFavouriteDisciplineIdAction,
 } from "@/lib/disciplines/actions/getDisciplines"
 
 describe("getDisciplines actions", () => {
@@ -158,5 +167,38 @@ describe("getDisciplines actions", () => {
       shotRoutineCount: 2,
       canDelete: false,
     })
+  })
+})
+
+describe("getFavouriteDisciplineIdAction", () => {
+  beforeEach(() => {
+    requireAuthSessionMock.mockReset()
+    findFirstMock.mockReset()
+    userFindUniqueMock.mockReset()
+    userUpdateMock.mockReset()
+    // Favorit zeigt auf eine Disziplin, die es nicht mehr gibt (verwaist)
+    userFindUniqueMock.mockResolvedValue({ favouriteDisciplineId: "gone-1" })
+    findFirstMock.mockResolvedValue(null)
+  })
+
+  it("räumt einen verwaisten Favoriten auf", async () => {
+    requireAuthSessionMock.mockResolvedValue({
+      user: { id: "u1", role: "USER", movedToSpiegel: false },
+    })
+
+    expect(await getFavouriteDisciplineIdAction()).toBeNull()
+    expect(userUpdateMock).toHaveBeenCalledWith({
+      where: { id: "u1" },
+      data: { favouriteDisciplineId: null },
+    })
+  })
+
+  it("lässt den verwaisten Favoriten eines umgezogenen Kontos stehen", async () => {
+    requireAuthSessionMock.mockResolvedValue({
+      user: { id: "u1", role: "USER", movedToSpiegel: true },
+    })
+
+    expect(await getFavouriteDisciplineIdAction()).toBeNull()
+    expect(userUpdateMock).not.toHaveBeenCalled()
   })
 })

@@ -19,6 +19,7 @@ import {
   saveReflectionAction,
   saveWellbeingAction,
 } from "@/lib/sessions/actions/mentalActions"
+import { refuseIfMoved } from "@/lib/moved/guard"
 import type {
   ActionResult,
   MeytonImportPreviewResult,
@@ -41,10 +42,14 @@ export type {
 
 // Öffentliche Fassade für Session-Server-Actions: UI importiert nur dieses Modul statt Unterpfaden.
 export async function createSession(formData: FormData): Promise<ActionResult> {
+  const refused = await refuseIfMoved()
+  if (refused) return refused
   return createSessionAction(formData)
 }
 
 export async function previewMeytonImport(formData: FormData): Promise<MeytonImportPreviewResult> {
+  const refused = await refuseIfMoved()
+  if (refused) return refused
   return previewMeytonImportAction(formData)
 }
 
@@ -60,22 +65,32 @@ export async function uploadAttachment(
   sessionId: string,
   formData: FormData
 ): Promise<ActionResult> {
+  const refused = await refuseIfMoved()
+  if (refused) return refused
   return uploadAttachmentAction(sessionId, formData)
 }
 
 export async function deleteAttachment(attachmentId: string): Promise<ActionResult> {
+  const refused = await refuseIfMoved()
+  if (refused) return refused
   return deleteAttachmentAction(attachmentId)
 }
 
 export async function updateSession(id: string, formData: FormData): Promise<ActionResult> {
+  const refused = await refuseIfMoved()
+  if (refused) return refused
   return updateSessionAction(id, formData)
 }
 
 export async function toggleFavourite(sessionId: string): Promise<ActionResult> {
+  const refused = await refuseIfMoved()
+  if (refused) return refused
   return toggleFavouriteAction(sessionId)
 }
 
 export async function deleteSession(id: string): Promise<ActionResult> {
+  const refused = await refuseIfMoved()
+  if (refused) return refused
   return deleteSessionAction(id)
 }
 
@@ -84,6 +99,8 @@ export async function saveWellbeing(
   prevState: ActionResult | null,
   formData: FormData
 ): Promise<ActionResult> {
+  const refused = await refuseIfMoved()
+  if (refused) return refused
   return saveWellbeingAction(sessionId, prevState, formData)
 }
 
@@ -92,6 +109,8 @@ export async function saveReflection(
   prevState: ActionResult | null,
   formData: FormData
 ): Promise<ActionResult> {
+  const refused = await refuseIfMoved()
+  if (refused) return refused
   return saveReflectionAction(sessionId, prevState, formData)
 }
 
@@ -100,6 +119,8 @@ export async function savePrognosis(
   prevState: ActionResult | null,
   formData: FormData
 ): Promise<ActionResult> {
+  const refused = await refuseIfMoved()
+  if (refused) return refused
   return savePrognosisAction(sessionId, prevState, formData)
 }
 
@@ -108,5 +129,7 @@ export async function saveFeedback(
   prevState: ActionResult | null,
   formData: FormData
 ): Promise<ActionResult> {
+  const refused = await refuseIfMoved()
+  if (refused) return refused
   return saveFeedbackAction(sessionId, prevState, formData)
 }

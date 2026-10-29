@@ -82,6 +82,8 @@ export const authOptions: NextAuthOptions = {
         session.user.name = (token.name as string | null | undefined) ?? null
         session.user.sessionVersion =
           typeof token.sessionVersion === "number" ? token.sessionVersion : -1
+        // Die Wahrheit liest `getAuthSession` aus der Datenbank, wie die Rolle
+        session.user.movedToSpiegel = false
       }
       return session
     },

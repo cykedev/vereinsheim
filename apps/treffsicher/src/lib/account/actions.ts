@@ -3,6 +3,7 @@
 import bcrypt from "bcryptjs"
 import { db } from "@/lib/db"
 import { getAuthSession } from "@/lib/auth-helpers"
+import { refuseIfMoved } from "@/lib/moved/guard"
 import { validatePasswordChangeInput } from "@vereinsheim/lib/auth/validation"
 import type { ActionResult } from "@/lib/types"
 
@@ -13,6 +14,8 @@ export async function changeOwnPassword(
   _prevState: ActionResult | null,
   formData: FormData
 ): Promise<ActionResult> {
+  const refused = await refuseIfMoved()
+  if (refused) return refused
   const session = await getAuthSession()
   if (!session) return { error: "Nicht angemeldet." }
 
