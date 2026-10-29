@@ -151,7 +151,8 @@ gerechnet (`src/diary/analysis/`), ohne Schema. Die Scheiben einer Familie liest
   großen zu keiner, wie Treffsicher). `compareValues(niedrig, hoch, DISTANCE)` urteilt wie zwei Zeiträume
   ([[adr-034]], ab 5 je Seite, „deutlich“ aus T3); `DISTANCE` ist der Ø je Schuss ohne Wertung, damit das Mittel nicht auf
   das Raster der Zehntel fällt. Einträge ohne gezählte Scheibe mit Wert oder ohne fünf Scheiben davor zählen nicht und
-  stehen in der Grundlage. Die Zeile eines Merkmals ist ein Link auf **`/diary/analysis/[factor]`**: Punktwolke (Stufe
+  stehen in der Grundlage. Hat ein Eintrag eine Scheibe aus Summen ohne Streuung der Schusswerte, urteilt der Rangtest
+  über die Einträge statt über die Schüsse. Die Zeile eines Merkmals ist ein Link auf **`/diary/analysis/[factor]`**: Punktwolke (Stufe
   gegen Abstand, jeder Punkt ein Link in den Eintrag) und die Einträge, neueste oben.
 - **Selbstbild** (`execution.ts`, `self-image.ts`): „Merkst du, wann eine Serie gut ist?“ teilt je Scheibe ihre
   bewerteten Serien am Median ihrer Bewertungen und zieht von jeder Serie den Ø je Schuss der bewerteten Serien derselben

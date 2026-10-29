@@ -335,7 +335,9 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
   Punkt war an diesem Tag einer von drei Scheiben eines Abends, die im Verlauf fast übereinander stehen. Im Browser
   nachgestellt (Lage der Punkte, gewählte Kennung), war es ein echter Fehler des Lineals, kein Wackeln. Nicht als
   „flaky“ abtun und nicht im fremden Branch reparieren, sondern eigenen Branch aufmachen. Daten, in denen sich Werte
-  überdecken, prüft die Prüfung seither eigens (Stapel eines Abends im Fortschritt).
+  überdecken, prüft die Prüfung seither eigens (Stapel eines Abends im Fortschritt). Laufen parallele Sessions, erst
+  fragen, ob gerade eine andere die Dev-Datenbank seedet: Ein `seed:own` mitten in `pruefen --start` ließ am 29. Oktober
+  2026 je Lauf andere Prüfungen in unberührten Teilen fallen. Allein wiederholt blieb nur der bekannte FAIL.
 
 - **`pending` gilt für die ganze Transition, auch für das `router.refresh()` darin**: Läuft nach der Action noch
   `router.refresh()` in derselben Transition, bleibt `pending` wahr, bis die Seite neu gerechnet ist. Teilen sich zwei

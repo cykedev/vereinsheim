@@ -103,3 +103,20 @@ Geschichte in `vault/incidents/`.
 - **`seed:own` nach `seed:own --demo` braucht `--email`, wenn `SEED_ADMIN_EMAIL` ein Konto nennt, das es in der
   Prod-Kopie nicht gibt:** Sonst bleiben die eigenen Scheiben beim Demo-Konto (am 28. Oktober 2026 rund 20 Minuten, 90
   statt 122 Scheiben). → REMEMBER (Auto-Memory)
+
+## 2026-10-29 · Auswertung im Tagebuch (2c)
+
+- **Ein Seed einer anderen Session verfälscht die Skriptprüfung:** Während `pruefen --start` lief, spielte eine
+  parallele Session `seed:own --demo` und `seed:own --email` ein. Dabei fielen drei bis vier Prüfungen in Teilen, die
+  der Branch nicht berührte (Teilen, Löschen, Leiste am Telefon, Von Hand eintragen), je Lauf andere. Allein wiederholt
+  blieb nur der bekannte FAIL. → DOCUMENT (`vault/conventions.md` §9)
+- **`TabBar` braucht eine Client-Hülle:** `renderLink` ist eine Funktion und kann nicht aus einer Server-Komponente an
+  `TabBar` gehen. Der Kopf des Tagebuchs bekommt deshalb `DiaryTabs` wie der Admin `AdminTabs`. → DOCUMENT
+  (`apps/spiegel/CLAUDE.md`, Tagebuch)
+- **Eine Scheibe aus Summen lässt den Vergleich als Rangtest laufen:** Fehlt einem Eintrag die Streuung der
+  Schusswerte (eine Scheibe aus Treffsicher nur mit Serien-Summen), urteilt `compareValues` über die Einträge statt über
+  die Schüsse. Beim User traf das alle vier Merkmale. Das ist richtig ([[adr-034]]), aber nicht offensichtlich. →
+  DOCUMENT (`vault/spiegel/spiegel-diary.md`, Auswertung)
+- **Ein Probelauf als Transaktion, die zurückrollt:** `runPreview` rechnet mit `dryRun` alles in derselben Transaktion
+  wie ein echter Lauf und wirft am Ende einen eigenen Fehler. So zählt der Probelauf genau, was ein Lauf schreiben
+  würde, ohne zweiten Code. → REMEMBER (steht im Code)
