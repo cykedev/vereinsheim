@@ -21,6 +21,7 @@
     "projection-check": "tsx tools/projection-check.ts",
     "printout-check": "tsx tools/printout-check.ts",
     "printout-import": "tsx tools/printout-import.ts",
+    "diary-preview": "tsx tools/diary-preview.ts",
     "pruefen": "tsx tools/pruefen.ts",
     "ingest-load": "tsx tools/ingest-load.ts",
     "stack-probe": "tsx tools/stack-probe.ts",
