@@ -493,16 +493,16 @@ Befund aus dem Review von 2a).
 | 1c   | `plans/2026-10-27-tis-1c-printout-values.md` | `feat/tis-1c-printout-values` (von `main`) | `tis-1c-printout-values` | in `main` (`88ea1140`); Luftgewehr-Fix, Leser v2        |
 | 1d   | `plans/2026-10-28-tis-1d-hand-entry.md`      | `feat/tis-1d-hand-entry` (von `main`)      | `tis-1d-hand-entry`      | in `main` (`dbc9e45c`), noch nicht deployt              |
 | 1e   |                                              |                                            |                          | in 1a-2                                                 |
-| 1f   | `plans/2026-10-29-tis-1f-evidence-list.md`   | `feat/tis-1f-evidence-list` (von `main`)   | `tis-1f-evidence-list`   | in `main` (`39dca9f4`), noch nicht deployt              |
+| 1f   | `plans/2026-10-29-tis-1f-evidence-list.md`   | `feat/tis-1f-evidence-list` (von `main`)   | `tis-1f-evidence-list`   | in `main` (`39dca9f4`), noch nicht deployt; Plan entfernt |
 | 2a   | `plans/2026-10-28-tis-2a-diary-entries.md`   | `feat/tis-2a-diary-entries` (vom Basis)    | `tis-2a-diary-entries`   | im Basisbranch (`3fd30d85`), Plan entfernt              |
 | 2b   | `plans/2026-10-28-tis-2b-goals-routines.md`  | `feat/tis-2b-goals-routines` (vom Basis)   | `tis-2b-goals-routines`  | im Basisbranch (`b51a030b`), Plan entfernt              |
 | 2c   | `plans/2026-10-29-tis-2c-diary-analysis.md`  | `feat/tis-2c-diary-analysis` (vom Basis)   | `tis-2c-diary-analysis`  | im Basisbranch (`69bedd2a`), Plan entfernt              |
-| R    | `plans/2026-10-29-tis-r-tab-bar.md`          | `feat/tis-r-tab-bar` (von `main`)          | `tis-r-tab-bar`          | in `main` (`290da9e5`, mit R2), noch nicht deployt     |
+| R    | `plans/2026-10-29-tis-r-tab-bar.md`          | `feat/tis-r-tab-bar` (von `main`)          | `tis-r-tab-bar`          | in `main` (`290da9e5`, mit R2), noch nicht deployt; Plan entfernt |
 | 3a   |                                              | (vom Basis)                                |                          | entschieden (29.10.), Plan offen                        |
 | 3b   |                                              | (vom Basis)                                |                          | entschieden (29.10.), Plan nach 3a                      |
-| 3c   | `plans/2026-10-29-tis-3c-warmup.md`          | `feat/tis-3c-warmup` (von `main`)          |                          | Plan vorgelegt (29.10.)                                 |
+| 3c   | `plans/2026-10-29-tis-3c-warmup.md`          | `feat/tis-3c-warmup` (von `main`)          | `tis-3c-warmup`          | in `main` (`52dffad1`), noch nicht deployt; Plan entfernt |
 | 3d   |                                              | (vom Basis)                                |                          | entschieden (29.10.), Plan offen                        |
-| 3e   | `plans/2026-10-29-tis-3e-read-only.md`       | `feat/tis-3e-read-only` (von `main`)       |                          | Plan vorgelegt (29.10.)                                 |
+| 3e   | `plans/2026-10-29-tis-3e-read-only.md`       | `feat/tis-3e-read-only` (von `main`)       | `tis-3e-read-only`       | in `main` (`0000933f`), noch nicht deployt; Plan entfernt |
 | 4    |                                              |                                            |                          | offen                                                   |
 
 ## Verification
