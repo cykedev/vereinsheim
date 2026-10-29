@@ -671,8 +671,9 @@ const tabBarOk = (s: TabBarState, current: string) =>
 
 /**
  * Reiter am Telefon: Fortschritt und Vergleichen bei 360 und 390 px in einer Zeile, der gezeigte Reiter markiert und
- * im Bild, kein seitliches Scrollen der Seite. Danach die Leiste ans Ende geschoben, „Vergleichen“ angetippt: auch auf
- * der neuen Seite steht der gewählte Reiter im Bild.
+ * im Bild, kein seitliches Scrollen der Seite. Ein Tipp auf „Vergleichen“ führt auf die Seite, dort ist der Reiter
+ * markiert. Die Leiste passt hier ganz ins Bild; dass ein gewählter Reiter aus einer zu breiten Leiste ins Bild rückt,
+ * prüfen die Reiter eines Wettbewerbs in Ringwerk.
  */
 async function tabBars(page: Page) {
   for (const width of [360, 390]) {
@@ -692,13 +693,12 @@ async function tabBars(page: Page) {
   }
   await page.viewport(360, 844)
   await page.goto(`${BASE}/progress`)
-  await page.ev(`(() => { const bar = $("[data-tab-bar]"); bar.scrollLeft = bar.scrollWidth })()`)
   await page.click(`$$("[data-tab-bar] a").find((a) => txt(a) === "Vergleichen")`, { settle: 300 })
   await page.waitFor(`location.pathname === "/compare"`, 15_000)
   await page.waitFor(`txt($("[data-tab-bar] [aria-current]")) === "Vergleichen"`, 5_000)
   const after = await page.ev<TabBarState>(tabBarState())
   check(
-    "360 px: „Vergleichen“ angetippt, auf der neuen Seite steht der gewählte Reiter im Bild",
+    "360 px: ein Tipp auf „Vergleichen“ führt auf die Seite, der Reiter ist markiert und im Bild",
     after.url === "/compare" && tabBarOk(after, "Vergleichen"),
     after
   )
