@@ -1,5 +1,5 @@
-// Eine Einheit aus Treffsicher als Eintrag im Tagebuch ([[spiegel-account-transfer]]): welche Felder wohin. Rein; das
-// Vorschau-Werkzeug schreibt mit dem Schlüssel `preview:`, die Übernahme (Stufe 3) mit ihrem eigenen.
+// Eine Einheit aus Treffsicher als Eintrag im Tagebuch ([[spiegel-account-transfer]]): welche Felder wohin. Rein; den
+// Schlüssel gibt der Aufrufer (die Übernahme `treffsicher:<Einheit>`, das Vorschau-Werkzeug `preview:<Einheit>`).
 
 import { eveningDay } from "@vereinsheim/shot-ui/period/calendar"
 
@@ -126,12 +126,12 @@ function scalesOf(session: TreffsicherSessionForEntry): ImportedEntry["scales"] 
  */
 export function entryFromSession(
   session: TreffsicherSessionForEntry,
-  context: { familyId: number | null; withCard: boolean; timeZone: string }
+  context: { importKey: string; familyId: number | null; withCard: boolean; timeZone: string }
 ): ImportedEntry {
   const intention = text(session.trainingGoal) ?? text(session.prognosis?.performanceGoal)
   const achieved = session.feedback?.goalAchieved ?? null
   return {
-    importKey: `preview:${session.id}`,
+    importKey: context.importKey,
     day: eveningDay(session.dateMs, context.timeZone),
     kind: KIND[session.type],
     familyId: context.familyId,

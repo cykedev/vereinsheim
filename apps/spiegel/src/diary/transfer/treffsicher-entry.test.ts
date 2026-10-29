@@ -7,6 +7,7 @@ import {
 } from "./treffsicher-entry"
 
 const ZONE = "Europe/Berlin"
+const KEY = "treffsicher:ts1"
 const SEVEN = {
   fitness: 60,
   nutrition: 50,
@@ -54,10 +55,10 @@ describe("entryFromSession", () => {
         prognosis: { ...PROGNOSIS, expectedScore: 365.5 },
         feedback: FEEDBACK,
       }),
-      { familyId: 4, withCard: true, timeZone: ZONE }
+      { importKey: "treffsicher:ts1", familyId: 4, withCard: true, timeZone: ZONE }
     )
     expect(entry).toMatchObject({
-      importKey: "preview:ts1",
+      importKey: "treffsicher:ts1",
       day: "2026-03-13",
       kind: "shooting",
       familyId: 4,
@@ -77,19 +78,20 @@ describe("entryFromSession", () => {
 
   it("Abend vor 4 Uhr ist der Vortag; Trocken- und Mentaltraining", () => {
     const night = entryFromSession(session({ dateMs: Date.UTC(2026, 2, 14, 1, 30) }), {
+      importKey: KEY,
       familyId: null,
       withCard: false,
       timeZone: ZONE,
     })
     expect(night.day).toBe("2026-03-13")
-    const ctx = { familyId: null, withCard: false, timeZone: ZONE }
+    const ctx = { importKey: KEY, familyId: null, withCard: false, timeZone: ZONE }
     expect(entryFromSession(session({ type: "TROCKENTRAINING" }), ctx).kind).toBe("dry")
     expect(entryFromSession(session({ type: "MENTAL" }), ctx).kind).toBe("mental")
     expect(entryFromSession(session({ type: "WETTKAMPF" }), ctx).kind).toBe("shooting")
   })
 
   it("Vorhaben aus dem Trainingsziel, sonst dem Leistungsziel; „Hat es geklappt?“ nur mit Vorhaben", () => {
-    const ctx = { familyId: 1, withCard: true, timeZone: ZONE }
+    const ctx = { importKey: KEY, familyId: 1, withCard: true, timeZone: ZONE }
     const goal = entryFromSession(
       session({
         trainingGoal: " Abzug sauber ",
@@ -133,7 +135,12 @@ describe("entryFromSession", () => {
         routineDeviation: "kein Trockenschuss",
       },
     })
-    const withoutCard = entryFromSession(full, { familyId: 1, withCard: false, timeZone: ZONE })
+    const withoutCard = entryFromSession(full, {
+      importKey: KEY,
+      familyId: 1,
+      withCard: false,
+      timeZone: ZONE,
+    })
     expect(withoutCard.learned).toBe("Pause hilft")
     expect(withoutCard.question).toBe("länger halten?")
     expect(withoutCard.note).toBe(
@@ -151,10 +158,16 @@ describe("entryFromSession", () => {
         "Favorit",
       ].join("\n\n")
     )
-    const withCard = entryFromSession(full, { familyId: 1, withCard: true, timeZone: ZONE })
+    const withCard = entryFromSession(full, {
+      importKey: KEY,
+      familyId: 1,
+      withCard: true,
+      timeZone: ZONE,
+    })
     expect(withCard.note).not.toContain("Ort:")
     expect(
-      entryFromSession(session(), { familyId: 1, withCard: false, timeZone: ZONE }).note
+      entryFromSession(session(), { importKey: KEY, familyId: 1, withCard: false, timeZone: ZONE })
+        .note
     ).toBeNull()
   })
 })

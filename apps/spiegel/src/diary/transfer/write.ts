@@ -1,9 +1,11 @@
-// Einträge aus einer Übernahme schreiben: anlegen oder über den Schlüssel ersetzen, Scheiben verknüpfen, Ausführung
-// setzen, Vorschau-Zeilen löschen. Läuft in der Transaktion des Aufrufers (Vorschau-Werkzeug, später Stufe 3).
+// Einträge, Ziele und Abläufe aus einer Übernahme schreiben: anlegen oder über den Schlüssel ersetzen, Scheiben
+// verknüpfen, Ausführung setzen, Vorschau-Zeilen löschen. Läuft in der Transaktion des Aufrufers (Übernahme,
+// Vorschau-Werkzeug).
 
 import type { Prisma } from "@/generated/prisma/client"
 
 import type { ImportedEntry } from "./treffsicher-entry"
+import type { ImportedGoal, ImportedRoutine } from "./treffsicher-goal"
 import { dateOfDay } from "../validation"
 
 type Tx = Prisma.TransactionClient
@@ -35,8 +37,7 @@ export async function upsertImportedEntry(
     where: { importKey: entry.importKey },
     select: { id: true, userId: true },
   })
-  if (existing && existing.userId !== userId)
-    throw new Error("Schlüssel der Übernahme gehört zu einem anderen Konto")
+  if (existing && existing.userId !== userId) throw foreign()
   const id = existing
     ? (
         await tx.diaryEntry.update({
@@ -57,6 +58,70 @@ export async function upsertImportedEntry(
       data: entry.scales.map((scale) => ({ entryId: id, ...scale })),
     })
   return { id, created: !existing }
+}
+
+/**
+ * Geändert seit dem letzten Lauf: im Papierkorb, oder `updatedAt` nach `lastRunAt` (`movedToSpiegelAt` in Treffsicher).
+ * Beim ersten Lauf (`lastRunAt` null) gilt nur der Papierkorb. Ein zweiter Lauf lässt solche Zeilen stehen.
+ */
+export const isTouched = (
+  row: { deletedAt: Date | null; updatedAt: Date },
+  lastRunAt: Date | null
+): boolean => row.deletedAt !== null || (lastRunAt !== null && row.updatedAt > lastRunAt)
+
+const foreign = () => new Error("Schlüssel der Übernahme gehört zu einem anderen Konto")
+
+/** ein übernommenes Ziel über seinen Schlüssel anlegen oder seine Felder setzen; Messung und Antwort bleiben */
+export async function upsertImportedGoal(
+  tx: Tx,
+  userId: string,
+  goal: ImportedGoal
+): Promise<{ id: string; created: boolean }> {
+  const fields = {
+    familyId: goal.familyId,
+    title: goal.title,
+    note: goal.note,
+    kind: goal.kind,
+    from: dateOfDay(goal.from),
+    to: dateOfDay(goal.to),
+  }
+  const existing = await tx.diaryGoal.findUnique({
+    where: { importKey: goal.importKey },
+    select: { id: true, userId: true },
+  })
+  if (existing && existing.userId !== userId) throw foreign()
+  if (existing) {
+    await tx.diaryGoal.update({ where: { id: existing.id }, data: fields })
+    return { id: existing.id, created: false }
+  }
+  const created = await tx.diaryGoal.create({
+    data: { ...fields, userId, importKey: goal.importKey },
+    select: { id: true },
+  })
+  return { id: created.id, created: true }
+}
+
+/** einen übernommenen Ablauf über seinen Schlüssel anlegen oder Name, Familie und Schritte setzen */
+export async function upsertImportedRoutine(
+  tx: Tx,
+  userId: string,
+  routine: ImportedRoutine
+): Promise<{ id: string; created: boolean }> {
+  const fields = { familyId: routine.familyId, name: routine.name, steps: routine.steps }
+  const existing = await tx.diaryRoutine.findUnique({
+    where: { importKey: routine.importKey },
+    select: { id: true, userId: true },
+  })
+  if (existing && existing.userId !== userId) throw foreign()
+  if (existing) {
+    await tx.diaryRoutine.update({ where: { id: existing.id }, data: fields })
+    return { id: existing.id, created: false }
+  }
+  const created = await tx.diaryRoutine.create({
+    data: { ...fields, userId, importKey: routine.importKey },
+    select: { id: true },
+  })
+  return { id: created.id, created: true }
 }
 
 /** Scheiben fest mit dem Eintrag verknüpfen (`linked`); eine Zeile einer Scheibe hängt danach an diesem Eintrag */

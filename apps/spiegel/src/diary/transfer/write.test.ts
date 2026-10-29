@@ -4,12 +4,16 @@ import { createPrismaClient } from "@/lib/db"
 import { createTestSite, type TestSite } from "../../../test/fixtures"
 
 import type { ImportedEntry } from "./treffsicher-entry"
+import type { ImportedGoal, ImportedRoutine } from "./treffsicher-goal"
 import {
   deletePreviewDiary,
+  isTouched,
   releaseImportedLinks,
   replaceExecutions,
   setImportedLinks,
   upsertImportedEntry,
+  upsertImportedGoal,
+  upsertImportedRoutine,
 } from "./write"
 
 const db = createPrismaClient()
@@ -27,6 +31,7 @@ beforeAll(async () => {
 afterAll(async () => {
   await db.diaryEntry.deleteMany({ where: { userId: { in: [site.ownerId, otherId] } } })
   await db.diaryGoal.deleteMany({ where: { userId: { in: [site.ownerId, otherId] } } })
+  await db.diaryRoutine.deleteMany({ where: { userId: { in: [site.ownerId, otherId] } } })
   await site.remove()
   await db.user.delete({ where: { id: otherId } })
   await db.$disconnect()
@@ -82,6 +87,98 @@ describe("upsertImportedEntry", () => {
     await expect(
       db.$transaction((tx) => upsertImportedEntry(tx, otherId, entry("a")))
     ).rejects.toThrow()
+  })
+})
+
+const goal = (over: Partial<ImportedGoal> = {}): ImportedGoal => ({
+  importKey: `treffsicher:goal-${site.siteId}`,
+  familyId: site.familyId,
+  title: "380 Ringe",
+  note: "ruhig",
+  kind: "result",
+  from: "2026-09-01",
+  to: "2026-09-30",
+  ...over,
+})
+
+describe("upsertImportedGoal", () => {
+  it("legt an und setzt beim zweiten Mal die Felder; Messung und Antwort bleiben", async () => {
+    const first = await db.$transaction((tx) => upsertImportedGoal(tx, site.ownerId, goal()))
+    expect(first.created).toBe(true)
+    await db.diaryGoal.update({ where: { id: first.id }, data: { outcome: "partly" } })
+    const second = await db.$transaction((tx) =>
+      upsertImportedGoal(tx, site.ownerId, goal({ title: "385 Ringe", familyId: null }))
+    )
+    expect(second).toEqual({ id: first.id, created: false })
+    const row = await db.diaryGoal.findUniqueOrThrow({ where: { id: first.id } })
+    expect(row).toMatchObject({
+      title: "385 Ringe",
+      familyId: null,
+      note: "ruhig",
+      kind: "result",
+      outcome: "partly",
+      measure: null,
+    })
+    expect(row.from.toISOString().slice(0, 10)).toBe("2026-09-01")
+    expect(row.to.toISOString().slice(0, 10)).toBe("2026-09-30")
+  })
+
+  it("ein Schlüssel eines anderen Kontos ist ein Fehler", async () => {
+    await expect(db.$transaction((tx) => upsertImportedGoal(tx, otherId, goal()))).rejects.toThrow()
+  })
+})
+
+describe("upsertImportedRoutine", () => {
+  const routine = (over: Partial<ImportedRoutine> = {}): ImportedRoutine => ({
+    importKey: `treffsicher:routine-${site.siteId}`,
+    familyId: null,
+    name: "Vor dem Schuss",
+    steps: [{ title: "Atmen", description: "tief" }, { title: "Zielen" }],
+    ...over,
+  })
+
+  it("legt an und ersetzt beim zweiten Mal Name, Familie und Schritte", async () => {
+    const first = await db.$transaction((tx) => upsertImportedRoutine(tx, site.ownerId, routine()))
+    expect(first.created).toBe(true)
+    const second = await db.$transaction((tx) =>
+      upsertImportedRoutine(
+        tx,
+        site.ownerId,
+        routine({ familyId: site.familyId, steps: [{ title: "Abziehen" }] })
+      )
+    )
+    expect(second).toEqual({ id: first.id, created: false })
+    expect(await db.diaryRoutine.findUniqueOrThrow({ where: { id: first.id } })).toMatchObject({
+      familyId: site.familyId,
+      name: "Vor dem Schuss",
+      steps: [{ title: "Abziehen" }],
+    })
+  })
+
+  it("ein Schlüssel eines anderen Kontos ist ein Fehler", async () => {
+    await expect(
+      db.$transaction((tx) => upsertImportedRoutine(tx, otherId, routine()))
+    ).rejects.toThrow()
+  })
+})
+
+describe("isTouched", () => {
+  const at = new Date("2026-10-29T20:00:00Z")
+  const row = (updatedAt: Date, deletedAt: Date | null = null) => ({ updatedAt, deletedAt })
+
+  it("nach dem letzten Lauf geändert oder im Papierkorb", () => {
+    expect(isTouched(row(new Date("2026-10-29T20:00:01Z")), at)).toBe(true)
+    expect(isTouched(row(new Date("2026-10-29T19:00:00Z"), at), at)).toBe(true)
+  })
+
+  it("vor oder genau beim letzten Lauf geändert: unverändert", () => {
+    expect(isTouched(row(new Date("2026-10-29T19:59:59Z")), at)).toBe(false)
+    expect(isTouched(row(at), at)).toBe(false)
+  })
+
+  it("beim ersten Lauf zählt nur der Papierkorb", () => {
+    expect(isTouched(row(new Date("2030-01-01T00:00:00Z")), null)).toBe(false)
+    expect(isTouched(row(new Date(), new Date()), null)).toBe(true)
   })
 })
 

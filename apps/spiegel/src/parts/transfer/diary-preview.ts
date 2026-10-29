@@ -15,6 +15,7 @@ import {
 } from "@/diary/transfer/treffsicher-entry"
 import {
   deletePreviewDiary,
+  PREVIEW_PREFIX,
   releaseImportedLinks,
   replaceExecutions,
   setImportedLinks,
@@ -255,7 +256,12 @@ export async function runPreview(
         (report.unmatchedDisciplines[s.discipline.name] ?? 0) + 1
     if (familyId !== null) {
       const key = evening(
-        entryFromSession(forEntry(s, dateMs), { familyId, withCard: false, timeZone }).day,
+        entryFromSession(forEntry(s, dateMs), {
+          importKey: `${PREVIEW_PREFIX}${s.id}`,
+          familyId,
+          withCard: false,
+          timeZone,
+        }).day,
         familyId
       )
       perEvening.set(key, (perEvening.get(key) ?? 0) + 1)
@@ -278,6 +284,7 @@ export async function runPreview(
           const familyId = familyOf.get(s.id) ?? null
           const shooting = s.type === "TRAINING" || s.type === "WETTKAMPF"
           const base = entryFromSession(forEntry(s, dateMs), {
+            importKey: `${PREVIEW_PREFIX}${s.id}`,
             familyId,
             withCard: false,
             timeZone,
@@ -324,6 +331,7 @@ export async function runPreview(
             }
           }
           const entry = entryFromSession(forEntry(s, dateMs), {
+            importKey: `${PREVIEW_PREFIX}${s.id}`,
             familyId,
             withCard: existing.length > 0 || created !== null,
             timeZone,
