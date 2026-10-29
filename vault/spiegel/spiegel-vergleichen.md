@@ -49,7 +49,7 @@ Fortschritt und am Desktop über einen Untereintrag. Der Vergleich aus dem Forts
 | Seite | Inhalt | Einheit des Tests |
 |---|---|---|
 | eine Scheibe | ihre Wertungsschüsse wie am Ausdruck | der Schuss |
-| ein Zeitraum | rollend, frei, benannt oder „davor“, mit Art und „nur Probe“ wie im Fortschritt | die Scheibe |
+| ein Zeitraum | rollend, frei, benannt oder „davor“, mit Art und Einschießen wie im Fortschritt | die Scheibe |
 | eine Art | Wettkampf (A) oder Training (B) in einem Zeitraum (Vorgabe zwölf Monate) | die Scheibe |
 | ein Ort (später) | daheim oder auswärts, sobald es fremde Orte gibt ([[adr-033]]) | die Scheibe |
 | ein Merkmal (später) | etwa Munitionslos, sobald es Angaben dafür gibt (SP-2.3) | die Scheibe |

@@ -48,7 +48,7 @@ Reiter einer App; das Rückgrat ist die Liste der Scheiben. Die Seiten einer Sch
 |---|---|---|---|
 | Start | untere Leiste, Zähler für Offen | Seitenleiste, Zähler für Offen | `/` |
 | Scheiben | untere Leiste | Seitenleiste | `/cards?family=lp-auflage&kind=training&provenance=entered#2026-09-25` |
-| Fortschritt | untere Leiste | Seitenleiste | `/progress?range=12m&compare=previous&family=lg-freihand&sighters=0&pick=<id>#history` |
+| Fortschritt | untere Leiste | Seitenleiste | `/progress?range=12m&compare=previous&family=lg-freihand&warmup=1&pick=<id>#history` |
 | Profil | untere Leiste, für Admins oben die Bereiche des Admins | Seitenleiste | `/profile` |
 | Admin | in Profil oben (Abschnitt „Admin“ mit allen Bereichen), nur für Admins | letzter Eintrag der Seitenleiste, nur für Admins | `/admin{/users,/disciplines,/lists,/site}` |
 | Scheibe holen | Mitte der unteren Leiste, nur das Symbol (`ScanQrCode`), der Name für Screenreader | Pille „Scheibe holen“ in der Seitenleiste | `/scan` |
@@ -83,10 +83,11 @@ und über `nav/navigate`.
   - Vergleichen: `type` (`cards`, `kind`; ohne: zwei Zeiträume, mit B immer `type=periods`), bei zwei Scheiben `family` (ohne Ids die
     beiden neuesten dieser Familie; mit Scheibe A gilt deren Familie), `a` und `b` (Ids zweier
     Scheiben oder Zeiträume wie `range`, B auch `previous` als Vorgabe), `range` bei Wettkampf und Training (Vorgabe
-    `12m`), dazu `family`, `kind`, `sighters=0`. Eine alte Adresse mit `a` und `b` ohne `type` sind zwei Scheiben.
+    `12m`), dazu `family`, `kind`, `warmup=1`. Eine alte Adresse mit `a` und `b` ohne `type` sind zwei Scheiben.
   - Filter: `family`, `kind` (`training`, `competition`), `flag`; in der Liste dazu `list` (Kennung der Liste aus
     Meyton, nie ihr Name).
-  - Darstellung im Fortschritt: `sighters=0` (Training nur aus Probe nicht mitzählen), `metric` (`sigma`, `tens`,
+  - Darstellung im Fortschritt: `warmup=1` (Einschießen mitzählen; eine alte Adresse mit `sighters` gilt als
+    Vorgabe), `metric` (`sigma`, `tens`,
     `tempo`), `view` (`cards`, `months`), `show=target` (das Trefferbild statt des Verlaufs als Hauptbild; die Sicht
     Form oder Lage steht nicht in der Adresse). `scoring=rings` kennt das Modell; die App rechnet den Fortschritt in der
     Wertung der Familie und übergeht es.
@@ -371,7 +372,7 @@ Teil 1d, entschieden mit dem User am 28. Oktober 2026):
 - **Rechnen:** Der Server liest die Abfrage aus der Adresse und rechnet `periodModel` aus den Projektionen
   (`progressPageData` in `src/lib/overview.ts`), in der Wertung der Familie. An den Browser geht das leichte Modell
   (`lightPeriodModel`: Scheiben ohne Werte und Rekorde ihrer Projektion, die Kennzahl ohne Rechnung).
-- **Filter schreiben die Adresse:** Zeitraum, Vergleich, Familie, Art, „nur Probe“, Kennzahl und Darstellung; die Seite
+- **Filter schreiben die Adresse:** Zeitraum, Vergleich, Familie, Art, Einschießen, Kennzahl und Darstellung; die Seite
   rechnet neu. Das Blatt „Filter“ sammelt die Wahl und wendet sie erst mit „Übernehmen“ an, weil Zeitraum, Vergleich und
   Art zusammen eine Rechnung ergeben und „Frei“ zwei Tage braucht, bevor es gilt.
 - **Filter ohne Sprung:** `router.push` mit `scroll: false` in einer Transition. Die Schalter stehen im Verlauf, der ab
@@ -503,8 +504,8 @@ automatisch gespeichert.
   automatisch gespeichert wie die Wertung.
 - **Nur Probe bleibt ein Merkmal neben der Art:** „Training nur Probe“ und „Wettkampf nur Probe“ in Metazeile, Kachel
   auf Start, Namen der Links und Ablesung im Fortschritt („40 Schuss (Probe als Wettkampf)“); in der Liste Pokal und
-  „Probe“ nebeneinander. Rekorde und Verläufe zählen eine Scheibe nur aus Probe nur mit „Probe einbeziehen“, egal
-  welche Art.
+  „Probe“ nebeneinander. Rekorde und Verläufe zählen eine Scheibe nur aus Probe wie ein Training, egal welche Art; nur
+  Einschießen (Probe vor einer Wertung desselben Abends) zählt erst mit „Einschießen mitzählen“ ([[spiegel-langzeit]]).
 - Mehrere Scheiben auf einmal umzustellen braucht die Auswahl (siehe „Was noch fehlt“).
 
 ## Art und Wertung als Symbole
@@ -537,7 +538,9 @@ Neben einer Zahl stehen Art und Wertung als weiche Kreise, in einer Filterzeile 
   - Start: neben dem Ø je Block (der Block ist eine Karte, keine Filter); dort entfällt „in ganzen Ringen“ im Text.
   - Regel: in einer Filterzeile ein Chip in Worten, direkt neben einer Zahl der Kreis.
 - **Liste:** der Pokal in der Spalte „Art“ 16 px in Gold, damit er auffällt; nur aus Probe dahinter das Wort „Probe“
-  (`KindMark`).
+  (`KindMark`), Einschießen darunter leise das Wort „Einschießen“; seine Zahlen stehen leise, auch die Wertung der
+  Scheibe nicht fett, und der Abstand zeigt „–“ mit „Einschießen zählt nicht“ (er rechnet ohne Einschießen). Dasselbe
+  Wort in der Liste im Fortschritt und in der Metazeile der Kacheln auf Start.
 - **Eine Wahl je Seite:** Kopf am Telefon und Box zeigen denselben Zustand; ein Fehler steht im Platz `notice`, auf
   Start gleich unter der Zahl, in Liste und Fortschritt unter den Filtern.
 

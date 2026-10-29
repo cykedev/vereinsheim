@@ -60,7 +60,9 @@ Stand mit `past` (`MAX_OBSERVED_LAG_MS`, SF-79).
   (dazu die gewählten Wertungen, auch `FamilyScoring`, und die gewählte Art),
   `reads.ts` liest für die Ansichten. Seiten und Server Actions rufen nur diese Funktionen, nie Prisma direkt auf Schüsse.
 - **Übersichten lesen keine Schüsse** (ADR-031): Start, Liste und das Blättern nehmen `ownerCards` (Scheibe
-  mit Projektion, Familie, Scheibenbild) und rechnen die Modelle aus `shot-ui` **auf dem Server**. An den Browser gehen
+  mit Projektion, Familie, Scheibenbild) und rechnen die Modelle aus `shot-ui` **auf dem Server**. `overviewCards`
+  (`src/lib/overview.ts`) markiert dabei das Einschießen (`markWarmup` in der Zone der Seite, nur über sichtbare
+  Scheiben); Start, Liste, Fortschritt und Vergleichen lesen es von dort, gespeichert wird es nie. An den Browser gehen
   nur das Modell und die Lagen der gezeigten Scheiben (`marksOfCards`, `src/lib/marks.ts`); die Hülle baut Routen, eine
   Scheibe öffnet ohne Wertung in der Adresse (in ihrer). Die Liste liest ihre Abfrage auf dem Server (`searchOf` in
   `src/lib/search.ts`), ein Filter schreibt die Adresse, und die Seite rechnet neu. Gemessen bei 1.564 Scheiben: Start

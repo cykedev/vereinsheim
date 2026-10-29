@@ -100,7 +100,7 @@ bleibt der eingebaute Vergleich.
   - frei von … bis
   - „Vergleichen mit“: ohne, der gleich lange Zeitraum davor, ein benannter Zeitraum (später ein Merkmal); Scheiben,
     die in beiden Zeiträumen liegen, zählen nur im gewählten
-  - Art (alle, Training, Wettkampf), „Scheiben nur aus Probe mitzählen“
+  - Art (alle, Training, Wettkampf), „Einschießen mitzählen“ (Vorgabe aus, darunter leise der Hinweis)
   - „Als Zeitraum speichern“ fehlt noch.
 - **Ergebnis-Box** wie `CardResult`: Ø je Schuss über alle Wertungsschüsse groß ([[adr-034]]), darunter Scheiben und
   Wertungsschüsse, die beste Scheibe unter der häufigsten Schusszahl (eine kurze Scheibe hätte es sonst leichter).
@@ -154,8 +154,14 @@ bleibt der eingebaute Vergleich.
   - Die ganze Zeile eines Rekords ist der Knopf, mit Linien dazwischen wie in der Liste der Scheiben.
   - Die Rekorde der gewählten Scheibe sind markiert und sagen „gezeigt“. Liegt die Scheibe außerhalb des Zeitraums,
     steht „außerhalb“ ohne Knopf.
-- **Training nur aus Probe** zählt als Vorgabe mit, denn so trainieren die meisten; im Fachkern bleibt
-  `includeProbeOnly` eine Option, die Seite setzt sie als Vorgabe.
+- **Einschießen** (entschieden am 29. Oktober 2026, SF-05): Eine Scheibe nur aus Probe, die vor einer Wertung ihres
+  Abends (vor 4 Uhr der Vortag) in derselben Familie beginnt, ist Einschießen (`warmupIds` im Fachkern). Es zählt in
+  Fortschritt, Vergleichen und Start (Schnitte, Form, Formband, Rekorde) nur mit „Einschießen mitzählen“ (Vorgabe aus,
+  `includeWarmup`, Adresse `warmup=1`). Jede andere Scheibe nur aus Probe zählt immer wie ein Training, auch Probe nach
+  der letzten Wertung des Abends. Die Regel gilt beim Lesen: `overviewCards` markiert über `markWarmup` (`shot-ui`) mit
+  den sichtbaren Scheiben; eine gelöschte Wertung macht kein Einschießen. Der Kopf nennt es („14 Scheiben, 2
+  Einschießen nicht gezählt“, dahinter „?“ zur Hilfe „Einschießen“), Umfang, Wochen und Kalender zählen alle Scheiben.
+  Im Verlauf steht Einschießen mit Schalter hohl wie jede Scheibe nur aus Probe.
 - **Analyse über den Zeitraum** (SP-2.7, Konzept vom 21. Oktober 2026, mit dem User abgestimmt): siehe den
   folgenden Abschnitt.
 
@@ -320,7 +326,7 @@ Eingabe ist `PeriodItem`; was Spiegel anders braucht als Treffsicher, sind Param
 - **Kennzahlen:** `periodModel({ tileKeys })` für die Kacheln (die erste trägt den Vergleich), `PeriodChartBar.metrics`
   für den Verlauf. Treffsicher: Ø je Schuss, Zehner, Lage (`group.mpiDistance` aus der Trefferlage des Ausdrucks,
   in der Adresse `metric=location`).
-- **Blatt „Filter“:** `probeOnlySwitch={false}` blendet „Scheiben nur aus Probe mitzählen“ aus.
+- **Blatt „Filter“:** `warmupSwitch={false}` blendet „Einschießen mitzählen“ aus; Treffsicher kennt kein Einschießen.
 - **Ablesung:** `CardReadout` mit `target: null` zeichnet keine kleine Scheibe.
 
 ## Vorgaben
