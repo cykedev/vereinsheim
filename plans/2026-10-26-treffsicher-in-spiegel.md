@@ -392,7 +392,7 @@ Entschieden mit dem User am 29. Oktober 2026 (Planung Stufe 3):
   zählen dort aber schon (Schalter „Scheiben nur aus Probe mitzählen“, Vorgabe ja), auch das Einschießen vor einer
   Wertung. Neu, nach dem Designkonzept 3c/3e (https://claude.ai/artifact/84tuTUTfmPcxXVXYQMSnKV), vom User mit allen
   Empfehlungen freigegeben: eine Regel für Fortschritt, Vergleichen, Start, Rekorde und (nach dem Rebase) die Auswertung
-  im Tagebuch. **Einschießen ist eine Scheibe „nur Probe“ vor der ersten Wertung ihres Abends in ihrer Familie** und
+  im Tagebuch. **Einschießen ist eine Scheibe „nur Probe“ vor einer Wertung ihres Abends in ihrer Familie** und
   zählt nicht; jede andere Scheibe „nur Probe“ zählt wie ein Training (User beim Plan 3c: Probe nach einer Wertung ist
   weiteres Training, im Mittel 26 Schuss und 45 Minuten danach). Der Schalter heißt „Einschießen mitzählen“, Vorgabe
   aus; die Liste zeigt alles und nennt das Einschießen. In der Prod-Kopie 92 Scheiben „nur Probe“ in 7 Konten, 16 davon

@@ -457,7 +457,7 @@ kein Paket dazu.
 ## Offene Punkte für den Koordinator (Empfehlung zuerst)
 
 **Entschieden am 29. Oktober 2026:** Punkt 1 hat der User entschieden: **Variante B**. Einschießen ist nur eine
-Scheibe „nur Probe“ vor der ersten Wertung ihres Abends in ihrer Familie (in der Dev-DB 16); Probe nach einer Wertung
+Scheibe „nur Probe“ vor einer Wertung ihres Abends in ihrer Familie, auch zwischen zwei Wertungen (in der Dev-DB 16); Probe nach der letzten Wertung
 zählt wie ein Training. Die Kindsession setzt die im Plan beschriebene Änderung für B um und wartet vor Aufgabe 2 nicht
 mehr. Die übrigen Punkte hat der Koordinator so entschieden, wie sie empfohlen sind: Familie statt Disziplin,
 Vergleichen übernimmt `warmup=1`, der Satz bleibt im Kopf, eine Scheibe ohne Werte zählt als Wertung,
