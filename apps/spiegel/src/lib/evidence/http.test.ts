@@ -9,7 +9,7 @@ import { createPrismaClient } from "@/lib/db"
 import { createTestSite, type TestSite } from "../../../test/fixtures"
 
 import { writeEvidenceFile } from "./files"
-import { evidenceResponse } from "./http"
+import { contentDisposition, evidenceResponse } from "./http"
 
 const db = createPrismaClient()
 const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 9, 9])
@@ -66,6 +66,33 @@ describe("evidenceResponse", () => {
     expect(new Uint8Array(await response.arrayBuffer())).toEqual(PNG)
   })
 
+  it("mit Namen trägt der Kopf ihn zusätzlich in UTF-8", async () => {
+    const other = await db.card.create({
+      data: {
+        disciplineId: site.disciplineId,
+        ownerId: site.ownerId,
+        startedAt: new Date(),
+        kind: "training",
+        state: "final",
+        complete: false,
+        origin: "raw",
+      },
+    })
+    const { id } = await db.cardEvidence.create({
+      data: {
+        cardId: other.id,
+        sha256: SHA,
+        contentType: "image/png",
+        size: PNG.length,
+        fileName: "Ergebnisliste Kreisliga.png",
+      },
+    })
+    const response = await evidenceResponse(db, id, site.ownerId)
+    expect(response.headers.get("content-disposition")).toBe(
+      "inline; filename=\"beleg.png\"; filename*=UTF-8''Ergebnisliste%20Kreisliga.png"
+    )
+  })
+
   it("ein PDF ohne Sandbox, damit der Browser es anzeigt", async () => {
     const pdf = new TextEncoder().encode("%PDF-1.4\n%%EOF\n")
     const sha = createHash("sha256").update(`${randomUUID()}-pdf`).digest("hex")
@@ -90,11 +117,45 @@ describe("evidenceResponse", () => {
     expect(response.headers.get("x-content-type-options")).toBe("nosniff")
   })
 
+  it("auch eine geteilte Scheibe gibt ihren Beleg nur dem Besitzer", async () => {
+    const shared = await db.card.create({
+      data: {
+        disciplineId: site.disciplineId,
+        ownerId: site.ownerId,
+        startedAt: new Date(),
+        kind: "training",
+        state: "final",
+        complete: false,
+        origin: "manual",
+        shareId: randomUUID(),
+        sharedAt: new Date(),
+      },
+    })
+    const { id } = await db.cardEvidence.create({
+      data: { cardId: shared.id, sha256: SHA, contentType: "image/png", size: PNG.length },
+    })
+    expect((await evidenceResponse(db, id, null)).status).toBe(401)
+    expect((await evidenceResponse(db, id, "someone-else")).status).toBe(404)
+    expect((await evidenceResponse(db, id, site.ownerId)).status).toBe(200)
+  })
+
   it("ohne Sitzung 401, fremd, unbekannt oder im Papierkorb 404", async () => {
     expect((await evidenceResponse(db, evidenceId, null)).status).toBe(401)
     expect((await evidenceResponse(db, evidenceId, "someone-else")).status).toBe(404)
     expect((await evidenceResponse(db, "../etc/passwd", site.ownerId)).status).toBe(404)
     await db.card.update({ where: { id: cardId }, data: { deletedAt: new Date() } })
     expect((await evidenceResponse(db, evidenceId, site.ownerId)).status).toBe(404)
+  })
+})
+
+describe("contentDisposition", () => {
+  it("ohne Namen nur beleg.<Endung>", () => {
+    expect(contentDisposition("application/pdf", null)).toBe('inline; filename="beleg.pdf"')
+  })
+
+  it("Umlaute, Leerzeichen, Anführungszeichen und '()* kodiert", () => {
+    expect(contentDisposition("image/jpeg", "Müller (2) 'a'*\"b\".jpg")).toBe(
+      "inline; filename=\"beleg.jpg\"; filename*=UTF-8''M%C3%BCller%20%282%29%20%27a%27%2A%22b%22.jpg"
+    )
   })
 })
