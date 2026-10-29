@@ -23,15 +23,15 @@ export interface PeriodControlsProps {
    * als Wechsel-Chip)
    */
   actions?: ReactNode
-  /** der Schalter „Scheiben nur aus Probe mitzählen“ im Blatt „Filter“ (Vorgabe ja) */
-  probeOnlySwitch?: boolean
+  /** der Schalter „Einschießen mitzählen“ im Blatt „Filter“ (Vorgabe ja) */
+  warmupSwitch?: boolean
   /** „Vergleichen mit“ im Blatt „Filter“ (Vorgabe ja); Spiegel vergleicht auf eigener Seite */
   withCompare?: boolean
 }
 
 /**
  * Filter im Kopf der Seite eines Zeitraums in einer Zeile: die Familie als Segment, sie wechselt man am
- * häufigsten, dann der Chip, der das Blatt „Filter“ öffnet (Zeitraum, Vergleich, Art, Scheiben nur aus Probe).
+ * häufigsten, dann der Chip, der das Blatt „Filter“ öffnet (Zeitraum, Vergleich, Art, Einschießen).
  */
 export function PeriodControls({
   state,
@@ -42,7 +42,7 @@ export function PeriodControls({
   timeZone,
   families,
   actions,
-  probeOnlySwitch,
+  warmupSwitch,
   withCompare,
 }: PeriodControlsProps) {
   return (
@@ -56,14 +56,14 @@ export function PeriodControls({
         choice={state.choice}
         compare={state.compare}
         kind={state.kind}
-        includeProbeOnly={state.includeProbeOnly}
+        includeWarmup={state.includeWarmup}
         compareLabel={compareRange?.label ?? null}
         range={range}
         named={named}
         timeZone={timeZone}
         // eine Aktion für das ganze Blatt
         onApply={(filters) => dispatch({ type: "setFilters", filters })}
-        probeOnlySwitch={probeOnlySwitch}
+        warmupSwitch={warmupSwitch}
         withCompare={withCompare}
       />
       {actions && (

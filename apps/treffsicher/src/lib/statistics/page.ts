@@ -112,7 +112,7 @@ export function statisticsState(
     ? (memory.scorings[option.value] ?? "decimal")
     : "rings"
   return {
-    state: { ...query, family: option.value, scoring, includeProbeOnly: true },
+    state: { ...query, family: option.value, scoring, includeWarmup: false },
     option,
   }
 }

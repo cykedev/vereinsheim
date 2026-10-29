@@ -250,12 +250,12 @@ describe("Rekorde (R1–R8)", () => {
     expect(withProbe.bestSeries[10]).toMatchObject({ cardId: "p", value: 100, detail: "Serie 2" })
   })
 
-  it("Probe, die als Wertung zählt (SF-05), nur mit includeProbeOnly", () => {
+  it("das Merkmal „als Wertung gezählt“ (SF-05) wird nicht ausgewertet: die Scheibe zählt wie ohne", () => {
     const cards = [
       card("a", 1, tens(10, 95)),
       card("w", 2, tens(10), { flags: [FLAG_COUNTED_AS_MATCH] }),
     ]
-    expect(periodRecords(cards, "decimal").bestCard[10].cardId).toBe("a")
+    expect(periodRecords(cards, "decimal").bestCard[10].cardId).toBe("w")
     expect(periodRecords(cards, "decimal", { includeProbeOnly: true }).bestCard[10].cardId).toBe(
       "w"
     )

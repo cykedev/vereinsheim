@@ -28,7 +28,7 @@ export interface PeriodFilters {
   choice: PeriodChoice
   compare: CompareChoice
   kind: CardKind
-  includeProbeOnly: boolean
+  includeWarmup: boolean
 }
 
 export interface PeriodPickerProps {
@@ -36,8 +36,8 @@ export interface PeriodPickerProps {
   compare: CompareChoice
   /** Art der Scheiben (Alle, Training, Wettkampf) */
   kind: CardKind
-  /** Scheiben nur aus Probe mitzählen (Vorgabe ja) */
-  includeProbeOnly: boolean
+  /** Einschießen mitzählen (Vorgabe nein) */
+  includeWarmup: boolean
   /** Name des gewählten Vergleichs für den Chip; null ohne Vergleich */
   compareLabel?: string | null
   /** der Zeitraum der Wahl: sein Name steht auf dem Chip, seine Tage sind die Vorgabe für „Frei“ */
@@ -45,30 +45,30 @@ export interface PeriodPickerProps {
   named: readonly NamedPeriod[]
   timeZone: string
   onApply: (filters: PeriodFilters) => void
-  /** der Schalter „Scheiben nur aus Probe mitzählen“ (Vorgabe ja); ohne bleibt `includeProbeOnly` wie gegeben */
-  probeOnlySwitch?: boolean
+  /** der Schalter „Einschießen mitzählen“ (Vorgabe ja); ohne bleibt `includeWarmup` wie gegeben */
+  warmupSwitch?: boolean
   /** „Vergleichen mit“ im Blatt (Vorgabe ja); ohne gibt das Blatt immer „ohne Vergleich“ zurück (Spiegel vergleicht auf eigener Seite) */
   withCompare?: boolean
   className?: string
 }
 
 /**
- * Was der Chip zeigt: der Zeitraum und, was von der Vorgabe abweicht: die Art, ein Vergleich, ohne Trainings
- * nur aus Probe. „Letzte 90 Tage · Training · mit Zeitraum davor“
+ * Was der Chip zeigt: der Zeitraum und, was von der Vorgabe abweicht: die Art, ein Vergleich, mit Einschießen.
+ * „Letzte 90 Tage · Training · mit Zeitraum davor“
  */
 export function filterSummary(
   label: string,
   {
     kind,
     compareLabel,
-    includeProbeOnly,
-  }: { kind: CardKind; compareLabel: string | null; includeProbeOnly: boolean }
+    includeWarmup,
+  }: { kind: CardKind; compareLabel: string | null; includeWarmup: boolean }
 ): string {
   return [
     label,
     kind === "all" ? null : (KIND_OPTIONS.find((o) => o.value === kind)?.label ?? null),
     compareLabel ? `mit ${compareLabel}` : null,
-    includeProbeOnly ? null : "ohne Probe-Scheiben",
+    includeWarmup ? "mit Einschießen" : null,
   ]
     .filter(Boolean)
     .join(" · ")
@@ -78,20 +78,20 @@ const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b)
 
 /**
  * Blatt „Filter“: ein Chip mit dem Zeitraum und dem, was abweicht, öffnet ein Blatt (auf dem Telefon von unten) mit
- * den rollenden Vorgaben, den benannten Zeiträumen, „Frei“ mit zwei Tagen, „Vergleichen mit“, der Art und „Trainings
- * nur aus Probe mitzählen“. Die Wahl gilt erst mit „Übernehmen“. „Als Zeitraum speichern“ gibt es noch nicht.
+ * den rollenden Vorgaben, den benannten Zeiträumen, „Frei“ mit zwei Tagen, „Vergleichen mit“, der Art und
+ * „Einschießen mitzählen“. Die Wahl gilt erst mit „Übernehmen“. „Als Zeitraum speichern“ gibt es noch nicht.
  */
 export function PeriodPicker({
   choice,
   compare,
   kind,
-  includeProbeOnly,
+  includeWarmup,
   compareLabel = null,
   range,
   named,
   timeZone,
   onApply,
-  probeOnlySwitch = true,
+  warmupSwitch = true,
   withCompare = true,
   className,
 }: PeriodPickerProps) {
@@ -100,7 +100,7 @@ export function PeriodPicker({
   const [draft, setDraft] = useState(choice)
   const [draftCompare, setDraftCompare] = useState(compare)
   const [draftKind, setDraftKind] = useState(kind)
-  const [draftProbe, setDraftProbe] = useState(includeProbeOnly)
+  const [draftWarmup, setDraftWarmup] = useState(includeWarmup)
   const iso = (ms: number) => formatIsoDate(new Date(ms), timeZone)
   const [free, setFree] = useState(() =>
     choice.type === "free"
@@ -111,7 +111,7 @@ export function PeriodPicker({
     setDraft(choice)
     setDraftCompare(compare)
     setDraftKind(kind)
-    setDraftProbe(includeProbeOnly)
+    setDraftWarmup(includeWarmup)
     // nicht übernommene freie Tage gelten nicht: immer vom aktuellen Zeitraum aus beginnen
     setFree(
       choice.type === "free"
@@ -137,7 +137,7 @@ export function PeriodPicker({
           className
         )}
       >
-        {filterSummary(range.label, { kind, compareLabel, includeProbeOnly })}
+        {filterSummary(range.label, { kind, compareLabel, includeWarmup })}
         <svg
           viewBox="0 0 24 24"
           aria-hidden="true"
@@ -208,12 +208,12 @@ export function PeriodPicker({
               )
             )}
           </fieldset>
-          {probeOnlySwitch && (
+          {warmupSwitch && (
             <label className={OPTION_CLASS}>
               <input
                 type="checkbox"
-                checked={draftProbe}
-                onChange={(event) => setDraftProbe(event.target.checked)}
+                checked={draftWarmup}
+                onChange={(event) => setDraftWarmup(event.target.checked)}
                 className="size-4 accent-[var(--primary)]"
               />
               <span>Scheiben nur aus Probe mitzählen</span>
@@ -228,7 +228,7 @@ export function PeriodPicker({
                 choice: current,
                 compare: !withCompare || itself ? { type: "none" } : draftCompare,
                 kind: draftKind,
-                includeProbeOnly: draftProbe,
+                includeWarmup: draftWarmup,
               })
               setOpen(false)
             }}

@@ -92,7 +92,7 @@ describe("Zustand der Statistik aus der Adresse", () => {
   it("ohne Angabe die zuletzt geschossene Disziplin, Probe zählt nie", () => {
     const { state } = statisticsState(new URLSearchParams("sighters=0"), options)!
     expect(state.family).toBe("kk")
-    expect(state.includeProbeOnly).toBe(true)
+    expect(state.includeWarmup).toBe(false)
   })
 
   it("ganze Ringe nur in Zehntel-Disziplinen wählbar, gemerkt je Disziplin, sonst immer", () => {

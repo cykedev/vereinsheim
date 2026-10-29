@@ -9,10 +9,14 @@ import {
   periodModel,
   periodReading,
   PERIOD_TILE_KEYS,
+  type PeriodModel,
 } from "./model"
+import type { PeriodItem } from "./item"
+import { recordRows } from "./records"
 import { periodSentence, verdictText } from "./sentence"
 import { initialPeriodState, type PeriodState } from "./state"
 import { item, NOW, periodCard, projected, TZ } from "./testSeason"
+import { WARMUP_REASON } from "./warmup"
 
 const NAMED: NamedPeriod[] = [
   { id: "lm", name: "Vorbereitung", from: "2026-05-01", to: "2026-06-30" },
@@ -23,6 +27,19 @@ const model = (
 ) =>
   periodModel({
     items: (cards as ReturnType<typeof periodCard>[]).map(item),
+    state: { ...initialPeriodState({ family: "lg-10m" }), ...state },
+    nowMs: NOW,
+    timeZone: TZ,
+    named: NAMED,
+  })
+
+/** eine Scheibe als Einschießen markiert, wie `markWarmup` beim Lesen */
+const warm = (card: ReturnType<typeof periodCard>) => ({ ...item(card), warmup: true as const })
+
+/** wie `model`, aus fertigen Einträgen (mit Einschießen) */
+const modelOf = (items: readonly PeriodItem[], state: Partial<PeriodState> = {}) =>
+  periodModel({
+    items,
     state: { ...initialPeriodState({ family: "lg-10m" }), ...state },
     nowMs: NOW,
     timeZone: TZ,
@@ -411,11 +428,13 @@ describe("Grenzfälle des Modells", () => {
   })
 
   it("eine neueste Scheibe: die Ablesung meint die neueste mit Wert", () => {
-    // die Scheibe nur aus Probe zählt ohne den Schalter nicht: die neueste mit Wert ist c
-    const m = model([...THREE, probe], { includeProbeOnly: false })
+    // Einschießen zählt ohne den Schalter nicht: die neueste mit Wert ist c
+    const m = modelOf([...THREE.map(item), warm(probe)])
     expect(m.reading?.card.id).toBe("c")
     expect(m.newest).toBe("c")
-    // mit dem Schalter (der Vorgabe) zählt sie und ist die neueste
+    // mit dem Schalter zählt es und ist die neueste; ein Training nur aus Probe zählt immer
+    const all = modelOf([...THREE.map(item), warm(probe)], { includeWarmup: true })
+    expect(all.reading?.card.id).toBe("p")
     expect(model([...THREE, probe]).reading?.card.id).toBe("p")
   })
 
@@ -450,8 +469,11 @@ describe("Grenzfälle des Modells", () => {
     expect(item(probe).probeOnly).toBe(true)
     expect(item(THREE[0]).probeOnly).toBe(false)
     expect(item(periodCard("leer", 1, [])).probeOnly).toBe(false)
-    expect(model([...THREE, probe], { includeProbeOnly: false }).excludedProbeOnly).toBe(1)
-    expect(model([...THREE, probe]).excludedProbeOnly).toBe(0)
+    // nicht gezählt wird nur Einschießen, ein Training nur aus Probe zählt
+    const warmed = [...THREE.map(item), warm(probe)]
+    expect(model([...THREE, probe]).excludedWarmup).toBe(0)
+    expect(modelOf(warmed).excludedWarmup).toBe(1)
+    expect(modelOf(warmed, { includeWarmup: true }).excludedWarmup).toBe(0)
   })
 
   it("Ablesung aus dem Modell und einer Wahl, ohne das Modell neu zu rechnen", () => {
@@ -504,22 +526,23 @@ describe("Abstand zum Schnitt der Scheiben davor", () => {
 })
 
 describe("Grundlage des Trefferbilds", () => {
-  it("die Scheiben, die das Ergebnis zählt: ein Training nur aus Probe nur mit dem Schalter", () => {
+  it("die Scheiben, die das Ergebnis zählt: Einschießen nur mit dem Schalter, Training nur aus Probe immer", () => {
     const items = [
       item(periodCard("a", 3, [100, 101, 102])),
+      warm(periodCard("w", 2.5, [90, 90, 90], { probe: true })),
       item(periodCard("p", 2, [100, 100, 100], { probe: true })),
       item(periodCard("b", 1, [99, 98, 97])),
     ]
-    const model = (includeProbeOnly: boolean) =>
+    const model = (includeWarmup: boolean) =>
       periodModel({
         items,
-        state: { ...initialPeriodState({ family: "lg-10m" }), includeProbeOnly },
+        state: { ...initialPeriodState({ family: "lg-10m" }), includeWarmup },
         nowMs: NOW,
         timeZone: TZ,
         named: [],
       })
-    expect(patternIds(model(true), true).sort()).toEqual(["a", "b", "p"])
-    expect(patternIds(model(false), false).sort()).toEqual(["a", "b"])
+    expect(patternIds(model(true), true).sort()).toEqual(["a", "b", "p", "w"])
+    expect(patternIds(model(false), false).sort()).toEqual(["a", "b", "p"])
   })
 })
 
@@ -559,9 +582,14 @@ describe("Grundlage, Gründe und Herkunft der Rekorde", () => {
     expect(m.tiles[0].basis).toBeNull()
   })
 
-  it("ohne Trainings nur aus Probe zählt die Grundlage sie nicht mit", () => {
-    const sigma = build({ includeProbeOnly: false }).tiles.find((t) => t.key === "group.sigma")!
-    expect(sigma.basis).toMatchObject({ counted: 2, of: 3 })
+  it("ein Training nur aus Probe zählt in der Grundlage mit, Einschießen nur mit dem Schalter", () => {
+    const sigma = build().tiles.find((t) => t.key === "group.sigma")!
+    expect(sigma.basis).toMatchObject({ counted: 3, of: 4 })
+    const warmItems = items.map((c) => (c.id === "p" ? { ...c, warmup: true as const } : c))
+    const sigmaOf = (state: Partial<PeriodState>) =>
+      modelOf(warmItems, state).tiles.find((t) => t.key === "group.sigma")!
+    expect(sigmaOf({}).basis).toMatchObject({ counted: 2, of: 3 })
+    expect(sigmaOf({ includeWarmup: true }).basis).toMatchObject({ counted: 3, of: 4 })
   })
 
   it("je Scheibe ohne Wert der Kennzahl des Verlaufs der Grund", () => {
@@ -580,5 +608,39 @@ describe("Grundlage, Gründe und Herkunft der Rekorde", () => {
       expect(card).not.toHaveProperty("provenance")
     }
     expect(light.tiles.find((t) => t.key === "group.sigma")?.basis).not.toBeNull()
+  })
+})
+
+describe("Einschießen", () => {
+  // das Einschießen ist die schwächste Scheibe: Zählt es mit, sinkt der Ø sichtbar
+  const scored = [periodCard("a", 4, [100, 101, 102]), periodCard("b", 3, [99, 100, 101])]
+  // vier Schuss: allein in seiner Schusszahl, hält es die beste Scheibe zu 4 Schuss
+  const training = periodCard("t", 2, [96, 97, 98, 96], { probe: true })
+  const warmup = periodCard("w", 1, [80, 81, 82], { probe: true })
+  const items = [...scored.map(item), item(training), warm(warmup)]
+  const holders = (model: PeriodModel) =>
+    new Set(recordRows(model.records, "decimal").map((r) => r.record.cardId))
+
+  it("zählt ohne den Schalter nicht in Ø und Rekorden, ein Training nur aus Probe schon", () => {
+    const m = modelOf(items)
+    const all = modelOf(items, { includeWarmup: true })
+    expect(m.summary.cards).toBe(3)
+    expect(all.summary.cards).toBe(4)
+    expect(m.summary.mean).not.toBeNull()
+    expect(m.summary.mean as number).toBeGreaterThan((all.summary.mean as number) + 0.3)
+    // das Training nur aus Probe zählt: ohne es wäre der Ø höher
+    expect(m.summary.mean as number).toBeLessThan(modelOf(scored.map(item)).summary.mean as number)
+    expect(m.values.map((v) => v.id)).toEqual(["a", "b", "t"])
+    expect(all.values.map((v) => v.id)).toEqual(["a", "b", "t", "w"])
+    expect(holders(m).has("w")).toBe(false)
+    expect(holders(m).has("t")).toBe(true)
+    expect(m.excludedWarmup).toBe(1)
+    expect(all.excludedWarmup).toBe(0)
+  })
+
+  it("Liste und Ablesung nennen den Grund, das Trefferbild lässt es weg", () => {
+    expect(modelOf(items).reasons).toEqual({ w: WARMUP_REASON })
+    expect(modelOf(items, { includeWarmup: true }).reasons).toEqual({})
+    expect(patternIds(modelOf(items), false).sort()).toEqual(["a", "b", "t"])
   })
 })

@@ -155,7 +155,7 @@ export function StatisticsScreen({
                   named={[]}
                   timeZone={timeZone}
                   families={options}
-                  probeOnlySwitch={false}
+                  warmupSwitch={false}
                   actions={
                     switchable && (
                       <ScoringChip

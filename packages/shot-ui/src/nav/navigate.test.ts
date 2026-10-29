@@ -57,7 +57,7 @@ describe("Wege zwischen den Seiten", () => {
           compare: { type: "previous" },
           family: "lg-10m",
           kind: "training",
-          includeProbeOnly: true,
+          includeWarmup: false,
           metric: "group.sigma",
           view: null,
           show: "history",
@@ -214,7 +214,7 @@ describe("Fortschritt ↔ Zustand der Seite", () => {
         compare: { type: "named", id: "saison-2025" },
         family: "lp-10m",
         kind: "competition",
-        includeProbeOnly: false,
+        includeWarmup: true,
         scoring: "rings",
         metric: "time.intervalMedian",
         view: "cards",
@@ -254,17 +254,17 @@ describe("Wege zur Seite Vergleichen", () => {
     expect(urlFromRoute(compareCards("c9", "c8"))).toBe("/compare?type=cards&a=c9&b=c8")
   })
 
-  it("aus dem Fortschritt: der Zeitraum gegen den davor, mit Familie, Art und Probe", () => {
+  it("aus dem Fortschritt: der Zeitraum gegen den davor, mit Familie, Art und Einschießen", () => {
     const route = compareFromProgress(
       {
         ...DEFAULT_PROGRESS,
         choice: { type: "rolling", days: 182 },
         kind: "training",
-        includeProbeOnly: false,
+        includeWarmup: true,
       },
       "lg-10m"
     )
-    expect(urlFromRoute(route)).toBe("/compare?family=lg-10m&a=6m&kind=training&sighters=0")
+    expect(urlFromRoute(route)).toBe("/compare?family=lg-10m&a=6m&kind=training&warmup=1")
   })
 
   it("bei „Alles“ die letzten 90 Tage gegen die 90 davor, wie der Satz", () => {

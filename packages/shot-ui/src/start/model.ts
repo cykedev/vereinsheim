@@ -135,9 +135,9 @@ export function startModel(input: StartInput): StartModel {
     // Schüsse wie am Ausdruck; der Ø über alle zusammen, nicht das Mittel der Mittel
     const shots = evening.reduce((sum, card) => sum + card.projection.printedShots, 0)
     const mean = pooledMean(evening, scoring)
-    // Werte je Scheibe in der Wertung, nur Probe dabei (wie im Fortschritt mit seiner Grundeinstellung)
+    // Werte je Scheibe in der Wertung, ohne Einschießen (wie im Fortschritt mit seiner Grundeinstellung)
     const meanMetric = inScoring(metricByKey("result.decimalMean")!, scoring)
-    const values = projectedValues(ofFamily, meanMetric, scoring, { includeProbeOnly: true })
+    const values = projectedValues(ofFamily, meanMetric, scoring)
     const basis = periodBasis(
       tonight
         .filter((c) => c.family === family)
@@ -171,10 +171,9 @@ export function startModel(input: StartInput): StartModel {
       partial: p.partial,
       band: p.band,
     }))
-    const newRecords = recordRows(
-      projectedRecords(ofFamily, scoring, { includeProbeOnly: true }),
-      scoring
-    ).filter((row) => ids.has(row.record.cardId))
+    const newRecords = recordRows(projectedRecords(ofFamily, scoring), scoring).filter((row) =>
+      ids.has(row.record.cardId)
+    )
     return {
       family,
       scoring,

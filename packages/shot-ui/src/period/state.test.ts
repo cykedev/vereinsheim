@@ -6,13 +6,13 @@ const base = initialPeriodState({ family: "lg-10m" })
 const chosen: PeriodState = { ...base, chosen: "k12" }
 
 describe("Zustand der Seite eines Zeitraums", () => {
-  it("Vorgaben: 90 Tage, ohne Vergleich, alle Arten, Training nur aus Probe zählt, Zehntel, Ø je Schuss", () => {
+  it("Vorgaben: 90 Tage, ohne Vergleich, alle Arten, ohne Einschießen, Zehntel, Ø je Schuss", () => {
     expect(base).toEqual({
       choice: { type: "rolling", days: 90 },
       compare: { type: "none" },
       family: "lg-10m",
       kind: "all",
-      includeProbeOnly: true,
+      includeWarmup: false,
       scoring: "decimal",
       metric: "result.decimalMean",
       view: null,
@@ -28,7 +28,7 @@ describe("Zustand der Seite eines Zeitraums", () => {
       [{ type: "setCompare", compare: { type: "previous" } }, { compare: { type: "previous" } }],
       [{ type: "setFamily", family: "lp-10m" }, { family: "lp-10m" }],
       [{ type: "setKind", kind: "competition" }, { kind: "competition" }],
-      [{ type: "setIncludeProbeOnly", include: false }, { includeProbeOnly: false }],
+      [{ type: "setIncludeWarmup", include: true }, { includeWarmup: true }],
       [{ type: "setScoring", scoring: "rings" }, { scoring: "rings" }],
       [{ type: "setMetric", metric: "group.sigma" }, { metric: "group.sigma" }],
       [{ type: "setView", view: "months" }, { view: "months" }],
@@ -45,7 +45,7 @@ describe("Zustand der Seite eines Zeitraums", () => {
       { type: "setChoice", choice: { type: "rolling", days: 30 } },
       { type: "setFamily", family: "lp-10m" },
       { type: "setKind", kind: "training" },
-      { type: "setIncludeProbeOnly", include: false },
+      { type: "setIncludeWarmup", include: true },
     ]
     for (const action of changes)
       expect(periodReducer(chosen, action).chosen, action.type).toBeNull()
@@ -56,7 +56,7 @@ describe("Zustand der Seite eines Zeitraums", () => {
       choice: chosen.choice,
       compare: { type: "previous" as const },
       kind: chosen.kind,
-      includeProbeOnly: chosen.includeProbeOnly,
+      includeWarmup: chosen.includeWarmup,
     }
     const onlyCompare = periodReducer(chosen, { type: "setFilters", filters })
     expect(onlyCompare.compare).toEqual({ type: "previous" })
@@ -67,14 +67,14 @@ describe("Zustand der Seite eines Zeitraums", () => {
         choice: { type: "rolling", days: 30 },
         compare: { type: "none" },
         kind: "training",
-        includeProbeOnly: false,
+        includeWarmup: true,
       },
     })
     expect(all).toMatchObject({
       choice: { type: "rolling", days: 30 },
       compare: { type: "none" },
       kind: "training",
-      includeProbeOnly: false,
+      includeWarmup: true,
       chosen: null,
     })
   })

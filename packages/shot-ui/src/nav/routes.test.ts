@@ -100,7 +100,7 @@ describe("Liste und Fortschritt als Query", () => {
       compare: { type: "previous" },
       family: "lp-10m",
       kind: "training",
-      includeProbeOnly: false,
+      includeWarmup: true,
       scoring: "rings",
       metric: "group.sigma",
       view: "months",
@@ -108,7 +108,7 @@ describe("Liste und Fortschritt als Query", () => {
       chosen: "c42",
     }
     const text =
-      "range=2026-05-01..2026-06-30&compare=previous&family=lp-10m&kind=training&sighters=0&scoring=rings&metric=sigma&view=months&show=target&pick=c42"
+      "range=2026-05-01..2026-06-30&compare=previous&family=lp-10m&kind=training&warmup=1&scoring=rings&metric=sigma&view=months&show=target&pick=c42"
     expect(query(progressQueryToParams(full))).toBe(text)
     expect(progressQueryFromParams(new URLSearchParams(text))).toEqual(full)
   })
@@ -121,6 +121,13 @@ describe("Liste und Fortschritt als Query", () => {
     )
     expect(read).toEqual(DEFAULT_PROGRESS)
     expect(progressQueryToParams(read)).toEqual([])
+    // eine alte Adresse mit `sighters` öffnet mit der Vorgabe: Einschießen zählt nicht
+    for (const old of ["sighters=0", "sighters=1", "warmup=0", "warmup=ja"])
+      expect(progressQueryFromParams(new URLSearchParams(old)).includeWarmup, old).toBe(false)
+    expect(progressQueryFromParams(new URLSearchParams("warmup=1")).includeWarmup).toBe(true)
+    expect(progressQueryToParams({ ...DEFAULT_PROGRESS, includeWarmup: true })).toEqual([
+      ["warmup", "1"],
+    ])
     expect(progressQueryFromParams(new URLSearchParams("metric=tens&scoring=zehntel")).metric).toBe(
       "result.tensRate"
     )
@@ -218,7 +225,7 @@ describe("die Scheibe: Herkunft, Auswahl, Schuss, Anker", () => {
           compare: { type: "none" },
           family: "lg-10m",
           kind: "all",
-          includeProbeOnly: true,
+          includeWarmup: false,
           metric: "result.decimalMean",
           view: null,
           show: "history",
@@ -451,7 +458,7 @@ describe("die ganze Adresse", () => {
       ])
         for (const family of [null, "lp-10m"])
           for (const kind of ["all", "training", "competition"] as const)
-            for (const includeProbeOnly of [true, false])
+            for (const includeWarmup of [false, true])
               for (const scoring of ["decimal", "rings"] as const)
                 for (const metric of [
                   "result.decimalMean",
@@ -466,7 +473,7 @@ describe("die ganze Adresse", () => {
                         compare,
                         family,
                         kind,
-                        includeProbeOnly,
+                        includeWarmup,
                         scoring,
                         metric,
                         view,
@@ -562,15 +569,17 @@ describe("Seite Vergleichen", () => {
     return r.query
   }
 
-  it("ohne Angaben: die letzten 90 Tage gegen den Zeitraum davor, alle Arten, mit Probe", () => {
+  it("ohne Angaben: die letzten 90 Tage gegen den Zeitraum davor, alle Arten, ohne Einschießen", () => {
     expect(compare("")).toEqual({
       type: "periods",
       family: null,
       a: { type: "rolling", days: 90 },
       b: "previous",
       kind: "all",
-      includeProbeOnly: true,
+      includeWarmup: false,
     })
+    for (const old of ["?sighters=0", "?sighters=1", "?type=kind&sighters=0"])
+      expect(compare(old), old).toMatchObject({ includeWarmup: false })
   })
 
   it("Rundreise: jede Art übersteht Schreiben und Lesen, Vorgaben fallen weg", () => {
@@ -585,7 +594,7 @@ describe("Seite Vergleichen", () => {
         a: { type: "free", from: "2026-05-01", to: "2026-06-30" },
         b: { type: "named", id: "saison-2025" },
         kind: "competition",
-        includeProbeOnly: false,
+        includeWarmup: true,
       },
       {
         type: "periods",
@@ -593,15 +602,15 @@ describe("Seite Vergleichen", () => {
         a: { type: "all" },
         b: { type: "rolling", days: 30 },
         kind: "training",
-        includeProbeOnly: true,
+        includeWarmup: false,
       },
       {
         type: "kind",
         family: "lp-freihand",
         range: { type: "rolling", days: 365 },
-        includeProbeOnly: true,
+        includeWarmup: false,
       },
-      { type: "kind", family: null, range: { type: "rolling", days: 30 }, includeProbeOnly: false },
+      { type: "kind", family: null, range: { type: "rolling", days: 30 }, includeWarmup: true },
     ]
     for (const query of queries) {
       const url = urlFromRoute({ page: "compare", query })
@@ -615,10 +624,21 @@ describe("Seite Vergleichen", () => {
           type: "kind",
           family: "lp-freihand",
           range: { type: "rolling", days: 365 },
-          includeProbeOnly: true,
+          includeWarmup: false,
         },
       })
     ).toBe("/compare?type=kind&family=lp-freihand")
+    expect(
+      urlFromRoute({
+        page: "compare",
+        query: {
+          type: "kind",
+          family: null,
+          range: { type: "rolling", days: 365 },
+          includeWarmup: true,
+        },
+      })
+    ).toBe("/compare?type=kind&warmup=1")
     expect(
       urlFromRoute({
         page: "compare",

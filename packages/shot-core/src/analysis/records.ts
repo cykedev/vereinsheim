@@ -34,8 +34,8 @@ export const RECORD_EXCLUDING_FLAGS = [
   "ausgenommen",
 ] as const satisfies readonly CardFlag[]
 /**
- * Probe, die der Schütze nachträglich als Wertung zählt (SF-05, nicht amtlich): für Rekorde wie eine Scheibe nur
- * mit Probe, also nur mit `includeProbeOnly`
+ * Probe, die als Wertung zählen sollte (SF-05). Wird nicht ausgewertet: Ein Training ganz im Probe-Modus zählt ohnehin,
+ * Einschießen regelt `warmupIds`. Bleibt als Kennung, weil Scheiben es tragen.
  */
 export const FLAG_COUNTED_AS_MATCH = "als-wertung-gezaehlt" satisfies CardFlag
 
@@ -435,7 +435,7 @@ export function combineRecords(entries: readonly RecordEntry[]): PeriodRecords {
 /**
  * Rekorde über die Scheiben, die zählen (`recordEligible`), in der gewählten Wertung (R1–R8, R10, R11); wahlweise
  * nur Training oder nur Wettkampf. Eine Scheibe nur mit Probe zählt nur mit `includeProbeOnly`, dann über
- * die Probe wie Wertung; ebenso eine Scheibe, deren Probe der Schütze als Wertung zählt (SF-05). Zählungen
+ * die Probe wie Wertung. Zählungen
  * (R5–R7) setzen erst ab einem Treffer einen Rekord. Aus Kandidaten je Scheibe (`cardRecordCandidates`)
  * zusammengeführt (`combineRecords`)
  */
@@ -445,10 +445,7 @@ export function periodRecords(
   options: { kind?: PeriodCard["kind"]; includeProbeOnly?: boolean } = {}
 ): PeriodRecords {
   const counted = byStart(cards).filter(
-    (card) =>
-      recordEligible(card) &&
-      (options.kind === undefined || card.kind === options.kind) &&
-      (options.includeProbeOnly || !(card.flags ?? []).includes(FLAG_COUNTED_AS_MATCH))
+    (card) => recordEligible(card) && (options.kind === undefined || card.kind === options.kind)
   )
   return combineRecords(
     counted.flatMap((card) => {

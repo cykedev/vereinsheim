@@ -103,7 +103,7 @@ describe("comparePageData: Gruppen", () => {
       type: "kind",
       family: lpFamily,
       range: { type: "all" },
-      includeProbeOnly: true,
+      includeWarmup: false,
     })
     expect(page?.model?.a).toMatchObject({ name: "Wettkampf", cards: 6 })
     expect(page?.model?.b).toMatchObject({ name: "Training", cards: 6 })
@@ -118,7 +118,7 @@ describe("comparePageData: Gruppen", () => {
       a: { type: "free", from: "2026-06-07", to: "2026-07-10" },
       b: { type: "free", from: "2026-06-01", to: "2026-06-07" },
       kind: "all",
-      includeProbeOnly: true,
+      includeWarmup: false,
     })
     expect(page?.model?.a.cards).toBe(6)
     expect(page?.model?.b.cards).toBe(6)

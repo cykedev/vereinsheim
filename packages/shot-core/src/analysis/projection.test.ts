@@ -127,7 +127,7 @@ const special: PeriodCard[] = [
     Array.from({ length: 20 }, () => 109),
     { flags: ["ausgenommen"] }
   ),
-  // mit Wertung und dem Merkmal: zählt nur mit `includeProbeOnly`, auch wenn der Probe-Filter nicht greift
+  // mit Wertung und dem Merkmal: Das Merkmal wird nicht ausgewertet, die Scheibe zählt immer (wie „counted“)
   card(
     "counted-match",
     106,
@@ -140,6 +140,11 @@ const special: PeriodCard[] = [
 const CARDS = [...generated, ...special]
 
 const PROJECTED: ProjectedCard[] = CARDS.map(projectCard)
+/** dieselben Scheiben, „probe“ als Einschießen markiert (beim Lesen, wie `markWarmup`) */
+const WITH_WARMUP: ProjectedCard[] = PROJECTED.map((c) =>
+  c.id === "probe" ? { ...c, warmup: true } : c
+)
+const WITHOUT_WARMUP = CARDS.filter((c) => c.id !== "probe")
 
 describe("Projektion je Scheibe (ADR-031)", () => {
   it("die Testmenge ist reich genug: erzeugte Scheiben und jeder Sonderfall", () => {
@@ -152,29 +157,57 @@ describe("Projektion je Scheibe (ADR-031)", () => {
     (scoring) => {
       const cardMetrics = METRICS.filter((m) => m.scopes.includes("card"))
       expect(cardMetrics.length).toBeGreaterThan(10)
-      for (const metric of cardMetrics)
-        for (const includeProbeOnly of [false, true])
-          expect(
-            projectedValues(PROJECTED, metric, scoring, { includeProbeOnly }),
-            `${metric.key} ${includeProbeOnly}`
-          ).toEqual(cardValues(CARDS, metric, scoring, { includeProbeOnly }))
+      // die Projektion rechnet nur Probe wie Wertung; Einschießen fällt nur ohne `includeWarmup` weg
+      const all = { includeProbeOnly: true }
+      for (const metric of cardMetrics) {
+        expect(projectedValues(PROJECTED, metric, scoring), metric.key).toEqual(
+          cardValues(CARDS, metric, scoring, all)
+        )
+        expect(projectedValues(WITH_WARMUP, metric, scoring), metric.key).toEqual(
+          cardValues(WITHOUT_WARMUP, metric, scoring, all)
+        )
+        expect(
+          projectedValues(WITH_WARMUP, metric, scoring, { includeWarmup: true }),
+          metric.key
+        ).toEqual(cardValues(CARDS, metric, scoring, all))
+      }
+      const mean = metricByKey("result.decimalMean")!
+      expect(projectedValues(WITH_WARMUP, mean, scoring).map((v) => v.id)).not.toContain("probe")
+      expect(projectedValues(PROJECTED, mean, scoring).map((v) => v.id)).toContain("probe")
     }
   )
 
   it.each(["decimal", "rings"] as const)(
     "Rekorde aus der Projektion wie aus den Schüssen (%s)",
     (scoring) => {
-      for (const kind of [undefined, "training", "competition"] as const)
-        for (const includeProbeOnly of [false, true]) {
-          const options = { kind, includeProbeOnly }
-          expect(projectedRecords(PROJECTED, scoring, options), JSON.stringify(options)).toEqual(
-            periodRecords(CARDS, scoring, options)
-          )
-        }
+      for (const kind of [undefined, "training", "competition"] as const) {
+        const all = { kind, includeProbeOnly: true }
+        const label = String(kind)
+        expect(projectedRecords(PROJECTED, scoring, { kind }), label).toEqual(
+          periodRecords(CARDS, scoring, all)
+        )
+        expect(projectedRecords(WITH_WARMUP, scoring, { kind }), label).toEqual(
+          periodRecords(WITHOUT_WARMUP, scoring, all)
+        )
+        expect(
+          projectedRecords(WITH_WARMUP, scoring, { kind, includeWarmup: true }),
+          label
+        ).toEqual(periodRecords(CARDS, scoring, all))
+      }
     }
   )
 
-  it("ein Wettkampf nur aus Probe zählt für Rekorde nur mit „Probe einbeziehen“, wie ein Training nur aus Probe", () => {
+  it("das Merkmal „als Wertung gezählt“ ändert nichts an den Rekorden", () => {
+    // dieselben Rekorde wie ohne das Merkmal; dass eine Scheibe mit ihm einen Rekord hält, zeigt `records.test.ts`
+    const plain = CARDS.map((c) => (c.id === "counted-match" ? { ...c, flags: [] } : c))
+    for (const scoring of ["decimal", "rings"] as const) {
+      const records = projectedRecords(PROJECTED, scoring)
+      expect(records).toEqual(projectedRecords(plain.map(projectCard), scoring))
+      expect(periodRecords(CARDS, scoring)).toEqual(periodRecords(plain, scoring))
+    }
+  })
+
+  it("ein Wettkampf nur aus Probe zählt für Rekorde wie ein Training nur aus Probe, als Einschießen nur mit dem Schalter", () => {
     // zehn Zehner: hielte jeden Rekord der Ergebnisse, wenn er zählte
     const probeMatch = card(
       "probe-match",
@@ -187,18 +220,25 @@ describe("Projektion je Scheibe (ADR-031)", () => {
     )
     const cards = [...CARDS, probeMatch]
     const projected = cards.map(projectCard)
+    const warmup = projected.map((c) =>
+      c.id === "probe-match" ? { ...c, warmup: true as const } : c
+    )
     const holders = (records: ReturnType<typeof projectedRecords>) =>
       Object.values(records.bestCard).map((ref) => ref.cardId)
     for (const kind of [undefined, "competition"] as const) {
-      expect(holders(projectedRecords(projected, "decimal", { kind }))).not.toContain("probe-match")
-      const included = projectedRecords(projected, "decimal", { kind, includeProbeOnly: true })
-      expect(holders(included)).toContain("probe-match")
-      expect(included).toEqual(periodRecords(cards, "decimal", { kind, includeProbeOnly: true }))
+      const counted = projectedRecords(projected, "decimal", { kind })
+      expect(holders(counted)).toContain("probe-match")
+      expect(counted).toEqual(periodRecords(cards, "decimal", { kind, includeProbeOnly: true }))
+      expect(holders(projectedRecords(warmup, "decimal", { kind }))).not.toContain("probe-match")
+      expect(holders(projectedRecords(warmup, "decimal", { kind, includeWarmup: true }))).toContain(
+        "probe-match"
+      )
     }
-    const view = { kind: "competition" as const, flags: [], probeOnly: true }
+    const view = { kind: "competition" as const, warmup: true }
+    expect(recordsInView({ kind: "competition" }, { kind: "competition" })).toBe(true)
     expect(recordsInView(view, { kind: "competition" })).toBe(false)
-    expect(recordsInView(view, { kind: "competition", includeProbeOnly: true })).toBe(true)
-    expect(recordsInView(view, { kind: "training", includeProbeOnly: true })).toBe(false)
+    expect(recordsInView(view, { kind: "competition", includeWarmup: true })).toBe(true)
+    expect(recordsInView(view, { kind: "training", includeWarmup: true })).toBe(false)
   })
 
   it("die Version ändert sich mit jeder Kennzahl-Version", () => {
@@ -377,12 +417,10 @@ describe("Grenzfälle der Projektion", () => {
     "Werte, Rekorde und Ø wie aus den Schüssen (%s)",
     (scoring) => {
       for (const metric of METRICS.filter((m) => m.scopes.includes("card")))
-        for (const includeProbeOnly of [false, true])
-          expect(
-            projectedValues(projected, metric, scoring, { includeProbeOnly }),
-            `${metric.key} ${includeProbeOnly}`
-          ).toEqual(cardValues(EDGE, metric, scoring, { includeProbeOnly }))
-      expect(projectedRecords(projected, scoring, { includeProbeOnly: true })).toEqual(
+        expect(projectedValues(projected, metric, scoring), metric.key).toEqual(
+          cardValues(EDGE, metric, scoring, { includeProbeOnly: true })
+        )
+      expect(projectedRecords(projected, scoring)).toEqual(
         periodRecords(EDGE, scoring, { includeProbeOnly: true })
       )
       const metric = inScoring(metricByKey("result.decimalMean")!, scoring)
@@ -424,16 +462,12 @@ describe("Projektion von Scheiben mit Angaben ohne Einzelschüsse ([[adr-033]])"
   it.each(["decimal", "rings"] as const)(
     "Werte, Rekorde und Umfang wie aus den Angaben (%s)",
     (scoring) => {
-      for (const includeProbeOnly of [false, true]) {
-        for (const metric of METRICS.filter((m) => m.scopes.includes("card")))
-          expect(
-            projectedValues(projected, metric, scoring, { includeProbeOnly }),
-            `${metric.key} ${includeProbeOnly}`
-          ).toEqual(cardValues(SUMS, metric, scoring, { includeProbeOnly }))
-        expect(projectedRecords(projected, scoring, { includeProbeOnly })).toEqual(
-          periodRecords(SUMS, scoring, { includeProbeOnly })
+      const all = { includeProbeOnly: true }
+      for (const metric of METRICS.filter((m) => m.scopes.includes("card")))
+        expect(projectedValues(projected, metric, scoring), metric.key).toEqual(
+          cardValues(SUMS, metric, scoring, all)
         )
-      }
+      expect(projectedRecords(projected, scoring)).toEqual(periodRecords(SUMS, scoring, all))
       expect(projectedVolume(projected, week, day)).toEqual(trainingVolume(SUMS, week, day))
     }
   )

@@ -19,8 +19,10 @@ export interface PeriodItem {
   id: string
   startedAtMs: number
   kind: PeriodCard["kind"]
-  /** nur Probe mit mindestens einem Schuss: zählt nur mit `includeProbeOnly` */
+  /** nur Probe mit mindestens einem Schuss; zählt wie ein Training, außer als Einschießen (`warmup`) */
   probeOnly: boolean
+  /** Einschießen: zählt nur mit `includeWarmup` */
+  warmup?: true
   /** Schüsse wie am Ausdruck (Umfang, Ablesung) */
   shots: number
   /**
@@ -30,7 +32,7 @@ export interface PeriodItem {
   metrics: Readonly<Record<string, { value: number; n: number; sd?: number | null } | null>>
   /** Bausteine der Rekorde je Wertung (`cardRecordCandidates`); null, wenn der Eintrag für Rekorde nicht zählt */
   records: Readonly<Record<Scoring, RecordCandidates | null>>
-  /** Merkmale; für Rekorde zählt `FLAG_COUNTED_AS_MATCH` */
+  /** Merkmale */
   flags: readonly string[]
   /** Grundlage der Werte; fehlt in Treffsicher, dann nennt die Seite keine */
   detail?: CardDetail
@@ -48,18 +50,18 @@ export const byStart = (
 
 const inOrder = (items: readonly PeriodItem[]) => [...items].sort(byStart)
 
-/** wie `cardValues`, aus den Einträgen: ohne Wert kein Punkt, nur Probe nur mit dem Schalter */
+/** wie `projectedValues`, aus den Einträgen: ohne Wert kein Punkt, Einschießen nur mit dem Schalter */
 export function itemValues(
   items: readonly PeriodItem[],
   metric: Readonly<MetricDefinition>,
   scoring: Scoring,
-  options: { includeProbeOnly?: boolean } = {}
+  options: { includeWarmup?: boolean } = {}
 ): CardValue[] {
   if (!metric.scopes.includes("card"))
     throw new RangeError(`${metric.key}: keine Kennzahl der Ebene Scheibe`)
   const key = inScoring(metric, scoring).key
   return inOrder(items).flatMap((item) => {
-    if (item.probeOnly && !options.includeProbeOnly) return []
+    if (item.warmup && !options.includeWarmup) return []
     const entry = item.metrics[key]
     if (!entry) return []
     const value: CardValue = { id: item.id, atMs: item.startedAtMs, value: entry.value, n: entry.n }
@@ -68,11 +70,11 @@ export function itemValues(
   })
 }
 
-/** wie `periodRecords`, aus den Bausteinen der Einträge (`combineRecords`) */
+/** wie `projectedRecords`, aus den Bausteinen der Einträge (`combineRecords`) */
 export function itemRecords(
   items: readonly PeriodItem[],
   scoring: Scoring,
-  options: { kind?: PeriodCard["kind"]; includeProbeOnly?: boolean } = {}
+  options: { kind?: PeriodCard["kind"]; includeWarmup?: boolean } = {}
 ): PeriodRecords {
   return combineRecords(
     inOrder(items).flatMap((item) => {

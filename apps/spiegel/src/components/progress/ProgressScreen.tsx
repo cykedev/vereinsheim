@@ -250,10 +250,7 @@ export function ProgressScreen({
   )
 
   // das Trefferbild der Scheiben, die das Ergebnis zählt, erst wenn Bild oder Reiter es brauchen
-  const ids = useMemo(
-    () => patternIds(base, state.includeProbeOnly),
-    [base, state.includeProbeOnly]
-  )
+  const ids = useMemo(() => patternIds(base, state.includeWarmup), [base, state.includeWarmup])
   const pattern = usePeriodPattern(ids, state.show === "target" || tab !== "result")
   const [patternView, setPatternView] = usePatternView()
   // ein Schwerpunkt im Reiter Lage wählt seine Scheibe, ohne zu springen: Das Bild bleibt im Blick
@@ -263,9 +260,9 @@ export function ProgressScreen({
   const target = TARGETS[option?.targetId ?? "lp-10m"]
   const result = <PeriodResult model={model} timeZone={timeZone} onHelp={onHelp} />
   const sentence = periodSentence(model)
-  // eine Scheibe nur aus Probe zählt nur mit dem Schalter: sonst steht es in der Liste, aber nicht im Ergebnis
-  const excluded = model.excludedProbeOnly
-  const cardsText = `${model.cards.length} Scheiben${excluded ? `, ${excluded} nur Probe nicht gezählt` : ""}`
+  // Einschießen zählt nur mit dem Schalter: sonst steht es in der Liste, aber nicht im Ergebnis
+  const excluded = model.excludedWarmup
+  const cardsText = `${model.cards.length} Scheiben${excluded ? `, ${excluded} Einschießen nicht gezählt` : ""}`
   const empty = model.cards.length === 0
 
   return (
@@ -355,7 +352,7 @@ export function ProgressScreen({
                 {(width) => (
                   <PeriodChart
                     // je Menge der Scheiben, Darstellung und Kennzahl neu: das Lineal fängt ohne Wahl an
-                    key={`${state.family}:${state.kind}:${state.includeProbeOnly}:${model.range.fromMs}:${model.range.toMs}:${state.metric}:${model.view}:${model.compareRange?.fromMs ?? ""}`}
+                    key={`${state.family}:${state.kind}:${state.includeWarmup}:${model.range.fromMs}:${model.range.toMs}:${state.metric}:${model.view}:${model.compareRange?.fromMs ?? ""}`}
                     width={width}
                     model={model}
                     timeZone={timeZone}

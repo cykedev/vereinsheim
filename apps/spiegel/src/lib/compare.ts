@@ -215,7 +215,7 @@ export async function comparePageData(
         b,
         positions: await positionsOf(db, ownerId, [a, b]),
         scoring,
-        includeProbeOnly: query.includeProbeOnly,
+        includeWarmup: query.includeWarmup,
         names: KIND_NAMES,
         shared: 0,
       }),
@@ -238,7 +238,7 @@ export async function comparePageData(
       ? (compareRange({ type: "previous" }, rangeA, ctx) as DateRange)
       : resolveRange(query.b, ctx)
   const ofKind = (item: PeriodItem) => query.kind === "all" || item.kind === query.kind
-  const counts = (item: PeriodItem) => query.includeProbeOnly || !item.probeOnly
+  const counts = (item: PeriodItem) => query.includeWarmup || !item.warmup
   const a = within(rangeA, ofKind)
   const inA = new Set(a.map((item) => item.id))
   const bAll = within(rangeB, ofKind)
@@ -251,9 +251,9 @@ export async function comparePageData(
       b,
       positions: await positionsOf(db, ownerId, [a, b]),
       scoring,
-      includeProbeOnly: query.includeProbeOnly,
+      includeWarmup: query.includeWarmup,
       names,
-      // geteilt zählt, was B ohne die Scheiben von A verliert, nach demselben Filter wie die Seiten (nur Probe)
+      // geteilt zählt, was B ohne die Scheiben von A verliert, nach demselben Filter wie die Seiten (Einschießen)
       shared: bAll.filter(counts).length - b.filter(counts).length,
     }),
     problem: null,

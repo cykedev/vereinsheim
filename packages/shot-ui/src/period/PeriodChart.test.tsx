@@ -38,7 +38,7 @@ const TWELVE = [9, 10, 8, 10, 9, 11, 9, 10, 8, 10, 9, 10].map((v, i) =>
 const count = (html: string, pattern: RegExp) => [...html.matchAll(pattern)].length
 
 describe("Verlauf je Scheibe", () => {
-  const html = render(TWELVE, { includeProbeOnly: true })
+  const html = render(TWELVE, { includeWarmup: true })
 
   it("ein Punkt je Scheibe, Wettkampf mit Ring, nur Probe hohl", () => {
     expect(count(html, /data-card-point="/g)).toBe(12)

@@ -115,7 +115,7 @@ export interface ProgressQuery {
   compare: CompareChoice
   family: string | null
   kind: CardKind
-  includeProbeOnly: boolean
+  includeWarmup: boolean
   scoring: Scoring
   metric: PeriodMetricKey
   view: "cards" | "months" | null
@@ -138,7 +138,7 @@ export const DEFAULT_PROGRESS: ProgressQuery = {
   compare: { type: "none" },
   family: null,
   kind: "all",
-  includeProbeOnly: true,
+  includeWarmup: false,
   scoring: "decimal",
   metric: "result.decimalMean",
   view: null,
@@ -209,8 +209,8 @@ function progressPairs(
     ["compare", encodeCompare(query.compare)],
     ["family", query.family],
     ["kind", kindParams(query.kind)],
-    // englisch wie alle Schlüssel: Training nur aus Probe
-    ["sighters", query.includeProbeOnly ? null : "0"],
+    // englisch wie alle Schlüssel: Einschießen mitzählen; eine alte Adresse mit `sighters` gilt als Vorgabe
+    ["warmup", query.includeWarmup ? "1" : null],
     ["scoring", query.scoring === "rings" ? "rings" : null],
     [
       "metric",
@@ -248,7 +248,7 @@ export function progressQueryFromParams(
     compare: decodeCompare(params.get("compare")),
     family: slugOrNull(params.get("family")),
     kind: kindOf(params.get("kind")),
-    includeProbeOnly: params.get("sighters") !== "0",
+    includeWarmup: params.get("warmup") === "1",
     scoring: scoringOf(params.get("scoring")),
     metric: metric && metrics.includes(metric) ? metric : DEFAULT_PROGRESS.metric,
     view: view === "cards" || view === "months" ? view : null,
@@ -270,9 +270,9 @@ export type CompareQuery =
       a: PeriodChoice
       b: PeriodChoice | "previous"
       kind: CardKind
-      includeProbeOnly: boolean
+      includeWarmup: boolean
     }
-  | { type: "kind"; family: string | null; range: PeriodChoice; includeProbeOnly: boolean }
+  | { type: "kind"; family: string | null; range: PeriodChoice; includeWarmup: boolean }
 
 export type CompareType = CompareQuery["type"]
 
@@ -283,7 +283,7 @@ export const DEFAULT_COMPARE: CompareQuery = {
   a: DEFAULT_CHOICE,
   b: "previous",
   kind: "all",
-  includeProbeOnly: true,
+  includeWarmup: false,
 }
 
 /** Zeitraum von Wettkampf und Training ohne Angabe: die letzten zwölf Monate (Wettkämpfe sind selten) */
@@ -291,7 +291,7 @@ export const DEFAULT_KIND_RANGE: PeriodChoice = { type: "rolling", days: 365 }
 
 /**
  * Schlüssel der Seite Vergleichen: `type` (ohne: zwei Zeiträume, mit B immer genannt), `family`, `a`, `b`, `range`,
- * `kind`, `sighters=0`. Vorgaben fallen weg.
+ * `kind`, `warmup=1`. Vorgaben fallen weg.
  */
 export function compareQueryToParams(query: CompareQuery): Param[] {
   if (query.type === "cards")
@@ -307,7 +307,7 @@ export function compareQueryToParams(query: CompareQuery): Param[] {
       ["type", "kind"],
       ["family", query.family],
       ["range", range === encodeChoice(DEFAULT_KIND_RANGE) ? null : range],
-      ["sighters", query.includeProbeOnly ? null : "0"],
+      ["warmup", query.includeWarmup ? "1" : null],
     ])
   }
   const a = encodeChoice(query.a)
@@ -318,7 +318,7 @@ export function compareQueryToParams(query: CompareQuery): Param[] {
     ["a", a === encodeChoice(DEFAULT_CHOICE) ? null : a],
     ["b", query.b === "previous" ? null : encodeChoice(query.b)],
     ["kind", kindParams(query.kind)],
-    ["sighters", query.includeProbeOnly ? null : "0"],
+    ["warmup", query.includeWarmup ? "1" : null],
   ])
 }
 
@@ -326,7 +326,7 @@ export function compareQueryToParams(query: CompareQuery): Param[] {
 export function compareQueryFromParams(params: URLSearchParams): CompareQuery {
   const type = params.get("type")
   const family = slugOrNull(params.get("family"))
-  const includeProbeOnly = params.get("sighters") !== "0"
+  const includeWarmup = params.get("warmup") === "1"
   if (type === "cards" || (type === null && params.has("a") && params.has("b")))
     return {
       type: "cards",
@@ -339,7 +339,7 @@ export function compareQueryFromParams(params: URLSearchParams): CompareQuery {
       type: "kind",
       family,
       range: decodeChoice(params.get("range"), DEFAULT_KIND_RANGE),
-      includeProbeOnly,
+      includeWarmup,
     }
   if (type !== null && type !== "periods") return DEFAULT_COMPARE
   const b = params.get("b")
@@ -349,7 +349,7 @@ export function compareQueryFromParams(params: URLSearchParams): CompareQuery {
     a: decodeChoice(params.get("a"), DEFAULT_CHOICE),
     b: b === "previous" ? "previous" : (decodeChoice(b, null) ?? "previous"),
     kind: kindOf(params.get("kind")),
-    includeProbeOnly,
+    includeWarmup,
   }
 }
 

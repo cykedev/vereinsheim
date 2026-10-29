@@ -48,7 +48,7 @@ export function usePeriodPattern(
     }
   }, [needed, key, attempt])
   const retry = useCallback(() => setAttempt((n) => n + 1), [])
-  // ohne Scheibe, die das Ergebnis zählt (etwa nur Trainings aus Probe, die nicht mitzählen), gibt es nichts zu holen
+  // ohne Scheibe, die das Ergebnis zählt (etwa nur Einschießen, das nicht mitzählt), gibt es nichts zu holen
   if (key === "") return { state: EMPTY, retry }
   return { state: current ?? { status: "loading" }, retry }
 }

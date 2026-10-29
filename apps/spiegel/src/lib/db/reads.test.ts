@@ -158,19 +158,15 @@ describe("familyCards", () => {
     for (const scoring of ["decimal", "rings"] as const) {
       for (const key of ["result.decimal", "result.decimalMean", "group.enclosingDiameter"]) {
         const metric = metricByKey(key) as MetricDefinition
-        for (const includeProbeOnly of [false, true])
-          expect(projectedValues(overview, metric, scoring, { includeProbeOnly })).toEqual(
-            cardValues(cards, metric, scoring, { includeProbeOnly })
-          )
+        // ohne Einschießen (beim Lesen nicht markiert) zählt jede Scheibe nur aus Probe wie Wertung
+        expect(projectedValues(overview, metric, scoring)).toEqual(
+          cardValues(cards, metric, scoring, { includeProbeOnly: true })
+        )
       }
-      for (const options of [
-        {},
-        { includeProbeOnly: true },
-        { kind: "competition" as const },
-        { kind: "training" as const, includeProbeOnly: true },
-      ])
-        expect(projectedRecords(overview, scoring, options)).toEqual(
-          periodRecords(cards, scoring, options)
+      // die Scheibe mit `FLAG_COUNTED_AS_MATCH` zählt wie ohne: Das Merkmal wird nicht ausgewertet
+      for (const kind of [undefined, "competition" as const, "training" as const])
+        expect(projectedRecords(overview, scoring, { kind })).toEqual(
+          periodRecords(cards, scoring, { kind, includeProbeOnly: true })
         )
     }
   })

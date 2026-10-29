@@ -42,6 +42,7 @@ import {
 import { byStart, itemRecords, itemValues, itemVolume, type PeriodItem } from "./item"
 import { recordRows } from "./records"
 import type { PeriodMetricKey, PeriodState } from "./state"
+import { WARMUP_REASON } from "./warmup"
 
 export type { PeriodItem } from "./item"
 
@@ -111,8 +112,8 @@ export interface PeriodModel {
    * braucht zwei getrennte Stichproben
    */
   compareShared: number
-  /** Scheiben nur aus Probe im Zeitraum, die ohne den Schalter nicht zählen */
-  excludedProbeOnly: number
+  /** Einschießen im Zeitraum, das ohne den Schalter nicht zählt */
+  excludedWarmup: number
   /** gewählter Vergleich im Ø je Schuss (Ergebnis-Box, Zahlen): a der Vergleich, b der Zeitraum; Δ = Zeitraum − Vergleich */
   comparison: PeriodComparison | null
   /**
@@ -313,7 +314,7 @@ export function periodModel(input: {
   named: readonly NamedPeriod[]
 }): PeriodModel {
   const { state, nowMs, timeZone, named } = input
-  const options = { includeProbeOnly: state.includeProbeOnly }
+  const options = { includeWarmup: state.includeWarmup }
   const scoring: Scoring = state.scoring
   const ofKind = (card: PeriodItem) => state.kind === "all" || card.kind === state.kind
   const firstMs = input.items.length ? Math.min(...input.items.map((c) => c.startedAtMs)) : null
@@ -364,8 +365,8 @@ export function periodModel(input: {
     label: weekLabel(key),
   }))
 
-  // die Scheiben, über die die Zahlen rechnen könnten: eine Scheibe nur aus Probe nur mit dem Schalter
-  const counted = cards.filter((card) => state.includeProbeOnly || !card.probeOnly)
+  // die Scheiben, über die die Zahlen rechnen könnten: Einschießen nur mit dem Schalter
+  const counted = cards.filter((card) => state.includeWarmup || !card.warmup)
   const idsOf = (values: readonly CardValue[]) => new Set(values.map((v) => v.id))
 
   const tiles: PeriodTile[] = (input.tileKeys ?? PERIOD_TILE_KEYS).map((key) => {
@@ -436,7 +437,7 @@ export function periodModel(input: {
 
   const chartInScoring = inScoring(chartMetric, scoring)
   const chartValued = idsOf(values)
-  const reasons: Record<string, string> = counted.some((card) => card.detail)
+  const detailReasons: Record<string, string> = counted.some((card) => card.detail)
     ? Object.fromEntries(
         counted
           .filter((card) => !chartValued.has(card.id))
@@ -456,9 +457,19 @@ export function periodModel(input: {
           ])
       )
     : {}
+  // Einschießen, das nicht zählt, sagt es selbst, auch wenn keine Scheibe eine Grundlage trägt
+  const reasons: Record<string, string> = {
+    ...detailReasons,
+    ...Object.fromEntries(
+      (state.includeWarmup ? [] : cards.filter((card) => card.warmup)).map((card) => [
+        card.id,
+        WARMUP_REASON,
+      ])
+    ),
+  }
   const records = itemRecords(input.items, scoring, {
     kind: state.kind === "all" ? undefined : state.kind,
-    includeProbeOnly: state.includeProbeOnly,
+    includeWarmup: state.includeWarmup,
   })
   const provenanceOf = new Map(
     input.items.flatMap((item) => (item.provenance ? [[item.id, item.provenance] as const] : []))
@@ -488,7 +499,7 @@ export function periodModel(input: {
     trend,
     compareValues,
     compareShared: otherAll ? otherAll.length - (otherCards?.length ?? 0) : 0,
-    excludedProbeOnly: state.includeProbeOnly ? 0 : cards.filter((c) => c.probeOnly).length,
+    excludedWarmup: state.includeWarmup ? 0 : cards.filter((c) => c.warmup).length,
     comparison: tiles[0].compare?.comparison ?? null,
     form,
     view: other ? "cards" : (state.view ?? (values.length >= MONTH_VIEW_FROM ? "months" : "cards")),
@@ -514,7 +525,7 @@ export function periodModel(input: {
 
 /**
  * ein Eintrag für den Browser: nur die Felder von `PeriodItem` (eine App reicht mehr herein), ohne Werte und Rekorde
- * (die Bausteine lesen Art, „nur Probe“ und Schusszahl). Grundlage und Herkunft bleiben auf dem Server: Was die Seite
+ * (die Bausteine lesen Art, „nur Probe“, Einschießen und Schusszahl). Grundlage und Herkunft bleiben auf dem Server: Was die Seite
  * davon zeigt, steht schon in `basis`, `reasons` und `recordProvenance`.
  */
 const lightCard = (card: PeriodItem): PeriodItem => ({
@@ -526,20 +537,21 @@ const lightCard = (card: PeriodItem): PeriodItem => ({
   metrics: {},
   records: { decimal: null, rings: null },
   flags: card.flags,
+  ...(card.warmup ? { warmup: true as const } : {}),
 })
 
 /**
- * die Scheiben, die das Ergebnis des Zeitraums zählt, als Grundlage des Trefferbilds: eine Scheibe nur aus Probe nur
- * mit dem Schalter, wie im Ergebnis
+ * die Scheiben, die das Ergebnis des Zeitraums zählt, als Grundlage des Trefferbilds: Einschießen nur mit dem Schalter,
+ * wie im Ergebnis
  */
-export function patternIds(model: Pick<PeriodModel, "cards">, includeProbeOnly: boolean): string[] {
-  return model.cards.filter((card) => includeProbeOnly || !card.probeOnly).map((card) => card.id)
+export function patternIds(model: Pick<PeriodModel, "cards">, includeWarmup: boolean): string[] {
+  return model.cards.filter((card) => includeWarmup || !card.warmup).map((card) => card.id)
 }
 
 /**
  * Das Modell für den Browser (Fortschritt in der App): Rechnet der Server `periodModel`, gehen die Scheiben ohne
  * ihre Werte und Rekorde mit. Die Bausteine (`PeriodChart`, `CardList`, `CardReadout`, `PeriodResult`,
- * `PeriodInsights`) lesen von einer Scheibe nur Id, Beginn, Art, „nur Probe“ und Schusszahl; die Werte der Kennzahl
+ * `PeriodInsights`) lesen von einer Scheibe nur Id, Beginn, Art, „nur Probe“, Einschießen und Schusszahl; die Werte der Kennzahl
  * stehen in `values`. Ein Test hält fest, dass sie damit dasselbe zeichnen. Auf dem leichten Modell nicht neu rechnen.
  */
 export function lightPeriodModel(model: PeriodModel): PeriodModel {

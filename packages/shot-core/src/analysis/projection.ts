@@ -25,7 +25,6 @@ import { byStart, cardShots, probeOnlyCard, shotCountOf } from "./card-shots"
 import { pooledValue } from "./levels"
 import { cardValues, type CardValue, type PeriodCard, type VolumeBucket } from "./period"
 import {
-  FLAG_COUNTED_AS_MATCH,
   RECORD_EXCLUDING_FLAGS,
   cardRecordCandidates,
   combineRecords,
@@ -73,7 +72,7 @@ export { probeOnlyCard, sightersBesideSums } from "./card-shots"
 export interface CardProjection {
   /** `projectionVersion(METRICS)` beim Rechnen; weicht sie ab, ist die Projektion veraltet */
   version: string
-  /** nur Probe: zählt nur mit `includeProbeOnly`, dann über die Probe wie Wertung */
+  /** nur Probe: die Werte rechnen über die Probe wie Wertung; ob sie zählt, sagt beim Lesen `warmup` */
   probeOnly: boolean
   /** ein verdächtiger Schuss unter denen, die zählen: keine Rekorde (SF-15) */
   suspicious: boolean
@@ -258,26 +257,29 @@ export function projectedVolume(
 
 /**
  * Ø je Schuss über alle Schüsse mehrerer Scheiben zusammen, nicht das Mittel der Mittel: wie `computeMetric` mit dem
- * Ø je Schuss über ihre Schüsse wie am Ausdruck (nur Probe zählt), gerechnet wie jeder Wert eines Zeitraums
- * (`pooledValue`, auf dem Raster der Wertung). null ohne Schuss mit Wert.
+ * Ø je Schuss über ihre Schüsse wie am Ausdruck (nur Probe zählt, Einschießen nicht), gerechnet wie jeder Wert eines
+ * Zeitraums (`pooledValue`, auf dem Raster der Wertung). null ohne Schuss mit Wert.
  */
 export function pooledMean(cards: readonly ProjectedCard[], scoring: Scoring): number | null {
   const metric = inScoring(metricByKey("result.decimalMean") as MetricDefinition, scoring)
-  return pooledValue(projectedValues(cards, metric, scoring, { includeProbeOnly: true }), metric)
+  return pooledValue(projectedValues(cards, metric, scoring), metric)
 }
 
-/** wie `cardValues`, aus den Projektionen */
+/**
+ * wie `cardValues` mit `includeProbeOnly` (die Projektion rechnet nur Probe wie Wertung), aus den Projektionen;
+ * Einschießen (`warmup`) nur mit `includeWarmup`
+ */
 export function projectedValues(
   cards: readonly ProjectedCard[],
   metric: Readonly<MetricDefinition>,
   scoring: Scoring,
-  options: { includeProbeOnly?: boolean } = {}
+  options: { includeWarmup?: boolean } = {}
 ): CardValue[] {
   if (!metric.scopes.includes("card"))
     throw new RangeError(`${metric.key}: keine Kennzahl der Ebene Scheibe, nicht in der Projektion`)
   const key = inScoring(metric, scoring).key
   return byStart(cards).flatMap((card) => {
-    if (card.projection.probeOnly && !options.includeProbeOnly) return []
+    if (card.warmup && !options.includeWarmup) return []
     const entry = card.projection.values[key]
     if (!entry) return []
     const value: CardValue = { id: card.id, atMs: card.startedAtMs, value: entry.value, n: entry.n }
@@ -297,29 +299,27 @@ export function projectedEligible(card: ProjectedCard): boolean {
 }
 
 /**
- * zählt eine Scheibe, die für Rekorde zählt, unter den Filtern der Seite (Art, nur Probe, als Wertung gezählte Probe)?
- * Eine Regel für `projectedRecords` und jede andere Eingabe aus gespeicherten Kandidaten
+ * zählt eine Scheibe, die für Rekorde zählt, unter den Filtern der Seite (Art, Einschießen)? Eine Regel für
+ * `projectedRecords` und jede andere Eingabe aus gespeicherten Kandidaten
  */
 export function recordsInView(
-  card: { kind: PeriodCard["kind"]; flags: readonly string[]; probeOnly: boolean },
-  options: { kind?: PeriodCard["kind"]; includeProbeOnly?: boolean }
+  card: { kind: PeriodCard["kind"]; warmup?: boolean },
+  options: { kind?: PeriodCard["kind"]; includeWarmup?: boolean }
 ): boolean {
   if (options.kind !== undefined && card.kind !== options.kind) return false
-  if (!options.includeProbeOnly && card.flags.includes(FLAG_COUNTED_AS_MATCH)) return false
-  return !card.probeOnly || Boolean(options.includeProbeOnly)
+  return !card.warmup || Boolean(options.includeWarmup)
 }
 
-/** wie `periodRecords`, aus den Projektionen */
+/** wie `periodRecords` mit `includeProbeOnly`, aus den Projektionen; Einschießen nur mit `includeWarmup` */
 export function projectedRecords(
   cards: readonly ProjectedCard[],
   scoring: Scoring,
-  options: { kind?: PeriodCard["kind"]; includeProbeOnly?: boolean } = {}
+  options: { kind?: PeriodCard["kind"]; includeWarmup?: boolean } = {}
 ): PeriodRecords {
   return combineRecords(
     byStart(cards).flatMap((card) => {
       if (!projectedEligible(card)) return []
-      const { kind, flags } = card
-      if (!recordsInView({ kind, flags, probeOnly: card.projection.probeOnly }, options)) return []
+      if (!recordsInView(card, options)) return []
       const candidates = card.projection.records[scoring]
       return candidates ? [{ id: card.id, atMs: card.startedAtMs, candidates }] : []
     })

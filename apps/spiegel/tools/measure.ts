@@ -193,7 +193,7 @@ async function main() {
           a: { type: "rolling", days: 365 },
           b: "previous",
           kind: "all",
-          includeProbeOnly: true,
+          includeWarmup: false,
         },
         pageContext
       )

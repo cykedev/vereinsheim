@@ -93,12 +93,12 @@ export function CompareControls({
 }) {
   const changeType = (type: CompareType) => {
     if (type === query.type) return
-    const probeOnly = query.type === "cards" ? true : query.includeProbeOnly
+    const warmup = query.type === "cards" ? false : query.includeWarmup
     if (type === "cards") onQuery({ type, family, a: newest[0] ?? null, b: newest[1] ?? null })
-    // „Trainings nur aus Probe“ bleibt, wie der Fortschritt es mitgegeben hat
+    // „Einschießen mitzählen“ bleibt, wie der Fortschritt es mitgegeben hat
     else if (type === "kind")
-      onQuery({ type, family, range: DEFAULT_KIND_RANGE, includeProbeOnly: probeOnly })
-    else onQuery({ ...DEFAULT_COMPARE, family, includeProbeOnly: probeOnly } as CompareQuery)
+      onQuery({ type, family, range: DEFAULT_KIND_RANGE, includeWarmup: warmup })
+    else onQuery({ ...DEFAULT_COMPARE, family, includeWarmup: warmup } as CompareQuery)
   }
   return (
     <div data-compare-controls className={cn("grid gap-2.5", className)}>

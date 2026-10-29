@@ -27,10 +27,8 @@ export interface PeriodState {
   /** Disziplin-Familie, Pflicht; die Seite filtert die Scheiben danach */
   family: string
   kind: CardKind
-  /**
-   * Training nur aus Probe mitzählen; Vorgabe an, denn so trainieren die meisten
-   */
-  includeProbeOnly: boolean
+  /** Einschießen mitzählen (`warmup`); Vorgabe aus, ein Training ganz im Probe-Modus zählt immer */
+  includeWarmup: boolean
   scoring: Scoring
   metric: PeriodMetricKey
   /** Darstellung des Verlaufs; null: nach der Zahl der Scheiben */
@@ -46,7 +44,7 @@ export type PeriodAction =
   | { type: "setCompare"; compare: CompareChoice }
   | { type: "setFamily"; family: string }
   | { type: "setKind"; kind: CardKind }
-  | { type: "setIncludeProbeOnly"; include: boolean }
+  | { type: "setIncludeWarmup"; include: boolean }
   | { type: "setScoring"; scoring: Scoring }
   | { type: "setMetric"; metric: PeriodMetricKey }
   | { type: "setView"; view: "cards" | "months" }
@@ -62,7 +60,7 @@ export type PeriodAction =
    */
   | {
       type: "setFilters"
-      filters: Pick<PeriodState, "choice" | "compare" | "kind" | "includeProbeOnly">
+      filters: Pick<PeriodState, "choice" | "compare" | "kind" | "includeWarmup">
     }
 
 export function initialPeriodState(
@@ -72,7 +70,7 @@ export function initialPeriodState(
     choice: DEFAULT_CHOICE,
     compare: { type: "none" },
     kind: "all",
-    includeProbeOnly: true,
+    includeWarmup: false,
     scoring: "decimal",
     metric: "result.decimalMean",
     view: null,
@@ -83,7 +81,7 @@ export function initialPeriodState(
 }
 
 /**
- * Ändert sich die Menge der Scheiben (Zeitraum, Familie, Art, nur Probe), fällt die Wahl weg; Vergleich,
+ * Ändert sich die Menge der Scheiben (Zeitraum, Familie, Art, Einschießen), fällt die Wahl weg; Vergleich,
  * Wertung, Kennzahl und Darstellung lassen sie stehen. Dieselbe Scheibe noch einmal hebt die Wahl auf, wie
  * ein zweites Tippen auf denselben Schuss.
  */
@@ -97,8 +95,8 @@ export function periodReducer(state: PeriodState, action: PeriodAction): PeriodS
       return { ...state, family: action.family, chosen: null }
     case "setKind":
       return { ...state, kind: action.kind, chosen: null }
-    case "setIncludeProbeOnly":
-      return { ...state, includeProbeOnly: action.include, chosen: null }
+    case "setIncludeWarmup":
+      return { ...state, includeWarmup: action.include, chosen: null }
     case "setScoring":
       return { ...state, scoring: action.scoring }
     case "setMetric":
@@ -114,16 +112,15 @@ export function periodReducer(state: PeriodState, action: PeriodAction): PeriodS
     case "restore":
       return action.state
     case "setFilters": {
-      const { choice, compare, kind, includeProbeOnly } = action.filters
+      const { choice, compare, kind, includeWarmup } = action.filters
       const same = JSON.stringify(choice) === JSON.stringify(state.choice)
-      const cardsChange =
-        !same || kind !== state.kind || includeProbeOnly !== state.includeProbeOnly
+      const cardsChange = !same || kind !== state.kind || includeWarmup !== state.includeWarmup
       return {
         ...state,
         choice,
         compare,
         kind,
-        includeProbeOnly,
+        includeWarmup,
         chosen: cardsChange ? null : state.chosen,
       }
     }

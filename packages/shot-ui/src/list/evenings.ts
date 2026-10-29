@@ -212,9 +212,7 @@ export function cardListModel(
   const meanMetric = inScoring(metricByKey("result.decimalMean")!, context.scoring)
   // der Abstand rechnet über die Familie in der Art, auch vor dem Zeitraum (wie die Seite eines Zeitraums)
   const deltas = deltasBefore(
-    projectedValues(ofKind, metricByKey("result.decimalMean")!, context.scoring, {
-      includeProbeOnly: true,
-    }),
+    projectedValues(ofKind, metricByKey("result.decimalMean")!, context.scoring),
     new Set(shown.map((c) => c.id)),
     DELTA_WINDOW,
     // der Schnitt davor über die Schüsse der Scheiben ([[adr-034]])

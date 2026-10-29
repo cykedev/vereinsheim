@@ -187,7 +187,7 @@ describe("Blättern im Kontext", () => {
     ])
   })
 
-  it("Fortschritt ohne „nur Probe“: Trainings nur aus Probe bleiben im Kontext, wie in seiner Liste", () => {
+  it("Fortschritt ohne Einschießen: Trainings nur aus Probe bleiben im Kontext, wie in seiner Liste", () => {
     const probe: ListInputCard[] = [
       ...INPUT,
       { card: card_("pp", 2, [95], { probe: true }), family: "lg-freihand" },
@@ -199,7 +199,7 @@ describe("Blättern im Kontext", () => {
     } = {
       ...DEFAULT_PROGRESS,
       family: "lg-freihand",
-      includeProbeOnly: false,
+      includeWarmup: false,
       choice: { type: "all" as const },
     }
     expect(

@@ -29,7 +29,7 @@ const group = (a: readonly PeriodCard[], b: readonly PeriodCard[], extra = {}) =
     b: b.map(item),
     positions: positionsOf([...a, ...b]),
     scoring: "decimal",
-    includeProbeOnly: true,
+    includeWarmup: false,
     names: KIND_NAMES,
     shared: 0,
     ...extra,
@@ -60,10 +60,12 @@ describe("groupCompareModel", () => {
     expect(group(strong.slice(0, 4), weak).result.comparison?.test).toBeNull()
   })
 
-  it("ein Training nur aus Probe zählt nur mit dem Schalter", () => {
+  it("ein Training nur aus Probe zählt immer, Einschießen nur mit dem Schalter", () => {
     const probe = periodCard("p", 3, [100, 100, 100], { probe: true })
     expect(group([...strong, probe], weak).a.cards).toBe(7)
-    expect(group([...strong, probe], weak, { includeProbeOnly: false }).a.cards).toBe(6)
+    const warmup = { a: [...strong.map(item), { ...item(probe), warmup: true as const }] }
+    expect(group([...strong, probe], weak, warmup).a.cards).toBe(6)
+    expect(group([...strong, probe], weak, { ...warmup, includeWarmup: true }).a.cards).toBe(7)
   })
 
   it("eine Scheibe ohne Lagen zählt im Ergebnis, nicht im Bild", () => {
@@ -77,7 +79,7 @@ describe("groupCompareModel", () => {
         ...positionsOf([...strong.slice(2), ...weak]),
       ],
       scoring: "decimal",
-      includeProbeOnly: true,
+      includeWarmup: false,
       names: KIND_NAMES,
       shared: 2,
     })

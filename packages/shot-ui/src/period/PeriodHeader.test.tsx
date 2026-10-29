@@ -30,7 +30,7 @@ describe("Blatt „Filter“", () => {
       named: NAMED,
       timeZone: TZ,
       kind: "all",
-      includeProbeOnly: true,
+      includeWarmup: false,
       onApply: () => {},
     })
   )
@@ -59,7 +59,9 @@ describe("Blatt „Filter“", () => {
     expect([...html.matchAll(/<input type="radio"[^>]*name="art"/g)]).toHaveLength(3)
     for (const label of ["Alle", "Training", "Wettkampf"])
       expect(html).toContain(`<span>${label}</span>`)
-    expect(html).toMatch(/<input type="checkbox"[^>]*checked=""/)
+    // Einschießen zählt in der Vorgabe nicht: der Schalter ist aus
+    expect(html).toMatch(/<input type="checkbox"/)
+    expect(html).not.toMatch(/<input type="checkbox"[^>]*checked=""/)
     expect(html).toContain(">Filter<")
     // „Frei“ beginnt mit den Tagen des Zeitraums, die Felder sind aus, solange „Frei“ nicht gewählt ist
     expect(html).toMatch(/type="date" disabled=""[^>]*value="2026-07-02"/)
@@ -74,7 +76,7 @@ describe("Blatt „Filter“", () => {
         named: NAMED,
         timeZone: TZ,
         kind: "all",
-        includeProbeOnly: true,
+        includeWarmup: false,
         onApply: () => {},
       })
     )
@@ -94,7 +96,7 @@ describe("Blatt „Filter“", () => {
         named: NAMED,
         timeZone: TZ,
         kind: "all",
-        includeProbeOnly: true,
+        includeWarmup: false,
         onApply: () => {},
         withCompare: false,
       })
@@ -107,7 +109,7 @@ describe("Blatt „Filter“", () => {
   })
 
   it("der Chip fasst zusammen, was von der Vorgabe abweicht", () => {
-    const base = { kind: "all", compareLabel: null, includeProbeOnly: true } as const
+    const base = { kind: "all", compareLabel: null, includeWarmup: false } as const
     expect(filterSummary("Letzte 90 Tage", base)).toBe("Letzte 90 Tage")
     expect(filterSummary("Letzte 90 Tage", { ...base, kind: "training" })).toBe(
       "Letzte 90 Tage · Training"
@@ -116,8 +118,8 @@ describe("Blatt „Filter“", () => {
       "Letzte 90 Tage · mit Zeitraum davor"
     )
     expect(
-      filterSummary("Alles", { kind: "competition", compareLabel: null, includeProbeOnly: false })
-    ).toBe("Alles · Wettkampf · ohne Probe-Scheiben")
+      filterSummary("Alles", { kind: "competition", compareLabel: null, includeWarmup: true })
+    ).toBe("Alles · Wettkampf · mit Einschießen")
   })
 
   it("Frei nur mit zwei Tagen, von nicht nach bis", () => {

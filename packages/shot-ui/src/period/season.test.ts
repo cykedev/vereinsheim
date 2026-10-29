@@ -15,15 +15,21 @@ const NAMED: NamedPeriod[] = [
   { id: "winter", name: "Winter", from: "2025-11-01", to: "2026-02-28" },
 ]
 
-const STATES: Record<string, Partial<PeriodState>> = {
+/** die Scheiben nur aus Probe der Saison, als Einschießen markiert (in der App `markWarmup`) */
+const PROBE_CARDS = ["p0", "p1", "p2", "gezaehlt"]
+
+/** ein Zustand der Seite, dazu die Scheiben, die als Einschießen markiert sind */
+type Case = Partial<PeriodState> & { warmup?: readonly string[] }
+
+const STATES: Record<string, Case> = {
   vorgabe: {},
   "zeitraum davor": { compare: { type: "previous" } },
   "alles in ganzen Ringen": { choice: { type: "all" }, scoring: "rings" },
   "Wettkampf, 12 Monate": { choice: { type: "rolling", days: 365 }, kind: "competition" },
-  "Training ohne Probe, je Monat": {
+  "Training, Probe als Einschießen, je Monat": {
     choice: { type: "rolling", days: 365 },
     kind: "training",
-    includeProbeOnly: false,
+    warmup: PROBE_CARDS,
     view: "months",
   },
   "benannt gegen benannt": {
@@ -70,9 +76,11 @@ const plain = (model: PeriodModel, withoutSd = false) => {
   )
 }
 
-const modelFor = (state: Partial<PeriodState>) =>
+const modelFor = ({ warmup = [], ...state }: Case) =>
   periodModel({
-    items: seasonCards().map(item),
+    items: seasonCards()
+      .map(item)
+      .map((c) => (warmup.includes(c.id) ? { ...c, warmup: true as const } : c)),
     state: { ...initialPeriodState({ family: "lg-10m" }), ...state },
     nowMs: NOW,
     timeZone: TZ,
@@ -108,15 +116,19 @@ describe("das ganze Modell über eine Saison", () => {
     const holders = new Set(recordRows(all.records, "decimal").map((r) => r.record.cardId))
     for (const id of ["unvollstaendig", "ausgenommen", "verdaechtig"])
       expect(holders.has(id)).toBe(false)
-    // als Wertung gezählte Probe nur mit dem Schalter
+    // als Wertung gezählte Probe zählt wie jede Probe (das Merkmal wirkt nicht), als Einschießen nur mit dem Schalter
     expect(holders.has("gezaehlt")).toBe(true)
-    const strict = modelFor({ choice: { type: "all" }, includeProbeOnly: false })
-    const strictHolders = new Set(recordRows(strict.records, "decimal").map((r) => r.record.cardId))
-    expect(strictHolders.has("gezaehlt")).toBe(false)
+    const holdersOf = (model: PeriodModel) =>
+      new Set(recordRows(model.records, "decimal").map((r) => r.record.cardId))
+    const warm = { choice: { type: "all" } as const, warmup: ["gezaehlt"] }
+    expect(holdersOf(modelFor(warm)).has("gezaehlt")).toBe(false)
+    expect(holdersOf(modelFor({ ...warm, includeWarmup: true })).has("gezaehlt")).toBe(true)
     // Zehntel und ganze Ringe gehen auseinander
     const rings = modelFor({ choice: { type: "all" }, scoring: "rings" })
     expect(rings.summary.mean).not.toBeCloseTo(all.summary.mean as number, 2)
-    // nur Probe zählt mit dem Schalter, sonst nicht
-    expect(modelFor({ includeProbeOnly: false }).excludedProbeOnly).toBeGreaterThan(0)
+    // Einschießen zählt nur mit dem Schalter, ein Training nur aus Probe immer
+    expect(modelFor({}).excludedWarmup).toBe(0)
+    expect(modelFor({ warmup: PROBE_CARDS }).excludedWarmup).toBeGreaterThan(0)
+    expect(modelFor({ warmup: PROBE_CARDS, includeWarmup: true }).excludedWarmup).toBe(0)
   })
 })

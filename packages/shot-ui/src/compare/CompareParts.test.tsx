@@ -142,7 +142,7 @@ describe("CompareControls", () => {
       type: "kind",
       family: null,
       range: { type: "rolling", days: 365 },
-      includeProbeOnly: true,
+      includeWarmup: false,
     })
     expect(html).toContain('data-compare-chip="range"')
     expect(html).not.toContain('data-compare-chip="b"')

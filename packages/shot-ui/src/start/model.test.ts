@@ -213,8 +213,7 @@ describe("Start: der letzte Abend", () => {
     const all = recordRows(
       projectedRecords(
         [projected(periodCard("e", 0, [100, 104, 95, 109], { startedAtMs: at(29, 18) }))],
-        "decimal",
-        { includeProbeOnly: true }
+        "decimal"
       ),
       "decimal"
     )

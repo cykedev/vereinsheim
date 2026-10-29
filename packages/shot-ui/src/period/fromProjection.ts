@@ -9,8 +9,8 @@ import type { PeriodItem } from "./item"
 /**
  * Eine Scheibe mit Projektion als Eintrag: Werte und Rekord-Kandidaten aus der Projektion, „nur Probe“ wie
  * `isProbeOnly` (mit mindestens einem Schuss), die Schüsse wie am Ausdruck. Eine Scheibe, die für Rekorde nicht
- * zählt (`projectedEligible`), trägt keine Kandidaten. Grundlage und Herkunft gehen mit, die Herkunft nur, wenn sie nicht
- * gemessen ist.
+ * zählt (`projectedEligible`), trägt keine Kandidaten. Einschießen (`warmup`), Grundlage und Herkunft gehen mit, die
+ * Herkunft nur, wenn sie nicht gemessen ist.
  */
 export function fromProjection(
   card: ProjectedCard & { provenance?: CardProvenance; waiting?: false }
@@ -25,6 +25,7 @@ export function fromProjection(
     metrics: projection.values,
     records: projectedEligible(card) ? projection.records : { decimal: null, rings: null },
     flags: card.flags,
+    ...(card.warmup ? { warmup: true as const } : {}),
     ...(projection.detail ? { detail: projection.detail } : {}),
     ...(card.provenance && card.provenance !== "measured" ? { provenance: card.provenance } : {}),
     ...(card.waiting === false ? { waiting: false as const } : {}),

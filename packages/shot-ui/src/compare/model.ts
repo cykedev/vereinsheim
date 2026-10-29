@@ -118,7 +118,7 @@ function rowOf(key: string, scoring: Scoring): Omit<CompareRow, "a" | "b" | "com
 /**
  * Zwei Gruppen von Scheiben (Zeiträume oder Arten): Werte über alle Schüsse aus den Einträgen (`pooledValue`), Ergebnis,
  * Streuung und Kacheln über `compareValues`, die Lage über alle Schüsse der Scheiben ab 3 Schuss mit Lage
- * (`compareCenterGroups`), das Bild aus allen Lagen. Eine Scheibe nur aus Probe zählt nur mit `includeProbeOnly`, wie im Fortschritt; `positions` sind die Lagen
+ * (`compareCenterGroups`), das Bild aus allen Lagen. Einschießen zählt nur mit `includeWarmup`, wie im Fortschritt; `positions` sind die Lagen
  * je Scheibe (fehlt eine, zählt sie weder im Bild noch als Scheibe ohne Lage).
  */
 export function groupCompareModel(input: {
@@ -127,14 +127,14 @@ export function groupCompareModel(input: {
   b: readonly PeriodItem[]
   positions: readonly PatternCard[]
   scoring: Scoring
-  includeProbeOnly: boolean
+  includeWarmup: boolean
   names: { a: SideName; b: SideName }
   shared: number
 }): CompareModel {
   const { scoring } = input
-  const options = { includeProbeOnly: input.includeProbeOnly }
+  const options = { includeWarmup: input.includeWarmup }
   const counted = (items: readonly PeriodItem[]) =>
-    items.filter((item) => input.includeProbeOnly || !item.probeOnly)
+    items.filter((item) => input.includeWarmup || !item.warmup)
   const byId = new Map(input.positions.map((card) => [card.id, card]))
   const positionsOf = (items: readonly PeriodItem[]) =>
     items.flatMap((item) => {
