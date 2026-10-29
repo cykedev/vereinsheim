@@ -29,7 +29,7 @@ relates_to: ["[[spiegel-ingest-pipeline]]", "[[spiegel-target-library]]", "[[spi
 | Angaben der Revision | Gesamtergebnis (Ringe und Zehntel getrennt, mit Schusszahl) und Trefferlage als Summe (Mitte der Schüsse, mit Schusszahl; nur für Versatz und Richtung) | Revision |
 | Schuss | Lage, amtliche Werte, Zeit | Scheibe + Stellung + Treffer je Revision; über Revisionen hinweg ein Fingerabdruck aus Zeit, Millisekunden und Lage |
 | Ausdruck | gespeichertes Meyton-PDF mit gelesenen Kopf- und Fußdaten | Scheibe + Datei |
-| Beleg | ein Foto oder PDF an einer eingetragenen Scheibe, nur zum Nachsehen, geht in keine Zahl ein ([[adr-033]], 1d) | Scheibe |
+| Belege | bis zu 10 Fotos oder PDFs je eigener Scheibe mit Originalnamen, nur zum Nachsehen, in keiner Zahl ([[adr-033]], 1d und 1f) | Scheibe |
 | Disziplin | Meyton-Disziplin oder vom Admin ohne Meyton angelegt: DisziplinID (optional) und Name, Regelnummer, Schusszahl (`000` vermutlich offen; der Admin kann sie überschreiben), Serienlänge (vom Admin, 0 heißt ohne Serien; ohne Angabe 10 bei einer Schusszahl aus Zehnern), Stellungen, Familie, Scheibenbild, amtliche Wertung, eingeordnet oder ignoriert (Admin → Disziplinen) | Anlage + DisziplinID + Name (Vereinsvarianten können dieselbe ID tragen) |
 | Disziplin-Familie | was in Verläufen zusammen zählt, zum Beispiel LP Freihand (LP 40, LP 40 alt, LP Training); Auflage getrennt; vier aus dem Fachkern, weitere legt der Admin an | id |
 | Scheibenbild | Geometrie je Stellung, versioniert ([[spiegel-target-library]]) | id + Version |

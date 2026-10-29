@@ -3,7 +3,7 @@ id: spiegel-navigation
 type: concept
 title: "Spiegel — Navigation, Einstieg und Auswahl"
 aliases: [navigation-spiegel, einstieg, scheiben-liste-konzept, app-rahmen]
-keywords: [art der scheibe, wettkampf, training, kindchoice, navigation, einstieg, startseite, start, scheiben-liste, übersicht, auswahl, auswahlmodus, abend, trainingsabend, einheit, mischabend, familie, blättern, vorige, nächste, zurück, adresse, url, query, deep link, routen, seitenleiste, untere leiste, bottom navigation, scan, scheibe holen, holen, qr, ausdruck an der scheibe, von der anlage, nicht mehr holen, offen, bestätigen, eingang, löschen, papierkorb, rückgängig, weiche sperre, löschsperre, grabstein, wiederherstellen, admin, profil, fortschritt, schnitt davor, wertung, zehntel, ganze ringe, wertung der scheibe, wertung der familie, wie am stand, amtliche wertung, liste aus meyton, rangliste, filter liste, zeitraum merken, gemerkter zeitraum, kalender blättern, früher, später, darstellung, cookie, teilen, link teilen, geteilte scheibe, share, uuid, ohne anmeldung, herkunft, gemessen, vom ausdruck, eingetragen, detailtiefe, serien-summen, gesamtergebnis, ohne werte, wartet auf die anlage, grund, ort]
+keywords: [art der scheibe, wettkampf, training, kindchoice, navigation, einstieg, startseite, start, scheiben-liste, übersicht, auswahl, auswahlmodus, abend, trainingsabend, einheit, mischabend, familie, blättern, vorige, nächste, zurück, adresse, url, query, deep link, routen, seitenleiste, untere leiste, bottom navigation, scan, scheibe holen, holen, qr, ausdruck an der scheibe, von der anlage, nicht mehr holen, offen, bestätigen, eingang, löschen, papierkorb, rückgängig, weiche sperre, löschsperre, grabstein, wiederherstellen, admin, profil, fortschritt, schnitt davor, wertung, zehntel, ganze ringe, wertung der scheibe, wertung der familie, wie am stand, amtliche wertung, liste aus meyton, rangliste, filter liste, zeitraum merken, gemerkter zeitraum, kalender blättern, früher, später, darstellung, cookie, teilen, link teilen, geteilte scheibe, share, uuid, ohne anmeldung, herkunft, gemessen, vom ausdruck, eingetragen, detailtiefe, serien-summen, gesamtergebnis, ohne werte, wartet auf die anlage, grund, ort, belege, beleg, ergebnisliste, foto anhängen, originalname]
 part_of: ["[[spiegel]]"]
 governed_by: ["[[adr-030]]"]
 relates_to: ["[[spiegel-ui-design]]", "[[spiegel-langzeit]]", "[[spiegel-assignment]]", "[[spiegel-mobile]]", "[[spiegel-roadmap]]", "[[spiegel-privacy]]", "[[spiegel-edge-cases]]", "[[spiegel-durchsicht]]", "[[navigation-pattern]]"]
@@ -293,8 +293,9 @@ Die Liste markiert, wohin man kommt, wie der Fortschritt seine Wahl (`bg-accent-
   - Geschrieben nur beim Umschalten, nie beim Öffnen: Nach Zurück und Vor bringt Next die Seite aus dem Cache mit der
     Darstellung ihres ersten Besuchs, ein Schreiben beim Öffnen überschriebe die zuletzt gewählte.
   - Eine Seite aus dem Cache übernimmt die gemerkte über `useSyncExternalStore` (beim Hydrieren gilt die vom Server).
-- **Kasten „Diese Scheibe“** am Ende (`CardActions`, nur für den Besitzer): Eintrag und Beleg (eingetragene Scheiben),
-  Ausdruck, Von der Anlage, Ort (vom Ausdruck), Disziplin, Teilen und Löschen als Zeilen, je
+- **Kasten „Diese Scheibe“** am Ende (`CardActions`, nur für den Besitzer): Eintrag (eingetragene Scheiben), Ausdruck,
+  Von der Anlage, Ort (vom Ausdruck), Belege (jede Scheibe, direkt vor „Disziplin“), Disziplin, Teilen und Löschen als
+  Zeilen, je
   mit Zustand links und Aktion rechts („Ändern“, „Teilen“, „Löschen“; für Screenreader „Disziplin ändern“,
   „Scheibe teilen“, „Scheibe löschen“). Darüber „Mit der Scheibe davor vergleichen“ als eigener Kasten. Nach
   conventions §2 stünden sie oben (`DetailActionBar`); der Kopf ist aber schon voll, und man braucht sie selten. Siehe
@@ -349,12 +350,19 @@ Teil 1d, entschieden mit dem User am 28. Oktober 2026):
   Summe aus den Schüssen (`toggleRow`). Bleiben Tag und Uhrzeit, bleibt der gespeicherte Beginn auf die Millisekunde. Löschen wie jede Scheibe.
 - **Ort einer Scheibe vom Ausdruck:** Zeile „Ort“ mit einem Blatt (`setCardPlace`). Scheiben der Anlage tragen ihren Ort
   über die Anlage und haben keine Zeile.
-- **Beleg** (Zeile „Beleg“, nur eingetragene Scheiben): ein Foto oder PDF, damit der Schütze später nachsehen kann. Der
-  Browser zeichnet Fotos neu als JPEG unter 4 MiB (Grenze der Anfrage 5 MiB, `prepareEvidence`), das nimmt die
-  Drehung mit und lässt die übrigen Metadaten weg. Der Typ zählt an den Bytes. Ein PDF, in dem Spiegel einen
-  Meyton-Ausdruck erkennt, wird kein Beleg: Unter „Scheibe holen“ bringt es seine Werte mit. Öffnen nur für den
-  Besitzer (`/api/evidence/<id>`, Sandbox), nie auf der geteilten Seite. Ersetzen und Entfernen (mit Rückfrage,
-  `evidenceRemove`).
+- **Belege** (Zeile „Belege“ an jeder eigenen Scheibe, gleich welcher Herkunft, [[adr-033]] Nachtrag 1f): bis zu
+  10 Fotos oder PDFs, etwa eine Ergebnisliste, nur zum Nachsehen, in keiner Zahl und ohne Revision. Leer „Fotos oder PDFs
+  zu dieser Scheibe, etwa eine Ergebnisliste.“, sonst die Zahl, bei 10 der Satz zur Grenze ohne Knopf. Je Datei eine
+  Zeile: Vorschaubild aus der Datei selbst (`loading="lazy"`, ein PDF als Fläche „PDF“), Name der Datei wie vom Browser,
+  darunter Art, Größe und Tag; ein Tipp öffnet die Datei in einem neuen Tab (`/api/evidence/<id>`, Sandbox, Speichern
+  trägt den Namen), × entfernt sie nach der Rückfrage (`evidenceRemove`, nennt Namen und die Belege, die bleiben).
+  „Foto oder PDF anhängen“ nimmt mehrere Dateien in einem Zug, je Datei eine Anfrage, nacheinander. Der Browser zeichnet
+  Fotos neu als JPEG unter 4 MiB (Grenze der Anfrage 5 MiB, `prepareEvidence`), das nimmt die Drehung mit und lässt die
+  übrigen Metadaten weg; der Name behält den Stamm mit `.jpg`. Der Typ zählt an den Bytes. Was nicht angehängt ist, steht
+  mit Grund unter der Liste (zu groß, nicht lesbar, Meyton-Ausdruck mit dem Weg über „Scheibe holen“, schon an dieser
+  Scheibe, über der Grenze in einem Satz), bis zur nächsten Aktion; ging alles, kein Bericht. Dieselbe Datei hängt an
+  einer Scheibe nur einmal, an zwei Scheiben liegt sie einmal auf der Platte. Kein „Ersetzen“, nie auf der geteilten
+  Seite.
 
 ## Fortschritt
 

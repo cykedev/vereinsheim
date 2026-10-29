@@ -215,8 +215,11 @@ Ziel: **Mit Opt-in erscheint die Dienstagsscheibe von selbst in Spiegel; ohne Op
 - DISAG, neue Meyton-Linie ESTANX als weitere Adapter ([[meyton-interfaces]]). **Status:** offen.
 - **Handeingabe** (Stufe 1, Teil 1d aus [[adr-033]]): „Von Hand eintragen“ als Weg in „Scheibe holen“, Formular je
   Serie mit „Schüsse einzeln“ oder nur das Gesamtergebnis, Tag mit Uhrzeit, wenn bekannt, Ort mit Vorschlägen,
-  Trefferlage als Summe; eingetragene Scheiben ganz ändern; ein Beleg (Foto oder PDF) je Scheibe; Disziplinen ohne
+  Trefferlage als Summe; eingetragene Scheiben ganz ändern; ein Beleg (Foto oder PDF) je Scheibe (seit 1f bis zu 10); Disziplinen ohne
   Meyton-ID legt der Admin an ([[spiegel-navigation]] „Von Hand eintragen“). **Status:** umgesetzt (28. Oktober 2026).
+- **Belege** (Stufe 1, Teil 1f aus [[adr-033]]): bis zu 10 Belege (Foto oder PDF) an jeder eigenen Scheibe, mit
+  Originalnamen und Vorschaubild, mehrere in einem Zug, Zeile „Belege“ im Kasten „Diese Scheibe“
+  ([[spiegel-navigation]] „Von Hand eintragen“). **Status:** umgesetzt (29. Oktober 2026).
 
 ## Offene Einzelpunkte
 

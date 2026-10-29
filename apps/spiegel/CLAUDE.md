@@ -208,9 +208,15 @@ Stand mit `past` (`MAX_OBSERVED_LAG_MS`, SF-79).
 - **Von Hand eintragen** ([[spiegel-navigation]] „Von Hand eintragen“): Formular `/cards/new` und `/cards/[id]/edit`
   (`EnteredCardForm`), die Regeln rein in `src/lib/entered/form.ts` (`formToDetails`, `detailsToForm`, `problemText`),
   gespeichert nur über `saveEnteredCard` (`src/lib/entered/actions.ts`, Herkunft `manual`). Ohne Uhrzeit 12 Uhr und
-  `Card.timeUnknown` (`timeKnown` in `reads.ts`). Beleg je eingetragener Scheibe (`CardEvidence`, Dateien unter
-  `UPLOAD_DIR/evidence/`, `src/lib/evidence/`, Actions in `src/lib/entered/evidence-actions.ts`, Route
-  `/api/evidence/<id>`); Ort einer Scheibe vom Ausdruck über `setCardPlace`.
+  `Card.timeUnknown` (`timeKnown` in `reads.ts`). Ort einer Scheibe vom Ausdruck über `setCardPlace`.
+- **Belege** ([[adr-033]], Nachtrag 1f): bis zu `EVIDENCE_LIMIT` (10) Fotos oder PDFs an jeder eigenen, sichtbaren
+  Scheibe, gleich welcher Herkunft (`CardEvidence`, eindeutig je Scheibe und Prüfsumme, Dateien unter
+  `UPLOAD_DIR/evidence/`, alles in `src/lib/evidence/`). Name der Datei wie vom Browser (`evidenceFileName`), Fotos
+  zeichnet der Browser als JPEG neu und behält den Stamm (`jpegNameOf`). Actions in `src/lib/evidence/actions.ts`: je
+  Datei eine Anfrage; die Grenze und „dieselbe Datei nur einmal“ gelten in der Transaktion unter `lockCard`; ein Beleg
+  ist keine Angabe, also keine Revision. Entfernen löscht eine Zeile, die Datei räumt `removeOrphanEvidenceFiles` ab.
+  Gelesen über `cardEvidenceList` (nur Besitzer, `VISIBLE_CARD`), Route `/api/evidence/<id>` mit dem Namen in
+  `Content-Disposition`; nie auf der geteilten Seite. Ein Meyton-Ausdruck wird kein Beleg.
 - **Familie mitgeführt:** `Card.familyId` kopiert die Familie der Disziplin für den Index; umhängen nur über
   `moveDisciplineFamily` (in der Transaktion des Aufrufers, mit den Scheiben) bzw. `setDisciplineFamily`.
 - **Disziplinen einordnen** (Admin → Disziplinen, [[spiegel-target-library]]): Das Einlesen legt jede neue Disziplin
@@ -262,7 +268,8 @@ Stand mit `past` (`MAX_OBSERVED_LAG_MS`, SF-79).
   Grundlage in Fortschritt, Trefferbild und Start, Vergleichen) mit den Demo-Scheiben aus `seed:own --demo`; `pickCard`
   nimmt nur gemessene Scheiben (`/cards?provenance=measured`); „Scheibe holen“ (Link auf einen Ausdruck eines eigenen
   Servers, Upload über `setFiles`, getippte ID, „Nicht mehr holen“, die Sperre `7fff0a03` aus `seed:own --demo`, am
-  Ende alles endgültig gelöscht; `--start` gibt dem eigenen Server ein `UPLOAD_DIR` nur für den Lauf). Nicht im Gate (braucht Chrome, Server, Daten). Nach Änderungen an Bedienung oder Bausteinen:
+  Ende alles endgültig gelöscht; „Belege“ an der Scheibe aus `pickCard`: zwei Dateien in einem Zug, Bericht, Rückfrage,
+  am Ende wieder entfernt; `--start` gibt dem eigenen Server ein `UPLOAD_DIR` nur für den Lauf). Nicht im Gate (braucht Chrome, Server, Daten). Nach Änderungen an Bedienung oder Bausteinen:
   `pnpm build` (oder `pnpm check`), dann `pruefen --start`, damit die Prüfung den eigenen Stand sieht und nicht einen
   Dev-Server aus einem anderen Checkout. Neue Bedienung bekommt eine Prüfung dort. Eine Taste, die die Seite nicht nimmt,
   meldet `window.__keys` (Lauscher ganz außen; Alt+Pfeil wird dort abgefangen, sonst ginge der Browser zurück).
