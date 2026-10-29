@@ -11,7 +11,7 @@ const ENTRIES = [
 ] as const
 
 /**
- * Oben im Bereich Fortschritt: „Zeitraum · Vergleichen“ als zwei Links als Reiter (`TabBar`). So findet man Vergleichen
+ * Oben im Bereich Fortschritt: „Zeitraum · Vergleichen“ als Reiter (`TabBar`) mit zwei Links. So findet man Vergleichen
  * auch am Telefon, wo die untere Leiste keinen Platz mehr hat (Scannen, Tagebuch); am Desktop steht es zusätzlich in
  * der Seitenleiste unter Fortschritt. Die gezeigte Seite trägt `aria-current`.
  */
