@@ -177,14 +177,21 @@ describe("Texte der Auswertung", () => {
         high: { n: 0, mean: null },
         low: { n: 0, mean: null },
       })
-    ).toBe("Erst 1 Eintrag mit Befinden. Für ein Urteil braucht es 10.")
+    ).toBe("Erst 1 Eintrag zählt hier. Für ein Urteil braucht es 10.")
     expect(
       influenceSentence("energy", {
         entered: 0,
         high: { n: 0, mean: null },
         low: { n: 0, mean: null },
       })
-    ).toBe("Noch kein Eintrag mit einem Wert für Energie. Für ein Urteil braucht es 10.")
+    ).toBe("Noch kein Eintrag zählt hier. Für ein Urteil braucht es 10.")
+    expect(
+      influenceSentence("sleep", {
+        entered: 8,
+        high: { n: 4, mean: 0.1 },
+        low: { n: 4, mean: -0.1 },
+      })
+    ).toBe("Erst 8 Einträge zählen hier. Für ein Urteil braucht es 10.")
   })
 
   it("nennt die Grundlage nur, wenn etwas nicht zählt", () => {

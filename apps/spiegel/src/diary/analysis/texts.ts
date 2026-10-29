@@ -114,9 +114,9 @@ export function influenceSentence(
   // ein einzelner Eintrag hat keine Mitte, über und unter der etwas läge: Es fehlen Einträge
   if (row.entered > 1 && !high.n && !low.n) return ANALYSIS_TEXTS.allSame
   if (row.entered === 0)
-    return `Noch kein Eintrag mit einem Wert für ${words.name}. Für ein Urteil braucht es ${2 * MIN_SIDE}.`
+    return `Noch kein Eintrag zählt hier. Für ein Urteil braucht es ${2 * MIN_SIDE}.`
   if (row.entered < 2 * MIN_SIDE)
-    return `Erst ${entries(row.entered)} mit Befinden. Für ein Urteil braucht es ${2 * MIN_SIDE}.`
+    return `Erst ${entries(row.entered)} ${row.entered === 1 ? "zählt" : "zählen"} hier. Für ein Urteil braucht es ${2 * MIN_SIDE}.`
   if (high.n < MIN_SIDE && low.n < MIN_SIDE)
     return `Über der Mitte ${high.n === 1 ? "liegt" : "liegen"} ${entries(high.n)}, darunter ${low.n}. Für ein Urteil braucht es auf jeder Seite ${MIN_SIDE}.`
   if (low.n < MIN_SIDE)
