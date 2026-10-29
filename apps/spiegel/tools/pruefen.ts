@@ -2654,7 +2654,8 @@ async function detailLevels(page: Page, href: string) {
   await page.viewport(1280, 900)
   await page.goto(`${BASE}/cards`)
   const words = await page.ev<{ words: string[]; measured: boolean }>(`({
-    words: $$("[data-provenance-word]").map(txt),
+    // ohne die weichen Trennstellen, die das Wort in der schmalen Spalte umbrechen lassen
+    words: $$("[data-provenance-word]").map((el) => txt(el).replace(/\\u00ad/g, "")),
     measured: /gemessen/.test(txt($("main"))),
   })`)
   check(
