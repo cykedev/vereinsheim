@@ -1223,6 +1223,96 @@ async function fetchCards(page: Page) {
 const ONE_PIXEL_PNG =
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
 
+/**
+ * Belege an einer gemessenen Scheibe am Telefon: zwei Dateien in einem Zug, ein Foto mit langem Namen und ein
+ * Meyton-Ausdruck. Das Foto hängt an (Name auf „.jpg“, Vorschaubild geladen), der Bericht nennt den Ausdruck; bei 390
+ * und 360 px scrollt die Seite nicht seitlich. × fragt mit dem Namen und entfernt. Am Ende sind alle Belege der Prüfung
+ * wieder weg.
+ */
+async function evidenceList(page: Page, href: string) {
+  await page.viewport(390, 844)
+  const dir = await mkdtemp(join(tmpdir(), "spiegel-pruefen-belege-"))
+  const items = `$$("[data-evidence-item]")`
+  const hrefs = () => page.ev<string[]>(`${items}.map((li) => $("a", li).getAttribute("href"))`)
+  let known: string[] = []
+  try {
+    await page.goto(`${BASE}${href}`)
+    await page.waitFor(`!!$("[data-card-evidence]")`)
+    known = await hrefs()
+    const before = known.length
+    if (before >= 10) {
+      check("Belege: die Scheibe hat Platz für einen Beleg", false, `${before} Belege`)
+      return
+    }
+    const photo = join(dir, "Ergebnisliste Rundenwettkampf Kreisliga Luftpistole Seite 1 von 2.png")
+    await writeFile(photo, Buffer.from(ONE_PIXEL_PNG, "base64"))
+    const printout = join(dir, "print_ausdruck.pdf")
+    await writeFile(printout, await samplePrintout({ hex: PROBE_LINK }))
+    await page.setFiles(`$("#card-evidence-file")`, [photo, printout])
+    const done = await page.waitFor(
+      `${items}.length === ${before + 1} && !!$("[data-evidence-report]")`,
+      20_000
+    )
+    await page.ev(`${items}.at(-1)?.scrollIntoView({ block: "center" })`)
+    const loaded = await page.waitFor(
+      `(() => { const img = $("img", ${items}.at(-1)); return !!img && img.complete && img.naturalWidth > 0 })()`,
+      10_000
+    )
+    const state = await page.ev<{ name: string; report: string }>(`({
+      name: txt($("[data-evidence-name]", ${items}.at(-1))),
+      report: txt($("[data-evidence-report]")),
+    })`)
+    check(
+      "Belege: zwei Dateien in einem Zug, das Foto hängt an, mit Vorschaubild und Namen auf .jpg",
+      done && loaded && state.name.endsWith(" von 2.jpg"),
+      state
+    )
+    check(
+      "Belege: der Bericht nennt die angehängte Datei und den Ausdruck",
+      state.report.includes("1 Datei angehängt.") && state.report.includes("Ausdruck von Meyton"),
+      state.report
+    )
+    for (const width of [390, 360]) {
+      await page.viewport(width, 844)
+      await page.wait(200)
+      check(
+        `Belege: kein seitliches Scrollen bei ${width} px`,
+        await page.ev<boolean>(
+          `innerWidth === Math.round(visualViewport.width) && document.documentElement.scrollWidth <= innerWidth`
+        )
+      )
+    }
+    await page.viewport(390, 844)
+    await page.click(`$("[data-evidence-remove]", ${items}.at(-1))`)
+    await page.waitFor(`!!$('[role="alertdialog"]')`)
+    const dialog = await page.ev<string>(`txt($('[role="alertdialog"]'))`)
+    check(
+      "Belege: × fragt mit dem Namen der Datei",
+      dialog.includes("von 2.jpg") &&
+        dialog.includes("Die Werte der Scheibe bleiben, wie sie sind."),
+      dialog
+    )
+    await page.click(`button("Entfernen", $('[role="alertdialog"]'))`)
+    check(
+      "Belege: nach der Rückfrage entfernt",
+      await page.waitFor(`${items}.length === ${before}`, 10_000)
+    )
+  } finally {
+    // jeder Beleg, der in der Prüfung dazukam, geht über die Oberfläche wieder weg
+    for (let round = 0; round < 10; round++) {
+      const extra = (await hrefs()).findIndex((link) => !known.includes(link))
+      if (extra < 0) break
+      const count = (await hrefs()).length
+      await page.click(`$("[data-evidence-remove]", ${items}[${extra}])`)
+      await page.waitFor(`!!$('[role="alertdialog"]')`)
+      await page.click(`button("Entfernen", $('[role="alertdialog"]'))`)
+      await page.waitFor(`${items}.length === ${count - 1}`, 10_000)
+    }
+    await page.viewport(1280, 900)
+    await rm(dir, { recursive: true, force: true })
+  }
+}
+
 /** in das Feld tippen: hineinklicken, ans Ende, `remove` Zeichen löschen, dann den Text */
 async function fill(page: Page, selector: string, text: string, remove = 0) {
   await page.click(`$(${JSON.stringify(selector)})`)
@@ -1236,7 +1326,7 @@ async function fill(page: Page, selector: string, text: string, remove = 0) {
  * das Formular. Eine Summe neben einer Serie mit Schüssen einzeln ist ein Fehler an der Summe; mit Schüssen in beiden
  * Serien speichert es, und die Seite zeigt „Von Hand eingetragen“ und das Ergebnis. Ändern übernimmt die Werte, ein neuer
  * Schuss und ein Ort landen auf der Seite. Mit Eingaben fragt „Zurück“ erst. Ein Foto hängt als Beleg an, ein
- * Meyton-Ausdruck nicht. Am Ende ist die Scheibe endgültig gelöscht.
+ * Meyton-Ausdruck nicht, × entfernt es nach der Rückfrage. Am Ende ist die Scheibe endgültig gelöscht.
  */
 async function handEntry(page: Page) {
   await page.viewport(390, 844)
@@ -1339,12 +1429,16 @@ async function handEntry(page: Page) {
     )
 
     // Beleg: ein Foto hängt an, ein Meyton-Ausdruck nicht, Entfernen fragt erst
+    const items = `$$("[data-evidence-item]")`
     const photo = join(dir, "beleg.png")
     await writeFile(photo, Buffer.from(ONE_PIXEL_PNG, "base64"))
     await page.setFiles(`$("#card-evidence-file")`, [photo])
     check(
-      "Beleg: ein Foto hängt an",
-      await page.waitFor(`txt($('[data-card-evidence="photo"]')).includes("Foto,")`, 15_000)
+      "Beleg: ein Foto hängt an, als JPEG mit dem Namen des Originals",
+      await page.waitFor(
+        `${items}.length === 1 && txt($("[data-evidence-name]")) === "beleg.jpg"`,
+        15_000
+      )
     )
     const printout = join(dir, "ausdruck.pdf")
     await writeFile(printout, await samplePrintout({ hex: PROBE_LINK }))
@@ -1352,17 +1446,14 @@ async function handEntry(page: Page) {
     check(
       "Beleg: ein Meyton-Ausdruck wird keiner, der Weg über „Scheibe holen“ steht da",
       await page.waitFor(
-        `txt($("[data-evidence-error]")).includes("Ausdruck von Meyton") && !!$('[data-card-evidence="photo"]')`,
+        `txt($("[data-evidence-report]")).includes("Ausdruck von Meyton") && ${items}.length === 1`,
         15_000
       )
     )
-    await page.click(`button("Entfernen", $("[data-card-evidence]"))`)
+    await page.click(`$("[data-evidence-remove]")`)
     await page.waitFor(`!!$('[role="alertdialog"]')`)
     await page.click(`button("Entfernen", $('[role="alertdialog"]'))`)
-    check(
-      "Beleg: entfernt nach der Rückfrage",
-      await page.waitFor(`!!$('[data-card-evidence="none"]')`, 10_000)
-    )
+    check("Beleg: entfernt nach der Rückfrage", await page.waitFor(`${items}.length === 0`, 10_000))
   } finally {
     await page.viewport(1280, 900)
     await rm(dir, { recursive: true, force: true })
@@ -2759,6 +2850,7 @@ async function main() {
     await section("Seite einer Scheibe am Desktop", () => desktopCard(page, href))
     await section("Anker und Platz der Scheibe", () => anchorsAndFit(page, href))
     await section("Seite einer Scheibe am Telefon", () => phoneCard(page, href))
+    await section("Belege", () => evidenceList(page, href))
     await section("Telefon ohne seitliches Scrollen", () => phoneNoSideScroll(page))
     await section("Blatt Filter unter Scheiben", () => listFilterSheet(page))
     await section("Blättern", () => paging(page, href))
