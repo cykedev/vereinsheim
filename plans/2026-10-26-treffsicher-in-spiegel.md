@@ -385,6 +385,27 @@ Folgen, die der Teilplan von Stufe 3 klärt:
 - **ADR-033** sagt „Konten ordnen sich über die E-Mail zu“ und „Treffsicher läuft erst nur lesend“ (als Ganzes). Die
   Zuordnung je Konto und das Lesend je Konto verfeinern das; der Teilplan trägt es als Entscheidung in ADR-033 nach.
 
+Entschieden mit dem User am 29. Oktober 2026 (Planung Stufe 3):
+
+- **Trainings im Probe-Modus zählen als Wertung (SF-05):** 52 der 94 Einheiten des größten Kontos liegen an Abenden,
+  an denen Spiegel nur eine Scheibe „nur Probe“ hat; im Fortschritt fehlen sie heute. Neue Aktion „Als Wertung zählen“
+  an der Seite einer Scheibe (nicht amtlich, im Fachkern als Merkmal vorbereitet). Die Übernahme setzt sie selbst, wenn
+  die Summen der Einheit zur Scheibe passen. Keine zweite Scheibe aus Treffsicher für denselben Abend.
+- **Prüfbestand als Bericht je Konto** für den Betreiber (lokal bzw. auf dem VPS, nie im Repo), nicht in der App.
+- **Schnitt in fünf Teile:**
+  - **3a Übernahme eines Kontos** (Basisbranch): `--from`/`--to`, Konto anlegen, Scheiben aus Treffsicher mit
+    Dubletten-Regel gegen Scheiben der Anlage und vom Ausdruck, „Als Wertung zählen“ bei passenden Summen, Einträge mit
+    Stufen und Ausführung je Serie, Ziele und Abläufe nach dem Nachtrag 2b, Anhänge als Ausdruck (gelesen, passt er,
+    eine neue Revision) oder Beleg, Prüfbestand, wiederholbar, Abbruch statt Zusammenführen. Baut auf den Funktionen
+    der Vorschau aus 2c auf; die Vorschau wird vorher gelöscht.
+  - **3b Betrieb** (Basisbranch): Lauf über die geprüfte Zuordnungsdatei aus V1 (nur `ok` und `new`), `status`,
+    `vereinsheim transfer` im Ops-CLI, Zugang zu beiden Datenbanken und den Dateien der Anhänge auf dem VPS, Probe gegen
+    die Prod-Kopie, Nachtrag zu ADR-033.
+  - **3c „Als Wertung zählen“** (nach `main`, Konzept zuerst).
+  - **3d Ein später geholter Ausdruck ergänzt die übernommene Scheibe** (Basisbranch).
+  - **3e Treffsicher lesend je Konto** (nach `main`, Konzept zuerst): Hinweis auf Spiegel, keine Änderungen mehr.
+  - Reihenfolge: Konzepte für 3c und 3e zuerst; 3a kann parallel geplant werden und nimmt 3c nach dem Rebase auf.
+
 ### Stufe 4 · Ruhestand von Treffsicher
 
 Erst nur lesend mit Hinweis und Weiterleitung, dann abgeschaltet. Berührt Deploy-Vertrag, Caddy und das CLI. Mit dem
@@ -468,7 +489,11 @@ Befund aus dem Review von 2a).
 | 2b   | `plans/2026-10-28-tis-2b-goals-routines.md`  | `feat/tis-2b-goals-routines` (vom Basis)   | `tis-2b-goals-routines`  | im Basisbranch (`b51a030b`), Plan entfernt              |
 | 2c   | `plans/2026-10-29-tis-2c-diary-analysis.md`  | `feat/tis-2c-diary-analysis` (vom Basis)   | `tis-2c-diary-analysis`  | im Basisbranch (`69bedd2a`), Plan entfernt              |
 | R    | `plans/2026-10-29-tis-r-tab-bar.md`          | `feat/tis-r-tab-bar` (von `main`)          | `tis-r-tab-bar`          | in `main` (`290da9e5`, mit R2), noch nicht deployt     |
-| 3    |                                              |                                            |                          | offen                                                   |
+| 3a   |                                              | (vom Basis)                                |                          | entschieden (29.10.), Plan offen                        |
+| 3b   |                                              | (vom Basis)                                |                          | entschieden (29.10.), Plan nach 3a                      |
+| 3c   |                                              | (von `main`)                               |                          | entschieden (29.10.), Konzept offen                     |
+| 3d   |                                              | (vom Basis)                                |                          | entschieden (29.10.), Plan offen                        |
+| 3e   |                                              | (von `main`)                               |                          | entschieden (29.10.), Konzept offen                     |
 | 4    |                                              |                                            |                          | offen                                                   |
 
 ## Verification
