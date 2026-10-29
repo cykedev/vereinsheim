@@ -24,8 +24,7 @@
     "pruefen": "tsx tools/pruefen.ts",
     "ingest-load": "tsx tools/ingest-load.ts",
     "stack-probe": "tsx tools/stack-probe.ts",
-    "bridge-e2e": "tsx tools/bridge-e2e.ts",
-    "warmup-census": "tsx tools/warmup-census.ts"
+    "bridge-e2e": "tsx tools/bridge-e2e.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "catalog:",
