@@ -260,30 +260,37 @@ async function layout(page: Page, paths: string[]) {
   }
 }
 
-/** Reiter eines Wettbewerbs: eine Zeile, die gezeigte Seite markiert und sichtbar, jeder Reiter führt zu seiner Seite */
+/**
+ * Reiter eines Wettbewerbs: eine Zeile, die gezeigte Seite markiert und sichtbar, jeder Reiter führt zu seiner Seite;
+ * die Seite scrollt nicht seitlich
+ */
 async function tabs(page: Page, competitionPaths: string[]) {
-  for (const width of [390, 1280]) {
-    await page.viewport(width, width === 390 ? 844 : 900)
+  for (const width of [360, 390, 1280]) {
+    await page.viewport(width, width < 768 ? 844 : 900)
     for (const p of competitionPaths) {
       await page.goto(`${BASE}${p}`)
       const s = await page.ev<{
         rows: number
         current: string | null
         inView: boolean
+        vv: boolean
+        sw: boolean
         hrefs: string[]
       }>(`(() => {
-        const bar = $("[data-competition-tabs]")
+        const bar = $("[data-tab-bar]")
         const links = $$("a", bar)
-        const active = $('[data-competition-tabs] [aria-current="page"]')
+        const active = $('[data-tab-bar] [aria-current="page"]')
         const a = active?.getBoundingClientRect(), c = bar.getBoundingClientRect()
         return { rows: new Set(links.map((l) => Math.round(l.getBoundingClientRect().top))).size,
           current: active?.getAttribute("href") ?? null,
           inView: !!a && a.left >= c.left - 1 && a.right <= c.right + 1,
+          vv: innerWidth === Math.round(visualViewport.width),
+          sw: document.documentElement.scrollWidth <= innerWidth,
           hrefs: links.map((l) => l.getAttribute("href")) }
       })()`)
       check(
-        `${width} px: ${p} Reiter in einer Zeile, die Seite markiert und im Bild`,
-        s.rows === 1 && s.current === p && s.inView,
+        `${width} px: ${p} Reiter in einer Zeile, die Seite markiert und im Bild, die Seite scrollt nicht seitlich`,
+        s.rows === 1 && s.current === p && s.inView && s.vv && s.sw,
         s
       )
     }
