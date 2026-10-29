@@ -98,6 +98,23 @@ vergleicht alt gegen neu auf demselben Aufbau.
    Freigabe durch den User neu auf, in einem eigenen Commit.
 6. Release nach [[operations#Release von Ringwerk]].
 
+### In einem Worktree und neben anderen Sessions
+
+Aufgefallen am 29. Oktober 2026 bei den gemeinsamen Reitern (`TabBar`):
+
+- **Bilder des Ausgangsstands:** Sie liegen nur im Checkout, der ihn aufgenommen hat (`reports/ringwerk-referenz/`). In
+  einem Worktree zählt `pruefen:vergleichen` deshalb jedes Bild als geändert, streng bleiben Text und Daten. Für die
+  Bilder den alten Stand auf demselben Aufbau aufnehmen und dagegen vergleichen: `pruefdaten`, die geänderten Dateien
+  aus `main` zurückholen (`git show main:<datei> > <datei>`), bauen, `pruefen:aufnehmen --referenz reports/ringwerk-alt`,
+  zurück auf `HEAD`, bauen, `pruefen:vergleichen --referenz reports/ringwerk-alt`. Ob wirklich der alte Stand gebaut
+  wurde, zeigt eine Kennung im Bündel unter `.next/static`.
+- **Lange Seiten rauschen:** Seiten, die bei 16.000 px enden, unterschieden sich vorher und nachher nur in den rechten
+  4 Pixelspalten: die überlagerte Scrollbar, einmal sichtbar, einmal ausgeblendet. Neu gegen neu ebenso. Vor einem
+  Verdacht Pixel für Pixel ohne diesen Rand vergleichen (`pngjs` liegt im Workspace).
+- **`--echt` und andere Sessions:** Ändert etwas außerhalb des eigenen Laufs die Dev-Datenbank zwischen Aufnahme und
+  Vergleich, verweigert sich der Vergleich. Dann den alten Stand wie oben neu aufnehmen (`--aufnehmen --echt`) und
+  gleich danach vergleichen.
+
 ## Stand 21. Oktober 2026
 
 - Saison ohne Mindestzahl ([[season-mode]]): neues Szenario `S-OHNE-MINDEST` (96 Wettbewerbe), mit Absicht **am Ende**

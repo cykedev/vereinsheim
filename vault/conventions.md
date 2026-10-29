@@ -369,7 +369,9 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
   Layout-Fenster bis zur Mindestbreite des Inhalts, `scrollWidth` bleibt dann gleich `innerWidth`, nur
   `visualViewport.width` ist kleiner. Ein Feld, das nachgeben soll, bekommt `w-0 grow max-w-…` statt einer festen Breite
   (mit `w-28` trug es 112 px in die Mindestbreite, die Zeile wurde 413 px breit). Prüfen mit `innerWidth ===
-  visualViewport.width` bei 390 und 360 px. Aufgefallen im Oktober 2026 im Formular „Ergebnis eintragen“.
+  visualViewport.width` bei 390 und 360 px. Aufgefallen im Oktober 2026 im Formular „Ergebnis eintragen“. Am Desktop
+  zieht `visualViewport` die Scrollbar ab, `innerWidth` nicht: Dort gegen `document.documentElement.clientWidth` prüfen
+  (Abschnitt „Reiter“ in `apps/ringwerk/tools/pruefen.ts`).
 
 - **Ein Toast liegt über einer klebenden Leiste unten**: Toasts stehen über der unteren Leiste der App, genau dort, wo
   eine klebende Leiste mit „Speichern“ steht; ein Toast der vorigen Seite schluckte den Klick. Ein Formular mit so einer
