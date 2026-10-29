@@ -76,15 +76,17 @@ Fachwissen: `vault/spiegel/spiegel-target-library.md`, `vault/spiegel/spiegel-me
 - **Projektion gleich Live-Rechnung** (ADR-031): Die Übersichten lesen Werte und Rekord-Kandidaten je
   Scheibe aus der Projektion, die beim Schreiben einer Revision entsteht. Rekorde sind dafür zerlegt in Kandidaten je
   Scheibe (`cardRecordCandidates`) und ihr Zusammenführen (`combineRecords`); `periodRecords` nutzt beides. Die
-  Projektion rechnet beide Wertungen und mit Probe; gefiltert wird beim Lesen wie in `cardValues` und `periodRecords`.
+  Projektion rechnet beide Wertungen und mit Probe wie Wertung (gleich `cardValues`/`periodRecords` mit
+  `includeProbeOnly: true`); beim Lesen fällt nur Einschießen weg (`warmup`, ohne `includeWarmup`).
   `projection.test.ts` hält die Gleichheit an den erzeugten Scheiben und jedem Sonderfall fest. Ändert sich eine Formel,
   steigt ihre `version` und damit `projectionVersion()`; ändert sich ein Kandidat oder die Form der Projektion, steigt
   `PROJECTION_VERSION` (dazu gehören die Lagen aus `cardMarks`, die mit der Projektion gespeichert und im Test mit
   festgeschrieben werden). Das gilt auch für geteilte Logik dahinter (`cardShots`, `asOnPrintout`, Rundung, Streukreis):
   Ein Test schreibt Version und Ausgabe an den Fixtures fest und wird rot, wenn sich nur die Ausgabe ändert. Die
   Projektion rechnet in Abgabefolge (`inShotOrder`), unabhängig von der Folge der Eingabe. Eine neue Filterregel in
-  `periodRecords` oder `cardValues` braucht dieselbe in `projectedRecords`/`projectedValues` (Filter der Rekorde in
-  `recordsInView`, das auch `itemRecords` in `shot-ui` nimmt) und eine Testscheibe, an der sie greift.
+  `periodRecords` oder `cardValues` (außer der über nur Probe, die die Projektion immer einschließt) braucht dieselbe in
+  `projectedRecords`/`projectedValues` (Filter der Rekorde in `recordsInView`, das auch `itemRecords` in `shot-ui`
+  nimmt) und eine Testscheibe, an der sie greift.
 - **Angaben ohne Einzelschüsse** ([[adr-033]]): `PeriodCard.sums` (`CardSums`: Serien-Summen, Gesamtergebnis,
   Trefferlage als Summe, je mit Schusszahl). Kaskade: erst die Schüsse, dann die Serien-Summen, wenn jede den Wert der
   Wertung trägt, dann das Gesamtergebnis (`summaryValue`). Nur Kennzahlen mit `summary` (E1, E2, L2; `defineMetric`

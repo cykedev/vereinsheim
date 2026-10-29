@@ -305,8 +305,9 @@ async function main() {
       [
         "Rechnen aus den Schüssen: Ø je Scheibe und Rekorde",
         await median(async () => {
-          cardValues(full, mean, "decimal")
-          periodRecords(full, "decimal")
+          // dieselbe Arbeit wie die Projektion: nur Probe wie Wertung
+          cardValues(full, mean, "decimal", { includeProbeOnly: true })
+          periodRecords(full, "decimal", { includeProbeOnly: true })
         }),
       ],
     ]
