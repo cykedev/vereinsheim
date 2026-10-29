@@ -20,3 +20,7 @@ export const CARD_WORDS: PeriodWords = {
 
 /** „1 Scheibe“, „3 Scheiben“ */
 export const countOf = (n: number, words: PeriodWords) => `${n} ${n === 1 ? words.one : words.many}`
+
+/** Zahl der Einträge im Kopf eines Zeitraums: „14 Scheiben“, mit Einschießen „14 Scheiben, 2 Einschießen nicht gezählt“ */
+export const periodCountText = (cards: number, warmup: number, words: PeriodWords = CARD_WORDS) =>
+  `${countOf(cards, words)}${warmup > 0 ? `, ${warmup} Einschießen nicht gezählt` : ""}`

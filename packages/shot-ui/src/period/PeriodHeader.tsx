@@ -1,7 +1,7 @@
 "use client"
 
 import { cn } from "@vereinsheim/lib/utils"
-import type { ReactNode } from "react"
+import { Fragment, type ReactNode } from "react"
 
 import { CardFilters } from "../controls/CardFilters"
 import { PAGE_COLUMNS } from "../layout/columns"
@@ -78,8 +78,8 @@ export function PeriodControls({
 export interface PeriodHeaderProps {
   /** Name des Zeitraums */
   title: string
-  /** Familie, Zahl der Scheiben, Tage; mit „·“ verbunden */
-  meta: readonly string[]
+  /** Familie, Zahl der Scheiben (auch mit „?“), Tage; mit „·“ verbunden */
+  meta: readonly ReactNode[]
   /** Filter (`PeriodControls`) */
   controls: ReactNode
   /** das Ergebnis (`PeriodResult`), nur auf dem Telefon hier; ohne Scheiben null */
@@ -110,7 +110,16 @@ export function PeriodHeader({
         <h1 className="font-display text-[1.7rem] leading-tight font-bold tracking-tight text-balance">
           {title}
         </h1>
-        {meta.length > 0 && <p className="text-[13px] text-muted-foreground">{meta.join(" · ")}</p>}
+        {meta.length > 0 && (
+          <p className="text-[13px] text-muted-foreground">
+            {meta.map((part, i) => (
+              <Fragment key={i}>
+                {i > 0 && " · "}
+                {part}
+              </Fragment>
+            ))}
+          </p>
+        )}
       </div>
       <div className="min-w-0 md:col-span-2">{controls}</div>
       {result && <div className="md:hidden">{result}</div>}

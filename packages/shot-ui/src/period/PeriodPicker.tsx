@@ -216,7 +216,13 @@ export function PeriodPicker({
                 onChange={(event) => setDraftWarmup(event.target.checked)}
                 className="size-4 accent-[var(--primary)]"
               />
-              <span>Scheiben nur aus Probe mitzählen</span>
+              <span className="grid">
+                <span>Einschießen mitzählen</span>
+                <span className="text-[12.5px] text-muted-foreground">
+                  Probe vor einer Wertung am selben Abend. Ein Training ganz im Probe-Modus zählt
+                  immer.
+                </span>
+              </span>
             </label>
           )}
           <button

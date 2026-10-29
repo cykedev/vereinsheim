@@ -205,33 +205,26 @@ Neu in `VIEW_HELP` (`packages/shot-help/src/guide.ts`) die Erklärung `einschies
 (`caution`) und `gegen-den-schnitt` (`what`) in `topics.ts`. Texte unten. Danach `pnpm --filter
 @vereinsheim/shot-help docs` (erzeugt `vault/spiegel/spiegel-statistics-help.md` neu).
 
-## Neue Texte (gehen erst zum User, dann ins Textbuch Spiegel, dann in den Code)
+## Neue Texte (Textbuch, vom User am 29. Oktober 2026 bestätigt)
 
-Geschrieben für die Regel „ein Abend mit Wertung“ (freigegeben). Entscheidet der Koordinator Offene Punkte 1 anders,
-gelten die Texte in Klammern.
+Fassung B: Einschießen ist Probe vor einer Wertung desselben Abends in derselben Familie.
 
-1. **Blatt „Filter“, Schalter:** „Einschießen mitzählen“. Darunter leise: „Probe an einem Abend, an dem du in derselben
-   Disziplin auch mit Wertung schießt. Ein Training ganz im Probe-Modus zählt immer.“ („Probe vor einer Wertung am
-   selben Abend. Ein Training ganz im Probe-Modus zählt immer.“)
+1. **Blatt „Filter“, Schalter:** „Einschießen mitzählen“. Darunter leise: „Probe vor einer Wertung am selben Abend. Ein
+   Training ganz im Probe-Modus zählt immer.“
 2. **Chip „Filter“**, nur wenn an: „… · mit Einschießen“.
-3. **Kopf im Fortschritt:** „14 Scheiben, 2 Einschießen nicht gezählt“, dahinter „?“ mit dem Namen „Was heißt
-   Einschießen?“.
+3. **Kopf im Fortschritt:** „14 Scheiben, 2 Einschießen nicht gezählt“, dahinter „?“ zur Hilfe „Einschießen“.
 4. **Hilfe `einschiessen`**, Titel „Einschießen“.
-   - Was: „Einschießen ist Probe an einem Abend, an dem du in derselben Disziplin auch mit Wertung schießt. Meist ist es
-     das Warmschießen davor. Es zählt nicht im Schnitt, im Verlauf, in der Form und bei den Rekorden, damit es deinen
-     Schnitt nicht drückt. Ein Training ganz im Probe-Modus zählt mit, wie ein Training mit Wertung.“ („Einschießen ist
-     Probe vor einer Wertung am selben Abend, in derselben Disziplin. Es zählt nicht … [Rest gleich]“)
-   - So liest du es: „Ein Abend reicht bis 4 Uhr morgens. Unter „Scheiben“ steht das Einschießen mit allen anderen
-     Scheiben, unter der Art steht „Einschießen“, seine Zahlen stehen leise. Im Fortschritt zählst du es mit
-     „Einschießen mitzählen“ im Blatt „Filter“ mit. Vergleichen übernimmt diese Wahl.“
+   - Was: „Einschießen ist Probe vor einer Wertung am selben Abend, in derselben Disziplin. Es zählt nicht im Schnitt,
+     im Verlauf, in der Form und bei den Rekorden, damit es deinen Schnitt nicht drückt. Ein Training ganz im
+     Probe-Modus zählt mit.“
+   - So liest du es: „Ein Abend reicht bis 4 Uhr morgens. Unter „Scheiben“ steht das Einschießen bei allen anderen, mit
+     dem Wort „Einschießen“ und leisen Zahlen. Mitzählen kannst du es im Fortschritt im Blatt „Filter“. Vergleichen
+     übernimmt diese Wahl.“
 5. **Liste, Fortschritt, Start:** das Wort „Einschießen“ unter der Art bzw. in der Metazeile der Kachel; der Grund am
    „–“: „Einschießen zählt nicht“; im Namen des Links: „…, Training nur Probe, Einschießen, zählt nicht, …“.
-6. **Hilfe `rekorde`, `caution`:** der Satz „Eine Scheibe nur aus Probe zählt mit, solange „Scheiben nur aus Probe
-   mitzählen“ im Blatt „Filter“ an ist (die Vorgabe); dann gilt ihre Probe wie Wertung, in Serien zu zehn. Ebenso eine
-   Scheibe, deren Probe du als Wertung zählst.“ wird: „Ein Training ganz im Probe-Modus zählt mit, seine Probe gilt
-   wie Wertung, in Serien zu zehn. Einschießen zählt nur mit „Einschießen mitzählen“ im Blatt „Filter“.“
-7. **Hilfe `gegen-den-schnitt`, `what`:** „…, und Scheiben nur aus Probe nur, wenn sie mitzählen.“ wird „…, und
-   Einschießen nur, wenn es mitzählt.“
+6. **Hilfe `rekorde`, `caution`:** „Ein Training ganz im Probe-Modus zählt mit, seine Probe gilt wie Wertung, in Serien
+   zu zehn. Einschießen zählt nur mit „Einschießen mitzählen“ im Blatt „Filter“.“
+7. **Hilfe `gegen-den-schnitt`, `what`:** „…, und Einschießen nur, wenn es mitzählt.“
 
 ## Dateien
 

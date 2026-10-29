@@ -23,7 +23,7 @@ import { periodSentence, verdictText } from "./sentence"
 import { initialPeriodState } from "./state"
 import { item, NOW, periodCard, TZ } from "./testSeason"
 import { VolumeChart, weekText } from "./VolumeChart"
-import type { PeriodWords } from "./words"
+import { periodCountText, type PeriodWords } from "./words"
 
 const UNIT: PeriodWords = {
   one: "Einheit",
@@ -230,6 +230,18 @@ describe("Kennzahlen als Parameter", () => {
     const params = new URLSearchParams(url.split("?")[1])
     expect(progressQueryFromParams(params, [...PROGRESS_METRICS, "group.mpiDistance"]).metric).toBe(
       "group.mpiDistance"
+    )
+  })
+})
+
+describe("Zahl im Kopf eines Zeitraums", () => {
+  it("Einzahl und Mehrzahl, Einschießen nur, wenn es nicht zählt", () => {
+    expect(periodCountText(1, 0)).toBe("1 Scheibe")
+    expect(periodCountText(14, 0)).toBe("14 Scheiben")
+    expect(periodCountText(14, 2)).toBe("14 Scheiben, 2 Einschießen nicht gezählt")
+    expect(periodCountText(1, 1)).toBe("1 Scheibe, 1 Einschießen nicht gezählt")
+    expect(periodCountText(3, 0, { one: "Einheit", many: "Einheiten", noRecords: "" })).toBe(
+      "3 Einheiten"
     )
   })
 })

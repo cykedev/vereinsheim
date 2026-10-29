@@ -57,6 +57,7 @@ import {
   type PeriodState,
 } from "@vereinsheim/shot-ui/period/state"
 import { VolumeChart } from "@vereinsheim/shot-ui/period/VolumeChart"
+import { periodCountText } from "@vereinsheim/shot-ui/period/words"
 import { CalendarBrowser } from "@vereinsheim/shot-ui/period/CalendarChart"
 import { Segmented } from "@vereinsheim/ui/design2/segmented"
 import { ToggleChip } from "@vereinsheim/ui/design2/toggle-chip"
@@ -260,9 +261,21 @@ export function ProgressScreen({
   const target = TARGETS[option?.targetId ?? "lp-10m"]
   const result = <PeriodResult model={model} timeZone={timeZone} onHelp={onHelp} />
   const sentence = periodSentence(model)
-  // Einschießen zählt nur mit dem Schalter: sonst steht es in der Liste, aber nicht im Ergebnis
+  // Einschießen zählt nur mit dem Schalter: sonst steht es in der Liste, aber nicht im Ergebnis; das „?“ erklärt es
   const excluded = model.excludedWarmup
-  const cardsText = `${model.cards.length} Scheiben${excluded ? `, ${excluded} Einschießen nicht gezählt` : ""}`
+  const cardsText = (
+    <span data-period-count>
+      {periodCountText(model.cards.length, excluded)}
+      {excluded > 0 && (
+        <HelpButton
+          label="Einschießen"
+          helpId="einschiessen"
+          onClick={() => onHelp("einschiessen")}
+          className="ml-1 align-middle"
+        />
+      )}
+    </span>
+  )
   const empty = model.cards.length === 0
 
   return (

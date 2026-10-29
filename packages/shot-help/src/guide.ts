@@ -70,6 +70,12 @@ export const VIEW_HELP: readonly ViewHelp[] = [
     what: "Nicht jede Scheibe bringt alles mit. Gemessen heißt: Die Anlage hat jeden Schuss mit Wert, Lage und Zeit geliefert. Vom Ausdruck heißt: Die Werte stammen vom Papier, das die Anlage gedruckt hat. Eingetragen heißt: Die Werte sind von Hand eingegeben oder aus Treffsicher übernommen. Je nach Herkunft hat eine Scheibe Schüsse mit Lage, nur Serien-Summen oder nur ein Gesamtergebnis.",
     read: "Jede Zahl rechnet nur über die Scheiben, die dafür etwas mitbringen. Zählen nicht alle, steht darunter die Grundlage, etwa „über 12 von 20 Scheiben · 6 ohne Lage je Schuss“. Ergebnis und Ø je Schuss kommen auch aus Summen. Streuung, Tempo und jedes Urteil über die Lage brauchen Einzelschüsse. Die Mitte der Schüsse aus einer Summe zählt beim Versatz mit, nie bei der Streuung. Wo ein Wert fehlt, steht „–“ mit dem Grund.",
   },
+  {
+    id: "einschiessen",
+    title: "Einschießen",
+    what: "Einschießen ist Probe vor einer Wertung am selben Abend, in derselben Disziplin. Es zählt nicht im Schnitt, im Verlauf, in der Form und bei den Rekorden, damit es deinen Schnitt nicht drückt. Ein Training ganz im Probe-Modus zählt mit.",
+    read: "Ein Abend reicht bis 4 Uhr morgens. Unter „Scheiben“ steht das Einschießen bei allen anderen, mit dem Wort „Einschießen“ und leisen Zahlen. Mitzählen kannst du es im Fortschritt im Blatt „Filter“. Vergleichen übernimmt diese Wahl.",
+  },
 ]
 
 /** Typische Fehlschlüsse */

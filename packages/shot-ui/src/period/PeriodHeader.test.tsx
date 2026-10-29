@@ -47,14 +47,15 @@ describe("Blatt „Filter“", () => {
       "Vergleichen mit",
       "Zeitraum davor",
       "Übernehmen",
-      "Scheiben nur aus Probe mitzählen",
+      "Einschießen mitzählen",
+      "Probe vor einer Wertung am selben Abend. Ein Training ganz im Probe-Modus zählt immer.",
     ]) {
       expect(html, label).toContain(label)
     }
     expect([...html.matchAll(/Vorbereitung Landesmeisterschaft/g)]).toHaveLength(2)
     expect(html).toContain("01.05.2026 – 30.06.2026")
     expect(html).toContain("seit 01.08.2026")
-    // auch Art und Probe-Training im Blatt, als Entwurf bis „Übernehmen“; das Blatt heißt „Filter“
+    // auch Art und Einschießen im Blatt, als Entwurf bis „Übernehmen“; das Blatt heißt „Filter“
     expect(html).toMatch(/<legend[^>]*>Art<\/legend>/)
     expect([...html.matchAll(/<input type="radio"[^>]*name="art"/g)]).toHaveLength(3)
     for (const label of ["Alle", "Training", "Wettkampf"])
@@ -174,10 +175,13 @@ describe("Filter und Kopf", () => {
     expect(controls({}, null)).not.toContain("data-period-actions")
   })
 
-  it("eine Zeile: Familie (erst ab zwei) und der Chip; Art, Probe-Training und Vergleich im Blatt", () => {
+  it("eine Zeile: Familie (erst ab zwei) und der Chip; Art, Einschießen und Vergleich im Blatt", () => {
     const html = controls({}, null)
     expect(html).not.toContain('aria-label="Art"')
-    expect(html).not.toContain("mit Training nur aus Probe")
+    expect(html).not.toContain("mit Einschießen")
+    expect(controls({ includeWarmup: true, kind: "competition" }, null)).toMatch(
+      /data-period-chip="true"[^>]*>Letzte 90 Tage · Wettkampf · mit Einschießen</
+    )
     expect(html).not.toContain('aria-label="Familie"')
     expect(html).not.toContain("data-compare-chip")
     expect(html).toMatch(/data-period-chip="true"[^>]*>Letzte 90 Tage</)
@@ -211,6 +215,17 @@ describe("Filter und Kopf", () => {
     expect(html).toMatch(/<div class="md:hidden"><p>ERGEBNIS/)
     expect(html).toMatch(/data-sentence="true"[^>]*>Ein Satz\./)
     expect(html).not.toContain("WEG")
+    // ein Teil der Metazeile darf ein Knoten sein (die Zahl mit „?“)
+    const withNode = renderToStaticMarkup(
+      h(PeriodHeader, {
+        title: "Alles",
+        meta: ["Luftgewehr", h("span", { "data-count": true }, "14 Scheiben"), "3 Tage"],
+        controls: null,
+        result: null,
+        sentence: null,
+      })
+    )
+    expect(withNode).toContain('Luftgewehr · <span data-count="true">14 Scheiben</span> · 3 Tage')
   })
 
   it("hinter dem Satz ein Weg (in Spiegel „Genauer vergleichen“)", () => {

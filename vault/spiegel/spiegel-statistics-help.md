@@ -112,6 +112,14 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   brauchen Einzelschüsse. Die Mitte der Schüsse aus einer Summe zählt beim Versatz mit, nie bei der
   Streuung. Wo ein Wert fehlt, steht „–“ mit dem Grund.
 
+**Einschießen**
+- *Was:* Einschießen ist Probe vor einer Wertung am selben Abend, in derselben Disziplin. Es zählt
+  nicht im Schnitt, im Verlauf, in der Form und bei den Rekorden, damit es deinen Schnitt nicht
+  drückt. Ein Training ganz im Probe-Modus zählt mit.
+- *So liest du es:* Ein Abend reicht bis 4 Uhr morgens. Unter „Scheiben“ steht das Einschießen bei
+  allen anderen, mit dem Wort „Einschießen“ und leisen Zahlen. Mitzählen kannst du es im Fortschritt
+  im Blatt „Filter“. Vergleichen übernimmt diese Wahl.
+
 ## Ergebnis
 
 **Ergebnis und Ø je Schuss (E1, E2)**
@@ -538,8 +546,8 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
 **Abstand zum Schnitt davor (C4)**
 - *Was:* Der Unterschied zwischen dem Ø je Schuss einer Scheibe und dem Schnitt deiner bis zu fünf
   Scheiben davor in derselben Disziplin; im Fortschritt zählen dazu nur Scheiben der gewählten Art,
-  und Scheiben nur aus Probe nur, wenn sie mitzählen. Die Scheibe selbst zählt nicht mit. Gezählt
-  werden alle deine Scheiben davor, nicht nur die im gewählten Zeitraum.
+  und Einschießen nur, wenn es mitzählt. Die Scheibe selbst zählt nicht mit. Gezählt werden alle
+  deine Scheiben davor, nicht nur die im gewählten Zeitraum.
 - *So liest du es:* +0,12 heißt: 0,12 Ringe je Schuss über dem Schnitt der Scheiben davor. In der
   Grundeinstellung steht dieselbe Zahl unter Scheiben, auf Start und in der Ablesung im Fortschritt;
   ein Bezug für eine Scheibe überall.
@@ -564,9 +572,8 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   Wettkampf; sie gelten über alle deine Scheiben, nicht nur über den gewählten Zeitraum.
 - *Vorsicht:* Es zählen nur abgeschlossene, vollständige Scheiben. Nicht zählen Scheiben nur aus dem
   Ausdruck, neu gewertete, von dir ausgenommene und jede mit einem verdächtigen Schuss in der
-  Wertung. Eine Scheibe nur aus Probe zählt mit, solange „Scheiben nur aus Probe mitzählen“ im Blatt
-  „Filter“ an ist (die Vorgabe); dann gilt ihre Probe wie Wertung, in Serien zu zehn. Ebenso eine
-  Scheibe, deren Probe du als Wertung zählst.
+  Wertung. Ein Training ganz im Probe-Modus zählt mit, seine Probe gilt wie Wertung, in Serien zu
+  zehn. Einschießen zählt nur mit „Einschießen mitzählen“ im Blatt „Filter“.
 - *Mindestzahl:* Ab 1 Scheibe, die beste Form ab 5 Scheiben.
 
 ## Vergleichen
