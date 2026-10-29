@@ -387,24 +387,33 @@ Folgen, die der Teilplan von Stufe 3 klärt:
 
 Entschieden mit dem User am 29. Oktober 2026 (Planung Stufe 3):
 
-- **Trainings im Probe-Modus zählen als Wertung (SF-05):** 52 der 94 Einheiten des größten Kontos liegen an Abenden,
-  an denen Spiegel nur eine Scheibe „nur Probe“ hat; im Fortschritt fehlen sie heute. Neue Aktion „Als Wertung zählen“
-  an der Seite einer Scheibe (nicht amtlich, im Fachkern als Merkmal vorbereitet). Die Übernahme setzt sie selbst, wenn
-  die Summen der Einheit zur Scheibe passen. Keine zweite Scheibe aus Treffsicher für denselben Abend.
+- **Einschießen zählt nicht, Trainings im Probe-Modus schon** (korrigiert am selben Tag): Zuerst entschieden war
+  „Als Wertung zählen“ je Scheibe (SF-05), auf die falsche Annahme hin, Probe-Scheiben fehlten im Fortschritt. Sie
+  zählen dort aber schon (Schalter „Scheiben nur aus Probe mitzählen“, Vorgabe ja), auch das Einschießen vor einer
+  Wertung. Neu, nach dem Designkonzept 3c/3e (https://claude.ai/artifact/84tuTUTfmPcxXVXYQMSnKV), vom User mit allen
+  Empfehlungen freigegeben: eine Regel für Fortschritt, Vergleichen, Start, Rekorde und (nach dem Rebase) die Auswertung
+  im Tagebuch. **Einschießen ist eine Scheibe „nur Probe“ vor der ersten Wertung ihres Abends in ihrer Familie** und
+  zählt nicht; jede andere Scheibe „nur Probe“ zählt wie ein Training (User beim Plan 3c: Probe nach einer Wertung ist
+  weiteres Training, im Mittel 26 Schuss und 45 Minuten danach). Der Schalter heißt „Einschießen mitzählen“, Vorgabe
+  aus; die Liste zeigt alles und nennt das Einschießen. In der Prod-Kopie 92 Scheiben „nur Probe“ in 7 Konten, 16 davon
+  Einschießen. Die Übernahme legt an einem Abend mit Probe-Scheibe keine zweite Scheibe aus Treffsicher an.
 - **Prüfbestand als Bericht je Konto** für den Betreiber (lokal bzw. auf dem VPS, nie im Repo), nicht in der App.
 - **Schnitt in fünf Teile:**
   - **3a Übernahme eines Kontos** (Basisbranch): `--from`/`--to`, Konto anlegen, Scheiben aus Treffsicher mit
-    Dubletten-Regel gegen Scheiben der Anlage und vom Ausdruck, „Als Wertung zählen“ bei passenden Summen, Einträge mit
+    Dubletten-Regel gegen Scheiben der Anlage und vom Ausdruck (auch gegen Scheiben „nur Probe“), Einträge mit
     Stufen und Ausführung je Serie, Ziele und Abläufe nach dem Nachtrag 2b, Anhänge als Ausdruck (gelesen, passt er,
     eine neue Revision) oder Beleg, Prüfbestand, wiederholbar, Abbruch statt Zusammenführen. Baut auf den Funktionen
     der Vorschau aus 2c auf; die Vorschau wird vorher gelöscht.
   - **3b Betrieb** (Basisbranch): Lauf über die geprüfte Zuordnungsdatei aus V1 (nur `ok` und `new`), `status`,
     `vereinsheim transfer` im Ops-CLI, Zugang zu beiden Datenbanken und den Dateien der Anhänge auf dem VPS, Probe gegen
     die Prod-Kopie, Nachtrag zu ADR-033.
-  - **3c „Als Wertung zählen“** (nach `main`, Konzept zuerst).
+  - **3c Einschießen** (nach `main`): eine Regel für Scheiben „nur Probe“, Schalter „Einschießen mitzählen“.
   - **3d Ein später geholter Ausdruck ergänzt die übernommene Scheibe** (Basisbranch).
-  - **3e Treffsicher lesend je Konto** (nach `main`, Konzept zuerst): Hinweis auf Spiegel, keine Änderungen mehr.
-  - Reihenfolge: Konzepte für 3c und 3e zuerst; 3a kann parallel geplant werden und nimmt 3c nach dem Rebase auf.
+  - **3e Treffsicher lesend je Konto** (nach `main`): Hinweis auf jeder Seite mit „Zu Spiegel“, keine Änderungen mehr
+    (auch kein Passwort), der Server lehnt sie ab, PDF und Admin bleiben. Das Merkmal „umgezogen“ setzt nur die
+    Übernahme in der Datenbank von Treffsicher, ein eigener Befehl hebt es auf; Treffsicher braucht dafür eine kleine
+    Migration und ein Release vor dem ersten Umzug.
+  - Reihenfolge: 3c und 3e nach `main`, parallel; 3a plant danach und nimmt 3e (das Merkmal) nach dem Rebase auf.
 
 ### Stufe 4 · Ruhestand von Treffsicher
 
@@ -491,9 +500,9 @@ Befund aus dem Review von 2a).
 | R    | `plans/2026-10-29-tis-r-tab-bar.md`          | `feat/tis-r-tab-bar` (von `main`)          | `tis-r-tab-bar`          | in `main` (`290da9e5`, mit R2), noch nicht deployt     |
 | 3a   |                                              | (vom Basis)                                |                          | entschieden (29.10.), Plan offen                        |
 | 3b   |                                              | (vom Basis)                                |                          | entschieden (29.10.), Plan nach 3a                      |
-| 3c   |                                              | (von `main`)                               |                          | entschieden (29.10.), Konzept offen                     |
+| 3c   | `plans/2026-10-29-tis-3c-warmup.md`          | `feat/tis-3c-warmup` (von `main`)          |                          | Plan vorgelegt (29.10.)                                 |
 | 3d   |                                              | (vom Basis)                                |                          | entschieden (29.10.), Plan offen                        |
-| 3e   |                                              | (von `main`)                               |                          | entschieden (29.10.), Konzept offen                     |
+| 3e   | `plans/2026-10-29-tis-3e-read-only.md`       | `feat/tis-3e-read-only` (von `main`)       |                          | Plan vorgelegt (29.10.)                                 |
 | 4    |                                              |                                            |                          | offen                                                   |
 
 ## Verification
