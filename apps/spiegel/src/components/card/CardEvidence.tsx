@@ -1,37 +1,47 @@
 "use client"
 
-import { Download, Paperclip } from "lucide-react"
+import { Paperclip, X } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useState, useTransition } from "react"
 
 import { getErrorMessage } from "@vereinsheim/lib/forms/fieldErrors"
-import { formatDecimal, formatWeekdayDate } from "@vereinsheim/lib/format"
+import { Button } from "@vereinsheim/ui/button"
 import { DecisionDialog } from "@vereinsheim/ui/design2/decision-dialog"
 
 import { evidenceRemove } from "@/lib/admin/consequences"
 import { attachEvidence, removeEvidence } from "@/lib/evidence/actions"
+import { evidenceFileName } from "@/lib/evidence/name"
 import type { CardEvidenceInfo } from "@/lib/evidence/queries"
-import { prepareEvidence } from "@/lib/evidence/shrink"
-import { EVIDENCE_TEXTS } from "@/lib/evidence/texts"
+import { isPdfFile, prepareEvidence } from "@/lib/evidence/shrink"
+import {
+  attachedText,
+  attachingText,
+  EVIDENCE_GONE,
+  EVIDENCE_LIMIT,
+  EVIDENCE_REMOVE_FAILED,
+  evidenceCountText,
+  evidenceMeta,
+  evidenceName,
+  evidenceProblemText,
+  limitText,
+} from "@/lib/evidence/texts"
 
 import { ActionRow } from "./ActionRow"
 
-const ACTION =
-  "inline-flex h-10 cursor-pointer items-center gap-2 rounded-full px-3.5 text-[13px] font-semibold text-foreground hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-60"
 const PICK =
   "inline-flex h-10 cursor-pointer items-center gap-2 rounded-full px-3.5 text-[13px] font-semibold text-foreground peer-focus-visible:outline-2 peer-focus-visible:outline-ring peer-disabled:cursor-default peer-disabled:opacity-60 hover:bg-surface-2"
 
-/** „Foto, 1,2 MB, angehängt Di 28.10.2026“ */
-export function evidenceText(evidence: CardEvidenceInfo, timeZone: string): string {
-  const mb = formatDecimal(Math.max(0.1, evidence.size / 1_000_000), 1)
-  const day = formatWeekdayDate(new Date(evidence.storedAtMs), timeZone)
-  return `${evidence.kind === "pdf" ? "PDF" : "Foto"}, ${mb} MB, angehängt ${day}`
+/** was nach dem Anhängen unter der Liste steht, wenn nicht alles ging */
+interface Report {
+  attached: number
+  lines: string[]
 }
 
 /**
- * Beleg als Zeile im Kasten „Diese Scheibe“ einer eingetragenen Scheibe: ein Foto oder PDF vom Papier. Ohne Beleg der
- * Satz und „Foto oder PDF anhängen“; mit Beleg Art, Größe und Tag, dazu Öffnen, Ersetzen und Entfernen (mit Rückfrage).
- * Fotos verkleinert der Browser vorher (`prepareEvidence`).
+ * Belege als Zeile im Kasten „Diese Scheibe“ jeder eigenen Scheibe: Fotos oder PDFs, etwa eine Ergebnisliste, bis zu
+ * `EVIDENCE_LIMIT`. Je Datei Vorschaubild, Name, Art, Größe und Tag; ein Tipp öffnet die Datei, × entfernt sie (mit
+ * Rückfrage). Mehrere Dateien gehen in einem Zug, je Datei eine Anfrage, nacheinander: Fotos verkleinert der Browser
+ * vorher (`prepareEvidence`). Was nicht angehängt ist, steht mit Grund unter der Liste, bis zur nächsten Aktion.
  */
 export function CardEvidence({
   cardId,
@@ -42,120 +52,196 @@ export function CardEvidence({
   cardId: string
   /** Tag und Uhrzeit der Scheibe wie in Listen, für die Rückfrage */
   when: string
-  evidence: CardEvidenceInfo | null
+  evidence: readonly CardEvidenceInfo[]
   timeZone: string
 }) {
   const router = useRouter()
-  const [error, setError] = useState<string | null>(null)
-  const [asking, setAsking] = useState(false)
+  const [report, setReport] = useState<Report | null>(null)
+  const [asking, setAsking] = useState<CardEvidenceInfo | null>(null)
+  const [open, setOpen] = useState(false)
+  const [progress, setProgress] = useState({ k: 1, n: 1 })
   const [pending, startTransition] = useTransition()
-  // „…“ nur am Knopf der Aktion, die läuft; der andere ist nur gesperrt (conventions §9)
+  // „…“ nur am Knopf der Aktion, die läuft; die anderen sind nur gesperrt (conventions §9)
   const [running, setRunning] = useState<"attach" | "remove" | null>(null)
   const attaching = pending && running === "attach"
 
-  const run = (
-    which: "attach" | "remove",
-    action: () => Promise<Parameters<typeof getErrorMessage>[0]>
-  ) =>
+  const attach = (files: File[]) =>
     startTransition(async () => {
-      setRunning(which)
-      setError(null)
-      let result
-      try {
-        result = await action()
-      } catch {
-        result = { error: EVIDENCE_TEXTS.failed }
+      setRunning("attach")
+      setReport(null)
+      let free = EVIDENCE_LIMIT - evidence.length
+      let attached = 0
+      const lines: string[] = []
+      const overLimit: string[] = []
+      for (const [i, file] of files.entries()) {
+        const name = evidenceName({
+          name: evidenceFileName(file.name),
+          kind: isPdfFile(file) ? "pdf" : "photo",
+        })
+        if (free <= 0) {
+          overLimit.push(name)
+          continue
+        }
+        setProgress({ k: i + 1, n: files.length })
+        const prepared = await prepareEvidence(file)
+        if (!prepared.ok) {
+          lines.push(evidenceProblemText(prepared.problem, name))
+          continue
+        }
+        const form = new FormData()
+        form.set("cardId", cardId)
+        form.set("file", prepared.file)
+        let result
+        try {
+          result = await attachEvidence(form)
+        } catch {
+          result = { error: evidenceProblemText("failed", name) }
+        }
+        if ("error" in result) {
+          const text = getErrorMessage(result) ?? evidenceProblemText("failed", name)
+          lines.push(text)
+          if (text === EVIDENCE_GONE) break
+        } else {
+          attached += 1
+          free -= 1
+        }
       }
-      if (result && "error" in result) setError(getErrorMessage(result) ?? EVIDENCE_TEXTS.failed)
-      else router.refresh()
+      if (overLimit.length) lines.push(limitText(overLimit))
+      setReport(lines.length ? { attached, lines } : null)
+      router.refresh()
     })
 
-  const picker = (label: string) => (
-    <span>
-      <input
-        id="card-evidence-file"
-        type="file"
-        accept="image/*,application/pdf"
-        className="peer sr-only"
-        disabled={pending}
-        onChange={(event) => {
-          const chosen = event.target.files?.[0]
-          // dieselbe Datei noch einmal wählen löst wieder ein `change` aus
-          event.target.value = ""
-          if (!chosen) return
-          run("attach", async () => {
-            const prepared = await prepareEvidence(chosen)
-            if (!prepared.ok)
-              return {
-                error:
-                  prepared.problem === "tooLarge"
-                    ? EVIDENCE_TEXTS.tooLarge
-                    : EVIDENCE_TEXTS.unreadable,
-              }
-            const form = new FormData()
-            form.set("cardId", cardId)
-            form.set("file", prepared.file)
-            return attachEvidence(form)
-          })
-        }}
-      />
-      <label htmlFor="card-evidence-file" className={PICK}>
-        <Paperclip aria-hidden className="size-4" />
-        {attaching ? "Wird angehängt…" : label}
-      </label>
-    </span>
-  )
+  const remove = (item: CardEvidenceInfo) =>
+    startTransition(async () => {
+      setRunning("remove")
+      setReport(null)
+      let result
+      try {
+        result = await removeEvidence(item.id)
+      } catch {
+        result = { error: EVIDENCE_REMOVE_FAILED }
+      }
+      if ("error" in result)
+        setReport({ attached: 0, lines: [getErrorMessage(result) ?? EVIDENCE_REMOVE_FAILED] })
+      router.refresh()
+    })
 
   return (
     <ActionRow
-      data-card-evidence={evidence ? evidence.kind : "none"}
-      title="Beleg"
-      state={
-        evidence ? (
-          <span className="font-semibold text-foreground">{evidenceText(evidence, timeZone)}</span>
-        ) : (
-          "Ein Foto vom Papier oder ein PDF, damit du später nachsehen kannst."
-        )
-      }
-      action={
-        evidence ? (
-          <div className="flex flex-wrap items-center gap-1">
-            <a
-              data-evidence-file
-              href={`/api/evidence/${encodeURIComponent(evidence.id)}`}
-              target="_blank"
-              rel="noopener"
-              className={ACTION}
-            >
-              <Download aria-hidden className="size-4" />
-              Öffnen
-            </a>
-            {picker("Ersetzen")}
-            <button
-              type="button"
-              className={ACTION}
-              disabled={pending}
-              onClick={() => setAsking(true)}
-            >
-              Entfernen
-            </button>
-          </div>
-        ) : (
-          picker("Foto oder PDF anhängen")
-        )
-      }
+      data-card-evidence={evidence.length}
+      title="Belege"
+      state={evidenceCountText(evidence.length)}
     >
-      {error && (
-        <p role="alert" data-evidence-error className="text-sm text-destructive">
-          {error}
-        </p>
+      {evidence.length > 0 && (
+        <ul data-evidence-list className="grid gap-1">
+          {evidence.map((item) => {
+            const name = evidenceName(item)
+            const href = `/api/evidence/${encodeURIComponent(item.id)}`
+            return (
+              <li
+                key={item.id}
+                data-evidence-item
+                data-evidence-kind={item.kind}
+                className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2"
+              >
+                <a
+                  href={href}
+                  target="_blank"
+                  rel="noopener"
+                  className="grid min-w-0 grid-cols-[2.75rem_minmax(0,1fr)] items-center gap-2.5 rounded-xl p-1 hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-ring"
+                >
+                  {item.kind === "photo" ? (
+                    // eslint-disable-next-line @next/next/no-img-element -- Datei des Besitzers über die eigene Route, ohne Optimierung
+                    <img
+                      src={href}
+                      alt=""
+                      width={44}
+                      height={44}
+                      loading="lazy"
+                      decoding="async"
+                      className="size-11 rounded-lg border border-border bg-surface-2 object-cover"
+                    />
+                  ) : (
+                    <span
+                      aria-hidden
+                      className="grid size-11 place-items-center rounded-lg border border-border bg-surface-2 text-xs font-bold text-muted-foreground"
+                    >
+                      PDF
+                    </span>
+                  )}
+                  <span className="grid min-w-0">
+                    <span data-evidence-name className="truncate text-sm font-semibold">
+                      {name}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {evidenceMeta(item, timeZone)}
+                    </span>
+                  </span>
+                </a>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label={`${name} entfernen`}
+                  data-evidence-remove
+                  disabled={pending}
+                  onClick={() => {
+                    setAsking(item)
+                    setOpen(true)
+                  }}
+                >
+                  <X aria-hidden />
+                </Button>
+              </li>
+            )
+          })}
+        </ul>
       )}
-      {evidence && (
+      {report && (
+        <div
+          role="status"
+          data-evidence-report
+          className="grid gap-1 rounded-xl bg-warning-wash px-3 py-2 text-sm text-foreground"
+        >
+          {report.attached > 0 && <p>{attachedText(report.attached)}</p>}
+          {report.lines.map((line, i) => (
+            <p key={i}>{line}</p>
+          ))}
+        </div>
+      )}
+      {evidence.length < EVIDENCE_LIMIT && (
+        <span>
+          <input
+            id="card-evidence-file"
+            type="file"
+            multiple
+            accept="image/*,application/pdf"
+            className="peer sr-only"
+            disabled={pending}
+            onChange={(event) => {
+              const chosen = Array.from(event.target.files ?? [])
+              // dieselben Dateien noch einmal wählen löst wieder ein `change` aus
+              event.target.value = ""
+              if (chosen.length) attach(chosen)
+            }}
+          />
+          <label htmlFor="card-evidence-file" className={PICK}>
+            <Paperclip aria-hidden className="size-4" />
+            {attaching ? attachingText(progress.k, progress.n) : "Foto oder PDF anhängen"}
+          </label>
+        </span>
+      )}
+      {asking && (
         <DecisionDialog
-          decision={evidenceRemove({ when, name: null, kind: evidence.kind, others: 0 })}
-          open={asking}
-          onOpenChange={setAsking}
-          onConfirm={() => run("remove", () => removeEvidence(evidence.id))}
+          decision={evidenceRemove({
+            when,
+            name: asking.name,
+            kind: asking.kind,
+            others: evidence.filter((item) => item.id !== asking.id).length,
+          })}
+          open={open}
+          onOpenChange={setOpen}
+          onConfirm={() => remove(asking)}
         />
       )}
     </ActionRow>

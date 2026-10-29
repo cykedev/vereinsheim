@@ -18,15 +18,6 @@ export const EVIDENCE_EMPTY = "Fotos oder PDFs zu dieser Scheibe, etwa eine Erge
 export const EVIDENCE_GONE = "Diese Scheibe gibt es nicht mehr."
 export const EVIDENCE_REMOVE_FAILED = "Das ließ sich nicht entfernen. Bitte noch einmal versuchen."
 
-/** Texte, die nur bis zum Umbau der Zeile gelten */
-export const EVIDENCE_TEXTS = {
-  tooLarge: "Die Datei ist zu groß, auch verkleinert.",
-  unreadable: "Spiegel kann diese Datei nicht lesen. Nimm ein Foto (JPEG, PNG) oder ein PDF.",
-  printout:
-    "Das ist ein Ausdruck von Meyton. Hole ihn unter „Scheibe holen“ mit „PDF hochladen“, dann übernimmt Spiegel seine Werte. Der Beleg ist nicht angehängt.",
-  failed: "Das ließ sich nicht speichern. Bitte noch einmal versuchen.",
-} as const
-
 /** der Grund, warum eine Datei nicht angehängt ist, mit ihrem Namen */
 export function evidenceProblemText(problem: EvidenceProblem, name: string): string {
   const quoted = `„${shortName(name)}“`

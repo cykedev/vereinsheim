@@ -15,10 +15,10 @@ import { DeleteCard } from "./DeleteCard"
 import { ShareCard } from "./ShareCard"
 
 /**
- * Kasten „Diese Scheibe“ am Ende der Seite einer Scheibe, nur für den Besitzer: Eintrag und Beleg (eingetragene Scheiben), Ausdruck
- * (mit ID oder PDF), der Auftrag an die Anlage (solange es etwas zu sagen gibt), Ort (vom Ausdruck), Disziplin, Teilen und
- * Löschen als Zeilen, fachlich vor destruktiv. Am Ende statt oben (Ausnahme zu conventions §2): Der Kopf der Seite ist voll, die
- * Aktionen braucht man selten, und jede Zeile zeigt, was gerade gilt.
+ * Kasten „Diese Scheibe“ am Ende der Seite einer Scheibe, nur für den Besitzer: Eintrag (eingetragene Scheiben), Ausdruck
+ * (mit ID oder PDF), der Auftrag an die Anlage (solange es etwas zu sagen gibt), Ort (vom Ausdruck), Belege (jede Scheibe),
+ * Disziplin, Teilen und Löschen als Zeilen, fachlich vor destruktiv. Am Ende statt oben (Ausnahme zu conventions §2):
+ * Der Kopf der Seite ist voll, die Aktionen braucht man selten, und jede Zeile zeigt, was gerade gilt.
  */
 export function CardActions({
   cardId,
@@ -59,15 +59,7 @@ export function CardActions({
       </h2>
       <div className="grid divide-y divide-border">
         {entry?.kind === "entered" && (
-          <>
-            <CardEntry cardId={cardId} from={entry.from} editable={entry.editable} />
-            <CardEvidence
-              cardId={cardId}
-              when={when}
-              evidence={evidence.at(-1) ?? null}
-              timeZone={timeZone}
-            />
-          </>
+          <CardEntry cardId={cardId} from={entry.from} editable={entry.editable} />
         )}
         {fetch && (fetch.hex || fetch.printouts.length > 0) && (
           <CardPrintout hex={fetch.hex} printouts={fetch.printouts} timeZone={timeZone} />
@@ -76,6 +68,7 @@ export function CardActions({
         {entry?.kind === "place" && (
           <CardPlace cardId={cardId} place={entry.place} places={entry.places} />
         )}
+        <CardEvidence cardId={cardId} when={when} evidence={evidence} timeZone={timeZone} />
         <CardDiscipline cardId={cardId} when={when} {...discipline} />
         <ShareCard
           cardId={cardId}

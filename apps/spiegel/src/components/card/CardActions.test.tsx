@@ -227,34 +227,97 @@ describe("Eintrag und Ort je Herkunft", () => {
   })
 })
 
-describe("Beleg", () => {
-  const evidence = {
+describe("Belege", () => {
+  const photo = {
     id: "cevidence00000000000000001",
     kind: "photo" as const,
-    name: null,
+    name: "Ergebnisliste Kreisliga Luftpistole Seite 1 von 2.jpg",
     size: 1_234_567,
     storedAtMs: Date.UTC(2026, 9, 28, 10),
   }
-  it("ohne Beleg: Satz und „Foto oder PDF anhängen“, nach dem Eintrag", () => {
-    const html = render(null, { kind: "entered", from: "manual", editable: true })
-    expect(html.indexOf("data-card-entry")).toBeLessThan(html.indexOf("data-card-evidence"))
-    expect(rowText(html, 'data-card-evidence="none"')).toContain(
-      "Beleg Ein Foto vom Papier oder ein PDF, damit du später nachsehen kannst. Foto oder PDF anhängen"
+  const pdf = {
+    id: "cevidence00000000000000002",
+    kind: "pdf" as const,
+    name: "Liste.pdf",
+    size: 240_000,
+    storedAtMs: Date.UTC(2026, 9, 29, 10),
+  }
+  const printout = {
+    hex: "ff914420",
+    printouts: [
+      { id: "cp1", printedAtMs: Date.UTC(2026, 9, 13, 17, 52), unreadable: false, mismatch: false },
+    ],
+    request: null,
+  }
+  const before = (html: string, names: string[]) => {
+    const order = names.map((a) => html.indexOf(a))
+    expect(order.every((i) => i > 0)).toBe(true)
+    expect(order).toEqual([...order].sort((a, b) => a - b))
+  }
+
+  it("an einer Scheibe der Anlage: leerer Satz und Knopf, vor der Disziplin", () => {
+    const html = render(null, null)
+    expect(rowText(html, 'data-card-evidence="0"')).toBe(
+      "Belege Fotos oder PDFs zu dieser Scheibe, etwa eine Ergebnisliste. Foto oder PDF anhängen"
     )
+    before(html, ["data-card-evidence", "data-card-discipline"])
+    expect(html).toMatch(/<input[^>]*id="card-evidence-file"[^>]*multiple=""/)
     expect(html).toContain('accept="image/*,application/pdf"')
+    expect(html).not.toContain("data-evidence-list")
   })
 
-  it("mit Beleg: Art, Größe, Tag; Öffnen, Ersetzen, Entfernen", () => {
-    const html = render(null, { kind: "entered", from: "manual", editable: true }, [evidence])
-    const row = rowText(html, 'data-card-evidence="photo"')
-    expect(row).toContain("Foto, 1,2 MB, angehängt Mi 28.10.2026")
-    for (const action of ["Öffnen", "Ersetzen", "Entfernen"]) expect(row).toContain(action)
-    expect(html).toContain('href="/api/evidence/cevidence00000000000000001"')
+  it("dieselbe Stelle je Herkunft: Eintrag → Belege → Disziplin, Ausdruck → Ort → Belege → Disziplin", () => {
+    before(render(null, { kind: "entered", from: "manual", editable: true }), [
+      "data-card-entry",
+      "data-card-evidence",
+      "data-card-discipline",
+    ])
+    before(render(printout, { kind: "place", place: null, places: [] }), [
+      "data-card-printout",
+      "data-card-place",
+      "data-card-evidence",
+      "data-card-discipline",
+    ])
   })
 
-  it("keine Zeile bei Scheiben vom Ausdruck", () => {
-    expect(render(null, { kind: "place", place: null, places: [] })).not.toContain(
-      "data-card-evidence"
+  it("zwei Dateien: Zahl, Namen, Art, Größe, Tag; Vorschau nur beim Foto, Links in einem neuen Tab", () => {
+    const html = render(null, null, [photo, pdf])
+    const row = rowText(html, 'data-card-evidence="2"')
+    expect(row).toContain("Belege 2 Dateien")
+    expect(row).toContain(`${photo.name} Foto · 1,2 MB · Mi 28.10.2026`)
+    expect(row).toContain("PDF Liste.pdf PDF · 0,2 MB · Do 29.10.2026")
+    const images = html.match(/<img[^>]*>/g) ?? []
+    expect(images).toHaveLength(1)
+    expect(images[0]).toContain('src="/api/evidence/cevidence00000000000000001"')
+    expect(images[0]).toContain('loading="lazy"')
+    expect(images[0]).toContain('alt=""')
+    expect(html).toMatch(
+      /data-evidence-kind="pdf"[\s\S]*?<span aria-hidden="true"[^>]*>PDF<\/span>/
     )
+    for (const id of [photo.id, pdf.id])
+      expect(html).toMatch(
+        new RegExp(`<a href="/api/evidence/${id}" target="_blank" rel="noopener"`)
+      )
+    expect(html).toContain(`aria-label="${photo.name} entfernen"`)
+    expect(html).toContain('aria-label="Liste.pdf entfernen"')
+  })
+
+  it("ohne Namen heißt ein Beleg Foto oder PDF", () => {
+    const html = render(null, null, [{ ...photo, name: null }])
+    expect(html).toMatch(/data-evidence-name="true"[^>]*>Foto</)
+    expect(html).toContain('aria-label="Foto entfernen"')
+  })
+
+  it("mit 10 Belegen der Satz zur Grenze und kein Knopf", () => {
+    const ten = Array.from({ length: 10 }, (_, i) => ({
+      ...photo,
+      id: `cevidence0000000000000001${i}`,
+    }))
+    const html = render(null, null, ten)
+    expect(rowText(html, 'data-card-evidence="10"')).toContain(
+      "10 Dateien, mehr gehen nicht an eine Scheibe. Entferne einen, um einen neuen anzuhängen."
+    )
+    expect(html).not.toContain("card-evidence-file")
+    expect(html).not.toContain("Foto oder PDF anhängen")
   })
 })
