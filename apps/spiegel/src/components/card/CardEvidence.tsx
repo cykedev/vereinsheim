@@ -10,7 +10,7 @@ import { DecisionDialog } from "@vereinsheim/ui/design2/decision-dialog"
 
 import { evidenceRemove } from "@/lib/admin/consequences"
 import { attachEvidence, removeEvidence } from "@/lib/evidence/actions"
-import type { CardEvidenceInfo } from "@/lib/entered/queries"
+import type { CardEvidenceInfo } from "@/lib/evidence/queries"
 import { prepareEvidence } from "@/lib/evidence/shrink"
 import { EVIDENCE_TEXTS } from "@/lib/evidence/texts"
 

@@ -1,6 +1,7 @@
 "use client"
 
 import type { CardEntryInfo } from "@/lib/entered/queries"
+import type { CardEvidenceInfo } from "@/lib/evidence/queries"
 import type { CardFetchInfo } from "@/lib/fetch-card/queries"
 import type { Share } from "@/lib/share-actions"
 
@@ -26,6 +27,7 @@ export function CardActions({
   discipline,
   fetch,
   entry,
+  evidence = [],
   share,
   onShareChange,
   back,
@@ -39,6 +41,8 @@ export function CardActions({
   fetch: CardFetchInfo | null
   /** Eintrag und Ort (`cardEntryInfo`); null bei Scheiben der Anlage */
   entry?: CardEntryInfo | null
+  /** die Belege in der Folge des Anhängens (`cardEvidenceList`) */
+  evidence?: readonly CardEvidenceInfo[]
   share: Share | null
   onShareChange: (share: Share | null) => void
   /** der Rückweg nach dem Löschen */
@@ -60,7 +64,7 @@ export function CardActions({
             <CardEvidence
               cardId={cardId}
               when={when}
-              evidence={entry.evidence}
+              evidence={evidence.at(-1) ?? null}
               timeZone={timeZone}
             />
           </>

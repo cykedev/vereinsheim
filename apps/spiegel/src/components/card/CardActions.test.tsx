@@ -24,7 +24,11 @@ vi.mock("@/lib/trash-actions", () => ({
 const { CardActions } = await import("./CardActions")
 
 type Props = Parameters<typeof CardActions>[0]
-const render = (fetch: Props["fetch"], entry: Props["entry"] = null) =>
+const render = (
+  fetch: Props["fetch"],
+  entry: Props["entry"] = null,
+  evidence: Props["evidence"] = []
+) =>
   renderToStaticMarkup(
     createElement(CardActions, {
       cardId: "c1",
@@ -39,6 +43,7 @@ const render = (fetch: Props["fetch"], entry: Props["entry"] = null) =>
       },
       fetch,
       entry,
+      evidence,
       share: null,
       onShareChange: () => {},
       back: "/cards",
@@ -189,7 +194,6 @@ describe("Eintrag und Ort je Herkunft", () => {
       kind: "entered",
       from: "manual",
       editable: true,
-      evidence: null,
     })
     expect(html.indexOf("data-card-entry")).toBeLessThan(html.indexOf("data-card-discipline"))
     expect(rowText(html, 'data-card-entry="manual"')).toContain("Eintrag Von Hand eingetragen")
@@ -202,7 +206,6 @@ describe("Eintrag und Ort je Herkunft", () => {
       kind: "entered",
       from: "treffsicher",
       editable: false,
-      evidence: null,
     })
     expect(rowText(html, 'data-card-entry="treffsicher"')).toContain("Aus Treffsicher übernommen")
     expect(html).not.toContain("/edit")
@@ -228,11 +231,12 @@ describe("Beleg", () => {
   const evidence = {
     id: "cevidence00000000000000001",
     kind: "photo" as const,
+    name: null,
     size: 1_234_567,
     storedAtMs: Date.UTC(2026, 9, 28, 10),
   }
   it("ohne Beleg: Satz und „Foto oder PDF anhängen“, nach dem Eintrag", () => {
-    const html = render(null, { kind: "entered", from: "manual", editable: true, evidence: null })
+    const html = render(null, { kind: "entered", from: "manual", editable: true })
     expect(html.indexOf("data-card-entry")).toBeLessThan(html.indexOf("data-card-evidence"))
     expect(rowText(html, 'data-card-evidence="none"')).toContain(
       "Beleg Ein Foto vom Papier oder ein PDF, damit du später nachsehen kannst. Foto oder PDF anhängen"
@@ -241,7 +245,7 @@ describe("Beleg", () => {
   })
 
   it("mit Beleg: Art, Größe, Tag; Öffnen, Ersetzen, Entfernen", () => {
-    const html = render(null, { kind: "entered", from: "manual", editable: true, evidence })
+    const html = render(null, { kind: "entered", from: "manual", editable: true }, [evidence])
     const row = rowText(html, 'data-card-evidence="photo"')
     expect(row).toContain("Foto, 1,2 MB, angehängt Mi 28.10.2026")
     for (const action of ["Öffnen", "Ersetzen", "Entfernen"]) expect(row).toContain(action)
