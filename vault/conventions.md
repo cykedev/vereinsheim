@@ -332,6 +332,17 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
   gesperrt (`buttonLabels` in `apps/spiegel/src/components/card/ShareCard.tsx`). Sonst hieß der Knopf direkt nach dem
   Teilen rund 250 ms „Beenden…“. Aufgefallen im Oktober 2026, als die Skriptprüfung in einem von fünf Läufen scheiterte.
 
+- **Zustand, der „…“ steuert, gehört vor `startTransition`**: Was eine async Action in ihrer Transition setzt (auch vor
+  dem ersten `await`), zeigt React 19 erst, wenn die Action fertig ist. Welche Aktion läuft, der Fortschritt und das
+  Leeren eines alten Berichts werden deshalb vor `startTransition` gesetzt; nur Zwischenstände nach einem `await` dürfen
+  darin stehen. Sonst hieß der Knopf beim ersten Anhängen eines Belegs die ganze Zeit „Foto oder PDF anhängen“
+  (`apps/spiegel/src/components/card/CardEvidence.tsx`). Aufgefallen im Review, Oktober 2026.
+
+- **Eine Sperre prüft ein Test mit einer Transaktion, die sie hält**: Zwei Aufrufe in `Promise.all` überlappen in einem
+  Test selten wirklich; ein Test der Grenze blieb grün, als `lockCard` fehlte. Der Test öffnet stattdessen selbst eine
+  Transaktion, nimmt die Sperre, startet den Aufruf, schreibt und gibt erst dann frei (Beispiel: „Grenze unter der
+  Sperre“ in `apps/spiegel/src/lib/evidence/actions.test.ts`). Gegenprobe: ohne Sperre muss er fallen.
+
 - **Ein Kindprozess schreibt auf macOS in eine Pipe asynchron**: Node schreibt `process.stdout` in eine Pipe unter Linux
   synchron, auf macOS nicht. Ein Skript, das eine Zeile schreibt und danach blockiert (Endlosschleife, `process.exit`),
   liefert auf dem Mac nichts, und der Elternprozess wartet bis zu seiner eigenen Zeitgrenze. Deshalb erst im Rückruf

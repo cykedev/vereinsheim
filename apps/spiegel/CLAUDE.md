@@ -213,7 +213,8 @@ Stand mit `past` (`MAX_OBSERVED_LAG_MS`, SF-79).
   Scheibe, gleich welcher Herkunft (`CardEvidence`, eindeutig je Scheibe und Prüfsumme, Dateien unter
   `UPLOAD_DIR/evidence/`, alles in `src/lib/evidence/`). Name der Datei wie vom Browser (`evidenceFileName`), Fotos
   zeichnet der Browser als JPEG neu und behält den Stamm (`jpegNameOf`). Actions in `src/lib/evidence/actions.ts`: je
-  Datei eine Anfrage; die Grenze und „dieselbe Datei nur einmal“ gelten in der Transaktion unter `lockCard`; ein Beleg
+  Datei eine Anfrage (Schleife und Bericht im Browser: `attachAll`); die Grenze und „dieselbe Datei nur einmal“ gelten in
+  der Transaktion unter `lockCard`; ein Beleg
   ist keine Angabe, also keine Revision. Entfernen löscht eine Zeile, die Datei räumt `removeOrphanEvidenceFiles` ab.
   Gelesen über `cardEvidenceList` (nur Besitzer, `VISIBLE_CARD`), Route `/api/evidence/<id>` mit dem Namen in
   `Content-Disposition`; nie auf der geteilten Seite. Ein Meyton-Ausdruck wird kein Beleg.
