@@ -50,7 +50,8 @@ export function executionCheck(cards: readonly RatedCard[]): ExecutionResult {
         ? []
         : [{ series: s.series, shots: s.shots, mean: s.mean, rating }]
     })
-    if (!rated.length) continue
+    // eine einzelne bewertete Serie hat nichts, wogegen sie stünde
+    if (rated.length < 2) continue
     const split = splitAtMedian(rated, (s) => s.rating)
     if (!split.high.length && !split.low.length) {
       sameRated += 1

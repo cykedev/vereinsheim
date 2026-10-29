@@ -14,6 +14,9 @@ const query = (family: string | null, season: string | null) => {
   return text ? `?${text}` : ""
 }
 
+/** eine Saison in der Adresse der Auswertung: ihr Startjahr („2025“ für 25/26) */
+export const seasonKey = (season: { from: string }) => season.from.slice(0, 4)
+
 /** die Auswertung mit Disziplin und Zeitraum (Startjahr der Saison, ohne: „Alles“) */
 export const analysisHref = (family: string | null, season: string | null) =>
   `${ANALYSIS_PATH}${query(family, season)}`

@@ -18,7 +18,7 @@ import {
   influencePill,
   signedDistance,
 } from "../analysis/texts"
-import { analysisHref } from "../paths"
+import { analysisHref, seasonKey } from "../paths"
 import { stageOf } from "../scales"
 import { dayLabel } from "../summaries"
 
@@ -37,7 +37,7 @@ const FIRST_ROWS = 5
 export function FactorScreen({ view, timeZone }: { view: FactorView; timeZone: string }) {
   const [all, setAll] = useState(false)
   const { row, aspect } = view
-  const season = view.season ? view.season.from.slice(0, 4) : null
+  const season = view.season ? seasonKey(view.season) : null
   const pill = influencePill(aspect, row.comparison)
   const points = [...row.points].sort((a, b) => (a.day < b.day ? 1 : a.day > b.day ? -1 : 0))
   const shown = all ? points : points.slice(0, FIRST_ROWS)

@@ -16,6 +16,7 @@ import {
 } from "@/diary/transfer/treffsicher-entry"
 import {
   deletePreviewDiary,
+  releaseImportedLinks,
   replaceExecutions,
   setImportedLinks,
   upsertImportedEntry,
@@ -222,7 +223,7 @@ export async function runPreview(
     }),
     db.card.findMany({
       where: { ownerId, importKey: { startsWith: PREVIEW_CARD_PREFIX } },
-      select: { id: true, importKey: true },
+      select: { id: true, importKey: true, deletedAt: true },
     }),
     resultCards(db, { ownerId, timeZone }),
     db.diarySettings.findUnique({ where: { userId: ownerId }, select: { enabled: true } }),
@@ -267,6 +268,12 @@ export async function runPreview(
   try {
     await db.$transaction(
       async (tx) => {
+        // eine Vorschau-Scheibe im Papierkorb ginge nicht mehr zu ersetzen: erst weg, dann neu
+        const trashed = previewCards.filter((card) => card.deletedAt).map((card) => card.id)
+        if (trashed.length) {
+          await releaseImportedLinks(tx, trashed)
+          await purgeCards(tx, trashed, { lock: true })
+        }
         const kept = new Set<string>()
         for (const { s, dateMs } of sessions) {
           const familyId = familyOf.get(s.id) ?? null
@@ -355,9 +362,14 @@ export async function runPreview(
           }
           await replaceExecutions(tx, entryId, rows)
         }
-        const stale = previewCards.filter((card) => !kept.has(card.id)).map((card) => card.id)
-        if (stale.length) await purgeCards(tx, stale, { lock: true })
-        report.cards.removed = stale.length
+        const stale = previewCards
+          .filter((card) => !card.deletedAt && !kept.has(card.id))
+          .map((card) => card.id)
+        if (stale.length) {
+          await releaseImportedLinks(tx, stale)
+          await purgeCards(tx, stale, { lock: true })
+        }
+        report.cards.removed = trashed.length + stale.length
         if (input.dryRun) throw new DryRun()
       },
       { timeout: TIMEOUT_MS, maxWait: 10_000 }
@@ -377,6 +389,10 @@ export async function deletePreview(db: Db, toUserId: string): Promise<PreviewRe
         where: { ownerId: toUserId, importKey: { startsWith: PREVIEW_CARD_PREFIX } },
         select: { id: true },
       })
+      await releaseImportedLinks(
+        tx,
+        cards.map((card) => card.id)
+      )
       if (cards.length)
         await purgeCards(
           tx,

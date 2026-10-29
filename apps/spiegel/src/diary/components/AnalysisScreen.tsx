@@ -3,7 +3,7 @@ import { Page } from "@vereinsheim/ui/design2/page"
 
 import type { AnalysisView } from "../analysis/queries"
 import { ANALYSIS_TEXTS, influenceBasis } from "../analysis/texts"
-import { factorHref } from "../paths"
+import { factorHref, seasonKey } from "../paths"
 
 import { AnalysisFilters } from "./AnalysisFilters"
 import { DiaryHeader } from "./DiaryList"
@@ -21,7 +21,7 @@ const HEADING = "flex items-center gap-2 text-[17px] font-semibold"
  */
 export function AnalysisScreen({ view, timeZone }: { view: AnalysisView; timeZone: string }) {
   const family = view.family?.slug ?? null
-  const season = view.season ? view.season.from.slice(0, 4) : null
+  const season = view.season ? seasonKey(view.season) : null
   const basis = influenceBasis(view.influences.left)
   return (
     <Page>
@@ -30,7 +30,7 @@ export function AnalysisScreen({ view, timeZone }: { view: AnalysisView; timeZon
         <AnalysisFilters
           families={view.families}
           family={view.family}
-          seasons={view.seasons.map((s) => ({ key: s.from.slice(0, 4), label: s.label }))}
+          seasons={view.seasons.map((s) => ({ key: seasonKey(s), label: s.label }))}
           season={season}
         />
 

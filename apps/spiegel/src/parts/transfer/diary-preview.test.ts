@@ -195,6 +195,31 @@ describe("runPreview", () => {
     expect(report.unmatchedDisciplines).toEqual({ Kleinkaliber: 1 })
     expect(report.withoutCard.noFamily).toBe(1)
   })
+
+  it("eine Vorschau-Scheibe im Papierkorb wird ersetzt, statt den Lauf abzubrechen", async () => {
+    const before = await counts()
+    await db.card.updateMany({
+      where: { ownerId: site.ownerId, importKey: { startsWith: PREVIEW_CARD_PREFIX } },
+      data: { deletedAt: new Date() },
+    })
+    const report = await run()
+    expect(report.cards.removed).toBe(1)
+    expect(report.cards.created.shots).toBe(1)
+    expect(await counts()).toEqual(before)
+  })
+
+  it("kommt eine echte Scheibe dazu, geht die Vorschau-Scheibe samt ihrer Zeile", async () => {
+    await card(DAYS[1])
+    const report = await run()
+    expect(report.cards.removed).toBe(1)
+    expect(report.withoutCard.eveningHasCard).toBe(3)
+    expect(await counts()).toMatchObject({ cards: 3, links: 0 })
+    expect(
+      await db.card.count({
+        where: { ownerId: site.ownerId, importKey: { startsWith: PREVIEW_CARD_PREFIX } },
+      })
+    ).toBe(0)
+  })
 })
 
 describe("deletePreview", () => {
@@ -206,12 +231,13 @@ describe("deletePreview", () => {
         familyId: site.familyId,
       },
     })
+    await run(false, { sessions: [...exported.sessions, session("d", DAYS[3])] })
     const report = await deletePreview(db, site.ownerId)
     expect(report.cards.removed).toBe(1)
-    expect(report.entries.deleted).toBe(3)
+    expect(report.entries.deleted).toBe(4)
     expect(
       await db.diaryEntry.findMany({ where: { userId: site.ownerId }, select: { id: true } })
     ).toEqual([{ id: own.id }])
-    expect(await db.card.count({ where: { ownerId: site.ownerId } })).toBe(2)
+    expect(await db.card.count({ where: { ownerId: site.ownerId } })).toBe(3)
   })
 })

@@ -6,6 +6,7 @@ import { createTestSite, type TestSite } from "../../../test/fixtures"
 import type { ImportedEntry } from "./treffsicher-entry"
 import {
   deletePreviewDiary,
+  releaseImportedLinks,
   replaceExecutions,
   setImportedLinks,
   upsertImportedEntry,
@@ -102,6 +103,8 @@ describe("Zeilen und Ausführung", () => {
     expect(
       (await db.diarySeriesExecution.findMany({ where: { entryId: id } })).map((e) => e.series)
     ).toEqual([3])
+    await db.$transaction((tx) => releaseImportedLinks(tx, [cardId]))
+    expect(await db.diaryEntryCard.count({ where: { entryId: id } })).toBe(0)
   })
 })
 

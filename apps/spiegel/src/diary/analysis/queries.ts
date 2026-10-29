@@ -6,6 +6,7 @@ import { resultCards, resultFamilies, resultFormCards, type ResultCard } from "@
 
 import { entryCards, type CardLinkRow, type EntryRef } from "../cards"
 import { seasonOf, type Season } from "../goals/season"
+import { seasonKey } from "../paths"
 import type { Family } from "../queries"
 import { SCALE_ASPECTS, type ScaleAspect, type ScalePart } from "../scales"
 import { dayOfDate } from "../validation"
@@ -48,9 +49,6 @@ export interface FactorView {
   row: InfluenceRow
   left: { noCard: number; noForm: number }
 }
-
-/** die Startjahre der Saison als Wert in der Adresse (`?season=2025`) */
-export const seasonKey = (season: Season) => season.from.slice(0, 4)
 
 const WELLBEING: readonly string[] = SCALE_ASPECTS.wellbeing
 

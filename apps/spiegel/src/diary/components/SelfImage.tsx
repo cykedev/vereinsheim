@@ -18,7 +18,7 @@ import {
   expectedMean,
 } from "../analysis/texts"
 import { ASPECT_LABELS } from "../scales"
-import { dayLabel, resultText } from "../summaries"
+import { dayLabel } from "../summaries"
 
 import { PILL, PILL_BASE } from "./InfluenceLine"
 import { BOX } from "./styles"
@@ -119,7 +119,7 @@ export function ExpectedCard({
                   </td>
                   <td className="py-1.5 text-right">{formatValue(row.expected, digitsOf(row))}</td>
                   <td className="py-1.5 text-right">
-                    {resultText(row.shot).replace(/ Ringe$/, "")}
+                    {formatValue(row.shot.value, row.shot.digits)}
                   </td>
                   <td
                     data-delta={row.delta > 0 ? "up" : row.delta < 0 ? "down" : "even"}

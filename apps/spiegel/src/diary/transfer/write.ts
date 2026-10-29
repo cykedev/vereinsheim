@@ -73,6 +73,15 @@ export async function setImportedLinks(
     })
 }
 
+/**
+ * Die Zeilen entfernter Scheiben lösen: Die Tabellen des Tagebuchs haben keinen Fremdschlüssel auf Scheiben, ohne das
+ * stünde im Eintrag „Scheibe gelöscht“
+ */
+export async function releaseImportedLinks(tx: Tx, cardIds: readonly string[]): Promise<void> {
+  if (cardIds.length)
+    await tx.diaryEntryCard.deleteMany({ where: { cardId: { in: [...cardIds] } } })
+}
+
 /** die Ausführung eines Eintrags durch diese Zeilen ersetzen */
 export async function replaceExecutions(
   tx: Tx,

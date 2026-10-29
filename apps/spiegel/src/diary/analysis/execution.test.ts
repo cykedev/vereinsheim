@@ -55,6 +55,13 @@ describe("executionCheck", () => {
     expect(result.comparison).toBeNull()
   })
 
+  it("eine Scheibe mit nur einer bewerteten Serie zählt nicht und gilt nicht als gleich bewertet", () => {
+    const result = executionCheck([
+      rated("e", "2026-03-05", [9, 9.5, 8.8], [70, undefined, undefined]),
+    ])
+    expect(result).toMatchObject({ series: 0, evenings: 0, sameRated: 0 })
+  })
+
   it("lässt Serien ohne Wert oder Bewertung und Bewertungen fremder Serien weg", () => {
     const card = rated("d", "2026-03-04", [9, null, 9.6, 9.2], [30, 90, 90, undefined])
     const withForeign: RatedCard = { ...card, ratings: new Map([...card.ratings, [7, 10]]) }
