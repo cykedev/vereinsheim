@@ -253,6 +253,18 @@ Vorgeschlagener Schnitt, endgültig im jeweiligen `/plan`:
   Teil nach `main`, weil er den Ergebnisteil betrifft und auch ohne Tagebuch nützt (Fotos von Ergebnislisten
   auswärts). Grundlage für Stufe 3: Jeder Anhang aus Treffsicher wird Ausdruck oder Beleg seiner Scheibe (entschieden
   mit dem User am 28. Oktober 2026, aus dem Konzept 2b). Erst ein Designkonzept, dann Plan und Bau.
+  **Designkonzept 1f, Runde 1** (https://claude.ai/artifact/5AKqZGGpnJKA1hH3UThdVY), vom User mit allen Empfehlungen
+  freigegeben (29. Oktober 2026). Grundlage: 69 Anhänge an 56 Einheiten in 4 Konten (20 Fotos, fast alle Ergebnislisten
+  von Wettkämpfen; 49 PDFs, 25 davon `print_…`), keiner beschriftet; 69 von 94 Einheiten des größten Kontos haben schon
+  eine Scheibe in Spiegel.
+  - **Belege an jeder eigenen Scheibe**, auch gemessen und vom Ausdruck (statt nur an eingetragenen, Entscheidung 1d).
+  - **Bis zu 10 je Scheibe**, je höchstens 4 MiB, mehrere Dateien in einem Zug; „Ersetzen“ fällt weg.
+  - **Zeile „Belege“** im Kasten „Diese Scheibe“, leer wie gefüllt an derselben Stelle: Vorschaubild, Originalname,
+    Größe, Tag; ein Tipp öffnet die Datei im Browser, × entfernt nach Rückfrage (nennt die Datei, die übrigen bleiben).
+    Keine Beschriftung, kein Umbenennen, kein Zeichen in Liste und Start, kein eigener Bildbetrachter.
+  - **Ein Meyton-Ausdruck bleibt kein Beleg**, je Datei mit Hinweis auf „Scheibe holen“; Stufe 3 hängt Meyton-PDFs aus
+    Treffsicher als Ausdruck an.
+  - **Nie auf der geteilten Seite**; im Export mit Art, Größe, Tag und neu dem Namen.
 
 Reihenfolge: 1b-1 und 1a-1 parallel (1b-1 ändert kein Schema), dann 1a-2; danach 1b-2, 1d und 1c in einer Reihenfolge,
 die wir nach 1a festlegen. Jeder Teil geht einzeln nach `main` und in Prod.
@@ -448,7 +460,7 @@ Befund aus dem Review von 2a).
 | 1c   | `plans/2026-10-27-tis-1c-printout-values.md` | `feat/tis-1c-printout-values` (von `main`) | `tis-1c-printout-values` | in `main` (`88ea1140`); Luftgewehr-Fix, Leser v2        |
 | 1d   | `plans/2026-10-28-tis-1d-hand-entry.md`      | `feat/tis-1d-hand-entry` (von `main`)      | `tis-1d-hand-entry`      | in `main` (`dbc9e45c`), noch nicht deployt              |
 | 1e   |                                              |                                            |                          | in 1a-2                                                 |
-| 1f   |                                              |                                            |                          | entschieden (28.10.), Konzept offen                     |
+| 1f   | `plans/2026-10-29-tis-1f-evidence-list.md`   | `feat/tis-1f-evidence-list` (von `main`)   |                          | Plan vorgelegt (29.10.)                                 |
 | 2a   | `plans/2026-10-28-tis-2a-diary-entries.md`   | `feat/tis-2a-diary-entries` (vom Basis)    | `tis-2a-diary-entries`   | im Basisbranch (`3fd30d85`), Plan entfernt              |
 | 2b   | `plans/2026-10-28-tis-2b-goals-routines.md`  | `feat/tis-2b-goals-routines` (vom Basis)   | `tis-2b-goals-routines`  | im Basisbranch (`b51a030b`), Plan entfernt              |
 | 2c   | `plans/2026-10-29-tis-2c-diary-analysis.md`  | `feat/tis-2c-diary-analysis` (vom Basis)   | `tis-2c-diary-analysis`  | im Basisbranch (`69bedd2a`), Plan entfernt              |
