@@ -26,6 +26,7 @@ Stack Ende zu Ende.
 | `pnpm --filter spiegel stack-probe`                            | Grenzen hinter Caddy gegen einen laufenden Stack (`BASE_URL`, `DATABASE_URL`; aus `tools/stack-e2e/run.sh`)                                                                                                                                                      |
 | `pnpm --filter spiegel bridge-e2e`                             | die echte Brücke (Go) Ende zu Ende gegen den eigenen Build auf :3012 mit MariaDB, drei Fällen und Aufträgen per ID (`--keep`), mit `BASE_URL` gegen einen laufenden Spiegel                                                                                      |
 | `pnpm --filter spiegel exec tsx tools/printout-sample.ts`      | erfundener Meyton-Ausdruck (`--id`, Vorgabe `ff914420`; `--printed` mit Versatz) als PDF nach stdout, für den Stack-Test, die Skriptprüfung (`samplePrintout`) und zum Messen des Lesers (`--values`: stimmig mit Werten und Trefferbild; `--kind memory\|time`) |
+| `pnpm --filter spiegel diary-preview --from <a> --to <b>`      | Vorschau des Tagebuchs mit einem Konto aus Treffsicher (nur Dev-DB, `--dry-run`, `--delete --to <b>`): Scheiben `treffsicher:preview-…` und Einträge `preview:…`, Bericht nur mit Zahlen nach `reports/tis-2c/`                                                  |
 | `pnpm --filter spiegel transfer:accounts dev`                  | Abgleich der Konten Treffsicher ↔ Spiegel vor der Übernahme (ADR-033): Bericht und Vorschlag der Zuordnung nach `reports/tis-v1/` (Personendaten, gitignored); `prod` führt nur der User aus                                                                     |
 
 Die Dev-Datenbank legt `dev/db-init` beim ersten Start an, `scripts/bootstrap-dev.sh` zieht sie für bestehende Volumes
@@ -434,7 +435,10 @@ Stand mit `past` (`MAX_OBSERVED_LAG_MS`, SF-79).
   als ein Text (`textToSteps`); „Fragen“ (`/diary/thread`, im Code der Faden) zeigt keine Abläufe. Client-Komponenten des
   Tagebuchs importieren aus `queries.ts`, `goals/queries.ts` und `routines/queries.ts` nur Typen: Ein Wert daraus zieht
   die Datenbank ins Bündel des Browsers (`next build` scheitert mit `node:module`); geteilte Werte stehen in
-  `src/diary/paths.ts` und `components/styles.ts`.
+  `src/diary/paths.ts` und `components/styles.ts`. **Auswertung** (`src/diary/analysis/`, `/diary/analysis`): Einflüsse
+  gegen die Form (Abstand des Ø je Schuss zum Schnitt der fünf gezählten Scheiben vor dem Abend) und Selbstbild, alles
+  beim Lesen gerechnet aus `resultFormCards`; Abend-Regel: je Abend und Familie zählen die Scheiben mit Wertung, ohne
+  Wertung die „nur Probe“ (`countedCards`). Das Vorschau-Werkzeug schreibt über `src/parts/transfer/diary-preview.ts`.
 - **Deine Daten** (Profil, `src/parts/account.ts`): `GET /api/account/export` gibt eine JSON-Datei als Strom
   (`resultsExport` in `src/lib/export/results.ts`, je 200 Scheiben eine Abfrage, und `diaryExport`), nur mit eigener
   Sitzung. `deleteOwnAccount` (`src/parts/account-actions.ts`) prüft das Passwort, lehnt das einzige aktive Admin-Konto

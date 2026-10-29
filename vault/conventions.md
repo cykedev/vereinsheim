@@ -79,8 +79,9 @@ app-übergreifende Komponenten gehören in diese Liste (in `MUST_MATCH` des Gate
   scheitert. Nie native `confirm()`.
 - **Hilfe:** Eine Zahl oder Überschrift, die Leser nicht von selbst verstehen, trägt ein „?“ (`HelpButton` aus
   `design2/help`). Es öffnet die Erklärung als Blatt (`HelpSheet`, einmal im Rahmen der App, geöffnet über `useHelp`),
-  nie nur als Tooltip. Die Texte stehen an einer Stelle: Spiegel `@vereinsheim/shot-help`, Treffsicher und Ringwerk
-  `src/lib/help/topics.ts` (Tests halten Felder und Schreibregeln, in Ringwerk auch den Wortlaut des Textbuchs).
+  nie nur als Tooltip. Die Texte stehen an einer Stelle: Spiegel `@vereinsheim/shot-help` (Kennzahlen und Katalog),
+  das Tagebuch in Spiegel `src/diary/analysis/texts.ts` (`ANALYSIS_HELP`, Blatt über `DiaryHelp`), Treffsicher und
+  Ringwerk `src/lib/help/topics.ts` (Tests halten Felder und Schreibregeln, in Ringwerk auch den Wortlaut des Textbuchs).
 - **„–“ mit Grund:** Wo kein Wert steht, steht „–“ und leise daneben der Grund, in schmalen Zellen als Tooltip und für
   Screenreader. Keine 0 und kein leeres Feld für „kein Wert“. Die Gründe kommen aus einer reinen Funktion der App
   (Treffsicher `src/lib/missing.ts`, Ringwerk `src/lib/help/missing.ts`). In Ringwerk nur auf dem Bildschirm, die PDFs

@@ -1,9 +1,9 @@
 ---
 id: spiegel-diary
 type: subsystem
-title: "Spiegel — Tagebuch: Einträge, Fragen und Stellen"
+title: "Spiegel — Tagebuch: Einträge, Fragen, Auswertung und Stellen"
 aliases: [tagebuch, diary, treffsicher-2-0, trainingstagebuch-in-spiegel]
-keywords: [saisonziel, ziele, ziel, messung, scheibe ab, serie ab, schnitt ab, saison, hat es geklappt, schuss-ablauf, abläufe, ablauf, ohne disziplin, disziplin festlegen, tagebuch, eintrag, einträge, vorhaben, notiz, befinden, prognose, feedback, ausführung je serie, stufen, fünf stufen, 0 bis 100, faden, fragen, lernfrage, wie schaffe ich es, ich habe gelernt, hat es geklappt, was hat gestört, vorschlag, neuer eintrag, ohne scheibe, trockentraining, mentaltraining, dazugekommen, lösen, dazunehmen, vom selben abend, papierkorb, abschaltbar, hinweis, nur du siehst, zonen, grenze, nahtstellen, parts, results-read, partline, export, konto löschen, deine daten, stufe 2, 2a, treffsicher]
+keywords: [auswertung, einflüsse, selbstbild, form, abstand zur form, merkst du, erwartet und geschossen, vorher und nachher, vorschau, diary-preview, nur probe, abend-regel, saisonziel, ziele, ziel, messung, scheibe ab, serie ab, schnitt ab, saison, hat es geklappt, schuss-ablauf, abläufe, ablauf, ohne disziplin, disziplin festlegen, tagebuch, eintrag, einträge, vorhaben, notiz, befinden, prognose, feedback, ausführung je serie, stufen, fünf stufen, 0 bis 100, faden, fragen, lernfrage, wie schaffe ich es, ich habe gelernt, hat es geklappt, was hat gestört, vorschlag, neuer eintrag, ohne scheibe, trockentraining, mentaltraining, dazugekommen, lösen, dazunehmen, vom selben abend, papierkorb, abschaltbar, hinweis, nur du siehst, zonen, grenze, nahtstellen, parts, results-read, partline, export, konto löschen, deine daten, stufe 2, 2a, treffsicher]
 part_of: ["[[spiegel]]"]
 governed_by: ["[[adr-033]]", "[[adr-030]]", "[[adr-029]]"]
 relates_to: ["[[spiegel-navigation]]", "[[spiegel-privacy]]", "[[spiegel-data-model]]", "[[spiegel-db-schema]]", "[[spiegel-roadmap]]", "[[spiegel-account-transfer]]"]
@@ -14,7 +14,8 @@ wurde, wird besser, was kaum genutzt wurde, wird einfacher oder fällt weg. Ein 
 Disziplin, mit Vorhaben, Notiz, Vorher, Nachher und den eigenen Fragen über die Zeit (Reiter „Fragen“). Das Tagebuch ist je Konto
 abschaltbar, liest Scheiben nur über eine schmale Schnittstelle und erscheint im Ergebnisteil nur an festen Stellen.
 Gebaut in Teil 2a (28. Oktober 2026) mit Export und Konto löschen über beide Teile; in 2b Ziele, die Spiegel misst,
-ohne zu urteilen, und Schuss-Abläufe in einem eigenen Reiter.
+ohne zu urteilen, und Schuss-Abläufe in einem eigenen Reiter; in 2c die Auswertung (Einflüsse gegen die Form,
+Selbstbild) und eine Vorschau mit den Daten des Users aus Treffsicher.
 
 # Spiegel — Tagebuch
 
@@ -88,8 +89,9 @@ Alle in einer Spalte (`PAGE_SINGLE`), Bereich „Tagebuch“ mit `BookOpen` ([[s
   nicht davon ab, was jemand bisher genutzt hat (Konsistenz als Grundsatz, [[adr-035]]).
 - Texte sind gesteuerte Felder mit „Speichern“ und „Verwerfen“; wer mit Ungespeichertem geht, wird gefragt.
 
-- **Reiter** „Einträge · Fragen · Ziele · Abläufe“ (`DiaryHeader`), am Telefon in einer Zeile bis 360 px; der Knopf oben
-  folgt dem Reiter („Neuer Eintrag“, „Neues Ziel“, „Neuer Ablauf“).
+- **Reiter** „Einträge · Fragen · Ziele · Abläufe · Auswertung“ (`DiaryHeader`), am Telefon in einer Zeile, die in sich
+  wischt, wenn sie breiter ist als die Seite; der Knopf oben folgt dem Reiter („Neuer Eintrag“, „Neues Ziel“, „Neuer
+  Ablauf“, in der Auswertung „Neuer Eintrag“).
 - **`/diary/goals` (Ziele):** dritter Reiter, Knopf „Neues Ziel“; Gruppen Laufend, Kommend, Vorbei; je Karte Satz,
   Disziplin und Ende, der Stand in einer Zeile und der Zustand (die Antwort, sonst läuft, beginnt am …, vorbei).
 - **`/diary/goals/[id]`:** für jedes Ziel dieselbe Folge: Stand, Notiz, „Hat es geklappt?“, Einträge im Zeitraum,
@@ -127,6 +129,51 @@ Alle in einer Spalte (`PAGE_SINGLE`), Bereich „Tagebuch“ mit `BookOpen` ([[s
   (`startLines` gibt je Block eine Liste, `StartScreen` zeigt Titel, Zustand, Aktion): „Ziel ab 350 · 6 von 20
   Scheiben ›“, „Ziel ab 91 · 31 von 56 Serien ›“, beim Schnitt „Ziel Schnitt 350 · bisher 347,2 ›“; zählt noch nichts,
   „… · noch keine Scheibe zählt ›“ statt „0 von 0“.
+
+## Auswertung: Einflüsse und Selbstbild
+
+Gebaut in 2c (29. Oktober 2026, Nachtrag zu [[adr-033]]). Fünfter Reiter **„Auswertung“** (`/diary/analysis`), je
+Disziplin (Chips der Disziplinen mit Einträgen, `?family=`) und Zeitraum („Alles“ oder eine Saison vom 1. September bis
+31. August, `?season=2025` ist das Startjahr). Der Zeitraum wählt die Einträge, nie die Form. Alles wird beim Lesen
+gerechnet (`src/diary/analysis/`), ohne Schema. Die Scheiben einer Familie liest `resultFormCards` aus
+`results-read.ts`: Ø je Schuss der Projektion mit Schusszahl und Streuung der Schusswerte, die Serien je Schuss.
+
+- **Welche Scheiben zählen (Abend-Regel):** je Abend und Familie die Scheiben mit Wertung; ein Abend ohne Wertung zählt
+  seine Scheiben „nur Probe“ (`countedCards`). So zählen Trainings, die im Probe-Modus gedruckt sind, und kurze
+  Probe-Blöcke vor einer Wertung bleiben draußen. Gilt für Form, Wert eines Eintrags und Ausführung.
+- **Form und Abstand** (`form.ts`): Die Form vor einem Abend ist der Schnitt über die Schüsse der fünf letzten gezählten
+  Scheiben derselben Familie vor diesem Abend (`DELTA_WINDOW`, `pooledValue`), auch vor dem Zeitraum und aus anderen
+  Einträgen; Scheiben desselben Abends zählen nie. Der Wert eines Eintrags ist der Ø je Schuss über seine gezählten
+  Scheiben, die Streuung zusammengesetzt aus Streuung und Mittel je Scheibe. Der Abstand ist Wert minus Form; bei einer
+  Scheibe je Abend rechnet er wie der Abstand in der Liste (`deltasBefore`, Gegenprobe im Test).
+- **Einflüsse** (`influences.ts`, `split.ts`): Schlaf, Energie, Stress, Motivation, Werte 0 bis 100 wie gespeichert.
+  Je Merkmal teilt `splitAtMedian` die Einträge über und unter dem Median (auf dem Median zur kleineren Gruppe, bei gleich
+  großen zu keiner, wie Treffsicher). `compareValues(niedrig, hoch, DISTANCE)` urteilt wie zwei Zeiträume
+  ([[adr-034]], ab 5 je Seite, „deutlich“ aus T3); `DISTANCE` ist der Ø je Schuss ohne Wertung, damit das Mittel nicht auf
+  das Raster der Zehntel fällt. Einträge ohne gezählte Scheibe mit Wert oder ohne fünf Scheiben davor zählen nicht und
+  stehen in der Grundlage. Die Zeile eines Merkmals ist ein Link auf **`/diary/analysis/[factor]`**: Punktwolke (Stufe
+  gegen Abstand, jeder Punkt ein Link in den Eintrag) und die Einträge, neueste oben.
+- **Selbstbild** (`execution.ts`, `self-image.ts`): „Merkst du, wann eine Serie gut ist?“ teilt je Scheibe ihre
+  bewerteten Serien am Median ihrer Bewertungen und zieht von jeder Serie den Ø je Schuss der bewerteten Serien derselben
+  Scheibe ab. Tagesform und Fortschritt fallen so heraus; ohne Streuung je Serie urteilt der Rangtest über die Serien.
+  Eine Scheibe mit gleich bewerteten Serien zählt nicht. „Erwartet und geschossen“ nimmt die Regel der Seite eines
+  Eintrags (`shotResult`: genau eine Scheibe mit Ergebnis). „Vorher und nachher“ zeigt je Bereich das Mittel von
+  Prognose und Feedback über die Einträge mit beidem. Beide ohne Urteil.
+- **Seite:** Die Abschnitte stehen immer da, ohne Daten mit Leersatz; Hilfe hinter „?“ aus `ANALYSIS_HELP`
+  (`DiaryHelp`, Blatt `HelpSheet`), Texte in `src/diary/analysis/texts.ts`. Die Form bleibt eine feste Zahl im Test:
+  Sie wackelt selbst, Urteile sind dadurch etwas zu sicher (offen, Fachkern mit Simulation).
+
+## Vorschau mit den Daten des Users
+
+`pnpm --filter spiegel diary-preview --from <E-Mail in Treffsicher> --to <E-Mail in Spiegel> [--dry-run]`, nur gegen die
+lokale Dev-Datenbank (`assertDevDatabase`). Es liest das Konto über `psql` im Dev-Container
+(`tools/transfer/treffsicher-sessions.sql`, keine Verbindung der App zur fremden Datenbank, [[adr-002]]) und schreibt in
+einer Transaktion: je Einheit einen Eintrag mit Schlüssel `preview:<Einheit>`, eine Scheibe „aus Treffsicher“
+(`treffsicher:preview-<Einheit>`) nur, wenn der Abend in der Familie noch keine Scheibe hat, die Ausführung auf die eine
+gezählte Scheibe des Eintrags. Ein zweiter Lauf ersetzt, `--delete --to <E-Mail>` löscht alles mit diesen Schlüsseln
+(auch Ziele und Abläufe mit `preview:`). Bericht nur mit Zahlen nach `reports/tis-2c/diary-preview.md`. Die Zuordnungen
+stehen dort, wo Stufe 3 sie wiederverwendet ([[spiegel-account-transfer]]); der Ablauf als Nahtstelle in
+`src/parts/transfer/diary-preview.ts`.
 
 ## Scheiben vom selben Abend
 
@@ -183,5 +230,5 @@ Kasten „Deine Daten“ im Profil, über beide Teile (`src/parts/account.ts`):
 
 ## Was folgt
 
-Einflüsse und Selbstbild in 2c, mehrere Belege je Scheibe in 1f, die Übernahme von Einträgen, Zielen und Abläufen aus
+Mehrere Belege je Scheibe in 1f, die Übernahme von Einträgen, Zielen und Abläufen aus
 Treffsicher in Stufe 3 (`importKey`, [[spiegel-account-transfer]]).

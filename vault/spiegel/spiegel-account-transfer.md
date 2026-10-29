@@ -3,7 +3,7 @@ id: spiegel-account-transfer
 type: operation
 title: "Spiegel — Abgleich der Konten vor der Übernahme aus Treffsicher"
 aliases: [kontenabgleich, account-match, zuordnung-der-konten]
-keywords: [übernahme, treffsicher, konten, e-mail, zuordnung, mapping, csv, transfer, verdacht, levenshtein, stufe 3, personendaten, reports]
+keywords: [vorschau, diary-preview, treffsicher:preview-, entryfromsession, treffsicherdetails, übernahme, treffsicher, konten, e-mail, zuordnung, mapping, csv, transfer, verdacht, levenshtein, stufe 3, personendaten, reports]
 part_of: ["[[spiegel]]"]
 governed_by: ["[[adr-033]]", "[[adr-029]]", "[[adr-002]]"]
 ---
@@ -32,6 +32,24 @@ E-Mail brechen den Abgleich ab (die Meldung nennt nur die Zahl).
 E-Mail, `check` an den Kandidaten (Merkmale in `reason`), `new` an die eigene E-Mail. `formatMappingCsv` und
 `parseMappingCsv` schreiben und lesen sie (Fehler mit Zeilennummer). Was der Leser **nicht** prüft und das CLI aus
 Stufe 3 deshalb selbst ablehnen muss: übrig gebliebene `check`-Zeilen und widersprüchliche Zeilen zu einem `from`.
+
+## Zuordnungen für Stufe 3
+
+Erprobt mit dem Vorschau-Werkzeug des Tagebuchs ([[spiegel-diary]], `pnpm --filter spiegel diary-preview`, nur Dev-DB):
+
+- **Scheibe** (`apps/spiegel/src/lib/transfer/treffsicher-card.ts`, rein): `familyForName` (Name der Treffsicher-Disziplin
+  gleich dem der Familie, ohne Groß- und Kleinschreibung, genau eine), `disciplineForShots` (Disziplin der ersten Anlage
+  mit derselben Schusszahl, bei mehreren die meistgenutzte des Kontos, sonst keine), `treffsicherDetails`
+  (Wertungsserien mit Wert neu nummeriert; Einzelschüsse nur, wenn jede Serie sie hat und ihre Summe zum Wert passt,
+  sonst Serien-Summen; Probeserien als Probe; Trefferlage mit Richtung).
+- **Eintrag** (`apps/spiegel/src/diary/transfer/treffsicher-entry.ts`, rein): `entryFromSession` (Abend, Art, Vorhaben aus
+  Trainingsziel oder Leistungsziel, „Hat es geklappt?“ nur mit Vorhaben, Erkenntnis, Lernfrage, Notiz mit Überschriften
+  je übrigem Feld, Werte genau wie gespeichert) und `executionsOnCard` (Ausführung je Wertungsserie auf die Serien der
+  Scheibe, nur bei gleicher Zahl). Geschrieben über `src/diary/transfer/write.ts` (anlegen oder über den Schlüssel
+  ersetzen).
+- **Schlüssel der Vorschau:** Scheiben `treffsicher:preview-<Einheit>` (`IMPORT_KEY` nimmt nur `treffsicher:…`),
+  Tagebuch `preview:<Einheit>`. Stufe 3 löscht die Vorschau vorher (`--delete`) oder lässt `treffsicher:preview-` beim
+  Zählen aus. Zwei Einheiten an einem Abend bekommen keine Scheibe von selbst; dafür braucht Stufe 3 eine Regel.
 
 ## Fallstricke
 
