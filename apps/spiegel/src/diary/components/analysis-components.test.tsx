@@ -177,6 +177,16 @@ describe("Auswertung", () => {
     expect(labels).toEqual(["Alles", "Saison 26/27", "Saison 25/26"])
   })
 
+  it("die Pille steht neben dem Namen und bricht nie in sich um", () => {
+    const html = render(FULL)
+    const head = html.match(/data-influence-head[^>]*>([\s\S]*?)<\/span><\/span>/)?.[1] ?? ""
+    expect(head).toContain("Schlaf")
+    expect(head).toContain("Guter Schlaf: besser")
+    const pills = [...html.matchAll(/<span[^>]*data-pill="[a-z]+"[^>]*>/g)].map((m) => m[0])
+    expect(pills.length).toBeGreaterThan(4)
+    for (const pill of pills) expect(pill).toContain("whitespace-nowrap")
+  })
+
   it("jede Zeile ist ein Link mit Disziplin und Zeitraum", () => {
     const html = render(FULL)
     expect(html).toMatch(
