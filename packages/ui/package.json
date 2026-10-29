@@ -18,6 +18,7 @@
     "./design2/score-colors": "./src/design2/score-colors.ts",
     "./design2/segmented": "./src/design2/segmented.tsx",
     "./design2/sheet": "./src/design2/sheet.tsx",
+    "./design2/tab-bar": "./src/design2/tab-bar.tsx",
     "./design2/theme": "./src/design2/theme/index.ts",
     "./design2/theme-switch": "./src/design2/theme/ThemeSwitch.tsx",
     "./design2/toaster": "./src/design2/toaster.tsx",
