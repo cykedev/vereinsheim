@@ -1,5 +1,6 @@
-// Zählung an der Dev-Datenbank, nur lesend: je Konto und Familie, was der Fortschritt über „Alles“ zählt, dazu das
-// Einschießen aus SQL, unabhängig vom Code der Regel. Konten nur als Nummer in der Folge ihrer Kennung, nie Name, E-Mail
+// Zählung an der Dev-Datenbank, nur lesend: je Konto und Familie, was der Fortschritt über „Alles“ zählt, mit Einschießen
+// (wie vor der Regel) und ohne (die Vorgabe, mit „nicht gezählt“), dazu das Einschießen aus SQL, unabhängig vom Code
+// der Regel. Konten nur als Nummer in der Folge ihrer Kennung, nie Name, E-Mail
 // oder Kennung. Die Ausgabe enthält Leistungsdaten: nur nach `reports/` (gitignored).
 // Aufruf: pnpm --filter spiegel warmup-census > reports/<datei>.txt
 
@@ -58,18 +59,25 @@ async function main() {
       const account = `Konto ${i + 1}`
       const context = { timeZone: TIME_ZONE, nowMs: Date.now(), named: [] }
       const { families } = await progressPageData(db, ownerId, DEFAULT_PROGRESS, context)
-      for (const { value: family } of families) {
-        const query = { ...DEFAULT_PROGRESS, choice: { type: "all" as const }, family }
-        const { progress } = await progressPageData(db, ownerId, query, context)
-        if (!progress) continue
-        const { model, state } = progress
-        const mean = model.summary.mean?.toFixed(3) ?? "–"
-        const records = recordRows(model.records, state.scoring).length
-        out(
-          `${account} · ${family} · alle ${model.cards.length} · gezählt ${model.summary.cards} · ` +
-            `Schuss ${model.summary.shots} · Ø ${mean} · Rekorde ${records}`
-        )
-      }
+      for (const includeWarmup of [true, false])
+        for (const { value: family } of families) {
+          const query = {
+            ...DEFAULT_PROGRESS,
+            choice: { type: "all" as const },
+            family,
+            includeWarmup,
+          }
+          const { progress } = await progressPageData(db, ownerId, query, context)
+          if (!progress) continue
+          const { model, state } = progress
+          const mean = model.summary.mean?.toFixed(3) ?? "–"
+          const records = recordRows(model.records, state.scoring).length
+          out(
+            `${account} · ${family} · alle ${model.cards.length} · gezählt ${model.summary.cards} · ` +
+              `Schuss ${model.summary.shots} · Ø ${mean} · Rekorde ${records}` +
+              (includeWarmup ? "" : ` · nicht gezählt ${model.excludedWarmup}`)
+          )
+        }
       const warmup = await sqlWarmup(ownerId)
       for (const { value: family } of families) {
         out(`SQL ${account} · ${family} · Einschießen ${warmup.get(family) ?? 0}`)

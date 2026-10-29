@@ -99,30 +99,36 @@ const data = (query: CompareQuery) => comparePageData(db, site.ownerId, query, c
 
 describe("comparePageData: Gruppen", () => {
   it("Wettkampf und Training: A ist Wettkampf, B Training, die Familie gewählt", async () => {
-    const page = await data({
-      type: "kind",
-      family: lpFamily,
-      range: { type: "all" },
-      includeWarmup: false,
-    })
-    expect(page?.model?.a).toMatchObject({ name: "Wettkampf", cards: 6 })
-    expect(page?.model?.b).toMatchObject({ name: "Training", cards: 6 })
+    const query = { type: "kind", family: lpFamily, range: { type: "all" } } as const
+    const page = await data({ ...query, includeWarmup: false })
+    // drei der erzeugten Scheiben sind nur Probe vor einer Wertung ihres Abends (Einschießen), zwei davon Wettkampf:
+    // Sie zählen nur mit dem Schalter
+    expect(page?.model?.a).toMatchObject({ name: "Wettkampf", cards: 4 })
+    expect(page?.model?.b).toMatchObject({ name: "Training", cards: 5 })
+    const withWarmup = await data({ ...query, includeWarmup: true })
+    expect(withWarmup?.model?.a.cards).toBe(6)
+    expect(withWarmup?.model?.b.cards).toBe(6)
     expect(page?.names.a).toBe("Alles")
     expect(page?.family).toBe(lpFamily)
   })
 
   it("zwei Zeiträume: Scheiben in beiden zählen nur in A", async () => {
-    const page = await data({
+    const query = {
       type: "periods",
       family: lpFamily,
       a: { type: "free", from: "2026-06-07", to: "2026-07-10" },
       b: { type: "free", from: "2026-06-01", to: "2026-06-07" },
       kind: "all",
-      includeWarmup: false,
-    })
-    expect(page?.model?.a.cards).toBe(6)
-    expect(page?.model?.b.cards).toBe(6)
-    expect(page?.model?.shared).toBe(3)
+    } as const
+    // mit Einschießen alle Scheiben, ohne (die Vorgabe) zählen die drei aus dem Fall davor auf keiner Seite
+    const withWarmup = await data({ ...query, includeWarmup: true })
+    expect(withWarmup?.model?.a.cards).toBe(6)
+    expect(withWarmup?.model?.b.cards).toBe(6)
+    expect(withWarmup?.model?.shared).toBe(3)
+    const page = await data({ ...query, includeWarmup: false })
+    expect(page?.model?.a.cards).toBe(5)
+    expect(page?.model?.b.cards).toBe(4)
+    expect(page?.model?.shared).toBe(2)
     expect(page?.ranges?.a.label).toBe("07.06.2026 – 10.07.2026")
   })
 

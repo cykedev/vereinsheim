@@ -121,7 +121,7 @@ export async function comparePageData(
   query: CompareQuery,
   context: Context
 ): Promise<ComparePageData | null> {
-  const { shown, scoringOf } = await overviewCards(db, ownerId)
+  const { shown, scoringOf } = await overviewCards(db, ownerId, context.timeZone)
   const families = familiesOf(shown)
   if (!families.length) return null
   // `shown` hat nur Scheiben mit Familie und Scheibenbild (`listable`)

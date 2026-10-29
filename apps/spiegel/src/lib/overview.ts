@@ -5,6 +5,7 @@ import type { ListQuery, ProgressQuery } from "@vereinsheim/shot-ui/nav/routes"
 import { fromProjection } from "@vereinsheim/shot-ui/period/fromProjection"
 import { lightPeriodModel, periodModel, type PeriodModel } from "@vereinsheim/shot-ui/period/model"
 import type { PeriodState } from "@vereinsheim/shot-ui/period/state"
+import { markWarmup } from "@vereinsheim/shot-ui/period/warmup"
 import { startModel, type StartModel } from "@vereinsheim/shot-ui/start/model"
 
 import type { Scoring } from "@vereinsheim/shot-core/metrics"
@@ -22,16 +23,23 @@ import { familyScoringOf } from "@/lib/scoring"
 
 type Context = Pick<PageContext, "timeZone" | "nowMs" | "named">
 
-/** die eigenen Scheiben, die die Übersichten zeigen können, und die Wertung je Familie (auch für Vergleichen) */
+/**
+ * die eigenen Scheiben, die die Übersichten zeigen können, mit dem Einschießen des Abends in `timeZone` (`markWarmup`:
+ * beim Lesen, eine gelöschte oder wartende Wertung macht keins), und die Wertung je Familie (auch für Vergleichen)
+ */
 export async function overviewCards(
   db: Db,
-  ownerId: string
+  ownerId: string,
+  timeZone: string
 ): Promise<{ shown: OverviewCard[]; scoringOf: (family: string) => Scoring }> {
   const [cards, saved] = await Promise.all([
     ownerCards(db, { ownerId }),
     familyScorings(db, ownerId),
   ])
-  const shown = listable(cards)
+  const shown = markWarmup(listable(cards), {
+    timeZone,
+    familyOf: (card) => card.family?.slug ?? null,
+  })
   const scoringOf = (family: string) =>
     familyScoringOf(
       shown.filter((card) => card.family?.slug === family).map((card) => card.scoring),
@@ -46,7 +54,7 @@ export async function startPageData(
   ownerId: string,
   context: Context
 ): Promise<{ model: StartModel; marks: Record<string, CardMark[]>; families: FamilyOption[] }> {
-  const { shown, scoringOf } = await overviewCards(db, ownerId)
+  const { shown, scoringOf } = await overviewCards(db, ownerId, context.timeZone)
   const families = familiesOf(shown)
   const model = startModel({
     cards: withFamily(shown),
@@ -74,7 +82,7 @@ export async function listPageData(
   list: { model: CardListModel; marks: Record<string, CardMark[]>; option: FamilyOption } | null
   families: FamilyOption[]
 }> {
-  const { shown, scoringOf } = await overviewCards(db, ownerId)
+  const { shown, scoringOf } = await overviewCards(db, ownerId, context.timeZone)
   const families = familiesOf(shown)
   const option = families.find((f) => f.value === query.family) ?? families[0]
   if (!option) return { list: null, families }
@@ -107,7 +115,7 @@ export async function progressPageData(
   progress: { model: PeriodModel; state: PeriodState; marks: Record<string, CardMark[]> } | null
   families: FamilyOption[]
 }> {
-  const { shown, scoringOf } = await overviewCards(db, ownerId)
+  const { shown, scoringOf } = await overviewCards(db, ownerId, context.timeZone)
   const families = familiesOf(shown)
   const option = families.find((f) => f.value === query.family) ?? families[0]
   if (!option) return { progress: null, families }

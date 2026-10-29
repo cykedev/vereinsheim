@@ -7,6 +7,7 @@ import { generateSeason } from "../../test/generate"
 import { createTestSite, type TestSite } from "../../test/fixtures"
 import { writeRevision } from "./db/cards"
 import { writeEnteredCard } from "./db/entered"
+import { comparePageData } from "./compare"
 import { listPageData, progressPageData, startPageData } from "./overview"
 
 const db = createPrismaClient()
@@ -363,5 +364,144 @@ describe("Scheiben ohne Einzelschüsse", () => {
     expect(empty).toMatchObject({ result: null, mean: null, shots: 0 })
     expect(empty.kind).not.toBe("probe")
     expect(rows.find((r) => r.id === entered.shots)?.shots).toBe(10)
+  })
+})
+
+describe("Einschießen", () => {
+  // ein eigenes Konto mit zwei Familien: Die übrigen Tests sehen diese Scheiben nicht
+  const warm = {
+    owner: "",
+    families: [] as { id: number; slug: string }[],
+    disciplines: [] as number[],
+    warmup: "",
+    scored: "",
+    deletedScored: "",
+    beforeDeleted: "",
+    crossFamily: "",
+    alone: "",
+  }
+  const all = { ...DEFAULT_PROGRESS, choice: { type: "all" as const } }
+  // vier Abende im Abstand von zwei Tagen; Uhrzeiten in Berlin (MESZ, UTC + 2)
+  const at = (evening: number, hour: number, minute = 0) =>
+    Date.UTC(2026, 6, 1 + 2 * evening, hour - 2, minute)
+
+  beforeAll(async () => {
+    warm.owner = (
+      await db.user.create({
+        data: { email: `overview-warmup-${site.siteId}@example.com`, passwordHash: "-" },
+      })
+    ).id
+    for (const name of ["lp", "lg"]) {
+      const family = await db.family.create({
+        data: { slug: `${name}-einschiessen-${site.siteId}`, name: `${name} Einschießen` },
+      })
+      warm.families.push(family)
+      warm.disciplines.push(
+        (
+          await db.discipline.create({
+            data: {
+              siteId: site.siteId,
+              meytonId: null,
+              name: `${name} 40 Einschießen`,
+              familyId: family.id,
+              targetId: "lp-10m",
+            },
+          })
+        ).id
+      )
+    }
+    let scheibenId = 8600
+    // eine Scheibe aus `generateSeason`, als nur Probe (alle Schüsse Probe) oder mit Wertung, zu `startedAtMs`
+    const write = async (startedAtMs: number, probe: boolean, family = 0) => {
+      const [input] = generateSeason({
+        seed: scheibenId,
+        cards: 1,
+        firstMs: startedAtMs,
+        everyDays: 1,
+        sourceId: site.sourceId,
+        disciplineId: warm.disciplines[family],
+        ownerId: warm.owner,
+        scheibenIdBase: scheibenId++,
+      })
+      const shots = [...input.probeBefore, ...input.shots].map((shot, i) => ({
+        ...shot,
+        seq: i + 1,
+        treffer: i + 1,
+        stellung: probe ? 0 : 1,
+        series: probe ? null : Math.floor(i / 10) + 1,
+      }))
+      const card = { ...input.card, startedAtMs, kind: "training" as const }
+      return (await writeRevision(db, { ...input, card, shots })).cardId
+    }
+    // Abend 0: Probe 18:20, Wertung 19:00 in derselben Familie
+    warm.warmup = await write(at(0, 18, 20), true)
+    warm.scored = await write(at(0, 19), false)
+    // Abend 1: Probe vor einer Wertung, die gelöscht ist
+    warm.beforeDeleted = await write(at(1, 18, 20), true)
+    warm.deletedScored = await write(at(1, 19), false)
+    await db.card.update({ where: { id: warm.deletedScored }, data: { deletedAt: new Date() } })
+    // Abend 2: Probe in der einen Familie, Wertung in der anderen
+    warm.crossFamily = await write(at(2, 18, 20), true)
+    await write(at(2, 19), false, 1)
+    // Abend 3, der letzte: nur eine Probe-Scheibe
+    warm.alone = await write(at(3, 18, 20), true)
+  })
+  afterAll(async () => {
+    await db.card.deleteMany({ where: { ownerId: warm.owner } })
+    await db.discipline.deleteMany({ where: { id: { in: warm.disciplines } } })
+    await db.family.deleteMany({ where: { id: { in: warm.families.map((f) => f.id) } } })
+    await db.user.delete({ where: { id: warm.owner } })
+  })
+
+  const progress = async (includeWarmup: boolean) =>
+    (await progressPageData(
+      db,
+      warm.owner,
+      { ...all, family: warm.families[0].slug, includeWarmup },
+      context
+    ))!.progress!.model
+
+  it("nur die Probe vor einer Wertung desselben Abends und derselben Familie ist Einschießen", async () => {
+    const model = await progress(false)
+    const marked = model.cards.filter((card) => card.warmup).map((card) => card.id)
+    expect(marked).toEqual([warm.warmup])
+    // gelöschte Wertung, andere Familie, Abend nur mit Probe: kein Einschießen, alle zählen
+    expect(model.cards.map((card) => card.id)).toEqual(
+      expect.arrayContaining([warm.beforeDeleted, warm.crossFamily, warm.alone, warm.scored])
+    )
+    expect(model.cards.map((card) => card.id)).not.toContain(warm.deletedScored)
+  })
+
+  it("der Fortschritt zählt Einschießen nur mit dem Schalter", async () => {
+    const without = await progress(false)
+    const withWarmup = await progress(true)
+    expect(without.cards).toHaveLength(5)
+    expect(without.excludedWarmup).toBe(1)
+    expect(without.summary.cards).toBe(4)
+    expect(without.values.map((v) => v.id)).not.toContain(warm.warmup)
+    expect(without.reasons[warm.warmup]).toBe("Einschießen zählt nicht")
+    expect(withWarmup.excludedWarmup).toBe(0)
+    expect(withWarmup.summary.cards).toBe(5)
+  })
+
+  it("Start zählt einen Abend nur mit Probe", async () => {
+    const { model } = await startPageData(db, warm.owner, { ...context, nowMs: at(3, 22) })
+    const block = model.blocks.find((b) => b.family === warm.families[0].slug)!
+    expect(block.rows.map((row) => row.id)).toEqual([warm.alone])
+    expect(block.mean).not.toBeNull()
+  })
+
+  it("Vergleichen zählt Einschießen nur mit dem Schalter", async () => {
+    const query = (includeWarmup: boolean) =>
+      ({
+        type: "kind",
+        family: warm.families[0].slug,
+        range: { type: "all" },
+        includeWarmup,
+      }) as const
+    const without = await comparePageData(db, warm.owner, query(false), context)
+    const withWarmup = await comparePageData(db, warm.owner, query(true), context)
+    expect(without?.model?.b.cards).toBe(4)
+    expect(withWarmup?.model?.b.cards).toBe(5)
   })
 })
