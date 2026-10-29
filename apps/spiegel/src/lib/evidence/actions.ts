@@ -11,9 +11,9 @@ import { db } from "@/lib/db"
 import type { ActionResult } from "@/lib/types"
 import { sweepUploadsSoon } from "@/lib/uploads"
 
-import { lockCard } from "../db/purge"
 import { VISIBLE_CARD } from "../db/visible"
 import { storePrintout } from "../printouts/store"
+import { attachEvidenceIn } from "./attach"
 import { EVIDENCE_ID, evidenceTypeOf, writeEvidenceFile } from "./files"
 import { evidenceFileName } from "./name"
 import { isPdfFile } from "./shrink"
@@ -26,7 +26,6 @@ import {
   evidenceName,
   evidenceProblemText,
   limitText,
-  type EvidenceProblem,
 } from "./texts"
 
 // Belege einer eigenen Scheibe ([[adr-033]], Nachtrag 1f): bis zu `EVIDENCE_LIMIT` Fotos oder PDFs an jeder sichtbaren
@@ -41,39 +40,6 @@ const ownCard = (cardId: string, ownerId: string): Prisma.CardWhereInput => ({
   ownerId,
   ...VISIBLE_CARD,
 })
-
-type Attached = "attached" | "gone" | "limit" | EvidenceProblem
-
-/** in einer Transaktion unter der Sperre der Scheibe: sichtbar und eigen, unter der Grenze, die Datei noch nicht dran */
-async function attachRow(
-  ownerId: string,
-  data: {
-    cardId: string
-    sha256: string
-    contentType: string
-    size: number
-    fileName: string | null
-  }
-): Promise<Attached> {
-  return db.$transaction(async (tx) => {
-    if (!(await lockCard(tx, data.cardId))) return "gone"
-    const card = await tx.card.findFirst({
-      where: ownCard(data.cardId, ownerId),
-      select: { _count: { select: { evidence: true } } },
-    })
-    if (!card) return "gone"
-    if (card._count.evidence >= EVIDENCE_LIMIT) return "limit"
-    if (
-      await tx.cardEvidence.findFirst({
-        where: { cardId: data.cardId, sha256: data.sha256 },
-        select: { id: true },
-      })
-    )
-      return "duplicate"
-    await tx.cardEvidence.create({ data })
-    return "attached"
-  })
-}
 
 /** ein Foto oder PDF an eine eigene Scheibe hängen. Felder `cardId` und `file`; der Fehler ist ein fertiger Satz */
 export async function attachEvidence(form: FormData): Promise<ActionResult> {
@@ -113,13 +79,9 @@ export async function attachEvidence(form: FormData): Promise<ActionResult> {
 
     const sha256 = createHash("sha256").update(bytes).digest("hex")
     await writeEvidenceFile(sha256, type, bytes)
-    const result = await attachRow(ownerId, {
-      cardId,
-      sha256,
-      contentType: type,
-      size: bytes.length,
-      fileName,
-    })
+    const result = await db.$transaction((tx) =>
+      attachEvidenceIn(tx, { cardId, ownerId, sha256, type, size: bytes.length, fileName })
+    )
     if (result === "attached") return { success: true }
     if (result === "gone") return { error: EVIDENCE_GONE }
     if (result === "limit") return { error: limitText([name]) }

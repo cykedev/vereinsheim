@@ -198,7 +198,8 @@ Stand mit `past` (`MAX_OBSERVED_LAG_MS`, SF-79).
 - **Scheiben mit Angaben** ([[adr-033]], Nachtrag 27. Oktober 2026): Herkunft `raw`, `pdf`, `manual`, `treffsicher`.
   Scheiben ohne Brücke schreibt nur `writeEnteredCard` / `writeEnteredCardIn` (`src/lib/db/entered.ts`; Scan, Parser,
   Hand, Übernahme), geprüft über `checkDetails` und `detailsWriter` (`src/lib/entered/details.ts`: Rohdaten nie, vom
-  Ausdruck nur der Ausdruck, eingetragene nur von Hand, aus Treffsicher von Hand oder von der Übernahme). Die Angaben
+  Ausdruck nur der Ausdruck, eingetragene nur von Hand, aus Treffsicher von Hand, von der Übernahme oder vom Ausdruck,
+  dann vom Ausdruck: so legt die Übernahme die Werte eines passenden Ausdrucks darüber). Die Angaben
   (Serien-Summen `SeriesSum`, Gesamtergebnis, Trefferlage) gehören zur Revision; `revisionSums` liest sie für
   Projektion und Nachrechnen, `revisionCounts` und `detailFlags` (`card-checks.ts`) rechnen die Merkmale (ohne Werte
   weder leer noch nur Probe, Scheiben der Brücke behalten alle Merkmale). Rohdaten an einer Scheibe vom Ausdruck sind eine neue

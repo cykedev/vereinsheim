@@ -214,7 +214,7 @@ describe("detailsWriter: wer was ändern darf", () => {
     ["manual", "pdf", null],
     ["manual", "manual", "manual"],
     ["manual", "treffsicher", null],
-    ["treffsicher", "pdf", null],
+    ["treffsicher", "pdf", "pdf"],
     ["treffsicher", "manual", "manual"],
     ["treffsicher", "treffsicher", "treffsicher"],
   ]

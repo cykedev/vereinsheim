@@ -296,7 +296,9 @@ export function enteredScoring(details: NormalizedDetails): "decimal" | "rings" 
 /**
  * Wer die Angaben einer Scheibe ändern darf, und ihre Herkunft danach ([[adr-033]] „nur Eingetragenes ist änderbar“):
  * Rohdaten nie, eine Scheibe vom Ausdruck nur vom Ausdruck (Parser), gemessen und gescannt nie von Hand. Eingetragene
- * nur von Hand; eine aus Treffsicher auch von Hand (dann eingetragen) oder von der Übernahme. Null: nicht änderbar
+ * nur von Hand; eine aus Treffsicher auch von Hand (dann eingetragen), von der Übernahme oder vom Ausdruck (dann vom
+ * Ausdruck, die Übernahme legt so die Werte eines passenden Ausdrucks über die Zahlen aus Treffsicher). Null: nicht
+ * änderbar
  */
 export function detailsWriter(existing: CardOrigin, writer: EnteredOrigin): CardOrigin | null {
   switch (existing) {
@@ -307,6 +309,6 @@ export function detailsWriter(existing: CardOrigin, writer: EnteredOrigin): Card
     case "manual":
       return writer === "manual" ? "manual" : null
     case "treffsicher":
-      return writer === "treffsicher" ? "treffsicher" : writer === "manual" ? "manual" : null
+      return writer
   }
 }
