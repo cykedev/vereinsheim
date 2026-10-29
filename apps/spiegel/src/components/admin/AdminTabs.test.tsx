@@ -34,4 +34,11 @@ describe("Reiter des Admins (Markup)", () => {
     const html = renderToStaticMarkup(createElement(AdminTabs, { current: "users", detail: true }))
     expect(tabs(html).filter(([, current]) => current)).toEqual([["/admin/users", "true"]])
   })
+
+  it("eine Zeile, die wischt: kein Umbruch, die Leiste scrollt in sich", () => {
+    const html = renderToStaticMarkup(createElement(AdminTabs, { current: "site" }))
+    expect(html).not.toContain("flex-wrap")
+    expect(html).toContain("data-tab-bar")
+    expect(html).toContain("overflow-x-auto")
+  })
 })

@@ -25,7 +25,7 @@ export function AdminHeader({
   children?: ReactNode
 }) {
   return (
-    <div className="grid gap-3">
+    <div className="grid grid-cols-1 gap-3">
       <AdminTabs current={current} />
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="grid gap-1">
