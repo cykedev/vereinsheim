@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from "vitest"
 import type { PeriodComparison } from "@vereinsheim/shot-core/analysis"
 
 import type { InfluenceRow } from "../analysis/influences"
-import type { AnalysisView } from "../analysis/queries"
+import type { AnalysisView, FactorView } from "../analysis/queries"
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh: () => {}, push: () => {}, replace: () => {} }),
@@ -13,6 +13,7 @@ vi.mock("next/navigation", () => ({
 
 const { AnalysisScreen } = await import("./AnalysisScreen")
 const { InfluenceStrip } = await import("./InfluenceStrip")
+const { FactorScreen } = await import("./FactorScreen")
 
 const ZONE = "Europe/Berlin"
 const LP = { id: 1, slug: "lp", name: "Luftpistole" }
@@ -211,5 +212,71 @@ describe("InfluenceStrip", () => {
     expect(none).not.toContain("data-strip-low")
     const wide = renderToStaticMarkup(createElement(InfluenceStrip, { high: 0.52, low: -0.1 }))
     expect(wide).toContain(">+0,6<")
+  })
+})
+
+describe("Seite eines Merkmals", () => {
+  const points = Array.from({ length: 8 }, (_, i) => ({
+    entryId: `e${i}`,
+    day: `2026-10-${String(10 + i).padStart(2, "0")}`,
+    competition: i === 7,
+    value: i < 4 ? 30 : 70,
+    distance: i < 4 ? -0.2 : 0.3,
+    side: (i < 3 ? "low" : i < 4 ? "none" : "high") as "low" | "none" | "high",
+  }))
+  const view: FactorView = {
+    family: LP,
+    season: SEASON,
+    aspect: "energy",
+    row: row("energy", { entered: 8, points }),
+    left: { noCard: 0, noForm: 1 },
+  }
+  const html = renderToStaticMarkup(createElement(FactorScreen, { view, timeZone: ZONE }))
+
+  it("Rückweg mit Disziplin und Zeitraum, Name, Unterzeile, Urteil mit Abstand", () => {
+    expect(html).toMatch(
+      /<a[^>]*href="\/diary\/analysis\?family=lp&amp;season=2026"[^>]*>[\s\S]*Auswertung/
+    )
+    expect(html).toContain(">Energie</h1>")
+    expect(html).toContain("Luftpistole · Saison 26/27 · 8 Einträge")
+    expect(html).toContain("Viel Energie: besser")
+    expect(html).toContain("Abstand +0,40")
+    expect(html).toContain("1 Eintrag ohne fünf Scheiben davor zählt nicht mit.")
+  })
+
+  it("jeder Punkt ist ein Link in den Eintrag, die Seite in Farbe und Form", () => {
+    const links = [
+      ...html.matchAll(
+        /<a[^>]*href="(\/diary\/e\d)"[^>]*data-point="([a-z]+)"[^>]*aria-label="([^"]*)"/g
+      ),
+    ]
+    expect(links).toHaveLength(8)
+    expect(links.map((m) => m[2]).sort()).toEqual([
+      "high",
+      "high",
+      "high",
+      "high",
+      "low",
+      "low",
+      "low",
+      "none",
+    ])
+    expect(links[7][3]).toBe("Sa 17.10., Energie 4, +0,30 zur Form")
+    expect(html).toMatch(/data-point="high"[\s\S]*?class="fill-primary"/)
+    expect(html).toMatch(/data-point="none"[\s\S]*?class="fill-quiet"/)
+  })
+
+  it("die Einträge neueste oben, die ersten fünf, dann „Alle 8 Einträge zeigen“", () => {
+    const entries = [...html.matchAll(/data-factor-entry="(e\d)"/g)].map((m) => m[1])
+    expect(entries).toEqual(["e7", "e6", "e5", "e4", "e3"])
+    expect(html).toContain("Alle 8 Einträge zeigen")
+    expect(html).toContain("Wettkampf · Energie 4")
+    const few = renderToStaticMarkup(
+      createElement(FactorScreen, {
+        view: { ...view, row: row("energy", { entered: 5, points: points.slice(0, 5) }) },
+        timeZone: ZONE,
+      })
+    )
+    expect(few).not.toContain("Einträge zeigen")
   })
 })
