@@ -46,13 +46,18 @@ describe("Art in den Listen", () => {
     expect(html).toContain('<span class="sr-only">Wettkampf nur Probe</span>')
   })
 
-  it("Einschießen: darunter leise das Wort, der Screenreader hört es nach der Art", () => {
+  it("Einschießen: statt „Probe“ das Wort, mit Trennstellen; der Screenreader hört es nach der Art", () => {
     const html = renderToStaticMarkup(h(KindMark, { kind: "probe", warmup: true }))
-    expect(visible(html)).toBe("ProbeEinschießen")
-    expect(html).toContain(
-      '<span data-warmup-word="true" aria-hidden="true" class="block text-xs text-muted-foreground">Einschießen</span>'
-    )
+    // weiche Trennstellen: am Telefon bricht das Wort um, statt die Spalte zu verbreitern
+    expect(visible(html)).toBe("Ein\u00adschie\u00adßen")
+    expect(html).toContain('<span data-warmup-word="true">Ein\u00adschie\u00adßen</span>')
+    expect(html).toContain('title="Training nur Probe, Einschießen"')
     expect(html).toContain('<span class="sr-only">Training nur Probe, Einschießen</span>')
     expect(renderToStaticMarkup(h(KindMark, { kind: "probe" }))).not.toContain("Einschießen")
+    const competition = renderToStaticMarkup(
+      h(KindMark, { kind: "competition-probe", warmup: true })
+    )
+    expect(competition).toContain("lucide-trophy")
+    expect(visible(competition)).toBe("Ein\u00adschie\u00adßen")
   })
 })

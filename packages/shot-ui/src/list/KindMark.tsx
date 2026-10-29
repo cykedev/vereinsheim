@@ -10,10 +10,14 @@ export const KIND_TEXT: Readonly<Record<CardKind, string>> = {
   "competition-probe": "Wettkampf nur Probe",
 }
 
+/** „Einschießen“ mit weichen Trennstellen: Die Spalte „Art“ bleibt am Telefon so schmal wie mit „Probe“ */
+const WARMUP_WORD = "Ein\u00adschie\u00adßen"
+
 /**
  * Art einer Scheibe in einer Zeile der Listen: Wettkampf als goldener Pokal (wie der Kreis der Art), Training ohne
- * Zeichen (das Übliche), nur aus Probe dahinter das Wort „Probe“, auch beim Wettkampf; Einschießen darunter leise das
- * Wort „Einschießen“. Den vollen Namen hört der Screenreader.
+ * Zeichen (das Übliche), nur aus Probe dahinter das Wort „Probe“, auch beim Wettkampf; Einschießen (immer nur Probe)
+ * statt „Probe“ das Wort „Einschießen“, mit Trennstellen, damit die Spalte nicht breiter wird als mit „Probe“. Den
+ * vollen Namen hört der Screenreader.
  */
 export function KindMark({ kind, warmup = false }: { kind: CardKind; warmup?: boolean }) {
   const competition = kind === "competition" || kind === "competition-probe"
@@ -22,15 +26,13 @@ export function KindMark({ kind, warmup = false }: { kind: CardKind; warmup?: bo
   return (
     <span data-kind={kind}>
       {kind !== "training" && (
-        <span aria-hidden="true" title={KIND_TEXT[kind]}>
+        <span
+          aria-hidden="true"
+          title={warmup ? `${KIND_TEXT[kind]}, Einschießen` : KIND_TEXT[kind]}
+        >
           {competition && <Trophy className="inline size-4 align-[-3px] text-gold" />}
           {competition && probe && " "}
-          {probe && "Probe"}
-        </span>
-      )}
-      {warmup && (
-        <span data-warmup-word aria-hidden="true" className="block text-xs text-muted-foreground">
-          Einschießen
+          {probe && warmup ? <span data-warmup-word>{WARMUP_WORD}</span> : probe && "Probe"}
         </span>
       )}
       <span className="sr-only">

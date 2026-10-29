@@ -2179,6 +2179,17 @@ async function warmup(page: Page) {
       list.warm && list.quiet && list.reason.includes("Einschießen zählt nicht") && list.probe,
       list.warm && list.probe ? list : missingData
     )
+    // die Seite kann stillstehen, während eine Tabelle in ihrer Karte seitlich überläuft
+    const wide = await page.ev<string[]>(`$$("[data-month]").flatMap((month) => {
+      const card = $("table", month)?.parentElement
+      return card && card.scrollWidth > card.clientWidth + 1
+        ? [month.dataset.month + " " + card.scrollWidth + " > " + card.clientWidth] : []
+    })`)
+    check(
+      `${width} px: /cards jede Tabelle passt in ihre Karte`,
+      wide.length === 0,
+      wide.join(" | ")
+    )
   }
   record(await noSideScroll(page, { base: BASE, paths: ["/cards"], widths: [390, 360] }))
 
