@@ -39,8 +39,9 @@ schwierigen Zahlen und „–“ mit Grund. Daten und PDFs sind unverändert (Ab
 ## Seiten eines Wettbewerbs
 
 `CompetitionDetailHeader` zeigt oben „Wettbewerbe“ zum Zurück und die Aktionen der Seite (PDF, Spielplan generieren,
-Bearbeiten), darunter den Namen in `font-display` und die Reiter (`CompetitionTabs`): eine Zeile in der Form des
-Segment-Umschalters, als Links, die in sich seitlich scrollt; die gezeigte Seite ist markiert und rückt ins Bild. Jede
+Bearbeiten), darunter den Namen in `font-display` und die Reiter (`CompetitionTabs` über `TabBar` aus
+`@vereinsheim/ui/design2/tab-bar`): eine Zeile als Links, die in sich seitlich scrollt; die gezeigte Seite ist markiert
+und rückt ins Bild. Jede
 Seite nennt die Seiten, zu denen sie schon vorher führte (`links`); `competitionTabs` ordnet sie fest (Ergebnis,
 Playoffs, Serien, Teilnehmer, Protokoll). Damit ist jede Seite in jeder Phase so erreichbar wie vorher.
 

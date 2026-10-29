@@ -257,7 +257,7 @@ Stand mit `past` (`MAX_OBSERVED_LAG_MS`, SF-79).
   sich wie beim Menschen. Angemeldet mit dem Demo-Konto (vorher `seed:own --demo`). Geprüft wird ohne feste Zahlen
   (echte Daten): Sprungleiste, Kleben, Rücksprung mit Pille, „Alle Beobachtungen“, Blatt der Hilfe, Lineal mit Zeiger
   und Tastatur, Platz der Scheibe bei mehreren Fenstergrößen, kein seitliches Scrollen am Telefon, Anker beim Laden,
-  Blättern, Rückwege, Rekorde, Blatt „Filter“, Fachbegriffe auf den ersten Ebenen, ein „?“ je Thema des Fortschritts,
+  Blättern, Rückwege, Rekorde, Blatt „Filter“, Reiter in einer Zeile am Telefon, Fachbegriffe auf den ersten Ebenen, ein „?“ je Thema des Fortschritts,
   keine Skriptfehler; „Detailtiefen“ (Herkunft in Liste und Kopf, „–“ mit Grund, Filter nach Herkunft, Seiten aus Summen,
   Grundlage in Fortschritt, Trefferbild und Start, Vergleichen) mit den Demo-Scheiben aus `seed:own --demo`; `pickCard`
   nimmt nur gemessene Scheiben (`/cards?provenance=measured`); „Scheibe holen“ (Link auf einen Ausdruck eines eigenen
