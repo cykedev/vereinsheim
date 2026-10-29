@@ -234,7 +234,7 @@ describe("Seite eines Eintrags", () => {
 })
 
 describe("Liste und Faden", () => {
-  it("fünf Reiter, gewählt „Auswertung“ mit „Neuer Eintrag“ oben; die Leiste wischt in sich", () => {
+  it("fünf Reiter als TabBar, gewählt „Auswertung“ mit „Neuer Eintrag“ oben", () => {
     const html = renderToStaticMarkup(createElement(DiaryHeader, { current: "analysis" }))
     const switchHtml = html.slice(html.indexOf("data-diary-switch"))
     expect(
@@ -243,7 +243,9 @@ describe("Liste und Faden", () => {
     expect(html).toMatch(/<a(?=[^>]*href="\/diary\/analysis")(?=[^>]*aria-current="page")/)
     expect(html.match(/aria-current="page"/g)).toHaveLength(1)
     expect(html).toMatch(/<a[^>]*href="\/diary\/new"[^>]*>.*Neuer Eintrag/)
-    expect(html).toMatch(/data-diary-switch[^>]*overflow-x-auto/)
+    // die gemeinsame Reiterleiste: eine Zeile, die wischt
+    expect(switchHtml).toContain("data-tab-bar")
+    expect(switchHtml.match(/<a /g)).toHaveLength(5)
   })
 
   it("leer: der Leerzustand mit „Neuer Eintrag“", () => {

@@ -7,13 +7,13 @@ import { TARGETS } from "@vereinsheim/shot-core/targets"
 import { MiniTarget } from "@vereinsheim/shot-ui/target/MiniTarget"
 import { EmptyState } from "@vereinsheim/ui/empty-state"
 
-import { ANALYSIS_TEXTS } from "../analysis/texts"
-import { ANALYSIS_PATH } from "../paths"
 import type { EntrySummary } from "../queries"
 import { entryLine, entryTitle } from "../summaries"
 import { GOAL_TEXTS } from "../goals/texts"
 import { ROUTINE_TEXTS } from "../routines/texts"
 import { LIST_TEXTS } from "../texts"
+
+import { DiaryTabs } from "./DiaryTabs"
 
 const PRIMARY =
   "inline-flex h-10 items-center justify-center gap-2 justify-self-start rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-90 focus-visible:outline-2 focus-visible:outline-ring"
@@ -34,8 +34,7 @@ const NEW_BUTTON = {
 } as const
 
 /**
- * Kopf des Tagebuchs: Titel und der Knopf des Reiters, darunter „Einträge · Fragen · Ziele · Abläufe · Auswertung“. Ist
- * die Leiste breiter als die Seite (Telefon), wischt sie in sich.
+ * Kopf des Tagebuchs: Titel und der Knopf des Reiters, darunter die Reiter (`DiaryTabs`)
  */
 export function DiaryHeader({ current }: { current: keyof typeof NEW_BUTTON }) {
   const [href, label] = NEW_BUTTON[current]
@@ -50,30 +49,7 @@ export function DiaryHeader({ current }: { current: keyof typeof NEW_BUTTON }) {
           {label}
         </Link>
       </div>
-      <nav
-        aria-label={LIST_TEXTS.title}
-        data-diary-switch
-        className="flex max-w-full gap-1 justify-self-start overflow-x-auto rounded-full bg-surface-2 p-1 text-[13px] font-semibold [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-      >
-        {(
-          [
-            ["entries", "/diary", LIST_TEXTS.entries],
-            ["thread", "/diary/thread", LIST_TEXTS.thread],
-            ["goals", "/diary/goals", GOAL_TEXTS.tab],
-            ["routines", "/diary/routines", ROUTINE_TEXTS.tab],
-            ["analysis", ANALYSIS_PATH, ANALYSIS_TEXTS.tab],
-          ] as const
-        ).map(([key, href, label]) => (
-          <Link
-            key={key}
-            href={href}
-            aria-current={current === key ? "page" : undefined}
-            className="shrink-0 rounded-full px-3.5 py-1.5 whitespace-nowrap text-foreground-2 focus-visible:outline-2 focus-visible:outline-ring aria-[current=page]:bg-card aria-[current=page]:text-foreground aria-[current=page]:shadow-sm"
-          >
-            {label}
-          </Link>
-        ))}
-      </nav>
+      <DiaryTabs current={current} />
     </>
   )
 }

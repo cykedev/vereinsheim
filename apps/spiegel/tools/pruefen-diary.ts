@@ -806,6 +806,20 @@ async function analysis(page: Page, { base, check, record }: Context) {
     help.slice(0, 80)
   )
 
+  // am schmalen Telefon wischt die Leiste: der gewählte Reiter steht trotzdem ganz im Bild
+  await page.viewport(360, 844)
+  await page.goto(`${base}/diary/analysis`)
+  const tab = await page.ev<{ left: number; right: number; barLeft: number; barRight: number }>(
+    `(() => { const bar = $("[data-diary-switch] [data-tab-bar]").getBoundingClientRect()
+      const tab = $('[data-diary-switch] a[aria-current="page"]').getBoundingClientRect()
+      return { left: tab.left, right: tab.right, barLeft: bar.left, barRight: bar.right } })()`
+  )
+  check(
+    "Auswertung: Telefon 360 px, der gewählte Reiter steht ganz im Bild",
+    tab.left >= tab.barLeft - 0.5 && tab.right <= tab.barRight + 0.5,
+    tab
+  )
+
   record(
     await noSideScroll(page, {
       base,
