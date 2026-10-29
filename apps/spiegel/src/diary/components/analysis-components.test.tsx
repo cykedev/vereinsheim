@@ -12,7 +12,7 @@ vi.mock("next/navigation", () => ({
 }))
 
 const { AnalysisScreen } = await import("./AnalysisScreen")
-const { InfluenceStrip } = await import("./InfluenceStrip")
+const { InfluenceStrip, sharedStripSpan } = await import("./InfluenceStrip")
 const { FactorScreen } = await import("./FactorScreen")
 
 const ZONE = "Europe/Berlin"
@@ -225,6 +225,33 @@ describe("Auswertung", () => {
 })
 
 describe("InfluenceStrip", () => {
+  it("eine Spanne für alle Zeilen: das Maximum über alle Gruppen, gerundet wie je Strich", () => {
+    expect(
+      sharedStripSpan([
+        { high: { mean: 0.12 }, low: { mean: -0.05 } },
+        { high: { mean: 0.71 }, low: { mean: 0.2 } },
+        { high: { mean: null }, low: { mean: null } },
+      ])
+    ).toBe(0.8)
+    expect(sharedStripSpan([{ high: { mean: 0.1 }, low: { mean: -0.2 } }])).toBe(0.3)
+    expect(sharedStripSpan([])).toBe(0.3)
+  })
+
+  it("auf der Seite haben alle Striche dieselbe Skala", () => {
+    const html = render({
+      ...FULL,
+      influences: {
+        ...FULL.influences,
+        rows: [
+          row("sleep"),
+          row("motivation", { high: { n: 6, mean: 0.71 }, low: { n: 6, mean: 0.1 } }),
+        ],
+      },
+    })
+    const ends = [...html.matchAll(/text-anchor="end"[^>]*>([^<]*)</g)].map((m) => m[1])
+    expect(ends).toEqual(["+0,8", "+0,8"])
+  })
+
   it("zeigt beide Punkte und die Verbindung, ohne Gruppe keinen Punkt", () => {
     const both = renderToStaticMarkup(createElement(InfluenceStrip, { high: 0.2, low: -0.1 }))
     expect(both).toContain("data-strip-high")

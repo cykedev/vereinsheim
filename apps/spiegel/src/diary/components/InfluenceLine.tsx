@@ -21,7 +21,16 @@ export const PILL_BASE =
  * Satz, am Desktop nebeneinander. Die Trennlinie trägt die Hülle, gerade; die Fläche beim Überfahren ist rund, ohne
  * Rand.
  */
-export function InfluenceLine({ row, href }: { row: InfluenceRow; href: string }) {
+export function InfluenceLine({
+  row,
+  href,
+  span,
+}: {
+  row: InfluenceRow
+  href: string
+  /** die Spanne des Strichs, für alle Zeilen der Seite dieselbe */
+  span: number
+}) {
   const pill = influencePill(row.aspect, row.comparison)
   return (
     <div className="py-1">
@@ -37,7 +46,7 @@ export function InfluenceLine({ row, href }: { row: InfluenceRow; href: string }
           </span>
         </span>
         <span className="grid gap-2 md:grid-cols-[minmax(0,1fr)_15rem] md:items-center md:gap-4">
-          <InfluenceStrip high={row.high.mean} low={row.low.mean} />
+          <InfluenceStrip high={row.high.mean} low={row.low.mean} span={span} />
           <span className="text-sm text-foreground-2 tabular-nums">
             {influenceSentence(row.aspect, row)}
           </span>

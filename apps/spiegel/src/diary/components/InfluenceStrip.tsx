@@ -11,15 +11,34 @@ export function stripSpan(means: readonly (number | null)[]): number {
   return Math.max(MIN_SPAN, Math.ceil(largest * 10 - 1e-9) / 10)
 }
 
+/**
+ * Eine Spanne für alle Striche einer Seite: aus den Mitteln aller Gruppen, damit Zeilen untereinander dieselbe Skala
+ * haben und ein kleiner Abstand nicht groß wirkt
+ */
+export function sharedStripSpan(
+  rows: readonly { high: { mean: number | null }; low: { mean: number | null } }[]
+): number {
+  return stripSpan(rows.flatMap((row) => [row.high.mean, row.low.mean]))
+}
+
 /** Lage auf dem Strich in Prozent, mit Rand für die Beschriftung */
 const at = (value: number, span: number) => `${8 + ((value + span) / (2 * span)) * 84}%`
 
 /**
  * Der Strich eines Merkmals: Achse, die Form gestrichelt in der Mitte, die hohe Gruppe als gefüllter Punkt, die
- * niedrige als hohler, verbunden. Eine leere Gruppe hat keinen Punkt.
+ * niedrige als hohler, verbunden. Eine leere Gruppe hat keinen Punkt. Auf einer Seite mit mehreren Strichen gibt der
+ * Aufrufer allen dieselbe Spanne (`sharedStripSpan`).
  */
-export function InfluenceStrip({ high, low }: { high: number | null; low: number | null }) {
-  const span = stripSpan([high, low])
+export function InfluenceStrip({
+  high,
+  low,
+  span = stripSpan([high, low]),
+}: {
+  high: number | null
+  low: number | null
+  /** die Spanne je Seite; ohne die eigene aus beiden Gruppen */
+  span?: number
+}) {
   return (
     <svg
       data-influence-strip

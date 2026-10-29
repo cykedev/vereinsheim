@@ -9,7 +9,7 @@ import { AnalysisFilters } from "./AnalysisFilters"
 import { DiaryHeader } from "./DiaryList"
 import { DiaryHelp } from "./DiaryHelp"
 import { InfluenceLine } from "./InfluenceLine"
-import { InfluenceLegend } from "./InfluenceStrip"
+import { InfluenceLegend, sharedStripSpan } from "./InfluenceStrip"
 import { BeforeAfter, ExecutionCard, ExpectedCard } from "./SelfImage"
 import { BOX } from "./styles"
 
@@ -23,6 +23,7 @@ export function AnalysisScreen({ view, timeZone }: { view: AnalysisView; timeZon
   const family = view.family?.slug ?? null
   const season = view.season ? seasonKey(view.season) : null
   const basis = influenceBasis(view.influences.left)
+  const span = sharedStripSpan(view.influences.rows)
   return (
     <Page>
       <section data-analysis-page className={`grid gap-5 ${PAGE_SINGLE}`}>
@@ -53,6 +54,7 @@ export function AnalysisScreen({ view, timeZone }: { view: AnalysisView; timeZon
                       key={row.aspect}
                       row={row}
                       href={factorHref(row.aspect, family, season)}
+                      span={span}
                     />
                   ))}
                 </div>
