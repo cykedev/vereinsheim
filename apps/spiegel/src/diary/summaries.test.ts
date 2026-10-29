@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest"
 
-import { cardsText, dayLabel, entryLine, entryMeta, entryTitle, resultText } from "./summaries"
+import {
+  cardsText,
+  dayLabel,
+  entryLine,
+  entryMeta,
+  entryTitle,
+  resultText,
+  shotResult,
+} from "./summaries"
 
 const ZONE = "Europe/Berlin"
 const r = (value: number, digits = 1) => ({ value, scoring: "decimal" as const, digits })
@@ -13,6 +21,13 @@ describe("Zeilen eines Eintrags", () => {
   it("nennt Ergebnisse in Ringen in ihrer Wertung", () => {
     expect(resultText(r(374.3))).toBe("374,3 Ringe")
     expect(resultText({ value: 358, scoring: "rings", digits: 0 })).toBe("358 Ringe")
+  })
+
+  it("nimmt als geschossen nur das Ergebnis genau einer Scheibe", () => {
+    expect(shotResult([{ result: r(374.3) }])).toEqual(r(374.3))
+    expect(shotResult([{ result: null }])).toBeNull()
+    expect(shotResult([])).toBeNull()
+    expect(shotResult([{ result: r(374.3) }, { result: r(370) }])).toBeNull()
   })
 
   it("nennt die Scheiben: eine mit Ergebnis, mehrere als Zahl, keine, oder die Art", () => {

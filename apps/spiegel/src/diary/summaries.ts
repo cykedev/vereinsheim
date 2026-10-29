@@ -16,6 +16,14 @@ export function dayLabel(day: string, timeZone: string): string {
 export const resultText = (result: ResultValue) =>
   `${formatValue(result.value, result.digits)} Ringe`
 
+/**
+ * Was ein Eintrag geschossen hat: das Ergebnis seiner einen Scheibe (verknüpft oder dazugekommen); null ohne Scheibe,
+ * bei mehreren oder ohne Ergebnis. Die Seite eines Eintrags und „Erwartet und geschossen“ nehmen diese eine Regel.
+ */
+export function shotResult(cards: readonly { result: ResultValue | null }[]): ResultValue | null {
+  return cards.length === 1 ? cards[0].result : null
+}
+
 export const KIND_WORDS: Readonly<Record<Exclude<DiaryKindValue, "shooting">, string>> = {
   dry: "Trockentraining",
   mental: "Mentaltraining",

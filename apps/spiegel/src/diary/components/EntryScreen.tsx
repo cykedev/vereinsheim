@@ -17,7 +17,7 @@ import { saveEntryText, saveExpected, saveOutcome } from "../actions"
 import { diaryDiscard } from "../consequences"
 import type { EntryView, Family } from "../queries"
 import type { ScalePart } from "../scales"
-import { entryMeta, KIND_WORDS, resultText } from "../summaries"
+import { entryMeta, KIND_WORDS, resultText, shotResult } from "../summaries"
 import { ENTRY_TEXTS } from "../texts"
 
 import { EntryBasics } from "./EntryBasics"
@@ -83,7 +83,8 @@ export function EntryScreen({
   ]
   const executions: Record<string, number> = {}
   for (const e of entry.executions) executions[e.cardId] = (executions[e.cardId] ?? 0) + 1
-  const shot = ownCards.length === 1 && ownCards[0].result ? resultText(ownCards[0].result) : null
+  const shotValue = shotResult(ownCards)
+  const shot = shotValue ? resultText(shotValue) : null
   const prognosis = valuesOf(entry, "prognosis")
   const text =
     (field: "intention" | "note" | "learned" | "question" | "disturbed") => (value: string) =>
