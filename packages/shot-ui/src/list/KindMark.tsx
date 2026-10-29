@@ -10,8 +10,18 @@ export const KIND_TEXT: Readonly<Record<CardKind, string>> = {
   "competition-probe": "Wettkampf nur Probe",
 }
 
-/** „Einschießen“ mit weichen Trennstellen: Die Spalte „Art“ bleibt am Telefon so schmal wie mit „Probe“ */
-const WARMUP_WORD = "Ein\u00adschie\u00adßen"
+/**
+ * Wörter unter oder statt der Art mit weichen Trennstellen: Die Spalte „Art“ bleibt am Telefon so schmal wie mit
+ * „Probe“, sonst läuft die Tabelle bei 360 px in ihrer Karte über
+ */
+const NARROW_WORDS: Readonly<Record<string, string>> = {
+  Einschießen: "Ein\u00adschie\u00adßen",
+  "vom Ausdruck": "vom Aus\u00addruck",
+  eingetragen: "ein\u00adge\u00adtra\u00adgen",
+}
+
+/** ein Wort für die Spalte „Art“, mit Trennstellen, wo es sie braucht */
+export const narrowWord = (word: string) => NARROW_WORDS[word] ?? word
 
 /**
  * Art einer Scheibe in einer Zeile der Listen: Wettkampf als goldener Pokal (wie der Kreis der Art), Training ohne
@@ -32,7 +42,11 @@ export function KindMark({ kind, warmup = false }: { kind: CardKind; warmup?: bo
         >
           {competition && <Trophy className="inline size-4 align-[-3px] text-gold" />}
           {competition && probe && " "}
-          {probe && warmup ? <span data-warmup-word>{WARMUP_WORD}</span> : probe && "Probe"}
+          {probe && warmup ? (
+            <span data-warmup-word>{narrowWord("Einschießen")}</span>
+          ) : (
+            probe && "Probe"
+          )}
         </span>
       )}
       <span className="sr-only">

@@ -20,7 +20,7 @@ import { RouteLink, shouldIntercept, useRouteNavigate } from "../nav/RouteLink"
 import type { CardRoute, ListRoute } from "../nav/routes"
 import { MiniTarget } from "../target/MiniTarget"
 import { eveningsByMonth, type CardListModel, type ListRow } from "./evenings"
-import { KIND_TEXT, KindMark } from "./KindMark"
+import { KIND_TEXT, KindMark, narrowWord } from "./KindMark"
 
 /** die Wertung im Namen der Zeile */
 const SCORING_IN: Readonly<Record<Scoring, string>> = {
@@ -259,7 +259,7 @@ export function EveningList({
                                   data-provenance-word
                                   className="block text-xs text-muted-foreground"
                                 >
-                                  {quietProvenance(row.provenance)}
+                                  {narrowWord(quietProvenance(row.provenance) ?? "")}
                                 </span>
                               )}
                             </td>

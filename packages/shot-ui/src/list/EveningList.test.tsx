@@ -338,8 +338,11 @@ describe("Herkunft und Gründe in den Zeilen", () => {
 
   it("eingetragen und vom Ausdruck stehen leise unter der Art, gemessen nie", () => {
     expect(rowOf("s")).toMatch(/data-provenance="entered"/)
-    expect(rowOf("s")).toMatch(/<span data-provenance-word="true"[^>]*>eingetragen<\/span>/)
-    expect(rowOf("w")).toMatch(/data-provenance-word="true"[^>]*>vom Ausdruck</)
+    // mit weichen Trennstellen: am Telefon bricht das Wort um, statt die Spalte „Art“ zu verbreitern
+    expect(rowOf("s")).toMatch(
+      /<span data-provenance-word="true"[^>]*>ein\u00adge\u00adtra\u00adgen<\/span>/
+    )
+    expect(rowOf("w")).toMatch(/data-provenance-word="true"[^>]*>vom Aus\u00addruck</)
     expect(rowOf("a")).not.toContain("data-provenance")
     expect(text(html)).not.toContain("gemessen")
   })

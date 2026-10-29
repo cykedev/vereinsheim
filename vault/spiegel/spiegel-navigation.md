@@ -538,9 +538,10 @@ Neben einer Zahl stehen Art und Wertung als weiche Kreise, in einer Filterzeile 
   - Start: neben dem Ø je Block (der Block ist eine Karte, keine Filter); dort entfällt „in ganzen Ringen“ im Text.
   - Regel: in einer Filterzeile ein Chip in Worten, direkt neben einer Zahl der Kreis.
 - **Liste:** der Pokal in der Spalte „Art“ 16 px in Gold, damit er auffällt; nur aus Probe dahinter das Wort „Probe“
-  (`KindMark`), bei Einschießen statt „Probe“ das Wort „Einschießen“ (mit weichen Trennstellen, damit die Spalte am
-  Telefon nicht breiter wird als mit „Probe“; gemessen am 29. Oktober 2026: 74 statt 25 px, die Tabelle lief bei 360 px
-  in ihrer Karte über); seine Zahlen stehen leise, auch die Wertung der
+  (`KindMark`), bei Einschießen statt „Probe“ das Wort „Einschießen“. Dieses Wort und die Herkunft darunter („vom
+  Ausdruck“, „eingetragen“) tragen weiche Trennstellen (`narrowWord`): Ohne sie war die Spalte 60 bis 74 statt 25 px
+  breit, und die Tabelle lief bei 360 und 390 px in ihrer Karte über (gemessen am 29. Oktober 2026; die Skriptprüfung
+  hält „jede Tabelle passt in ihre Karte“ fest). Die Zahlen des Einschießens stehen leise, auch die Wertung der
   Scheibe nicht fett, und der Abstand zeigt „–“ mit „Einschießen zählt nicht“ (er rechnet ohne Einschießen). Dasselbe
   Wort in der Liste im Fortschritt und in der Metazeile der Kacheln auf Start.
 - **Eine Wahl je Seite:** Kopf am Telefon und Box zeigen denselben Zustand; ein Fehler steht im Platz `notice`, auf
