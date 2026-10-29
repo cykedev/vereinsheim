@@ -2,6 +2,11 @@
 // Mitglied sieht auf Start den vollen Hinweis, auf allen anderen Seiten die Zeile, keine Knöpfe zum Ändern und auf den
 // alten Adressen zum Anlegen und Bearbeiten die Seite „Das geht jetzt in Spiegel.“; der umgezogene Admin bedient Admin
 // und legt Disziplinen der Anlage an. Am Ende sind beide Prüfkonten wieder nicht umgezogen, auch wenn etwas abbricht.
+// Mit `--bilder <ordner>` legt er Bildschirmfotos des umgezogenen Mitglieds ab (Start und eine Einheit bei 390 und
+// 1280 px, hell und dunkel, dazu „Neue Einheit“).
+
+import { mkdirSync, writeFileSync } from "node:fs"
+import { join } from "node:path"
 
 import type { Page } from "@vereinsheim/pruefen/browser"
 import { noSideScroll, type Check } from "@vereinsheim/pruefen/common"
@@ -18,9 +23,66 @@ export interface MovedFlow {
   record: (checks: Check[]) => void
   login: (page: Page, role?: "member" | "admin") => Promise<void>
   newestSessionId: string
+  /** Ordner für Bildschirmfotos; ohne keine */
+  pictures?: string
 }
 
-export async function movedFlow({ page, base, check, record, login, newestSessionId }: MovedFlow) {
+/** die ganze Seite in einem Fenster ihrer Höhe, in der gewählten Darstellung */
+async function picture(
+  page: Page,
+  url: string,
+  width: number,
+  theme: "light" | "dark",
+  file: string
+) {
+  await page.viewport(width, width < 1024 ? 844 : 900)
+  await page.goto(url)
+  await page.ev(`localStorage.setItem("treffsicher-theme", ${JSON.stringify(theme)})`)
+  await page.goto(url)
+  await page.wait(500)
+  await page.viewport(width, await page.ev<number>(`document.documentElement.scrollHeight`))
+  await page.wait(300)
+  writeFileSync(file, await page.screenshot())
+}
+
+async function movedPictures(page: Page, base: string, session: string, dir: string) {
+  mkdirSync(dir, { recursive: true })
+  for (const theme of ["light", "dark"] as const)
+    for (const width of [390, 1280]) {
+      await picture(
+        page,
+        `${base}/dashboard`,
+        width,
+        theme,
+        join(dir, `start-${width}-${theme}.png`)
+      )
+      await picture(
+        page,
+        `${base}${session}`,
+        width,
+        theme,
+        join(dir, `einheit-${width}-${theme}.png`)
+      )
+      await picture(
+        page,
+        `${base}/sessions/new`,
+        width,
+        theme,
+        join(dir, `neu-${width}-${theme}.png`)
+      )
+    }
+  await page.ev(`localStorage.removeItem("treffsicher-theme")`)
+}
+
+export async function movedFlow({
+  page,
+  base,
+  check,
+  record,
+  login,
+  newestSessionId,
+  pictures,
+}: MovedFlow) {
   const session = `/sessions/${newestSessionId}`
   try {
     await setMovedByEmail(testDb(), PRUEFEN_EMAIL, true)
@@ -109,6 +171,7 @@ export async function movedFlow({ page, base, check, record, login, newestSessio
     }
 
     record(await noSideScroll(page, { base, paths: ["/dashboard", session], widths: [390, 360] }))
+    if (pictures) await movedPictures(page, base, session, pictures)
 
     await setMovedByEmail(testDb(), PRUEFEN_ADMIN_EMAIL, true)
     await login(page, "admin")

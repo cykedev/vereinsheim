@@ -372,7 +372,16 @@ async function main() {
     await section("Konto deaktivieren", () => accountFlow(page))
     // danach: meldet Mitglied und Admin als umgezogen an und setzt beide am Ende zurück
     await section("Nur lesend", () =>
-      movedFlow({ page, base: BASE, check, record, login, newestSessionId })
+      movedFlow({
+        page,
+        base: BASE,
+        check,
+        record,
+        login,
+        newestSessionId,
+        pictures:
+          pictures >= 0 ? join(process.argv[pictures + 1] ?? "bilder", "nur-lesend") : undefined,
+      })
     )
     // React meldet in der Entwicklung manches über console.error; jede Meldung zählt, damit keine untergeht
     check("Keine Skriptfehler", page.errors.length === 0, page.errors.slice(0, 5).join(" · "))
