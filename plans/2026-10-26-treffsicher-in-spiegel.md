@@ -300,6 +300,26 @@ Entschieden mit dem User am 28. Oktober 2026:
     Schritt, erste Zeile = Titel). Weicht von ADR-033 ab (eigene Seite im Tagebuch), vom User wieder aufgemacht.
   - **Anhänge:** keine im Tagebuch. Jede Datei wird Ausdruck oder Beleg ihrer Scheibe (Teil 1f). Weicht von ADR-033 ab
     („Anhänge bleiben im Tagebuch“), vom User wieder aufgemacht. Der Nachtrag zu ADR-033 kommt mit 2b.
+- **Designkonzept 2c, Runde 2** (https://claude.ai/artifact/PuQTCAECDnDYxBjMLPjMUe), vom User mit allen Empfehlungen
+  freigegeben (29. Oktober 2026). Grundlage: 36 Einheiten mit Befinden und Ergebnis in 4 Konten (26 in einem, in 90
+  Tagen nie mehr als 9), 180 bewertete Serien an 48 Einheiten, 10 Einheiten mit Prognose und Feedback (höchstens 4 je
+  Konto).
+  - **Fünfter Reiter „Auswertung“** im Tagebuch, je Disziplin (Chips wie „Fragen“), Zeitraum „Alles“ (Vorgabe) oder
+    eine Saison mit Einträgen. Der Fortschritt bleibt, wie er ist (ADR-033).
+  - **Einflüsse gegen die Form:** Je Eintrag der Abstand seines Ø je Schuss zum Schnitt der fünf Scheiben derselben
+    Disziplin davor; Einträge ohne fünf Scheiben davor zählen nicht und werden genannt. Gruppen über und unter dem
+    mittleren Wert wie in Treffsicher, Urteil ab 5 je Seite (ADR-034). Nur Schlaf, Energie, Stress, Motivation, nur der
+    Ø je Schuss (keine Streuung: zu viele Vergleiche für wenige Einträge). Urteile wie „Viel Energie: besser“, „Kein
+    klarer Unterschied“, „Noch kein Urteil“. Ein Einfluss öffnet eine Seite mit den Einträgen nach Stufe.
+  - **Selbstbild:** „Merkst du, wann eine Serie gut ist?“ (Ausführung, Serie gegen Serie desselben Abends, mit
+    Urteil), „Erwartet und geschossen“ (Liste je Eintrag), „Vorher und nachher“ (Mittel je Bereich in fünf Stufen).
+    Die beiden letzten ohne Urteil.
+  - **Reiter in einer Zeile, die wischt** (User, gilt für alle Reiter in allen Apps): eigener Teil „Reiter“ nach
+    `main`, gemeinsamer Baustein in `@vereinsheim/ui`; Auswahlen im Blatt „Filter“ brechen weiter um.
+  - **Vorschau mit den Daten des Users** als Teil von 2c (User): ein Werkzeug nur für die Dev-DB nimmt die
+    Treffsicher-Ergebnisse ohne Scheibe in Spiegel als Scheiben „aus Treffsicher“ mit und legt die Ausführung auf die
+    Serien, alles mit `preview:` und löschbar. Mit den vorhandenen Scheiben allein hätten nur 12 von 26 Einträgen mit
+    Befinden eine Scheibe. Die Prüfung ist eine Vorschau auf Stufe 3.
 
 ### Stufe 3 · Die Daten ziehen um
 
@@ -400,8 +420,9 @@ Holen“ ins Textbuch Spiegel (steht in `reports/2026-10-27-fetch-no-request-cap
    (Serien): vor dem Release `projection-check dump|compare` auf der Prod-Kopie. In der Dev-DB stehen Vorschau-Daten
    des Users (`importKey` `preview:`): 94 Einträge, 10 Ziele, 2 Abläufe; vor der Übernahme in Stufe 3 löschen mit
    `delete from "DiaryEntry" where "importKey" like 'preview:%'` und denselben Befehlen für `"DiaryGoal"` und
-   `"DiaryRoutine"`. Als Nächstes 2c (Einflüsse, Selbstbild), Konzept zuerst; 1f (mehrere Belege je Scheibe) geht als
-   eigener Teil nach `main`.
+   `"DiaryRoutine"`. 2c (Auswertung: Einflüsse, Selbstbild, Vorschau mit den Daten des Users) ist entschieden, der
+   Teilplan folgt; parallel der Teil „Reiter“ nach `main`, danach den Basisbranch auf `main` rebasen. 1f (mehrere
+   Belege je Scheibe) geht als eigener Teil nach `main`.
 3. **Stufe 3 Übernahme**, dann **Stufe 4 Ruhestand**.
 
 Für später festgehalten: Randfall „Wertung endgültig gelöscht, Probe des Abends bleibt“: Holen öffnet die Probe, die
@@ -428,6 +449,8 @@ Befund aus dem Review von 2a).
 | 1f   |                                              |                                            |                          | entschieden (28.10.), Konzept offen                     |
 | 2a   | `plans/2026-10-28-tis-2a-diary-entries.md`   | `feat/tis-2a-diary-entries` (vom Basis)    | `tis-2a-diary-entries`   | im Basisbranch (`3fd30d85`), Plan entfernt              |
 | 2b   | `plans/2026-10-28-tis-2b-goals-routines.md`  | `feat/tis-2b-goals-routines` (vom Basis)   | `tis-2b-goals-routines`  | im Basisbranch (`b51a030b`), Plan entfernt              |
+| 2c   | `plans/2026-10-29-tis-2c-diary-analysis.md`  | `feat/tis-2c-diary-analysis` (vom Basis)   |                          | Plan vorgelegt (29.10.)                                 |
+| R    | `plans/2026-10-29-tis-r-tab-bar.md`          | `feat/tis-r-tab-bar` (von `main`)          |                          | Plan vorgelegt (29.10.)                                 |
 | 3    |                                              |                                            |                          | offen                                                   |
 | 4    |                                              |                                            |                          | offen                                                   |
 
