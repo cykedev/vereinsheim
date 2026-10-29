@@ -26,6 +26,7 @@ services:
       - "3001:3000"
     environment:
       NEXTAUTH_URL: "http://localhost:3001"
+      SPIEGEL_URL: "http://localhost:3002"
       AUTH_TRUST_PROXY_HEADERS: "false"
 
   app-spiegel:

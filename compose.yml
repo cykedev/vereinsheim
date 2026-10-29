@@ -144,6 +144,8 @@ services:
       DATABASE_URL: postgresql://treffsicher:${TREFFSICHER_DB_PASSWORD}@db:5432/treffsicher
       NEXTAUTH_SECRET: ${TREFFSICHER_NEXTAUTH_SECRET}
       NEXTAUTH_URL: https://${TREFFSICHER_HOST}
+      # Ziel des Knopfs „Zu Spiegel“ für Konten, die nach Spiegel umgezogen sind ([[adr-033]], Stufe 3)
+      SPIEGEL_URL: https://${SPIEGEL_HOST}
       ADMIN_EMAIL: ${TREFFSICHER_ADMIN_EMAIL}
       ADMIN_PASSWORD: ${TREFFSICHER_ADMIN_PASSWORD}
       UPLOAD_DIR: /app/uploads

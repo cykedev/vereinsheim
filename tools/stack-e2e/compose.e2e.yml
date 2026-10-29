@@ -30,6 +30,8 @@ services:
     pull_policy: never
     environment:
       NEXTAUTH_URL: "http://localhost:18081"
+      # SPIEGEL_HOST ist hier `:8082`, daraus wird keine gültige Adresse
+      SPIEGEL_URL: "http://localhost:18082"
 
   app-spiegel:
     pull_policy: never
