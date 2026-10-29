@@ -51,6 +51,8 @@ export const ANALYSIS_CATALOG: Readonly<Record<string, readonly string[]>> = Obj
   compareShots: ["C2"],
   comparePicture: ["C2", "C3"],
   againstOwnAverage: ["C4"],
+  // Einschießen (SF-05): welche Scheiben nur aus Probe in Verlauf und Rekorden nicht zählen
+  warmupIds: ["T1", "R1"],
   recordEligible: ["R1"],
   periodRecords: ["R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R10", "R11"],
   cardRecordCandidates: ["R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R10", "R11"],
