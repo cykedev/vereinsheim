@@ -16,7 +16,8 @@ const ALL = "all"
 
 /**
  * Disziplin und Zeitraum der Auswertung: Chips der Disziplinen als Links (der Zeitraum bleibt), darunter „Alles“ und
- * die Saisons (die Disziplin bleibt). Ohne Disziplin weder Chips noch Zeitraum. Am Desktop in einer Zeile.
+ * die Saisons (die Disziplin bleibt) in einer Zeile, die wischt. Ohne Disziplin weder Chips noch Zeitraum. Am Desktop
+ * beide in einer Zeile.
  */
 export function AnalysisFilters({
   families,
@@ -47,7 +48,9 @@ export function AnalysisFilters({
       </nav>
       <Segmented
         label={ANALYSIS_TEXTS.period}
-        wrap
+        scroll
+        // so breit wie die Saisons; im Raster sonst über die ganze Spalte
+        className="justify-self-start"
         options={[
           { value: ALL, label: ANALYSIS_TEXTS.all },
           ...seasons.map((s) => ({ value: s.key, label: s.label })),

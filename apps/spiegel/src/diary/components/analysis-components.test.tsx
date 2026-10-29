@@ -164,6 +164,19 @@ describe("Auswertung", () => {
     expect(html).toContain("Noch kein Urteil")
   })
 
+  it("die Saisons stehen in einer Zeile, die wischt, „Alles“ zuerst", () => {
+    const html = render({
+      ...FULL,
+      seasons: [SEASON, { ...SEASON, from: "2025-09-01", label: "Saison 25/26" }],
+    })
+    const group = html.match(/<div[^>]*role="radiogroup"[^>]*>/)?.[0] ?? ""
+    expect(group).toContain('aria-label="Zeitraum"')
+    expect(group).toContain("overflow-x-auto")
+    expect(group).not.toContain("flex-wrap")
+    const labels = [...html.matchAll(/role="radio"[^>]*>([^<]*)</g)].map((m) => m[1])
+    expect(labels).toEqual(["Alles", "Saison 26/27", "Saison 25/26"])
+  })
+
   it("jede Zeile ist ein Link mit Disziplin und Zeitraum", () => {
     const html = render(FULL)
     expect(html).toMatch(
