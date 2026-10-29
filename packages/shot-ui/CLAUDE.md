@@ -237,7 +237,9 @@ Bedienung prüft `pnpm --filter spiegel pruefen`.
   - Wohin man kommt, ist markiert (`bg-accent-wash`, `data-marked`): die Zeilen des Abends aus dem Anker (`evening`)
     und die Scheibe aus `ListRoute.pick` (`aria-current`). `pick` setzen `backRoute` und `listFromProgress`; Filter,
     `listOnEvening` und `areaLinks` lassen es fallen.
-  - Unter 32rem Breite des Bereichs fallen Uhrzeit, Abstand und Schusszahl weg.
+  - Unter 32rem Breite des Bereichs fallen Uhrzeit, Abstand und Schusszahl weg, Wochentag und Datum stehen in zwei
+    Zeilen (`EveningDate`), und die Wörter der Spalte „Art“ brechen um (`narrowWord`): Keine Tabelle wird bei 360 px
+    breiter als ihre Karte.
 - **Zustand in der Adresse** (`vault/spiegel/spiegel-navigation.md`): Pfade,
   Schlüssel und Anker englisch. In die Adresse gehört, _was_ man sieht (Seite, Filter, Zeitraum, Vergleich,
   Wahl, Serie, Schuss als Nummer wie `shotLabels`, Wertung, Abschnitt), nicht _wie_ es gezeichnet ist (Ebenen,

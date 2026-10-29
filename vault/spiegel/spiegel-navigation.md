@@ -541,7 +541,8 @@ Neben einer Zahl stehen Art und Wertung als weiche Kreise, in einer Filterzeile 
   (`KindMark`), bei Einschießen statt „Probe“ das Wort „Einschießen“. Dieses Wort und die Herkunft darunter („vom
   Ausdruck“, „eingetragen“) tragen weiche Trennstellen (`narrowWord`): Ohne sie war die Spalte 60 bis 74 statt 25 px
   breit, und die Tabelle lief bei 360 und 390 px in ihrer Karte über (gemessen am 29. Oktober 2026; die Skriptprüfung
-  hält „jede Tabelle passt in ihre Karte“ fest). Die Zahlen des Einschießens stehen leise, auch die Wertung der
+  hält „jede Tabelle passt in ihre Karte“ fest). Aus demselben Grund stehen Wochentag und Datum am Telefon in zwei
+  Zeilen: Sonst trug das breiteste Datum („Di 31.03.“) die Spalte (69 statt 62 px). Die Zahlen des Einschießens stehen leise, auch die Wertung der
   Scheibe nicht fett, und der Abstand zeigt „–“ mit „Einschießen zählt nicht“ (er rechnet ohne Einschießen). Dasselbe
   Wort in der Liste im Fortschritt und in der Metazeile der Kacheln auf Start.
 - **Eine Wahl je Seite:** Kopf am Telefon und Box zeigen denselben Zustand; ein Fehler steht im Platz `notice`, auf

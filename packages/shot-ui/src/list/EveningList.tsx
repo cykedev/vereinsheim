@@ -71,6 +71,24 @@ export interface EveningListProps {
  * der Hinweis auf andere Familien des Abends. Die Gruppe trägt den ISO-Tag als Anker. Die ganze Zeile öffnet die
  * Scheibe; ihr Knopf ist die kleine Scheibe und trägt die Werte der Zeile als Namen.
  */
+/**
+ * Wochentag und Datum des Abends („Di 31.03.“): unter 32rem Breite des Bereichs in zwei Zeilen, in jedem Monat gleich.
+ * Sonst trüge das breiteste Datum die Spalte, und die Tabelle liefe bei 360 px in ihrer Karte über
+ */
+function EveningDate({ day, timeZone }: { day: string; timeZone: string }) {
+  const text = formatWeekdayDay(noonOf(day, timeZone), timeZone)
+  // `formatWeekdayDay` setzt ein Leerzeichen zwischen Wochentag und Datum
+  const gap = text.indexOf(" ")
+  return (
+    <>
+      {text.slice(0, gap)}{" "}
+      <span data-evening-date className="block @min-[32rem]:inline">
+        {text.slice(gap + 1)}
+      </span>
+    </>
+  )
+}
+
 export function EveningList({
   model,
   marks,
@@ -223,7 +241,7 @@ export function EveningList({
                                 scope="row"
                                 className={cn(CELL, "text-left font-semibold whitespace-nowrap")}
                               >
-                                {formatWeekdayDay(noonOf(evening.day, timeZone), timeZone)}
+                                <EveningDate day={evening.day} timeZone={timeZone} />
                               </th>
                             ) : (
                               <td className={CELL} />

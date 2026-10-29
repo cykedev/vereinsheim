@@ -86,8 +86,13 @@ describe("Scheiben-Liste nach Abend (Form wie die Liste eines Zeitraums)", () =>
     ])
     // das Datum steht einmal je Abend, jede Zeile hat ihre Zelle (kein rowSpan: das Hervorheben bleibt ein
     // Rechteck); keine Zahl der Scheiben und Schüsse je Abend; der Hinweis rechtsbündig in eigener Zeile
-    expect(html).toMatch(/<th scope="row"[^>]*>Di 29\.09\.<\/th>/)
-    expect(html).toMatch(/<th scope="row"[^>]*>So 27\.09\.<\/th>/)
+    // am Telefon Wochentag und Datum in zwei Zeilen, ab 32rem Breite des Bereichs in einer
+    const date = (weekday: string, day: string) =>
+      new RegExp(
+        `<th scope="row"[^>]*>${weekday} <span data-evening-date="true" class="block @min-\\[32rem\\]:inline">${day}</span></th>`
+      )
+    expect(html).toMatch(date("Di", "29\\.09\\."))
+    expect(html).toMatch(date("So", "27\\.09\\."))
     expect(html.match(/scope="row"/g)).toHaveLength(2)
     expect(html).not.toContain("rowSpan")
     expect(html).toMatch(
@@ -119,7 +124,7 @@ describe("Scheiben-Liste nach Abend (Form wie die Liste eines Zeitraums)", () =>
   it("Zeilen neueste zuerst: Uhrzeit, Art, Ergebnis, Ø, Abstand, Schuss; die kleine Scheibe ist der Knopf", () => {
     expect([...html.matchAll(/data-card-row="([^"]+)"/g)].map((m) => m[1])).toEqual(["b", "a", "d"])
     expect(html).toMatch(
-      /<tr data-card-row="b"[^>]*><th[^>]*>[^<]*<\/th><td[^>]*><a href="\/cards\/b\?from=list&amp;family=lg-freihand" aria-label=/
+      /<tr data-card-row="b"[^>]*><th[^>]*>[^<]*<span[^>]*>[^<]*<\/span><\/th><td[^>]*><a href="\/cards\/b\?from=list&amp;family=lg-freihand" aria-label=/
     )
     const rowA = html.slice(html.indexOf('data-card-row="a"'), html.indexOf('data-card-row="d"'))
     // die Art ohne Kürzel: Training hat kein Zeichen, nur den Namen für den Screenreader
