@@ -47,7 +47,7 @@ import { PatternPanel } from "@vereinsheim/shot-ui/period/PatternPanel"
 import { PeriodAnalysis } from "@vereinsheim/shot-ui/period/PeriodAnalysis"
 import { PeriodChart } from "@vereinsheim/shot-ui/period/PeriodChart"
 import { PeriodChartBar } from "@vereinsheim/shot-ui/period/PeriodChartBar"
-import { PeriodControls, PeriodHeader } from "@vereinsheim/shot-ui/period/PeriodHeader"
+import { PeriodControls, PeriodCount, PeriodHeader } from "@vereinsheim/shot-ui/period/PeriodHeader"
 import { PeriodResult } from "@vereinsheim/shot-ui/period/PeriodResult"
 import { PeriodTiles } from "@vereinsheim/shot-ui/period/PeriodTiles"
 import { emptyPeriodText, periodSentence } from "@vereinsheim/shot-ui/period/sentence"
@@ -57,7 +57,6 @@ import {
   type PeriodState,
 } from "@vereinsheim/shot-ui/period/state"
 import { VolumeChart } from "@vereinsheim/shot-ui/period/VolumeChart"
-import { periodCountText } from "@vereinsheim/shot-ui/period/words"
 import { CalendarBrowser } from "@vereinsheim/shot-ui/period/CalendarChart"
 import { Segmented } from "@vereinsheim/ui/design2/segmented"
 import { ToggleChip } from "@vereinsheim/ui/design2/toggle-chip"
@@ -264,17 +263,11 @@ export function ProgressScreen({
   // Einschießen zählt nur mit dem Schalter: sonst steht es in der Liste, aber nicht im Ergebnis; das „?“ erklärt es
   const excluded = model.excludedWarmup
   const cardsText = (
-    <span data-period-count>
-      {periodCountText(model.cards.length, excluded)}
-      {excluded > 0 && (
-        <HelpButton
-          label="Einschießen"
-          helpId="einschiessen"
-          onClick={() => onHelp("einschiessen")}
-          className="ml-1 align-middle"
-        />
-      )}
-    </span>
+    <PeriodCount
+      cards={model.cards.length}
+      warmup={excluded}
+      onHelp={() => onHelp("einschiessen")}
+    />
   )
   const empty = model.cards.length === 0
 

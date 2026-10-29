@@ -4,10 +4,13 @@ import { cn } from "@vereinsheim/lib/utils"
 import { Fragment, type ReactNode } from "react"
 
 import { CardFilters } from "../controls/CardFilters"
+import { HelpButton } from "../help/HelpButton"
 import { PAGE_COLUMNS } from "../layout/columns"
 import type { DateRange, NamedPeriod } from "./calendar"
 import { PeriodPicker } from "./PeriodPicker"
+import { usePeriodWords } from "./PeriodWords"
 import type { PeriodAction, PeriodState } from "./state"
+import { countOf, warmupCountText } from "./words"
 
 export interface PeriodControlsProps {
   state: PeriodState
@@ -75,6 +78,41 @@ export function PeriodControls({
   )
 }
 
+/**
+ * Zahl der Scheiben im Kopf eines Zeitraums. Nicht gezähltes Einschießen steht mit seinem „?“ als eine Einheit da, die
+ * nur als Ganzes umbricht; sonst stand das „?“ am Telefon am Anfang der nächsten Zeile vor dem Zeitraum
+ */
+export function PeriodCount({
+  cards,
+  warmup,
+  onHelp,
+}: {
+  cards: number
+  warmup: number
+  onHelp: () => void
+}) {
+  const words = usePeriodWords()
+  return (
+    <span data-period-count>
+      {countOf(cards, words)}
+      {warmup > 0 && (
+        <>
+          {", "}
+          <span data-period-warmup className="whitespace-nowrap">
+            {warmupCountText(warmup)}
+            <HelpButton
+              label="Einschießen"
+              helpId="einschiessen"
+              onClick={onHelp}
+              className="ml-1 align-middle"
+            />
+          </span>
+        </>
+      )}
+    </span>
+  )
+}
+
 export interface PeriodHeaderProps {
   /** Name des Zeitraums */
   title: string
@@ -112,10 +150,16 @@ export function PeriodHeader({
         </h1>
         {meta.length > 0 && (
           <p className="text-[13px] text-muted-foreground">
+            {/* umgebrochen wird nur zwischen den Teilen; ein Text bleibt beisammen („26.09.2026 – 29.10.2026“), ein
+                Knoten bestimmt selbst, wo er umbricht (`PeriodCount`) */}
             {meta.map((part, i) => (
               <Fragment key={i}>
                 {i > 0 && " · "}
-                {part}
+                {typeof part === "string" ? (
+                  <span className="whitespace-nowrap">{part}</span>
+                ) : (
+                  part
+                )}
               </Fragment>
             ))}
           </p>

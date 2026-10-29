@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest"
 
 import type { NamedPeriod } from "./calendar"
 import { periodModel } from "./model"
-import { PeriodControls, PeriodHeader } from "./PeriodHeader"
+import { PeriodControls, PeriodCount, PeriodHeader } from "./PeriodHeader"
 import { choiceValid, namedSpan } from "./PeriodChoiceFields"
 import { filterSummary, PeriodPicker } from "./PeriodPicker"
 import { PeriodResult } from "./PeriodResult"
@@ -210,7 +210,9 @@ describe("Filter und Kopf", () => {
       })
     )
     expect(html).toContain("<h1")
-    expect(html).toContain("Luftgewehr · 12 Scheiben")
+    expect(html).toContain(
+      '<span class="whitespace-nowrap">Luftgewehr</span> · <span class="whitespace-nowrap">12 Scheiben</span>'
+    )
     expect(html).toContain("FILTER")
     expect(html).toMatch(/<div class="md:hidden"><p>ERGEBNIS/)
     expect(html).toMatch(/data-sentence="true"[^>]*>Ein Satz\./)
@@ -225,7 +227,19 @@ describe("Filter und Kopf", () => {
         sentence: null,
       })
     )
-    expect(withNode).toContain('Luftgewehr · <span data-count="true">14 Scheiben</span> · 3 Tage')
+    expect(withNode).toContain(
+      '<span class="whitespace-nowrap">Luftgewehr</span> · <span data-count="true">14 Scheiben</span> · <span class="whitespace-nowrap">3 Tage</span>'
+    )
+  })
+
+  it("die Zahl im Kopf: nicht gezähltes Einschießen und sein „?“ brechen nur zusammen um", () => {
+    const html = renderToStaticMarkup(h(PeriodCount, { cards: 135, warmup: 2, onHelp: () => {} }))
+    expect(html).toMatch(
+      /^<span data-period-count="true">135 Scheiben, <span data-period-warmup="true" class="whitespace-nowrap">2 Einschießen nicht gezählt<button [^>]*data-help="einschiessen"[^>]*>/
+    )
+    expect(html).toContain('aria-label="Erklärung: Einschießen"')
+    const none = renderToStaticMarkup(h(PeriodCount, { cards: 1, warmup: 0, onHelp: () => {} }))
+    expect(none).toBe('<span data-period-count="true">1 Scheibe</span>')
   })
 
   it("hinter dem Satz ein Weg (in Spiegel „Genauer vergleichen“)", () => {
