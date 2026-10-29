@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto"
+
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 
 import { computeChecksum } from "@vereinsheim/ingest-contract/checksum"
@@ -282,6 +284,36 @@ describe("purgeCards mit weicher Sperre (Papierkorb)", () => {
     const ownerless = await cardOf(snapshots[0].scheibenId)
     await db.card.update({ where: { id: ownerless.id }, data: { ownerId: null } })
     await expect(purgeLocked([ownerless.id])).rejects.toThrow(/ohne Besitzer/)
+  })
+  it("nimmt alle Belege der Scheibe mit; der Beleg einer anderen Scheibe mit derselben Datei bleibt", async () => {
+    const base = {
+      disciplineId: site.disciplineId,
+      ownerId: site.ownerId,
+      startedAt: new Date(),
+      kind: "training",
+      state: "final",
+      complete: true,
+      origin: "manual",
+    } as const
+    const gone = await db.card.create({ data: base })
+    const kept = await db.card.create({ data: base })
+    const sha = (n: number) => createHash("sha256").update(`${gone.id}-${n}`).digest("hex")
+    await db.cardEvidence.createMany({
+      data: [1, 2, 3].map((n) => ({
+        cardId: gone.id,
+        sha256: sha(n),
+        contentType: "image/jpeg",
+        size: 1,
+      })),
+    })
+    await db.cardEvidence.create({
+      data: { cardId: kept.id, sha256: sha(1), contentType: "image/jpeg", size: 1 },
+    })
+    await purgeLocked([gone.id])
+    expect(await db.cardEvidence.count({ where: { cardId: gone.id } })).toBe(0)
+    expect(await db.cardEvidence.findMany({ where: { cardId: kept.id } })).toMatchObject([
+      { sha256: sha(1) },
+    ])
   })
 })
 

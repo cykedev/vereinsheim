@@ -119,4 +119,42 @@ describe("removeOrphanEvidenceFiles mit Datenbank", () => {
     expect(await removeOrphanEvidenceFiles(db)).toEqual({ removed: 1, skipped: false })
     expect(await readdir(evidenceDir())).toEqual(["fremd.txt"])
   })
+  it("dieselbe Datei an zwei Scheiben: sie bleibt, bis keine Zeile mehr auf sie zeigt", async () => {
+    const B = sha(`${RUN}-b`)
+    const cards = await Promise.all(
+      [0, 1].map(() =>
+        db.card.create({
+          data: {
+            disciplineId: site.disciplineId,
+            ownerId: site.ownerId,
+            startedAt: new Date(),
+            kind: "training",
+            state: "final",
+            complete: false,
+            origin: "manual",
+          },
+        })
+      )
+    )
+    const rows = await Promise.all(
+      cards.map((card) =>
+        db.cardEvidence.create({
+          data: { cardId: card.id, sha256: B, contentType: "image/jpeg", size: 4 },
+        })
+      )
+    )
+    await writeEvidenceFile(B, "image/jpeg", bytes(0xff, 0xd8, 0xff, 9))
+    await db.cardEvidence.delete({ where: { id: rows[0]!.id } })
+    expect(await removeOrphanEvidenceFiles(db, { graceMs: 0 })).toEqual({
+      removed: 0,
+      skipped: false,
+    })
+    expect(await readdir(evidenceDir())).toEqual([`${B}.jpg`])
+    await db.cardEvidence.delete({ where: { id: rows[1]!.id } })
+    expect(await removeOrphanEvidenceFiles(db, { graceMs: 0 })).toEqual({
+      removed: 1,
+      skipped: false,
+    })
+    expect(await readdir(evidenceDir())).toEqual([])
+  })
 })
