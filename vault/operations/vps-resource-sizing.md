@@ -157,6 +157,12 @@ ihrem `"maxRssKb"` (der höhere zählt).
 die Dauer eines Laufs neben dem Stack, also kommen auf dem VPS für Minuten bis zu 320 MB dazu; eine ruhige Zeit wählen.
 Das Werkzeug gibt am Ende `Speicher: Spitze <n> MiB` aus (`maxRSS` des Prozesses, ohne den Kindprozess).
 
+Gemessen in der Übung gegen die Prod-Kopie (30. Oktober 2026, lokaler Stack, arm64, neun Konten, je Probelauf, echter
+Lauf und Wiederholung): `maxRSS` 196 bis 234 MiB, der Container laut `docker stats` (cgroup, je Sekunde abgetastet)
+76 bis 142 MiB, auch für das Konto mit 41 Anhängen. Schon das geladene Bündel steht bei 112 MiB `maxRSS` (ein leeres
+Node 50). `maxRSS` zählt die gemappten Dateien von Node mit; für die Grenze zählt der cgroup-Wert. Kein Lauf endete mit 137. Auf
+amd64 liegt das höher (siehe den Leser oben): Den ersten Lauf in Prod mit `--dry-run` messen.
+
 ## Später: Leistung der Container
 
 Festgehalten am 26. Oktober 2026 auf Wunsch des Users, ohne Messung. Engpass ist der Speicher, nicht die CPU. Die Hebel
