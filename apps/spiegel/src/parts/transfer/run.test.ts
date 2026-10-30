@@ -162,7 +162,11 @@ async function rowsOf(email: string) {
     entries: await db.diaryEntry.findMany({
       where: { userId },
       orderBy: { id: "asc" },
-      include: { scales: true, cards: true, executions: true },
+      include: {
+        scales: { orderBy: [{ part: "asc" }, { aspect: "asc" }] },
+        cards: { orderBy: { cardId: "asc" } },
+        executions: { orderBy: [{ cardId: "asc" }, { series: "asc" }] },
+      },
     }),
     goals: await db.diaryGoal.findMany({ where: { userId }, orderBy: { id: "asc" } }),
     routines: await db.diaryRoutine.findMany({ where: { userId }, orderBy: { id: "asc" } }),
