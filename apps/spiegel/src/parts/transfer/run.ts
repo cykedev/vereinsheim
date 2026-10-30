@@ -118,6 +118,10 @@ export type TransferAbort =
   | { kind: "preview"; rows: number }
   | { kind: "foreignInTarget"; rows: number }
   | { kind: "sourceElsewhere"; rows: number }
+  /** das Ziel hat Zeilen der Übernahme, aber Treffsicher kein Merkmal „umgezogen“ */
+  | { kind: "markerMissing"; rows: number }
+  /** das Merkmal passt zu keiner Zeile des Ziels: kein Eintrag, Ziel, Ablauf oder Verknüpfung trägt seine Zeit */
+  | { kind: "markerMismatch"; rows: number }
   | { kind: "badFamilyOption"; unknownSlugs: string[]; duplicateNames: string[] }
   /**
    * `--discipline` nennt eine Disziplin in Spiegel, die es unter den eingeordneten der ersten Anlage nicht genau einmal
@@ -175,6 +179,11 @@ export interface TransferReport {
    * weiter die Familie des Ziels) und ohne eigene Scheibe (ohne Ergebnis, Abend nur aus Probe)
    */
   cardOnly: Tally<"units" | "goalLinked" | "noCard">
+  /**
+   * ab dem zweiten Lauf: was es in Spiegel nicht mehr gibt, legt die Übernahme nicht wieder an (der User hat es gelöscht;
+   * Treffsicher ist nach dem ersten Lauf nur lesend)
+   */
+  deletedInSpiegel: Tally<"cards" | "entries" | "goals" | "routines" | "attachments">
   links: { linkedElsewhere: number }
   executions: {
     placed: number
@@ -230,25 +239,82 @@ const add = <K extends string>(tally: Partial<Record<K, number>>, key: K, n = 1)
   tally[key] = (tally[key] ?? 0) + n
 }
 
+/** der Grund in Bilanz und Bericht für Zeilen, die ein späterer Lauf nicht wieder anlegt */
+const GONE_TEXT = "in Spiegel gelöscht, bleibt weg"
+/** nur die Erklärungen mit einer Zahl */
+const positive = (explained: Record<string, number>) =>
+  Object.fromEntries(Object.entries(explained).filter(([, n]) => n > 0))
+
+/** was der Lauf von einer Scheibe der Übernahme braucht: Herkunft, Papierkorb und was der User ergänzt haben kann */
+const TRANSFER_CARD = {
+  id: true,
+  importKey: true,
+  origin: true,
+  deletedAt: true,
+  kind: true,
+  kindChoice: true,
+  scoringChoice: true,
+  standDisciplineId: true,
+  shareId: true,
+  createdAt: true,
+  _count: { select: { evidence: true } },
+} as const
+
+/** sha256 jeder lesbaren Datei der Anhänge eines Kontos */
+async function attachmentHashes(
+  account: TreffsicherAccount,
+  readFile: (filePath: string) => Promise<Uint8Array | null>
+): Promise<string[]> {
+  const hashes: string[] = []
+  for (const session of account.sessions)
+    for (const attachment of session.attachments) {
+      const bytes = await readFile(attachment.filePath)
+      if (bytes) hashes.push(createHash("sha256").update(bytes).digest("hex"))
+    }
+  return hashes
+}
+
+/**
+ * Scheiben vom Ausdruck (ohne Brücke, ohne Schlüssel), die ein früherer Lauf aus einem Ausdruck dieses Kontos angelegt
+ * hat: mit einem seiner Ausdrucke und nicht älter als der erste Lauf (die älteste Zeile der Übernahme, abzüglich der
+ * längsten Transaktion). Eine Scheibe, die der User vorher selbst mit demselben Ausdruck geholt hat, bleibt eine Scheibe
+ * des Abends. Beim ersten Lauf keine.
+ */
+async function printoutCardsOfEarlierRuns(
+  db: Db,
+  input: {
+    targetId: string | null
+    lastRunAt: Date | null
+    existing: Awaited<ReturnType<typeof targetRows>> | null
+    sha256s: string[]
+  }
+): Promise<Set<string>> {
+  const { targetId, lastRunAt, existing, sha256s } = input
+  if (targetId === null || lastRunAt === null || !existing || !sha256s.length) return new Set()
+  const created = [...existing.cards, ...existing.entries].map((row) => row.createdAt.getTime())
+  if (!created.length) return new Set()
+  const firstRun = new Date(Math.min(...created) - TIMEOUT_MS)
+  const rows = await db.printout.findMany({
+    where: {
+      sha256: { in: sha256s },
+      card: {
+        ownerId: targetId,
+        origin: "pdf",
+        sourceId: null,
+        importKey: null,
+        createdAt: { gte: firstRun },
+      },
+    },
+    select: { cardId: true },
+  })
+  return new Set(rows.map((row) => row.cardId))
+}
+
 /** die Zeilen des Ziels mit Schlüsseln der Übernahme (ohne Vorschau) */
 async function targetRows(db: Db, userId: string) {
   const where = { startsWith: TRANSFER_PREFIX }
   const [cards, entries, goals, routines] = await Promise.all([
-    db.card.findMany({
-      where: { ownerId: userId, importKey: where },
-      select: {
-        id: true,
-        importKey: true,
-        origin: true,
-        deletedAt: true,
-        kind: true,
-        kindChoice: true,
-        scoringChoice: true,
-        standDisciplineId: true,
-        shareId: true,
-        _count: { select: { evidence: true } },
-      },
-    }),
+    db.card.findMany({ where: { ownerId: userId, importKey: where }, select: TRANSFER_CARD }),
     db.diaryEntry.findMany({
       where: { userId, importKey: where },
       select: {
@@ -256,6 +322,7 @@ async function targetRows(db: Db, userId: string) {
         importKey: true,
         deletedAt: true,
         updatedAt: true,
+        createdAt: true,
         // Verknüpfen und Lösen ändern `updatedAt` des Eintrags nicht, nur das ihrer Zeile
         cards: { select: { updatedAt: true } },
       },
@@ -328,6 +395,7 @@ const blankReport = (dryRun: boolean): Omit<TransferReport, "check"> => ({
   cards: { created: 0, revised: 0, unchanged: 0, removed: 0, kept: 0, invalid: {} },
   entries: { created: 0, updated: 0, kept: 0, removed: 0 },
   cardOnly: { units: 0, goalLinked: 0, noCard: 0 },
+  deletedInSpiegel: { cards: 0, entries: 0, goals: 0, routines: 0, attachments: 0 },
   links: { linkedElsewhere: 0 },
   executions: {
     placed: 0,
@@ -406,7 +474,38 @@ export async function runTransfer(db: Db, input: TransferInput): Promise<Transfe
   const elsewhere = await rowsElsewhere(db, ownIds.map(transferKey), targetId)
   if (elsewhere) return { kind: "aborted", abort: { kind: "sourceElsewhere", rows: elsewhere } }
 
-  // 5./6. Familien
+  // 5. Merkmal und Zeilen: Ohne Merkmal hielte der Lauf jede Änderung für unverändert, mit einem fremden alles für
+  // geändert (`isTouched`); beides wäre still falsch
+  const lastRunAt = account.user.movedToSpiegelAt ? new Date(account.user.movedToSpiegelAt) : null
+  if (existing) {
+    const rows =
+      existing.cards.length +
+      existing.entries.length +
+      existing.goals.length +
+      existing.routines.length
+    if (rows && lastRunAt === null)
+      return { kind: "aborted", abort: { kind: "markerMissing", rows } }
+    const stamped = [...existing.entries, ...existing.goals, ...existing.routines]
+    const fromLastRun = (updatedAt: Date) =>
+      lastRunAt !== null && writtenInLastRun(updatedAt, lastRunAt)
+    if (
+      lastRunAt !== null &&
+      stamped.length &&
+      !stamped.some((row) => fromLastRun(row.updatedAt)) &&
+      !existing.entries.some((entry) => entry.cards.some((link) => fromLastRun(link.updatedAt)))
+    )
+      return { kind: "aborted", abort: { kind: "markerMismatch", rows: stamped.length } }
+  }
+
+  // die Dateien der Anhänge, einmal gelesen: für die Entscheidung je Einheit und für die Anhänge
+  const files = new Map<string, Uint8Array | null>()
+  const readFile = async (filePath: string) => {
+    if (!files.has(filePath))
+      files.set(filePath, input.files ? await input.files.read(filePath) : null)
+    return files.get(filePath)!
+  }
+
+  // 6./7. Familien
   const families = await db.family.findMany({ select: { id: true, name: true, slug: true } })
   const bySlug = new Map(families.map((f) => [f.slug, f.id]))
   const unknownSlugs = input.families.filter((o) => !bySlug.has(o.slug)).map((o) => o.slug)
@@ -464,7 +563,7 @@ export async function runTransfer(db: Db, input: TransferInput): Promise<Transfe
         plannedShots: plannedShotsOf(d.meytonId, d.plannedShots),
         ownCards: ownCards.get(d.id) ?? 0,
       }))
-  // 7. `--discipline`: die genannte genau einmal unter den eingeordneten, in der Familie der Disziplin aus Treffsicher
+  // 8. `--discipline`: die genannte genau einmal unter den eingeordneten, in der Familie der Disziplin aus Treffsicher
   const disciplineOptions = input.disciplines ?? []
   const seenOptions = new Set<string>()
   const optionDuplicates = disciplineOptions
@@ -491,14 +590,22 @@ export async function runTransfer(db: Db, input: TransferInput): Promise<Transfe
       },
     }
 
+  // ab dem zweiten Lauf: Scheiben, die ein früherer Lauf aus einem Ausdruck dieses Kontos angelegt hat, sind keine
+  // Scheiben des Abends; sonst kippte die Entscheidung (Abend nur aus Probe → vorhanden, oder unsicher mit einer zweiten)
+  const fromOwnPrintouts = await printoutCardsOfEarlierRuns(db, {
+    targetId,
+    lastRunAt,
+    existing,
+    sha256s: await attachmentHashes(account, readFile),
+  })
   const byEvening = new Map<string, typeof visible>()
   for (const card of visible)
-    if (card.family && sourceIdOf(card.importKey) === null) {
+    if (card.family && sourceIdOf(card.importKey) === null && !fromOwnPrintouts.has(card.id)) {
       const key = `${card.day}|${card.family.id}`
       byEvening.set(key, [...(byEvening.get(key) ?? []), card])
     }
 
-  // je Einheit entscheiden; 8. Disziplin für jede neue Scheibe
+  // je Einheit entscheiden; 9. Disziplin für jede neue Scheibe
   const units: Unit[] = []
   const missing = new Map<
     string,
@@ -606,7 +713,7 @@ export async function runTransfer(db: Db, input: TransferInput): Promise<Transfe
   for (const unit of units)
     for (const attachment of unit.session.attachments) {
       report.attachments.total += 1
-      const bytes = input.files ? await input.files.read(attachment.filePath) : null
+      const bytes = await readFile(attachment.filePath)
       if (!bytes) {
         report.attachments.fileMissing += 1
         continue
@@ -648,7 +755,6 @@ export async function runTransfer(db: Db, input: TransferInput): Promise<Transfe
       })
     }
 
-  const lastRunAt = account.user.movedToSpiegelAt ? new Date(account.user.movedToSpiegelAt) : null
   // die Zeit dieses Laufs: `updatedAt` jeder Zeile, die er schreibt, und das Merkmal in Treffsicher (`isTouched`)
   const runAt = new Date()
   const done: { check?: CheckResult; marked?: true } = {}
@@ -757,9 +863,62 @@ async function write(
   const entriesByKey = new Map((ctx.existing?.entries ?? []).map((e) => [e.importKey!, e]))
   const goalSessions = new Set(account.goals.flatMap((goal) => goal.sessionIds))
   /** ein Eintrag gilt auch als geändert, wenn eine Zeile seiner Scheiben nicht vom letzten Lauf stammt (verknüpft, gelöst) */
-  const entryTouched = (row: NonNullable<typeof ctx.existing>["entries"][number]) =>
+  const entryTouched = (row: {
+    deletedAt: Date | null
+    updatedAt: Date
+    cards: { updatedAt: Date }[]
+  }) =>
     isTouched(row, lastRunAt) ||
     (lastRunAt !== null && row.cards.some((link) => !writtenInLastRun(link.updatedAt, lastRunAt)))
+  // was der Lauf vor der Transaktion las, kann inzwischen geändert sein (die App läuft daneben): Jede Zeile, die er
+  // ändert oder löscht, sperrt er und liest sie neu; was jemand dazwischen geändert hat, bleibt
+  const freshEntry = async (id: string) => {
+    await tx.$queryRaw`SELECT id FROM "DiaryEntry" WHERE id = ${id} FOR UPDATE`
+    return tx.diaryEntry.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        importKey: true,
+        deletedAt: true,
+        updatedAt: true,
+        cards: { select: { updatedAt: true } },
+      },
+    })
+  }
+  const freshGoal = async (id: string) => {
+    await tx.$queryRaw`SELECT id FROM "DiaryGoal" WHERE id = ${id} FOR UPDATE`
+    return tx.diaryGoal.findUnique({
+      where: { id },
+      select: { id: true, deletedAt: true, updatedAt: true },
+    })
+  }
+  const freshRoutine = async (id: string) => {
+    await tx.$queryRaw`SELECT id FROM "DiaryRoutine" WHERE id = ${id} FOR UPDATE`
+    return tx.diaryRoutine.findUnique({
+      where: { id },
+      select: { id: true, deletedAt: true, updatedAt: true },
+    })
+  }
+  const freshCard = async (id: string) => {
+    await tx.$queryRaw`SELECT id FROM "Card" WHERE id = ${id} FOR UPDATE`
+    return tx.card.findUnique({ where: { id }, select: TRANSFER_CARD })
+  }
+  const GONE = GONE_TEXT
+  // ab dem zweiten Lauf: Anhänge, deren Datei an keiner Scheibe des Kontos mehr hängt, hat der User entfernt
+  const presentFiles =
+    lastRunAt === null
+      ? null
+      : new Set([
+          ...(
+            await tx.printout.findMany({ where: { card: { ownerId } }, select: { sha256: true } })
+          ).map((row) => row.sha256),
+          ...(
+            await tx.cardEvidence.findMany({
+              where: { card: { ownerId } },
+              select: { sha256: true },
+            })
+          ).map((row) => row.sha256),
+        ])
   const keptReason = (row: { deletedAt: Date | null; origin?: string }) =>
     row.deletedAt
       ? "Papierkorb"
@@ -774,7 +933,7 @@ async function write(
    * eine Scheibe aus Treffsicher, die der User ergänzt hat: Beleg, geteilt, eine eigene Wahl von Art, Wertung oder
    * Stand, oder eine Verknüpfung, die nicht vom unveränderten Eintrag ihrer Einheit stammt
    */
-  const addedTo = async (old: NonNullable<ReturnType<typeof cardsByKey.get>>, key: string) => {
+  const addedTo = async (old: NonNullable<Awaited<ReturnType<typeof freshCard>>>, key: string) => {
     if (
       old._count.evidence > 0 ||
       old.shareId !== null ||
@@ -792,7 +951,8 @@ async function write(
     return !own || holder.entryId !== own.id || entryTouched(own)
   }
   const removeOldCard = async (key: string, day: string) => {
-    const old = cardsByKey.get(key)
+    const stale = cardsByKey.get(key)
+    const old = stale ? await freshCard(stale.id) : null
     if (!old) return
     if (old.origin === "treffsicher" && !old.deletedAt && (await addedTo(old, key))) {
       report.cards.kept += 1
@@ -828,7 +988,12 @@ async function write(
     // die Scheibe der Einheit
     let unitCard: string | null = null
     let cardKept = false
-    if (decision.kind === "new" || decision.kind === "uncertain") {
+    const wantsCard = decision.kind === "new" || decision.kind === "uncertain"
+    if (wantsCard && lastRunAt !== null && !cardsByKey.has(key)) {
+      cardKept = true
+      report.deletedInSpiegel.cards += 1
+      report.kept.push({ what: "card", day: unit.day, reason: GONE })
+    } else if (wantsCard) {
       const card = unit.card!
       const kind = session.type === "WETTKAMPF" ? "competition" : "training"
       const written = await writeTransferCard(tx, {
@@ -868,8 +1033,13 @@ async function write(
     const old = entriesByKey.get(key)
     // nur Werte: kein Eintrag, die Scheibe trägt alles; ein Eintrag aus einem früheren Lauf bleibt (nichts wird gelöscht)
     const cardOnly = old === undefined && !needsEntry(session)
-    const entryKept = old !== undefined && entryTouched(old)
-    if (!cardOnly) expectedEntries.push({ key, entry, kept: entryKept })
+    const fresh = old === undefined ? null : await freshEntry(old.id)
+    // ab dem zweiten Lauf hat der User einen fehlenden Eintrag gelöscht, auch einen, der seit dem Lesen fehlt
+    const entryGone =
+      (old === undefined && !cardOnly && lastRunAt !== null) ||
+      (old !== undefined && fresh === null)
+    const entryKept = fresh !== null && entryTouched(fresh)
+    if (!cardOnly && !entryGone) expectedEntries.push({ key, entry, kept: entryKept })
     const rated = session.series.filter((x) => !x.isPractice && x.executionQuality !== null)
     executionsExpected.rated += rated.length
     const practice = session.series.filter((x) => x.isPractice && x.executionQuality !== null)
@@ -880,12 +1050,17 @@ async function write(
       report.cardOnly.units += 1
       if (goalSessions.has(session.id)) report.cardOnly.goalLinked += 1
       if (decision.kind === "none" || decision.kind === "probeEvening") report.cardOnly.noCard += 1
+    } else if (entryGone) {
+      report.deletedInSpiegel.entries += 1
+      report.kept.push({ what: "entry", day: unit.day, reason: GONE })
+      if (rated.length) report.executions.skipped.keptEntry += 1
+      executionsExpected.kept += rated.length
     } else if (entryKept) {
       report.entries.kept += 1
       report.kept.push({
         what: "entry",
         day: unit.day,
-        reason: keptReason(old),
+        reason: keptReason(fresh),
       })
       if (rated.length) report.executions.skipped.keptEntry += 1
       executionsExpected.kept += rated.length
@@ -948,6 +1123,11 @@ async function write(
         ? decision.cardIds[0]
         : null)
     for (const attachment of unit.attachments) {
+      const sha256 = attachment.kind === "printout" ? attachment.file.sha256 : attachment.sha256
+      if (presentFiles && !presentFiles.has(sha256)) {
+        report.deletedInSpiegel.attachments += 1
+        continue
+      }
       const placed = await placeAttachment(tx, {
         ownerId,
         siteId: ctx.siteId,
@@ -1031,12 +1211,18 @@ async function write(
     goalLinks.unknown += mapped.unknown
     goalLinks.inside += goal.sessionIds.length - mapped.outside - mapped.unknown
     const old = goalsByKey.get(key)
-    if (old && isTouched(old, lastRunAt)) {
+    const fresh = old ? await freshGoal(old.id) : null
+    if ((old && !fresh) || (!old && lastRunAt !== null)) {
+      report.deletedInSpiegel.goals += 1
+      report.kept.push({ what: "goal", day: null, reason: GONE })
+      continue
+    }
+    if (fresh && isTouched(fresh, lastRunAt)) {
       report.goals.kept += 1
       report.kept.push({
         what: "goal",
         day: null,
-        reason: old.deletedAt ? "Papierkorb" : "geändert",
+        reason: fresh.deletedAt ? "Papierkorb" : "geändert",
       })
       continue
     }
@@ -1049,12 +1235,18 @@ async function write(
     const mapped = routineFromTreffsicher(routine, { importKey: key, familyOf: ctx.familyOf })
     if (mapped.flattened) report.routines.flattened += 1
     const old = routinesByKey.get(key)
-    if (old && isTouched(old, lastRunAt)) {
+    const fresh = old ? await freshRoutine(old.id) : null
+    if ((old && !fresh) || (!old && lastRunAt !== null)) {
+      report.deletedInSpiegel.routines += 1
+      report.kept.push({ what: "routine", day: null, reason: GONE })
+      continue
+    }
+    if (fresh && isTouched(fresh, lastRunAt)) {
       report.routines.kept += 1
       report.kept.push({
         what: "routine",
         day: null,
-        reason: old.deletedAt ? "Papierkorb" : "geändert",
+        reason: fresh.deletedAt ? "Papierkorb" : "geändert",
       })
       continue
     }
@@ -1074,8 +1266,10 @@ async function write(
   }
   for (const card of ctx.existing?.cards ?? [])
     if (gone(card.importKey)) await removeOldCard(card.importKey!, "")
-  for (const row of ctx.existing?.entries ?? [])
-    if (gone(row.importKey)) {
+  for (const stale of ctx.existing?.entries ?? [])
+    if (gone(stale.importKey)) {
+      const row = await freshEntry(stale.id)
+      if (!row) continue
       if (entryTouched(row)) {
         report.entries.kept += 1
         report.kept.push({ what: "entry", day: null, reason: "in Treffsicher gelöscht, geändert" })
@@ -1084,8 +1278,10 @@ async function write(
         report.entries.removed += 1
       }
     }
-  for (const row of ctx.existing?.goals ?? [])
-    if (gone(row.importKey)) {
+  for (const stale of ctx.existing?.goals ?? [])
+    if (gone(stale.importKey)) {
+      const row = await freshGoal(stale.id)
+      if (!row) continue
       if (isTouched(row, lastRunAt)) {
         report.goals.kept += 1
         report.kept.push({
@@ -1098,8 +1294,10 @@ async function write(
         report.goals.removed += 1
       }
     }
-  for (const row of ctx.existing?.routines ?? [])
-    if (gone(row.importKey)) {
+  for (const stale of ctx.existing?.routines ?? [])
+    if (gone(stale.importKey)) {
+      const row = await freshRoutine(stale.id)
+      if (!row) continue
       if (isTouched(row, lastRunAt)) {
         report.routines.kept += 1
         report.kept.push({
@@ -1240,11 +1438,13 @@ async function checkInput(
   const tables: TableCheck[] = [
     {
       name: "Einheiten → Einträge",
-      before: input.entries.length + input.report.cardOnly.units,
+      before:
+        input.entries.length + input.report.cardOnly.units + input.report.deletedInSpiegel.entries,
       after: stored.length,
-      explained: input.report.cardOnly.units
-        ? { "nur Werte, kein Eintrag": input.report.cardOnly.units }
-        : {},
+      explained: positive({
+        "nur Werte, kein Eintrag": input.report.cardOnly.units,
+        [GONE_TEXT]: input.report.deletedInSpiegel.entries,
+      }),
     },
   ]
   for (const field of fieldNames) {
@@ -1330,6 +1530,7 @@ async function checkInput(
         "Datei fehlt": a.fileMissing,
         unlesbar: a.unreadable,
         "zu groß": a.tooLarge,
+        [GONE_TEXT]: input.report.deletedInSpiegel.attachments,
         "Beleg ohne Scheibe": a.evidence.noCard,
         "Grenze der Belege": a.evidence.limit,
         "Scheibe nicht sichtbar": a.evidence.gone,
@@ -1341,13 +1542,13 @@ async function checkInput(
     name: "Ziele",
     before: account.goals.length,
     after: goals,
-    explained: {},
+    explained: positive({ [GONE_TEXT]: input.report.deletedInSpiegel.goals }),
   })
   tables.push({
     name: "Abläufe",
     before: account.routines.length,
     after: routines,
-    explained: {},
+    explained: positive({ [GONE_TEXT]: input.report.deletedInSpiegel.routines }),
   })
   const links = input.goalLinks
   tables.push({

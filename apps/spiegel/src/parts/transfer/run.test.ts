@@ -425,6 +425,40 @@ describe("runTransfer: Ausdruck einer Einheit ohne Scheibe", () => {
     expect(await links()).toEqual(["linked"])
   })
 
+  it("die Scheibe, die Lauf 1 aus dem Ausdruck anlegte, ändert in Lauf 2 nicht die Entscheidung", async () => {
+    const c = newCase("abend")
+    const ownerId = await target(c.to)
+    await handCard(ownerId, "2026-10-02", true)
+    c.account([
+      c.session("s1", "2026-10-02", {
+        attachments: [
+          {
+            id: c.id("a1"),
+            filePath: "ausdruck.pdf",
+            fileType: "PDF",
+            originalName: "ausdruck.pdf",
+            createdAt: "2026-10-02T18:00:00.000Z",
+          },
+        ],
+      }),
+    ])
+    // die Prüfsumme der Datei, wie `storePrintout` sie aus den Bytes rechnet
+    const bytes = await pdf.read()
+    const file = {
+      ...(await unknownHeader(c.tag)),
+      sha256: createHash("sha256").update(bytes).digest("hex"),
+    }
+    const run = () =>
+      c.run({ files: pdf, readPrintout: async () => ({ kind: "stored", file, maxRssKb: 0 }) })
+    const first = done(await run())
+    expect(first.decisions).toMatchObject({ probeEvening: 1 })
+    expect(first.attachments.printouts.imported).toBe(1)
+    const second = done(await run())
+    expect(second.decisions).toMatchObject({ probeEvening: 1 })
+    expect(second.deletedInSpiegel.cards).toBe(0)
+    expect(second.check.findings).toBe(0)
+  })
+
   it("bleibt er ohne Scheibe, ist das ein Befund, nicht still", async () => {
     const tag = `${site.siteId}-${fixture++}`
     // Gleichstand: zwei Disziplinen mit 40 Schuss, keine meistgenutzt, der Ausdruck findet keine
@@ -477,6 +511,94 @@ describe("runTransfer: Tagebuch an", () => {
     await db.diarySettings.update({ where: { userId }, data: { enabled: false } })
     const second = done(await c.run())
     expect(second.diaryEnabled).toBe(false)
+  })
+})
+
+describe("runTransfer: was der User in Spiegel ändert oder löscht", () => {
+  const goalOf = (c: ReturnType<typeof newCase>) => ({
+    id: c.id("g1"),
+    title: "360 Ringe",
+    description: null,
+    type: "RESULT" as const,
+    dateFrom: "2026-05-31T22:00:00.000Z",
+    dateTo: "2026-06-29T22:00:00.000Z",
+    sessionIds: [c.id("s1")],
+  })
+
+  it("was der User endgültig gelöscht hat, legt ein späterer Lauf nicht wieder an", async () => {
+    const c = newCase("geloescht")
+    c.account([c.session("s1", "2026-06-02")], { goals: [goalOf(c)] })
+    done(await c.run())
+    const key = `treffsicher:${c.id("s1")}`
+    const card = await db.card.findUniqueOrThrow({ where: { importKey: key } })
+    await db.diaryEntry.delete({ where: { importKey: key } })
+    await db.diaryEntryCard.deleteMany({ where: { cardId: card.id } })
+    await db.card.delete({ where: { id: card.id } })
+    await db.diaryGoal.delete({ where: { importKey: `treffsicher:${c.id("g1")}` } })
+
+    const report = done(await c.run())
+    expect(report.deletedInSpiegel).toEqual({
+      cards: 1,
+      entries: 1,
+      goals: 1,
+      routines: 0,
+      attachments: 0,
+    })
+    expect(report.cards.created).toBe(0)
+    expect(report.entries.created).toBe(0)
+    expect(report.goals.created).toBe(0)
+    expect(report.check.findings).toBe(0)
+    expect(await db.card.count({ where: { importKey: key } })).toBe(0)
+    expect(await db.diaryEntry.count({ where: { importKey: key } })).toBe(0)
+  })
+
+  it("eine Änderung zwischen dem Lesen vor der Transaktion und dem Schreiben bleibt stehen", async () => {
+    const c = newCase("dazwischen")
+    const s1 = c.session("s1", "2026-06-03", {
+      attachments: [
+        {
+          id: c.id("a1"),
+          filePath: "beleg.pdf",
+          fileType: "PDF",
+          originalName: "beleg.pdf",
+          createdAt: "2026-06-03T18:00:00.000Z",
+        },
+      ],
+    })
+    c.account([s1], { goals: [goalOf(c)] })
+    const files = { read: async () => new TextEncoder().encode("%PDF-1.4") }
+    const plain = { files, writeEvidence: async () => {} }
+    done(
+      await c.run({ ...plain, readPrintout: async () => ({ kind: "rejected", reason: "noId" }) })
+    )
+    const entryKey = `treffsicher:${c.id("s1")}`
+    const goalKey = `treffsicher:${c.id("g1")}`
+    // Lauf 2 liest die Zeilen, dann die Anhänge: In dieser Zeit ändert der User Eintrag und Ziel in der App
+    const report = done(
+      await c.run({
+        ...plain,
+        readPrintout: async () => {
+          await db.diaryEntry.update({
+            where: { importKey: entryKey },
+            data: { intention: "dazwischen" },
+          })
+          await db.diaryGoal.update({
+            where: { importKey: goalKey },
+            data: { title: "dazwischen" },
+          })
+          return { kind: "rejected", reason: "noId" }
+        },
+      })
+    )
+    expect(report.entries).toMatchObject({ kept: 1, updated: 0 })
+    expect(report.goals).toMatchObject({ kept: 1, updated: 0 })
+    expect(report.check.findings).toBe(0)
+    expect(
+      (await db.diaryEntry.findUniqueOrThrow({ where: { importKey: entryKey } })).intention
+    ).toBe("dazwischen")
+    expect((await db.diaryGoal.findUniqueOrThrow({ where: { importKey: goalKey } })).title).toBe(
+      "dazwischen"
+    )
   })
 })
 
@@ -712,6 +834,22 @@ describe("runTransfer: Merkmal in Treffsicher", () => {
 })
 
 describe("runTransfer: Abbruch vor dem Schreiben", () => {
+  it("Zeilen der Übernahme im Ziel, aber kein Merkmal in Treffsicher", async () => {
+    const c = newCase("ohnemerkmal")
+    c.account([c.session("s1", "2026-09-04")])
+    done(await c.run())
+    c.source.accounts.get(c.from)!.user.movedToSpiegelAt = null
+    expect(await c.run()).toEqual({ kind: "aborted", abort: { kind: "markerMissing", rows: 2 } })
+  })
+
+  it("ein Merkmal, das zu keiner Zeile passt", async () => {
+    const c = newCase("fremdmerkmal")
+    c.account([c.session("s1", "2026-09-05")])
+    done(await c.run())
+    c.source.accounts.get(c.from)!.user.movedToSpiegelAt = "2026-01-01T00:00:00.000Z"
+    expect(await c.run()).toEqual({ kind: "aborted", abort: { kind: "markerMismatch", rows: 1 } })
+  })
+
   it("ohne Konto in Treffsicher", async () => {
     const c = newCase("ohne")
     expect(await c.run()).toEqual({ kind: "aborted", abort: { kind: "noSource" } })

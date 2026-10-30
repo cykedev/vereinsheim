@@ -33,6 +33,16 @@ export function abortText(abort: TransferAbort): string {
       return `Das Konto in Spiegel trägt schon Übernommenes aus einem anderen Konto in Treffsicher (${abort.rows} Kennungen). Nichts wird zusammengeführt.`
     case "sourceElsewhere":
       return `Übernommenes dieses Kontos steht schon an einem anderen Konto in Spiegel (${abort.rows} Zeilen). Nichts wird zusammengeführt.`
+    case "markerMissing":
+      return [
+        `Das Konto in Spiegel hat schon ${abort.rows} Zeilen der Übernahme, aber Treffsicher kein Merkmal „umgezogen“.`,
+        "Ohne Merkmal hielte der Lauf jede Änderung in Spiegel für unverändert und überschriebe sie. Erst klären, warum das Merkmal fehlt.",
+      ].join("\n")
+    case "markerMismatch":
+      return [
+        `Das Merkmal „umgezogen“ in Treffsicher passt zu keiner der ${abort.rows} Zeilen in Spiegel (Einträge, Ziele, Abläufe).`,
+        "Der Lauf hielte alles für geändert und ersetzte nichts. Erst klären, welcher Lauf das Merkmal gesetzt hat.",
+      ].join("\n")
     case "badFamilyOption":
       return [
         "--family stimmt nicht:",
@@ -90,6 +100,7 @@ export function summaryLines(report: TransferReport): string[] {
     `Scheiben: angelegt ${report.cards.created}, ersetzt ${report.cards.revised}, unverändert ${report.cards.unchanged}, entfernt ${report.cards.removed}, geändert und bleibt ${report.cards.kept}`,
     `Scheiben mit ungültigen Angaben: ${tally(report.cards.invalid)}`,
     `Einträge: ${tally(report.entries)}`,
+    `In Spiegel gelöscht, bleibt weg: ${tally(report.deletedInSpiegel)}`,
     `Nur Werte, kein Eintrag: ${report.cardOnly.units} Einheiten (mit Ziel verknüpft ${report.cardOnly.goalLinked}, ohne eigene Scheibe ${report.cardOnly.noCard})`,
     `Scheiben, die schon ein anderer Eintrag hält: ${report.links.linkedElsewhere}`,
     `Ausführung: ${report.executions.placed} Einträge, ${report.executions.series} Serien; ausgelassen ${tally(report.executions.skipped)}; Probeserien ${report.executions.practiceSkipped}`,

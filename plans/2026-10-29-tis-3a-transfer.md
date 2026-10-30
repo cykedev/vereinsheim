@@ -135,6 +135,19 @@ Gefunden bei den Wiederholungen mit den Daten des Users (30. Oktober 2026), der 
     übernommene Scheibe, die der User ergänzt hat (Beleg, geteilt, eigene Wahl, fremde Verknüpfung), bleibt; das
     Merkmal wird auch zurückgesetzt, wenn sein Aufruf scheitert, nachdem er geschrieben hat; Exit 5, wenn nach dem
     Speichern nur Ausgabe oder Bericht scheitern.
+15. **Gelöschtes bleibt weg** (koordinierende Session, 30. Oktober 2026): Ab dem zweiten Lauf legt die Übernahme keine
+    Scheibe der Einheit, keinen Eintrag, kein Ziel, keinen Ablauf und keinen Anhang wieder an, den es in Spiegel nicht
+    mehr gibt; der Bericht zählt sie je Art.
+16. **Geändert in der Transaktion prüfen**: Jede Zeile, die der Lauf ändert oder löscht, sperrt er (`FOR UPDATE`) und
+    liest sie neu; eine Änderung zwischen dem Lesen vor der Transaktion und dem Schreiben bleibt.
+17. **Scheiben aus eigenen Ausdrucken** früherer Läufe zählen beim Entscheiden nicht als Scheiben des Abends.
+18. **Merkmal und Zeilen**: Abbruch `markerMissing` (Zeilen ohne Merkmal) und `markerMismatch` (Merkmal ohne Zeile mit
+    seiner Zeit).
+
+### Offen
+
+- Trägt eine übernommene Scheibe zwei Ausdrucke (einen passenden, einen anderen), kann ein späteres Neulesen die Werte
+  des anderen nehmen (`applyPrintoutValues`, `readingOrder`). Für 3b, in der Vault-Note festgehalten.
 
 ## Ansatz
 

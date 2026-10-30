@@ -61,7 +61,10 @@ findet ein zweiter Lauf, was er schon geschrieben hat. Die Schlüssel der frühe
 
 In dieser Reihenfolge, je mit festem Text im CLI: kein Konto in Treffsicher (`noSource`); Zeilen der Vorschau im Ziel
 (`preview`, siehe unten); Übernommenes eines anderen Treffsicher-Kontos im Ziel (`foreignInTarget`); Übernommenes
-dieses Kontos an einem anderen Spiegel-Konto (`sourceElsewhere`); `--family` mit unbekannter Kennung oder doppeltem
+dieses Kontos an einem anderen Spiegel-Konto (`sourceElsewhere`); Zeilen der Übernahme im Ziel, aber kein Merkmal in
+Treffsicher (`markerMissing`), oder ein Merkmal, dessen Zeit kein Eintrag, Ziel, Ablauf und keine Verknüpfung trägt
+(`markerMismatch`): ohne Merkmal hielte der Lauf jede Änderung für unverändert, mit einem fremden alles für geändert;
+`--family` mit unbekannter Kennung oder doppeltem
 Namen (`badFamilyOption`); eine Disziplin aus Treffsicher ohne Familie (`unknownFamily`, Namen mit Zahl der Einheiten);
 `--discipline` nennt eine Disziplin in Spiegel, die es unter den eingeordneten nicht genau einmal gibt, eine in einer
 anderen Familie oder denselben Namen zweimal (`badDisciplineOption`); für eine neue Scheibe lässt sich keine Disziplin
@@ -134,6 +137,21 @@ Eintrags (`touch` in `src/diary/entries.ts`). Was im Papierkorb liegt, bleibt do
 geändert und bleibt, gehört die Ausführung weiter auf sie. Was in Treffsicher verschwunden ist, geht, wenn es
 unverändert ist. Der Bericht nennt, was stehen blieb und warum.
 
+Was es in Spiegel nicht mehr gibt, legt ab dem zweiten Lauf keine Übernahme wieder an: Treffsicher ist nach dem
+ersten Lauf nur lesend, eine fehlende Scheibe der Einheit, ein fehlender Eintrag, ein fehlendes Ziel oder ein Ablauf,
+ein Anhang, dessen Datei an keiner Scheibe des Kontos hängt, hat der User gelöscht (entschieden am 30. Oktober 2026).
+Der Bericht zählt sie je Art unter „in Spiegel gelöscht, bleibt weg“. Kippt dadurch eine Entscheidung (die passende
+Scheibe ist gelöscht), entsteht auch keine Scheibe aus Treffsicher: Gelöscht ist gelöscht.
+
+Was der Lauf vor der Transaktion las, kann beim Schreiben überholt sein: Dazwischen liest er die Anhänge, und die App
+läuft daneben. Jeden Eintrag, jedes Ziel, jeden Ablauf und jede Scheibe, die er ändern oder löschen will, sperrt er
+deshalb in der Transaktion (`FOR UPDATE`) und liest sie neu; was jemand dazwischen geändert hat, bleibt. Eine Änderung
+in der App, die erst danach kommt, wartet auf die Sperre und gilt danach.
+
+Ab dem zweiten Lauf zählen Scheiben vom Ausdruck, die ein früherer Lauf aus einem Ausdruck dieses Kontos angelegt hat
+(gleiche Prüfsumme, nicht älter als der erste Lauf), beim Entscheiden nicht als Scheiben des Abends; sonst kippte ein
+Abend nur aus Probe zu „vorhanden“ oder zu „unsicher“ mit einer zweiten Scheibe.
+
 Ein Vergleich `updatedAt` > Merkmal reicht nicht: Das Merkmal rückt mit jedem Lauf vor, eine Änderung überstünde nur
 den nächsten Lauf (aufgefallen am 30. Oktober 2026 an den Wiederholungen mit den Daten des Users).
 
@@ -181,6 +199,10 @@ DELETE FROM "Card" WHERE "importKey" LIKE 'treffsicher:preview-%';
   (anlegen oder über den Schlüssel ersetzen).
 
 ## Fallstricke
+
+- Offen (für 3b): Trägt eine übernommene Scheibe zwei Ausdrucke, einen passenden (seine Werte wurden übernommen) und
+  einen anderen, kann ein späteres Neulesen (neue Version des Lesers, andere Disziplin) mit `readingOrder` die Werte
+  des anderen nehmen; `applyPrintoutValues` kennt den übernommenen nicht.
 
 - Ein zweiter Lauf am selben Tag bricht ab, solange `zuordnung-<Tag>.csv` existiert: Sonst überschriebe er die
   Bearbeitung des Users. Umbenennen oder löschen, dann neu laufen lassen.
