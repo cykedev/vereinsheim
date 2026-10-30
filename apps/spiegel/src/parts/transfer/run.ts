@@ -238,8 +238,8 @@ export interface TransferReport {
   }[]
   /** was stehen blieb, weil der User es geändert hat (gegen das Hauptbuch) oder es im Papierkorb liegt */
   kept: { what: "card" | "entry" | "goal" | "routine"; day: string | null; reason: string }[]
-  /** `movedToSpiegelAt` in Treffsicher */
-  marked: "set" | "dryRun"
+  /** `movedToSpiegelAt` in Treffsicher: gesetzt, Probelauf, oder vom Aufrufer nach dem Lauf (Quelle ohne `markMoved`) */
+  marked: "set" | "dryRun" | "caller"
   check: CheckResult
 }
 
@@ -363,7 +363,7 @@ interface Unit {
   attachments: (PreparedAttachment & { sourceId: string })[]
 }
 
-const blankReport = (dryRun: boolean): Omit<TransferReport, "check"> => ({
+const blankReport = (dryRun: boolean, marks: boolean): Omit<TransferReport, "check"> => ({
   dryRun,
   accountCreated: false,
   diaryEnabled: false,
@@ -403,7 +403,7 @@ const blankReport = (dryRun: boolean): Omit<TransferReport, "check"> => ({
   printoutsNotPlaced: {},
   uncertain: [],
   kept: [],
-  marked: dryRun ? "dryRun" : "set",
+  marked: dryRun ? "dryRun" : marks ? "set" : "caller",
 })
 
 /**
@@ -412,7 +412,7 @@ const blankReport = (dryRun: boolean): Omit<TransferReport, "check"> => ({
  * daran entscheidet der nächste je Stück „unverändert“, „geändert, bleibt“ und „in Spiegel gelöscht“. Nach einem echten
  * Lauf ist das Konto in Treffsicher umgezogen (`markMoved` als letzter Schritt in der Transaktion: scheitert es, bleibt
  * nichts halb). Scheitert der Commit nach dem Merkmal, setzt der Lauf das alte zurück; geht auch das nicht, meldet er
- * `markedNotSaved`.
+ * `markedNotSaved`. Hat die Quelle kein `markMoved`, setzt der Aufrufer das Merkmal nach dem Commit (`marked: "caller"`).
  */
 export async function runTransfer(db: Db, input: TransferInput): Promise<TransferOutcome> {
   const raw = await input.source.readAccount(input.from)
@@ -679,7 +679,7 @@ export async function runTransfer(db: Db, input: TransferInput): Promise<Transfe
   }
 
   // die Anhänge lesen, außerhalb der Transaktion (Kindprozess, Dateien)
-  const report = blankReport(input.dryRun)
+  const report = blankReport(input.dryRun, input.source.markMoved !== undefined)
   report.disciplines = steps
   const readPrintout =
     input.readPrintout ??
@@ -753,6 +753,7 @@ export async function runTransfer(db: Db, input: TransferInput): Promise<Transfe
           report,
         })
         if (input.dryRun) throw new DryRun()
+        if (!input.source.markMoved) return
         // versucht ist versucht: Scheitert der Aufruf, kann das Merkmal trotzdem geschrieben sein
         done.marked = true
         await input.source.markMoved(account.user.id, runAt)
@@ -762,7 +763,7 @@ export async function runTransfer(db: Db, input: TransferInput): Promise<Transfe
   } catch (error) {
     // das Merkmal steht in Treffsicher, aber Spiegel hat nichts gespeichert: das alte zurück (beim ersten Lauf keins,
     // sonst wäre das Konto in Treffsicher nur lesend, ohne Daten in Spiegel); geht auch das nicht, laut melden
-    if (done.marked) {
+    if (done.marked && input.source.markMoved) {
       const restored = await input.source.markMoved(account.user.id, previousMark).then(
         () => true,
         () => false

@@ -1029,6 +1029,23 @@ describe("runTransfer: Merkmal in Treffsicher", () => {
     expect(await db.user.findUnique({ where: { email: c.to } })).toBeNull()
     expect(await db.card.count({ where: { importKey: `treffsicher:${c.id("s1")}` } })).toBe(0)
   }, 15_000)
+
+  it("eine Quelle ohne markMoved schreibt und überlässt das Merkmal dem Aufrufer", async () => {
+    const c = newCase("aufrufer")
+    c.account([c.session("s1", "2026-09-06")])
+    const report = done(
+      await c.run({
+        source: {
+          readAccount: (email) => c.source.readAccount(email),
+          sessionOwners: (ids) => c.source.sessionOwners(ids),
+        },
+      })
+    )
+    expect(report.marked).toBe("caller")
+    expect(c.source.accounts.get(c.from)!.user.movedToSpiegelAt).toBeNull()
+    expect(await db.transferRun.count({ where: { userId: (await userOf(c.to)).id } })).toBe(1)
+    expect(await db.card.count({ where: { importKey: `treffsicher:${c.id("s1")}` } })).toBe(1)
+  })
 })
 
 describe("runTransfer: Abbruch vor dem Schreiben", () => {
