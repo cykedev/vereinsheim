@@ -96,7 +96,12 @@ export async function adoptPrintoutValues(
 
 /** ein Anhang aus Treffsicher, gelesen und geprüft vor der Transaktion */
 export type PreparedAttachment =
-  | { kind: "printout"; file: StoredPrintout }
+  | {
+      kind: "printout"
+      file: StoredPrintout
+      /** die Disziplin der Einheit, falls der Ausdruck eine eigene Scheibe braucht und sein Kopf keine bekannte nennt */
+      disciplineId?: number | null
+    }
   | {
       kind: "evidence"
       sha256: string
@@ -170,13 +175,23 @@ export async function placeAttachment(
   // die eigene Scheibe mit dieser ID ist die der Einheit, wenn ein früherer Lauf den Ausdruck dort angehängt hat: dann
   // wie beim ersten Lauf über die Scheibe der Einheit, damit ein passender Ausdruck seine Werte gibt
   if (own && own.id !== card?.id) {
-    const result = await importPrintoutIn(tx, { userId: ownerId, siteId, file })
+    const result = await importPrintoutIn(tx, {
+      userId: ownerId,
+      siteId,
+      file,
+      fallbackDisciplineId: attachment.disciplineId,
+    })
     return { kind: "printoutOwnCard", cardId: own.id, result }
   }
   if (!card)
     return {
       kind: "printoutImported",
-      result: await importPrintoutIn(tx, { userId: ownerId, siteId, file }),
+      result: await importPrintoutIn(tx, {
+        userId: ownerId,
+        siteId,
+        file,
+        fallbackDisciplineId: attachment.disciplineId,
+      }),
     }
 
   const printoutId = await attachPrintout(tx, file, card.id)

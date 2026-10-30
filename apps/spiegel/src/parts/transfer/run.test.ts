@@ -1,9 +1,16 @@
+import { createHash } from "node:crypto"
+
+import { printoutReading } from "@vereinsheim/meyton-pdf/reading"
+import { printoutPdf } from "@vereinsheim/meyton-pdf/test-printout"
+import { readPrintoutValues } from "@vereinsheim/meyton-pdf/values"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 
 import { setScale } from "@/diary/entries"
 import { createPrismaClient } from "@/lib/db"
 import { writeEnteredCard } from "@/lib/db/entered"
+import { valuesReadOf, type StoredPrintout } from "@/lib/printouts/store"
 import { createTestSite, type TestSite } from "../../../test/fixtures"
+import { valuedSpec } from "../../../test/printout"
 
 import { runTransfer, type TransferInput, type TransferOutcome } from "./run"
 import type { TreffsicherSource } from "./source"
@@ -335,6 +342,95 @@ describe("runTransfer: nur Werte, kein Eintrag", () => {
     const second = done(await c.run())
     expect(second.cardOnly.units).toBe(2)
     expect((await rowsOf(c.to))!.entries).toHaveLength(1)
+  })
+})
+
+describe("runTransfer: Ausdruck einer Einheit ohne Scheibe", () => {
+  /** ein Meyton-Ausdruck vom 2. Oktober 2026 (40 Schuss), dessen Kopf eine Disziplin nennt, die Spiegel nicht kennt */
+  async function unknownHeader(tag: string): Promise<StoredPrintout> {
+    const values = valuesReadOf(
+      printoutReading(await readPrintoutValues(await printoutPdf(valuedSpec())), {
+        producer: "Qt 5.12.8",
+      })
+    )
+    const scheibenId = 97_000 + fixture
+    return {
+      sha256: createHash("sha256").update(`ausdruck-${tag}`).digest("hex"),
+      size: 1,
+      fileName: "ausdruck.pdf",
+      hex: (scheibenId >>> 0).toString(16).padStart(8, "0"),
+      scheibenId,
+      printedAt: new Date("2026-10-02T17:52:12Z"),
+      values: { ...values, discipline: "LP Balken 28x110 mm" },
+    }
+  }
+
+  /** eine Einheit ohne Ergebnis am Abend des Ausdrucks, mit ihm als Anhang */
+  function caseWithPrintout(label: string) {
+    const c = newCase(label)
+    const noResult = c.session("s1", "2026-10-02", {
+      series: [
+        { position: 1, isPractice: false, scoreTotal: null, shots: null, executionQuality: null },
+      ],
+      attachments: [
+        {
+          id: c.id("a1"),
+          filePath: "ausdruck.pdf",
+          fileType: "PDF",
+          originalName: "ausdruck.pdf",
+          createdAt: "2026-10-02T18:00:00.000Z",
+        },
+      ],
+    })
+    c.account([noResult])
+    return c
+  }
+  const pdf = { read: async () => new TextEncoder().encode("%PDF-1.4") }
+
+  it("nennt der Kopf keine bekannte Disziplin, nimmt der Ausdruck die der Einheit", async () => {
+    const c = caseWithPrintout("ausdruck")
+    const file = await unknownHeader(c.tag)
+    const report = done(
+      await c.run({ files: pdf, readPrintout: async () => ({ kind: "stored", file, maxRssKb: 0 }) })
+    )
+    expect(report.attachments.printouts.imported).toBe(1)
+    expect(report.check.findings).toBe(0)
+    const { card } = await db.printout.findFirstOrThrow({
+      where: { sha256: file.sha256, card: { ownerId: (await userOf(c.to)).id } },
+      select: { card: { select: { disciplineId: true, origin: true } } },
+    })
+    expect(card).toEqual({ disciplineId, origin: "pdf" })
+  })
+
+  it("bleibt er ohne Scheibe, ist das ein Befund, nicht still", async () => {
+    const tag = `${site.siteId}-${fixture++}`
+    // Gleichstand: zwei Disziplinen mit 40 Schuss, keine meistgenutzt, der Ausdruck findet keine
+    const alt = await db.discipline.create({
+      data: {
+        siteId: site.siteId,
+        name: `LP 40 zwei ${tag}`,
+        familyId: site.familyId,
+        targetId: "lp-10m",
+        plannedShots: 40,
+        officialScoring: "rings",
+        confirmedAt: new Date(),
+      },
+    })
+    try {
+      const c = caseWithPrintout("ohne")
+      const file = await unknownHeader(c.tag)
+      const report = done(
+        await c.run({
+          files: pdf,
+          readPrintout: async () => ({ kind: "stored", file, maxRssKb: 0 }),
+        })
+      )
+      expect(report.attachments.printouts.notPlaced).toBe(1)
+      expect(report.printoutsNotPlaced).toEqual({ noDiscipline: 1 })
+      expect(report.check.findings).toBeGreaterThan(0)
+    } finally {
+      await db.discipline.delete({ where: { id: alt.id } })
+    }
   })
 })
 

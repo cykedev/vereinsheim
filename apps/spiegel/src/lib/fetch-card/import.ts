@@ -59,7 +59,13 @@ export async function importPrintout(
  */
 export async function importPrintoutIn(
   tx: Prisma.TransactionClient,
-  input: { userId: string; siteId: number; file: StoredPrintout }
+  input: {
+    userId: string
+    siteId: number
+    file: StoredPrintout
+    /** die Disziplin, wenn der Kopf des Ausdrucks keine bekannte nennt (die Übernahme kennt sie aus Treffsicher) */
+    fallbackDisciplineId?: number | null
+  }
 ): Promise<ImportResult> {
   const { userId, siteId, file } = input
   await tx.$queryRaw`SELECT id FROM "User" WHERE id = ${userId} FOR NO KEY UPDATE`
@@ -108,10 +114,13 @@ export async function importPrintoutIn(
   if ([...tombstones, ...locks].some((row) => sameEvening(row.startedAt)))
     return { kind: "blocked" }
 
-  const disciplineId = await headerDisciplineId(tx, {
-    siteId,
-    name: file.values.discipline,
-  })
+  const disciplineId =
+    (await headerDisciplineId(tx, {
+      siteId,
+      name: file.values.discipline,
+    })) ??
+    input.fallbackDisciplineId ??
+    null
   if (disciplineId === null) return { kind: "noDiscipline" }
   const discipline = await tx.discipline.findUniqueOrThrow({
     where: { id: disciplineId },

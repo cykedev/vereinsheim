@@ -572,6 +572,18 @@ export async function runTransfer(db: Db, input: TransferInput): Promise<Transfe
   if (missing.size)
     return { kind: "aborted", abort: { kind: "noDiscipline", cases: [...missing.values()] } }
 
+  /**
+   * die Disziplin für einen Ausdruck, dessen Kopf keine bekannte nennt und der eine eigene Scheibe braucht: nach den Stufen
+   * mit der Schusszahl aus Treffsicher oder vom Ausdruck; ohne Schusszahl die eine Disziplin der Familie, sonst keine
+   */
+  const printoutDiscipline = (familyId: number | null, shots: number | null): number | null => {
+    if (familyId === null) return null
+    const family = candidates(familyId)
+    if (shots === null) return family.length === 1 ? family[0].id : null
+    const choice = disciplineForShots(family, shots)
+    return choice.kind === "found" ? choice.id : null
+  }
+
   // die Anhänge lesen, außerhalb der Transaktion (Kindprozess, Dateien)
   const report = blankReport(input.dryRun)
   report.disciplines = steps
@@ -592,7 +604,16 @@ export async function runTransfer(db: Db, input: TransferInput): Promise<Transfe
       if (type === "application/pdf") {
         const read = await readPrintout(bytes, attachment.originalName, timeZone)
         if (read.kind === "stored") {
-          unit.attachments.push({ kind: "printout", file: read.file })
+          unit.attachments.push({
+            kind: "printout",
+            file: read.file,
+            disciplineId:
+              unit.disciplineId ??
+              printoutDiscipline(
+                unit.familyId,
+                unit.card?.shots ?? read.file.values.reading?.shots.length ?? null
+              ),
+          })
           continue
         }
         if (read.reason !== "noId") add(report.attachments.printoutRejected, read.reason)
@@ -1235,7 +1256,6 @@ async function checkInput(
         "Datei fehlt": a.fileMissing,
         unlesbar: a.unreadable,
         "zu groß": a.tooLarge,
-        "Ausdruck nicht angehängt": a.printouts.notPlaced,
         "Beleg ohne Scheibe": a.evidence.noCard,
         "Grenze der Belege": a.evidence.limit,
         "Scheibe nicht sichtbar": a.evidence.gone,

@@ -127,6 +127,9 @@ Gefunden bei den Wiederholungen mit den Daten des Users (30. Oktober 2026), der 
     einen Eintrag bekommt (Trainingsziel, Befinden, Prognose, Feedback, Reflexion mit Text, Ausführung, Favorit; ohne
     Schießen immer). Eine Einheit nur mit Werten wird nur Scheibe; eine Ziel-Verknüpfung ist kein Grund und bestimmt
     weiter die Familie des Ziels. Ein Eintrag aus einem früheren Lauf bleibt. Der Bericht zählt sie.
+13. **Kein Ausdruck geht still verloren** (koordinierende Session, 30. Oktober 2026): Nennt der Kopf eines Ausdrucks,
+    der eine eigene Scheibe braucht, keine bekannte Disziplin, nimmt `importPrintoutIn` die der Einheit
+    (`fallbackDisciplineId`). Ein Ausdruck ohne Scheibe ist ein Befund (Exit 1), keine Erklärung mehr in der Bilanz.
 
 ## Ansatz
 

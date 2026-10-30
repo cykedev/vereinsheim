@@ -104,7 +104,9 @@ die Anhänge:
 - **Meyton-Ausdruck:** an die eigene Scheibe mit dieser ID am Abend des Drucks; sonst an die Scheibe der Einheit, und
   wenn sie aus Treffsicher ist und der Ausdruck passt (`printoutFits`: Lesung ok, gleicher Abend, gleiche Schusszahl,
   gleiches Ergebnis in der Wertung von Treffsicher), übernimmt sie seine Werte (Revision 2, Herkunft `pdf`); sonst wie
-  „Scheibe holen“ eine Scheibe vom Ausdruck. Ein Ausdruck im Modus Probe zählt dabei als Wertung, sein Ergebnis ist die
+  „Scheibe holen“ eine Scheibe vom Ausdruck; nennt sein Kopf keine bekannte Disziplin, nimmt sie die der Einheit nach
+  den Stufen (Schusszahl aus Treffsicher oder vom Ausdruck, ohne sie die eine Disziplin der Familie). Bleibt ein
+  Ausdruck ohne Scheibe, ist das ein Befund im Prüfbestand (Exit 1), nie still. Ein Ausdruck im Modus Probe zählt dabei als Wertung, sein Ergebnis ist die
   Summe seiner Schüsse (`scoringReading`, entschieden mit dem User am 30. Oktober 2026): Treffsicher hat solche
   Abende als Training gewertet. Dieselbe Regel gilt, wenn Spiegel die Ausdrucke einer solchen Scheibe später neu
   anwendet (`applyPrintoutValues` an einer Scheibe mit Schlüssel `treffsicher:`), sonst würde sie dabei eine Scheibe
