@@ -659,6 +659,51 @@ describe("runTransfer: Merkmal, Befunde und eigene Wahl über mehrere Läufe", (
     expect(second.check.findings).toBeGreaterThan(0)
   })
 
+  it("ein Ort, den Spiegel nicht nimmt, bleibt in Lauf 2 ein Befund, nicht „gelöscht“", async () => {
+    const c = newCase("ort")
+    // Treffsicher nimmt 200 Zeichen, Spiegel 80
+    c.account([
+      c.session("s1", "2026-11-10", { location: "Schützenhaus ".repeat(10) }),
+      c.session("s2", "2026-11-11"),
+    ])
+    const first = done(await c.run())
+    expect(first.cards.invalid).toEqual({ place: 1 })
+    const second = done(await c.run())
+    expect(second.cards.invalid).toEqual({ place: 1 })
+    expect(second.deletedInSpiegel.cards).toBe(0)
+    expect(second.check.findings).toBeGreaterThan(0)
+  })
+
+  it("ein Beleg, den der User entfernt hat, kommt nicht wieder", async () => {
+    const c = newCase("belegweg")
+    c.account([
+      c.session("s1", "2026-11-12", {
+        attachments: [
+          {
+            id: c.id("a1"),
+            filePath: "foto.png",
+            fileType: "IMAGE",
+            originalName: "foto.png",
+            createdAt: "2026-11-12T18:00:00.000Z",
+          },
+        ],
+      }),
+    ])
+    const png = {
+      read: async () => new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 2]),
+    }
+    const plain = { files: png, writeEvidence: async () => {} }
+    expect(done(await c.run(plain)).attachments.evidence.attached).toBe(1)
+    const card = await db.card.findUniqueOrThrow({
+      where: { importKey: `treffsicher:${c.id("s1")}` },
+    })
+    await db.cardEvidence.deleteMany({ where: { cardId: card.id } })
+    const second = done(await c.run(plain))
+    expect(second.deletedInSpiegel.attachments).toBe(1)
+    expect(second.check.findings).toBe(0)
+    expect(await db.cardEvidence.count({ where: { cardId: card.id } })).toBe(0)
+  })
+
   it("Belege aus Treffsicher machen eine Scheibe nicht zu einer vom User ergänzten", async () => {
     const c = newCase("eigenebelege")
     c.account([
@@ -694,26 +739,50 @@ describe("runTransfer: Merkmal, Befunde und eigene Wahl über mehrere Läufe", (
     c.account([c.session("s1", "2026-11-08")])
     done(await c.run())
     const key = `treffsicher:${c.id("s1")}`
-    await db.card.update({ where: { importKey: key }, data: { standDisciplineId: disciplineId } })
-    const executions = async () =>
-      (
-        await db.diaryEntry.findUniqueOrThrow({
-          where: { importKey: key },
-          include: { executions: true },
-        })
-      ).executions.length
-    expect(await executions()).toBe(4)
-    const second = done(await c.run())
-    expect(second.cards.kept).toBe(1)
-    expect(second.kept).toContainEqual({
-      what: "card",
-      day: "2026-11-08",
-      reason: "vom User ergänzt",
+    // eine andere Disziplin derselben Familie, ohne feste Schusszahl (kein Kandidat der Wahl nach Schusszahl)
+    const other = await db.discipline.create({
+      data: {
+        siteId: site.siteId,
+        name: `LP offen ${site.siteId}-${fixture++}`,
+        familyId: site.familyId,
+        targetId: "lp-10m",
+        plannedShots: 0,
+        officialScoring: "rings",
+        confirmedAt: new Date(),
+      },
     })
-    expect((await db.card.findUniqueOrThrow({ where: { importKey: key } })).standDisciplineId).toBe(
-      disciplineId
-    )
-    expect(await executions()).toBe(4)
+    try {
+      await db.card.update({
+        where: { importKey: key },
+        data: { disciplineId: other.id, standDisciplineId: other.id },
+      })
+      const executions = async () =>
+        (
+          await db.diaryEntry.findUniqueOrThrow({
+            where: { importKey: key },
+            include: { executions: true },
+          })
+        ).executions.length
+      expect(await executions()).toBe(4)
+      const second = done(await c.run())
+      expect(second.cards.kept).toBe(1)
+      expect(second.kept).toContainEqual({
+        what: "card",
+        day: "2026-11-08",
+        reason: "vom User ergänzt",
+      })
+      expect(await db.card.findUniqueOrThrow({ where: { importKey: key } })).toMatchObject({
+        disciplineId: other.id,
+        standDisciplineId: other.id,
+      })
+      expect(await executions()).toBe(4)
+    } finally {
+      await db.card.updateMany({
+        where: { disciplineId: other.id },
+        data: { disciplineId, standDisciplineId: null },
+      })
+      await db.discipline.delete({ where: { id: other.id } })
+    }
   })
 
   it("eine Änderung, die einen Eintrag während des Laufs gesperrt hält, bleibt", async () => {

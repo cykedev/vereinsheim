@@ -5,7 +5,7 @@
 
 import { createHash } from "node:crypto"
 
-import { plannedShotsOf, seriesShotsOf } from "@vereinsheim/shot-core/discipline"
+import { plannedShotsOf } from "@vereinsheim/shot-core/discipline"
 import { eveningDay } from "@vereinsheim/shot-ui/period/calendar"
 
 import {
@@ -28,8 +28,9 @@ import {
 import type { Prisma } from "@/generated/prisma/client"
 import { requestSiteId } from "@/lib/card-requests/queries"
 import type { Db } from "@/lib/db"
+import { checkEnteredInput } from "@/lib/db/entered"
 import { lockCard, purgeCards } from "@/lib/db/purge"
-import { checkDetails, type DetailsProblem } from "@/lib/entered/details"
+import type { DetailsProblem } from "@/lib/entered/details"
 import { evidenceTypeOf, writeEvidenceFile, type EvidenceType } from "@/lib/evidence/files"
 import { evidenceFileName } from "@/lib/evidence/name"
 import { EVIDENCE_MAX_BYTES } from "@/lib/evidence/texts"
@@ -1040,22 +1041,30 @@ async function write(
     const wantsCard = decision.kind === "new" || decision.kind === "uncertain"
     const staleCard = cardsByKey.get(key)
     const current = wantsCard && staleCard ? await freshCard(staleCard.id) : null
-    const detailsProblem = async () => {
-      const discipline = await tx.discipline.findUniqueOrThrow({
+    /** was `writeEnteredCardIn` an dieser Scheibe ablehnen würde; `missing` ohne Disziplin */
+    const inputProblem = async () => {
+      const discipline = await tx.discipline.findUnique({
         where: { id: unit.disciplineId! },
         select: { meytonId: true, plannedShots: true, seriesShots: true },
       })
-      const plannedShots = plannedShotsOf(discipline.meytonId, discipline.plannedShots)
-      const checked = checkDetails(unit.card!.details, {
-        plannedShots,
-        seriesShots: seriesShotsOf(discipline.seriesShots, plannedShots),
+      if (!discipline) return "missing" as const
+      const checked = checkEnteredInput(discipline, {
+        startedAtMs: unit.dateMs,
+        details: unit.card!.details,
+        place: session.location,
+        origin: "treffsicher",
+        importKey: key,
       })
       return checked.ok ? null : checked.problem
     }
     if (wantsCard && lastRunAt !== null && !current) {
       // eine Scheibe, die schon der erste Lauf nicht anlegen konnte, ist nicht gelöscht: weiter ein Befund
-      const problem = await detailsProblem()
-      if (problem) add(report.cards.invalid, problem)
+      const problem = await inputProblem()
+      if (problem === "missing") {
+        cardKept = true
+        report.cards.kept += 1
+        report.kept.push({ what: "card", day: unit.day, reason: "Disziplin fehlt" })
+      } else if (problem) add(report.cards.invalid, problem)
       else {
         cardKept = true
         report.deletedInSpiegel.cards += 1
@@ -1228,6 +1237,7 @@ async function write(
       })
       if (missing) {
         await tx.$executeRawUnsafe("ROLLBACK TO SAVEPOINT transfer_attachment")
+        await tx.$executeRawUnsafe("RELEASE SAVEPOINT transfer_attachment")
         if (wouldArrive(placed)) report.deletedInSpiegel.attachments += 1
         else countPlaced(report, placed)
         continue
@@ -1244,20 +1254,19 @@ async function write(
             ? placed.cardId
             : null
       if (entryId !== null && firstCard === null && printoutCard !== null) {
-        const [card, holder] = await Promise.all([
-          tx.card.findUnique({
-            where: { id: printoutCard },
-            select: { origin: true, sourceId: true },
-          }),
-          tx.diaryEntryCard.findUnique({
-            where: { cardId: printoutCard },
-            select: { entryId: true },
-          }),
-        ])
+        const card = await tx.card.findUnique({
+          where: { id: printoutCard },
+          select: { origin: true, sourceId: true },
+        })
+        const holder = await tx.diaryEntryCard.findUnique({
+          where: { cardId: printoutCard },
+          select: { entryId: true },
+        })
         const fromPrintout = card?.origin === "pdf" && card.sourceId === null
-        if (fromPrintout && (!holder || holder.entryId === entryId))
+        if (fromPrintout && (!holder || holder.entryId === entryId)) {
           await setImportedLinks(tx, entryId, [printoutCard], runAt)
-        stamps.count += 1
+          stamps.count += 1
+        }
       }
     }
 

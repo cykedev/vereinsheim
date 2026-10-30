@@ -99,6 +99,38 @@ async function createDetailsRevision(
 }
 
 /**
+ * Die Eingabe einer Scheibe ohne Brücke prüfen, rein: Beginn, Angaben gegen die Disziplin (`checkDetails`), Ort,
+ * Schlüssel der Übernahme, Standnummer. `writeEnteredCardIn` schreibt nur, was hier durchgeht; die Übernahme fragt
+ * damit, ob eine fehlende Scheibe schon der erste Lauf nicht anlegen konnte.
+ */
+export function checkEnteredInput(
+  discipline: { plannedShots: number | null; seriesShots: number | null; meytonId: number | null },
+  input: Pick<
+    EnteredCardInput,
+    "startedAtMs" | "details" | "place" | "origin" | "importKey" | "stand" | "cardId"
+  >
+) {
+  if (!isTimeMs(input.startedAtMs)) return { ok: false as const, problem: "startedAt" as const }
+  const plannedShots = plannedShotsOf(discipline.meytonId, discipline.plannedShots)
+  const checked = checkDetails(input.details, {
+    plannedShots,
+    seriesShots: seriesShotsOf(discipline.seriesShots, plannedShots),
+  })
+  if (!checked.ok) return { ok: false as const, problem: checked.problem }
+  const place = normalizePlace(input.place)
+  if (!place.ok) return { ok: false as const, problem: place.problem }
+  const importKey = input.importKey ?? null
+  const keyProblem =
+    input.cardId !== undefined && importKey !== null
+      ? "importKey"
+      : checkImportKey(input.origin, importKey)
+  if (keyProblem) return { ok: false as const, problem: keyProblem }
+  const standProblem = checkStand(input.origin, input.stand)
+  if (standProblem) return { ok: false as const, problem: standProblem }
+  return { ok: true as const, details: checked.details, place: place.place, importKey }
+}
+
+/**
  * Eine Scheibe ohne Brücke anlegen oder ändern, in der Transaktion des Aufrufers: Disziplin (`FOR SHARE`), Angaben
  * prüfen (`checkDetails`), Gegenprobe gegen das Scheibenbild, Merkmale und Projektion wie beim Nachrechnen. Ändern darf
  * nur, wer nach `detailsWriter` darf, und nur der Besitzer einer sichtbaren Scheibe.
@@ -118,23 +150,10 @@ export async function writeEnteredCardIn(tx: Tx, input: EnteredCardInput): Promi
       FROM "Discipline" WHERE id = ${input.disciplineId} FOR SHARE`
   if (!discipline) return { kind: "missing" }
 
-  if (!isTimeMs(input.startedAtMs)) return { kind: "invalid", problem: "startedAt" }
+  const valid = checkEnteredInput(discipline, input)
+  if (!valid.ok) return { kind: "invalid", problem: valid.problem }
   const plannedShots = plannedShotsOf(discipline.meytonId, discipline.plannedShots)
-  const checked = checkDetails(input.details, {
-    plannedShots,
-    seriesShots: seriesShotsOf(discipline.seriesShots, plannedShots),
-  })
-  if (!checked.ok) return { kind: "invalid", problem: checked.problem }
-  const place = normalizePlace(input.place)
-  if (!place.ok) return { kind: "invalid", problem: place.problem }
-  const importKey = input.importKey ?? null
-  const keyProblem =
-    input.cardId !== undefined && importKey !== null
-      ? "importKey"
-      : checkImportKey(input.origin, importKey)
-  if (keyProblem) return { kind: "invalid", problem: keyProblem }
-  const standProblem = checkStand(input.origin, input.stand)
-  if (standProblem) return { kind: "invalid", problem: standProblem }
+  const importKey = valid.importKey
   const stand = input.stand === undefined ? {} : { stand: input.stand }
 
   // die Gegenprobe wie beim Nachrechnen: Merkmale aus den Werten hat `checkDetails` gesetzt
@@ -142,10 +161,10 @@ export async function writeEnteredCardIn(tx: Tx, input: EnteredCardInput): Promi
     discipline.targetId !== null && Object.hasOwn(TARGETS, discipline.targetId)
       ? (discipline.targetId as TargetId)
       : null
-  const { suspicious, targetMismatch } = verifyShots(targetId, checked.details.shots)
+  const { suspicious, targetMismatch } = verifyShots(targetId, valid.details.shots)
   const details: NormalizedDetails = {
-    ...checked.details,
-    shots: checked.details.shots.map((shot, i) =>
+    ...valid.details,
+    shots: valid.details.shots.map((shot, i) =>
       suspicious[i] ? { ...shot, flags: [...shot.flags, FLAG_SUSPICIOUS] } : shot
     ),
   }
@@ -189,7 +208,7 @@ export async function writeEnteredCardIn(tx: Tx, input: EnteredCardInput): Promi
         ownerId: input.ownerId,
         ownerPending: false,
         state: "final",
-        place: place.place ?? null,
+        place: valid.place ?? null,
         timeUnknown: input.timeUnknown ?? false,
         importKey,
         ...stand,
@@ -219,7 +238,7 @@ export async function writeEnteredCardIn(tx: Tx, input: EnteredCardInput): Promi
     data: {
       ...features(next),
       ...stand,
-      ...(place.place === undefined ? {} : { place: place.place }),
+      ...(valid.place === undefined ? {} : { place: valid.place }),
       ...(input.timeUnknown === undefined ? {} : { timeUnknown: input.timeUnknown }),
     },
   })
