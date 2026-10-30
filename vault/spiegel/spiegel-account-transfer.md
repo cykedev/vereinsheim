@@ -66,8 +66,9 @@ Namen (`badFamilyOption`); eine Disziplin aus Treffsicher ohne Familie (`unknown
 `--discipline` nennt eine Disziplin in Spiegel, die es unter den eingeordneten nicht genau einmal gibt, eine in einer
 anderen Familie oder denselben Namen zweimal (`badDisciplineOption`); für eine neue Scheibe lässt sich keine Disziplin
 wählen (`noDiscipline`, Familie, Schusszahl und Grund: Gleichstand oder keine Disziplin mit fester Schusszahl). Die
-Familie gibt `--family` an, die Disziplin `--discipline "<Disziplin in Treffsicher>=<Disziplin in Spiegel>"`; die
-Option ersetzt die Wahl nach Schusszahl für alle Einheiten dieser Disziplin.
+Familie gibt `--family` an, die Disziplin `--discipline "<Disziplin in Treffsicher>=<Disziplin in Spiegel>"`. Die
+Option gilt nur für Einheiten, für die die Wahl nach Schusszahl keine findet: Eine Disziplin aus Treffsicher („Luftpistole“)
+hat oft Einheiten mit verschiedener Schusszahl, die übrigen behalten ihre.
 
 Die Wahl nach Schusszahl hat drei Stufen (entschieden mit dem User am 30. Oktober 2026): eine Disziplin der Familie mit
 genau der Schusszahl der Einheit; sonst die mit der kleinsten größeren, die Scheibe ist dann unvollständig
@@ -88,6 +89,13 @@ gilt die vom Konto meistgenutzte, bei Gleichstand bricht der Lauf ab. Der Berich
 4. nur Scheiben „nur Probe“ → keine neue, der Abend leitet sie ab;
 5. sonst **unsicher**: trotzdem neu, beide bleiben, der Bericht nennt den Fall (Abweichung von [[adr-033]], die
    Entscheidung steht dort im Nachtrag).
+
+Ein Eintrag entsteht nur mit Inhalt fürs Tagebuch (`needsEntry`, mit dem User entschieden am 30. Oktober 2026):
+Trainingsziel, Befinden, Prognose oder Feedback (die Zeile, auch nur mit Skalen), eine Reflexion mit Text, die
+Ausführung einer Serie, Favorit; ohne Schießen immer. Eine Einheit nur mit Werten wird nur Scheibe: Werte, Ausdruck,
+Belege, Ort und Trefferlage stehen dort. Eine Verknüpfung mit einem Ziel ist kein Grund, sie bestimmt weiter die Familie
+des Ziels; das Ziel misst seine Scheiben selbst. Ein Eintrag aus einem früheren Lauf bleibt. Der Bericht zählt „nur
+Werte, kein Eintrag“ (davon mit Ziel verknüpft, ohne eigene Scheibe).
 
 Dazu der Eintrag (`entryFromSession`), die festen Verknüpfungen (eine Scheibe, die schon ein anderer Eintrag hält,
 bleibt dort), die Ausführung je Serie (`executionsOnCard`, nur bei genau einer Scheibe mit gleicher Zahl Serien) und

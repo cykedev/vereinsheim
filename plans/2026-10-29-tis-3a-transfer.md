@@ -120,8 +120,13 @@ Gefunden bei den Wiederholungen mit den Daten des Users (30. Oktober 2026), der 
     Werte; jetzt geht er wie beim ersten Lauf über die Scheibe der Einheit.
 11. **Größte Disziplin und `--discipline`** (mit dem User entschieden, 30. Oktober 2026): Ohne gleiche oder größere
     Schusszahl nimmt die Übernahme die größte der Familie (`ueber-soll`). Ein Gleichstand bricht ab; `--discipline
-    "<Disziplin in Treffsicher>=<Disziplin in Spiegel>"` wählt, eine Disziplin außerhalb der Familie oder nicht
-    eingeordnet bricht vorher ab (`badDisciplineOption`). Der Bericht zählt Einheiten je Stufe.
+    "<Disziplin in Treffsicher>=<Disziplin in Spiegel>"` wählt für die Einheiten ohne Wahl (die übrigen derselben
+    Treffsicher-Disziplin behalten ihre, weil sie oft verschiedene Schusszahlen hat); eine Disziplin außerhalb der Familie
+    oder nicht eingeordnet bricht vorher ab (`badDisciplineOption`). Der Bericht zählt Einheiten je Stufe.
+12. **Nur Werte, kein Eintrag** (mit dem User entschieden, 30. Oktober 2026): `needsEntry` entscheidet, ob eine Einheit
+    einen Eintrag bekommt (Trainingsziel, Befinden, Prognose, Feedback, Reflexion mit Text, Ausführung, Favorit; ohne
+    Schießen immer). Eine Einheit nur mit Werten wird nur Scheibe; eine Ziel-Verknüpfung ist kein Grund und bestimmt
+    weiter die Familie des Ziels. Ein Eintrag aus einem früheren Lauf bleibt. Der Bericht zählt sie.
 
 ## Ansatz
 

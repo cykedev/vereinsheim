@@ -290,6 +290,54 @@ describe("runTransfer: erster Lauf", () => {
   })
 })
 
+describe("runTransfer: nur Werte, kein Eintrag", () => {
+  it("eine Einheit nur mit Werten wird nur Scheibe; die Verknüpfung mit dem Ziel bestimmt weiter seine Familie", async () => {
+    const c = newCase("werte")
+    const bare = {
+      trainingGoal: null,
+      isFavourite: false,
+      wellbeing: null,
+      prognosis: null,
+      feedback: null,
+      reflection: null,
+    }
+    const values = c.session("s1", "2026-05-05", bare)
+    values.series = values.series.map((series) => ({ ...series, executionQuality: null }))
+    // ohne Ergebnis: keine Scheibe, kein Eintrag
+    const empty = c.session("s2", "2026-05-06", {
+      ...bare,
+      series: [
+        { position: 1, isPractice: false, scoreTotal: null, shots: null, executionQuality: null },
+      ],
+    })
+    c.account([values, empty, c.session("s3", "2026-05-07")], {
+      goals: [
+        {
+          id: c.id("g1"),
+          title: "360 Ringe",
+          description: null,
+          type: "RESULT",
+          dateFrom: "2026-04-30T22:00:00.000Z",
+          dateTo: "2026-05-30T22:00:00.000Z",
+          sessionIds: [c.id("s1")],
+        },
+      ],
+    })
+    const report = done(await c.run())
+    expect(report.cardOnly).toEqual({ units: 2, goalLinked: 1, noCard: 1 })
+    expect(report.entries).toMatchObject({ created: 1 })
+    expect(report.check.findings).toBe(0)
+    const rows = (await rowsOf(c.to))!
+    expect(rows.entries.map((e) => e.importKey)).toEqual([`treffsicher:${c.id("s3")}`])
+    expect(await db.card.count({ where: { importKey: `treffsicher:${c.id("s1")}` } })).toBe(1)
+    expect(rows.goals).toMatchObject([{ title: "360 Ringe", familyId: site.familyId }])
+    // ein zweiter Lauf legt auch keinen an
+    const second = done(await c.run())
+    expect(second.cardOnly.units).toBe(2)
+    expect((await rowsOf(c.to))!.entries).toHaveLength(1)
+  })
+})
+
 describe("runTransfer: über drei Läufe", () => {
   it("eine Änderung in der App nach Lauf 1 steht auch nach Lauf 2 und Lauf 3", async () => {
     const c = newCase("drei")
@@ -590,6 +638,18 @@ describe("runTransfer: Abbruch vor dem Schreiben", () => {
         confirmedAt: new Date(),
       },
     })
+    const twenty = await db.discipline.create({
+      data: {
+        siteId: site.siteId,
+        name: `LP 20 ${tag}`,
+        familyId: site.familyId,
+        targetId: "lp-10m",
+        plannedShots: 20,
+        seriesShots: 10,
+        officialScoring: "rings",
+        confirmedAt: new Date(),
+      },
+    })
     const other = await db.family.create({ data: { slug: `fremd-${tag}`, name: `Fremd ${tag}` } })
     const foreign = await db.discipline.create({
       data: {
@@ -604,7 +664,9 @@ describe("runTransfer: Abbruch vor dem Schreiben", () => {
     })
     try {
       const c = newCase("gleich")
-      c.account([c.session("s1", "2026-08-09")])
+      const short = c.session("s2", "2026-08-11")
+      short.series = short.series.slice(0, 2)
+      c.account([c.session("s1", "2026-08-09"), short])
       expect(await c.run()).toEqual({
         kind: "aborted",
         abort: {
@@ -632,15 +694,20 @@ describe("runTransfer: Abbruch vor dem Schreiben", () => {
         await c.run({ disciplines: [{ name: familyName, target: alt.name.toUpperCase() }] })
       )
       expect(report.disciplines).toEqual({ larger: 0, largest: 0, option: 1 })
-      expect(
-        await db.card.findFirstOrThrow({
-          where: { importKey: `treffsicher:${c.id("s1")}` },
-          select: { disciplineId: true },
-        })
-      ).toEqual({ disciplineId: alt.id })
+      const disciplineOf = async (name: string) =>
+        (
+          await db.card.findFirstOrThrow({
+            where: { importKey: `treffsicher:${c.id(name)}` },
+            select: { disciplineId: true },
+          })
+        ).disciplineId
+      expect(await disciplineOf("s1")).toBe(alt.id)
+      // die Einheit mit 20 Schuss hat ihre Disziplin ohne die Option und behält sie
+      expect(await disciplineOf("s2")).toBe(twenty.id)
     } finally {
-      await db.card.deleteMany({ where: { disciplineId: { in: [alt.id, foreign.id] } } })
-      await db.discipline.deleteMany({ where: { id: { in: [alt.id, foreign.id] } } })
+      const ids = [alt.id, twenty.id, foreign.id]
+      await db.card.deleteMany({ where: { disciplineId: { in: ids } } })
+      await db.discipline.deleteMany({ where: { id: { in: ids } } })
       await db.family.delete({ where: { id: other.id } })
     }
   })

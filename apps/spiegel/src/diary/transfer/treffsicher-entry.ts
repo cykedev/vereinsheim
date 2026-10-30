@@ -76,6 +76,33 @@ const text = (value: string | null | undefined) => {
 }
 
 /**
+ * Braucht die Einheit einen Eintrag im Tagebuch? Ohne Schießen (Trocken-, Mentaltraining) immer, es gibt keine Scheibe.
+ * Sonst nur mit Inhalt fürs Tagebuch: ein Trainingsziel, Befinden, Prognose oder Feedback (die Zeile, auch nur mit
+ * Skalen), eine Reflexion mit Text, die Ausführung einer Serie, Favorit. Was die Scheibe trägt (Serien, Schüsse,
+ * Probe, Trefferlage, Ort, Disziplin, Art, Datum, Anhänge), ist kein Grund; eine Verknüpfung mit einem Ziel auch nicht
+ * (sie bestimmt nur die Familie des Ziels).
+ */
+export function needsEntry(session: Omit<TreffsicherSessionForEntry, "id" | "dateMs">): boolean {
+  if (KIND[session.type] !== "shooting") return true
+  const reflection = session.reflection
+  return (
+    text(session.trainingGoal) !== null ||
+    session.wellbeing !== null ||
+    session.prognosis !== null ||
+    session.feedback !== null ||
+    (reflection !== null &&
+      [
+        reflection.observations,
+        reflection.insight,
+        reflection.learningQuestion,
+        reflection.routineDeviation,
+      ].some((value) => text(value) !== null)) ||
+    session.series.some((series) => series.executionQuality !== null) ||
+    session.isFavourite
+  )
+}
+
+/**
  * Die Notiz: die Beobachtungen, darunter je Feld ohne eigenes Feld im Tagebuch eine Überschrift in fester Folge. Der
  * Ort nur ohne Scheibe (sonst steht er an der Scheibe), „Favorit“ als eigene Zeile
  */

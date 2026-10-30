@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest"
 import {
   entryFromSession,
   executionsOnCard,
+  needsEntry,
   type TreffsicherSessionForEntry,
 } from "./treffsicher-entry"
 
@@ -200,5 +201,66 @@ describe("executionsOnCard", () => {
         [1, 2, 3, 4, 5, 6].map((n) => ({ series: n }))
       )
     ).toBeNull()
+  })
+})
+
+describe("needsEntry", () => {
+  const REFLECTION = {
+    observations: null,
+    insight: null,
+    learningQuestion: null,
+    routineDeviation: null,
+  }
+  // was die Scheibe trägt: Werte, Probe, Ort; Trefferlage und Anhänge kennt der Eintrag gar nicht
+  const valuesOnly = session({
+    location: "Schützenhaus",
+    series: [
+      { position: 1, isPractice: true, executionQuality: null },
+      { position: 2, isPractice: false, executionQuality: null },
+    ],
+  })
+
+  it("nur Werte, Probe und Ort: kein Eintrag", () => {
+    expect(needsEntry(valuesOnly)).toBe(false)
+    expect(needsEntry({ ...valuesOnly, type: "WETTKAMPF" })).toBe(false)
+  })
+
+  it.each([
+    ["Trainingsziel", { trainingGoal: "Abzug ruhig" }],
+    ["Befinden", { wellbeing: { sleep: 70, energy: 50, stress: 30, motivation: 90 } }],
+    ["Prognose, nur Skalen", { prognosis: PROGNOSIS }],
+    ["Prognose mit Ergebnis", { prognosis: { ...PROGNOSIS, expectedScore: 360 } }],
+    ["Feedback, nur Skalen", { feedback: FEEDBACK }],
+    ["Reflexion: Beobachtung", { reflection: { ...REFLECTION, observations: "ruhig" } }],
+    ["Reflexion: Erkenntnis", { reflection: { ...REFLECTION, insight: "Atmen" } }],
+    ["Reflexion: Lernfrage", { reflection: { ...REFLECTION, learningQuestion: "Wie?" } }],
+    ["Reflexion: Abweichung", { reflection: { ...REFLECTION, routineDeviation: "zu schnell" } }],
+    [
+      "Ausführung einer Serie",
+      { series: [{ position: 1, isPractice: false, executionQuality: 4 }] },
+    ],
+    [
+      "Ausführung einer Probeserie",
+      { series: [{ position: 1, isPractice: true, executionQuality: 2 }] },
+    ],
+    ["Favorit", { isFavourite: true }],
+  ] as [string, Partial<TreffsicherSessionForEntry>][])("%s allein: ein Eintrag", (_, over) => {
+    expect(needsEntry({ ...valuesOnly, ...over })).toBe(true)
+  })
+
+  it("eine Reflexion ohne Text und ein leeres Trainingsziel zählen nicht", () => {
+    expect(needsEntry({ ...valuesOnly, reflection: REFLECTION })).toBe(false)
+    expect(
+      needsEntry({
+        ...valuesOnly,
+        reflection: { ...REFLECTION, observations: "  " },
+        trainingGoal: " ",
+      })
+    ).toBe(false)
+  })
+
+  it("ohne Schießen immer ein Eintrag, auch ohne Inhalt", () => {
+    expect(needsEntry(session({ type: "TROCKENTRAINING" }))).toBe(true)
+    expect(needsEntry(session({ type: "MENTAL" }))).toBe(true)
   })
 })

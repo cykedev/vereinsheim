@@ -90,6 +90,7 @@ export function summaryLines(report: TransferReport): string[] {
     `Scheiben: angelegt ${report.cards.created}, ersetzt ${report.cards.revised}, unverändert ${report.cards.unchanged}, entfernt ${report.cards.removed}, geändert und bleibt ${report.cards.kept}`,
     `Scheiben mit ungültigen Angaben: ${tally(report.cards.invalid)}`,
     `Einträge: ${tally(report.entries)}`,
+    `Nur Werte, kein Eintrag: ${report.cardOnly.units} Einheiten (mit Ziel verknüpft ${report.cardOnly.goalLinked}, ohne eigene Scheibe ${report.cardOnly.noCard})`,
     `Scheiben, die schon ein anderer Eintrag hält: ${report.links.linkedElsewhere}`,
     `Ausführung: ${report.executions.placed} Einträge, ${report.executions.series} Serien; ausgelassen ${tally(report.executions.skipped)}; Probeserien ${report.executions.practiceSkipped}`,
     `Ziele: ${tally(report.goals)}`,

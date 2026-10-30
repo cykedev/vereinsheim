@@ -11,6 +11,7 @@ import { eveningDay } from "@vereinsheim/shot-ui/period/calendar"
 import {
   entryFromSession,
   executionsOnCard,
+  needsEntry,
   type ImportedEntry,
 } from "@/diary/transfer/treffsicher-entry"
 import { goalFromTreffsicher, routineFromTreffsicher } from "@/diary/transfer/treffsicher-goal"
@@ -81,7 +82,10 @@ export interface FamilyOption {
   slug: string
 }
 
-/** eine Zuordnung `--discipline "<Disziplin in Treffsicher>=<Disziplin in Spiegel>"`; ersetzt die Wahl nach Schusszahl */
+/**
+ * eine Zuordnung `--discipline "<Disziplin in Treffsicher>=<Disziplin in Spiegel>"`: die Disziplin für Einheiten, für
+ * die die Wahl nach Schusszahl keine findet (Gleichstand)
+ */
 export interface DisciplineOption {
   name: string
   target: string
@@ -166,6 +170,11 @@ export interface TransferReport {
     invalid: Partial<Record<DetailsProblem, number>>
   }
   entries: Tally<"created" | "updated" | "kept" | "removed">
+  /**
+   * Einheiten nur mit Werten, ohne Eintrag (`needsEntry`); davon mit einem Ziel verknüpft (die Verknüpfung bestimmt
+   * weiter die Familie des Ziels) und ohne eigene Scheibe (ohne Ergebnis, Abend nur aus Probe)
+   */
+  cardOnly: Tally<"units" | "goalLinked" | "noCard">
   links: { linkedElsewhere: number }
   executions: {
     placed: number
@@ -304,6 +313,7 @@ const blankReport = (dryRun: boolean): Omit<TransferReport, "check"> => ({
   decisions: { existing: 0, new: 0, uncertain: 0, probeEvening: 0, noResult: 0, notShooting: 0 },
   cards: { created: 0, revised: 0, unchanged: 0, removed: 0, kept: 0, invalid: {} },
   entries: { created: 0, updated: 0, kept: 0, removed: 0 },
+  cardOnly: { units: 0, goalLinked: 0, noCard: 0 },
   links: { linkedElsewhere: 0 },
   executions: {
     placed: 0,
@@ -496,11 +506,13 @@ export async function runTransfer(db: Db, input: TransferInput): Promise<Transfe
     )
     let disciplineId: number | null = null
     if ((decision.kind === "new" || decision.kind === "uncertain") && card && familyId !== null) {
-      const option = chosen.get(normalize(session.discipline!.name))
+      // `--discipline` entscheidet nur, wo die Wahl nach Schusszahl keine findet: Eine Disziplin aus Treffsicher hat
+      // Einheiten verschiedener Schusszahl, die übrigen behalten ihre
+      const automatic = disciplineForShots(candidates(familyId), card.shots)
+      const option =
+        automatic.kind === "found" ? undefined : chosen.get(normalize(session.discipline!.name))
       const choice: ReturnType<typeof disciplineForShots> =
-        option === undefined
-          ? disciplineForShots(candidates(familyId), card.shots)
-          : { kind: "found", id: option, step: "exact" }
+        option === undefined ? automatic : { kind: "found", id: option, step: "exact" }
       if (option !== undefined) steps.option += 1
       if (choice.kind === "found") {
         disciplineId = choice.id
@@ -699,6 +711,7 @@ async function write(
 
   const cardsByKey = new Map((ctx.existing?.cards ?? []).map((c) => [c.importKey!, c]))
   const entriesByKey = new Map((ctx.existing?.entries ?? []).map((e) => [e.importKey!, e]))
+  const goalSessions = new Set(account.goals.flatMap((goal) => goal.sessionIds))
   /** ein Eintrag gilt auch als geändert, wenn eine Zeile seiner Scheiben nicht vom letzten Lauf stammt (verknüpft, gelöst) */
   const entryTouched = (row: NonNullable<typeof ctx.existing>["entries"][number]) =>
     isTouched(row, lastRunAt) ||
@@ -785,15 +798,21 @@ async function write(
       { importKey: key, familyId: unit.familyId, withCard, timeZone }
     )
     const old = entriesByKey.get(key)
+    // nur Werte: kein Eintrag, die Scheibe trägt alles; ein Eintrag aus einem früheren Lauf bleibt (nichts wird gelöscht)
+    const cardOnly = old === undefined && !needsEntry(session)
     const entryKept = old !== undefined && entryTouched(old)
-    expectedEntries.push({ key, entry, kept: entryKept })
+    if (!cardOnly) expectedEntries.push({ key, entry, kept: entryKept })
     const rated = session.series.filter((x) => !x.isPractice && x.executionQuality !== null)
     executionsExpected.rated += rated.length
     const practice = session.series.filter((x) => x.isPractice && x.executionQuality !== null)
     executionsExpected.practice += practice.length
     report.executions.practiceSkipped += practice.length
     let entryId: string | null = null
-    if (entryKept) {
+    if (cardOnly) {
+      report.cardOnly.units += 1
+      if (goalSessions.has(session.id)) report.cardOnly.goalLinked += 1
+      if (decision.kind === "none" || decision.kind === "probeEvening") report.cardOnly.noCard += 1
+    } else if (entryKept) {
       report.entries.kept += 1
       report.kept.push({
         what: "entry",
@@ -1123,9 +1142,11 @@ async function checkInput(
   const tables: TableCheck[] = [
     {
       name: "Einheiten → Einträge",
-      before: input.entries.length,
+      before: input.entries.length + input.report.cardOnly.units,
       after: stored.length,
-      explained: {},
+      explained: input.report.cardOnly.units
+        ? { "nur Werte, kein Eintrag": input.report.cardOnly.units }
+        : {},
     },
   ]
   for (const field of fieldNames) {
