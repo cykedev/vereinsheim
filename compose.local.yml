@@ -45,3 +45,6 @@ services:
 
   migrate-spiegel:
     pull_policy: missing
+
+  transfer-spiegel:
+    pull_policy: missing

@@ -195,6 +195,31 @@ services:
       - web
       - data
 
+  # Übernahme eines Kontos aus Treffsicher ([[spiegel-account-transfer]]): ein Wegwerf-Container aus dem Image von
+  # Spiegel, den nur `vereinsheim transfer` startet (Profil ops; deploy und up starten ihn nicht). Das Konto kommt per
+  # Pipe, die Dateien von Treffsicher nur lesend; die Datenbank von Treffsicher liest allein der Host (ADR-002).
+  transfer-spiegel:
+    image: ${DOCKER_USER}/spiegel:${SPIEGEL_TAG:-latest}
+    profiles:
+      - ops
+    restart: "no"
+    pull_policy: missing
+    working_dir: /app/apps/spiegel
+    entrypoint: ["node", "transfer.mjs"]
+    environment:
+      DATABASE_URL: postgresql://spiegel:${SPIEGEL_DB_PASSWORD}@db:5432/spiegel
+      UPLOAD_DIR: /app/uploads
+      TRANSFER_DIR: /transfer
+      TRANSFER_FILES: /treffsicher-uploads
+      NODE_OPTIONS: --max-old-space-size=160
+    volumes:
+      - uploads_spiegel:/app/uploads
+      - uploads_treffsicher:/treffsicher-uploads:ro
+    mem_limit: 320m
+    logging: *default-logging
+    networks:
+      - data
+
 networks:
   web:
   data:
