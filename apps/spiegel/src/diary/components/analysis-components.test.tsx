@@ -214,7 +214,7 @@ describe("Auswertung", () => {
     expect(html).toMatch(/data-delta="down"[^>]*text-warning[^>]*>−5</)
     expect(html).toMatch(/data-delta="up"[^>]*text-success[^>]*>\+5</)
     expect(html).toContain(
-      "1 Eintrag mit erwartetem Ergebnis hat nicht genau eine Scheibe mit Ergebnis und fehlt hier."
+      "1 Eintrag mit erwartetem Ergebnis fehlt hier. Er hat kein Ergebnis oder mehrere Scheiben mit Wertung."
     )
     expect(html.match(/data-no-pair/g)).toHaveLength(6)
     expect(html).toContain("kein Eintrag mit beidem")

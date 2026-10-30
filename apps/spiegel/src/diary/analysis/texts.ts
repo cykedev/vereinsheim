@@ -197,10 +197,10 @@ export function expectedMean(mean: number, n: number): string {
   return `${first} Nur ${entries(n)}. Für ein Urteil reicht das nicht.`
 }
 
-/** die Grundlage von „Erwartet und geschossen“; null, wenn keiner fehlt */
+/** die Grundlage von „Erwartet und geschossen“ (`shotResult` gibt kein Ergebnis); null, wenn keiner fehlt */
 export const expectedBasis = (left: number) =>
   left
-    ? `${entries(left)} mit erwartetem Ergebnis ${left === 1 ? "hat" : "haben"} nicht genau eine Scheibe mit Ergebnis und ${left === 1 ? "fehlt" : "fehlen"} hier.`
+    ? `${entries(left)} mit erwartetem Ergebnis ${left === 1 ? "fehlt" : "fehlen"} hier. ${left === 1 ? "Er hat" : "Sie haben"} kein Ergebnis oder mehrere Scheiben mit Wertung.`
     : null
 
 /** Erklärungen hinter den „?“ der Auswertung */

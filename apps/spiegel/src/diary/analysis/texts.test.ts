@@ -205,6 +205,13 @@ describe("Texte der Auswertung", () => {
     expect(influenceBasis({ noCard: 2, noForm: 4 })).toBe(
       "2 Einträge ohne Scheibe und 4 ohne fünf Scheiben davor zählen nicht mit."
     )
+    expect(expectedBasis(0)).toBeNull()
+    expect(expectedBasis(1)).toBe(
+      "1 Eintrag mit erwartetem Ergebnis fehlt hier. Er hat kein Ergebnis oder mehrere Scheiben mit Wertung."
+    )
+    expect(expectedBasis(3)).toBe(
+      "3 Einträge mit erwartetem Ergebnis fehlen hier. Sie haben kein Ergebnis oder mehrere Scheiben mit Wertung."
+    )
   })
 
   it("sagt das Urteil der Ausführung als Antwort auf die Frage", () => {
