@@ -114,9 +114,21 @@ export function summaryLines(report: TransferReport): string[] {
     `  an der verzeichneten Scheibe, nicht ein zweites Mal abgelegt: ${a.atRecordedCard}`,
     `Unsicher (beide behalten): ${report.uncertain.length}`,
     `Geändert, bleibt: ${report.kept.length}`,
-    `Treffsicher: ${report.marked === "set" ? "Konto als umgezogen markiert" : "nicht markiert (Probelauf)"}`,
+    `Treffsicher: ${markedText(report.marked)}`,
     `Prüfbestand: ${report.check.findings === 0 ? "ohne Befund" : `${report.check.findings} Befunde`}`,
   ]
+}
+
+/** das Merkmal „umgezogen“ in Treffsicher; ein `switch` ohne `default`, damit `tsc` einen neuen Wert meldet */
+function markedText(marked: TransferReport["marked"]): string {
+  switch (marked) {
+    case "set":
+      return "Konto als umgezogen markiert"
+    case "dryRun":
+      return "nicht markiert (Probelauf)"
+    case "caller":
+      return "Merkmal setzt vereinsheim nach dem Lauf"
+  }
 }
 
 const cell = (text: string | null) =>
