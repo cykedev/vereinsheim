@@ -63,9 +63,16 @@ In dieser Reihenfolge, je mit festem Text im CLI: kein Konto in Treffsicher (`no
 (`preview`, siehe unten); Übernommenes eines anderen Treffsicher-Kontos im Ziel (`foreignInTarget`); Übernommenes
 dieses Kontos an einem anderen Spiegel-Konto (`sourceElsewhere`); `--family` mit unbekannter Kennung oder doppeltem
 Namen (`badFamilyOption`); eine Disziplin aus Treffsicher ohne Familie (`unknownFamily`, Namen mit Zahl der Einheiten);
-eine Einheit braucht eine neue Scheibe, aber die Familie hat keine Disziplin mit ihrer Schusszahl (`noDiscipline`,
-Familie und Schusszahl). Nichts wird geraten: Die Familie gibt `--family` an, eine fehlende Disziplin legt der Admin
-unter Admin → Disziplinen an.
+eine Einheit braucht eine neue Scheibe, aber die Familie hat weder eine Disziplin mit ihrer Schusszahl noch eine mit
+mehr Schüssen, oder mehrere passen gleich und keine ist die meistgenutzte (`noDiscipline`, Familie, Schusszahl und
+Grund). Die Familie gibt `--family` an, eine fehlende Disziplin legt der Admin unter Admin → Disziplinen an.
+
+Eine Einheit ohne Disziplin mit genau ihrer Schusszahl geht auf die Disziplin der Familie mit der kleinsten
+Schusszahl darüber (entschieden mit dem User am 30. Oktober 2026). Die Scheibe ist dann unvollständig (Merkmal
+`unvollstaendig`, nicht `complete`): Sie zählt für keinen Rekord, ein Ziel über die ganze Scheibe lässt sie als
+„andere Schusszahl“ aus, der Fortschritt rechnet ohnehin je Schuss. Der Bericht zählt diese Einheiten. Mehr Schüsse
+als die Disziplin würde Spiegel annehmen (Merkmal `ueber-soll`, die Scheibe zählte als vollständig); dafür gibt es
+keine Regel, der Lauf bricht ab.
 
 ### Je Einheit
 
@@ -85,9 +92,13 @@ bleibt dort), die Ausführung je Serie (`executionsOnCard`, nur bei genau einer 
 die Anhänge:
 
 - **Meyton-Ausdruck:** an die eigene Scheibe mit dieser ID am Abend des Drucks; sonst an die Scheibe der Einheit, und
-  wenn sie aus Treffsicher ist und der Ausdruck passt (`printoutFits`: Lesung ok, nicht nur Probe, gleicher Abend,
-  gleiche Schusszahl, gleiches Ergebnis), übernimmt sie seine Werte (Revision 2, Herkunft `pdf`); sonst wie „Scheibe
-  holen“ eine Scheibe vom Ausdruck. Ein Ausdruck im Modus Probe passt nie und hängt ohne Werte an.
+  wenn sie aus Treffsicher ist und der Ausdruck passt (`printoutFits`: Lesung ok, gleicher Abend, gleiche Schusszahl,
+  gleiches Ergebnis in der Wertung von Treffsicher), übernimmt sie seine Werte (Revision 2, Herkunft `pdf`); sonst wie
+  „Scheibe holen“ eine Scheibe vom Ausdruck. Ein Ausdruck im Modus Probe zählt dabei als Wertung, sein Ergebnis ist die
+  Summe seiner Schüsse (`scoringReading`, entschieden mit dem User am 30. Oktober 2026): Treffsicher hat solche
+  Abende als Training gewertet. Dieselbe Regel gilt, wenn Spiegel die Ausdrucke einer solchen Scheibe später neu
+  anwendet (`applyPrintoutValues` an einer Scheibe mit Schlüssel `treffsicher:`), sonst würde sie dabei eine Scheibe
+  nur aus Probe.
 - **Foto oder gewöhnliches PDF:** Beleg an der Scheibe der Einheit, ohne Scheibe nur im Bericht.
 
 Ausdruck und Beleg schreiben in der Transaktion der Übernahme (`importPrintoutIn`, `attachEvidenceIn`); gelesen
@@ -141,7 +152,8 @@ DELETE FROM "Card" WHERE "importKey" LIKE 'treffsicher:preview-%';
 
 - **Scheibe** (`apps/spiegel/src/lib/transfer/treffsicher-card.ts`, rein): `familyForName` (Name der Treffsicher-Disziplin
   gleich dem der Familie, ohne Groß- und Kleinschreibung, genau eine; `--family` geht vor), `disciplineForShots`
-  (Disziplin der ersten Anlage mit derselben Schusszahl, bei mehreren die meistgenutzte des Kontos, sonst keine),
+  (Disziplin der ersten Anlage mit derselben Schusszahl, ohne sie die mit der kleinsten Schusszahl darüber; bei
+  mehreren die meistgenutzte des Kontos, sonst keine),
   `treffsicherDetails` (Wertungsserien mit Wert neu nummeriert; Einzelschüsse nur, wenn jede Serie sie hat und ihre
   Summe zum Wert passt, sonst Serien-Summen; Probeserien als Probe; Trefferlage mit Richtung).
 - **Eintrag** (`apps/spiegel/src/diary/transfer/treffsicher-entry.ts`, rein): `entryFromSession` (Abend, Art, Vorhaben aus

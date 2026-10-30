@@ -62,12 +62,34 @@ describe("printoutFits", () => {
     expect(printoutFits(late, unit(), ZONE)).toBe(true)
   })
 
-  it("ohne gelesene Werte, nur Probe oder ohne Ergebnis in Treffsicher passt nichts", () => {
+  it("im Modus Probe zählt die Summe der Schüsse in der Wertung von Treffsicher", () => {
+    // 39 × 9,8 und eine 10,4: 361 Ringe, 3926 Zehntel
+    const probe = printout({
+      reading: reading({
+        probe: true,
+        total: null,
+        shots: [
+          ...Array.from({ length: 39 }, () => ({ series: 1, decimalTenths: 98, innerTen: false })),
+          { series: 4, decimalTenths: 104, innerTen: true },
+        ],
+      }),
+    })
+    expect(printoutFits(probe, unit({ total: { rings: 361 } }), ZONE)).toBe(true)
+    expect(
+      printoutFits(probe, unit({ scoring: "TENTH", total: { decimalTenths: 3926 } }), ZONE)
+    ).toBe(true)
+    // Gegenprobe: eins daneben passt nicht
+    expect(printoutFits(probe, unit({ total: { rings: 360 } }), ZONE)).toBe(false)
+    expect(printoutFits(probe, unit({ total: { rings: 362 } }), ZONE)).toBe(false)
+    expect(
+      printoutFits(probe, unit({ scoring: "TENTH", total: { decimalTenths: 3925 } }), ZONE)
+    ).toBe(false)
+    expect(printoutFits(probe, unit({ shots: 39, total: { rings: 361 } }), ZONE)).toBe(false)
+  })
+
+  it("ohne gelesene Werte oder ohne Ergebnis in Treffsicher passt nichts", () => {
     expect(printoutFits(printout({ status: "inconsistent" }), unit(), ZONE)).toBe(false)
     expect(printoutFits(printout({ reading: null }), unit(), ZONE)).toBe(false)
-    expect(
-      printoutFits(printout({ reading: reading({ probe: true, total: null }) }), unit(), ZONE)
-    ).toBe(false)
     expect(printoutFits(printout(), unit({ total: null }), ZONE)).toBe(false)
     expect(printoutFits(printout(), unit({ total: {} }), ZONE)).toBe(false)
   })

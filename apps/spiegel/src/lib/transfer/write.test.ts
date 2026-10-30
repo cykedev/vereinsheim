@@ -9,7 +9,9 @@ import { createPrismaClient } from "@/lib/db"
 import { createTestSite, type TestSite } from "../../../test/fixtures"
 import { valuedSpec, type ValuedPrintoutSpec } from "../../../test/printout"
 import { importPrintout } from "../fetch-card/import"
+import { applyPrintoutValues } from "../printouts/apply"
 import { valuesReadOf, type StoredPrintout } from "../printouts/store"
+import { scoringReading } from "../printouts/values"
 import { placeAttachment, writeTransferCard, type PreparedAttachment } from "./write"
 
 // Gegen die Dev-Datenbank, eigene Anlage mit eingeordneter Disziplin „LP 40“ (ganze Ringe); je Fall eine eigene
@@ -126,6 +128,46 @@ describe("placeAttachment: Meyton-Ausdruck", () => {
     })
     expect(card.origin).toBe("treffsicher")
     expect(card.printouts).toHaveLength(1)
+    expect((await revisionsOf(cardId)).map((r) => r.number)).toEqual([1])
+  })
+
+  it("im Modus Probe mit der Summe der Schüsse: Werte als Wertung, auch nach erneutem Anwenden", async () => {
+    const file = await stored(nextId++, { mode: "Probe" })
+    expect(file.values.reading!.probe).toBe(true)
+    const rings = scoringReading(file.values.reading!).total!.rings
+    const cardId = await transferCard(rings)
+    const placed = await place(cardId, { kind: "printout", file }, rings)
+    expect(placed).toEqual({ kind: "printoutUnitCard", cardId, fits: true, adopted: "adopted" })
+    const read = () =>
+      db.card.findUniqueOrThrow({
+        where: { id: cardId },
+        select: { origin: true, flags: true, complete: true, currentRevisionId: true },
+      })
+    const card = await read()
+    expect(card).toMatchObject({ origin: "pdf", complete: true })
+    expect(card.flags).not.toContain("nur-probe")
+    const revisions = await revisionsOf(cardId)
+    expect(revisions.map((r) => [r.number, r.reason, r.totalRings, r._count.shots])).toEqual([
+      [1, "treffsicher", rings, 0],
+      [2, "printout", rings, 40],
+    ])
+    // ein neues Lesen der Ausdrucke (neuer Leser, andere Disziplin) wendet dieselbe Regel an
+    await db.$transaction((tx) => applyPrintoutValues(tx, cardId))
+    expect(await read()).toEqual(card)
+    expect((await revisionsOf(cardId)).map((r) => r.number)).toEqual([1, 2])
+  })
+
+  it("im Modus Probe, Summe um eins daneben: angehängt ohne Werte", async () => {
+    const file = await stored(nextId++, { mode: "Probe" })
+    const rings = scoringReading(file.values.reading!).total!.rings + 1
+    const cardId = await transferCard(rings)
+    const placed = await place(cardId, { kind: "printout", file }, rings)
+    expect(placed).toEqual({
+      kind: "printoutUnitCard",
+      cardId,
+      fits: false,
+      adopted: "notFitting",
+    })
     expect((await revisionsOf(cardId)).map((r) => r.number)).toEqual([1])
   })
 

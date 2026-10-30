@@ -2,7 +2,9 @@
 // Ausdruck ohne Brücke gibt der zuletzt gedruckte mit gespeicherter Lesung die Angaben (`readingOrder`); passt seine
 // Lesung nicht zur Disziplin (Scheibenbild, Schusszahl), ist er `inconsistent`, behält die Lesung, und der nächste kommt
 // dran. Geschrieben wird über `writeEnteredCardIn` (Herkunft `pdf`): gleiche Angaben ändern nichts, andere sind eine neue
-// Revision. Ändert sich die Disziplin, ruft `recomputeDisciplineCard` dies erneut.
+// Revision. Ändert sich die Disziplin, ruft `recomputeDisciplineCard` dies erneut. Eine Scheibe aus Treffsicher, die die
+// Werte ihres Ausdrucks übernommen hat (Schlüssel `treffsicher:`), liest einen Ausdruck im Modus Probe als Wertung wie
+// bei der Übernahme (`scoringReading`); sonst würde sie beim nächsten Lesen eine Scheibe nur aus Probe.
 
 import type { PrintoutReading } from "@vereinsheim/meyton-pdf/reading"
 import { TARGETS, type TargetId } from "@vereinsheim/shot-core/targets"
@@ -10,9 +12,10 @@ import { TARGETS, type TargetId } from "@vereinsheim/shot-core/targets"
 import type { Prisma } from "@/generated/prisma/client"
 
 import { writeEnteredCardIn } from "../db/entered"
+import { IMPORT_KEY } from "../entered/details"
 import { lockCard } from "../db/purge"
 import { markPrintoutValues } from "./queries"
-import { detailsFromReading, readingOrder } from "./values"
+import { detailsFromReading, readingOrder, scoringReading } from "./values"
 
 type Tx = Prisma.TransactionClient
 
@@ -40,6 +43,7 @@ export async function applyPrintoutValues(tx: Tx, cardId: string): Promise<Apply
       disciplineId: true,
       startedAt: true,
       kind: true,
+      importKey: true,
       discipline: { select: { targetId: true } },
       currentRevision: {
         select: {
@@ -86,8 +90,10 @@ export async function applyPrintoutValues(tx: Tx, cardId: string): Promise<Apply
     })
 
   const targetId = targetIdOf(card.discipline.targetId)
+  const transferred = card.importKey !== null && IMPORT_KEY.test(card.importKey)
   for (const printout of readingOrder(card.printouts)) {
-    const result = detailsFromReading(printout.reading as unknown as PrintoutReading, targetId)
+    const reading = printout.reading as unknown as PrintoutReading
+    const result = detailsFromReading(transferred ? scoringReading(reading) : reading, targetId)
     if (!result.ok) {
       if (printout.valuesStatus !== "inconsistent")
         await markPrintoutValues(tx, printout.id, "inconsistent")

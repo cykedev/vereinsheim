@@ -13,6 +13,7 @@ import { importPrintoutIn, type ImportResult } from "../fetch-card/import"
 import { newCardValues, ownCardOfEvening } from "../fetch-card/queries"
 import { attachPrintout, markPrintoutValues } from "../printouts/queries"
 import type { StoredPrintout } from "../printouts/store"
+import { scoringReading } from "../printouts/values"
 import { printoutFits } from "./printout-fit"
 
 type Tx = Prisma.TransactionClient
@@ -50,7 +51,8 @@ export function writeTransferCard(
 /**
  * Die Werte eines passenden Ausdrucks als neue Revision über den Zahlen aus Treffsicher: Die Scheibe wird „vom Ausdruck“
  * (`detailsWriter` erlaubt `treffsicher` → `pdf`), Revision 1 bleibt. Beginn und Art bleiben wie bei
- * `applyPrintoutValues`. Ohne Werte, die das Scheibenbild annimmt, nichts (`noValues`, der Ausdruck `inconsistent`).
+ * `applyPrintoutValues`. Ein Ausdruck im Modus Probe gibt seine Schüsse als Wertung (`scoringReading`, wie in
+ * `printoutFits`). Ohne Werte, die das Scheibenbild annimmt, nichts (`noValues`, der Ausdruck `inconsistent`).
  */
 export type AdoptOutcome = "adopted" | "noValues" | Exclude<EnteredResult["kind"], "saved">
 
@@ -67,7 +69,12 @@ export async function adoptPrintoutValues(
       discipline: { select: { targetId: true } },
     },
   })
-  const values = newCardValues(input.file, card.discipline.targetId)
+  const reading = input.file.values.reading
+  const file =
+    reading === null
+      ? input.file
+      : { ...input.file, values: { ...input.file.values, reading: scoringReading(reading) } }
+  const values = newCardValues(file, card.discipline.targetId)
   if (!Object.keys(values.details).length) {
     if (values.inconsistent) await markPrintoutValues(tx, input.printoutId, "inconsistent")
     return "noValues"

@@ -16,6 +16,7 @@ import {
   readingOrder,
   ringDiametersMm,
   scaleFromRings,
+  scoringReading,
 } from "./values"
 
 // Erfundene, stimmige Ausdrucke aus `valuedPrintout`, gelesen wie im Kindprozess (hier im Testprozess).
@@ -277,5 +278,28 @@ describe("readingOrder", () => {
       { id: "f", reading, printedAt: null, storedAt: at("2026-10-02T20:00:00Z") },
     ]
     expect(readingOrder(rows).map((r) => r.id)).toEqual(["d", "b", "a", "f"])
+  })
+})
+
+describe("scoringReading", () => {
+  it("macht aus einem Ausdruck im Modus Probe eine Wertung mit der Summe der Schüsse als Ergebnis", async () => {
+    const spec: ValuedPrintoutSpec = { layout: "qt", mode: "Probe", cross: false }
+    const probe = await readingOf(spec)
+    expect(probe.probe).toBe(true)
+    const hits = valuedHits(spec)
+    const rings = hits.reduce((sum, hit) => sum + hit.ring, 0)
+    const tenths = hits.reduce((sum, hit) => sum + hit.decimalTenths, 0)
+    const scored = scoringReading(probe)
+    expect(scored.total).toEqual({ rings, decimalTenths: tenths })
+    const result = detailsFromReading(scored, "lp-10m")
+    if (!result.ok) throw new Error(result.problem)
+    expect(result.details.shots!.every((shot) => !shot.probe && shot.series !== null)).toBe(true)
+    expect(result.details.total).toEqual({ shots: 40, rings, decimalTenths: tenths })
+    expect(result.details.series!.reduce((sum, s) => sum + s.rings!, 0)).toBe(rings)
+  })
+
+  it("lässt eine Lesung der Wertung, wie sie ist", async () => {
+    const reading = await readingOf({ layout: "qt", mode: "Wertung", cross: false })
+    expect(scoringReading(reading)).toBe(reading)
   })
 })

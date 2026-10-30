@@ -7,7 +7,7 @@
 // jeden Schuss; die gedruckten Teiler (abgeschnitten) dienen nur der Prüfung.
 
 import type { PointPt } from "@vereinsheim/meyton-pdf/values"
-import type { PrintoutReading } from "@vereinsheim/meyton-pdf/reading"
+import { ringOf, type PrintoutReading } from "@vereinsheim/meyton-pdf/reading"
 import {
   centroid,
   smallestEnclosingCircle,
@@ -268,6 +268,23 @@ export function detailsFromReading(
     if (suspicious.some(Boolean)) return { ok: false, problem: "marks" }
   }
   return { ok: true, details, stand: reading.stand }
+}
+
+/**
+ * Eine Lesung im Modus Probe als Wertung ([[spiegel-account-transfer]]): Treffsicher hat Probe-Ausdrucke als Training
+ * gewertet. Die Schüsse behalten ihre Serien, das Ergebnis ist ihre Summe (ganze Ringe wie Meyton, `ringOf`). Eine
+ * Lesung der Wertung bleibt, wie sie ist.
+ */
+export function scoringReading(reading: PrintoutReading): PrintoutReading {
+  if (!reading.probe) return reading
+  return {
+    ...reading,
+    probe: false,
+    total: {
+      rings: reading.shots.reduce((sum, shot) => sum + ringOf(shot.decimalTenths), 0),
+      decimalTenths: reading.shots.reduce((sum, shot) => sum + shot.decimalTenths, 0),
+    },
+  }
 }
 
 /**

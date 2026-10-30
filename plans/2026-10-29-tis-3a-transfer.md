@@ -83,6 +83,30 @@ Neu, mit dem User am 29. Oktober 2026 (je mit der Empfehlung):
 Keine neue Oberfläche in der App: Was der Betreiber sieht, sind Ausgabe und Bericht des CLI. Ein Designkonzept entfällt
 deshalb.
 
+### Abweichungen während der Umsetzung
+
+Mit der koordinierenden Session abgestimmt (29. Oktober 2026), je mit Grund im Validierungsbericht:
+
+1. `markMoved` ist der letzte Schritt **in** der Transaktion, nicht nach dem Commit. Scheiterte es nach dem Commit eines
+   zweiten Laufs, wären alle Zeilen dieses Laufs jünger als das alte Merkmal, und der dritte Lauf ersetzte nichts mehr.
+   Scheitert der Commit nach dem Merkmal, meldet der Lauf `markedNotSaved` (Exit 3) mit beiden Auswegen.
+2. `badFamilyOption` vor `unknownFamily`: Mit einer falschen Kennung meldete der Lauf den Namen sonst als unbekannt.
+3. Exit-Code 4 für unerwartete Fehler (nichts geschrieben), damit 1 nur „Befund“ heißt.
+4. Verknüpfen ändert `updatedAt` des Eintrags nicht: Ein Eintrag gilt auch als geändert, wenn eine seiner Zeilen in
+   `DiaryEntryCard` nach dem letzten Lauf geändert wurde. Eine Scheibe, die ein anderer Eintrag hält, bleibt dort.
+5. Ein Probelauf schreibt seinen Bericht nach `…-probe.md`, damit er den des echten Laufs nicht überschreibt.
+
+Mit dem User entschieden (30. Oktober 2026), nach der Probe mit echten Daten:
+
+6. **Größere Disziplin statt Abbruch:** Ohne Disziplin mit genau der Schusszahl nimmt die Übernahme die eingeordnete
+   Disziplin der Familie mit der kleinsten Schusszahl darüber (Gleichstand wie bei genauer Schusszahl). Die Scheibe ist
+   dann unvollständig (`unvollstaendig`, nicht `complete`); der Bericht zählt diese Einheiten. Gibt es keine größere
+   oder ist es ein Gleichstand, bleibt es beim Abbruch `noDiscipline`, jetzt mit Grund (`none`, `tie`).
+7. **Probe-Ausdruck übernehmen:** Ein Ausdruck im Modus Probe passt, wenn Abend und Schusszahl gleich sind und die
+   Summe seiner Schüsse in der Wertung von Treffsicher dem Ergebnis gleicht (`scoringReading`). Seine Schüsse werden
+   Wertung (Revision 2, Herkunft `pdf`). `applyPrintoutValues` liest an einer Scheibe mit Schlüssel `treffsicher:`
+   ebenso, damit ein späteres Neulesen sie nicht zu einer Scheibe nur aus Probe macht.
+
 ## Ansatz
 
 ### Überblick
