@@ -150,6 +150,15 @@ Gefunden bei den Wiederholungen mit den Daten des Users (30. Oktober 2026), der 
     samt Ausführung; Eintrag vor Scheibe sperren, Scheiben über `lockCard`; das Fenster der Scheiben aus eigenen
     Ausdrucken hat eine obere Grenze; Exit 5 nennt die Befunde.
 
+20. **Hauptbuch der Übernahme, mit Migration** (koordinierende Session, 30. Oktober 2026; Abweichung von „Schema und
+    Migrationen fasst 3a nicht an“): zwei neue Tabellen `TransferRun` und `TransferItem`
+    (`20261030120000_transfer_ledger`, nur angehängt). „Unverändert“, „geändert, bleibt“, „in Spiegel gelöscht“ und
+    „nie platziert“ entscheidet der Lauf je Stück gegen das Hauptbuch; Scheiben nur nach fachlichen Merkmalen (Herkunft,
+    Revision, Wahl, Teilen, eigener Beleg), nie nach `updatedAt`. Es fallen weg: der Vergleich mit dem Merkmal,
+    `markerMismatch`, `markerWithoutRows`, `markerMissing` (jetzt `ledgerMissing`), das Zeitfenster der Scheiben aus
+    eigenen Ausdrucken und die Probe im `SAVEPOINT`. Das Merkmal heißt nur noch „umgezogen“. Export mit den Läufen,
+    Konto löschen über die Kaskade.
+
 ### Offen
 
 - Trägt eine übernommene Scheibe zwei Ausdrucke (einen passenden, einen anderen), kann ein späteres Neulesen die Werte

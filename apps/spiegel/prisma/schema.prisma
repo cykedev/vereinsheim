@@ -366,6 +366,8 @@ model User {
   diaryEntries       DiaryEntry[]
   diaryGoals         DiaryGoal[]
   diaryRoutines      DiaryRoutine[]
+  transferRuns       TransferRun[]
+  transferItems      TransferItem[]
 }
 
 // benannter Zeitraum des Schützen („Vorbereitung Landesmeisterschaft“), Tage in der Anzeige-Zone
@@ -913,4 +915,60 @@ model DiaryRoutine {
 
   // Faden je Disziplin
   @@index([userId, familyId])
+}
+
+// ein Lauf der Übernahme aus Treffsicher, der gespeichert hat ([[spiegel-account-transfer]]); gehört zu
+// `src/parts/transfer`, nur dort gelesen und geschrieben
+model TransferRun {
+  id      String   @id @default(cuid())
+  userId  String
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // die Zeit des Laufs: `updatedAt` jeder Zeile des Tagebuchs, die er schreibt, und `writtenAt` seiner Stücke
+  at      DateTime @db.Timestamptz(3)
+  // Version der Regeln der Übernahme (`TRANSFER_VERSION`)
+  version Int
+  // die Zahlen des Berichts, ohne Texte
+  counts  Json
+
+  @@index([userId, at])
+}
+
+// was die Übernahme aus Treffsicher in Spiegel hinterlassen hat, je Stück; der nächste Lauf entscheidet daran
+// „unverändert“, „geändert, bleibt“ und „in Spiegel gelöscht“. Kein Fremdschlüssel auf Scheiben oder Tagebuch: die
+// Kennung in Spiegel ist nur Text. Schlüssel aus Treffsicher (`sourceKey`) je Art, eindeutig mit `kind`:
+//   card      `session:<Einheit>` die Scheibe der Einheit; `attachment:<Anhang>` eine Scheibe, die ein Ausdruck anlegte
+//   entry     `session:<Einheit>`
+//   goal      `goal:<Ziel>`
+//   routine   `routine:<Ablauf>`
+//   link      `session:<Einheit>/card:<Scheibe in Spiegel>` eine feste Verknüpfung des Eintrags
+//   printout  `attachment:<Anhang>`
+//   evidence  `attachment:<Anhang>`
+model TransferItem {
+  userId     String
+  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind       TransferItemKind
+  sourceKey  String
+  // die Zeile in Spiegel: Scheibe, Eintrag, Ziel oder Ablauf; bei Verknüpfung, Ausdruck und Beleg die Scheibe
+  spiegelId  String
+  // Ausdruck und Beleg: die Prüfsumme der Datei
+  sha256     String?
+  // Zeilen des Tagebuchs: `updatedAt`, wie der Lauf sie hinterließ
+  writtenAt  DateTime?        @db.Timestamptz(3)
+  // Scheiben: die aktuelle Revision und was der User außerhalb von Revisionen ändern kann (Disziplin, Art, Wertung,
+  // Stand, Ort), wie der Lauf sie hinterließ
+  revisionId BigInt?
+  cardState  String?
+  updatedAt  DateTime         @updatedAt @db.Timestamptz(3)
+
+  @@id([userId, kind, sourceKey])
+}
+
+enum TransferItemKind {
+  card
+  entry
+  goal
+  routine
+  link
+  printout
+  evidence
 }

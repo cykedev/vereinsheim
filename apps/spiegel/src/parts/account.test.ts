@@ -112,6 +112,22 @@ const read = async (stream: ReadableStream<Uint8Array>) =>
 describe("Export über beide Teile", () => {
   it("gültiges JSON über mehrere Stapel, nur eigene Scheiben samt Papierkorb, das Tagebuch als eigener Teil", async () => {
     const user = await db.user.findUniqueOrThrow({ where: { id: site.ownerId } })
+    await db.transferRun.create({
+      data: {
+        userId: user.id,
+        at: new Date("2026-10-30T06:00:00Z"),
+        version: 1,
+        counts: { sessions: 3 },
+      },
+    })
+    await db.transferItem.create({
+      data: {
+        userId: user.id,
+        kind: "entry",
+        sourceKey: "session:treffsicher-stueck",
+        spiegelId: "x",
+      },
+    })
     const data = await read(accountExport(db, user, 2))
     expect(data.format).toBe("spiegel-export")
     expect(data.version).toBe(1)
@@ -125,6 +141,11 @@ describe("Export über beide Teile", () => {
     expect(deleted.currentRevision.seriesSums).toEqual([
       { series: 1, shots: 10, rings: 90, decimalTenths: null },
     ])
+    // die Läufe der Übernahme mit Zeit, Version und Zahlen; die Stücke des Hauptbuchs nicht
+    expect(data.transfer.runs).toEqual([
+      { at: "2026-10-30T06:00:00.000Z", version: 1, counts: { sessions: 3 } },
+    ])
+    expect(JSON.stringify(data)).not.toContain("treffsicher-stueck")
     expect(data.diary.settings.enabled).toBe(true)
     expect(data.diary.entries).toHaveLength(1)
     expect(data.diary.entries[0]).toMatchObject({

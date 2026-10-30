@@ -164,6 +164,12 @@ describe("deleteOwnAccount", () => {
     const routine = await db.diaryRoutine.create({
       data: { userId: id, name: "Ablauf", steps: [{ title: "Atmen" }] },
     })
+    await db.transferRun.create({
+      data: { userId: id, at: new Date(), version: 1, counts: {} },
+    })
+    await db.transferItem.create({
+      data: { userId: id, kind: "card", sourceKey: "session:s1", spiegelId: own[0] },
+    })
 
     as(id)
     expect(await deleteOwnAccount(PASSWORD)).toEqual({ success: true })
@@ -172,6 +178,8 @@ describe("deleteOwnAccount", () => {
     expect(await db.card.count({ where: { OR: [{ id: { in: own } }, { ownerId: id }] } })).toBe(0)
     expect(await db.sportpassConsent.count({ where: { userId: id } })).toBe(0)
     expect(await db.namedPeriod.count({ where: { ownerId: id } })).toBe(0)
+    expect(await db.transferRun.count({ where: { userId: id } })).toBe(0)
+    expect(await db.transferItem.count({ where: { userId: id } })).toBe(0)
     expect(await db.deleteLock.count({ where: { userId: id } })).toBe(0)
     expect(await db.diarySettings.count({ where: { userId: id } })).toBe(0)
     expect(await db.diaryEntry.count({ where: { id: entry.id } })).toBe(0)

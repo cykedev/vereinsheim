@@ -52,7 +52,7 @@ async function lockEntry(tx: Tx, userId: string, entryId: string) {
 
 /**
  * Werte und Ausführung stehen in eigenen Tabellen: Eine Änderung dort setzt `updatedAt` des Eintrags, damit er als
- * geändert gilt (die Übernahme aus Treffsicher lässt ihn dann stehen, `isTouched`)
+ * geändert gilt (die Übernahme aus Treffsicher vergleicht ihn mit ihrem Hauptbuch und lässt ihn dann stehen)
  */
 const touch = (tx: Tx, entryId: string) =>
   tx.diaryEntry.update({ where: { id: entryId }, data: { updatedAt: new Date() } })

@@ -9,7 +9,9 @@ import type { Db } from "@/lib/db"
 import { purgeCards } from "@/lib/db/purge"
 import { resultsExport, toJson } from "@/lib/export/results"
 
-/** der Export als Strom: `{"format":"spiegel-export","version":1,…,"results":…,"diary":…}` */
+import { transferExport } from "./transfer/ledger"
+
+/** der Export als Strom: `{"format":"spiegel-export","version":1,…,"results":…,"diary":…,"transfer":…}` */
 export function accountExport(
   db: Db,
   user: { id: string; name: string | null; email: string; createdAt: Date },
@@ -25,7 +27,8 @@ export function accountExport(
       }
     )},"results":`
     yield* resultsExport(db, user.id, batch)
-    yield `,"diary":${toJson(await diaryExport(db, user.id))}}`
+    yield `,"diary":${toJson(await diaryExport(db, user.id))}`
+    yield `,"transfer":${toJson({ runs: await transferExport(db, user.id) })}}`
   }
   const iterator = parts()
   return new ReadableStream<Uint8Array>({

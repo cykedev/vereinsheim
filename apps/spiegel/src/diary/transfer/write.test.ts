@@ -6,7 +6,6 @@ import { createTestSite, type TestSite } from "../../../test/fixtures"
 import type { ImportedEntry } from "./treffsicher-entry"
 import type { ImportedGoal, ImportedRoutine } from "./treffsicher-goal"
 import {
-  isTouched,
   releaseImportedLinks,
   replaceExecutions,
   setImportedLinks,
@@ -172,30 +171,6 @@ describe("upsertImportedRoutine", () => {
     await expect(
       db.$transaction((tx) => upsertImportedRoutine(tx, otherId, routine(), AT))
     ).rejects.toThrow()
-  })
-})
-
-describe("isTouched", () => {
-  const at = new Date("2026-10-29T20:00:00.123Z")
-  const row = (updatedAt: Date, deletedAt: Date | null = null) => ({ updatedAt, deletedAt })
-
-  it("vom letzten Lauf geschrieben: `updatedAt` genau die Zeit seines Merkmals, unverändert", () => {
-    expect(isTouched(row(new Date(at)), at)).toBe(false)
-  })
-
-  it("danach geändert, auch eine Millisekunde, oder im Papierkorb", () => {
-    expect(isTouched(row(new Date("2026-10-29T20:00:00.124Z")), at)).toBe(true)
-    expect(isTouched(row(new Date(at), at), at)).toBe(true)
-  })
-
-  it("älter als der letzte Lauf: ein früherer Lauf ließ die Zeile stehen, sie bleibt", () => {
-    expect(isTouched(row(new Date("2026-10-29T20:00:00.122Z")), at)).toBe(true)
-    expect(isTouched(row(new Date("2026-10-28T20:00:00Z")), at)).toBe(true)
-  })
-
-  it("beim ersten Lauf zählt nur der Papierkorb", () => {
-    expect(isTouched(row(new Date("2030-01-01T00:00:00Z")), null)).toBe(false)
-    expect(isTouched(row(new Date("2020-01-01T00:00:00Z"), at), null)).toBe(true)
   })
 })
 

@@ -11,7 +11,7 @@ type Tx = Prisma.TransactionClient
 
 /**
  * Einen übernommenen Eintrag über seinen Schlüssel anlegen oder seine Felder setzen und seine Werte ersetzen; die
- * Kennung bleibt, `updatedAt` ist `at`, die Zeit des Laufs (`isTouched`). Ein Schlüssel eines anderen Kontos ist ein
+ * Kennung bleibt, `updatedAt` ist `at`, die Zeit des Laufs (im Hauptbuch der Übernahme). Ein Schlüssel eines anderen Kontos ist ein
  * Fehler.
  */
 export async function upsertImportedEntry(
@@ -58,24 +58,6 @@ export async function upsertImportedEntry(
     })
   return { id, created: !existing }
 }
-
-/**
- * Hat der letzte Lauf die Zeile geschrieben? Jeder Lauf setzt `updatedAt` jeder Zeile, die er schreibt, auf die Zeit
- * seines Merkmals (`movedToSpiegelAt` in Treffsicher), und er schreibt jede, die er nicht stehen lässt.
- */
-export const writtenInLastRun = (updatedAt: Date, lastRunAt: Date): boolean =>
-  updatedAt.getTime() === lastRunAt.getTime()
-
-/**
- * Geändert, bleibt: im Papierkorb, oder nicht vom letzten Lauf geschrieben (`writtenInLastRun`). Danach geändert, oder
- * schon ein früherer Lauf ließ die Zeile stehen; so bleibt eine Änderung in jedem weiteren Lauf. Beim ersten Lauf
- * (`lastRunAt` null) gilt nur der Papierkorb.
- */
-export const isTouched = (
-  row: { deletedAt: Date | null; updatedAt: Date },
-  lastRunAt: Date | null
-): boolean =>
-  row.deletedAt !== null || (lastRunAt !== null && !writtenInLastRun(row.updatedAt, lastRunAt))
 
 const foreign = () => new Error("Schlüssel der Übernahme gehört zu einem anderen Konto")
 
@@ -142,7 +124,7 @@ export async function upsertImportedRoutine(
 
 /**
  * Scheiben fest mit dem Eintrag verknüpfen (`linked`); eine Zeile einer Scheibe hängt danach an diesem Eintrag. `at` ist
- * die Zeit des Laufs wie bei Einträgen (`isTouched`)
+ * die Zeit des Laufs wie bei Einträgen
  */
 export async function setImportedLinks(
   tx: Tx,

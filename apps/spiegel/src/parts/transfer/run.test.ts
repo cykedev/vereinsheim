@@ -7,6 +7,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest"
 
 import { setScale } from "@/diary/entries"
 import { createPrismaClient } from "@/lib/db"
+import { refreshDisciplineCards, refreshProjections } from "@/lib/db/cards"
 import { writeEnteredCard } from "@/lib/db/entered"
 import { valuesReadOf, type StoredPrintout } from "@/lib/printouts/store"
 import { createTestSite, type TestSite } from "../../../test/fixtures"
@@ -495,8 +496,19 @@ describe("runTransfer: Ausdruck einer Einheit ohne Scheibe", () => {
       expect(second.attachments.printouts.notPlaced).toBe(1)
       expect(second.deletedInSpiegel.attachments).toBe(0)
       expect(second.check.findings).toBeGreaterThan(0)
-    } finally {
+      // die Ursache behoben (eine Disziplin weniger, kein Gleichstand): Er war nie platziert, Lauf 3 legt ihn an
       await db.discipline.delete({ where: { id: alt.id } })
+      const third = done(
+        await c.run({
+          files: pdf,
+          readPrintout: async () => ({ kind: "stored", file, maxRssKb: 0 }),
+        })
+      )
+      expect(third.attachments.printouts.imported).toBe(1)
+      expect(third.deletedInSpiegel.attachments).toBe(0)
+      expect(third.check.findings).toBe(0)
+    } finally {
+      await db.discipline.deleteMany({ where: { id: alt.id } })
     }
   })
 })
@@ -615,33 +627,6 @@ describe("runTransfer: was der User in Spiegel ändert oder löscht", () => {
 })
 
 describe("runTransfer: Merkmal, Befunde und eigene Wahl über mehrere Läufe", () => {
-  it("ein Merkmal ohne eine Zeile der Übernahme im Ziel bricht ab", async () => {
-    const c = newCase("ohnezeilen")
-    c.account([c.session("s1", "2026-11-02")])
-    done(await c.run())
-    const userId = (await userOf(c.to)).id
-    await db.diaryEntry.deleteMany({ where: { userId } })
-    await db.card.deleteMany({ where: { ownerId: userId } })
-    expect(await c.run()).toEqual({ kind: "aborted", abort: { kind: "markerWithoutRows" } })
-  })
-
-  it("schreibt ein Lauf keine Zeile, bleibt das Merkmal, und der nächste läuft durch", async () => {
-    const c = newCase("ohnestempel")
-    c.account([c.session("s1", "2026-11-03")])
-    done(await c.run())
-    const marker = c.source.accounts.get(c.from)!.user.movedToSpiegelAt
-    const key = `treffsicher:${c.id("s1")}`
-    await new Promise((resolve) => setTimeout(resolve, 5))
-    await db.diaryEntry.update({ where: { importKey: key }, data: { intention: "selbst" } })
-    const second = done(await c.run())
-    expect(second.entries.kept).toBe(1)
-    expect(second.marked).toBe("unchanged")
-    expect(c.source.accounts.get(c.from)!.user.movedToSpiegelAt).toBe(marker)
-    const third = done(await c.run())
-    expect(third.entries.kept).toBe(1)
-    expect(third.check.findings).toBe(0)
-  })
-
   it("eine Scheibe, die schon Lauf 1 nicht anlegen konnte, bleibt in Lauf 2 ein Befund", async () => {
     const c = newCase("ungueltig")
     // eine Serie mit 200 Ringen auf 10 Schuss: ungültige Angaben
@@ -1037,21 +1022,24 @@ describe("runTransfer: Merkmal in Treffsicher", () => {
 })
 
 describe("runTransfer: Abbruch vor dem Schreiben", () => {
-  it("Zeilen der Übernahme im Ziel, aber kein Merkmal in Treffsicher", async () => {
-    const c = newCase("ohnemerkmal")
+  it("Zeilen der Übernahme im Ziel ohne Hauptbuch: kein Raten", async () => {
+    const c = newCase("ohnebuch")
     c.account([c.session("s1", "2026-09-04")])
     done(await c.run())
-    c.source.accounts.get(c.from)!.user.movedToSpiegelAt = null
-    expect(await c.run()).toEqual({ kind: "aborted", abort: { kind: "markerMissing", rows: 2 } })
+    const userId = (await userOf(c.to)).id
+    await db.transferItem.deleteMany({ where: { userId } })
+    await db.transferRun.deleteMany({ where: { userId } })
+    expect(await c.run()).toEqual({ kind: "aborted", abort: { kind: "ledgerMissing", rows: 2 } })
   })
 
-  it("ein Merkmal, das zu keiner Zeile passt, während Zeilen die Zeit eines anderen Laufs tragen", async () => {
+  it("das Merkmal in Treffsicher entscheidet nichts: ein fremder Wert ändert den Lauf nicht", async () => {
     const c = newCase("fremdmerkmal")
     c.account([c.session("s1", "2026-09-05")])
     done(await c.run())
-    // ein Lauf hat das Merkmal gesetzt und nicht gespeichert: Eintrag und Verknüpfung tragen die Zeit von Lauf 1
-    c.source.accounts.get(c.from)!.user.movedToSpiegelAt = "2026-12-01T00:00:00.000Z"
-    expect(await c.run()).toEqual({ kind: "aborted", abort: { kind: "markerMismatch", rows: 2 } })
+    c.source.accounts.get(c.from)!.user.movedToSpiegelAt = "2026-01-01T00:00:00.000Z"
+    const second = done(await c.run())
+    expect(second.entries).toMatchObject({ updated: 1, kept: 0 })
+    expect(second.cards.unchanged).toBe(1)
   })
 
   it("ein Konto nur mit Werten: Lauf 2 läuft durch, obwohl keine Zeile das Merkmal trägt", async () => {
@@ -1070,6 +1058,98 @@ describe("runTransfer: Abbruch vor dem Schreiben", () => {
     const second = done(await c.run())
     expect(second.cards.unchanged).toBe(1)
     expect(second.check.findings).toBe(0)
+  })
+
+  it("Jobs an der Scheibe zwischen zwei Läufen sind keine Änderung des Users: Lauf 2 korrigiert", async () => {
+    const c = newCase("job")
+    const account = c.account([c.session("s1", "2026-09-11")])
+    done(await c.run())
+    const key = `treffsicher:${c.id("s1")}`
+    const card = await db.card.findUniqueOrThrow({ where: { importKey: key } })
+    // Nachrechnen nach einer neuen Version der Disziplin und neue Projektion: ändern die Zeile, nicht Revision oder Wahl
+    await db.card.update({ where: { id: card.id }, data: { disciplineVersion: { decrement: 1 } } })
+    expect(await refreshDisciplineCards(db, { cardIds: [card.id] })).toBe(1)
+    await refreshProjections(db, { cardIds: [card.id] })
+    const after = await db.card.findUniqueOrThrow({ where: { id: card.id } })
+    expect(after.updatedAt.getTime()).toBeGreaterThan(card.updatedAt.getTime())
+    // in Treffsicher eine Serie berichtigt: Lauf 2 ersetzt die Scheibe
+    account.sessions[0].series[0].scoreTotal = 91
+    account.sessions[0].series[0].shots = [...ten("9").slice(0, 9), "10"]
+    const second = done(await c.run())
+    expect(second.cards).toMatchObject({ revised: 1, kept: 0 })
+    expect(second.check.findings).toBe(0)
+  })
+
+  it("ein Konto, dessen erster Lauf keine Zeile schreibt, läuft auch beim zweiten durch", async () => {
+    const c = newCase("ohnezeile")
+    const ownerId = await target(c.to)
+    // nur Werte, passend zu einer vorhandenen Scheibe: weder Scheibe noch Eintrag
+    await handCard(ownerId, "2026-09-09")
+    const values = c.session("s1", "2026-09-09", {
+      trainingGoal: null,
+      isFavourite: false,
+      wellbeing: null,
+      prognosis: null,
+      feedback: null,
+      reflection: null,
+    })
+    values.series = values.series.map((series) => ({ ...series, executionQuality: null }))
+    c.account([values])
+    const first = done(await c.run())
+    expect(first.decisions.existing).toBe(1)
+    expect(first.cardOnly.units).toBe(1)
+    expect(await db.transferItem.count({ where: { userId: ownerId } })).toBe(0)
+    const second = done(await c.run())
+    expect(second.check.findings).toBe(0)
+    expect(await db.transferRun.count({ where: { userId: ownerId } })).toBe(2)
+  })
+
+  it("hat der User alles Übernommene gelöscht, legt der nächste Lauf nichts wieder an", async () => {
+    const c = newCase("allesweg")
+    c.account([c.session("s1", "2026-09-10")])
+    done(await c.run())
+    const userId = (await userOf(c.to)).id
+    await db.diaryEntry.deleteMany({ where: { userId } })
+    await db.diaryEntryCard.deleteMany({
+      where: {
+        cardId: {
+          in: (await db.card.findMany({ where: { ownerId: userId } })).map((card) => card.id),
+        },
+      },
+    })
+    await db.card.deleteMany({ where: { ownerId: userId } })
+    const second = done(await c.run())
+    expect(second.deletedInSpiegel).toMatchObject({ cards: 1, entries: 1 })
+    expect(second.cards.created).toBe(0)
+    expect(second.entries.created).toBe(0)
+    expect(await db.card.count({ where: { ownerId: userId } })).toBe(0)
+  })
+
+  it("ein Konto nur mit einem Ziel: eine Änderung bleibt über drei Läufe", async () => {
+    const c = newCase("einziel")
+    c.account([], {
+      goals: [
+        {
+          id: c.id("g1"),
+          title: "360 Ringe",
+          description: null,
+          type: "RESULT",
+          dateFrom: "2026-05-31T22:00:00.000Z",
+          dateTo: "2026-06-29T22:00:00.000Z",
+          sessionIds: [],
+        },
+      ],
+    })
+    done(await c.run())
+    const key = `treffsicher:${c.id("g1")}`
+    await db.diaryGoal.update({ where: { importKey: key }, data: { title: "selbst" } })
+    for (const run of [2, 3]) {
+      const report = done(await c.run())
+      expect(report.goals, `Lauf ${run}`).toMatchObject({ kept: 1, updated: 0 })
+    }
+    expect((await db.diaryGoal.findUniqueOrThrow({ where: { importKey: key } })).title).toBe(
+      "selbst"
+    )
   })
 
   it("alles übernommene im Tagebuch geändert oder gelöscht: Lauf 2 läuft durch", async () => {

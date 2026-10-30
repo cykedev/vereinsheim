@@ -61,12 +61,9 @@ findet ein zweiter Lauf, was er schon geschrieben hat. Die Schlüssel der frühe
 
 In dieser Reihenfolge, je mit festem Text im CLI: kein Konto in Treffsicher (`noSource`); Zeilen der Vorschau im Ziel
 (`preview`, siehe unten); Übernommenes eines anderen Treffsicher-Kontos im Ziel (`foreignInTarget`); Übernommenes
-dieses Kontos an einem anderen Spiegel-Konto (`sourceElsewhere`); ein Merkmal in Treffsicher, aber keine Zeile der
-Übernahme im Ziel (`markerWithoutRows`: Spiegel zurückgesetzt oder Konto neu; für einen neuen ersten Lauf das Merkmal
-aufheben); Zeilen der Übernahme, aber kein Merkmal (`markerMissing`); ein Merkmal, dessen Zeit keine Zeile trägt,
-während Zeilen die Zeit eines anderen Laufs tragen (`markerMismatch`: eine Zeit, die mehrere Zeilen teilen, stammt von
-einem Lauf, eine Änderung des Users gibt jeder Zeile ihre eigene; ein Konto nur mit Werten oder mit allem geändert
-läuft durch); `--family` mit unbekannter Kennung oder doppeltem
+dieses Kontos an einem anderen Spiegel-Konto (`sourceElsewhere`); Zeilen mit Schlüssel der Übernahme im Ziel, aber
+kein Hauptbuch (`ledgerMissing`: Zeilen eines älteren Stands der Übernahme, der Lauf rät nicht, was davon geändert
+ist); `--family` mit unbekannter Kennung oder doppeltem
 Namen (`badFamilyOption`); eine Disziplin aus Treffsicher ohne Familie (`unknownFamily`, Namen mit Zahl der Einheiten);
 `--discipline` nennt eine Disziplin in Spiegel, die es unter den eingeordneten nicht genau einmal gibt, eine in einer
 anderen Familie oder denselben Namen zweimal (`badDisciplineOption`); für eine neue Scheibe lässt sich keine Disziplin
@@ -127,55 +124,53 @@ Bericht; Schritte eines Ablaufs in ihrer Reihenfolge, ungültige als ein Schritt
 Ein neues Konto bekommt Name, Passwort-Hash und Aktiv-Status aus Treffsicher, die Rolle Schütze und keinen verlangten
 Passwortwechsel; beim ersten Lauf wird das Tagebuch eingeschaltet.
 
-### Geändertes bleibt
+### Hauptbuch: geändert, gelöscht, nie platziert
 
-Ein weiterer Lauf ersetzt nur, was seit dem letzten unverändert ist, und lässt Geändertes in jedem weiteren Lauf stehen.
-Scheiben zeigen es an der Herkunft (von Hand `manual`, mit Werten vom Ausdruck `pdf`). Einträge, Ziele, Abläufe und die
-Verknüpfungen eines Eintrags zeigen es an `updatedAt`: Jeder Lauf schreibt sie mit derselben Zeit, die er als Merkmal
-`movedToSpiegelAt` in Treffsicher setzt. Unverändert ist nur, was genau diese Zeit trägt (`isTouched`); eine
-Änderung danach und eine Zeile, die schon ein früherer Lauf stehen ließ, tragen eine andere. Werte (Befinden, Prognose,
-Feedback) und Ausführung stehen in eigenen Tabellen; ändert der Schütze sie in der App, setzt das `updatedAt` des
-Eintrags (`touch` in `src/diary/entries.ts`). Was im Papierkorb liegt, bleibt dort. Ist die Scheibe einer Einheit
-geändert und bleibt, gehört die Ausführung weiter auf sie. Was in Treffsicher verschwunden ist, geht, wenn es
-unverändert ist. Der Bericht nennt, was stehen blieb und warum.
+Was ein Lauf schreibt, verzeichnet er in derselben Transaktion im Hauptbuch der Übernahme (`src/parts/transfer/ledger.ts`,
+entschieden mit der koordinierenden Session am 30. Oktober 2026; eine Abweichung vom Plan „ohne Schema“): je Lauf, der
+gespeichert hat, eine Zeile `TransferRun` (Zeit, Version der Regeln, Zahlen), je übernommenes Stück eine Zeile
+`TransferItem` mit Art, Schlüssel aus Treffsicher, Kennung in Spiegel (nur Text, kein Fremdschlüssel) und dem Stand, den
+der Lauf hinterließ. Die Schlüssel je Art stehen am Modell im Schema (`session:<Einheit>` für Scheibe und Eintrag einer
+Einheit, `attachment:<Anhang>` für Ausdruck, Beleg und eine Scheibe, die ein Ausdruck anlegte, `goal:`, `routine:`,
+`session:<Einheit>/card:<Scheibe>` für eine Verknüpfung). Der nächste Lauf entscheidet je Stück gegen das Hauptbuch:
 
-Was es in Spiegel nicht mehr gibt, legt ab dem zweiten Lauf keine Übernahme wieder an: Treffsicher ist nach dem
-ersten Lauf nur lesend, eine fehlende Scheibe der Einheit, ein fehlender Eintrag, ein fehlendes Ziel oder ein Ablauf,
-ein Anhang, dessen Datei an keiner Scheibe des Kontos hängt, hat der User gelöscht (entschieden am 30. Oktober 2026).
-Der Bericht zählt sie je Art unter „in Spiegel gelöscht, bleibt weg“. Kippt dadurch eine Entscheidung (die passende
-Scheibe ist gelöscht), entsteht auch keine Scheibe aus Treffsicher: Gelöscht ist gelöscht.
+- **Unverändert** steht ein Stück noch genau so da, wie verzeichnet: eine Zeile des Tagebuchs mit `updatedAt` gleich
+  der Zeit, mit der der Lauf sie schrieb (ein Eintrag dazu mit genau den verzeichneten Verknüpfungen); eine Scheibe mit
+  Herkunft `treffsicher`, derselben Revision, derselben Wahl (Disziplin, Art, Wertung, Stand, Ort), nicht geteilt, ohne
+  eigenen Beleg, nicht im Papierkorb. `updatedAt` einer Scheibe zählt nicht: Jobs (Nachrechnen, Projektion, Zustände)
+  ändern die Zeile, schreiben an Scheiben aus Treffsicher aber keine Revision und keine Wahl; `applyPrintoutValues`
+  greift nur an Scheiben vom Ausdruck, die die Übernahme ohnehin stehen lässt. Unverändertes ersetzt der Lauf.
+- **Geändert, bleibt** ist alles andere, in jedem weiteren Lauf, denn das Hauptbuch behält für ein stehen gelassenes Stück
+  den alten Stand. Werte (Befinden, Prognose, Feedback) und Ausführung stehen in eigenen Tabellen; ändert der Schütze sie
+  in der App, setzt das `updatedAt` des Eintrags (`touch` in `src/diary/entries.ts`). Ist die Scheibe einer Einheit
+  geändert und hat noch ihre Revision, bleibt die Ausführung auf ihr.
+- **In Spiegel gelöscht** ist nur ein Stück, das im Hauptbuch steht und fehlt (ein Anhang: an der verzeichneten Scheibe
+  keine Zeile mit seiner Prüfsumme). Kein Lauf legt es wieder an; der Bericht zählt es je Art. Kippt dadurch eine
+  Entscheidung, entsteht auch keine Scheibe aus Treffsicher: Gelöscht ist gelöscht.
+- **Nie platziert** ist, was nicht im Hauptbuch steht: Der nächste Lauf versucht es neu. Ein Ausdruck, der wieder nicht
+  passt, bleibt ein Befund; ist die Ursache behoben (etwa eine Disziplin angelegt), kommt er an.
 
 Was der Lauf vor der Transaktion las, kann beim Schreiben überholt sein: Dazwischen liest er die Anhänge, und die App
 läuft daneben. Jeden Eintrag, jedes Ziel, jeden Ablauf und jede Scheibe, die er ändern oder löschen will, sperrt er
-deshalb in der Transaktion und liest sie neu (Eintrag mit `FOR UPDATE`, Scheibe mit `lockCard`; erst der Eintrag
-der Einheit, dann ihre Scheibe, dieselbe Folge wie die App); was jemand dazwischen geändert hat, bleibt. Eine Änderung
-in der App, die erst danach kommt, wartet auf die Sperre; das Tagebuch schreibt `Serializable` und meldet danach einen
-Fehler, die Änderung muss noch einmal gespeichert werden.
+deshalb in der Transaktion und liest sie neu (Eintrag mit `FOR UPDATE`, Scheibe mit `lockCard`; erst der Eintrag der
+Einheit, dann ihre Scheibe); was jemand dazwischen geändert hat, bleibt. Eine Änderung in der App, die erst danach
+kommt, wartet auf die Sperre; das Tagebuch schreibt `Serializable` und meldet danach einen Fehler, die Änderung muss
+noch einmal gespeichert werden.
 
-Was ab dem zweiten Lauf fehlt, aber schon der erste nicht anlegen konnte, bleibt ein Befund: eine Scheibe mit
-ungültigen Angaben (`checkDetails` wie beim Schreiben) und ein Anhang, den der Lauf zur Probe platziert und
-zurückrollt (`SAVEPOINT`): Käme er an, hat der User ihn entfernt; sonst zählt sein Grund (nicht angehängt, ohne
-Scheibe, Grenze).
+Scheiben, die ein früherer Lauf aus einem Ausdruck dieses Kontos angelegt hat, stehen im Hauptbuch und zählen beim
+Entscheiden nicht als Scheiben des Abends; sonst kippte ein Abend nur aus Probe zu „vorhanden“ oder zu „unsicher“ mit
+einer zweiten Scheibe.
 
-Eine Scheibe aus Treffsicher mit einer eigenen Wahl (Art, Wertung, Stand) ersetzt ein Lauf nicht mehr („vom User
-ergänzt“), ihre Ausführung bleibt auf ihr. Belege aus Treffsicher an ihr machen sie nicht zu einer ergänzten.
-
-Ab dem zweiten Lauf zählen Scheiben vom Ausdruck, die ein früherer Lauf aus einem Ausdruck dieses Kontos angelegt hat
-(gleiche Prüfsumme, angelegt im Fenster der Läufe, die Zeilen angelegt haben), beim Entscheiden nicht als Scheiben des
-Abends; sonst kippte ein Abend nur aus Probe zu „vorhanden“ oder zu „unsicher“ mit einer zweiten Scheibe. Ohne
-`--files` kennt der Lauf die Prüfsummen nicht: Ein späterer Lauf braucht `--files` wie der erste.
-
-Ein Vergleich `updatedAt` > Merkmal reicht nicht: Das Merkmal rückt mit jedem Lauf vor, eine Änderung überstünde nur
-den nächsten Lauf (aufgefallen am 30. Oktober 2026 an den Wiederholungen mit den Daten des Users).
+Der Export des Kontos enthält die Läufe (Zeit, Version, Zahlen), nicht die Stücke. Konto löschen nimmt beide Tabellen
+über die Kaskade vom Konto mit. Nur `src/parts/transfer` liest und schreibt sie (`boundary.test.ts`).
 
 ### Merkmal „umgezogen“
 
-Der letzte Schritt der Transaktion setzt `movedToSpiegelAt` in Treffsicher ([[treffsicher-read-only]]); der
-Probelauf setzt nichts, ein späterer Lauf, der keine Zeile geschrieben hat, lässt es, wie es ist (sonst trüge keine
-Zeile seine Zeit). Scheitert danach das Speichern in Spiegel, setzt der Lauf das alte Merkmal zurück (beim ersten
-Lauf: keins). Geht auch das nicht, meldet das CLI „Übernahme in Spiegel nicht gespeichert, das Merkmal in Treffsicher
-ist vielleicht gesetzt“ (Exit 3) und nennt den alten Wert: Vor dem nächsten Lauf muss er wieder stehen, sonst bricht der
-nächste Lauf mit `markerMismatch` ab.
+Das Merkmal `movedToSpiegelAt` in Treffsicher ([[treffsicher-read-only]]) heißt nur noch „umgezogen“; was geändert
+ist, sagt das Hauptbuch. Der letzte Schritt der Transaktion setzt es; der Probelauf setzt nichts. Scheitert danach das
+Speichern in Spiegel, setzt der Lauf das alte Merkmal zurück (beim ersten Lauf: keins, sonst wäre das Konto in
+Treffsicher nur lesend, ohne Daten in Spiegel). Geht auch das nicht, meldet das CLI „Übernahme in Spiegel nicht
+gespeichert, das Merkmal in Treffsicher ist vielleicht gesetzt“ (Exit 3) und nennt den alten Wert.
 
 ### Prüfbestand
 
@@ -228,5 +223,8 @@ DELETE FROM "Card" WHERE "importKey" LIKE 'treffsicher:preview-%';
   Treffsicher“ daneben. In den Daten der Probe kam der Fall nicht vor.
 - Die Ausdrucke des Users in Treffsicher sind beide im Modus Probe gedruckt (kein Gesamtergebnis). Sie geben Werte erst
   seit der Regel „Summe der Schüsse“ (`scoringReading`, 30. Oktober 2026).
+- Faustregeln über Zeiten (`updatedAt` gegen das Merkmal, „eine Zeit, die mehrere Zeilen teilen“, „fehlt heißt
+  gelöscht“) kosten still Daten: ein Merkmal, das weiterrückt, ein Konto ohne geschriebene Zeile, ein Ausdruck, der
+  erst später passt. Deshalb das Hauptbuch (Reviews vom 30. Oktober 2026).
 - In der ersten Anlage gibt es „LP 60“ und „LP 60 alt“, „LG 60“ und „LG 60 alt“ mit derselben Schusszahl: Ohne eigene
   Scheiben im Konto ist das ein Gleichstand, `--discipline` wählt.

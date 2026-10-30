@@ -24,6 +24,23 @@ describe("Grenze zwischen Ergebnisteil und Tagebuch", () => {
   })
 })
 
+describe("das Hauptbuch der Übernahme", () => {
+  // `TransferRun`/`TransferItem` gehören zur Übernahme; Tests ausgenommen (sie räumen ihre Konten auf)
+  const ledgerUse = /\.(transferRun|transferItem)\b/
+  it("lesen und schreiben nur Dateien unter src/parts/transfer", () => {
+    const outside = sources(join(APP, "src"))
+      .filter(({ file }) => !file.startsWith("src/parts/transfer/") && !/\.test\.tsx?$/.test(file))
+      .filter(({ source }) => ledgerUse.test(source))
+      .map(({ file }) => file)
+    expect(outside).toEqual([])
+  })
+
+  it("Gegenprobe: das Muster findet einen Zugriff", () => {
+    expect(ledgerUse.test("await tx.transferItem.findMany()")).toBe(true)
+    expect(ledgerUse.test("const transferItems = []")).toBe(false)
+  })
+})
+
 // Gegenprobe: je Regel eine Quelle mit einem Verstoß, die die Prüfung finden muss
 describe("boundaryViolations", () => {
   it("ordnet Dateien ihren Zonen zu", () => {

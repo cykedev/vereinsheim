@@ -16,9 +16,7 @@ import {
 } from "@/diary/transfer/treffsicher-entry"
 import { goalFromTreffsicher, routineFromTreffsicher } from "@/diary/transfer/treffsicher-goal"
 import {
-  isTouched,
   releaseImportedLinks,
-  writtenInLastRun,
   replaceExecutions,
   setImportedLinks,
   upsertImportedEntry,
@@ -28,7 +26,6 @@ import {
 import type { Prisma } from "@/generated/prisma/client"
 import { requestSiteId } from "@/lib/card-requests/queries"
 import type { Db } from "@/lib/db"
-import { checkEnteredInput } from "@/lib/db/entered"
 import { lockCard, purgeCards } from "@/lib/db/purge"
 import type { DetailsProblem } from "@/lib/entered/details"
 import { evidenceTypeOf, writeEvidenceFile, type EvidenceType } from "@/lib/evidence/files"
@@ -56,6 +53,21 @@ import {
   type TableCheck,
 } from "./check"
 import { decideCard, type CardDecision } from "./decide"
+import {
+  cardState,
+  cardUnchanged,
+  diaryRowUnchanged,
+  forgetItem,
+  forgetLinksExcept,
+  ledgerKey,
+  linksUnchanged,
+  loadLedger,
+  recordItem,
+  sourceOfKey,
+  TRANSFER_VERSION,
+  type Ledger,
+  type LedgerItem,
+} from "./ledger"
 import {
   PREVIEW_CARD_PREFIX,
   PREVIEW_DIARY_PREFIX,
@@ -120,17 +132,10 @@ export type TransferAbort =
   | { kind: "foreignInTarget"; rows: number }
   | { kind: "sourceElsewhere"; rows: number }
   /**
-   * Treffsicher hat das Merkmal „umgezogen“, aber das Ziel keine Zeile der Übernahme (zurückgesetzt, Konto neu): Der Lauf
-   * hielte alles für in Spiegel gelöscht und schriebe nichts
+   * das Ziel hat Zeilen mit Schlüssel der Übernahme, aber kein Hauptbuch: Zeilen eines älteren Stands der Übernahme;
+   * der Lauf rät nicht, was davon geändert ist
    */
-  | { kind: "markerWithoutRows" }
-  /** das Ziel hat Zeilen der Übernahme, aber Treffsicher kein Merkmal „umgezogen“ */
-  | { kind: "markerMissing"; rows: number }
-  /**
-   * das Merkmal passt zu keiner Zeile des Ziels, aber Zeilen tragen die Zeit eines anderen Laufs (`rows`): Das Merkmal
-   * stammt von einem Lauf, der nicht gespeichert hat
-   */
-  | { kind: "markerMismatch"; rows: number }
+  | { kind: "ledgerMissing"; rows: number }
   | { kind: "badFamilyOption"; unknownSlugs: string[]; duplicateNames: string[] }
   /**
    * `--discipline` nennt eine Disziplin in Spiegel, die es unter den eingeordneten der ersten Anlage nicht genau einmal
@@ -188,10 +193,7 @@ export interface TransferReport {
    * weiter die Familie des Ziels) und ohne eigene Scheibe (ohne Ergebnis, Abend nur aus Probe)
    */
   cardOnly: Tally<"units" | "goalLinked" | "noCard">
-  /**
-   * ab dem zweiten Lauf: was es in Spiegel nicht mehr gibt, legt die Übernahme nicht wieder an (der User hat es gelöscht;
-   * Treffsicher ist nach dem ersten Lauf nur lesend)
-   */
+  /** was im Hauptbuch als platziert steht und in Spiegel fehlt: Der User hat es gelöscht, kein Lauf legt es wieder an */
   deletedInSpiegel: Tally<"cards" | "entries" | "goals" | "routines" | "attachments">
   links: { linkedElsewhere: number }
   executions: {
@@ -227,10 +229,10 @@ export interface TransferReport {
     total: number | null
     others: { shots: number; total: number | null }[]
   }[]
-  /** was stehen blieb, weil es seit dem letzten Lauf geändert wurde oder im Papierkorb liegt */
+  /** was stehen blieb, weil der User es geändert hat (gegen das Hauptbuch) oder es im Papierkorb liegt */
   kept: { what: "card" | "entry" | "goal" | "routine"; day: string | null; reason: string }[]
-  /** `movedToSpiegelAt` in Treffsicher; `unchanged`: der Lauf hat keine Zeile geschrieben, das Merkmal bleibt */
-  marked: "set" | "dryRun" | "unchanged"
+  /** `movedToSpiegelAt` in Treffsicher */
+  marked: "set" | "dryRun"
   check: CheckResult
 }
 
@@ -254,18 +256,19 @@ const GONE_TEXT = "in Spiegel gelöscht, bleibt weg"
 const positive = (explained: Record<string, number>) =>
   Object.fromEntries(Object.entries(explained).filter(([, n]) => n > 0))
 
-/** was der Lauf von einer Scheibe der Übernahme braucht: Herkunft, Papierkorb und was der User ergänzt haben kann */
-const TRANSFER_CARD = {
+/** eine Scheibe, wie der Lauf sie mit dem Hauptbuch vergleicht */
+const CARD_NOW = {
   id: true,
-  importKey: true,
   origin: true,
   deletedAt: true,
+  currentRevisionId: true,
+  shareId: true,
+  disciplineId: true,
   kind: true,
   kindChoice: true,
   scoringChoice: true,
   standDisciplineId: true,
-  shareId: true,
-  createdAt: true,
+  place: true,
 } as const
 
 /** sha256 jeder lesbaren Datei der Anhänge eines Kontos */
@@ -282,59 +285,17 @@ async function attachmentHashes(
   return hashes
 }
 
-/**
- * Scheiben vom Ausdruck (ohne Brücke, ohne Schlüssel), die ein früherer Lauf aus einem Ausdruck dieses Kontos angelegt
- * hat: mit einem seiner Ausdrucke und angelegt im Fenster der Läufe, die Zeilen angelegt haben (älteste bis jüngste Zeile
- * der Übernahme, je um die längste Transaktion erweitert; ein späterer Lauf legt nichts mehr an). Eine Scheibe, die der User vorher selbst mit demselben Ausdruck geholt hat, bleibt eine Scheibe
- * des Abends. Beim ersten Lauf keine.
- */
-async function printoutCardsOfEarlierRuns(
-  db: Db,
-  input: {
-    targetId: string | null
-    lastRunAt: Date | null
-    existing: Awaited<ReturnType<typeof targetRows>> | null
-    sha256s: string[]
-  }
-): Promise<Set<string>> {
-  const { targetId, lastRunAt, existing, sha256s } = input
-  if (targetId === null || lastRunAt === null || !existing || !sha256s.length) return new Set()
-  const created = [...existing.cards, ...existing.entries].map((row) => row.createdAt.getTime())
-  if (!created.length) return new Set()
-  const from = new Date(Math.min(...created) - TIMEOUT_MS)
-  const to = new Date(Math.max(...created) + TIMEOUT_MS)
-  const rows = await db.printout.findMany({
-    where: {
-      sha256: { in: sha256s },
-      card: {
-        ownerId: targetId,
-        origin: "pdf",
-        sourceId: null,
-        importKey: null,
-        createdAt: { gte: from, lte: to },
-      },
-    },
-    select: { cardId: true },
-  })
-  return new Set(rows.map((row) => row.cardId))
-}
-
 /** die Zeilen des Ziels mit Schlüsseln der Übernahme (ohne Vorschau) */
 async function targetRows(db: Db, userId: string) {
   const where = { startsWith: TRANSFER_PREFIX }
   const [cards, entries, goals, routines] = await Promise.all([
-    db.card.findMany({ where: { ownerId: userId, importKey: where }, select: TRANSFER_CARD }),
+    db.card.findMany({
+      where: { ownerId: userId, importKey: where },
+      select: { id: true, importKey: true, origin: true, deletedAt: true },
+    }),
     db.diaryEntry.findMany({
       where: { userId, importKey: where },
-      select: {
-        id: true,
-        importKey: true,
-        deletedAt: true,
-        updatedAt: true,
-        createdAt: true,
-        // Verknüpfen und Lösen ändern `updatedAt` des Eintrags nicht, nur das ihrer Zeile
-        cards: { select: { updatedAt: true } },
-      },
+      select: { id: true, importKey: true },
     }),
     db.diaryGoal.findMany({
       where: { userId, importKey: where },
@@ -391,7 +352,8 @@ interface Unit {
   disciplineId: number | null
   /** die Serien der einen vorhandenen Scheibe, auf die die Ausführung geht (passend oder Abend nur aus Probe) */
   executionCard: { id: string; series: { series: number }[] } | null
-  attachments: PreparedAttachment[]
+  /** mit der Kennung des Anhangs in Treffsicher (`sourceId`, Schlüssel im Hauptbuch) */
+  attachments: (PreparedAttachment & { sourceId: string })[]
 }
 
 const blankReport = (dryRun: boolean): Omit<TransferReport, "check"> => ({
@@ -438,10 +400,11 @@ const blankReport = (dryRun: boolean): Omit<TransferReport, "check"> => ({
 
 /**
  * Ein Konto aus Treffsicher übernehmen. Bricht vor dem Schreiben mit festem Grund ab (`TransferAbort`); sonst eine
- * Transaktion, die `dryRun` am Ende zurückrollt. Nach einem echten Lauf ist das Konto in Treffsicher umgezogen
- * (`markMoved` als letzter Schritt in der Transaktion: scheitert es, bleibt nichts halb). Das Merkmal trägt die Zeit,
- * mit der der Lauf seine Zeilen schreibt; daran erkennt der nächste, was seitdem geändert ist (`isTouched`). Scheitert
- * der Commit nach dem Merkmal, setzt der Lauf das alte zurück; geht auch das nicht, meldet er `markedNotSaved`.
+ * Transaktion, die `dryRun` am Ende zurückrollt. Was der Lauf schreibt, verzeichnet er im Hauptbuch (`ledger.ts`);
+ * daran entscheidet der nächste je Stück „unverändert“, „geändert, bleibt“ und „in Spiegel gelöscht“. Nach einem echten
+ * Lauf ist das Konto in Treffsicher umgezogen (`markMoved` als letzter Schritt in der Transaktion: scheitert es, bleibt
+ * nichts halb). Scheitert der Commit nach dem Merkmal, setzt der Lauf das alte zurück; geht auch das nicht, meldet er
+ * `markedNotSaved`.
  */
 export async function runTransfer(db: Db, input: TransferInput): Promise<TransferOutcome> {
   const raw = await input.source.readAccount(input.from)
@@ -483,51 +446,20 @@ export async function runTransfer(db: Db, input: TransferInput): Promise<Transfe
   const elsewhere = await rowsElsewhere(db, ownIds.map(transferKey), targetId)
   if (elsewhere) return { kind: "aborted", abort: { kind: "sourceElsewhere", rows: elsewhere } }
 
-  // 5. Merkmal und Zeilen: Ohne Merkmal hielte der Lauf jede Änderung für unverändert, mit einem fremden alles für
-  // geändert (`isTouched`); beides wäre still falsch
-  const lastRunAt = account.user.movedToSpiegelAt ? new Date(account.user.movedToSpiegelAt) : null
-  const anyRows =
-    !!existing &&
-    existing.cards.length +
-      existing.entries.length +
-      existing.goals.length +
-      existing.routines.length >
-      0
-  const anythingToTransfer =
-    account.sessions.length + account.goals.length + account.routines.length > 0
-  if (lastRunAt !== null && !anyRows && anythingToTransfer)
-    return { kind: "aborted", abort: { kind: "markerWithoutRows" } }
-  if (existing) {
-    const rows =
-      existing.cards.length +
+  // 5. Hauptbuch: Zeilen der Übernahme ohne Hauptbuch stammen von einem älteren Stand; der Lauf rät nicht
+  const ledger = await loadLedger(db, targetId)
+  const transferRows = existing
+    ? existing.cards.length +
       existing.entries.length +
       existing.goals.length +
       existing.routines.length
-    if (rows && lastRunAt === null)
-      return { kind: "aborted", abort: { kind: "markerMissing", rows } }
-    // jeder Lauf schreibt seine Zeilen mit derselben Zeit; eine Zeit, die mehrere Zeilen teilen, stammt von einem Lauf,
-    // eine Änderung des Users gibt jeder Zeile ihre eigene. Trägt keine Zeile das Merkmal, aber eine die Zeit eines
-    // Laufs, steht das Merkmal eines Laufs, der nicht gespeichert hat. Ohne solche Zeilen (nur Scheiben, oder alles
-    // geändert oder gelöscht) gibt es nichts zu vergleichen
-    if (lastRunAt !== null) {
-      const times = [
-        ...existing.entries.flatMap((entry) => [
-          entry.updatedAt,
-          ...entry.cards.map((link) => link.updatedAt),
-        ]),
-        ...existing.goals.map((goal) => goal.updatedAt),
-        ...existing.routines.map((routine) => routine.updatedAt),
-      ].map((at) => at.getTime())
-      const count = new Map<number, number>()
-      for (const at of times) count.set(at, (count.get(at) ?? 0) + 1)
-      const ofRuns = [...count].filter(([, n]) => n > 1)
-      if (!count.has(lastRunAt.getTime()) && ofRuns.length)
-        return {
-          kind: "aborted",
-          abort: { kind: "markerMismatch", rows: ofRuns.reduce((sum, [, n]) => sum + n, 0) },
-        }
-    }
-  }
+    : 0
+  if (transferRows && ledger.runs === 0)
+    return { kind: "aborted", abort: { kind: "ledgerMissing", rows: transferRows } }
+  // das Merkmal „umgezogen“ vor diesem Lauf: zurück, wenn das Speichern scheitert
+  const previousMark = account.user.movedToSpiegelAt
+    ? new Date(account.user.movedToSpiegelAt)
+    : null
 
   // die Dateien der Anhänge, einmal gelesen: für die Entscheidung je Einheit und für die Anhänge
   const files = new Map<string, Uint8Array | null>()
@@ -622,15 +554,15 @@ export async function runTransfer(db: Db, input: TransferInput): Promise<Transfe
       },
     }
 
-  // ab dem zweiten Lauf: Scheiben, die ein früherer Lauf aus einem Ausdruck dieses Kontos angelegt hat, sind keine
-  // Scheiben des Abends; sonst kippte die Entscheidung (Abend nur aus Probe → vorhanden, oder unsicher mit einer zweiten)
+  // Scheiben, die ein früherer Lauf aus einem Ausdruck dieses Kontos angelegt hat (im Hauptbuch), sind keine Scheiben des
+  // Abends; sonst kippte die Entscheidung (Abend nur aus Probe → vorhanden, oder unsicher mit einer zweiten)
   const ownHashes = await attachmentHashes(account, readFile)
-  const fromOwnPrintouts = await printoutCardsOfEarlierRuns(db, {
-    targetId,
-    lastRunAt,
-    existing,
-    sha256s: ownHashes,
-  })
+  const fromOwnPrintouts = new Set(
+    ledger
+      .all("card")
+      .filter((item) => item.sourceKey.startsWith("attachment:"))
+      .map((item) => item.spiegelId)
+  )
   const byEvening = new Map<string, typeof visible>()
   for (const card of visible)
     if (card.family && sourceIdOf(card.importKey) === null && !fromOwnPrintouts.has(card.id)) {
@@ -757,6 +689,7 @@ export async function runTransfer(db: Db, input: TransferInput): Promise<Transfe
         if (read.kind === "stored") {
           unit.attachments.push({
             kind: "printout",
+            sourceId: attachment.id,
             file: read.file,
             disciplineId:
               unit.disciplineId ??
@@ -781,6 +714,7 @@ export async function runTransfer(db: Db, input: TransferInput): Promise<Transfe
       if (!input.dryRun) await writeEvidence(sha256, type, bytes)
       unit.attachments.push({
         kind: "evidence",
+        sourceId: attachment.id,
         sha256,
         type,
         size: bytes.length,
@@ -788,12 +722,9 @@ export async function runTransfer(db: Db, input: TransferInput): Promise<Transfe
       })
     }
 
-  // die Zeit dieses Laufs: `updatedAt` jeder Zeile, die er schreibt, und das Merkmal in Treffsicher (`isTouched`)
+  // die Zeit dieses Laufs: `updatedAt` jeder Zeile des Tagebuchs, die er schreibt, und `writtenAt` im Hauptbuch
   const runAt = new Date()
   const done: { check?: CheckResult; marked?: true } = {}
-  // wie viele Zeilen der Lauf mit seiner Zeit geschrieben hat; ohne eine bleibt das Merkmal, wie es ist (sonst trüge
-  // keine Zeile seine Zeit)
-  const stamps = { count: 0 }
   try {
     await db.$transaction(
       async (tx) => {
@@ -801,23 +732,17 @@ export async function runTransfer(db: Db, input: TransferInput): Promise<Transfe
           account,
           toEmail,
           targetId,
-          existing,
           owners,
           units,
           familyOf,
           siteId: siteId ?? 0,
           timeZone,
-          lastRunAt,
+          ledger,
           runAt,
-          stamps,
           ownHashes,
           report,
         })
         if (input.dryRun) throw new DryRun()
-        if (lastRunAt !== null && stamps.count === 0) {
-          report.marked = "unchanged"
-          return
-        }
         // versucht ist versucht: Scheitert der Aufruf, kann das Merkmal trotzdem geschrieben sein
         done.marked = true
         await input.source.markMoved(account.user.id, runAt)
@@ -825,17 +750,17 @@ export async function runTransfer(db: Db, input: TransferInput): Promise<Transfe
       { timeout: input.timeoutMs ?? TIMEOUT_MS, maxWait: 10_000 }
     )
   } catch (error) {
-    // das Merkmal steht in Treffsicher, aber Spiegel hat nichts gespeichert: das alte zurück, sonst trüge keine Zeile
-    // die Zeit des Merkmals und der nächste Lauf ließe alles stehen; geht auch das nicht, laut melden
+    // das Merkmal steht in Treffsicher, aber Spiegel hat nichts gespeichert: das alte zurück (beim ersten Lauf keins,
+    // sonst wäre das Konto in Treffsicher nur lesend, ohne Daten in Spiegel); geht auch das nicht, laut melden
     if (done.marked) {
-      const restored = await input.source.markMoved(account.user.id, lastRunAt).then(
+      const restored = await input.source.markMoved(account.user.id, previousMark).then(
         () => true,
         () => false
       )
       if (!restored)
         return {
           kind: "aborted",
-          abort: { kind: "markedNotSaved", previous: lastRunAt?.toISOString() ?? null },
+          abort: { kind: "markedNotSaved", previous: previousMark?.toISOString() ?? null },
         }
     }
     if (!(error instanceof DryRun)) throw error
@@ -850,21 +775,19 @@ async function write(
     account: TreffsicherAccount
     toEmail: string
     targetId: string | null
-    existing: Awaited<ReturnType<typeof targetRows>> | null
     owners: Map<string, string>
     units: Unit[]
     familyOf: (name: string) => number | null
     siteId: number
     timeZone: string
-    lastRunAt: Date | null
+    ledger: Ledger
     runAt: Date
-    stamps: { count: number }
     /** sha256 aller Dateien der Anhänge des Kontos */
     ownHashes: string[]
     report: Omit<TransferReport, "check">
   }
 ): Promise<CheckResult> {
-  const { account, units, report, lastRunAt, runAt, timeZone, stamps } = ctx
+  const { account, units, report, runAt, timeZone, ledger } = ctx
   report.sessions = units.length
 
   // 1. Konto
@@ -886,8 +809,8 @@ async function write(
     ).id
     report.accountCreated = true
   }
-  // der erste Lauf: ohne Merkmal (Zeilen ohne Merkmal bricht die Vorprüfung ab)
-  if (lastRunAt === null)
+  // der erste Lauf: noch kein Lauf im Hauptbuch
+  if (ledger.runs === 0)
     await tx.diarySettings.upsert({
       where: { userId: ownerId },
       create: { userId: ownerId, enabled: true },
@@ -896,17 +819,7 @@ async function write(
   report.diaryEnabled =
     (await tx.diarySettings.findUnique({ where: { userId: ownerId } }))?.enabled ?? false
 
-  const cardsByKey = new Map((ctx.existing?.cards ?? []).map((c) => [c.importKey!, c]))
-  const entriesByKey = new Map((ctx.existing?.entries ?? []).map((e) => [e.importKey!, e]))
   const goalSessions = new Set(account.goals.flatMap((goal) => goal.sessionIds))
-  /** ein Eintrag gilt auch als geändert, wenn eine Zeile seiner Scheiben nicht vom letzten Lauf stammt (verknüpft, gelöst) */
-  const entryTouched = (row: {
-    deletedAt: Date | null
-    updatedAt: Date
-    cards: { updatedAt: Date }[]
-  }) =>
-    isTouched(row, lastRunAt) ||
-    (lastRunAt !== null && row.cards.some((link) => !writtenInLastRun(link.updatedAt, lastRunAt)))
   // was der Lauf vor der Transaktion las, kann inzwischen geändert sein (die App läuft daneben): Jede Zeile, die er
   // ändert oder löscht, sperrt er und liest sie neu; was jemand dazwischen geändert hat, bleibt
   const lockedEntries = new Map<string, Awaited<ReturnType<typeof readEntry>>>()
@@ -916,10 +829,9 @@ async function write(
       where: { id },
       select: {
         id: true,
-        importKey: true,
         deletedAt: true,
         updatedAt: true,
-        cards: { select: { updatedAt: true } },
+        cards: { select: { cardId: true, link: true, updatedAt: true } },
       },
     })
   }
@@ -943,71 +855,60 @@ async function write(
     })
   }
   const freshCard = async (id: string) =>
-    (await lockCard(tx, id)) ? tx.card.findUnique({ where: { id }, select: TRANSFER_CARD }) : null
-  // ab dem zweiten Lauf: Anhänge, deren Datei an keiner Scheibe des Kontos mehr hängt, hat der User entfernt
-  const presentFiles =
-    lastRunAt === null
-      ? null
-      : new Set([
-          ...(
-            await tx.printout.findMany({ where: { card: { ownerId } }, select: { sha256: true } })
-          ).map((row) => row.sha256),
-          ...(
-            await tx.cardEvidence.findMany({
-              where: { card: { ownerId } },
-              select: { sha256: true },
-            })
-          ).map((row) => row.sha256),
-        ])
-  const keptReason = (row: { deletedAt: Date | null; origin?: string }) =>
-    row.deletedAt
-      ? "Papierkorb"
-      : row.origin === "pdf"
-        ? "Werte vom Ausdruck"
-        : row.origin === "manual"
-          ? "von Hand geändert"
-          : "geändert"
+    (await lockCard(tx, id)) ? tx.card.findUnique({ where: { id }, select: CARD_NOW }) : null
+  type CardNow = NonNullable<Awaited<ReturnType<typeof freshCard>>>
 
-  type TransferCard = NonNullable<Awaited<ReturnType<typeof freshCard>>>
-  /** eine eigene Wahl an der Scheibe: Art, Wertung oder Stand (Disziplin); ein Lauf setzte sie zurück */
-  const chosen = (card: TransferCard) =>
-    (card.kindChoice !== null && card.kindChoice !== card.kind) ||
-    card.scoringChoice !== null ||
-    card.standDisciplineId !== null
-  /**
-   * eine Scheibe aus Treffsicher, die der User ergänzt hat: ein eigener Beleg (nicht aus Treffsicher), geteilt, eine
-   * eigene Wahl, oder eine Verknüpfung, die nicht vom unveränderten Eintrag ihrer Einheit stammt
-   */
-  const addedTo = async (old: TransferCard, key: string) => {
-    if (old.shareId !== null || chosen(old)) return true
-    const ownEvidence = await tx.cardEvidence.count({
-      where: { cardId: old.id, sha256: { notIn: ctx.ownHashes } },
+  /** unverändert, wie das Hauptbuch sie verzeichnet; ein Beleg, der nicht aus Treffsicher stammt, ist eine Änderung */
+  const cardIsUnchanged = async (item: LedgerItem, card: CardNow) =>
+    cardUnchanged(
+      item,
+      card,
+      await tx.cardEvidence.count({
+        where: { cardId: card.id, sha256: { notIn: ctx.ownHashes } },
+      })
+    )
+  const entryIsUnchanged = (
+    sessionId: string,
+    item: LedgerItem,
+    row: NonNullable<Awaited<ReturnType<typeof readEntry>>>
+  ) => diaryRowUnchanged(item, row) && linksUnchanged(ledger.links(sessionId), row.cards)
+  /** eine Scheibe so verzeichnen, wie sie jetzt dasteht */
+  const recordCard = async (sourceKey: string, cardId: string) => {
+    const card = await tx.card.findUniqueOrThrow({ where: { id: cardId }, select: CARD_NOW })
+    await recordItem(tx, ownerId, {
+      kind: "card",
+      sourceKey,
+      spiegelId: cardId,
+      revisionId: card.currentRevisionId,
+      cardState: cardState(card),
     })
-    if (ownEvidence > 0) return true
-    const holder = await tx.diaryEntryCard.findUnique({
-      where: { cardId: old.id },
-      select: { entryId: true },
-    })
-    if (!holder) return false
-    const stale = entriesByKey.get(key)
-    const own = stale ? await freshEntry(stale.id) : null
-    return !own || holder.entryId !== own.id || entryTouched(own)
   }
-  /** eine früher übernommene Scheibe dieser Einheit entfernen, wenn sie unverändert ist */
-  const removeOldCard = async (key: string, day: string) => {
-    const stale = cardsByKey.get(key)
-    const old = stale ? await freshCard(stale.id) : null
-    if (!old) return
-    if (old.origin === "treffsicher" && !old.deletedAt && (await addedTo(old, key))) {
-      report.cards.kept += 1
-      report.kept.push({ what: "card", day, reason: "vom User ergänzt" })
-    } else if (old.origin === "treffsicher" && !old.deletedAt) {
-      await releaseImportedLinks(tx, [old.id])
-      await purgeCards(tx, [old.id], { lock: true })
+  const keptReason = (card: { deletedAt: Date | null; origin: string }) =>
+    card.deletedAt
+      ? "Papierkorb"
+      : card.origin === "pdf"
+        ? "Werte vom Ausdruck"
+        : card.origin === "manual"
+          ? "von Hand geändert"
+          : "vom User ergänzt"
+
+  /** die Scheibe eines Schlüssels entfernen, wenn sie unverändert ist; eine geänderte bleibt */
+  const removeCard = async (sourceKey: string, day: string) => {
+    const item = ledger.get("card", sourceKey)
+    if (!item) return
+    const card = await freshCard(item.spiegelId)
+    if (!card) {
+      await forgetItem(tx, ownerId, "card", sourceKey)
+      return
+    }
+    if (await cardIsUnchanged(item, card)) {
+      await releaseImportedLinks(tx, [card.id])
+      await purgeCards(tx, [card.id], { lock: true })
+      await forgetItem(tx, ownerId, "card", sourceKey)
       report.cards.removed += 1
     } else {
       report.cards.kept += 1
-      report.kept.push({ what: "card", day, reason: keptReason(old) })
+      report.kept.push({ what: "card", day, reason: keptReason(card) })
     }
   }
 
@@ -1016,6 +917,7 @@ async function write(
   const executionsExpected = { rated: 0, placed: 0, skipped: 0, practice: 0, kept: 0 }
   for (const unit of units) {
     const { session, decision, key } = unit
+    const sessionKey = ledgerKey.session(session.id)
     add(report.decisions, decision.kind === "none" ? decision.reason : decision.kind)
     if (decision.kind === "uncertain" && unit.card)
       report.uncertain.push({
@@ -1029,60 +931,31 @@ async function write(
         others: decision.others.map((o) => ({ shots: o.shots, total: o.total })),
       })
 
-    // der Eintrag der Einheit zuerst gesperrt: dieselbe Folge (Eintrag, dann Scheibe) wie die Schreibwege der App
-    const old = entriesByKey.get(key)
-    const fresh = old === undefined ? null : await freshEntry(old.id)
+    // der Eintrag der Einheit zuerst gesperrt, dann ihre Scheibe
+    const entryItem = ledger.get("entry", sessionKey)
+    const entryRow = entryItem ? await freshEntry(entryItem.spiegelId) : null
 
-    // die Scheibe der Einheit, gesperrt und neu gelesen
+    // die Scheibe der Einheit
     let unitCard: string | null = null
     let cardKept = false
-    // eine Scheibe, die bleibt, aber dieselben Serien wie aus Treffsicher hat (nur eine eigene Wahl)
+    // eine Scheibe, die bleibt, aber noch die Revision aus Treffsicher hat (nur eine eigene Wahl): gleiche Serien
     let sameSeries = false
     const wantsCard = decision.kind === "new" || decision.kind === "uncertain"
-    const staleCard = cardsByKey.get(key)
-    const current = wantsCard && staleCard ? await freshCard(staleCard.id) : null
-    /** was `writeEnteredCardIn` an dieser Scheibe ablehnen würde; `missing` ohne Disziplin */
-    const inputProblem = async () => {
-      const discipline = await tx.discipline.findUnique({
-        where: { id: unit.disciplineId! },
-        select: { meytonId: true, plannedShots: true, seriesShots: true },
-      })
-      if (!discipline) return "missing" as const
-      const checked = checkEnteredInput(discipline, {
-        startedAtMs: unit.dateMs,
-        details: unit.card!.details,
-        place: session.location,
-        origin: "treffsicher",
-        importKey: key,
-      })
-      return checked.ok ? null : checked.problem
-    }
-    if (wantsCard && lastRunAt !== null && !current) {
-      // eine Scheibe, die schon der erste Lauf nicht anlegen konnte, ist nicht gelöscht: weiter ein Befund
-      const problem = await inputProblem()
-      if (problem === "missing") {
-        cardKept = true
-        report.cards.kept += 1
-        report.kept.push({ what: "card", day: unit.day, reason: "Disziplin fehlt" })
-      } else if (problem) add(report.cards.invalid, problem)
-      else {
-        cardKept = true
-        report.deletedInSpiegel.cards += 1
-        report.kept.push({ what: "card", day: unit.day, reason: GONE_TEXT })
-      }
-    } else if (
-      wantsCard &&
-      current &&
-      current.origin === "treffsicher" &&
-      !current.deletedAt &&
-      chosen(current)
-    ) {
+    const cardItem = ledger.get("card", sessionKey)
+    const current = wantsCard && cardItem ? await freshCard(cardItem.spiegelId) : null
+    if (wantsCard && cardItem && !current) {
+      // im Hauptbuch und fehlt: in Spiegel gelöscht
       cardKept = true
-      sameSeries = true
-      unitCard = current.id
+      report.deletedInSpiegel.cards += 1
+      report.kept.push({ what: "card", day: unit.day, reason: GONE_TEXT })
+    } else if (wantsCard && cardItem && current && !(await cardIsUnchanged(cardItem, current))) {
+      cardKept = true
+      unitCard = current.deletedAt ? null : current.id
+      sameSeries = current.currentRevisionId === cardItem.revisionId
       report.cards.kept += 1
-      report.kept.push({ what: "card", day: unit.day, reason: "vom User ergänzt" })
+      report.kept.push({ what: "card", day: unit.day, reason: keptReason(current) })
     } else if (wantsCard) {
+      // unverändert, oder nie platziert: schreiben
       const card = unit.card!
       const kind = session.type === "WETTKAMPF" ? "competition" : "training"
       const written = await writeTransferCard(tx, {
@@ -1097,19 +970,19 @@ async function write(
       if (written.kind === "saved") {
         unitCard = written.cardId
         report.cards[written.change] += 1
+        await recordCard(sessionKey, written.cardId)
       } else if (written.kind === "notEditable" || written.kind === "missing") {
-        const known = current ?? staleCard
         cardKept = true
-        unitCard = written.kind === "notEditable" && known ? known.id : null
+        unitCard = written.kind === "notEditable" && current ? current.id : null
         report.cards.kept += 1
         report.kept.push({
           what: "card",
           day: unit.day,
-          reason: known ? keptReason(known) : "Papierkorb",
+          reason: current ? keptReason(current) : "Papierkorb",
         })
       } else if (written.kind === "invalid") add(report.cards.invalid, written.problem)
       else throw new Error(`Scheibe aus Treffsicher: ${written.kind}`)
-    } else await removeOldCard(key, unit.day)
+    } else await removeCard(sessionKey, unit.day)
 
     // die Scheiben, die der Eintrag hält
     const linkIds =
@@ -1119,13 +992,12 @@ async function write(
       { ...session, dateMs: unit.dateMs },
       { importKey: key, familyId: unit.familyId, withCard, timeZone }
     )
-    // nur Werte: kein Eintrag, die Scheibe trägt alles; ein Eintrag aus einem früheren Lauf bleibt (nichts wird gelöscht)
-    const cardOnly = old === undefined && !needsEntry(session)
-    // ab dem zweiten Lauf hat der User einen fehlenden Eintrag gelöscht, auch einen, der seit dem Lesen fehlt
-    const entryGone =
-      (old === undefined && !cardOnly && lastRunAt !== null) ||
-      (old !== undefined && fresh === null)
-    const entryKept = fresh !== null && entryTouched(fresh)
+    // nur Werte: kein Eintrag, die Scheibe trägt alles; ein Eintrag im Hauptbuch bleibt (nichts wird gelöscht)
+    const cardOnly = !entryItem && !needsEntry(session)
+    // im Hauptbuch und fehlt (auch seit dem Lesen): in Spiegel gelöscht
+    const entryGone = !!entryItem && entryRow === null
+    const entryKept =
+      !!entryItem && entryRow !== null && !entryIsUnchanged(session.id, entryItem, entryRow)
     if (!cardOnly && !entryGone) expectedEntries.push({ key, entry, kept: entryKept })
     const rated = session.series.filter((x) => !x.isPractice && x.executionQuality !== null)
     executionsExpected.rated += rated.length
@@ -1133,6 +1005,8 @@ async function write(
     executionsExpected.practice += practice.length
     report.executions.practiceSkipped += practice.length
     let entryId: string | null = null
+    // die festen Verknüpfungen, die dieser Lauf setzt
+    let linked: string[] = []
     if (cardOnly) {
       report.cardOnly.units += 1
       if (goalSessions.has(session.id)) report.cardOnly.goalLinked += 1
@@ -1147,14 +1021,19 @@ async function write(
       report.kept.push({
         what: "entry",
         day: unit.day,
-        reason: keptReason(fresh),
+        reason: entryRow!.deletedAt ? "Papierkorb" : "geändert",
       })
       if (rated.length) report.executions.skipped.keptEntry += 1
       executionsExpected.kept += rated.length
     } else {
-      stamps.count += 1
       const upserted = await upsertImportedEntry(tx, ownerId, entry, runAt)
       entryId = upserted.id
+      await recordItem(tx, ownerId, {
+        kind: "entry",
+        sourceKey: sessionKey,
+        spiegelId: upserted.id,
+        writtenAt: runAt,
+      })
       report.entries[upserted.created ? "created" : "updated"] += 1
       // feste Zeilen: die neue Scheibe bzw. die passenden; eine Scheibe, die ein anderer Eintrag hält, bleibt dort
       const held = await tx.diaryEntryCard.findMany({
@@ -1166,11 +1045,18 @@ async function write(
         return !row || row.entryId === upserted.id
       })
       report.links.linkedElsewhere += linkIds.length - free.length
+      linked = free
       await tx.diaryEntryCard.deleteMany({
         where: { entryId: upserted.id, link: "linked", cardId: { notIn: free } },
       })
       await setImportedLinks(tx, upserted.id, free, runAt)
-      stamps.count += free.length
+      for (const cardId of free)
+        await recordItem(tx, ownerId, {
+          kind: "link",
+          sourceKey: ledgerKey.link(session.id, cardId),
+          spiegelId: cardId,
+          writtenAt: runAt,
+        })
 
       // die Ausführung auf die eine Scheibe des Eintrags
       let rows: { cardId: string; series: number; value: number }[] = []
@@ -1211,12 +1097,23 @@ async function write(
       (decision.kind === "probeEvening" && decision.cardIds.length === 1
         ? decision.cardIds[0]
         : null)
+    const links: string[] = []
     for (const attachment of unit.attachments) {
-      const sha256 = attachment.kind === "printout" ? attachment.file.sha256 : attachment.sha256
-      const missing = presentFiles !== null && !presentFiles.has(sha256)
-      // fehlt die Datei ab dem zweiten Lauf, zur Probe platzieren und zurückrollen: Wäre sie angekommen, hat der User sie
-      // entfernt; sonst bleibt der Grund, aus dem sie schon der erste Lauf nicht platzieren konnte
-      if (missing) await tx.$executeRawUnsafe("SAVEPOINT transfer_attachment")
+      const attachmentKey = ledgerKey.attachment(attachment.sourceId)
+      const kind = attachment.kind === "printout" ? "printout" : "evidence"
+      const item = ledger.get(kind, attachmentKey)
+      // im Hauptbuch und an der verzeichneten Scheibe nicht mehr da: in Spiegel entfernt
+      if (item) {
+        const where = { cardId: item.spiegelId, sha256: item.sha256 ?? "" }
+        const present =
+          kind === "printout"
+            ? await tx.printout.count({ where })
+            : await tx.cardEvidence.count({ where })
+        if (!present) {
+          report.deletedInSpiegel.attachments += 1
+          continue
+        }
+      }
       const placed = await placeAttachment(tx, {
         ownerId,
         siteId: ctx.siteId,
@@ -1235,17 +1132,19 @@ async function write(
           : null,
         attachment,
       })
-      if (missing) {
-        await tx.$executeRawUnsafe("ROLLBACK TO SAVEPOINT transfer_attachment")
-        await tx.$executeRawUnsafe("RELEASE SAVEPOINT transfer_attachment")
-        if (wouldArrive(placed)) report.deletedInSpiegel.attachments += 1
-        else countPlaced(report, placed)
-        continue
-      }
       countPlaced(report, placed)
-      // eine Scheibe vom Ausdruck einer Einheit ohne eigene Scheibe hält ihr Eintrag: beim ersten Lauf angelegt, bei
-      // jedem weiteren als eigene Scheibe gefunden und neu verknüpft (mit der Zeit des Laufs, `isTouched`); eine Scheibe
-      // der Brücke, etwa die eines Abends nur aus Probe, leitet der Abend ab
+      const landed = landedOn(placed)
+      if (landed)
+        await recordItem(tx, ownerId, {
+          kind,
+          sourceKey: attachmentKey,
+          spiegelId: landed,
+          sha256: attachment.kind === "printout" ? attachment.file.sha256 : attachment.sha256,
+        })
+      // eine Scheibe, die der Ausdruck einer Einheit ohne eigene Scheibe anlegte, steht im Hauptbuch und hält ihr
+      // Eintrag; bei jedem weiteren Lauf findet der Ausdruck sie als eigene Scheibe
+      if (placed.kind === "printoutImported" && placed.result.kind === "created")
+        await recordCard(attachmentKey, placed.result.cardId)
       const printoutCard =
         placed.kind === "printoutImported" &&
         (placed.result.kind === "created" || placed.result.kind === "attached")
@@ -1253,22 +1152,31 @@ async function write(
           : placed.kind === "printoutOwnCard" && placed.result.kind === "attached"
             ? placed.cardId
             : null
-      if (entryId !== null && firstCard === null && printoutCard !== null) {
-        const card = await tx.card.findUnique({
-          where: { id: printoutCard },
-          select: { origin: true, sourceId: true },
-        })
+      const fromPrintout =
+        printoutCard !== null &&
+        (ledger.get("card", attachmentKey)?.spiegelId === printoutCard ||
+          (placed.kind === "printoutImported" && placed.result.kind === "created"))
+      if (entryId !== null && firstCard === null && printoutCard !== null && fromPrintout)
+        links.push(printoutCard)
+    }
+    if (entryId !== null)
+      for (const cardId of links) {
         const holder = await tx.diaryEntryCard.findUnique({
-          where: { cardId: printoutCard },
+          where: { cardId },
           select: { entryId: true },
         })
-        const fromPrintout = card?.origin === "pdf" && card.sourceId === null
-        if (fromPrintout && (!holder || holder.entryId === entryId)) {
-          await setImportedLinks(tx, entryId, [printoutCard], runAt)
-          stamps.count += 1
-        }
+        if (holder && holder.entryId !== entryId) continue
+        await setImportedLinks(tx, entryId, [cardId], runAt)
+        linked.push(cardId)
+        await recordItem(tx, ownerId, {
+          kind: "link",
+          sourceKey: ledgerKey.link(session.id, cardId),
+          spiegelId: cardId,
+          writtenAt: runAt,
+        })
       }
-    }
+    // feste Verknüpfungen, die der Lauf nicht mehr setzt, aus dem Hauptbuch nehmen
+    if (entryId !== null) await forgetLinksExcept(tx, ownerId, session.id, linked)
 
     checkUnits.push({
       sessionId: session.id,
@@ -1292,10 +1200,10 @@ async function write(
 
   // Ziele und Abläufe
   const sessionOf = new Map(units.map((u) => [u.session.id, { familyId: u.familyId, day: u.day }]))
-  const goalsByKey = new Map((ctx.existing?.goals ?? []).map((g) => [g.importKey!, g]))
   const goalLinks = { inside: 0, outside: 0, unknown: 0 }
   for (const goal of account.goals) {
     const key = transferKey(goal.id)
+    const goalKey = ledgerKey.goal(goal.id)
     const mapped = goalFromTreffsicher(goal, {
       importKey: key,
       sessionOf: (id) => sessionOf.get(id),
@@ -1306,79 +1214,99 @@ async function write(
     goalLinks.outside += mapped.outside
     goalLinks.unknown += mapped.unknown
     goalLinks.inside += goal.sessionIds.length - mapped.outside - mapped.unknown
-    const old = goalsByKey.get(key)
-    const fresh = old ? await freshGoal(old.id) : null
-    if ((old && !fresh) || (!old && lastRunAt !== null)) {
+    const item = ledger.get("goal", goalKey)
+    const row = item ? await freshGoal(item.spiegelId) : null
+    if (item && !row) {
       report.deletedInSpiegel.goals += 1
       report.kept.push({ what: "goal", day: null, reason: GONE_TEXT })
       continue
     }
-    if (fresh && isTouched(fresh, lastRunAt)) {
+    if (item && row && !diaryRowUnchanged(item, row)) {
       report.goals.kept += 1
       report.kept.push({
         what: "goal",
         day: null,
-        reason: fresh.deletedAt ? "Papierkorb" : "geändert",
+        reason: row.deletedAt ? "Papierkorb" : "geändert",
       })
       continue
     }
-    stamps.count += 1
-    const { created } = await upsertImportedGoal(tx, ownerId, mapped.goal, runAt)
+    const { id, created } = await upsertImportedGoal(tx, ownerId, mapped.goal, runAt)
+    await recordItem(tx, ownerId, {
+      kind: "goal",
+      sourceKey: goalKey,
+      spiegelId: id,
+      writtenAt: runAt,
+    })
     report.goals[created ? "created" : "updated"] += 1
   }
-  const routinesByKey = new Map((ctx.existing?.routines ?? []).map((r) => [r.importKey!, r]))
   for (const routine of account.routines) {
     const key = transferKey(routine.id)
+    const routineKey = ledgerKey.routine(routine.id)
     const mapped = routineFromTreffsicher(routine, { importKey: key, familyOf: ctx.familyOf })
     if (mapped.flattened) report.routines.flattened += 1
-    const old = routinesByKey.get(key)
-    const fresh = old ? await freshRoutine(old.id) : null
-    if ((old && !fresh) || (!old && lastRunAt !== null)) {
+    const item = ledger.get("routine", routineKey)
+    const row = item ? await freshRoutine(item.spiegelId) : null
+    if (item && !row) {
       report.deletedInSpiegel.routines += 1
       report.kept.push({ what: "routine", day: null, reason: GONE_TEXT })
       continue
     }
-    if (fresh && isTouched(fresh, lastRunAt)) {
+    if (item && row && !diaryRowUnchanged(item, row)) {
       report.routines.kept += 1
       report.kept.push({
         what: "routine",
         day: null,
-        reason: fresh.deletedAt ? "Papierkorb" : "geändert",
+        reason: row.deletedAt ? "Papierkorb" : "geändert",
       })
       continue
     }
-    stamps.count += 1
-    const { created } = await upsertImportedRoutine(tx, ownerId, mapped.routine, runAt)
+    const { id, created } = await upsertImportedRoutine(tx, ownerId, mapped.routine, runAt)
+    await recordItem(tx, ownerId, {
+      kind: "routine",
+      sourceKey: routineKey,
+      spiegelId: id,
+      writtenAt: runAt,
+    })
     report.routines[created ? "created" : "updated"] += 1
   }
 
-  // verschwundene: in Treffsicher gelöscht, keinem anderen Konto zugeordnet
+  // verschwundene: in Treffsicher gelöscht, keinem anderen Konto zugeordnet; erst die Zeilen des Tagebuchs, dann die
+  // Scheiben (dieselbe Folge der Sperren wie oben)
   const present = new Set([
     ...units.map((u) => u.session.id),
     ...account.goals.map((g) => g.id),
     ...account.routines.map((r) => r.id),
   ])
-  const gone = (key: string | null) => {
-    const id = sourceIdOf(key)
-    return id !== null && !present.has(id) && !ctx.owners.has(id)
+  const gone = (sourceKey: string) => {
+    const source = sourceOfKey(sourceKey)
+    return source !== null && !present.has(source.id) && !ctx.owners.has(source.id)
   }
-  for (const stale of ctx.existing?.entries ?? [])
-    if (gone(stale.importKey)) {
-      const row = await freshEntry(stale.id)
-      if (!row) continue
-      if (entryTouched(row)) {
+  for (const item of ledger.all("entry"))
+    if (gone(item.sourceKey)) {
+      const row = await freshEntry(item.spiegelId)
+      const sessionId = sourceOfKey(item.sourceKey)!.id
+      if (!row) {
+        await forgetItem(tx, ownerId, "entry", item.sourceKey)
+        continue
+      }
+      if (!entryIsUnchanged(sessionId, item, row)) {
         report.entries.kept += 1
         report.kept.push({ what: "entry", day: null, reason: "in Treffsicher gelöscht, geändert" })
       } else {
         await tx.diaryEntry.delete({ where: { id: row.id } })
+        await forgetItem(tx, ownerId, "entry", item.sourceKey)
+        await forgetLinksExcept(tx, ownerId, sessionId, [])
         report.entries.removed += 1
       }
     }
-  for (const stale of ctx.existing?.goals ?? [])
-    if (gone(stale.importKey)) {
-      const row = await freshGoal(stale.id)
-      if (!row) continue
-      if (isTouched(row, lastRunAt)) {
+  for (const item of ledger.all("goal"))
+    if (gone(item.sourceKey)) {
+      const row = await freshGoal(item.spiegelId)
+      if (!row) {
+        await forgetItem(tx, ownerId, "goal", item.sourceKey)
+        continue
+      }
+      if (!diaryRowUnchanged(item, row)) {
         report.goals.kept += 1
         report.kept.push({
           what: "goal",
@@ -1387,14 +1315,18 @@ async function write(
         })
       } else {
         await tx.diaryGoal.delete({ where: { id: row.id } })
+        await forgetItem(tx, ownerId, "goal", item.sourceKey)
         report.goals.removed += 1
       }
     }
-  for (const stale of ctx.existing?.routines ?? [])
-    if (gone(stale.importKey)) {
-      const row = await freshRoutine(stale.id)
-      if (!row) continue
-      if (isTouched(row, lastRunAt)) {
+  for (const item of ledger.all("routine"))
+    if (gone(item.sourceKey)) {
+      const row = await freshRoutine(item.spiegelId)
+      if (!row) {
+        await forgetItem(tx, ownerId, "routine", item.sourceKey)
+        continue
+      }
+      if (!diaryRowUnchanged(item, row)) {
         report.routines.kept += 1
         report.kept.push({
           what: "routine",
@@ -1403,12 +1335,18 @@ async function write(
         })
       } else {
         await tx.diaryRoutine.delete({ where: { id: row.id } })
+        await forgetItem(tx, ownerId, "routine", item.sourceKey)
         report.routines.removed += 1
       }
     }
+  for (const item of ledger.all("card"))
+    if (item.sourceKey.startsWith("session:") && gone(item.sourceKey))
+      await removeCard(item.sourceKey, "")
 
-  for (const card of ctx.existing?.cards ?? [])
-    if (gone(card.importKey)) await removeOldCard(card.importKey!, "")
+  // der Lauf im Hauptbuch: Zeit, Version der Regeln, Zahlen
+  await tx.transferRun.create({
+    data: { userId: ownerId, at: runAt, version: TRANSFER_VERSION, counts: runCounts(report) },
+  })
 
   return checkTransfer(
     await checkInput(tx, {
@@ -1423,19 +1361,40 @@ async function write(
   )
 }
 
-/** käme der Anhang an (an einer Scheibe, als Ausdruck oder Beleg)? */
-function wouldArrive(placed: PlacedAttachment): boolean {
+/** die Scheibe, an der ein Anhang jetzt hängt; null, wenn er nicht ankam */
+function landedOn(placed: PlacedAttachment): string | null {
   switch (placed.kind) {
     case "evidence":
-      return placed.result === "attached" || placed.result === "duplicate"
+      return placed.result === "attached" || placed.result === "duplicate" ? placed.cardId : null
     case "evidenceNoCard":
-      return false
+      return null
     case "printoutOwnCard":
-      return placed.result.kind === "attached"
+      return placed.result.kind === "attached" ? placed.cardId : null
     case "printoutUnitCard":
-      return true
+      return placed.cardId
     case "printoutImported":
       return placed.result.kind === "created" || placed.result.kind === "attached"
+        ? placed.result.cardId
+        : null
+  }
+}
+
+/** die Zahlen eines Laufs für das Hauptbuch, ohne Texte */
+function runCounts(report: Omit<TransferReport, "check">) {
+  return {
+    sessions: report.sessions,
+    decisions: report.decisions,
+    cards: {
+      ...report.cards,
+      invalid: Object.values(report.cards.invalid).reduce((s, n) => s + (n ?? 0), 0),
+    },
+    entries: report.entries,
+    cardOnly: report.cardOnly,
+    deletedInSpiegel: report.deletedInSpiegel,
+    goals: report.goals,
+    routines: report.routines,
+    printouts: report.attachments.printouts,
+    evidence: report.attachments.evidence,
   }
 }
 
