@@ -7,6 +7,7 @@ import {
   normalizeName,
   parseCsv,
   parseMappingCsv,
+  parseMappingCsvLines,
   proposeMapping,
   spiegelAccountsFromCsv,
   treffsicherAccountsFromCsv,
@@ -353,5 +354,15 @@ describe("Vorschlag der Zuordnung", () => {
       parseMappingCsv("from,to,status,reason\na@example.org,b@example.org,vielleicht,\n")
     ).toThrow(/Zeile 2.*Status/)
     expect(() => parseMappingCsv("from,to,status,reason\na@example.org,,ok,\n")).toThrow(/Zeile 2/)
+  })
+
+  it("nennt je Zeile ihre Nummer in der Datei, auch nach einer Leerzeile", () => {
+    const text =
+      "from,to,status,reason\na@example.org,b@example.org,ok,\nc@example.org,c@example.org,new,\n\nd@example.org,e@example.org,check,gleicher Name\n"
+    expect(parseMappingCsvLines(text).map((row) => [row.from, row.line])).toEqual([
+      ["a@example.org", 2],
+      ["c@example.org", 3],
+      ["d@example.org", 5],
+    ])
   })
 })

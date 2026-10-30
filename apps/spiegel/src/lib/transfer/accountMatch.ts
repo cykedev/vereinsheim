@@ -441,6 +441,11 @@ export function formatMappingCsv(rows: MappingRow[]): string {
 
 /** Liest eine (auch von Hand bearbeitete) Zuordnung; ein Fehler nennt die Zeile in der Datei. */
 export function parseMappingCsv(csv: string): MappingRow[] {
+  return parseMappingCsvLines(csv).map(({ line: _line, ...row }) => row)
+}
+
+/** wie `parseMappingCsv`, je Zeile mit ihrer Nummer in der Datei (Kopfzeile 1) */
+export function parseMappingCsvLines(csv: string): (MappingRow & { line: number })[] {
   const { header, rows } = recordsWithHeader(csv)
   if (header.map((name) => name.trim()).join(",") !== MAPPING_HEADER.join(",")) {
     throw new Error(`Kopfzeile muss „${MAPPING_HEADER.join(",")}“ sein`)
@@ -451,6 +456,6 @@ export function parseMappingCsv(csv: string): MappingRow[] {
     if (!MAPPING_STATUSES.includes(status as MappingStatus)) {
       throw new Error(`Zeile ${line}: Status „${status}“ ist nicht ${MAPPING_STATUSES.join(", ")}`)
     }
-    return { from, to, status: status as MappingStatus, reason }
+    return { from, to, status: status as MappingStatus, reason, line }
   })
 }
