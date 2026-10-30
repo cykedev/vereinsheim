@@ -487,6 +487,17 @@ der Prod-Kopie von 14:14 nach dem Deploy: 285 gleich, keine Abweichung. Am iPhon
 Kamera, HEIC aus der Mediathek (als JPEG mit Namen) und ein PDF als Beleg. Auf dem Basisbranch (`e6280f4f`) der Stack mit
 Brücke, Betrieb und Übernahme grün.
 
+**Viertes Release am 30. Oktober 2026: der Basisbranch** (`main` per Fast-forward auf `0bbc4d75`, alle drei Apps, vom
+User): Stufe 2 (Tagebuch) und 3a/3b (Übernahme). Migrationen Tagebuch, Ziele und Abläufe, Hauptbuch der Übernahme, alle
+additiv; Projektion auf Version 7. Ringwerk lief unverändert weiter (nichts geändert seit `fcb9aa69`).
+
+**Übernahme in Prod am 30. Oktober 2026** (User, über `vereinsheim transfer --vps`): `status` vorher 9 offen und 0
+außerhalb der Datei; Probelauf über alle 9 Zeilen ohne Befund; dann das Konto des Users, danach die übrigen. Die drei
+Konten ohne Einheit in Treffsicher hat der User aus der Zuordnung genommen, sie bleiben nur in Treffsicher. Übernommen
+sind 6 Konten, je Exit 0 ohne Befund, Speicher je Lauf höchstens 186 MiB. Folgepunkte: die Warnung von Compose, dass
+`vereinsheim_uploads_spiegel` ohne seine Labels angelegt ist; die `DeprecationWarning` von `pg` (zwei Abfragen zugleich
+auf einer Verbindung der Übernahme, scheitert erst mit `pg` 9); 3d; Stufe 4 mit Zeitplan für die Mitglieder.
+
 ## Wie es weitergeht
 
 1. **1d Handeingabe** ist in `main` (`dbc9e45c`, Migration `20261028120000_hand_entry`, keine neue Brücke) und wartet
@@ -529,12 +540,12 @@ Befund aus dem Review von 2a).
 | 1d   | `plans/2026-10-28-tis-1d-hand-entry.md`      | `feat/tis-1d-hand-entry` (von `main`)      | `tis-1d-hand-entry`      | in `main` (`dbc9e45c`), deployt (bis 30.10.)              |
 | 1e   |                                              |                                            |                          | in 1a-2                                                 |
 | 1f   | `plans/2026-10-29-tis-1f-evidence-list.md`   | `feat/tis-1f-evidence-list` (von `main`)   | `tis-1f-evidence-list`   | in `main` (`39dca9f4`), deployt (bis 30.10.); Plan entfernt |
-| 2a   | `plans/2026-10-28-tis-2a-diary-entries.md`   | `feat/tis-2a-diary-entries` (vom Basis)    | `tis-2a-diary-entries`   | im Basisbranch (`3fd30d85`), Plan entfernt              |
-| 2b   | `plans/2026-10-28-tis-2b-goals-routines.md`  | `feat/tis-2b-goals-routines` (vom Basis)   | `tis-2b-goals-routines`  | im Basisbranch (`b51a030b`), Plan entfernt              |
-| 2c   | `plans/2026-10-29-tis-2c-diary-analysis.md`  | `feat/tis-2c-diary-analysis` (vom Basis)   | `tis-2c-diary-analysis`  | im Basisbranch (`69bedd2a`), Plan entfernt              |
+| 2a   | `plans/2026-10-28-tis-2a-diary-entries.md`   | `feat/tis-2a-diary-entries` (vom Basis)    | `tis-2a-diary-entries`   | deployt 30.10., Basisbranch (`3fd30d85`), Plan entfernt              |
+| 2b   | `plans/2026-10-28-tis-2b-goals-routines.md`  | `feat/tis-2b-goals-routines` (vom Basis)   | `tis-2b-goals-routines`  | deployt 30.10., Basisbranch (`b51a030b`), Plan entfernt              |
+| 2c   | `plans/2026-10-29-tis-2c-diary-analysis.md`  | `feat/tis-2c-diary-analysis` (vom Basis)   | `tis-2c-diary-analysis`  | deployt 30.10., Basisbranch (`69bedd2a`), Plan entfernt              |
 | R    | `plans/2026-10-29-tis-r-tab-bar.md`          | `feat/tis-r-tab-bar` (von `main`)          | `tis-r-tab-bar`          | in `main` (`290da9e5`, mit R2), deployt (bis 30.10.); Plan entfernt |
-| 3a   | `plans/2026-10-29-tis-3a-transfer.md`        | `feat/tis-3a-transfer` (vom Basis)         | `tis-3a-transfer`        | im Basisbranch (`b8ae4506`), Plan entfernt              |
-| 3b   | `plans/2026-10-30-tis-3b-transfer-ops.md`    | `feat/tis-3b-transfer-ops` (vom Basis)     | `tis-3b-transfer-ops`    | im Basisbranch (`b75352f1`), Plan entfernt              |
+| 3a   | `plans/2026-10-29-tis-3a-transfer.md`        | `feat/tis-3a-transfer` (vom Basis)         | `tis-3a-transfer`        | deployt 30.10., Basisbranch (`b8ae4506`), Plan entfernt              |
+| 3b   | `plans/2026-10-30-tis-3b-transfer-ops.md`    | `feat/tis-3b-transfer-ops` (vom Basis)     | `tis-3b-transfer-ops`    | deployt 30.10., Basisbranch (`b75352f1`), Plan entfernt              |
 | 3c   | `plans/2026-10-29-tis-3c-warmup.md`          | `feat/tis-3c-warmup` (von `main`)          | `tis-3c-warmup`          | in `main` (`52dffad1`), deployt (bis 30.10.); Plan entfernt |
 | 3d   |                                              | (vom Basis)                                |                          | entschieden (29.10.), Plan offen                        |
 | 3e   | `plans/2026-10-29-tis-3e-read-only.md`       | `feat/tis-3e-read-only` (von `main`)       | `tis-3e-read-only`       | in `main` (`0000933f`), deployt (bis 30.10.); Plan entfernt |
