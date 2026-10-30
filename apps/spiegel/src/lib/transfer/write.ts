@@ -20,9 +20,12 @@ type Tx = Prisma.TransactionClient
 
 /**
  * Eine Scheibe „aus Treffsicher“ über ihren Schlüssel anlegen oder ersetzen. Eine von Hand oder vom Ausdruck geänderte
- * (`notEditable`) oder eine im Papierkorb (`missing`) bleibt; der Aufrufer zählt sie als „geändert, bleibt“.
+ * (`notEditable`) oder eine im Papierkorb (`missing`) bleibt; der Aufrufer zählt sie als „geändert, bleibt“. Die Art
+ * aus Treffsicher steht auch als Wahl (`kindChoice`), damit sie bleibt, wenn die Brücke die Scheibe füllt; ein späterer
+ * Lauf setzt beide neu. Der Aufrufer ruft nur für unveränderte oder nie platzierte Scheiben (Hauptbuch), eine eigene
+ * Wahl des Schützen bleibt also.
  */
-export function writeTransferCard(
+export async function writeTransferCard(
   tx: Tx,
   input: {
     ownerId: string
@@ -34,7 +37,7 @@ export function writeTransferCard(
     details: DetailsInput
   }
 ): Promise<EnteredResult> {
-  return writeEnteredCardIn(tx, {
+  const written = await writeEnteredCardIn(tx, {
     ownerId: input.ownerId,
     origin: "treffsicher",
     disciplineId: input.disciplineId,
@@ -46,6 +49,18 @@ export function writeTransferCard(
     details: input.details,
     reason: "treffsicher",
   })
+  if (written.kind === "saved" && written.change !== "created") {
+    const card = await tx.card.findUniqueOrThrow({
+      where: { id: written.cardId },
+      select: { kind: true, kindChoice: true },
+    })
+    if (card.kind !== input.kind || card.kindChoice !== input.kind)
+      await tx.card.update({
+        where: { id: written.cardId },
+        data: { kind: input.kind, kindChoice: input.kind },
+      })
+  }
+  return written
 }
 
 /**

@@ -829,6 +829,43 @@ describe("runTransfer: über drei Läufe", () => {
     expect(third.check.findings).toBe(0)
     expect(await sleep()).toBe(tipped)
   })
+  it("wechselt die Einheit auf Wettkampf, wird die Scheibe Wettkampf; Lauf 3 zählt sie unverändert", async () => {
+    const c = newCase("art")
+    const account = c.account([c.session("s1", "2026-06-26"), c.session("s2", "2026-06-27")])
+    done(await c.run())
+    account.sessions[0].type = "WETTKAMPF"
+    done(await c.run())
+    const kindOf = (name: string) =>
+      db.card.findUniqueOrThrow({
+        where: { importKey: `treffsicher:${c.id(name)}` },
+        select: { kind: true, kindChoice: true },
+      })
+    expect(await kindOf("s1")).toEqual({ kind: "competition", kindChoice: "competition" })
+    expect(await kindOf("s2")).toEqual({ kind: "training", kindChoice: "training" })
+    const third = done(await c.run())
+    expect(third.cards).toMatchObject({ created: 0, revised: 0, unchanged: 2, kept: 0 })
+    expect(third.check.findings).toBe(0)
+  })
+
+  it("eine eigene Wahl der Art bleibt, auch wenn die Einheit danach wechselt", async () => {
+    const c = newCase("eigeneart")
+    const account = c.account([c.session("s1", "2026-06-28")])
+    done(await c.run())
+    const importKey = `treffsicher:${c.id("s1")}`
+    // in der App auf Wettkampf gestellt (wie `setCardKind`), danach in Treffsicher erst Wettkampf, dann wieder Training
+    await db.card.update({ where: { importKey }, data: { kindChoice: "competition" } })
+    account.sessions[0].type = "WETTKAMPF"
+    const second = done(await c.run())
+    expect(second.cards.kept).toBe(1)
+    account.sessions[0].type = "TRAINING"
+    done(await c.run())
+    expect(
+      await db.card.findUniqueOrThrow({
+        where: { importKey },
+        select: { kind: true, kindChoice: true },
+      })
+    ).toEqual({ kind: "training", kindChoice: "competition" })
+  })
 })
 
 describe("runTransfer: zweiter Lauf", () => {

@@ -245,3 +245,33 @@ describe("placeAttachment: Beleg", () => {
     expect(await place(null, evidence(2), null)).toEqual({ kind: "evidenceNoCard" })
   })
 })
+
+describe("writeTransferCard: Art", () => {
+  it("ein späterer Lauf mit anderer Art setzt kind und kindChoice, die Angaben bleiben", async () => {
+    const importKey = `treffsicher:write-${RUN}-art`
+    const write = (kind: "training" | "competition") =>
+      db.$transaction((tx) =>
+        writeTransferCard(tx, {
+          ownerId: site.ownerId,
+          disciplineId: site.disciplineId,
+          startedAtMs: Date.parse(`${DAY}T17:00:00Z`),
+          kind,
+          place: null,
+          importKey,
+          details: { total: { shots: 40, rings: 360 } },
+        })
+      )
+    expect(await write("training")).toMatchObject({ kind: "saved", change: "created" })
+    const second = await write("competition")
+    expect(second).toMatchObject({ kind: "saved", change: "unchanged" })
+    const card = await db.card.findUniqueOrThrow({
+      where: { importKey },
+      select: { kind: true, kindChoice: true, _count: { select: { revisions: true } } },
+    })
+    expect(card).toEqual({
+      kind: "competition",
+      kindChoice: "competition",
+      _count: { revisions: 1 },
+    })
+  })
+})
