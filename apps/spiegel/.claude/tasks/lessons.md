@@ -137,3 +137,17 @@ Geschichte in `vault/incidents/`.
 - **Fünf von neun Konten brechen mit `noDiscipline` ab:** Die erste Anlage hat in Luftpistole, Luftpistole Auflage und
   Luftgewehr nur die üblichen Schusszahlen; Treffsicher kennt 10, 20, 50, 52, 60, 70 und 80. Vor einem Lauf über alle
   Konten muss der Admin die Disziplinen anlegen. → REMEMBER (Meldung an die Koordination, Plan der Stufe 3)
+- **Ein Merkmal, das mit jedem Lauf vorrückt, taugt nicht als Grenze für „geändert“:** `updatedAt` > Merkmal hielt eine
+  Änderung nur einen Lauf; der übernächste sah sie als älter als das neue Merkmal und überschrieb sie. Jeder Lauf schreibt
+  deshalb `updatedAt` seiner Zeilen gleich der Zeit seines Merkmals, und unverändert ist nur genau diese Zeit. Ein Test
+  über drei Läufe mit einer Änderung dazwischen fängt das, zwei Läufe nicht. → DOCUMENT
+  (`vault/spiegel/spiegel-account-transfer.md`, Geändertes bleibt)
+- **Werte in eigenen Tabellen ändern `updatedAt` der Zeile darüber nicht:** Skalen und Ausführung eines Eintrags stehen in
+  `DiaryScale` und `DiarySeriesExecution`; ihr Tippen ließ den Eintrag unverändert aussehen. `touch` in
+  `src/diary/entries.ts` setzt es jetzt. → DOCUMENT (`vault/spiegel/spiegel-diary.md`)
+- **Eine Zuordnung über den Namen einer Treffsicher-Disziplin trifft Einheiten verschiedener Schusszahl:** „Luftpistole“
+  hat Einheiten mit 10, 40 und 60 Schuss. `--discipline` gilt deshalb nur, wo die Wahl nach Schusszahl keine findet. →
+  DOCUMENT (`spiegel-account-transfer`, Abbrüche)
+- **Ein `cd` vor `&&`, das scheitert, lässt den Rest still aus:** Zweimal fehlte so eine Änderung, einmal fiel es erst an
+  einem Test auf, der aus einem anderen Grund rot war. Nach einer Änderung per Skript prüfen, ob sie angekommen ist. →
+  REMEMBER
