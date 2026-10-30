@@ -311,6 +311,12 @@ cmd_help() {
 		  ${GREEN}cron${RESET}                  Backup-Cron installieren/prüfen
 		  ${GREEN}up${RESET} / ${GREEN}down${RESET} / ${GREEN}restart${RESET} <svc>  Service-Kontrolle
 
+		${BOLD}── ÜBERNAHME AUS TREFFSICHER${RESET} ${DIM}(lokal mit --local oder --vps, auf dem VPS ohne)${RESET}
+		  ${GREEN}transfer${RESET} --from <a> --to <b>     Ein Konto übernehmen  ${DIM}(--dry-run, --family, --discipline, --yes)${RESET}
+		  ${GREEN}transfer${RESET} --mapping <datei>       Alle ok/new-Zeilen der geprüften Zuordnung  ${DIM}(nur lokal)${RESET}
+		  ${GREEN}transfer status${RESET} --mapping <datei> Je Zeile übernommen oder offen  ${DIM}(nur lokal)${RESET}
+		  ${GREEN}transfer mark${RESET} --from <a>         Konto als umgezogen markieren  ${DIM}(--clear hebt es auf)${RESET}
+
 		${BOLD}TIPS${RESET}
 		  ${YELLOW}vereinsheim release${RESET}            Standard-Release von der lokalen Maschine
 		  ${YELLOW}vereinsheim remote status${RESET}      VPS-Stand ohne Login
@@ -1730,6 +1736,456 @@ cmd_restart() {
 }
 
 # ============================================================
+# Übernahme aus Treffsicher (beide Modi)
+# ============================================================
+# Ein Konto aus Treffsicher in Spiegel übernehmen ([[spiegel-account-transfer]], Abschnitt „Betrieb“). Der Host liest
+# Treffsicher mit psql und gibt das Konto per Pipe in den Wegwerf-Container transfer-spiegel (Profil ops), der nur die
+# Datenbank von Spiegel kennt (ADR-002); nach einem echten, gespeicherten Lauf setzt der Host das Merkmal „umgezogen“.
+# Auf dem Mac geht jeder Aufruf mit --local an den lokalen Stack oder mit --vps über ssh an den VPS; die Zuordnungsdatei
+# bleibt auf dem Mac. Ausgabe nur mit Zahlen, Codes und gekürzten Hashes; E-Mails nur auf der Kommandozeile.
+
+TRANSFER_SQL_DIR="$REPO_DIR/apps/spiegel/tools/transfer"
+# Berichte mit Texten: gitignored, Ordner 700, Dateien 600, in keinem Image und keinem Volume
+TRANSFER_REPORTS="${TRANSFER_REPORTS:-$REPO_DIR/reports/tis-3b}"
+# local: lokaler Stack (compose.local.yml); host: der Stack dieses Rechners (VPS); vps: über ssh vom Mac
+TRANSFER_TARGET=""
+
+transfer_usage() {
+	cat >&2 <<-EOF
+		Aufruf:
+		  vereinsheim transfer --from <E-Mail in Treffsicher> --to <E-Mail in Spiegel> [--dry-run] [--yes]
+		      [--family "<Name>=<Kennung der Familie>"]… [--discipline "<Disziplin in Treffsicher>=<Disziplin in Spiegel>"]…
+		  vereinsheim transfer --mapping <Zuordnungsdatei> [--dry-run] [--family …]… [--discipline …]…  (nur lokal)
+		  vereinsheim transfer status --mapping <Zuordnungsdatei>                                       (nur lokal)
+		  vereinsheim transfer mark --from <E-Mail in Treffsicher> [--clear] [--yes]
+		Lokal braucht jeder Aufruf --local (lokaler Stack) oder --vps (über ssh), auf dem VPS keinen von beiden.
+	EOF
+}
+
+# docker compose für die Übernahme, mit dem Profil ops (ohne startet `run` den Dienst transfer-spiegel nicht)
+tcompose() {
+	if [[ "$TRANSFER_TARGET" == local ]]; then
+		local_compose --profile ops "$@"
+	else
+		docker compose --profile ops "$@"
+	fi
+}
+
+# eine Abfrage als postgres an eine Datenbank des Stacks, die SQL über stdin; Ausgabe ohne Rand und ohne Meldungen
+transfer_psql() {
+	local db="$1"
+	shift
+	tcompose exec -T db psql -U postgres -d "$db" -At -q -v ON_ERROR_STOP=1 "$@"
+}
+
+# eine SQL-Datei aus TRANSFER_SQL_DIR gegen eine Datenbank: lokal über den Stack, mit --vps über ssh (wie accounts.sh)
+transfer_query() {
+	local db="$1" file="$TRANSFER_SQL_DIR/$2"
+	if [[ "$TRANSFER_TARGET" == vps ]]; then
+		# shellcheck disable=SC2029
+		ssh "$VPS_HOST" "cd $VPS_REPO_PATH && docker compose exec -T db psql -U postgres -d $db -At -q -v ON_ERROR_STOP=1" <"$file"
+	else
+		transfer_psql "$db" <"$file"
+	fi
+}
+
+# ein Aufruf von `vereinsheim transfer` auf dem VPS. %q hält Argumente mit Leerzeichen zusammen (--family "LP Training=lp");
+# ssh -n liest nicht von stdin, sonst verschluckte ein Aufruf die übrigen Zeilen einer Schleife. 255: keine Verbindung
+transfer_remote() {
+	# shellcheck disable=SC2029
+	ssh -n "$VPS_HOST" "cd $VPS_REPO_PATH && ./scripts/vereinsheim transfer $(printf '%q ' "$@")"
+}
+
+# die Meldung zu einem Exit-Code der Übernahme; $2 = 1 für einen Probelauf
+transfer_exit_text() {
+	local code="$1" dry="$2"
+	case "$code" in
+	0)
+		if ((dry)); then echo "Probelauf ohne Befund, nichts geschrieben"; else echo "Übernommen, Prüfbestand ohne Befund"; fi
+		;;
+	1)
+		if ((dry)); then echo "Probelauf mit Befund: Bericht lesen, nichts geschrieben"; else echo "Übernommen, Prüfbestand mit Befund: Bericht lesen"; fi
+		;;
+	2) echo "Aufruf falsch" ;;
+	3) echo "Abgebrochen vor dem Schreiben, nichts geändert" ;;
+	4) echo "Fehler, nichts geschrieben" ;;
+	5)
+		if ((dry)); then echo "Probelauf fertig, aber Ausgabe oder Bericht fehlt"; else echo "Gespeichert, aber Ausgabe oder Bericht fehlt"; fi
+		;;
+	6) echo "Gespeichert, Merkmal fehlt" ;;
+	137) echo "Speichergrenze des Containers erreicht" ;;
+	255) echo "Keine Verbindung zum VPS" ;;
+	*) echo "Container endete mit Code $code" ;;
+	esac
+}
+
+# das Merkmal „umgezogen“ setzen ($2 = 0) oder aufheben ($2 = 1): 0 geändert, 3 kein Konto, 4 Fehler oder nicht eindeutig
+transfer_set_mark() {
+	local from="$1" clear="$2" out
+	if ! out="$(transfer_psql treffsicher -v "from=$from" -v "clear=$clear" <"$TRANSFER_SQL_DIR/treffsicher-mark.sql")"; then
+		return 4
+	fi
+	case "$out" in
+	"1|1") return 0 ;;
+	"0|0") return 3 ;;
+	*) return 4 ;;
+	esac
+}
+
+# läuft die Datenbank, und hat das Image von Spiegel die Übernahme (transfer.mjs)?
+transfer_preflight() {
+	if ! tcompose ps --status running --services </dev/null 2>/dev/null | grep -x db >/dev/null; then
+		err "Die Datenbank läuft nicht (Dienst db)."
+		return 4
+	fi
+	if ! tcompose run --rm --no-deps -T --entrypoint sh transfer-spiegel -c 'test -f transfer.mjs' </dev/null >/dev/null 2>&1; then
+		if [[ "$TRANSFER_TARGET" == local ]]; then
+			err "Image von Spiegel ohne Übernahme: erst local-build"
+		else
+			err "Image von Spiegel ohne Übernahme: erst release und deploy"
+		fi
+		return 4
+	fi
+}
+
+# Ein Konto auf diesem Rechner oder im lokalen Stack: Besitzer und Konto aus Treffsicher lesen, das Konto per Pipe in
+# den Container, Bericht kopieren, nach einem echten, gespeicherten Lauf das Merkmal setzen. Eine Subshell, damit der
+# Arbeitsordner (mit owners.txt, Bericht und saved) in jedem Fall verschwindet. Exit 0 bis 6 wie transfer_exit_text.
+transfer_one() (
+	from="$1" to="$2" dry="$3"
+	shift 3
+	tool_args=(--from "$from" --to "$to")
+	if ((dry)); then tool_args+=(--dry-run); fi
+	tool_args+=("$@")
+
+	mkdir -p "$TRANSFER_REPORTS" && chmod 700 "$TRANSFER_REPORTS" || exit 4
+	parent="$(mktemp -d "$TRANSFER_REPORTS/.lauf-XXXXXX")" || exit 4
+	trap 'rm -rf "$parent"' EXIT
+	work="$parent/w"
+	# der Container läuft als nextjs (1001) und schreibt Bericht und saved hierher; der Ordner darüber bleibt 700
+	mkdir "$work" && chmod 777 "$work" || exit 4
+	if ! transfer_psql treffsicher <"$TRANSFER_SQL_DIR/treffsicher-owners.sql" >"$work/owners.txt"; then
+		err "Treffsicher nicht lesbar (Besitzer)."
+		exit 4
+	fi
+
+	set +e
+	transfer_psql treffsicher -v "from=$from" <"$TRANSFER_SQL_DIR/treffsicher-account.sql" |
+		tcompose run -T --rm --no-deps -v "$work:/transfer" transfer-spiegel "${tool_args[@]}"
+	codes=("${PIPESTATUS[@]}")
+	set -e
+	psql_rc="${codes[0]}" rc="${codes[1]}"
+
+	for report in "$work"/*.md; do
+		[[ -e "$report" ]] || continue
+		if install -m 600 "$report" "$TRANSFER_REPORTS/"; then
+			echo "Bericht liegt unter: $TRANSFER_REPORTS/${report##*/}"
+		else
+			warn "Bericht nicht kopiert."
+		fi
+	done
+
+	mark_hint="Nachholen: vereinsheim transfer mark --from <E-Mail in Treffsicher>"
+	if [[ -f "$work/saved" ]]; then
+		# gespeichert: das Merkmal gehört dazu, auch wenn der Container danach anders endete
+		code="$rc"
+		if [[ "$rc" != 0 && "$rc" != 1 ]]; then code=5; fi
+		if ! transfer_set_mark "$from" 0; then
+			err "Übernahme gespeichert, Merkmal in Treffsicher nicht gesetzt. $mark_hint"
+			code=6
+		fi
+	elif [[ "$psql_rc" != 0 ]]; then
+		err "Treffsicher nicht lesbar (psql endete mit Code $psql_rc)."
+		code=4
+	else
+		case "$rc" in
+		0 | 1)
+			code="$rc"
+			if ((!dry)); then
+				err "Der Lauf meldet nicht, dass er gespeichert hat: Merkmal nicht gesetzt. Erst prüfen, dann: $mark_hint"
+				code=6
+			fi
+			;;
+		2 | 3 | 4) code="$rc" ;;
+		5)
+			code=5
+			if ((!dry)); then err "Merkmal nicht gesetzt. $mark_hint"; fi
+			;;
+		137)
+			err "Speichergrenze des Containers erreicht: nichts geschrieben."
+			code=4
+			;;
+		*)
+			err "Container endete mit Code $rc: nichts geschrieben."
+			code=4
+			;;
+		esac
+	fi
+	if [[ "$code" == 0 ]]; then
+		ok "$(transfer_exit_text "$code" "$dry")"
+	else
+		warn "$(transfer_exit_text "$code" "$dry") (Exit $code)"
+	fi
+	exit "$code"
+)
+
+# ein Konto: hier, im lokalen Stack oder über ssh auf dem VPS
+transfer_single() {
+	local from="$1" to="$2" dry="$3" yes="$4"
+	shift 4
+	if ((!dry && !yes)); then
+		if ! confirm "Konto übernehmen ($TRANSFER_TARGET)? Ein echter Lauf schreibt in Spiegel und setzt das Merkmal in Treffsicher."; then
+			info "Abgebrochen."
+			return 3
+		fi
+	fi
+	if [[ "$TRANSFER_TARGET" == vps ]]; then
+		local -a args=(--yes --from "$from" --to "$to")
+		if ((dry)); then args+=(--dry-run); fi
+		transfer_remote "${args[@]}" "$@"
+		return
+	fi
+	transfer_preflight || return
+	transfer_one "$from" "$to" "$dry" "$@"
+}
+
+# das Merkmal von Hand setzen oder aufheben, etwa nach Exit 6
+transfer_mark_cmd() {
+	local from="$1" clear="$2" yes="$3" what="setzen" done_text="gesetzt"
+	if ((clear)); then
+		what="aufheben"
+		done_text="aufgehoben"
+	fi
+	if ((!yes)); then
+		if ! confirm "Konto in Treffsicher als umgezogen markieren: $what ($TRANSFER_TARGET)?"; then
+			info "Abgebrochen."
+			return 3
+		fi
+	fi
+	if [[ "$TRANSFER_TARGET" == vps ]]; then
+		local -a args=(mark --yes --from "$from")
+		if ((clear)); then args+=(--clear); fi
+		transfer_remote "${args[@]}"
+		return
+	fi
+	local rc=0
+	transfer_set_mark "$from" "$clear" || rc=$?
+	case "$rc" in
+	0) ok "Merkmal in Treffsicher $done_text" ;;
+	3) err "Kein Konto in Treffsicher mit dieser E-Mail" ;;
+	*) err "Merkmal nicht geändert: psql scheiterte oder die E-Mail passt zu mehr als einem Konto" ;;
+	esac
+	return "$rc"
+}
+
+# ein Pfad relativ zum Repo (das CLI läuft dort) oder absolut
+transfer_abs_path() {
+	if [[ "$1" == /* ]]; then echo "$1"; else echo "$REPO_DIR/$1"; fi
+}
+
+# alle Zeilen der geprüften Zuordnung, die laufen (tools/transfer-mapping.ts plan), je Zeile ein Konto
+transfer_mapping() {
+	local mapping dry="$2" plan rc=0
+	mapping="$(transfer_abs_path "$1")"
+	shift 2
+	if [[ ! -f "$mapping" ]]; then
+		err "Zuordnungsdatei nicht gefunden."
+		return 2
+	fi
+	plan="$(pnpm --silent --dir "$REPO_DIR/apps/spiegel" exec tsx tools/transfer-mapping.ts plan "$mapping")" || rc=$?
+	if ((rc != 0)); then
+		err "Zuordnungsdatei abgelehnt (Exit $rc), nichts läuft."
+		return "$rc"
+	fi
+	local -a runs=()
+	if [[ -n "$plan" ]]; then mapfile -t runs <<<"$plan"; fi
+	if ((${#runs[@]} == 0)); then
+		info "Keine Zeile läuft."
+		return 0
+	fi
+	local mode="echter Lauf"
+	if ((dry)); then mode="Probelauf"; fi
+	info "${#runs[@]} Konten aus der Zuordnung, $mode, über --$TRANSFER_TARGET"
+	if ! confirm "Starten?"; then
+		info "Abgebrochen."
+		return 3
+	fi
+	if [[ "$TRANSFER_TARGET" == vps ]] && ((!dry)); then
+		if [[ "${SKIP_BACKUP:-0}" == 1 ]]; then
+			warn "Ohne Backup vor dem Lauf (SKIP_BACKUP=1)."
+		else
+			info "Backup auf dem VPS …"
+			# shellcheck disable=SC2029
+			if ! ssh -n "$VPS_HOST" "cd $VPS_REPO_PATH && ./scripts/vereinsheim backup"; then
+				err "Backup gescheitert, nichts läuft."
+				return 4
+			fi
+		fi
+	fi
+	if [[ "$TRANSFER_TARGET" == local ]]; then transfer_preflight || return; fi
+
+	local -a summary=()
+	local entry line from to hash code all=0
+	for entry in "${runs[@]}"; do
+		IFS=$'\t' read -r line from to hash <<<"$entry"
+		hr
+		info "Zeile $line ($hash)"
+		code=0
+		if [[ "$TRANSFER_TARGET" == vps ]]; then
+			local -a args=(--yes --from "$from" --to "$to")
+			if ((dry)); then args+=(--dry-run); fi
+			transfer_remote "${args[@]}" "$@" || code=$?
+		else
+			transfer_one "$from" "$to" "$dry" "$@" </dev/null || code=$?
+		fi
+		summary+=("Zeile $line  $hash  Exit $code  $(transfer_exit_text "$code" "$dry")")
+		if ((code != 0)); then all=1; fi
+		if ((code == 2 || code == 255)); then
+			warn "Schleife angehalten (Exit $code)."
+			break
+		fi
+	done
+	hr
+	printf '%s\n' "${summary[@]}"
+	return "$all"
+}
+
+# je Zeile der Zuordnung übernommen oder offen; über den Draht gehen nur Hashes (treffsicher-status.sql, spiegel-status.sql)
+transfer_status() {
+	local mapping tmp rc=0
+	mapping="$(transfer_abs_path "$1")"
+	if [[ ! -f "$mapping" ]]; then
+		err "Zuordnungsdatei nicht gefunden."
+		return 2
+	fi
+	tmp="$(mktemp -d)"
+	if transfer_query treffsicher treffsicher-status.sql >"$tmp/ts.txt" &&
+		transfer_query spiegel spiegel-status.sql >"$tmp/sp.txt"; then
+		pnpm --silent --dir "$REPO_DIR/apps/spiegel" exec tsx tools/transfer-mapping.ts status \
+			"$mapping" "$tmp/ts.txt" "$tmp/sp.txt" || rc=$?
+	else
+		err "Stand der Datenbanken nicht lesbar."
+		rc=4
+	fi
+	rm -rf "$tmp"
+	return "$rc"
+}
+
+cmd_transfer() {
+	local sub=""
+	case "${1:-}" in
+	status | mark)
+		sub="$1"
+		shift
+		;;
+	esac
+	local from="" to="" mapping="" target="" dry=0 yes=0 clear=0
+	local -a extra=()
+	while (($#)); do
+		case "$1" in
+		--from | --to | --mapping | --family | --discipline)
+			if (($# < 2)) || [[ -z "$2" || "$2" == --* ]]; then
+				transfer_usage
+				return 2
+			fi
+			case "$1" in
+			--from)
+				[[ -z "$from" ]] || { transfer_usage; return 2; }
+				from="$2"
+				;;
+			--to)
+				[[ -z "$to" ]] || { transfer_usage; return 2; }
+				to="$2"
+				;;
+			--mapping)
+				[[ -z "$mapping" ]] || { transfer_usage; return 2; }
+				mapping="$2"
+				;;
+			*) extra+=("$1" "$2") ;;
+			esac
+			shift 2
+			;;
+		--dry-run) dry=1 && shift ;;
+		--yes) yes=1 && shift ;;
+		--clear) clear=1 && shift ;;
+		--local | --vps)
+			[[ -z "$target" ]] || { transfer_usage; return 2; }
+			target="${1#--}"
+			shift
+			;;
+		*)
+			transfer_usage
+			return 2
+			;;
+		esac
+	done
+
+	# welche Form: status, mark, eine Datei oder ein Konto; jede mit genau ihren Schaltern
+	local valid=1
+	case "$sub" in
+	status) [[ -n "$mapping" && -z "$from$to" && $dry == 0 && $yes == 0 && $clear == 0 && ${#extra[@]} == 0 ]] || valid=0 ;;
+	mark) [[ -n "$from" && -z "$to$mapping" && $dry == 0 && ${#extra[@]} == 0 ]] || valid=0 ;;
+	*)
+		if [[ -n "$mapping" ]]; then
+			[[ -z "$from$to" && $yes == 0 && $clear == 0 ]] || valid=0
+		else
+			[[ -n "$from" && -n "$to" && $clear == 0 ]] || valid=0
+		fi
+		;;
+	esac
+	if ((!valid)); then
+		transfer_usage
+		return 2
+	fi
+	if [[ -n "$from" ]] && ! is_email "$from"; then
+		err "--from ist keine E-Mail."
+		return 2
+	fi
+	if [[ -n "$to" ]] && ! is_email "$to"; then
+		err "--to ist keine E-Mail."
+		return 2
+	fi
+
+	if is_local_mode; then
+		if [[ -z "$target" ]]; then
+			err "Lokal braucht jeder Aufruf --local (lokaler Stack) oder --vps (über ssh)."
+			return 2
+		fi
+		if [[ "$target" == vps ]]; then
+			require_local_config
+		else
+			require_local_env
+			require_docker
+		fi
+	else
+		if [[ -n "$target" ]]; then
+			err "--local und --vps gibt es nur auf dem Mac."
+			return 2
+		fi
+		if [[ -n "$mapping" ]]; then
+			err "--mapping und status laufen nur auf dem Mac: Die Zuordnungsdatei bleibt dort."
+			return 2
+		fi
+		require_env
+		require_docker
+		target=host
+	fi
+	TRANSFER_TARGET="$target"
+
+	case "$sub" in
+	status) transfer_status "$mapping" ;;
+	mark) transfer_mark_cmd "$from" "$clear" "$yes" ;;
+	*)
+		if [[ -n "$mapping" ]]; then
+			transfer_mapping "$mapping" "$dry" "${extra[@]}"
+		else
+			transfer_single "$from" "$to" "$dry" "$yes" "${extra[@]}"
+		fi
+		;;
+	esac
+}
+
+# ============================================================
 # Interactive menu
 # ============================================================
 interactive_menu() {
@@ -1960,6 +2416,8 @@ main() {
 	up) cmd_up "$@" ;;
 	down) cmd_down "$@" ;;
 	restart) cmd_restart "$@" ;;
+	# both modes
+	transfer) cmd_transfer "$@" ;;
 	*)
 		err "Unbekanntes Kommando: $cmd"
 		cmd_help
