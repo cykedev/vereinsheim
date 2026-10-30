@@ -95,8 +95,12 @@ export function transferExport(db: Db, userId: string) {
   })
 }
 
-/** was der User an einer Scheibe außerhalb von Revisionen ändern kann; Jobs ändern es nicht */
+/**
+ * Herkunft und was der User an einer Scheibe außerhalb von Revisionen ändern kann; Jobs ändern es nicht. Die Herkunft
+ * verzeichnet auch, dass die Übernahme selbst die Werte eines Ausdrucks übernommen hat (`pdf`)
+ */
 export function cardState(card: {
+  origin: string
   disciplineId: number
   kind: string
   kindChoice: string | null
@@ -105,6 +109,7 @@ export function cardState(card: {
   place: string | null
 }): string {
   return JSON.stringify([
+    card.origin,
     card.disciplineId,
     card.kind,
     card.kindChoice,
@@ -115,9 +120,11 @@ export function cardState(card: {
 }
 
 /**
- * Steht die Scheibe noch so da, wie der Lauf sie hinterließ? Herkunft `treffsicher`, nicht im Papierkorb, dieselbe
- * Revision, dieselbe Wahl (`cardState`), nicht geteilt, kein eigener Beleg. Jobs (Nachrechnen, Projektion, Zustände)
- * schreiben an Scheiben aus Treffsicher keine Revision und ändern nichts davon; `updatedAt` zählt deshalb nicht.
+ * Steht die Scheibe noch so da, wie der Lauf sie hinterließ? Dieselbe Herkunft und Wahl (`cardState`), nicht im
+ * Papierkorb, nicht geteilt, kein eigener Beleg; bei Herkunft `treffsicher` dazu dieselbe Revision. Jobs (Nachrechnen,
+ * Projektion, Zustände) schreiben an Scheiben aus Treffsicher keine Revision und ändern nichts davon; `updatedAt` zählt
+ * deshalb nicht. An einer Scheibe, deren Werte die Übernahme vom Ausdruck nahm (`pdf`), schreibt das Neulesen der
+ * Ausdrucke Revisionen: Dort zählt die Revision nicht.
  */
 export function cardUnchanged(
   item: Pick<LedgerItem, "revisionId" | "cardState">,
@@ -130,9 +137,9 @@ export function cardUnchanged(
   ownEvidence: number
 ): boolean {
   return (
-    card.origin === "treffsicher" &&
+    (card.origin === "treffsicher" || card.origin === "pdf") &&
     card.deletedAt === null &&
-    card.currentRevisionId === item.revisionId &&
+    (card.origin === "pdf" || card.currentRevisionId === item.revisionId) &&
     cardState(card) === item.cardState &&
     card.shareId === null &&
     ownEvidence === 0
@@ -185,6 +192,13 @@ export function recordItem(
     where: { userId_kind_sourceKey: { userId, kind: item.kind, sourceKey: item.sourceKey } },
     create: { userId, kind: item.kind, sourceKey: item.sourceKey, ...data },
     update: data,
+  })
+}
+
+/** Ausdrucke, Belege und Verknüpfungen an einer Scheibe, die der Lauf entfernt hat: Sie waren nie anderswo platziert */
+export function forgetOnCard(tx: Tx, userId: string, cardId: string) {
+  return tx.transferItem.deleteMany({
+    where: { userId, kind: { in: ["printout", "evidence", "link"] }, spiegelId: cardId },
   })
 }
 

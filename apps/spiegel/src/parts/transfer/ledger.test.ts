@@ -74,6 +74,15 @@ describe("cardUnchanged", () => {
   it("ein eigener Beleg ist eine Änderung", () => {
     expect(cardUnchanged(item, card, 1)).toBe(false)
   })
+
+  it("mit Werten vom Ausdruck, wie verzeichnet: eine neue Revision aus dem Neulesen ist keine Änderung", () => {
+    const pdf = { ...card, origin: "pdf" }
+    const recorded = { revisionId: BigInt(7), cardState: cardState(pdf) }
+    expect(cardUnchanged(recorded, { ...pdf, currentRevisionId: BigInt(9) }, 0)).toBe(true)
+    expect(cardUnchanged(recorded, { ...pdf, place: "Halle" }, 0)).toBe(false)
+    expect(cardUnchanged(recorded, { ...pdf, origin: "manual" }, 0)).toBe(false)
+    expect(cardUnchanged(recorded, pdf, 1)).toBe(false)
+  })
 })
 
 describe("diaryRowUnchanged und linksUnchanged", () => {

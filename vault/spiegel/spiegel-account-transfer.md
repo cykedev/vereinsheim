@@ -46,7 +46,8 @@ Nur gegen die lokale Dev-Datenbank (`assertDevDatabase`). Treffsicher liest `too
 im Dev-Container (`tools/transfer/treffsicher-account.sql`, eine Zeile JSON je Konto, keine Verbindung der App zur
 fremden Datenbank, [[adr-002]]); `runTransfer` (`apps/spiegel/src/parts/transfer/run.ts`) bekommt die Quelle als
 Schnittstelle (`TreffsicherSource`). `--files` zeigt auf die entpackten Dateien der Anhänge aus der Sicherung von
-Treffsicher, nur unter `tools/private/`. Exit-Codes: 0 fertig, 1 Befund im Prüfbestand, 2 Aufruf falsch, 3 Abbruch,
+Treffsicher, nur unter `tools/private/`. Kennt das Hauptbuch Ausdrucke oder Belege, braucht jeder weitere Lauf
+`--files` (sonst `filesMissing`): Ohne die Dateien kennt er ihre Prüfsummen nicht. Exit-Codes: 0 fertig, 1 Befund im Prüfbestand, 2 Aufruf falsch, 3 Abbruch,
 4 Fehler (nichts geschrieben), 5 gespeichert, aber Ausgabe oder Bericht fehlt. Die Ausgabe hat nur Zahlen, Gründe und Namen von Disziplinen; der Bericht mit Tagen und
 Texten der Stichprobe geht nach `reports/tis-3a/transfer-<Tag>-<acht Zeichen sha256 der E-Mail>.md` (gitignored, nie
 E-Mail oder Passwort, [[adr-029]]).
@@ -63,7 +64,8 @@ In dieser Reihenfolge, je mit festem Text im CLI: kein Konto in Treffsicher (`no
 (`preview`, siehe unten); Übernommenes eines anderen Treffsicher-Kontos im Ziel (`foreignInTarget`); Übernommenes
 dieses Kontos an einem anderen Spiegel-Konto (`sourceElsewhere`); Zeilen mit Schlüssel der Übernahme im Ziel, aber
 kein Hauptbuch (`ledgerMissing`: Zeilen eines älteren Stands der Übernahme, der Lauf rät nicht, was davon geändert
-ist); `--family` mit unbekannter Kennung oder doppeltem
+ist; das gibt es nur in einer Dev-Datenbank: sie neu aus Prod holen oder die Zeilen mit Schlüssel `treffsicher:`
+löschen); ein späterer Lauf ohne `--files`, obwohl das Hauptbuch Ausdrucke oder Belege kennt (`filesMissing`); `--family` mit unbekannter Kennung oder doppeltem
 Namen (`badFamilyOption`); eine Disziplin aus Treffsicher ohne Familie (`unknownFamily`, Namen mit Zahl der Einheiten);
 `--discipline` nennt eine Disziplin in Spiegel, die es unter den eingeordneten nicht genau einmal gibt, eine in einer
 anderen Familie oder denselben Namen zweimal (`badDisciplineOption`); für eine neue Scheibe lässt sich keine Disziplin
@@ -137,16 +139,21 @@ Einheit, `attachment:<Anhang>` für Ausdruck, Beleg und eine Scheibe, die ein Au
 - **Unverändert** steht ein Stück noch genau so da, wie verzeichnet: eine Zeile des Tagebuchs mit `updatedAt` gleich
   der Zeit, mit der der Lauf sie schrieb (ein Eintrag dazu mit genau den verzeichneten Verknüpfungen); eine Scheibe mit
   Herkunft `treffsicher`, derselben Revision, derselben Wahl (Disziplin, Art, Wertung, Stand, Ort), nicht geteilt, ohne
-  eigenen Beleg, nicht im Papierkorb. `updatedAt` einer Scheibe zählt nicht: Jobs (Nachrechnen, Projektion, Zustände)
-  ändern die Zeile, schreiben an Scheiben aus Treffsicher aber keine Revision und keine Wahl; `applyPrintoutValues`
-  greift nur an Scheiben vom Ausdruck, die die Übernahme ohnehin stehen lässt. Unverändertes ersetzt der Lauf.
+  eigenen Beleg (einer, der nicht aus Treffsicher stammt), nicht im Papierkorb. `updatedAt` einer Scheibe zählt nicht:
+  Jobs (Nachrechnen, Projektion, Zustände) ändern die Zeile, schreiben an Scheiben aus Treffsicher aber keine Revision
+  und keine Wahl. Unverändertes ersetzt der Lauf. Hat die Übernahme selbst die Werte eines passenden Ausdrucks
+  übernommen, verzeichnet sie die Scheibe danach mit Herkunft `pdf`; so eine Scheibe ist unverändert, solange Herkunft
+  und Wahl stimmen, auch mit einer neuen Revision (das Neulesen der Ausdrucke schreibt sie), und der Lauf lässt sie, wie
+  sie ist.
 - **Geändert, bleibt** ist alles andere, in jedem weiteren Lauf, denn das Hauptbuch behält für ein stehen gelassenes Stück
   den alten Stand. Werte (Befinden, Prognose, Feedback) und Ausführung stehen in eigenen Tabellen; ändert der Schütze sie
   in der App, setzt das `updatedAt` des Eintrags (`touch` in `src/diary/entries.ts`). Ist die Scheibe einer Einheit
   geändert und hat noch ihre Revision, bleibt die Ausführung auf ihr.
 - **In Spiegel gelöscht** ist nur ein Stück, das im Hauptbuch steht und fehlt (ein Anhang: an der verzeichneten Scheibe
   keine Zeile mit seiner Prüfsumme). Kein Lauf legt es wieder an; der Bericht zählt es je Art. Kippt dadurch eine
-  Entscheidung, entsteht auch keine Scheibe aus Treffsicher: Gelöscht ist gelöscht.
+  Entscheidung, entsteht auch keine Scheibe aus Treffsicher: Gelöscht ist gelöscht. Das gilt auch, wenn die Scheibe,
+  mit der der letzte Lauf den Eintrag verknüpfte, gelöscht oder im Papierkorb ist, und für eine Scheibe einer Einheit,
+  die zwischendurch eine andere hielt (sie bleibt im Hauptbuch, bis die Einheit in Treffsicher fehlt).
 - **Nie platziert** ist, was nicht im Hauptbuch steht: Der nächste Lauf versucht es neu. Ein Ausdruck, der wieder nicht
   passt, bleibt ein Befund; ist die Ursache behoben (etwa eine Disziplin angelegt), kommt er an.
 
@@ -156,6 +163,13 @@ deshalb in der Transaktion und liest sie neu (Eintrag mit `FOR UPDATE`, Scheibe 
 Einheit, dann ihre Scheibe); was jemand dazwischen geändert hat, bleibt. Eine Änderung in der App, die erst danach
 kommt, wartet auf die Sperre; das Tagebuch schreibt `Serializable` und meldet danach einen Fehler, die Änderung muss
 noch einmal gespeichert werden.
+
+Entfernt ein Lauf eine unveränderte Scheibe aus Treffsicher (die Einheit hat jetzt eine passende), nimmt er ihre
+Ausdrucke, Belege und Verknüpfungen aus dem Hauptbuch: Sie hingen nur dort und gehen an die neue Scheibe. Hängt ein
+Anhang noch an seiner verzeichneten Scheibe, legt ihn kein Lauf ein zweites Mal an eine andere (im Bericht „an der
+verzeichneten Scheibe“). Gibt es einen Anhang in Treffsicher nicht mehr, geht er aus dem Hauptbuch, eine Scheibe, die
+er anlegte, wie die einer verschwundenen Einheit. Ein Lauf je Konto zur Zeit: `write` nimmt eine Sperre des Kontos
+(`pg_advisory_xact_lock`) und liest das Hauptbuch darunter neu.
 
 Scheiben, die ein früherer Lauf aus einem Ausdruck dieses Kontos angelegt hat, stehen im Hauptbuch und zählen beim
 Entscheiden nicht als Scheiben des Abends; sonst kippte ein Abend nur aus Probe zu „vorhanden“ oder zu „unsicher“ mit

@@ -37,6 +37,12 @@ export function abortText(abort: TransferAbort): string {
       return [
         `Das Konto in Spiegel hat ${abort.rows} Zeilen der Übernahme, aber kein Hauptbuch der Übernahme.`,
         "Die Zeilen stammen von einem älteren Stand der Übernahme. Der Lauf kann nicht sagen, was davon geändert ist, und rät nicht.",
+        "Das gibt es nur in einer Dev-Datenbank: sie zurücksetzen (dev-restore) oder die Zeilen mit Schlüssel treffsicher: löschen (SQL in der Vault-Note der Übernahme).",
+      ].join("\n")
+    case "filesMissing":
+      return [
+        `Das Hauptbuch kennt ${abort.attachments} Ausdrucke und Belege aus Treffsicher, aber der Lauf hat keine Dateien.`,
+        "Ohne die Dateien kennt er ihre Prüfsummen nicht. Mit --files <Ordner unter tools/private/> laufen lassen, wie beim ersten Lauf.",
       ].join("\n")
     case "badFamilyOption":
       return [
@@ -105,6 +111,7 @@ export function summaryLines(report: TransferReport): string[] {
     `  Ausdrucke: ${tally(a.printouts)}; nicht angehängt: ${tally(report.printoutsNotPlaced)}`,
     `  PDF ohne lesbaren Ausdruck: ${tally(a.printoutRejected)}`,
     `  Belege: ${tally(a.evidence)}`,
+    `  an der verzeichneten Scheibe, nicht ein zweites Mal abgelegt: ${a.atRecordedCard}`,
     `Unsicher (beide behalten): ${report.uncertain.length}`,
     `Geändert, bleibt: ${report.kept.length}`,
     `Treffsicher: ${report.marked === "set" ? "Konto als umgezogen markiert" : "nicht markiert (Probelauf)"}`,

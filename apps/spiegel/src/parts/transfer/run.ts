@@ -59,13 +59,13 @@ import {
   diaryRowUnchanged,
   forgetItem,
   forgetLinksExcept,
+  forgetOnCard,
   ledgerKey,
   linksUnchanged,
   loadLedger,
   recordItem,
   sourceOfKey,
   TRANSFER_VERSION,
-  type Ledger,
   type LedgerItem,
 } from "./ledger"
 import {
@@ -136,6 +136,11 @@ export type TransferAbort =
    * der Lauf rät nicht, was davon geändert ist
    */
   | { kind: "ledgerMissing"; rows: number }
+  /**
+   * ein späterer Lauf ohne `--files`, obwohl das Hauptbuch Ausdrucke oder Belege kennt: Ohne die Dateien kennt er ihre
+   * Prüfsummen nicht und hielte eigene Ausdrucke und Belege für fehlend oder fremd
+   */
+  | { kind: "filesMissing"; attachments: number }
   | { kind: "badFamilyOption"; unknownSlugs: string[]; duplicateNames: string[] }
   /**
    * `--discipline` nennt eine Disziplin in Spiegel, die es unter den eingeordneten der ersten Anlage nicht genau einmal
@@ -218,6 +223,8 @@ export interface TransferReport {
       "ownCard" | "adopted" | "withoutValues" | "keepsValues" | "imported" | "notPlaced"
     >
     evidence: Tally<"attached" | "duplicate" | "limit" | "gone" | "noCard">
+    /** hängt schon an der Scheibe, an der das Hauptbuch ihn verzeichnet; die Scheibe der Einheit ist eine andere */
+    atRecordedCard: number
   }
   /** Gründe für Ausdrucke, die nicht angehängt wurden (`importPrintoutIn`: taken, blocked, trashed, noDiscipline) */
   printoutsNotPlaced: Partial<Record<string, number>>
@@ -391,6 +398,7 @@ const blankReport = (dryRun: boolean): Omit<TransferReport, "check"> => ({
       notPlaced: 0,
     },
     evidence: { attached: 0, duplicate: 0, limit: 0, gone: 0, noCard: 0 },
+    atRecordedCard: 0,
   },
   printoutsNotPlaced: {},
   uncertain: [],
@@ -456,6 +464,9 @@ export async function runTransfer(db: Db, input: TransferInput): Promise<Transfe
     : 0
   if (transferRows && ledger.runs === 0)
     return { kind: "aborted", abort: { kind: "ledgerMissing", rows: transferRows } }
+  const recordedFiles = ledger.all("printout").length + ledger.all("evidence").length
+  if (input.files === null && recordedFiles)
+    return { kind: "aborted", abort: { kind: "filesMissing", attachments: recordedFiles } }
   // das Merkmal „umgezogen“ vor diesem Lauf: zurück, wenn das Speichern scheitert
   const previousMark = account.user.movedToSpiegelAt
     ? new Date(account.user.movedToSpiegelAt)
@@ -737,7 +748,6 @@ export async function runTransfer(db: Db, input: TransferInput): Promise<Transfe
           familyOf,
           siteId: siteId ?? 0,
           timeZone,
-          ledger,
           runAt,
           ownHashes,
           report,
@@ -780,14 +790,13 @@ async function write(
     familyOf: (name: string) => number | null
     siteId: number
     timeZone: string
-    ledger: Ledger
     runAt: Date
     /** sha256 aller Dateien der Anhänge des Kontos */
     ownHashes: string[]
     report: Omit<TransferReport, "check">
   }
 ): Promise<CheckResult> {
-  const { account, units, report, runAt, timeZone, ledger } = ctx
+  const { account, units, report, runAt, timeZone } = ctx
   report.sessions = units.length
 
   // 1. Konto
@@ -809,6 +818,9 @@ async function write(
     ).id
     report.accountCreated = true
   }
+  // ein Lauf je Konto zur Zeit: das Hauptbuch unter einer Sperre des Kontos neu gelesen
+  await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${ownerId}))`
+  const ledger = await loadLedger(tx, ownerId)
   // der erste Lauf: noch kein Lauf im Hauptbuch
   if (ledger.runs === 0)
     await tx.diarySettings.upsert({
@@ -858,13 +870,20 @@ async function write(
     (await lockCard(tx, id)) ? tx.card.findUnique({ where: { id }, select: CARD_NOW }) : null
   type CardNow = NonNullable<Awaited<ReturnType<typeof freshCard>>>
 
+  // Belege aus Treffsicher: die Dateien dieses Laufs und die im Hauptbuch verzeichneten
+  const transferredFiles = [
+    ...new Set([
+      ...ctx.ownHashes,
+      ...ledger.all("evidence").flatMap((item) => (item.sha256 ? [item.sha256] : [])),
+    ]),
+  ]
   /** unverändert, wie das Hauptbuch sie verzeichnet; ein Beleg, der nicht aus Treffsicher stammt, ist eine Änderung */
   const cardIsUnchanged = async (item: LedgerItem, card: CardNow) =>
     cardUnchanged(
       item,
       card,
       await tx.cardEvidence.count({
-        where: { cardId: card.id, sha256: { notIn: ctx.ownHashes } },
+        where: { cardId: card.id, sha256: { notIn: transferredFiles } },
       })
     )
   const entryIsUnchanged = (
@@ -883,6 +902,13 @@ async function write(
       cardState: cardState(card),
     })
   }
+  /** sind Scheiben, mit denen der letzte Lauf den Eintrag einer Einheit verknüpfte, gelöscht oder im Papierkorb? */
+  const recordedLinksGone = async (sessionId: string) => {
+    const recorded = [...ledger.links(sessionId).keys()]
+    if (!recorded.length) return false
+    const visible = await tx.card.count({ where: { id: { in: recorded }, deletedAt: null } })
+    return visible < recorded.length
+  }
   const keptReason = (card: { deletedAt: Date | null; origin: string }) =>
     card.deletedAt
       ? "Papierkorb"
@@ -892,19 +918,28 @@ async function write(
           ? "von Hand geändert"
           : "vom User ergänzt"
 
-  /** die Scheibe eines Schlüssels entfernen, wenn sie unverändert ist; eine geänderte bleibt */
-  const removeCard = async (sourceKey: string, day: string) => {
+  /**
+   * die Scheibe eines Schlüssels entfernen, wenn sie unverändert ist; eine geänderte bleibt. Fehlt sie, bleibt sie im
+   * Hauptbuch (vom User gelöscht, kein Lauf legt sie wieder an); nur wenn auch die Einheit in Treffsicher fehlt
+   * (`forgetMissing`), geht der Eintrag. Mit der Scheibe gehen ihre Ausdrucke und Belege aus dem Hauptbuch: Sie waren
+   * nirgends sonst platziert und kommen so an ihre neue Scheibe
+   */
+  // Scheiben, die dieser Lauf entfernt hat: Das Hauptbuch im Speicher kennt ihre Anhänge noch
+  const purged = new Set<string>()
+  const removeCard = async (sourceKey: string, day: string, forgetMissing: boolean) => {
     const item = ledger.get("card", sourceKey)
     if (!item) return
     const card = await freshCard(item.spiegelId)
     if (!card) {
-      await forgetItem(tx, ownerId, "card", sourceKey)
+      if (forgetMissing) await forgetItem(tx, ownerId, "card", sourceKey)
       return
     }
     if (await cardIsUnchanged(item, card)) {
       await releaseImportedLinks(tx, [card.id])
       await purgeCards(tx, [card.id], { lock: true })
       await forgetItem(tx, ownerId, "card", sourceKey)
+      await forgetOnCard(tx, ownerId, card.id)
+      purged.add(card.id)
       report.cards.removed += 1
     } else {
       report.cards.kept += 1
@@ -954,6 +989,16 @@ async function write(
       sameSeries = current.currentRevisionId === cardItem.revisionId
       report.cards.kept += 1
       report.kept.push({ what: "card", day: unit.day, reason: keptReason(current) })
+    } else if (wantsCard && cardItem && current && current.origin === "pdf") {
+      // unverändert mit den Werten ihres Ausdrucks, die die Übernahme selbst nahm: bleibt, wie sie ist
+      unitCard = current.id
+      report.cards.unchanged += 1
+    } else if (wantsCard && !cardItem && (await recordedLinksGone(session.id))) {
+      // keine eigene Scheibe im Hauptbuch, aber die verknüpfte vom letzten Lauf hat der User gelöscht: Gelöscht ist
+      // gelöscht, auch wenn die Entscheidung dadurch kippt
+      cardKept = true
+      report.deletedInSpiegel.cards += 1
+      report.kept.push({ what: "card", day: unit.day, reason: GONE_TEXT })
     } else if (wantsCard) {
       // unverändert, oder nie platziert: schreiben
       const card = unit.card!
@@ -970,7 +1015,6 @@ async function write(
       if (written.kind === "saved") {
         unitCard = written.cardId
         report.cards[written.change] += 1
-        await recordCard(sessionKey, written.cardId)
       } else if (written.kind === "notEditable" || written.kind === "missing") {
         cardKept = true
         unitCard = written.kind === "notEditable" && current ? current.id : null
@@ -982,7 +1026,7 @@ async function write(
         })
       } else if (written.kind === "invalid") add(report.cards.invalid, written.problem)
       else throw new Error(`Scheibe aus Treffsicher: ${written.kind}`)
-    } else await removeCard(sessionKey, unit.day)
+    } else await removeCard(sessionKey, unit.day, false)
 
     // die Scheiben, die der Eintrag hält
     const linkIds =
@@ -1101,7 +1145,8 @@ async function write(
     for (const attachment of unit.attachments) {
       const attachmentKey = ledgerKey.attachment(attachment.sourceId)
       const kind = attachment.kind === "printout" ? "printout" : "evidence"
-      const item = ledger.get(kind, attachmentKey)
+      const recorded = ledger.get(kind, attachmentKey)
+      const item = recorded && !purged.has(recorded.spiegelId) ? recorded : undefined
       // im Hauptbuch und an der verzeichneten Scheibe nicht mehr da: in Spiegel entfernt
       if (item) {
         const where = { cardId: item.spiegelId, sha256: item.sha256 ?? "" }
@@ -1111,6 +1156,12 @@ async function write(
             : await tx.cardEvidence.count({ where })
         if (!present) {
           report.deletedInSpiegel.attachments += 1
+          continue
+        }
+        // hängt an seiner Scheibe, die Scheibe der Einheit ist inzwischen eine andere: nicht ein zweites Mal ablegen
+        const target = attachment.kind === "printout" ? firstCard : evidenceCard
+        if (target === null ? kind === "evidence" : target !== item.spiegelId) {
+          report.attachments.atRecordedCard += 1
           continue
         }
       }
@@ -1175,6 +1226,8 @@ async function write(
           writtenAt: runAt,
         })
       }
+    // die Scheibe der Einheit, wie sie nach den Anhängen dasteht: übernahm sie die Werte ihres Ausdrucks, ist das ihr Stand
+    if (unitCard !== null && !cardKept) await recordCard(sessionKey, unitCard)
     // feste Verknüpfungen, die der Lauf nicht mehr setzt, aus dem Hauptbuch nehmen
     if (entryId !== null) await forgetLinksExcept(tx, ownerId, session.id, linked)
 
@@ -1341,7 +1394,19 @@ async function write(
     }
   for (const item of ledger.all("card"))
     if (item.sourceKey.startsWith("session:") && gone(item.sourceKey))
-      await removeCard(item.sourceKey, "")
+      await removeCard(item.sourceKey, "", true)
+  // Anhänge, die es in Treffsicher nicht mehr gibt (nicht nur unlesbar): ihre Scheibe wie oben; Ausdruck und Beleg
+  // bleiben, wo sie hängen, und gehen aus dem Hauptbuch
+  const attachmentsNow = new Set(
+    units.flatMap((u) => u.session.attachments.map((a) => ledgerKey.attachment(a.id)))
+  )
+  const attachmentGone = (sourceKey: string) =>
+    sourceKey.startsWith("attachment:") && !attachmentsNow.has(sourceKey)
+  for (const item of ledger.all("card"))
+    if (attachmentGone(item.sourceKey)) await removeCard(item.sourceKey, "", true)
+  for (const kind of ["printout", "evidence"] as const)
+    for (const item of ledger.all(kind))
+      if (attachmentGone(item.sourceKey)) await forgetItem(tx, ownerId, kind, item.sourceKey)
 
   // der Lauf im Hauptbuch: Zeit, Version der Regeln, Zahlen
   await tx.transferRun.create({
@@ -1379,7 +1444,7 @@ function landedOn(placed: PlacedAttachment): string | null {
   }
 }
 
-/** die Zahlen eines Laufs für das Hauptbuch, ohne Texte */
+/** die wichtigsten Zahlen eines Laufs für das Hauptbuch und den Export, ohne Texte; den ganzen Bericht hat die Datei */
 function runCounts(report: Omit<TransferReport, "check">) {
   return {
     sessions: report.sessions,
@@ -1592,7 +1657,8 @@ async function checkInput(
     a.printouts.adopted +
     a.printouts.withoutValues +
     a.printouts.keepsValues +
-    a.printouts.imported
+    a.printouts.imported +
+    a.atRecordedCard
   const placedEvidence = a.evidence.attached + a.evidence.duplicate
   const rejected = Object.values(a.printoutRejected).reduce((s, n) => s + (n ?? 0), 0)
   tables.push({

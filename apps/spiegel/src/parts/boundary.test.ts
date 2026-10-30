@@ -27,8 +27,8 @@ describe("Grenze zwischen Ergebnisteil und Tagebuch", () => {
 describe("das Hauptbuch der Übernahme", () => {
   // `TransferRun`/`TransferItem` gehören zur Übernahme; Tests ausgenommen (sie räumen ihre Konten auf)
   const ledgerUse = /\.(transferRun|transferItem)\b/
-  it("lesen und schreiben nur Dateien unter src/parts/transfer", () => {
-    const outside = sources(join(APP, "src"))
+  it("lesen und schreiben nur Dateien unter src/parts/transfer, auch keine Werkzeuge", () => {
+    const outside = [...sources(join(APP, "src")), ...sources(join(APP, "tools"))]
       .filter(({ file }) => !file.startsWith("src/parts/transfer/") && !/\.test\.tsx?$/.test(file))
       .filter(({ source }) => ledgerUse.test(source))
       .map(({ file }) => file)

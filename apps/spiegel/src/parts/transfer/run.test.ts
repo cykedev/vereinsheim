@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from "node:crypto"
 
-import { printoutReading } from "@vereinsheim/meyton-pdf/reading"
+import { printoutReading, ringOf } from "@vereinsheim/meyton-pdf/reading"
 import { printoutPdf } from "@vereinsheim/meyton-pdf/test-printout"
 import { readPrintoutValues } from "@vereinsheim/meyton-pdf/values"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
@@ -717,6 +717,16 @@ describe("runTransfer: Merkmal, Befunde und eigene Wahl über mehrere Läufe", (
     expect(second.decisions.existing).toBe(1)
     expect(second.cards).toMatchObject({ removed: 1, kept: 0 })
     expect(await db.card.count({ where: { importKey: `treffsicher:${c.id("s1")}` } })).toBe(0)
+    // der Beleg der entfernten Scheibe geht an die verknüpfte, nicht als „gelöscht“ verloren
+    expect(second.attachments.evidence.attached).toBe(1)
+    expect(second.deletedInSpiegel.attachments).toBe(0)
+    expect(
+      await db.cardEvidence.count({ where: { card: { ownerId: (await userOf(c.to)).id } } })
+    ).toBe(1)
+    // Lauf 3 findet ihn dort, wo Lauf 2 ihn ablegte
+    const third = done(await c.run(plain))
+    expect(third.attachments.evidence.duplicate).toBe(1)
+    expect(third.deletedInSpiegel.attachments).toBe(0)
   })
 
   it("eine eigene Wahl der Disziplin an einer Scheibe aus Treffsicher bleibt, mit ihrer Ausführung", async () => {
@@ -1042,7 +1052,7 @@ describe("runTransfer: Abbruch vor dem Schreiben", () => {
     expect(second.cards.unchanged).toBe(1)
   })
 
-  it("ein Konto nur mit Werten: Lauf 2 läuft durch, obwohl keine Zeile das Merkmal trägt", async () => {
+  it("ein Konto nur mit Werten: Lauf 2 läuft durch, ohne Eintrag im Tagebuch", async () => {
     const c = newCase("nurwerte")
     const values = c.session("s1", "2026-09-06", {
       trainingGoal: null,
@@ -1352,6 +1362,190 @@ describe("runTransfer: Abbruch vor dem Schreiben", () => {
       await db.discipline.deleteMany({ where: { id: { in: ids } } })
       await db.family.delete({ where: { id: other.id } })
     }
+  })
+})
+
+describe("runTransfer: Hauptbuch über mehrere Läufe", () => {
+  const png = (byte: number) => ({
+    read: async () => new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, byte]),
+  })
+  const photo = (c: ReturnType<typeof newCase>, day: string) => ({
+    id: c.id("a1"),
+    filePath: "foto.png",
+    fileType: "IMAGE" as const,
+    originalName: "foto.png",
+    createdAt: `${day}T18:00:00.000Z`,
+  })
+  /** eine Einheit nur mit Werten: kein Eintrag, also keine Verknüpfung im Hauptbuch */
+  const valuesOnly = {
+    trainingGoal: null,
+    wellbeing: null,
+    reflection: null,
+    series: [1, 2, 3, 4].map((position) => ({
+      position,
+      isPractice: false,
+      scoreTotal: 90,
+      shots: ten("9"),
+      executionQuality: null,
+    })),
+  }
+
+  it("übernimmt eine Scheibe die Werte ihres Ausdrucks, ist sie in Lauf 2 und 3 unverändert", async () => {
+    const c = newCase("uebernahme")
+    const read = printoutReading(await readPrintoutValues(await printoutPdf(valuedSpec())), {
+      producer: "Qt 5.12.8",
+    })
+    const values = valuesReadOf(read)
+    const shots = values.reading!.shots
+    const series = [1, 2, 3, 4].map((position) => {
+      const rings = shots
+        .slice((position - 1) * 10, position * 10)
+        .map((s) => ringOf(s.decimalTenths))
+      return {
+        position,
+        isPractice: false,
+        scoreTotal: rings.reduce((sum, ring) => sum + ring, 0),
+        shots: rings.map(String),
+        executionQuality: 4,
+      }
+    })
+    c.account([
+      c.session("s1", "2026-10-02", {
+        series,
+        attachments: [
+          {
+            id: c.id("a1"),
+            filePath: "ausdruck.pdf",
+            fileType: "PDF",
+            originalName: "ausdruck.pdf",
+            createdAt: "2026-10-02T18:00:00.000Z",
+          },
+        ],
+      }),
+    ])
+    const bytes = new TextEncoder().encode(`%PDF-1.4 ${c.tag}`)
+    const file: StoredPrintout = {
+      sha256: createHash("sha256").update(bytes).digest("hex"),
+      size: bytes.length,
+      fileName: "ausdruck.pdf",
+      hex: (98_000 + fixture).toString(16).padStart(8, "0"),
+      scheibenId: 98_000 + fixture,
+      printedAt: new Date("2026-10-02T17:52:12Z"),
+      values: { ...values, discipline: "LP Balken 28x110 mm" },
+    }
+    const run = () =>
+      c.run({
+        files: { read: async () => bytes },
+        readPrintout: async () => ({ kind: "stored", file, maxRssKb: 0 }),
+      })
+    const first = done(await run())
+    expect(first.attachments.printouts.adopted).toBe(1)
+    const key = `treffsicher:${c.id("s1")}`
+    const card = await db.card.findUniqueOrThrow({ where: { importKey: key } })
+    expect(card.origin).toBe("pdf")
+    for (const later of [done(await run()), done(await run())]) {
+      expect(later.cards).toMatchObject({ unchanged: 1, kept: 0, created: 0 })
+      expect(later.kept).toEqual([])
+      expect(later.check.findings).toBe(0)
+    }
+    expect((await db.card.findUniqueOrThrow({ where: { importKey: key } })).id).toBe(card.id)
+  })
+
+  it("entfernt ein Lauf seine Scheibe und findet der Beleg keine andere, ist er später nicht „gelöscht“", async () => {
+    const c = newCase("belegohne")
+    c.account([c.session("s1", "2026-11-17", { attachments: [photo(c, "2026-11-17")] })])
+    const plain = { files: png(5), writeEvidence: async () => {} }
+    expect(done(await c.run(plain)).attachments.evidence.attached).toBe(1)
+    // zwei Scheiben nur aus Probe am Abend: keine Scheibe aus Treffsicher mehr, der Beleg weiß nicht, wohin
+    const ownerId = (await userOf(c.to)).id
+    await handCard(ownerId, "2026-11-17", true)
+    await handCard(ownerId, "2026-11-17", true)
+    const second = done(await c.run(plain))
+    expect(second.decisions.probeEvening).toBe(1)
+    expect(second.cards.removed).toBe(1)
+    expect(second.attachments.evidence.noCard).toBe(1)
+    const third = done(await c.run(plain))
+    expect(third.deletedInSpiegel.attachments).toBe(0)
+    expect(third.attachments.evidence.noCard).toBe(1)
+  })
+
+  it("ein späterer Lauf ohne Dateien bricht ab, wenn das Hauptbuch Anhänge kennt", async () => {
+    const c = newCase("ohnedateien")
+    c.account([c.session("s1", "2026-11-13", { attachments: [photo(c, "2026-11-13")] })])
+    done(await c.run({ files: png(3), writeEvidence: async () => {} }))
+    const outcome = await c.run()
+    expect(outcome.kind === "aborted" && outcome.abort).toEqual({
+      kind: "filesMissing",
+      attachments: 1,
+    })
+  })
+
+  it("eine gelöschte Scheibe bleibt gelöscht, auch wenn die Entscheidung dazwischen kippt", async () => {
+    const c = newCase("kippt")
+    c.account([c.session("s1", "2026-11-14", valuesOnly)])
+    done(await c.run())
+    const ownerId = (await userOf(c.to)).id
+    const key = `treffsicher:${c.id("s1")}`
+    await db.card.delete({ where: { importKey: key } })
+    expect(done(await c.run()).deletedInSpiegel.cards).toBe(1)
+    // eine passende Scheibe kommt dazu, und der User löscht sie wieder
+    const hand = await handCard(ownerId, "2026-11-14")
+    expect(done(await c.run()).decisions.existing).toBe(1)
+    await db.card.delete({ where: { id: hand } })
+    const last = done(await c.run())
+    expect(last.decisions.new).toBe(1)
+    expect(last.deletedInSpiegel.cards).toBe(1)
+    expect(last.cards.created).toBe(0)
+    expect(await db.card.count({ where: { importKey: key } })).toBe(0)
+  })
+
+  it("ist die verknüpfte Scheibe gelöscht, entsteht keine Scheibe aus Treffsicher", async () => {
+    const c = newCase("verknuepftweg")
+    const ownerId = await target(c.to)
+    const hand = await handCard(ownerId, "2026-11-15")
+    c.account([c.session("s1", "2026-11-15")])
+    expect(done(await c.run()).decisions.existing).toBe(1)
+    await db.diaryEntryCard.deleteMany({ where: { cardId: hand } })
+    await db.card.delete({ where: { id: hand } })
+    const second = done(await c.run())
+    expect(second.decisions.new).toBe(1)
+    expect(second.deletedInSpiegel.cards).toBe(1)
+    expect(second.cards.created).toBe(0)
+    expect(await db.card.count({ where: { ownerId } })).toBe(0)
+  })
+
+  it("ein Beleg an seiner verzeichneten Scheibe kommt nicht ein zweites Mal an eine andere", async () => {
+    const c = newCase("zweimal")
+    const ownerId = await target(c.to)
+    const hand = await handCard(ownerId, "2026-11-16")
+    c.account([c.session("s1", "2026-11-16", { attachments: [photo(c, "2026-11-16")] })])
+    const plain = { files: png(4), writeEvidence: async () => {} }
+    const first = done(await c.run(plain))
+    expect(first.decisions.existing).toBe(1)
+    expect(first.attachments.evidence.attached).toBe(1)
+    // der User ändert die verknüpfte Scheibe: Sie passt nicht mehr, Lauf 2 legt eine Scheibe aus Treffsicher an
+    const changed = await writeEnteredCard(db, {
+      cardId: hand,
+      ownerId,
+      origin: "manual",
+      disciplineId,
+      startedAtMs: Date.parse("2026-11-16T17:00:00Z"),
+      kind: "training",
+      details: {
+        shots: [1, 2, 3, 4].flatMap((series) =>
+          ten("8").map(() => ({ series, ring: 8, decimalTenths: null }))
+        ),
+      },
+      reason: "eingetragen",
+    })
+    expect(changed.kind).toBe("saved")
+    const second = done(await c.run(plain))
+    expect(second.decisions.uncertain).toBe(1)
+    expect(second.cards.created).toBe(1)
+    expect(second.attachments.atRecordedCard).toBe(1)
+    expect(second.attachments.evidence.attached).toBe(0)
+    expect(await db.cardEvidence.count({ where: { card: { ownerId } } })).toBe(1)
+    expect(await db.cardEvidence.count({ where: { cardId: hand } })).toBe(1)
   })
 })
 

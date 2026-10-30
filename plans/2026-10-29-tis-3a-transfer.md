@@ -157,7 +157,12 @@ Gefunden bei den Wiederholungen mit den Daten des Users (30. Oktober 2026), der 
     Revision, Wahl, Teilen, eigener Beleg), nie nach `updatedAt`. Es fallen weg: der Vergleich mit dem Merkmal,
     `markerMismatch`, `markerWithoutRows`, `markerMissing` (jetzt `ledgerMissing`), das Zeitfenster der Scheiben aus
     eigenen Ausdrucken und die Probe im `SAVEPOINT`. Das Merkmal heißt nur noch „umgezogen“. Export mit den Läufen,
-    Konto löschen über die Kaskade.
+    Konto löschen über die Kaskade. Die Abschnitte oben zu `lastRunAt`, `isTouched` und dem Merkmal als Grenze gelten
+    nicht mehr. Nachträge aus dem Review des Hauptbuchs: Anhänge einer entfernten Scheibe gehen aus dem Hauptbuch; eine
+    Scheibe mit übernommenen Werten vom Ausdruck wird nach dem Ablegen mit Herkunft `pdf` verzeichnet; `filesMissing`;
+    eine fehlende Scheibe einer Einheit bleibt im Hauptbuch; ist die verknüpfte Scheibe gelöscht, entsteht keine aus
+    Treffsicher; ein Anhang an seiner verzeichneten Scheibe kommt nicht an eine zweite; Anhänge, die es in Treffsicher
+    nicht mehr gibt; Sperre des Kontos in `write`. `kindChoice` setzt ein neuer Lauf nicht neu (wie vorher, offen).
 
 ### Offen
 

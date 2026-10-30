@@ -141,7 +141,9 @@ Geschichte in `vault/incidents/`.
   Änderung nur einen Lauf; der übernächste sah sie als älter als das neue Merkmal und überschrieb sie. Jeder Lauf schreibt
   deshalb `updatedAt` seiner Zeilen gleich der Zeit seines Merkmals, und unverändert ist nur genau diese Zeit. Ein Test
   über drei Läufe mit einer Änderung dazwischen fängt das, zwei Läufe nicht. → DOCUMENT
-  (`vault/spiegel/spiegel-account-transfer.md`, Geändertes bleibt)
+  (`vault/spiegel/spiegel-account-transfer.md`, Geändertes bleibt). Abgelöst durch das Hauptbuch der Übernahme
+  (Abschnitt „Hauptbuch“): Auch eine Zeit je Lauf versagte bei Konten ohne geschriebene Zeile und bei Scheiben, deren
+  `updatedAt` Jobs ändern.
 - **Werte in eigenen Tabellen ändern `updatedAt` der Zeile darüber nicht:** Skalen und Ausführung eines Eintrags stehen in
   `DiaryScale` und `DiarySeriesExecution`; ihr Tippen ließ den Eintrag unverändert aussehen. `touch` in
   `src/diary/entries.ts` setzt es jetzt. → DOCUMENT (`vault/spiegel/spiegel-diary.md`)
