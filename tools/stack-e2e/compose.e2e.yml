@@ -37,3 +37,6 @@ services:
     pull_policy: never
     environment:
       NEXTAUTH_URL: "http://localhost:18082"
+
+  transfer-spiegel:
+    pull_policy: never
