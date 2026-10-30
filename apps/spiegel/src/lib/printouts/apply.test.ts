@@ -16,6 +16,7 @@ import {
 } from "../../../test/printout"
 import { refreshDisciplineCards } from "../db/cards"
 import { writeEnteredCard } from "../db/entered"
+import { adoptPrintoutValues, writeTransferCard } from "../transfer/write"
 import { applyPrintoutValues } from "./apply"
 import { attachPrintout } from "./queries"
 import { valuesReadOf, type StoredPrintout } from "./store"
@@ -229,5 +230,64 @@ describe("applyPrintoutValues", () => {
     expect(await db.printout.findUniqueOrThrow({ where: { id: printoutId } })).toMatchObject({
       valuesStatus: "ok",
     })
+  })
+})
+
+describe("applyPrintoutValues an einer Scheibe aus Treffsicher", () => {
+  const spec: ValuedPrintoutSpec = { shotsMm: shotsAround(40, 21) }
+  const foreignSpec: ValuedPrintoutSpec = { shotsMm: shotsAround(40, 22) }
+  const later = new Date(PRINTED.getTime() + 20 * 60_000)
+
+  /**
+   * eine übernommene Scheibe mit Revision 1 aus Treffsicher (Ergebnis wie der passende Ausdruck), die die Werte des
+   * passenden Ausdrucks übernommen hat (wie die Übernahme mit `adoptPrintoutValues`)
+   */
+  async function adoptedCard() {
+    const rings = valuedHits(spec).reduce((sum, hit) => sum + hit.ring, 0)
+    const fitting = await stored(spec)
+    return db.$transaction(async (tx) => {
+      const written = await writeTransferCard(tx, {
+        ownerId: site.ownerId,
+        disciplineId: site.disciplineId,
+        startedAtMs: PRINTED.getTime(),
+        kind: "training",
+        place: null,
+        importKey: `treffsicher:apply${randomUUID().slice(0, 8)}`,
+        details: { total: { shots: 40, rings } },
+      })
+      if (written.kind !== "saved") throw new Error(written.kind)
+      const printoutId = await attachPrintout(tx, fitting, written.cardId)
+      const adopted = await adoptPrintoutValues(tx, {
+        cardId: written.cardId,
+        ownerId: site.ownerId,
+        file: fitting,
+        printoutId,
+      })
+      if (adopted !== "adopted") throw new Error(adopted)
+      return { cardId: written.cardId, printoutId }
+    })
+  }
+
+  it("ein jünger gedruckter fremder Ausdruck: das Neulesen nimmt den passenden", async () => {
+    const { cardId } = await adoptedCard()
+    const before = (await cardOf(cardId)).currentRevision!
+    await attachPrintout(db, await stored(foreignSpec, later), cardId)
+    expect(await apply(cardId)).toBe("taken")
+    const card = await cardOf(cardId)
+    expect(card.currentRevisionId).toBe(before.id)
+    expect(card.currentRevision!.shots.map((shot) => shot.decimalTenths)).toEqual(
+      valuedHits(spec).map((hit) => hit.decimalTenths)
+    )
+  })
+
+  it("nur ein fremder Ausdruck: none, die aktuelle Revision bleibt", async () => {
+    const { cardId, printoutId } = await adoptedCard()
+    await db.printout.delete({ where: { id: printoutId } })
+    await attachPrintout(db, await stored(foreignSpec, later), cardId)
+    const before = await cardOf(cardId)
+    const count = await revisions(cardId)
+    expect(await apply(cardId)).toBe("none")
+    expect((await cardOf(cardId)).currentRevisionId).toBe(before.currentRevisionId)
+    expect(await revisions(cardId)).toBe(count)
   })
 })

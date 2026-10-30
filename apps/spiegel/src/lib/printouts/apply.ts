@@ -4,7 +4,9 @@
 // dran. Geschrieben wird über `writeEnteredCardIn` (Herkunft `pdf`): gleiche Angaben ändern nichts, andere sind eine neue
 // Revision. Ändert sich die Disziplin, ruft `recomputeDisciplineCard` dies erneut. Eine Scheibe aus Treffsicher, die die
 // Werte ihres Ausdrucks übernommen hat (Schlüssel `treffsicher:`), liest einen Ausdruck im Modus Probe als Wertung wie
-// bei der Übernahme (`scoringReading`); sonst würde sie beim nächsten Lesen eine Scheibe nur aus Probe.
+// bei der Übernahme (`scoringReading`); sonst würde sie beim nächsten Lesen eine Scheibe nur aus Probe. Sie nimmt nur
+// Ausdrucke, deren Lesung zu den Zahlen ihrer Revision aus Treffsicher passt (`fitsEnteredTotal`); passt keiner, bleibt
+// sie, wie sie ist.
 
 import type { PrintoutReading } from "@vereinsheim/meyton-pdf/reading"
 import { TARGETS, type TargetId } from "@vereinsheim/shot-core/targets"
@@ -15,7 +17,7 @@ import { writeEnteredCardIn } from "../db/entered"
 import { IMPORT_KEY } from "../entered/details"
 import { lockCard } from "../db/purge"
 import { markPrintoutValues } from "./queries"
-import { detailsFromReading, readingOrder, scoringReading } from "./values"
+import { detailsFromReading, fitsEnteredTotal, readingOrder, scoringReading } from "./values"
 
 type Tx = Prisma.TransactionClient
 
@@ -60,6 +62,13 @@ export async function applyPrintoutValues(tx: Tx, cardId: string): Promise<Apply
           storedAt: true,
         },
       },
+      // die Zahlen, mit denen die Übernahme die Scheibe angelegt hat
+      revisions: {
+        where: { reason: "treffsicher" },
+        orderBy: { number: "desc" },
+        take: 1,
+        select: { totalRings: true, totalDecimalTenths: true, totalShots: true },
+      },
     },
   })
   if (
@@ -91,7 +100,13 @@ export async function applyPrintoutValues(tx: Tx, cardId: string): Promise<Apply
 
   const targetId = targetIdOf(card.discipline.targetId)
   const transferred = card.importKey !== null && IMPORT_KEY.test(card.importKey)
-  for (const printout of readingOrder(card.printouts)) {
+  const entered = transferred ? card.revisions[0] : undefined
+  const candidates = readingOrder(card.printouts).filter(
+    (printout) =>
+      !entered || fitsEnteredTotal(printout.reading as unknown as PrintoutReading, entered)
+  )
+  if (entered && !candidates.length) return "none"
+  for (const printout of candidates) {
     const reading = printout.reading as unknown as PrintoutReading
     const result = detailsFromReading(transferred ? scoringReading(reading) : reading, targetId)
     if (!result.ok) {
