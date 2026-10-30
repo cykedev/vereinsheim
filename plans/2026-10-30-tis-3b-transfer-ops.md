@@ -466,3 +466,18 @@ Jede Aufgabe ist ein Commit (außer 0). Gate ist `pnpm check`. Schritte mit **[g
       `reports/tis-3b/uebung.md` und in die Rückmeldung an die koordinierende Session. Nur Zahlen.
 7. Prod ist nicht Teil von 3b. Erst nach Merge und Deploy des Basisbranchs, durch den User, nach dem Ablauf in
    `operations.md`.
+
+## Abweichungen
+
+Mit der koordinierenden Session abgestimmt (30. Oktober 2026):
+
+- **Aufgabe 0** lief im vorhandenen Image aus stack-e2e (`vereinsheim-e2e/spiegel:latest`), nicht nach `local-build`:
+  dasselbe Dockerfile, kein Docker-Lauf ohne Signal.
+- **Aufgaben 19 bis 23** sind ein Commit statt fünf; die Prüfungen 20 bis 23 liefen am lokalen Stack und in stack-e2e.
+- **`treffsicher-mark.sql`** ändert nur, wenn genau ein Konto passt, und gibt `<Treffer>|<geändert>` aus (`1|1`,
+  `0|0` kein Konto, sonst nicht eindeutig) statt `returning 1`.
+- **Übung** ohne `local-pull` (Sicherung vom 29.10. 20:51 lag vor); die Tags der Images vom Branch kamen über die
+  Shell, `.env.local` blieb unverändert.
+- **Aus dem Review:** Exit 2 des Containers gilt vor einem Fehler von `psql` (SIGPIPE); rc 0/1 ohne Bericht ist 4,
+  ohne `saved` mit Bericht 6; 137 bleibt 137; `--family`/`--discipline` werden im CLI auf `<links>=<rechts>` geprüft,
+  die Adressen einer Zuordnung vor der Rückfrage mit `is_email`; der Name des Berichts trägt die Uhrzeit (UTC).
