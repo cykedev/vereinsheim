@@ -483,8 +483,9 @@ Ringwerk), 3e (Treffsicher lesend je Konto, vor dem ersten Umzug) und das Restor
 Migrationen `20261028120000_hand_entry`, `20261029120000_evidence_list` (Spiegel) und
 `20261029160000_user_moved_to_spiegel` (Treffsicher), alle additiv; keine neue Brücke. Vorher auf `main` der Stack mit
 Brücke und Betrieb grün. Danach `projection-check dump|compare` mit `main` gegen den Basisbranch (Version 6 → 7) auf
-der Prod-Kopie von 14:14 nach dem Deploy: 285 gleich, keine Abweichung. Offen: am iPhone ein HEIC-Foto und ein PDF als
-Beleg prüfen.
+der Prod-Kopie von 14:14 nach dem Deploy: 285 gleich, keine Abweichung. Am iPhone in Prod geprüft (User): Foto aus der
+Kamera, HEIC aus der Mediathek (als JPEG mit Namen) und ein PDF als Beleg. Auf dem Basisbranch (`e6280f4f`) der Stack mit
+Brücke, Betrieb und Übernahme grün.
 
 ## Wie es weitergeht
 
