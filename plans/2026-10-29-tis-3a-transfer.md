@@ -130,6 +130,11 @@ Gefunden bei den Wiederholungen mit den Daten des Users (30. Oktober 2026), der 
 13. **Kein Ausdruck geht still verloren** (koordinierende Session, 30. Oktober 2026): Nennt der Kopf eines Ausdrucks,
     der eine eigene Scheibe braucht, keine bekannte Disziplin, nimmt `importPrintoutIn` die der Einheit
     (`fallbackDisciplineId`). Ein Ausdruck ohne Scheibe ist ein Befund (Exit 1), keine Erklärung mehr in der Bilanz.
+14. **Aus dem Review** (30. Oktober 2026): Eine Scheibe vom Ausdruck einer Einheit ohne eigene Scheibe bleibt in jedem
+    Lauf mit dem Eintrag verknüpft; das Tagebuch schaltet nur ein Lauf ohne jede Zeile der Übernahme ein; eine
+    übernommene Scheibe, die der User ergänzt hat (Beleg, geteilt, eigene Wahl, fremde Verknüpfung), bleibt; das
+    Merkmal wird auch zurückgesetzt, wenn sein Aufruf scheitert, nachdem er geschrieben hat; Exit 5, wenn nach dem
+    Speichern nur Ausgabe oder Bericht scheitern.
 
 ## Ansatz
 

@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto"
+import { createHash, randomUUID } from "node:crypto"
 
 import { printoutReading } from "@vereinsheim/meyton-pdf/reading"
 import { printoutPdf } from "@vereinsheim/meyton-pdf/test-printout"
@@ -402,6 +402,29 @@ describe("runTransfer: Ausdruck einer Einheit ohne Scheibe", () => {
     expect(card).toEqual({ disciplineId, origin: "pdf" })
   })
 
+  it("die Scheibe vom Ausdruck bleibt mit dem Eintrag verknüpft, auch in Lauf 2 und 3", async () => {
+    const c = caseWithPrintout("halten")
+    const file = await unknownHeader(c.tag)
+    const run = () =>
+      c.run({ files: pdf, readPrintout: async () => ({ kind: "stored", file, maxRssKb: 0 }) })
+    const links = async () =>
+      (
+        await db.diaryEntry.findUniqueOrThrow({
+          where: { importKey: `treffsicher:${c.id("s1")}` },
+          include: { cards: true },
+        })
+      ).cards.map((l) => l.link)
+    expect(done(await run()).attachments.printouts.imported).toBe(1)
+    expect(await links()).toEqual(["linked"])
+    const second = done(await run())
+    expect(second.attachments.printouts.ownCard).toBe(1)
+    expect(second.entries).toMatchObject({ updated: 1, kept: 0 })
+    expect(await links()).toEqual(["linked"])
+    const third = done(await run())
+    expect(third.entries).toMatchObject({ updated: 1, kept: 0 })
+    expect(await links()).toEqual(["linked"])
+  })
+
   it("bleibt er ohne Scheibe, ist das ein Befund, nicht still", async () => {
     const tag = `${site.siteId}-${fixture++}`
     // Gleichstand: zwei Disziplinen mit 40 Schuss, keine meistgenutzt, der Ausdruck findet keine
@@ -431,6 +454,29 @@ describe("runTransfer: Ausdruck einer Einheit ohne Scheibe", () => {
     } finally {
       await db.discipline.delete({ where: { id: alt.id } })
     }
+  })
+})
+
+describe("runTransfer: Tagebuch an", () => {
+  it("nur beim ersten Lauf, auch bei einem Konto nur mit Werten", async () => {
+    const c = newCase("schalter")
+    const values = c.session("s1", "2026-05-12", {
+      trainingGoal: null,
+      isFavourite: false,
+      wellbeing: null,
+      prognosis: null,
+      feedback: null,
+      reflection: null,
+    })
+    values.series = values.series.map((series) => ({ ...series, executionQuality: null }))
+    c.account([values])
+    const first = done(await c.run())
+    expect(first.cardOnly.units).toBe(1)
+    expect(first.diaryEnabled).toBe(true)
+    const userId = (await userOf(c.to)).id
+    await db.diarySettings.update({ where: { userId }, data: { enabled: false } })
+    const second = done(await c.run())
+    expect(second.diaryEnabled).toBe(false)
   })
 })
 
@@ -567,6 +613,23 @@ describe("runTransfer: zweiter Lauf", () => {
     expect(await db.card.count({ where: { importKey: `treffsicher:${c.id("s1")}` } })).toBe(1)
   })
 
+  it("eine Scheibe, die der User geteilt hat, bleibt, auch wenn ihre Einheit verschwindet", async () => {
+    const c = newCase("geteilt")
+    const account = c.account([c.session("s1", "2026-07-03"), c.session("s2", "2026-07-04")])
+    done(await c.run())
+    const key = `treffsicher:${c.id("s2")}`
+    await db.card.update({ where: { importKey: key }, data: { shareId: randomUUID() } })
+    c.source.accounts.set(c.from, {
+      ...account,
+      sessions: account.sessions.slice(0, 1),
+      user: c.source.accounts.get(c.from)!.user,
+    })
+    const report = done(await c.run())
+    expect(report.cards).toMatchObject({ removed: 0, kept: 1 })
+    expect(report.kept).toContainEqual({ what: "card", day: "", reason: "vom User ergänzt" })
+    expect(await db.card.count({ where: { importKey: key } })).toBe(1)
+  })
+
   it("Gegenprobe: eine Scheibe mit falschem Wert ist ein Befund", async () => {
     const c = newCase("falsch")
     c.account([c.session("s1", "2026-07-10")])
@@ -588,13 +651,21 @@ describe("runTransfer: zweiter Lauf", () => {
 })
 
 describe("runTransfer: Merkmal in Treffsicher", () => {
-  it("scheitert das Merkmal, ist in Spiegel nichts geschrieben", async () => {
+  it("scheitert das Merkmal, ist in Spiegel nichts geschrieben und es wird zurückgesetzt", async () => {
     const c = newCase("merkmal")
     c.account([c.session("s1", "2026-09-01")])
-    c.source.markMoved = async () => {
-      throw new Error("psql nicht erreichbar")
+    const mark = c.source.markMoved.bind(c.source)
+    const calls: (string | null)[] = []
+    // schreibt und meldet trotzdem einen Fehler (etwa `docker compose exec` mit Exit-Code ungleich 0)
+    c.source.markMoved = async (userId, at) => {
+      calls.push(at?.toISOString() ?? null)
+      await mark(userId, at)
+      if (at !== null) throw new Error("psql nicht erreichbar")
     }
     await expect(c.run()).rejects.toThrow("psql nicht erreichbar")
+    expect(calls).toHaveLength(2)
+    expect(calls[1]).toBeNull()
+    expect(c.source.accounts.get(c.from)!.user.movedToSpiegelAt).toBeNull()
     expect(await db.user.findUnique({ where: { email: c.to } })).toBeNull()
     expect(await db.card.count({ where: { importKey: `treffsicher:${c.id("s1")}` } })).toBe(0)
     expect(await db.diaryEntry.count({ where: { importKey: `treffsicher:${c.id("s1")}` } })).toBe(0)

@@ -132,7 +132,7 @@ export type TransferAbort =
   | { kind: "unknownFamily"; names: Record<string, number> }
   | {
       kind: "noDiscipline"
-      /** `none`: keine Disziplin mit dieser Schusszahl oder mehr; `tie`: mehrere mit `plannedShots`, keine meistgenutzt */
+      /** `none`: keine Disziplin der Familie mit fester Schusszahl; `tie`: mehrere mit `plannedShots`, keine meistgenutzt */
       cases: {
         family: string
         shots: number
@@ -236,7 +236,18 @@ async function targetRows(db: Db, userId: string) {
   const [cards, entries, goals, routines] = await Promise.all([
     db.card.findMany({
       where: { ownerId: userId, importKey: where },
-      select: { id: true, importKey: true, origin: true, deletedAt: true },
+      select: {
+        id: true,
+        importKey: true,
+        origin: true,
+        deletedAt: true,
+        kind: true,
+        kindChoice: true,
+        scoringChoice: true,
+        standDisciplineId: true,
+        shareId: true,
+        _count: { select: { evidence: true } },
+      },
     }),
     db.diaryEntry.findMany({
       where: { userId, importKey: where },
@@ -659,8 +670,9 @@ export async function runTransfer(db: Db, input: TransferInput): Promise<Transfe
           report,
         })
         if (input.dryRun) throw new DryRun()
-        await input.source.markMoved(account.user.id, runAt)
+        // versucht ist versucht: Scheitert der Aufruf, kann das Merkmal trotzdem geschrieben sein
         done.marked = true
+        await input.source.markMoved(account.user.id, runAt)
       },
       { timeout: input.timeoutMs ?? TIMEOUT_MS, maxWait: 10_000 }
     )
@@ -723,7 +735,15 @@ async function write(
     ).id
     report.accountCreated = true
   }
-  const firstRun = !(ctx.existing?.entries.length ?? 0)
+  // der erste Lauf: noch keine Zeile der Übernahme, auch keine Scheibe (ein Konto nur mit Werten hat keine Einträge)
+  const existingRows = ctx.existing
+  const firstRun =
+    !existingRows ||
+    existingRows.cards.length +
+      existingRows.entries.length +
+      existingRows.goals.length +
+      existingRows.routines.length ===
+      0
   if (firstRun)
     await tx.diarySettings.upsert({
       where: { userId: ownerId },
@@ -750,10 +770,34 @@ async function write(
           : "geändert"
 
   /** eine früher übernommene Scheibe dieser Einheit entfernen, wenn sie unverändert ist */
+  /**
+   * eine Scheibe aus Treffsicher, die der User ergänzt hat: Beleg, geteilt, eine eigene Wahl von Art, Wertung oder
+   * Stand, oder eine Verknüpfung, die nicht vom unveränderten Eintrag ihrer Einheit stammt
+   */
+  const addedTo = async (old: NonNullable<ReturnType<typeof cardsByKey.get>>, key: string) => {
+    if (
+      old._count.evidence > 0 ||
+      old.shareId !== null ||
+      (old.kindChoice !== null && old.kindChoice !== old.kind) ||
+      old.scoringChoice !== null ||
+      old.standDisciplineId !== null
+    )
+      return true
+    const holder = await tx.diaryEntryCard.findUnique({
+      where: { cardId: old.id },
+      select: { entryId: true },
+    })
+    if (!holder) return false
+    const own = entriesByKey.get(key)
+    return !own || holder.entryId !== own.id || entryTouched(own)
+  }
   const removeOldCard = async (key: string, day: string) => {
     const old = cardsByKey.get(key)
     if (!old) return
-    if (old.origin === "treffsicher" && !old.deletedAt) {
+    if (old.origin === "treffsicher" && !old.deletedAt && (await addedTo(old, key))) {
+      report.cards.kept += 1
+      report.kept.push({ what: "card", day, reason: "vom User ergänzt" })
+    } else if (old.origin === "treffsicher" && !old.deletedAt) {
       await releaseImportedLinks(tx, [old.id])
       await purgeCards(tx, [old.id], { lock: true })
       report.cards.removed += 1
@@ -923,13 +967,31 @@ async function write(
         attachment,
       })
       countPlaced(report, placed)
-      // eine Scheibe, die erst der Ausdruck einer Einheit ohne eigene Scheibe anlegt, hält ihr Eintrag
-      if (
-        entryId !== null &&
+      // eine Scheibe vom Ausdruck einer Einheit ohne eigene Scheibe hält ihr Eintrag: beim ersten Lauf angelegt, bei
+      // jedem weiteren als eigene Scheibe gefunden und neu verknüpft (mit der Zeit des Laufs, `isTouched`); eine Scheibe
+      // der Brücke, etwa die eines Abends nur aus Probe, leitet der Abend ab
+      const printoutCard =
         placed.kind === "printoutImported" &&
-        placed.result.kind === "created"
-      )
-        await setImportedLinks(tx, entryId, [placed.result.cardId], runAt)
+        (placed.result.kind === "created" || placed.result.kind === "attached")
+          ? placed.result.cardId
+          : placed.kind === "printoutOwnCard" && placed.result.kind === "attached"
+            ? placed.cardId
+            : null
+      if (entryId !== null && firstCard === null && printoutCard !== null) {
+        const [card, holder] = await Promise.all([
+          tx.card.findUnique({
+            where: { id: printoutCard },
+            select: { origin: true, sourceId: true },
+          }),
+          tx.diaryEntryCard.findUnique({
+            where: { cardId: printoutCard },
+            select: { entryId: true },
+          }),
+        ])
+        const fromPrintout = card?.origin === "pdf" && card.sourceId === null
+        if (fromPrintout && (!holder || holder.entryId === entryId))
+          await setImportedLinks(tx, entryId, [printoutCard], runAt)
+      }
     }
 
     checkUnits.push({
@@ -1024,16 +1086,28 @@ async function write(
     }
   for (const row of ctx.existing?.goals ?? [])
     if (gone(row.importKey)) {
-      if (isTouched(row, lastRunAt)) report.goals.kept += 1
-      else {
+      if (isTouched(row, lastRunAt)) {
+        report.goals.kept += 1
+        report.kept.push({
+          what: "goal",
+          day: null,
+          reason: row.deletedAt ? "Papierkorb" : "geändert",
+        })
+      } else {
         await tx.diaryGoal.delete({ where: { id: row.id } })
         report.goals.removed += 1
       }
     }
   for (const row of ctx.existing?.routines ?? [])
     if (gone(row.importKey)) {
-      if (isTouched(row, lastRunAt)) report.routines.kept += 1
-      else {
+      if (isTouched(row, lastRunAt)) {
+        report.routines.kept += 1
+        report.kept.push({
+          what: "routine",
+          day: null,
+          reason: row.deletedAt ? "Papierkorb" : "geändert",
+        })
+      } else {
         await tx.diaryRoutine.delete({ where: { id: row.id } })
         report.routines.removed += 1
       }

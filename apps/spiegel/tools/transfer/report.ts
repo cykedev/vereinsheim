@@ -47,7 +47,7 @@ export function abortText(abort: TransferAbort): string {
       ].join("\n")
     case "markedNotSaved":
       return [
-        "Merkmal in Treffsicher gesetzt, Übernahme in Spiegel nicht gespeichert. Das alte Merkmal ließ sich nicht zurücksetzen.",
+        "Übernahme in Spiegel nicht gespeichert, das Merkmal in Treffsicher ist vielleicht gesetzt. Das alte Merkmal ließ sich nicht zurücksetzen.",
         "Vor dem nächsten Lauf das alte Merkmal wieder setzen, sonst lässt der Lauf alles stehen:",
         abort.previous === null
           ? "  pnpm --filter treffsicher moved --clear <E-Mail in Treffsicher>"

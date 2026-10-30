@@ -8,7 +8,7 @@
 //     [--discipline "<Disziplin in Treffsicher>=<Disziplin in Spiegel>"]…
 //
 // Exit-Codes: 0 fertig ohne Befund, 1 Befund im Prüfbestand, 2 Aufruf falsch, 3 Abbruch der Vorprüfung, 4 Fehler (nichts
-// geschrieben: die Transaktion rollt zurück).
+// geschrieben: die Transaktion rollt zurück), 5 gespeichert, aber Ausgabe oder Bericht nicht geschrieben.
 
 import "dotenv/config"
 
@@ -70,18 +70,26 @@ async function main() {
       return
     }
     const { report } = outcome
-    process.stdout.write(`${summaryLines(report).join("\n")}\n`)
-    const dir = join(ROOT, "reports/tis-3a")
-    mkdirSync(dir, { recursive: true })
-    const who = createHash("sha256")
-      .update(args.from.trim().toLowerCase())
-      .digest("hex")
-      .slice(0, 8)
-    const mode = args.dryRun ? "-probe" : ""
-    const file = join(dir, `transfer-${startedAt.toISOString().slice(0, 10)}-${who}${mode}.md`)
-    writeFileSync(file, `${reportMarkdown(report, startedAt)}\n`)
-    process.stdout.write(`Bericht: ${file}\n`)
-    process.exitCode = report.check.findings ? 1 : 0
+    // ab hier ist gespeichert (oder der Probelauf fertig): ein Fehler beim Schreiben der Ausgabe ist kein Exit 4
+    try {
+      process.stdout.write(`${summaryLines(report).join("\n")}\n`)
+      const dir = join(ROOT, "reports/tis-3a")
+      mkdirSync(dir, { recursive: true })
+      const who = createHash("sha256")
+        .update(args.from.trim().toLowerCase())
+        .digest("hex")
+        .slice(0, 8)
+      const mode = args.dryRun ? "-probe" : ""
+      const file = join(dir, `transfer-${startedAt.toISOString().slice(0, 10)}-${who}${mode}.md`)
+      writeFileSync(file, `${reportMarkdown(report, startedAt)}\n`)
+      process.stdout.write(`Bericht: ${file}\n`)
+      process.exitCode = report.check.findings ? 1 : 0
+    } catch (error) {
+      process.stderr.write(
+        `Übernahme ${args.dryRun ? "geprüft" : "gespeichert"}, aber der Bericht fehlt: ${error instanceof Error ? error.message : String(error)}\n`
+      )
+      process.exitCode = 5
+    }
   } finally {
     await db.$disconnect()
   }

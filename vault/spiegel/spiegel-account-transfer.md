@@ -47,7 +47,7 @@ im Dev-Container (`tools/transfer/treffsicher-account.sql`, eine Zeile JSON je K
 fremden Datenbank, [[adr-002]]); `runTransfer` (`apps/spiegel/src/parts/transfer/run.ts`) bekommt die Quelle als
 Schnittstelle (`TreffsicherSource`). `--files` zeigt auf die entpackten Dateien der Anhänge aus der Sicherung von
 Treffsicher, nur unter `tools/private/`. Exit-Codes: 0 fertig, 1 Befund im Prüfbestand, 2 Aufruf falsch, 3 Abbruch,
-4 Fehler (nichts geschrieben). Die Ausgabe hat nur Zahlen, Gründe und Namen von Disziplinen; der Bericht mit Tagen und
+4 Fehler (nichts geschrieben), 5 gespeichert, aber Ausgabe oder Bericht fehlt. Die Ausgabe hat nur Zahlen, Gründe und Namen von Disziplinen; der Bericht mit Tagen und
 Texten der Stichprobe geht nach `reports/tis-3a/transfer-<Tag>-<acht Zeichen sha256 der E-Mail>.md` (gitignored, nie
 E-Mail oder Passwort, [[adr-029]]).
 
