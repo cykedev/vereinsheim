@@ -141,8 +141,14 @@ Gefunden bei den Wiederholungen mit den Daten des Users (30. Oktober 2026), der 
 16. **Geändert in der Transaktion prüfen**: Jede Zeile, die der Lauf ändert oder löscht, sperrt er (`FOR UPDATE`) und
     liest sie neu; eine Änderung zwischen dem Lesen vor der Transaktion und dem Schreiben bleibt.
 17. **Scheiben aus eigenen Ausdrucken** früherer Läufe zählen beim Entscheiden nicht als Scheiben des Abends.
-18. **Merkmal und Zeilen**: Abbruch `markerMissing` (Zeilen ohne Merkmal) und `markerMismatch` (Merkmal ohne Zeile mit
-    seiner Zeit).
+18. **Merkmal und Zeilen**: Abbruch `markerMissing` (Zeilen ohne Merkmal), `markerWithoutRows` (Merkmal ohne Zeilen) und
+    `markerMismatch` (keine Zeile trägt das Merkmal, aber Zeilen die Zeit eines anderen Laufs; ein Konto nur mit Werten
+    oder mit allem geändert läuft durch). Ein späterer Lauf ohne geschriebene Zeile lässt das Merkmal stehen.
+19. **Aus dem zweiten Review**: Was schon der erste Lauf nicht anlegen konnte (ungültige Scheibe, nicht platzierbarer
+    Anhang), bleibt ein Befund statt „in Spiegel gelöscht“ (Anhänge zur Probe in einem `SAVEPOINT`); Belege aus
+    Treffsicher machen eine Scheibe nicht zu einer ergänzten; eine eigene Wahl an einer Scheibe aus Treffsicher bleibt
+    samt Ausführung; Eintrag vor Scheibe sperren, Scheiben über `lockCard`; das Fenster der Scheiben aus eigenen
+    Ausdrucken hat eine obere Grenze; Exit 5 nennt die Befunde.
 
 ### Offen
 

@@ -86,7 +86,7 @@ async function main() {
       process.exitCode = report.check.findings ? 1 : 0
     } catch (error) {
       process.stderr.write(
-        `Übernahme ${args.dryRun ? "geprüft" : "gespeichert"}, aber der Bericht fehlt: ${error instanceof Error ? error.message : String(error)}\n`
+        `Übernahme ${args.dryRun ? "geprüft" : "gespeichert"} (Prüfbestand: ${report.check.findings ? `${report.check.findings} Befunde` : "ohne Befund"}), aber der Bericht fehlt: ${error instanceof Error ? error.message : String(error)}\n`
       )
       process.exitCode = 5
     }

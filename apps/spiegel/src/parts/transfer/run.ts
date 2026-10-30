@@ -5,7 +5,7 @@
 
 import { createHash } from "node:crypto"
 
-import { plannedShotsOf } from "@vereinsheim/shot-core/discipline"
+import { plannedShotsOf, seriesShotsOf } from "@vereinsheim/shot-core/discipline"
 import { eveningDay } from "@vereinsheim/shot-ui/period/calendar"
 
 import {
@@ -28,8 +28,8 @@ import {
 import type { Prisma } from "@/generated/prisma/client"
 import { requestSiteId } from "@/lib/card-requests/queries"
 import type { Db } from "@/lib/db"
-import { purgeCards } from "@/lib/db/purge"
-import type { DetailsProblem } from "@/lib/entered/details"
+import { lockCard, purgeCards } from "@/lib/db/purge"
+import { checkDetails, type DetailsProblem } from "@/lib/entered/details"
 import { evidenceTypeOf, writeEvidenceFile, type EvidenceType } from "@/lib/evidence/files"
 import { evidenceFileName } from "@/lib/evidence/name"
 import { EVIDENCE_MAX_BYTES } from "@/lib/evidence/texts"
@@ -118,9 +118,17 @@ export type TransferAbort =
   | { kind: "preview"; rows: number }
   | { kind: "foreignInTarget"; rows: number }
   | { kind: "sourceElsewhere"; rows: number }
+  /**
+   * Treffsicher hat das Merkmal „umgezogen“, aber das Ziel keine Zeile der Übernahme (zurückgesetzt, Konto neu): Der Lauf
+   * hielte alles für in Spiegel gelöscht und schriebe nichts
+   */
+  | { kind: "markerWithoutRows" }
   /** das Ziel hat Zeilen der Übernahme, aber Treffsicher kein Merkmal „umgezogen“ */
   | { kind: "markerMissing"; rows: number }
-  /** das Merkmal passt zu keiner Zeile des Ziels: kein Eintrag, Ziel, Ablauf oder Verknüpfung trägt seine Zeit */
+  /**
+   * das Merkmal passt zu keiner Zeile des Ziels, aber Zeilen tragen die Zeit eines anderen Laufs (`rows`): Das Merkmal
+   * stammt von einem Lauf, der nicht gespeichert hat
+   */
   | { kind: "markerMismatch"; rows: number }
   | { kind: "badFamilyOption"; unknownSlugs: string[]; duplicateNames: string[] }
   /**
@@ -220,8 +228,8 @@ export interface TransferReport {
   }[]
   /** was stehen blieb, weil es seit dem letzten Lauf geändert wurde oder im Papierkorb liegt */
   kept: { what: "card" | "entry" | "goal" | "routine"; day: string | null; reason: string }[]
-  /** `movedToSpiegelAt` in Treffsicher */
-  marked: "set" | "dryRun"
+  /** `movedToSpiegelAt` in Treffsicher; `unchanged`: der Lauf hat keine Zeile geschrieben, das Merkmal bleibt */
+  marked: "set" | "dryRun" | "unchanged"
   check: CheckResult
 }
 
@@ -257,7 +265,6 @@ const TRANSFER_CARD = {
   standDisciplineId: true,
   shareId: true,
   createdAt: true,
-  _count: { select: { evidence: true } },
 } as const
 
 /** sha256 jeder lesbaren Datei der Anhänge eines Kontos */
@@ -276,8 +283,8 @@ async function attachmentHashes(
 
 /**
  * Scheiben vom Ausdruck (ohne Brücke, ohne Schlüssel), die ein früherer Lauf aus einem Ausdruck dieses Kontos angelegt
- * hat: mit einem seiner Ausdrucke und nicht älter als der erste Lauf (die älteste Zeile der Übernahme, abzüglich der
- * längsten Transaktion). Eine Scheibe, die der User vorher selbst mit demselben Ausdruck geholt hat, bleibt eine Scheibe
+ * hat: mit einem seiner Ausdrucke und angelegt im Fenster der Läufe, die Zeilen angelegt haben (älteste bis jüngste Zeile
+ * der Übernahme, je um die längste Transaktion erweitert; ein späterer Lauf legt nichts mehr an). Eine Scheibe, die der User vorher selbst mit demselben Ausdruck geholt hat, bleibt eine Scheibe
  * des Abends. Beim ersten Lauf keine.
  */
 async function printoutCardsOfEarlierRuns(
@@ -293,7 +300,8 @@ async function printoutCardsOfEarlierRuns(
   if (targetId === null || lastRunAt === null || !existing || !sha256s.length) return new Set()
   const created = [...existing.cards, ...existing.entries].map((row) => row.createdAt.getTime())
   if (!created.length) return new Set()
-  const firstRun = new Date(Math.min(...created) - TIMEOUT_MS)
+  const from = new Date(Math.min(...created) - TIMEOUT_MS)
+  const to = new Date(Math.max(...created) + TIMEOUT_MS)
   const rows = await db.printout.findMany({
     where: {
       sha256: { in: sha256s },
@@ -302,7 +310,7 @@ async function printoutCardsOfEarlierRuns(
         origin: "pdf",
         sourceId: null,
         importKey: null,
-        createdAt: { gte: firstRun },
+        createdAt: { gte: from, lte: to },
       },
     },
     select: { cardId: true },
@@ -477,6 +485,17 @@ export async function runTransfer(db: Db, input: TransferInput): Promise<Transfe
   // 5. Merkmal und Zeilen: Ohne Merkmal hielte der Lauf jede Änderung für unverändert, mit einem fremden alles für
   // geändert (`isTouched`); beides wäre still falsch
   const lastRunAt = account.user.movedToSpiegelAt ? new Date(account.user.movedToSpiegelAt) : null
+  const anyRows =
+    !!existing &&
+    existing.cards.length +
+      existing.entries.length +
+      existing.goals.length +
+      existing.routines.length >
+      0
+  const anythingToTransfer =
+    account.sessions.length + account.goals.length + account.routines.length > 0
+  if (lastRunAt !== null && !anyRows && anythingToTransfer)
+    return { kind: "aborted", abort: { kind: "markerWithoutRows" } }
   if (existing) {
     const rows =
       existing.cards.length +
@@ -485,16 +504,28 @@ export async function runTransfer(db: Db, input: TransferInput): Promise<Transfe
       existing.routines.length
     if (rows && lastRunAt === null)
       return { kind: "aborted", abort: { kind: "markerMissing", rows } }
-    const stamped = [...existing.entries, ...existing.goals, ...existing.routines]
-    const fromLastRun = (updatedAt: Date) =>
-      lastRunAt !== null && writtenInLastRun(updatedAt, lastRunAt)
-    if (
-      lastRunAt !== null &&
-      stamped.length &&
-      !stamped.some((row) => fromLastRun(row.updatedAt)) &&
-      !existing.entries.some((entry) => entry.cards.some((link) => fromLastRun(link.updatedAt)))
-    )
-      return { kind: "aborted", abort: { kind: "markerMismatch", rows: stamped.length } }
+    // jeder Lauf schreibt seine Zeilen mit derselben Zeit; eine Zeit, die mehrere Zeilen teilen, stammt von einem Lauf,
+    // eine Änderung des Users gibt jeder Zeile ihre eigene. Trägt keine Zeile das Merkmal, aber eine die Zeit eines
+    // Laufs, steht das Merkmal eines Laufs, der nicht gespeichert hat. Ohne solche Zeilen (nur Scheiben, oder alles
+    // geändert oder gelöscht) gibt es nichts zu vergleichen
+    if (lastRunAt !== null) {
+      const times = [
+        ...existing.entries.flatMap((entry) => [
+          entry.updatedAt,
+          ...entry.cards.map((link) => link.updatedAt),
+        ]),
+        ...existing.goals.map((goal) => goal.updatedAt),
+        ...existing.routines.map((routine) => routine.updatedAt),
+      ].map((at) => at.getTime())
+      const count = new Map<number, number>()
+      for (const at of times) count.set(at, (count.get(at) ?? 0) + 1)
+      const ofRuns = [...count].filter(([, n]) => n > 1)
+      if (!count.has(lastRunAt.getTime()) && ofRuns.length)
+        return {
+          kind: "aborted",
+          abort: { kind: "markerMismatch", rows: ofRuns.reduce((sum, [, n]) => sum + n, 0) },
+        }
+    }
   }
 
   // die Dateien der Anhänge, einmal gelesen: für die Entscheidung je Einheit und für die Anhänge
@@ -592,11 +623,12 @@ export async function runTransfer(db: Db, input: TransferInput): Promise<Transfe
 
   // ab dem zweiten Lauf: Scheiben, die ein früherer Lauf aus einem Ausdruck dieses Kontos angelegt hat, sind keine
   // Scheiben des Abends; sonst kippte die Entscheidung (Abend nur aus Probe → vorhanden, oder unsicher mit einer zweiten)
+  const ownHashes = await attachmentHashes(account, readFile)
   const fromOwnPrintouts = await printoutCardsOfEarlierRuns(db, {
     targetId,
     lastRunAt,
     existing,
-    sha256s: await attachmentHashes(account, readFile),
+    sha256s: ownHashes,
   })
   const byEvening = new Map<string, typeof visible>()
   for (const card of visible)
@@ -758,6 +790,9 @@ export async function runTransfer(db: Db, input: TransferInput): Promise<Transfe
   // die Zeit dieses Laufs: `updatedAt` jeder Zeile, die er schreibt, und das Merkmal in Treffsicher (`isTouched`)
   const runAt = new Date()
   const done: { check?: CheckResult; marked?: true } = {}
+  // wie viele Zeilen der Lauf mit seiner Zeit geschrieben hat; ohne eine bleibt das Merkmal, wie es ist (sonst trüge
+  // keine Zeile seine Zeit)
+  const stamps = { count: 0 }
   try {
     await db.$transaction(
       async (tx) => {
@@ -773,9 +808,15 @@ export async function runTransfer(db: Db, input: TransferInput): Promise<Transfe
           timeZone,
           lastRunAt,
           runAt,
+          stamps,
+          ownHashes,
           report,
         })
         if (input.dryRun) throw new DryRun()
+        if (lastRunAt !== null && stamps.count === 0) {
+          report.marked = "unchanged"
+          return
+        }
         // versucht ist versucht: Scheitert der Aufruf, kann das Merkmal trotzdem geschrieben sein
         done.marked = true
         await input.source.markMoved(account.user.id, runAt)
@@ -816,10 +857,13 @@ async function write(
     timeZone: string
     lastRunAt: Date | null
     runAt: Date
+    stamps: { count: number }
+    /** sha256 aller Dateien der Anhänge des Kontos */
+    ownHashes: string[]
     report: Omit<TransferReport, "check">
   }
 ): Promise<CheckResult> {
-  const { account, units, report, lastRunAt, runAt, timeZone } = ctx
+  const { account, units, report, lastRunAt, runAt, timeZone, stamps } = ctx
   report.sessions = units.length
 
   // 1. Konto
@@ -841,16 +885,8 @@ async function write(
     ).id
     report.accountCreated = true
   }
-  // der erste Lauf: noch keine Zeile der Übernahme, auch keine Scheibe (ein Konto nur mit Werten hat keine Einträge)
-  const existingRows = ctx.existing
-  const firstRun =
-    !existingRows ||
-    existingRows.cards.length +
-      existingRows.entries.length +
-      existingRows.goals.length +
-      existingRows.routines.length ===
-      0
-  if (firstRun)
+  // der erste Lauf: ohne Merkmal (Zeilen ohne Merkmal bricht die Vorprüfung ab)
+  if (lastRunAt === null)
     await tx.diarySettings.upsert({
       where: { userId: ownerId },
       create: { userId: ownerId, enabled: true },
@@ -872,7 +908,8 @@ async function write(
     (lastRunAt !== null && row.cards.some((link) => !writtenInLastRun(link.updatedAt, lastRunAt)))
   // was der Lauf vor der Transaktion las, kann inzwischen geändert sein (die App läuft daneben): Jede Zeile, die er
   // ändert oder löscht, sperrt er und liest sie neu; was jemand dazwischen geändert hat, bleibt
-  const freshEntry = async (id: string) => {
+  const lockedEntries = new Map<string, Awaited<ReturnType<typeof readEntry>>>()
+  const readEntry = async (id: string) => {
     await tx.$queryRaw`SELECT id FROM "DiaryEntry" WHERE id = ${id} FOR UPDATE`
     return tx.diaryEntry.findUnique({
       where: { id },
@@ -884,6 +921,11 @@ async function write(
         cards: { select: { updatedAt: true } },
       },
     })
+  }
+  /** der Eintrag, gesperrt und neu gelesen; je Eintrag einmal, die Sperre hält bis zum Ende der Transaktion */
+  const freshEntry = async (id: string) => {
+    if (!lockedEntries.has(id)) lockedEntries.set(id, await readEntry(id))
+    return lockedEntries.get(id)!
   }
   const freshGoal = async (id: string) => {
     await tx.$queryRaw`SELECT id FROM "DiaryGoal" WHERE id = ${id} FOR UPDATE`
@@ -899,11 +941,8 @@ async function write(
       select: { id: true, deletedAt: true, updatedAt: true },
     })
   }
-  const freshCard = async (id: string) => {
-    await tx.$queryRaw`SELECT id FROM "Card" WHERE id = ${id} FOR UPDATE`
-    return tx.card.findUnique({ where: { id }, select: TRANSFER_CARD })
-  }
-  const GONE = GONE_TEXT
+  const freshCard = async (id: string) =>
+    (await lockCard(tx, id)) ? tx.card.findUnique({ where: { id }, select: TRANSFER_CARD }) : null
   // ab dem zweiten Lauf: Anhänge, deren Datei an keiner Scheibe des Kontos mehr hängt, hat der User entfernt
   const presentFiles =
     lastRunAt === null
@@ -928,28 +967,32 @@ async function write(
           ? "von Hand geändert"
           : "geändert"
 
-  /** eine früher übernommene Scheibe dieser Einheit entfernen, wenn sie unverändert ist */
+  type TransferCard = NonNullable<Awaited<ReturnType<typeof freshCard>>>
+  /** eine eigene Wahl an der Scheibe: Art, Wertung oder Stand (Disziplin); ein Lauf setzte sie zurück */
+  const chosen = (card: TransferCard) =>
+    (card.kindChoice !== null && card.kindChoice !== card.kind) ||
+    card.scoringChoice !== null ||
+    card.standDisciplineId !== null
   /**
-   * eine Scheibe aus Treffsicher, die der User ergänzt hat: Beleg, geteilt, eine eigene Wahl von Art, Wertung oder
-   * Stand, oder eine Verknüpfung, die nicht vom unveränderten Eintrag ihrer Einheit stammt
+   * eine Scheibe aus Treffsicher, die der User ergänzt hat: ein eigener Beleg (nicht aus Treffsicher), geteilt, eine
+   * eigene Wahl, oder eine Verknüpfung, die nicht vom unveränderten Eintrag ihrer Einheit stammt
    */
-  const addedTo = async (old: NonNullable<Awaited<ReturnType<typeof freshCard>>>, key: string) => {
-    if (
-      old._count.evidence > 0 ||
-      old.shareId !== null ||
-      (old.kindChoice !== null && old.kindChoice !== old.kind) ||
-      old.scoringChoice !== null ||
-      old.standDisciplineId !== null
-    )
-      return true
+  const addedTo = async (old: TransferCard, key: string) => {
+    if (old.shareId !== null || chosen(old)) return true
+    const ownEvidence = await tx.cardEvidence.count({
+      where: { cardId: old.id, sha256: { notIn: ctx.ownHashes } },
+    })
+    if (ownEvidence > 0) return true
     const holder = await tx.diaryEntryCard.findUnique({
       where: { cardId: old.id },
       select: { entryId: true },
     })
     if (!holder) return false
-    const own = entriesByKey.get(key)
+    const stale = entriesByKey.get(key)
+    const own = stale ? await freshEntry(stale.id) : null
     return !own || holder.entryId !== own.id || entryTouched(own)
   }
+  /** eine früher übernommene Scheibe dieser Einheit entfernen, wenn sie unverändert ist */
   const removeOldCard = async (key: string, day: string) => {
     const stale = cardsByKey.get(key)
     const old = stale ? await freshCard(stale.id) : null
@@ -985,14 +1028,51 @@ async function write(
         others: decision.others.map((o) => ({ shots: o.shots, total: o.total })),
       })
 
-    // die Scheibe der Einheit
+    // der Eintrag der Einheit zuerst gesperrt: dieselbe Folge (Eintrag, dann Scheibe) wie die Schreibwege der App
+    const old = entriesByKey.get(key)
+    const fresh = old === undefined ? null : await freshEntry(old.id)
+
+    // die Scheibe der Einheit, gesperrt und neu gelesen
     let unitCard: string | null = null
     let cardKept = false
+    // eine Scheibe, die bleibt, aber dieselben Serien wie aus Treffsicher hat (nur eine eigene Wahl)
+    let sameSeries = false
     const wantsCard = decision.kind === "new" || decision.kind === "uncertain"
-    if (wantsCard && lastRunAt !== null && !cardsByKey.has(key)) {
+    const staleCard = cardsByKey.get(key)
+    const current = wantsCard && staleCard ? await freshCard(staleCard.id) : null
+    const detailsProblem = async () => {
+      const discipline = await tx.discipline.findUniqueOrThrow({
+        where: { id: unit.disciplineId! },
+        select: { meytonId: true, plannedShots: true, seriesShots: true },
+      })
+      const plannedShots = plannedShotsOf(discipline.meytonId, discipline.plannedShots)
+      const checked = checkDetails(unit.card!.details, {
+        plannedShots,
+        seriesShots: seriesShotsOf(discipline.seriesShots, plannedShots),
+      })
+      return checked.ok ? null : checked.problem
+    }
+    if (wantsCard && lastRunAt !== null && !current) {
+      // eine Scheibe, die schon der erste Lauf nicht anlegen konnte, ist nicht gelöscht: weiter ein Befund
+      const problem = await detailsProblem()
+      if (problem) add(report.cards.invalid, problem)
+      else {
+        cardKept = true
+        report.deletedInSpiegel.cards += 1
+        report.kept.push({ what: "card", day: unit.day, reason: GONE_TEXT })
+      }
+    } else if (
+      wantsCard &&
+      current &&
+      current.origin === "treffsicher" &&
+      !current.deletedAt &&
+      chosen(current)
+    ) {
       cardKept = true
-      report.deletedInSpiegel.cards += 1
-      report.kept.push({ what: "card", day: unit.day, reason: GONE })
+      sameSeries = true
+      unitCard = current.id
+      report.cards.kept += 1
+      report.kept.push({ what: "card", day: unit.day, reason: "vom User ergänzt" })
     } else if (wantsCard) {
       const card = unit.card!
       const kind = session.type === "WETTKAMPF" ? "competition" : "training"
@@ -1009,14 +1089,14 @@ async function write(
         unitCard = written.cardId
         report.cards[written.change] += 1
       } else if (written.kind === "notEditable" || written.kind === "missing") {
-        const old = cardsByKey.get(key)
+        const known = current ?? staleCard
         cardKept = true
-        unitCard = written.kind === "notEditable" && old ? old.id : null
+        unitCard = written.kind === "notEditable" && known ? known.id : null
         report.cards.kept += 1
         report.kept.push({
           what: "card",
           day: unit.day,
-          reason: old ? keptReason(old) : "Papierkorb",
+          reason: known ? keptReason(known) : "Papierkorb",
         })
       } else if (written.kind === "invalid") add(report.cards.invalid, written.problem)
       else throw new Error(`Scheibe aus Treffsicher: ${written.kind}`)
@@ -1030,10 +1110,8 @@ async function write(
       { ...session, dateMs: unit.dateMs },
       { importKey: key, familyId: unit.familyId, withCard, timeZone }
     )
-    const old = entriesByKey.get(key)
     // nur Werte: kein Eintrag, die Scheibe trägt alles; ein Eintrag aus einem früheren Lauf bleibt (nichts wird gelöscht)
     const cardOnly = old === undefined && !needsEntry(session)
-    const fresh = old === undefined ? null : await freshEntry(old.id)
     // ab dem zweiten Lauf hat der User einen fehlenden Eintrag gelöscht, auch einen, der seit dem Lesen fehlt
     const entryGone =
       (old === undefined && !cardOnly && lastRunAt !== null) ||
@@ -1052,7 +1130,7 @@ async function write(
       if (decision.kind === "none" || decision.kind === "probeEvening") report.cardOnly.noCard += 1
     } else if (entryGone) {
       report.deletedInSpiegel.entries += 1
-      report.kept.push({ what: "entry", day: unit.day, reason: GONE })
+      report.kept.push({ what: "entry", day: unit.day, reason: GONE_TEXT })
       if (rated.length) report.executions.skipped.keptEntry += 1
       executionsExpected.kept += rated.length
     } else if (entryKept) {
@@ -1065,6 +1143,7 @@ async function write(
       if (rated.length) report.executions.skipped.keptEntry += 1
       executionsExpected.kept += rated.length
     } else {
+      stamps.count += 1
       const upserted = await upsertImportedEntry(tx, ownerId, entry, runAt)
       entryId = upserted.id
       report.entries[upserted.created ? "created" : "updated"] += 1
@@ -1082,12 +1161,13 @@ async function write(
         where: { entryId: upserted.id, link: "linked", cardId: { notIn: free } },
       })
       await setImportedLinks(tx, upserted.id, free, runAt)
+      stamps.count += free.length
 
       // die Ausführung auf die eine Scheibe des Eintrags
       let rows: { cardId: string; series: number; value: number }[] = []
       if (rated.length) {
         const target =
-          unitCard !== null && !cardKept && unit.card
+          unitCard !== null && (!cardKept || sameSeries) && unit.card
             ? {
                 id: unitCard,
                 series: (unit.card.details.series ?? []).map((s) => ({ series: s.series })),
@@ -1124,10 +1204,10 @@ async function write(
         : null)
     for (const attachment of unit.attachments) {
       const sha256 = attachment.kind === "printout" ? attachment.file.sha256 : attachment.sha256
-      if (presentFiles && !presentFiles.has(sha256)) {
-        report.deletedInSpiegel.attachments += 1
-        continue
-      }
+      const missing = presentFiles !== null && !presentFiles.has(sha256)
+      // fehlt die Datei ab dem zweiten Lauf, zur Probe platzieren und zurückrollen: Wäre sie angekommen, hat der User sie
+      // entfernt; sonst bleibt der Grund, aus dem sie schon der erste Lauf nicht platzieren konnte
+      if (missing) await tx.$executeRawUnsafe("SAVEPOINT transfer_attachment")
       const placed = await placeAttachment(tx, {
         ownerId,
         siteId: ctx.siteId,
@@ -1146,6 +1226,12 @@ async function write(
           : null,
         attachment,
       })
+      if (missing) {
+        await tx.$executeRawUnsafe("ROLLBACK TO SAVEPOINT transfer_attachment")
+        if (wouldArrive(placed)) report.deletedInSpiegel.attachments += 1
+        else countPlaced(report, placed)
+        continue
+      }
       countPlaced(report, placed)
       // eine Scheibe vom Ausdruck einer Einheit ohne eigene Scheibe hält ihr Eintrag: beim ersten Lauf angelegt, bei
       // jedem weiteren als eigene Scheibe gefunden und neu verknüpft (mit der Zeit des Laufs, `isTouched`); eine Scheibe
@@ -1171,6 +1257,7 @@ async function write(
         const fromPrintout = card?.origin === "pdf" && card.sourceId === null
         if (fromPrintout && (!holder || holder.entryId === entryId))
           await setImportedLinks(tx, entryId, [printoutCard], runAt)
+        stamps.count += 1
       }
     }
 
@@ -1214,7 +1301,7 @@ async function write(
     const fresh = old ? await freshGoal(old.id) : null
     if ((old && !fresh) || (!old && lastRunAt !== null)) {
       report.deletedInSpiegel.goals += 1
-      report.kept.push({ what: "goal", day: null, reason: GONE })
+      report.kept.push({ what: "goal", day: null, reason: GONE_TEXT })
       continue
     }
     if (fresh && isTouched(fresh, lastRunAt)) {
@@ -1226,6 +1313,7 @@ async function write(
       })
       continue
     }
+    stamps.count += 1
     const { created } = await upsertImportedGoal(tx, ownerId, mapped.goal, runAt)
     report.goals[created ? "created" : "updated"] += 1
   }
@@ -1238,7 +1326,7 @@ async function write(
     const fresh = old ? await freshRoutine(old.id) : null
     if ((old && !fresh) || (!old && lastRunAt !== null)) {
       report.deletedInSpiegel.routines += 1
-      report.kept.push({ what: "routine", day: null, reason: GONE })
+      report.kept.push({ what: "routine", day: null, reason: GONE_TEXT })
       continue
     }
     if (fresh && isTouched(fresh, lastRunAt)) {
@@ -1250,6 +1338,7 @@ async function write(
       })
       continue
     }
+    stamps.count += 1
     const { created } = await upsertImportedRoutine(tx, ownerId, mapped.routine, runAt)
     report.routines[created ? "created" : "updated"] += 1
   }
@@ -1264,8 +1353,6 @@ async function write(
     const id = sourceIdOf(key)
     return id !== null && !present.has(id) && !ctx.owners.has(id)
   }
-  for (const card of ctx.existing?.cards ?? [])
-    if (gone(card.importKey)) await removeOldCard(card.importKey!, "")
   for (const stale of ctx.existing?.entries ?? [])
     if (gone(stale.importKey)) {
       const row = await freshEntry(stale.id)
@@ -1311,6 +1398,9 @@ async function write(
       }
     }
 
+  for (const card of ctx.existing?.cards ?? [])
+    if (gone(card.importKey)) await removeOldCard(card.importKey!, "")
+
   return checkTransfer(
     await checkInput(tx, {
       ownerId,
@@ -1322,6 +1412,22 @@ async function write(
       report,
     })
   )
+}
+
+/** käme der Anhang an (an einer Scheibe, als Ausdruck oder Beleg)? */
+function wouldArrive(placed: PlacedAttachment): boolean {
+  switch (placed.kind) {
+    case "evidence":
+      return placed.result === "attached" || placed.result === "duplicate"
+    case "evidenceNoCard":
+      return false
+    case "printoutOwnCard":
+      return placed.result.kind === "attached"
+    case "printoutUnitCard":
+      return true
+    case "printoutImported":
+      return placed.result.kind === "created" || placed.result.kind === "attached"
+  }
 }
 
 function countPlaced(report: Omit<TransferReport, "check">, placed: PlacedAttachment) {

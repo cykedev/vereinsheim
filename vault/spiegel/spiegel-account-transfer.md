@@ -61,10 +61,12 @@ findet ein zweiter Lauf, was er schon geschrieben hat. Die Schlüssel der frühe
 
 In dieser Reihenfolge, je mit festem Text im CLI: kein Konto in Treffsicher (`noSource`); Zeilen der Vorschau im Ziel
 (`preview`, siehe unten); Übernommenes eines anderen Treffsicher-Kontos im Ziel (`foreignInTarget`); Übernommenes
-dieses Kontos an einem anderen Spiegel-Konto (`sourceElsewhere`); Zeilen der Übernahme im Ziel, aber kein Merkmal in
-Treffsicher (`markerMissing`), oder ein Merkmal, dessen Zeit kein Eintrag, Ziel, Ablauf und keine Verknüpfung trägt
-(`markerMismatch`): ohne Merkmal hielte der Lauf jede Änderung für unverändert, mit einem fremden alles für geändert;
-`--family` mit unbekannter Kennung oder doppeltem
+dieses Kontos an einem anderen Spiegel-Konto (`sourceElsewhere`); ein Merkmal in Treffsicher, aber keine Zeile der
+Übernahme im Ziel (`markerWithoutRows`: Spiegel zurückgesetzt oder Konto neu; für einen neuen ersten Lauf das Merkmal
+aufheben); Zeilen der Übernahme, aber kein Merkmal (`markerMissing`); ein Merkmal, dessen Zeit keine Zeile trägt,
+während Zeilen die Zeit eines anderen Laufs tragen (`markerMismatch`: eine Zeit, die mehrere Zeilen teilen, stammt von
+einem Lauf, eine Änderung des Users gibt jeder Zeile ihre eigene; ein Konto nur mit Werten oder mit allem geändert
+läuft durch); `--family` mit unbekannter Kennung oder doppeltem
 Namen (`badFamilyOption`); eine Disziplin aus Treffsicher ohne Familie (`unknownFamily`, Namen mit Zahl der Einheiten);
 `--discipline` nennt eine Disziplin in Spiegel, die es unter den eingeordneten nicht genau einmal gibt, eine in einer
 anderen Familie oder denselben Namen zweimal (`badDisciplineOption`); für eine neue Scheibe lässt sich keine Disziplin
@@ -145,12 +147,23 @@ Scheibe ist gelöscht), entsteht auch keine Scheibe aus Treffsicher: Gelöscht i
 
 Was der Lauf vor der Transaktion las, kann beim Schreiben überholt sein: Dazwischen liest er die Anhänge, und die App
 läuft daneben. Jeden Eintrag, jedes Ziel, jeden Ablauf und jede Scheibe, die er ändern oder löschen will, sperrt er
-deshalb in der Transaktion (`FOR UPDATE`) und liest sie neu; was jemand dazwischen geändert hat, bleibt. Eine Änderung
-in der App, die erst danach kommt, wartet auf die Sperre und gilt danach.
+deshalb in der Transaktion und liest sie neu (Eintrag mit `FOR UPDATE`, Scheibe mit `lockCard`; erst der Eintrag
+der Einheit, dann ihre Scheibe, dieselbe Folge wie die App); was jemand dazwischen geändert hat, bleibt. Eine Änderung
+in der App, die erst danach kommt, wartet auf die Sperre; das Tagebuch schreibt `Serializable` und meldet danach einen
+Fehler, die Änderung muss noch einmal gespeichert werden.
+
+Was ab dem zweiten Lauf fehlt, aber schon der erste nicht anlegen konnte, bleibt ein Befund: eine Scheibe mit
+ungültigen Angaben (`checkDetails` wie beim Schreiben) und ein Anhang, den der Lauf zur Probe platziert und
+zurückrollt (`SAVEPOINT`): Käme er an, hat der User ihn entfernt; sonst zählt sein Grund (nicht angehängt, ohne
+Scheibe, Grenze).
+
+Eine Scheibe aus Treffsicher mit einer eigenen Wahl (Art, Wertung, Stand) ersetzt ein Lauf nicht mehr („vom User
+ergänzt“), ihre Ausführung bleibt auf ihr. Belege aus Treffsicher an ihr machen sie nicht zu einer ergänzten.
 
 Ab dem zweiten Lauf zählen Scheiben vom Ausdruck, die ein früherer Lauf aus einem Ausdruck dieses Kontos angelegt hat
-(gleiche Prüfsumme, nicht älter als der erste Lauf), beim Entscheiden nicht als Scheiben des Abends; sonst kippte ein
-Abend nur aus Probe zu „vorhanden“ oder zu „unsicher“ mit einer zweiten Scheibe.
+(gleiche Prüfsumme, angelegt im Fenster der Läufe, die Zeilen angelegt haben), beim Entscheiden nicht als Scheiben des
+Abends; sonst kippte ein Abend nur aus Probe zu „vorhanden“ oder zu „unsicher“ mit einer zweiten Scheibe. Ohne
+`--files` kennt der Lauf die Prüfsummen nicht: Ein späterer Lauf braucht `--files` wie der erste.
 
 Ein Vergleich `updatedAt` > Merkmal reicht nicht: Das Merkmal rückt mit jedem Lauf vor, eine Änderung überstünde nur
 den nächsten Lauf (aufgefallen am 30. Oktober 2026 an den Wiederholungen mit den Daten des Users).
@@ -158,10 +171,11 @@ den nächsten Lauf (aufgefallen am 30. Oktober 2026 an den Wiederholungen mit de
 ### Merkmal „umgezogen“
 
 Der letzte Schritt der Transaktion setzt `movedToSpiegelAt` in Treffsicher ([[treffsicher-read-only]]); der
-Probelauf setzt nichts. Scheitert danach das Speichern in Spiegel, setzt der Lauf das alte Merkmal zurück (beim ersten
-Lauf: keins). Geht auch das nicht, meldet das CLI „Merkmal in Treffsicher gesetzt, Übernahme in Spiegel nicht
-gespeichert“ (Exit 3) und nennt den alten Wert: Vor dem nächsten Lauf muss er wieder stehen, sonst trägt keine Zeile die
-Zeit des Merkmals und der Lauf lässt alles stehen.
+Probelauf setzt nichts, ein späterer Lauf, der keine Zeile geschrieben hat, lässt es, wie es ist (sonst trüge keine
+Zeile seine Zeit). Scheitert danach das Speichern in Spiegel, setzt der Lauf das alte Merkmal zurück (beim ersten
+Lauf: keins). Geht auch das nicht, meldet das CLI „Übernahme in Spiegel nicht gespeichert, das Merkmal in Treffsicher
+ist vielleicht gesetzt“ (Exit 3) und nennt den alten Wert: Vor dem nächsten Lauf muss er wieder stehen, sonst bricht der
+nächste Lauf mit `markerMismatch` ab.
 
 ### Prüfbestand
 

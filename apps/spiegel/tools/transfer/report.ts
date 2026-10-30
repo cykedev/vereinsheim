@@ -33,6 +33,11 @@ export function abortText(abort: TransferAbort): string {
       return `Das Konto in Spiegel trägt schon Übernommenes aus einem anderen Konto in Treffsicher (${abort.rows} Kennungen). Nichts wird zusammengeführt.`
     case "sourceElsewhere":
       return `Übernommenes dieses Kontos steht schon an einem anderen Konto in Spiegel (${abort.rows} Zeilen). Nichts wird zusammengeführt.`
+    case "markerWithoutRows":
+      return [
+        "Treffsicher hat das Merkmal „umgezogen“, aber das Konto in Spiegel keine Zeile der Übernahme.",
+        "Der Lauf hielte alles für in Spiegel gelöscht und schriebe nichts. Für einen neuen ersten Lauf das Merkmal aufheben: pnpm --filter treffsicher moved --clear <E-Mail in Treffsicher>",
+      ].join("\n")
     case "markerMissing":
       return [
         `Das Konto in Spiegel hat schon ${abort.rows} Zeilen der Übernahme, aber Treffsicher kein Merkmal „umgezogen“.`,
@@ -40,8 +45,8 @@ export function abortText(abort: TransferAbort): string {
       ].join("\n")
     case "markerMismatch":
       return [
-        `Das Merkmal „umgezogen“ in Treffsicher passt zu keiner der ${abort.rows} Zeilen in Spiegel (Einträge, Ziele, Abläufe).`,
-        "Der Lauf hielte alles für geändert und ersetzte nichts. Erst klären, welcher Lauf das Merkmal gesetzt hat.",
+        `Das Merkmal „umgezogen“ in Treffsicher passt zu keiner Zeile in Spiegel, ${abort.rows} Zeilen tragen die Zeit eines anderen Laufs.`,
+        "Vermutlich hat ein Lauf das Merkmal gesetzt und nicht gespeichert. Der Lauf hielte alles für geändert und ersetzte nichts. Erst das Merkmal des letzten gespeicherten Laufs wieder setzen.",
       ].join("\n")
     case "badFamilyOption":
       return [
@@ -112,7 +117,7 @@ export function summaryLines(report: TransferReport): string[] {
     `  Belege: ${tally(a.evidence)}`,
     `Unsicher (beide behalten): ${report.uncertain.length}`,
     `Geändert, bleibt: ${report.kept.length}`,
-    `Treffsicher: ${report.marked === "set" ? "Konto als umgezogen markiert" : "nicht markiert (Probelauf)"}`,
+    `Treffsicher: ${report.marked === "set" ? "Konto als umgezogen markiert" : report.marked === "unchanged" ? "Merkmal bleibt (keine Zeile geschrieben)" : "nicht markiert (Probelauf)"}`,
     `Prüfbestand: ${report.check.findings === 0 ? "ohne Befund" : `${report.check.findings} Befunde`}`,
   ]
 }
