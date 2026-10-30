@@ -6,8 +6,9 @@
   "prettier": "@vereinsheim/config/prettier",
   "scripts": {
     "dev": "next dev --webpack --port 3002",
-    "build": "next build && tsx tools/build-reader.ts",
+    "build": "next build && tsx tools/build-reader.ts && tsx tools/build-transfer.ts",
     "build:reader": "tsx tools/build-reader.ts",
+    "build:transfer": "tsx tools/build-transfer.ts",
     "start": "next start --port 3002",
     "lint": "eslint src tools test",
     "format": "prettier --write .",
