@@ -13,6 +13,7 @@ import {
 import {
   detailsFromReading,
   drawnRingDiametersMm,
+  fitsEnteredTotal,
   readingOrder,
   ringDiametersMm,
   scaleFromRings,
@@ -301,5 +302,85 @@ describe("scoringReading", () => {
   it("lässt eine Lesung der Wertung, wie sie ist", async () => {
     const reading = await readingOf({ layout: "qt", mode: "Wertung", cross: false })
     expect(scoringReading(reading)).toBe(reading)
+  })
+})
+
+describe("fitsEnteredTotal", () => {
+  const spec: ValuedPrintoutSpec = { layout: "qt", mode: "Wertung", cross: false }
+  const sums = () => {
+    const hits = valuedHits(spec)
+    return {
+      rings: hits.reduce((sum, hit) => sum + hit.ring, 0),
+      tenths: hits.reduce((sum, hit) => sum + hit.decimalTenths, 0),
+      shots: hits.length,
+    }
+  }
+
+  it("passt bei gleichen Zehnteln und gleicher Schusszahl", async () => {
+    const reading = await readingOf(spec)
+    const { rings, tenths, shots } = sums()
+    expect(
+      fitsEnteredTotal(reading, {
+        totalRings: rings,
+        totalDecimalTenths: tenths,
+        totalShots: shots,
+      })
+    ).toBe(true)
+  })
+
+  it("passt in Ringen, wenn keine Zehntel eingetragen sind", async () => {
+    const reading = await readingOf(spec)
+    const { rings, shots } = sums()
+    expect(
+      fitsEnteredTotal(reading, { totalRings: rings, totalDecimalTenths: null, totalShots: shots })
+    ).toBe(true)
+  })
+
+  it("Ringe gleich, aber Zehntel eingetragen und verschieden: passt nicht", async () => {
+    const reading = await readingOf(spec)
+    const { rings, tenths, shots } = sums()
+    expect(
+      fitsEnteredTotal(reading, {
+        totalRings: rings,
+        totalDecimalTenths: tenths + 1,
+        totalShots: shots,
+      })
+    ).toBe(false)
+  })
+
+  it("eine andere Schusszahl passt nicht", async () => {
+    const reading = await readingOf(spec)
+    const { rings, tenths, shots } = sums()
+    expect(
+      fitsEnteredTotal(reading, {
+        totalRings: rings,
+        totalDecimalTenths: tenths,
+        totalShots: shots - 1,
+      })
+    ).toBe(false)
+  })
+
+  it("ein Ausdruck im Modus Probe passt mit der Summe seiner Schüsse", async () => {
+    const probeSpec: ValuedPrintoutSpec = { layout: "qt", mode: "Probe", cross: false }
+    const reading = await readingOf(probeSpec)
+    const hits = valuedHits(probeSpec)
+    expect(
+      fitsEnteredTotal(reading, {
+        totalRings: hits.reduce((sum, hit) => sum + hit.ring, 0),
+        totalDecimalTenths: null,
+        totalShots: hits.length,
+      })
+    ).toBe(true)
+  })
+
+  it("ohne eingetragenes Gesamtergebnis passt nichts", async () => {
+    const reading = await readingOf(spec)
+    expect(
+      fitsEnteredTotal(reading, {
+        totalRings: null,
+        totalDecimalTenths: null,
+        totalShots: sums().shots,
+      })
+    ).toBe(false)
   })
 })

@@ -288,6 +288,28 @@ export function scoringReading(reading: PrintoutReading): PrintoutReading {
 }
 
 /**
+ * Passt eine Lesung zu den Zahlen aus Treffsicher, mit denen eine übernommene Scheibe angelegt wurde
+ * ([[spiegel-account-transfer]])? Als Wertung gelesen (`scoringReading`) braucht sie ein Gesamtergebnis und dieselbe
+ * Schusszahl; das Ergebnis ist gleich in Zehnteln, wenn sie eingetragen sind, sonst in Ringen. Ohne eingetragenes
+ * Ergebnis passt nichts. Der Abend zählt nicht: Die Ausdrucke hängen schon an der Scheibe.
+ */
+export function fitsEnteredTotal(
+  read: PrintoutReading,
+  totals: {
+    totalRings: number | null
+    totalDecimalTenths: number | null
+    totalShots: number | null
+  }
+): boolean {
+  const reading = scoringReading(read)
+  if (!reading.total || totals.totalShots === null) return false
+  if (reading.shots.length !== totals.totalShots) return false
+  if (totals.totalDecimalTenths !== null)
+    return reading.total.decimalTenths === totals.totalDecimalTenths
+  return totals.totalRings !== null && reading.total.rings === totals.totalRings
+}
+
+/**
  * Welche Ausdrucke einer Scheibe Werte geben können, der beste zuerst: mit gespeicherter Lesung (in sich stimmig, auch
  * wenn sie zur bisherigen Disziplin nicht passte), der zuletzt gedruckte vorn (ein späterer Ausdruck derselben Scheibe
  * hat mindestens so viele Schüsse), bei gleicher Druckzeit der zuletzt gespeicherte.
