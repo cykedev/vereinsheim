@@ -108,7 +108,17 @@ export type TransferAbort =
   | { kind: "sourceElsewhere"; rows: number }
   | { kind: "badFamilyOption"; unknownSlugs: string[]; duplicateNames: string[] }
   | { kind: "unknownFamily"; names: Record<string, number> }
-  | { kind: "noDiscipline"; cases: { family: string; shots: number; sessions: number }[] }
+  | {
+      kind: "noDiscipline"
+      /** `none`: keine Disziplin mit dieser Schusszahl oder mehr; `tie`: mehrere mit `plannedShots`, keine meistgenutzt */
+      cases: {
+        family: string
+        shots: number
+        sessions: number
+        reason: "none" | "tie"
+        plannedShots: number | null
+      }[]
+    }
   /** nach dem Merkmal in Treffsicher ist der Commit in Spiegel gescheitert */
   | { kind: "markedNotSaved" }
 
@@ -120,6 +130,8 @@ export interface TransferReport {
   accountCreated: boolean
   diaryEnabled: boolean
   sessions: number
+  /** neue Scheiben auf einer Disziplin mit mehr Schüssen als die Einheit (unvollständig) */
+  largerDiscipline: number
   decisions: Tally<"existing" | "new" | "uncertain" | "probeEvening" | "noResult" | "notShooting">
   cards: {
     created: number
@@ -261,6 +273,7 @@ const blankReport = (dryRun: boolean): Omit<TransferReport, "check"> => ({
   accountCreated: false,
   diaryEnabled: false,
   sessions: 0,
+  largerDiscipline: 0,
   decisions: { existing: 0, new: 0, uncertain: 0, probeEvening: 0, noResult: 0, notShooting: 0 },
   cards: { created: 0, revised: 0, unchanged: 0, removed: 0, kept: 0, invalid: {} },
   entries: { created: 0, updated: 0, kept: 0, removed: 0 },
@@ -402,7 +415,11 @@ export async function runTransfer(db: Db, input: TransferInput): Promise<Transfe
 
   // je Einheit entscheiden; 7. Disziplin für jede neue Scheibe
   const units: Unit[] = []
-  const missing = new Map<string, { family: string; shots: number; sessions: number }>()
+  const missing = new Map<
+    string,
+    Extract<TransferAbort, { kind: "noDiscipline" }>["cases"][number]
+  >()
+  let largerDiscipline = 0
   const familyName = new Map(families.map((f) => [f.id, f.name]))
   for (const session of [...account.sessions].sort((a, b) => a.date.localeCompare(b.date))) {
     const dateMs = Date.parse(session.date)
@@ -418,13 +435,18 @@ export async function runTransfer(db: Db, input: TransferInput): Promise<Transfe
     )
     let disciplineId: number | null = null
     if ((decision.kind === "new" || decision.kind === "uncertain") && card && familyId !== null) {
-      disciplineId = disciplineForShots(candidates(familyId), card.shots)
-      if (disciplineId === null) {
+      const choice = disciplineForShots(candidates(familyId), card.shots)
+      if (choice.kind === "found") {
+        disciplineId = choice.id
+        if (choice.larger) largerDiscipline += 1
+      } else {
         const k = `${familyId}|${card.shots}`
         const row = missing.get(k) ?? {
           family: familyName.get(familyId) ?? String(familyId),
           shots: card.shots,
           sessions: 0,
+          reason: choice.kind,
+          plannedShots: choice.kind === "tie" ? choice.plannedShots : null,
         }
         row.sessions += 1
         missing.set(k, row)
@@ -463,6 +485,7 @@ export async function runTransfer(db: Db, input: TransferInput): Promise<Transfe
 
   // die Anhänge lesen, außerhalb der Transaktion (Kindprozess, Dateien)
   const report = blankReport(input.dryRun)
+  report.largerDiscipline = largerDiscipline
   const readPrintout =
     input.readPrintout ??
     ((bytes: Uint8Array, fileName: string, zone: string) =>

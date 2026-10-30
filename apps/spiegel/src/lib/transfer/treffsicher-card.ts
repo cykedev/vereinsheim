@@ -1,5 +1,5 @@
 // Eine Einheit aus Treffsicher als Scheibe ([[spiegel-account-transfer]]): welche Familie, welche Disziplin, welche
-// Angaben. Rein; das Vorschau-Werkzeug und später die Übernahme (Stufe 3) schreiben über `writeEnteredCard`.
+// Angaben. Rein; die Übernahme schreibt über `writeEnteredCardIn`.
 
 import type { DetailsInput, EnteredShot } from "@/lib/entered/details"
 
@@ -35,19 +35,46 @@ export function familyForName(
   return hits.length === 1 ? hits[0].id : null
 }
 
+/** Die Wahl unter gleich passenden Disziplinen: die vom Konto meistgenutzte, bei Gleichstand keine */
+function mostUsed(
+  fitting: readonly { id: number; ownCards: number }[]
+): { id: number } | "tie" | null {
+  if (fitting.length <= 1) return fitting[0] ? { id: fitting[0].id } : null
+  const most = Math.max(...fitting.map((candidate) => candidate.ownCards))
+  const top = fitting.filter((candidate) => candidate.ownCards === most)
+  return top.length === 1 ? { id: top[0].id } : "tie"
+}
+
+/** die Disziplin einer neuen Scheibe; `larger`, wenn sie mehr Schüsse hat als die Einheit (die Scheibe ist unvollständig) */
+export type DisciplineChoice =
+  | { kind: "found"; id: number; larger: boolean }
+  /** keine Disziplin mit dieser Schusszahl und keine mit mehr */
+  | { kind: "none" }
+  /** mehrere passen gleich gut, keine ist die meistgenutzte */
+  | { kind: "tie"; plannedShots: number }
+
 /**
- * Die Disziplin mit dieser Schusszahl unter den Kandidaten einer Familie (eingeordnet, nicht ignoriert, mit
- * Scheibenbild, an der ersten Anlage); bei mehreren die vom Konto meistgenutzte, bei Gleichstand keine
+ * Die Disziplin für eine Einheit mit dieser Schusszahl unter den Kandidaten einer Familie (eingeordnet, nicht ignoriert,
+ * mit Scheibenbild, an der ersten Anlage): eine mit genau dieser Schusszahl; gibt es keine, die mit der kleinsten
+ * Schusszahl darüber. Passen mehrere gleich, die vom Konto meistgenutzte, bei Gleichstand keine. Eine Disziplin ohne
+ * feste Schusszahl ist kein Kandidat.
  */
 export function disciplineForShots(
   candidates: readonly { id: number; plannedShots: number | null; ownCards: number }[],
   shots: number
-): number | null {
-  const fitting = candidates.filter((candidate) => candidate.plannedShots === shots)
-  if (fitting.length <= 1) return fitting[0]?.id ?? null
-  const most = Math.max(...fitting.map((candidate) => candidate.ownCards))
-  const top = fitting.filter((candidate) => candidate.ownCards === most)
-  return top.length === 1 ? top[0].id : null
+): DisciplineChoice {
+  const exact = candidates.filter((candidate) => candidate.plannedShots === shots)
+  const above = candidates.filter(
+    (candidate) => candidate.plannedShots !== null && candidate.plannedShots > shots
+  )
+  const next = Math.min(...above.map((candidate) => candidate.plannedShots!))
+  const fitting = exact.length
+    ? exact
+    : above.filter((candidate) => candidate.plannedShots === next)
+  const choice = mostUsed(fitting)
+  if (choice === null) return { kind: "none" }
+  if (choice === "tie") return { kind: "tie", plannedShots: exact.length ? shots : next }
+  return { kind: "found", id: choice.id, larger: !exact.length }
 }
 
 /** ein Schuss aus Treffsicher („9“, „10,4“) als Zahl; null, wenn er keine ist */

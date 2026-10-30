@@ -140,23 +140,39 @@ describe("familyForName", () => {
 })
 
 describe("disciplineForShots", () => {
-  it("nimmt die Disziplin mit dieser Schusszahl, bei mehreren die meistgenutzte, gleich oft keine", () => {
-    const candidates = [
-      { id: 1, plannedShots: 40, ownCards: 3 },
-      { id: 2, plannedShots: 60, ownCards: 1 },
-      { id: 3, plannedShots: 60, ownCards: 7 },
+  const candidates = [
+    { id: 1, plannedShots: 40, ownCards: 3 },
+    { id: 2, plannedShots: 60, ownCards: 1 },
+    { id: 3, plannedShots: 60, ownCards: 7 },
+    { id: 4, plannedShots: 20, ownCards: 0 },
+    { id: 5, plannedShots: null, ownCards: 9 },
+  ]
+
+  it("nimmt die Disziplin mit dieser Schusszahl, bei mehreren die meistgenutzte", () => {
+    expect(disciplineForShots(candidates, 40)).toEqual({ kind: "found", id: 1, larger: false })
+    expect(disciplineForShots(candidates, 60)).toEqual({ kind: "found", id: 3, larger: false })
+    expect(disciplineForShots(candidates, 20)).toEqual({ kind: "found", id: 4, larger: false })
+  })
+
+  it("ohne genaue die mit der kleinsten Schusszahl darüber, nicht die meistgenutzte und nicht die ohne Zahl", () => {
+    expect(disciplineForShots(candidates, 10)).toEqual({ kind: "found", id: 4, larger: true })
+    expect(disciplineForShots(candidates, 30)).toEqual({ kind: "found", id: 1, larger: true })
+    expect(disciplineForShots(candidates, 52)).toEqual({ kind: "found", id: 3, larger: true })
+  })
+
+  it("ohne genaue und ohne größere keine", () => {
+    expect(disciplineForShots(candidates, 70)).toEqual({ kind: "none" })
+    expect(disciplineForShots([], 40)).toEqual({ kind: "none" })
+  })
+
+  it("bei Gleichstand keine, auch wenn es eine größere gäbe", () => {
+    const tied = [
+      { id: 2, plannedShots: 60, ownCards: 4 },
+      { id: 3, plannedShots: 60, ownCards: 4 },
+      { id: 6, plannedShots: 80, ownCards: 0 },
     ]
-    expect(disciplineForShots(candidates, 40)).toBe(1)
-    expect(disciplineForShots(candidates, 60)).toBe(3)
-    expect(disciplineForShots(candidates, 20)).toBeNull()
-    expect(
-      disciplineForShots(
-        [
-          { id: 2, plannedShots: 60, ownCards: 4 },
-          { id: 3, plannedShots: 60, ownCards: 4 },
-        ],
-        60
-      )
-    ).toBeNull()
+    expect(disciplineForShots(tied, 60)).toEqual({ kind: "tie", plannedShots: 60 })
+    expect(disciplineForShots(tied, 50)).toEqual({ kind: "tie", plannedShots: 60 })
+    expect(disciplineForShots(tied, 70)).toEqual({ kind: "found", id: 6, larger: true })
   })
 })

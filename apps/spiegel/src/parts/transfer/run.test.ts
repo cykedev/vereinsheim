@@ -500,15 +500,35 @@ describe("runTransfer: Abbruch vor dem Schreiben", () => {
     })
   })
 
-  it("keine Disziplin der Familie mit der Schusszahl einer neuen Scheibe", async () => {
+  it("keine Disziplin der Familie mit der Schusszahl einer neuen Scheibe oder mehr", async () => {
     const c = newCase("schuss")
-    const three = c.session("s1", "2026-08-07")
-    three.series = three.series.slice(0, 3)
-    c.account([three])
+    const five = c.session("s1", "2026-08-07")
+    five.series = [...five.series, { ...five.series[0], position: 5 }]
+    c.account([five])
     expect(await c.run()).toEqual({
       kind: "aborted",
-      abort: { kind: "noDiscipline", cases: [{ family: familyName, shots: 30, sessions: 1 }] },
+      abort: {
+        kind: "noDiscipline",
+        cases: [{ family: familyName, shots: 50, sessions: 1, reason: "none", plannedShots: null }],
+      },
     })
     expect(await db.user.findUnique({ where: { email: c.to } })).toBeNull()
+  })
+})
+
+describe("runTransfer: Disziplin mit mehr Schüssen", () => {
+  it("legt eine Einheit mit 30 Schuss auf die Disziplin mit 40 an, als unvollständig", async () => {
+    const c = newCase("groesser")
+    const three = c.session("s1", "2026-08-08")
+    three.series = three.series.slice(0, 3)
+    c.account([three])
+    const report = done(await c.run())
+    expect(report.largerDiscipline).toBe(1)
+    expect(report.check.findings).toBe(0)
+    const card = await db.card.findFirstOrThrow({
+      where: { importKey: `treffsicher:${c.id("s1")}` },
+      select: { disciplineId: true, flags: true, complete: true },
+    })
+    expect(card).toEqual({ disciplineId, flags: ["unvollstaendig"], complete: false })
   })
 })
