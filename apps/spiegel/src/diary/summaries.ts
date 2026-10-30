@@ -21,9 +21,10 @@ export type EntryResultCard = { result: ResultValue | null; probeOnly: boolean }
 
 /**
  * Was ein Eintrag geschossen hat. Hängt mindestens eine Scheibe mit Wertung am Eintrag (verknüpft oder dazugekommen),
- * zählen nur diese; eine Probe-Scheibe daneben nimmt ihm kein Ergebnis. Ohne Wertung zählen die Probe-Scheiben. Ist es
- * dann genau eine, ist ihr Ergebnis das des Eintrags; null ohne Scheibe, bei mehreren oder ohne Ergebnis. Die Seite
- * eines Eintrags, die Zeile der Liste und „Erwartet und geschossen“ nehmen diese eine Regel.
+ * zählen nur diese, Probe-Scheiben daneben nicht. Ohne Wertung zählen die Probe-Scheiben. Ist es dann genau eine, ist
+ * ihr Ergebnis das des Eintrags; null ohne Scheibe, bei mehreren oder ohne Ergebnis. Gefiltert wird nach `probeOnly`,
+ * nicht nach `warmup`: Auch eine Probe nach der Wertung ist nicht das, was geschossen wurde. Die Seite eines Eintrags,
+ * die Zeile der Liste und „Erwartet und geschossen“ nehmen diese eine Regel.
  */
 export function shotResult(cards: readonly EntryResultCard[]): ResultValue | null {
   const scored = cards.filter((card) => !card.probeOnly)

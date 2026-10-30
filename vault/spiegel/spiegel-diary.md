@@ -160,9 +160,10 @@ gerechnet (`src/diary/analysis/`), ohne Schema. Die Scheiben einer Familie liest
   bewerteten Serien am Median ihrer Bewertungen und zieht von jeder Serie den Ø je Schuss der bewerteten Serien derselben
   Scheibe ab. Tagesform und Fortschritt fallen so heraus; ohne Streuung je Serie urteilt der Rangtest über die Serien.
   Eine Scheibe mit gleich bewerteten Serien zählt nicht. „Erwartet und geschossen“ nimmt die Regel der Seite eines
-  Eintrags (`shotResult`: genau eine Scheibe mit Wertung, eine Probe-Scheibe daneben zählt nicht; ohne Wertung genau
-  eine Probe-Scheibe), wie die Zeile der Liste („2 Scheiben · 374,3 Ringe“). „Vorher und nachher“ zeigt je Bereich das Mittel von
-  Prognose und Feedback über die Einträge mit beidem. Beide ohne Urteil.
+  Eintrags (`shotResult`: genau eine Scheibe mit Wertung, Probe-Scheiben daneben zählen nicht; ohne Wertung genau eine
+  Probe-Scheibe), wie die Zeile der Liste („2 Scheiben · 374,3 Ringe“). Die Regel filtert bewusst nach `probeOnly`, nicht
+  nach `warmup` wie die Einflüsse: Auch eine Probe nach der Wertung ist nicht das Geschossene. „Vorher und nachher“
+  zeigt je Bereich das Mittel von Prognose und Feedback über die Einträge mit beidem. Beide ohne Urteil.
 - **Seite:** Die Abschnitte stehen immer da, ohne Daten mit Leersatz; Hilfe hinter „?“ aus `ANALYSIS_HELP`
   (`DiaryHelp`, Blatt `HelpSheet`), Texte in `src/diary/analysis/texts.ts`. Die Form bleibt eine feste Zahl im Test:
   Sie wackelt selbst, Urteile sind dadurch etwas zu sicher (offen, Fachkern mit Simulation).

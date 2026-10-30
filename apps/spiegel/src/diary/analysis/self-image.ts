@@ -16,8 +16,7 @@ export interface ExpectedRow {
 
 /**
  * Erwartet gegen geschossen: je Eintrag mit erwartetem und geschossenem Ergebnis (`shotResult`, die Regel der Seite
- * eines Eintrags: genau eine Scheibe mit Wertung, ohne Wertung genau eine Probe) eine Zeile, neueste oben; dazu das
- * Mittel der Abstände und wie viele fehlen
+ * eines Eintrags) eine Zeile, neueste oben; dazu das Mittel der Abstände und wie viele fehlen
  */
 export function expectedRows(
   entries: readonly {

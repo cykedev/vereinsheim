@@ -32,7 +32,7 @@ describe("Zeilen eines Eintrags", () => {
     expect(resultText({ value: 358, scoring: "rings", digits: 0 })).toBe("358 Ringe")
   })
 
-  it("nimmt als geschossen nur das Ergebnis genau einer Scheibe", () => {
+  it("nimmt als geschossen nur das Ergebnis genau einer Scheibe mit Wertung", () => {
     expect(shotResult([scored(374.3)])).toEqual(r(374.3))
     expect(shotResult([scored(null)])).toBeNull()
     expect(shotResult([])).toBeNull()

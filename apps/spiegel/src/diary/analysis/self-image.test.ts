@@ -10,7 +10,7 @@ const scored = (value: number | null) => ({
 const probe = (value: number) => ({ result: result(value), probeOnly: true })
 
 describe("expectedRows", () => {
-  it("nimmt Einträge mit genau einer Scheibe mit Ergebnis, neueste oben, und mittelt die Abstände", () => {
+  it("nimmt Einträge mit genau einer Scheibe mit Wertung und Ergebnis, neueste oben, und mittelt die Abstände", () => {
     const { rows, mean, left } = expectedRows([
       { id: "a", day: "2026-03-01", expectedScore: 365, cards: [scored(358)] },
       { id: "b", day: "2026-03-08", expectedScore: 360, cards: [scored(362)] },
