@@ -1,9 +1,9 @@
 ---
 id: spiegel-account-transfer
 type: operation
-title: "Spiegel — Abgleich der Konten vor der Übernahme aus Treffsicher"
-aliases: [kontenabgleich, account-match, zuordnung-der-konten]
-keywords: [vorschau, diary-preview, treffsicher:preview-, entryfromsession, treffsicherdetails, übernahme, treffsicher, konten, e-mail, zuordnung, mapping, csv, transfer, verdacht, levenshtein, stufe 3, personendaten, reports]
+title: "Spiegel — Übernahme aus Treffsicher: Abgleich der Konten und Lauf je Konto"
+aliases: [kontenabgleich, account-match, zuordnung-der-konten, übernahme-eines-kontos, account-transfer]
+keywords: [runtransfer, decidecard, checktransfer, prüfbestand, geändertes bleibt, movedtospiegelat, umgezogen, --family, nodiscipline, unknownfamily, exit-code, probelauf, dry-run, ausdruck übernehmen, printoutfits, vorschau, treffsicher:preview-, entryfromsession, treffsicherdetails, übernahme, treffsicher, konten, e-mail, zuordnung, mapping, csv, transfer, verdacht, levenshtein, stufe 3, personendaten, reports]
 part_of: ["[[spiegel]]"]
 governed_by: ["[[adr-033]]", "[[adr-029]]", "[[adr-002]]"]
 ---
@@ -12,6 +12,8 @@ governed_by: ["[[adr-033]]", "[[adr-029]]", "[[adr-002]]"]
 Abfrage, keine Verbindung dazwischen) und schreibt nach `reports/tis-v1/` einen Bericht und einen Vorschlag der
 Zuordnung `zuordnung-<Tag>.csv`. Diese Datei bearbeitet der User; sie ist der Vertrag mit dem CLI, das in Stufe 3 von
 [[adr-033]] Konto für Konto übernimmt. Beide Dateien enthalten Namen und E-Mails und bleiben gitignored ([[adr-029]]).
+Danach übernimmt `pnpm --filter spiegel transfer --from … --to …` ein Konto in einer Transaktion: Scheiben, Einträge,
+Ziele, Abläufe, Ausdrucke und Belege, mit Prüfbestand und Bericht; wiederholbar, Geändertes bleibt.
 
 ## Gruppen
 
@@ -33,23 +35,119 @@ E-Mail, `check` an den Kandidaten (Merkmale in `reason`), `new` an die eigene E-
 `parseMappingCsv` schreiben und lesen sie (Fehler mit Zeilennummer). Was der Leser **nicht** prüft und das CLI aus
 Stufe 3 deshalb selbst ablehnen muss: übrig gebliebene `check`-Zeilen und widersprüchliche Zeilen zu einem `from`.
 
-## Zuordnungen für Stufe 3
+## Übernahme eines Kontos
 
-Erprobt mit dem Vorschau-Werkzeug des Tagebuchs ([[spiegel-diary]], `pnpm --filter spiegel diary-preview`, nur Dev-DB):
+```
+pnpm --filter spiegel transfer --from <E-Mail in Treffsicher> --to <E-Mail in Spiegel>
+  [--dry-run] [--files <Ordner unter tools/private/>] [--family "<Name>=<Kennung der Familie>"]…
+```
+
+Nur gegen die lokale Dev-Datenbank (`assertDevDatabase`). Treffsicher liest `tools/transfer/source-dev.ts` über `psql`
+im Dev-Container (`tools/transfer/treffsicher-account.sql`, eine Zeile JSON je Konto, keine Verbindung der App zur
+fremden Datenbank, [[adr-002]]); `runTransfer` (`apps/spiegel/src/parts/transfer/run.ts`) bekommt die Quelle als
+Schnittstelle (`TreffsicherSource`). `--files` zeigt auf die entpackten Dateien der Anhänge aus der Sicherung von
+Treffsicher, nur unter `tools/private/`. Exit-Codes: 0 fertig, 1 Befund im Prüfbestand, 2 Aufruf falsch, 3 Abbruch,
+4 Fehler (nichts geschrieben). Die Ausgabe hat nur Zahlen, Gründe und Namen von Disziplinen; der Bericht mit Tagen und
+Texten der Stichprobe geht nach `reports/tis-3a/transfer-<Tag>-<acht Zeichen sha256 der E-Mail>.md` (gitignored, nie
+E-Mail oder Passwort, [[adr-029]]).
+
+### Schlüssel
+
+`treffsicher:<Kennung>` an Scheibe (`Card.importKey`), Eintrag, Ziel und Ablauf (`src/parts/transfer/keys.ts`). Über ihn
+findet ein zweiter Lauf, was er schon geschrieben hat. Die Schlüssel der früheren Vorschau (`treffsicher:preview-`,
+`preview:`) zählen nie als übernommen.
+
+### Abbrüche vor dem Schreiben
+
+In dieser Reihenfolge, je mit festem Text im CLI: kein Konto in Treffsicher (`noSource`); Zeilen der Vorschau im Ziel
+(`preview`, siehe unten); Übernommenes eines anderen Treffsicher-Kontos im Ziel (`foreignInTarget`); Übernommenes
+dieses Kontos an einem anderen Spiegel-Konto (`sourceElsewhere`); `--family` mit unbekannter Kennung oder doppeltem
+Namen (`badFamilyOption`); eine Disziplin aus Treffsicher ohne Familie (`unknownFamily`, Namen mit Zahl der Einheiten);
+eine Einheit braucht eine neue Scheibe, aber die Familie hat keine Disziplin mit ihrer Schusszahl (`noDiscipline`,
+Familie und Schusszahl). Nichts wird geraten: Die Familie gibt `--family` an, eine fehlende Disziplin legt der Admin
+unter Admin → Disziplinen an.
+
+### Je Einheit
+
+`decideCard` (`src/parts/transfer/decide.ts`, rein) gegen die Scheiben des Abends in der Familie, ohne die
+übernommenen:
+
+1. kein Training und kein Wettkampf → keine Scheibe; ohne Ergebnis → keine Scheibe;
+2. keine Scheibe am Abend → **neu**, eine Scheibe „aus Treffsicher“;
+3. passende Scheiben (nicht nur Probe, gleiche Schusszahl, gleiches Ergebnis in der Wertung von Treffsicher) →
+   **vorhanden**, alle passenden werden verknüpft;
+4. nur Scheiben „nur Probe“ → keine neue, der Abend leitet sie ab;
+5. sonst **unsicher**: trotzdem neu, beide bleiben, der Bericht nennt den Fall (Abweichung von [[adr-033]], die
+   Entscheidung steht dort im Nachtrag).
+
+Dazu der Eintrag (`entryFromSession`), die festen Verknüpfungen (eine Scheibe, die schon ein anderer Eintrag hält,
+bleibt dort), die Ausführung je Serie (`executionsOnCard`, nur bei genau einer Scheibe mit gleicher Zahl Serien) und
+die Anhänge:
+
+- **Meyton-Ausdruck:** an die eigene Scheibe mit dieser ID am Abend des Drucks; sonst an die Scheibe der Einheit, und
+  wenn sie aus Treffsicher ist und der Ausdruck passt (`printoutFits`: Lesung ok, nicht nur Probe, gleicher Abend,
+  gleiche Schusszahl, gleiches Ergebnis), übernimmt sie seine Werte (Revision 2, Herkunft `pdf`); sonst wie „Scheibe
+  holen“ eine Scheibe vom Ausdruck. Ein Ausdruck im Modus Probe passt nie und hängt ohne Werte an.
+- **Foto oder gewöhnliches PDF:** Beleg an der Scheibe der Einheit, ohne Scheibe nur im Bericht.
+
+Ausdruck und Beleg schreiben in der Transaktion der Übernahme (`importPrintoutIn`, `attachEvidenceIn`); gelesen
+werden die Dateien vorher, der Leser der Ausdrucke läuft im Kindprozess. Ziele und Abläufe über
+`goalFromTreffsicher`/`routineFromTreffsicher` (`src/diary/transfer/treffsicher-goal.ts`): Tage in der Zeitzone der
+Anzeige, Familie nur, wenn die verknüpften Einheiten genau eine ergeben, Verknüpfungen außerhalb des Zeitraums im
+Bericht; Schritte eines Ablaufs in ihrer Reihenfolge, ungültige als ein Schritt mit allen Texten.
+
+Ein neues Konto bekommt Name, Passwort-Hash und Aktiv-Status aus Treffsicher, die Rolle Schütze und keinen verlangten
+Passwortwechsel; beim ersten Lauf wird das Tagebuch eingeschaltet.
+
+### Geändertes bleibt
+
+Ein zweiter Lauf ersetzt nur, was seit dem letzten unverändert ist. Der letzte Lauf ist `movedToSpiegelAt` in
+Treffsicher. Scheiben zeigen es an der Herkunft (von Hand `manual`, mit Werten vom Ausdruck `pdf`), Einträge, Ziele und
+Abläufe an `updatedAt` (ein Eintrag auch an seinen Verknüpfungen); was im Papierkorb liegt, bleibt dort. Was in
+Treffsicher verschwunden ist, geht, wenn es unverändert ist. Der Bericht nennt, was stehen blieb und warum.
+
+### Merkmal „umgezogen“
+
+Der letzte Schritt der Transaktion setzt `movedToSpiegelAt` in Treffsicher ([[treffsicher-read-only]]); der
+Probelauf setzt nichts. Scheitert danach das Speichern in Spiegel, meldet das CLI „Merkmal in Treffsicher gesetzt,
+Übernahme in Spiegel nicht gespeichert“ (Exit 3): Den Lauf wiederholen, dann gilt nichts als geändert, oder das
+Merkmal mit `pnpm --filter treffsicher moved --clear <E-Mail>` zurücknehmen. Stünde das Merkmal erst nach dem Speichern
+und scheiterte es nach einem zweiten Lauf, wären alle Zeilen dieses Laufs jünger als das alte Merkmal; der dritte Lauf
+hielte sie für geändert und ersetzte nichts mehr.
+
+### Prüfbestand
+
+`checkTransfer` (`src/parts/transfer/check.ts`, rein) liest nach dem Schreiben in derselben Transaktion zurück: je
+Einheit mit Ergebnis Ergebnis und Ø je Schuss vorher gleich nachher (Abweichungen nur erklärt: Abend nur Probe,
+unsicher, Werte vom Ausdruck, geändert), je Tabelle Zahl vorher, nachher und Erklärung der Differenz, dazu eine
+Stichprobe der fünf Einheiten mit den meisten Texten Feld für Feld. Jede unerklärte Abweichung ist ein Befund
+(Exit 1).
+
+### Zeilen der Vorschau
+
+Das frühere Vorschau-Werkzeug des Tagebuchs schrieb nur in die Dev-Datenbank, mit Schlüsseln `treffsicher:preview-`
+(Scheiben) und `preview:` (Tagebuch). Hat das Ziel noch solche Zeilen, bricht die Übernahme ab und nennt diese Sätze
+SQL für die Datenbank von Spiegel (die Verknüpfungen zuerst, sie hängen an keiner Scheibe):
+
+```sql
+DELETE FROM "DiaryEntryCard" WHERE "cardId" IN (SELECT id FROM "Card" WHERE "importKey" LIKE 'treffsicher:preview-%');
+DELETE FROM "DiaryEntry" WHERE "importKey" LIKE 'preview:%';
+DELETE FROM "DiaryGoal" WHERE "importKey" LIKE 'preview:%';
+DELETE FROM "DiaryRoutine" WHERE "importKey" LIKE 'preview:%';
+DELETE FROM "Card" WHERE "importKey" LIKE 'treffsicher:preview-%';
+```
+
+### Zuordnungen
 
 - **Scheibe** (`apps/spiegel/src/lib/transfer/treffsicher-card.ts`, rein): `familyForName` (Name der Treffsicher-Disziplin
-  gleich dem der Familie, ohne Groß- und Kleinschreibung, genau eine), `disciplineForShots` (Disziplin der ersten Anlage
-  mit derselben Schusszahl, bei mehreren die meistgenutzte des Kontos, sonst keine), `treffsicherDetails`
-  (Wertungsserien mit Wert neu nummeriert; Einzelschüsse nur, wenn jede Serie sie hat und ihre Summe zum Wert passt,
-  sonst Serien-Summen; Probeserien als Probe; Trefferlage mit Richtung).
+  gleich dem der Familie, ohne Groß- und Kleinschreibung, genau eine; `--family` geht vor), `disciplineForShots`
+  (Disziplin der ersten Anlage mit derselben Schusszahl, bei mehreren die meistgenutzte des Kontos, sonst keine),
+  `treffsicherDetails` (Wertungsserien mit Wert neu nummeriert; Einzelschüsse nur, wenn jede Serie sie hat und ihre
+  Summe zum Wert passt, sonst Serien-Summen; Probeserien als Probe; Trefferlage mit Richtung).
 - **Eintrag** (`apps/spiegel/src/diary/transfer/treffsicher-entry.ts`, rein): `entryFromSession` (Abend, Art, Vorhaben aus
   Trainingsziel oder Leistungsziel, „Hat es geklappt?“ nur mit Vorhaben, Erkenntnis, Lernfrage, Notiz mit Überschriften
-  je übrigem Feld, Werte genau wie gespeichert) und `executionsOnCard` (Ausführung je Wertungsserie auf die Serien der
-  Scheibe, nur bei gleicher Zahl). Geschrieben über `src/diary/transfer/write.ts` (anlegen oder über den Schlüssel
-  ersetzen).
-- **Schlüssel der Vorschau:** Scheiben `treffsicher:preview-<Einheit>` (`IMPORT_KEY` nimmt nur `treffsicher:…`),
-  Tagebuch `preview:<Einheit>`. Stufe 3 löscht die Vorschau vorher (`--delete`) oder lässt `treffsicher:preview-` beim
-  Zählen aus. Zwei Einheiten an einem Abend bekommen keine Scheibe von selbst; dafür braucht Stufe 3 eine Regel.
+  je übrigem Feld, Werte genau wie gespeichert) und `executionsOnCard`. Geschrieben über `src/diary/transfer/write.ts`
+  (anlegen oder über den Schlüssel ersetzen).
 
 ## Fallstricke
 
@@ -58,3 +156,10 @@ Erprobt mit dem Vorschau-Werkzeug des Tagebuchs ([[spiegel-diary]], `pnpm --filt
 - `prod` läuft über `ssh` mit `VPS_HOST` und `VPS_REPO_PATH` aus `.vereinsheim.local` und nur durch den User.
 - Spalten der SQL und des Parsers sind über feste Listen gekoppelt: Eine umbenannte Spalte ist ein Fehler, keine
   stille 0.
+- Ein Abend nur aus Probe oder eine Einheit ohne Ergebnis mit Meyton-Ausdruck: Lauf 1 legt die Scheibe vom Ausdruck
+  an. Passt sie nicht zum Ergebnis in Treffsicher, sähe Lauf 2 sie als unsicher und legte eine Scheibe „aus
+  Treffsicher“ daneben. In den Daten der Probe kam der Fall nicht vor.
+- Meyton-Ausdrucke im Modus Probe haben kein Gesamtergebnis und passen nie (`printoutFits`). Die Ausdrucke des Users in
+  Treffsicher sind beide so gedruckt; die Übernahme der Werte vom Ausdruck ist nur durch Tests belegt.
+- Vor einem Lauf über alle Konten fehlen Disziplinen: Fünf von neun Konten (Probelauf am 29. Oktober 2026) haben
+  Einheiten mit Schusszahlen, für die ihre Familie in der ersten Anlage keine Disziplin hat (`noDiscipline`).

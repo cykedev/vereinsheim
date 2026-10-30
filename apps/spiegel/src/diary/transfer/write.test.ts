@@ -6,7 +6,6 @@ import { createTestSite, type TestSite } from "../../../test/fixtures"
 import type { ImportedEntry } from "./treffsicher-entry"
 import type { ImportedGoal, ImportedRoutine } from "./treffsicher-goal"
 import {
-  deletePreviewDiary,
   isTouched,
   releaseImportedLinks,
   replaceExecutions,
@@ -38,7 +37,7 @@ afterAll(async () => {
 })
 
 const entry = (key: string, over: Partial<ImportedEntry> = {}): ImportedEntry => ({
-  importKey: `preview:${key}-${site.siteId}`,
+  importKey: `treffsicher:test-${key}-${site.siteId}`,
   day: "2026-03-13",
   kind: "shooting",
   familyId: site.familyId,
@@ -202,51 +201,5 @@ describe("Zeilen und Ausführung", () => {
     ).toEqual([3])
     await db.$transaction((tx) => releaseImportedLinks(tx, [cardId]))
     expect(await db.diaryEntryCard.count({ where: { entryId: id } })).toBe(0)
-  })
-})
-
-describe("deletePreviewDiary", () => {
-  it("löscht nur Zeilen mit `preview:` dieses Kontos", async () => {
-    const own = await db.diaryEntry.create({
-      data: {
-        userId: site.ownerId,
-        day: new Date("2026-03-14T00:00:00Z"),
-        familyId: site.familyId,
-      },
-    })
-    const imported = await db.diaryEntry.create({
-      data: {
-        userId: site.ownerId,
-        day: new Date("2026-03-14T00:00:00Z"),
-        familyId: site.familyId,
-        importKey: `treffsicher:keep-${site.siteId}`,
-      },
-    })
-    const foreign = await db.diaryEntry.create({
-      data: {
-        userId: otherId,
-        day: new Date("2026-03-14T00:00:00Z"),
-        familyId: site.familyId,
-        importKey: `preview:foreign-${site.siteId}`,
-      },
-    })
-    await db.diaryGoal.create({
-      data: {
-        userId: site.ownerId,
-        title: "Ziel",
-        kind: "process",
-        from: new Date("2026-03-01T00:00:00Z"),
-        to: new Date("2026-03-31T00:00:00Z"),
-        importKey: `preview:goal-${site.siteId}`,
-      },
-    })
-    const deleted = await db.$transaction((tx) => deletePreviewDiary(tx, site.ownerId))
-    expect(deleted).toEqual({ entries: 2, goals: 1, routines: 0 })
-    const left = await db.diaryEntry.findMany({
-      where: { id: { in: [own.id, imported.id, foreign.id] } },
-      select: { id: true },
-    })
-    expect(left.map((e) => e.id).sort()).toEqual([own.id, imported.id, foreign.id].sort())
-    expect(await db.diaryEntry.count({ where: { importKey: entry("a").importKey } })).toBe(0)
   })
 })

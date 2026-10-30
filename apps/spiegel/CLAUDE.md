@@ -26,7 +26,6 @@ Stack Ende zu Ende.
 | `pnpm --filter spiegel stack-probe`                            | Grenzen hinter Caddy gegen einen laufenden Stack (`BASE_URL`, `DATABASE_URL`; aus `tools/stack-e2e/run.sh`)                                                                                                                                                                                                      |
 | `pnpm --filter spiegel bridge-e2e`                             | die echte Brücke (Go) Ende zu Ende gegen den eigenen Build auf :3012 mit MariaDB, drei Fällen und Aufträgen per ID (`--keep`), mit `BASE_URL` gegen einen laufenden Spiegel                                                                                                                                      |
 | `pnpm --filter spiegel exec tsx tools/printout-sample.ts`      | erfundener Meyton-Ausdruck (`--id`, Vorgabe `ff914420`; `--printed` mit Versatz) als PDF nach stdout, für den Stack-Test, die Skriptprüfung (`samplePrintout`) und zum Messen des Lesers (`--values`: stimmig mit Werten und Trefferbild; `--kind memory\|time`)                                                 |
-| `pnpm --filter spiegel diary-preview --from <a> --to <b>`      | Vorschau des Tagebuchs mit einem Konto aus Treffsicher (nur Dev-DB, `--dry-run`, `--delete --to <b>`): Scheiben `treffsicher:preview-…` und Einträge `preview:…`, Bericht nur mit Zahlen nach `reports/tis-2c/`                                                                                                  |
 | `pnpm --filter spiegel transfer --from <a> --to <b>`           | Übernahme eines Kontos aus Treffsicher (nur Dev-DB, ADR-033 Stufe 3): `--dry-run`, `--files <Ordner unter tools/private/>`, `--family "<Name>=<Kennung>"`; legt das Ziel an, wenn es fehlt, Geändertes bleibt; Bericht mit Prüfbestand nach `reports/tis-3a/`, Exit-Codes 0 bis 4 ([[spiegel-account-transfer]]) |
 | `pnpm --filter spiegel transfer:accounts dev`                  | Abgleich der Konten Treffsicher ↔ Spiegel vor der Übernahme (ADR-033): Bericht und Vorschlag der Zuordnung nach `reports/tis-v1/` (Personendaten, gitignored); `prod` führt nur der User aus                                                                                                                     |
 
@@ -442,7 +441,8 @@ Stand mit `past` (`MAX_OBSERVED_LAG_MS`, SF-79).
   beim Lesen gerechnet aus `resultFormCards`; es zählt jede Scheibe außer dem Einschießen (`warmup` aus
   `overviewCards`, dieselbe Regel wie im Fortschritt, auch für Ziele über `resultGoalCards`; keine eigene Regel im
   Tagebuch). Die Reiter sind `TabBar` in der Client-Hülle `DiaryTabs` (wie `AdminTabs`:
-  `renderLink` geht nicht von der Server-Komponente aus). Das Vorschau-Werkzeug schreibt über `src/parts/transfer/diary-preview.ts`.
+  `renderLink` geht nicht von der Server-Komponente aus). Die Übernahme aus Treffsicher schreibt über
+  `src/parts/transfer/run.ts`.
 - **Deine Daten** (Profil, `src/parts/account.ts`): `GET /api/account/export` gibt eine JSON-Datei als Strom
   (`resultsExport` in `src/lib/export/results.ts`, je 200 Scheiben eine Abfrage, und `diaryExport`), nur mit eigener
   Sitzung. `deleteOwnAccount` (`src/parts/account-actions.ts`) prüft das Passwort, lehnt das einzige aktive Admin-Konto

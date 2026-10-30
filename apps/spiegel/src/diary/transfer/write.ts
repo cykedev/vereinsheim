@@ -1,6 +1,5 @@
 // Einträge, Ziele und Abläufe aus einer Übernahme schreiben: anlegen oder über den Schlüssel ersetzen, Scheiben
-// verknüpfen, Ausführung setzen, Vorschau-Zeilen löschen. Läuft in der Transaktion des Aufrufers (Übernahme,
-// Vorschau-Werkzeug).
+// verknüpfen, Ausführung setzen. Läuft in der Transaktion der Übernahme.
 
 import type { Prisma } from "@/generated/prisma/client"
 
@@ -9,9 +8,6 @@ import type { ImportedGoal, ImportedRoutine } from "./treffsicher-goal"
 import { dateOfDay } from "../validation"
 
 type Tx = Prisma.TransactionClient
-
-/** Schlüssel der Vorschau im Tagebuch (`preview:<Einheit>`) */
-export const PREVIEW_PREFIX = "preview:"
 
 /**
  * Einen übernommenen Eintrag über seinen Schlüssel anlegen oder seine Felder setzen und seine Werte ersetzen; die
@@ -156,19 +152,4 @@ export async function replaceExecutions(
   await tx.diarySeriesExecution.deleteMany({ where: { entryId } })
   if (rows.length)
     await tx.diarySeriesExecution.createMany({ data: rows.map((row) => ({ entryId, ...row })) })
-}
-
-/**
- * Alle Zeilen der Vorschau eines Kontos löschen: Einträge, Ziele und Abläufe mit Schlüssel `preview:`; die Kaskade nimmt
- * Werte, Zeilen der Scheiben und Ausführung mit
- */
-export async function deletePreviewDiary(
-  tx: Tx,
-  userId: string
-): Promise<{ entries: number; goals: number; routines: number }> {
-  const where = { userId, importKey: { startsWith: PREVIEW_PREFIX } }
-  const entries = await tx.diaryEntry.deleteMany({ where })
-  const goals = await tx.diaryGoal.deleteMany({ where })
-  const routines = await tx.diaryRoutine.deleteMany({ where })
-  return { entries: entries.count, goals: goals.count, routines: routines.count }
 }

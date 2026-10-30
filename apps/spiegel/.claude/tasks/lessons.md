@@ -120,3 +120,20 @@ Geschichte in `vault/incidents/`.
 - **Ein Probelauf als Transaktion, die zurückrollt:** `runPreview` rechnet mit `dryRun` alles in derselben Transaktion
   wie ein echter Lauf und wirft am Ende einen eigenen Fehler. So zählt der Probelauf genau, was ein Lauf schreiben
   würde, ohne zweiten Code. → REMEMBER (steht im Code)
+
+## 2026-10-30 · Übernahme eines Kontos (3a)
+
+- **Ein Zeitstempel als Grenze für „geändert“ braucht das Merkmal in derselben Transaktion:** Die Übernahme hält eine
+  Zeile für geändert, wenn `updatedAt` jünger ist als `movedToSpiegelAt` in Treffsicher. Stünde das Merkmal erst nach
+  dem Commit und scheiterte es, wären alle Zeilen des Laufs jünger als das alte Merkmal, und der nächste Lauf ersetzte
+  nichts mehr. Das Merkmal ist deshalb der letzte Schritt in der Transaktion; scheitert danach der Commit, meldet das
+  CLI es laut (Exit 3). → DOCUMENT (`vault/spiegel/spiegel-account-transfer.md`, Merkmal „umgezogen“)
+- **`DiaryEntryCard` hat keinen Fremdschlüssel zur Scheibe:** Der Teil Tagebuch kennt Scheiben nur über die Kennung.
+  Wer Scheiben per SQL löscht, löscht die Verknüpfungen vorher selbst, sonst bleiben sie stehen. → DOCUMENT (SQL der
+  Vorschau in `vault/spiegel/spiegel-account-transfer.md`)
+- **Die echten Ausdrucke des Users sind im Modus Probe gedruckt:** Beide Meyton-PDFs aus Treffsicher haben kein
+  Gesamtergebnis und passen nach `printoutFits` nie. Die Übernahme der Werte vom Ausdruck (Revision 2) ist deshalb nur
+  durch Tests belegt, nicht durch echte Daten. → DOCUMENT (Fallstricke in `spiegel-account-transfer`)
+- **Fünf von neun Konten brechen mit `noDiscipline` ab:** Die erste Anlage hat in Luftpistole, Luftpistole Auflage und
+  Luftgewehr nur die üblichen Schusszahlen; Treffsicher kennt 10, 20, 50, 52, 60, 70 und 80. Vor einem Lauf über alle
+  Konten muss der Admin die Disziplinen anlegen. → REMEMBER (Meldung an die Koordination, Plan der Stufe 3)

@@ -1,5 +1,5 @@
 // Eine Einheit aus Treffsicher als Eintrag im Tagebuch ([[spiegel-account-transfer]]): welche Felder wohin. Rein; den
-// Schlüssel gibt der Aufrufer (die Übernahme `treffsicher:<Einheit>`, das Vorschau-Werkzeug `preview:<Einheit>`).
+// Schlüssel gibt der Aufrufer (die Übernahme: `treffsicher:<Einheit>`).
 
 import { eveningDay } from "@vereinsheim/shot-ui/period/calendar"
 

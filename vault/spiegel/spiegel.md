@@ -36,7 +36,7 @@ Features, die Deploy-Vertrag, Schema oder ADRs berühren, laufen interaktiv stat
 7. [[spiegel-ui-design]] — Design 2, Navigation, Bildschirme, Farben; [[spiegel-mobile]] — Spiegel auf dem Telefon; [[spiegel-langzeit]] — über viele Scheiben: Zeitraum, Verlauf, Analyse; [[spiegel-vergleichen]] — A gegen B auf einer eigenen Seite; [[spiegel-navigation]] — Einstieg, Scheiben-Liste, Auswahl, Adressen und Löschen; [[spiegel-durchsicht]] — Bedienbarkeit und Komplexität, Leitlinie „drei Ebenen“.
 8. [[spiegel-privacy]] — Datenschutz, Rollen, verdeckte Wertung.
 9. [[spiegel-roadmap]] und [[spiegel-open-questions]] — was wir wann bauen und was noch offen ist.
-10. [[spiegel-account-transfer]] — Abgleich der Konten vor der Übernahme aus Treffsicher, Zuordnung als Datei.
+10. [[spiegel-account-transfer]] — Übernahme aus Treffsicher: Abgleich der Konten, Zuordnung als Datei, Lauf je Konto (`transfer`).
 11. [[spiegel-diary]] — das Tagebuch als zweiter Teil: Einträge, Fragen, Ziele, Abläufe, Stellen im Ergebnisteil, Deine Daten.
 
 ## Domänenwissen

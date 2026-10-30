@@ -3,7 +3,7 @@ id: spiegel-diary
 type: subsystem
 title: "Spiegel — Tagebuch: Einträge, Fragen, Auswertung und Stellen"
 aliases: [tagebuch, diary, treffsicher-2-0, trainingstagebuch-in-spiegel]
-keywords: [auswertung, einflüsse, selbstbild, form, abstand zur form, merkst du, erwartet und geschossen, vorher und nachher, vorschau, diary-preview, nur probe, einschießen, warmup, saisonziel, ziele, ziel, messung, scheibe ab, serie ab, schnitt ab, saison, hat es geklappt, schuss-ablauf, abläufe, ablauf, ohne disziplin, disziplin festlegen, tagebuch, eintrag, einträge, vorhaben, notiz, befinden, prognose, feedback, ausführung je serie, stufen, fünf stufen, 0 bis 100, faden, fragen, lernfrage, wie schaffe ich es, ich habe gelernt, hat es geklappt, was hat gestört, vorschlag, neuer eintrag, ohne scheibe, trockentraining, mentaltraining, dazugekommen, lösen, dazunehmen, vom selben abend, papierkorb, abschaltbar, hinweis, nur du siehst, zonen, grenze, nahtstellen, parts, results-read, partline, export, konto löschen, deine daten, stufe 2, 2a, treffsicher]
+keywords: [auswertung, einflüsse, selbstbild, form, abstand zur form, merkst du, erwartet und geschossen, vorher und nachher, übernahme aus treffsicher, treffsicher:, nur probe, einschießen, warmup, saisonziel, ziele, ziel, messung, scheibe ab, serie ab, schnitt ab, saison, hat es geklappt, schuss-ablauf, abläufe, ablauf, ohne disziplin, disziplin festlegen, tagebuch, eintrag, einträge, vorhaben, notiz, befinden, prognose, feedback, ausführung je serie, stufen, fünf stufen, 0 bis 100, faden, fragen, lernfrage, wie schaffe ich es, ich habe gelernt, hat es geklappt, was hat gestört, vorschlag, neuer eintrag, ohne scheibe, trockentraining, mentaltraining, dazugekommen, lösen, dazunehmen, vom selben abend, papierkorb, abschaltbar, hinweis, nur du siehst, zonen, grenze, nahtstellen, parts, results-read, partline, export, konto löschen, deine daten, stufe 2, 2a, treffsicher]
 part_of: ["[[spiegel]]"]
 governed_by: ["[[adr-033]]", "[[adr-030]]", "[[adr-029]]"]
 relates_to: ["[[spiegel-navigation]]", "[[spiegel-privacy]]", "[[spiegel-data-model]]", "[[spiegel-db-schema]]", "[[spiegel-roadmap]]", "[[spiegel-account-transfer]]", "[[spiegel-langzeit]]"]
@@ -15,7 +15,7 @@ Disziplin, mit Vorhaben, Notiz, Vorher, Nachher und den eigenen Fragen über die
 abschaltbar, liest Scheiben nur über eine schmale Schnittstelle und erscheint im Ergebnisteil nur an festen Stellen.
 Gebaut in Teil 2a (28. Oktober 2026) mit Export und Konto löschen über beide Teile; in 2b Ziele, die Spiegel misst,
 ohne zu urteilen, und Schuss-Abläufe in einem eigenen Reiter; in 2c die Auswertung (Einflüsse gegen die Form,
-Selbstbild) und eine Vorschau mit den Daten des Users aus Treffsicher.
+Selbstbild). Konten aus Treffsicher kommen über die Übernahme dazu (Stufe 3a, [[spiegel-account-transfer]]).
 
 # Spiegel — Tagebuch
 
@@ -168,17 +168,13 @@ gerechnet (`src/diary/analysis/`), ohne Schema. Die Scheiben einer Familie liest
   (`DiaryHelp`, Blatt `HelpSheet`), Texte in `src/diary/analysis/texts.ts`. Die Form bleibt eine feste Zahl im Test:
   Sie wackelt selbst, Urteile sind dadurch etwas zu sicher (offen, Fachkern mit Simulation).
 
-## Vorschau mit den Daten des Users
+## Übernahme aus Treffsicher
 
-`pnpm --filter spiegel diary-preview --from <E-Mail in Treffsicher> --to <E-Mail in Spiegel> [--dry-run]`, nur gegen die
-lokale Dev-Datenbank (`assertDevDatabase`). Es liest das Konto über `psql` im Dev-Container
-(`tools/transfer/treffsicher-sessions.sql`, keine Verbindung der App zur fremden Datenbank, [[adr-002]]) und schreibt in
-einer Transaktion: je Einheit einen Eintrag mit Schlüssel `preview:<Einheit>`, eine Scheibe „aus Treffsicher“
-(`treffsicher:preview-<Einheit>`) nur, wenn der Abend in der Familie noch keine Scheibe hat, die Ausführung auf die eine
-gezählte Scheibe des Eintrags. Ein zweiter Lauf ersetzt, `--delete --to <E-Mail>` löscht alles mit diesen Schlüsseln
-(auch Ziele und Abläufe mit `preview:`). Bericht nur mit Zahlen nach `reports/tis-2c/diary-preview.md`. Die Zuordnungen
-stehen dort, wo Stufe 3 sie wiederverwendet ([[spiegel-account-transfer]]); der Ablauf als Nahtstelle in
-`src/parts/transfer/diary-preview.ts`.
+Einträge, Ziele und Abläufe eines Kontos aus Treffsicher schreibt die Übernahme (`pnpm --filter spiegel transfer`,
+[[spiegel-account-transfer]]) mit Schlüssel `treffsicher:<Kennung>`: je Einheit ein Eintrag (`entryFromSession`),
+feste Verknüpfungen zu den Scheiben „aus Treffsicher“ oder den passenden vorhandenen, die Ausführung je Serie auf die
+eine Scheibe des Eintrags. Die Bausteine dafür stehen in `src/diary/transfer/` (`treffsicher-entry.ts`,
+`treffsicher-goal.ts`, `write.ts`); ein zweiter Lauf ersetzt nur, was seit dem letzten unverändert ist (`isTouched`).
 
 ## Scheiben vom selben Abend
 

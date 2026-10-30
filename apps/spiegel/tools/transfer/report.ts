@@ -3,6 +3,15 @@
 
 import type { TransferAbort, TransferReport } from "../../src/parts/transfer/run"
 
+/** löscht die Zeilen der Vorschau (nur Dev-Datenbank); die Verknüpfungen zuerst, sie hängen an keiner Scheibe */
+const PREVIEW_DELETE = [
+  `DELETE FROM "DiaryEntryCard" WHERE "cardId" IN (SELECT id FROM "Card" WHERE "importKey" LIKE 'treffsicher:preview-%');`,
+  `DELETE FROM "DiaryEntry" WHERE "importKey" LIKE 'preview:%';`,
+  `DELETE FROM "DiaryGoal" WHERE "importKey" LIKE 'preview:%';`,
+  `DELETE FROM "DiaryRoutine" WHERE "importKey" LIKE 'preview:%';`,
+  `DELETE FROM "Card" WHERE "importKey" LIKE 'treffsicher:preview-%';`,
+]
+
 const tally = (record: Partial<Record<string, number>>) =>
   Object.entries(record)
     .filter(([, n]) => n)
@@ -17,7 +26,8 @@ export function abortText(abort: TransferAbort): string {
     case "preview":
       return [
         `Das Konto in Spiegel hat noch ${abort.rows} Zeilen der Vorschau.`,
-        "Erst die Vorschau löschen: pnpm --filter spiegel diary-preview --delete --to <E-Mail in Spiegel>",
+        "Erst die Vorschau löschen, in der Datenbank von Spiegel:",
+        ...PREVIEW_DELETE.map((sql) => `  ${sql}`),
       ].join("\n")
     case "foreignInTarget":
       return `Das Konto in Spiegel trägt schon Übernommenes aus einem anderen Konto in Treffsicher (${abort.rows} Kennungen). Nichts wird zusammengeführt.`
