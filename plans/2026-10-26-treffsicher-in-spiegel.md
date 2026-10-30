@@ -427,6 +427,15 @@ Zuordnung (265 Einheiten in 6 Konten: 141 neue Scheiben, 54 mit passender Scheib
 - **Zweiter Lauf: Geändertes bleibt** (Scheiben über die Herkunft, Tagebuch über `updatedAt` gegen `movedToSpiegelAt`).
 - Kein Designkonzept: 3a hat keine neue Oberfläche, nur Ausgabe und Bericht des CLI.
 
+Umgesetzt in 3a (30. Oktober 2026), mit dem User nach der Probe mit echten Daten entschieden; alles im Nachtrag 3a von
+[[adr-033]] und in [[spiegel-account-transfer]]: nur Werte ohne Eintrag, Disziplin in Stufen (genau, größer, größte;
+`--discipline` bei Gleichstand), Probe-Ausdruck übernehmen, kein Ausdruck geht still verloren, Hauptbuch der Übernahme
+mit Migration (ersetzt `updatedAt` gegen `movedToSpiegelAt`). Für 3b mitnehmen:
+
+- Zwei Ausdrucke an einer übernommenen Scheibe: Ein späteres Neulesen kann die Werte des nicht passenden nehmen.
+- `kindChoice` setzt ein neuer Lauf nicht neu.
+- Probe nur für das Konto des Users echt gelaufen; die übrigen Konten nur als Probelauf (alle Exit 0).
+
 ### Stufe 4 · Ruhestand von Treffsicher
 
 Erst nur lesend mit Hinweis und Weiterleitung, dann abgeschaltet. Berührt Deploy-Vertrag, Caddy und das CLI. Mit dem
@@ -510,7 +519,7 @@ Befund aus dem Review von 2a).
 | 2b   | `plans/2026-10-28-tis-2b-goals-routines.md`  | `feat/tis-2b-goals-routines` (vom Basis)   | `tis-2b-goals-routines`  | im Basisbranch (`b51a030b`), Plan entfernt              |
 | 2c   | `plans/2026-10-29-tis-2c-diary-analysis.md`  | `feat/tis-2c-diary-analysis` (vom Basis)   | `tis-2c-diary-analysis`  | im Basisbranch (`69bedd2a`), Plan entfernt              |
 | R    | `plans/2026-10-29-tis-r-tab-bar.md`          | `feat/tis-r-tab-bar` (von `main`)          | `tis-r-tab-bar`          | in `main` (`290da9e5`, mit R2), noch nicht deployt; Plan entfernt |
-| 3a   | `plans/2026-10-29-tis-3a-transfer.md`        | `feat/tis-3a-transfer` (vom Basis)         | `tis-3a-transfer`        | freigegeben (29.10.), Kindsession läuft                 |
+| 3a   | `plans/2026-10-29-tis-3a-transfer.md`        | `feat/tis-3a-transfer` (vom Basis)         | `tis-3a-transfer`        | im Basisbranch (`b8ae4506`), Plan entfernt              |
 | 3b   |                                              | (vom Basis)                                |                          | entschieden (29.10.), Plan nach 3a                      |
 | 3c   | `plans/2026-10-29-tis-3c-warmup.md`          | `feat/tis-3c-warmup` (von `main`)          | `tis-3c-warmup`          | in `main` (`52dffad1`), noch nicht deployt; Plan entfernt |
 | 3d   |                                              | (vom Basis)                                |                          | entschieden (29.10.), Plan offen                        |
