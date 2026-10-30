@@ -478,6 +478,14 @@ Probe, Toasts über der unteren Leiste, Speichergrenzen, Holen mit Ausdruck ohne
 `main` der Stack mit Brücke grün. Läuft laut User ohne Fehler. Offen danach: den Text „Grenze der Aufträge beim
 Holen“ ins Textbuch Spiegel (steht in `reports/2026-10-27-fetch-no-request-cap.md`).
 
+**Drittes Release am 30. Oktober 2026** (alle drei Apps, `main` `fcb9aa69`, vom User): 1d und 1f zusammen, 3c, R (auch
+Ringwerk), 3e (Treffsicher lesend je Konto, vor dem ersten Umzug) und das Restore über eine frische Datenbank.
+Migrationen `20261028120000_hand_entry`, `20261029120000_evidence_list` (Spiegel) und
+`20261029160000_user_moved_to_spiegel` (Treffsicher), alle additiv; keine neue Brücke. Vorher auf `main` der Stack mit
+Brücke und Betrieb grün. Danach `projection-check dump|compare` mit `main` gegen den Basisbranch (Version 6 → 7) auf
+der Prod-Kopie von 14:14 nach dem Deploy: 285 gleich, keine Abweichung. Offen: am iPhone ein HEIC-Foto und ein PDF als
+Beleg prüfen.
+
 ## Wie es weitergeht
 
 1. **1d Handeingabe** ist in `main` (`dbc9e45c`, Migration `20261028120000_hand_entry`, keine neue Brücke) und wartet
@@ -511,24 +519,24 @@ Befund aus dem Review von 2a).
 | Teil | Plan                                         | Branch                                     | Session                  | Stand                                                   |
 | ---- | -------------------------------------------- | ------------------------------------------ | ------------------------ | ------------------------------------------------------- |
 | V1   | `plans/2026-10-26-tis-v1-accounts.md`        | `feat/tis-v1-accounts`                     | tis-v1-accounts          | im Basisbranch, Plan entfernt                           |
-| 1a-1 | `plans/2026-10-27-tis-1a1-card-details.md`   | `feat/tis-1a1-card-details` (von `main`)   | tis-1a1-card-details     | in `main` (`a7c98a09`), noch nicht deployt              |
-| 1a-2 | `plans/2026-10-27-tis-1a2-views.md`          | `feat/tis-1a2-views` (von `main`)          | tis-1a2-views            | in `main` (`38fc63b6`), noch nicht deployt              |
-| 1b-1 | `plans/2026-10-26-tis-1b1-printouts.md`      | `feat/tis-1b1-printouts` (von `main`)      | tis-1b1-printouts        | in `main` (`f0213d9a`), noch nicht deployt              |
-| 1b-2 | `plans/2026-10-27-tis-1b2-fetch-card.md`     | `feat/tis-1b2-fetch-card` (von `main`)     | tis-1b2-fetch-card       | in `main` (`053c11b8`), noch nicht deployt              |
+| 1a-1 | `plans/2026-10-27-tis-1a1-card-details.md`   | `feat/tis-1a1-card-details` (von `main`)   | tis-1a1-card-details     | in `main` (`a7c98a09`), deployt (bis 30.10.)              |
+| 1a-2 | `plans/2026-10-27-tis-1a2-views.md`          | `feat/tis-1a2-views` (von `main`)          | tis-1a2-views            | in `main` (`38fc63b6`), deployt (bis 30.10.)              |
+| 1b-1 | `plans/2026-10-26-tis-1b1-printouts.md`      | `feat/tis-1b1-printouts` (von `main`)      | tis-1b1-printouts        | in `main` (`f0213d9a`), deployt (bis 30.10.)              |
+| 1b-2 | `plans/2026-10-27-tis-1b2-fetch-card.md`     | `feat/tis-1b2-fetch-card` (von `main`)     | tis-1b2-fetch-card       | in `main` (`053c11b8`), deployt (bis 30.10.)              |
 | 1c-0 | `plans/2026-10-27-tis-1c0-printout-check.md` | `feat/tis-1c0-printout-check` (von `main`) | tis-1c0-printout-check   | in `main` (`028234b0`); Ergebnis in [[meyton-printout]] |
 | 1c   | `plans/2026-10-27-tis-1c-printout-values.md` | `feat/tis-1c-printout-values` (von `main`) | `tis-1c-printout-values` | in `main` (`88ea1140`); Luftgewehr-Fix, Leser v2        |
-| 1d   | `plans/2026-10-28-tis-1d-hand-entry.md`      | `feat/tis-1d-hand-entry` (von `main`)      | `tis-1d-hand-entry`      | in `main` (`dbc9e45c`), noch nicht deployt              |
+| 1d   | `plans/2026-10-28-tis-1d-hand-entry.md`      | `feat/tis-1d-hand-entry` (von `main`)      | `tis-1d-hand-entry`      | in `main` (`dbc9e45c`), deployt (bis 30.10.)              |
 | 1e   |                                              |                                            |                          | in 1a-2                                                 |
-| 1f   | `plans/2026-10-29-tis-1f-evidence-list.md`   | `feat/tis-1f-evidence-list` (von `main`)   | `tis-1f-evidence-list`   | in `main` (`39dca9f4`), noch nicht deployt; Plan entfernt |
+| 1f   | `plans/2026-10-29-tis-1f-evidence-list.md`   | `feat/tis-1f-evidence-list` (von `main`)   | `tis-1f-evidence-list`   | in `main` (`39dca9f4`), deployt (bis 30.10.); Plan entfernt |
 | 2a   | `plans/2026-10-28-tis-2a-diary-entries.md`   | `feat/tis-2a-diary-entries` (vom Basis)    | `tis-2a-diary-entries`   | im Basisbranch (`3fd30d85`), Plan entfernt              |
 | 2b   | `plans/2026-10-28-tis-2b-goals-routines.md`  | `feat/tis-2b-goals-routines` (vom Basis)   | `tis-2b-goals-routines`  | im Basisbranch (`b51a030b`), Plan entfernt              |
 | 2c   | `plans/2026-10-29-tis-2c-diary-analysis.md`  | `feat/tis-2c-diary-analysis` (vom Basis)   | `tis-2c-diary-analysis`  | im Basisbranch (`69bedd2a`), Plan entfernt              |
-| R    | `plans/2026-10-29-tis-r-tab-bar.md`          | `feat/tis-r-tab-bar` (von `main`)          | `tis-r-tab-bar`          | in `main` (`290da9e5`, mit R2), noch nicht deployt; Plan entfernt |
+| R    | `plans/2026-10-29-tis-r-tab-bar.md`          | `feat/tis-r-tab-bar` (von `main`)          | `tis-r-tab-bar`          | in `main` (`290da9e5`, mit R2), deployt (bis 30.10.); Plan entfernt |
 | 3a   | `plans/2026-10-29-tis-3a-transfer.md`        | `feat/tis-3a-transfer` (vom Basis)         | `tis-3a-transfer`        | im Basisbranch (`b8ae4506`), Plan entfernt              |
 | 3b   | `plans/2026-10-30-tis-3b-transfer-ops.md`    | `feat/tis-3b-transfer-ops` (vom Basis)     | `tis-3b-transfer-ops`    | im Basisbranch (`b75352f1`), Plan entfernt              |
-| 3c   | `plans/2026-10-29-tis-3c-warmup.md`          | `feat/tis-3c-warmup` (von `main`)          | `tis-3c-warmup`          | in `main` (`52dffad1`), noch nicht deployt; Plan entfernt |
+| 3c   | `plans/2026-10-29-tis-3c-warmup.md`          | `feat/tis-3c-warmup` (von `main`)          | `tis-3c-warmup`          | in `main` (`52dffad1`), deployt (bis 30.10.); Plan entfernt |
 | 3d   |                                              | (vom Basis)                                |                          | entschieden (29.10.), Plan offen                        |
-| 3e   | `plans/2026-10-29-tis-3e-read-only.md`       | `feat/tis-3e-read-only` (von `main`)       | `tis-3e-read-only`       | in `main` (`0000933f`), noch nicht deployt; Plan entfernt |
+| 3e   | `plans/2026-10-29-tis-3e-read-only.md`       | `feat/tis-3e-read-only` (von `main`)       | `tis-3e-read-only`       | in `main` (`0000933f`), deployt (bis 30.10.); Plan entfernt |
 | 4    |                                              |                                            |                          | offen                                                   |
 
 ## Verification
