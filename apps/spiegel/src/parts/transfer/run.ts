@@ -190,9 +190,12 @@ export interface TransferReport {
     unreadable: number
     tooLarge: number
     printoutRejected: Partial<Record<StoreRejection, number>>
-    /** `changedCard`: an der Scheibe der Einheit, die schon Werte vom Ausdruck hat oder von Hand geändert ist */
+    /**
+     * `keepsValues`: an der Scheibe der Einheit, die nicht aus Treffsicher ist (passend vorhanden, schon mit Werten vom
+     * Ausdruck, von Hand geändert); ihre Werte bleiben
+     */
     printouts: Tally<
-      "ownCard" | "adopted" | "withoutValues" | "changedCard" | "imported" | "notPlaced"
+      "ownCard" | "adopted" | "withoutValues" | "keepsValues" | "imported" | "notPlaced"
     >
     evidence: Tally<"attached" | "duplicate" | "limit" | "gone" | "noCard">
   }
@@ -333,7 +336,7 @@ const blankReport = (dryRun: boolean): Omit<TransferReport, "check"> => ({
       ownCard: 0,
       adopted: 0,
       withoutValues: 0,
-      changedCard: 0,
+      keepsValues: 0,
       imported: 0,
       notPlaced: 0,
     },
@@ -1055,7 +1058,7 @@ function countPlaced(report: Omit<TransferReport, "check">, placed: PlacedAttach
         placed.adopted === "adopted"
           ? "adopted"
           : placed.adopted === "notTreffsicher"
-            ? "changedCard"
+            ? "keepsValues"
             : "withoutValues"
       ] += 1
       return
@@ -1219,7 +1222,7 @@ async function checkInput(
     a.printouts.ownCard +
     a.printouts.adopted +
     a.printouts.withoutValues +
-    a.printouts.changedCard +
+    a.printouts.keepsValues +
     a.printouts.imported
   const placedEvidence = a.evidence.attached + a.evidence.duplicate
   const rejected = Object.values(a.printoutRejected).reduce((s, n) => s + (n ?? 0), 0)
