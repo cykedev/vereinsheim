@@ -75,10 +75,9 @@ export async function transferCli(
       process.stdout.write(`${summaryLines(report).join("\n")}\n`)
       mkdirSync(setup.reportDir, { recursive: true })
       const mode = args.dryRun ? "-probe" : ""
-      const file = join(
-        setup.reportDir,
-        `transfer-${startedAt.toISOString().slice(0, 10)}-${accountHash(args.from)}${mode}.md`
-      )
+      // mit der Uhrzeit (UTC): ein zweiter Lauf am selben Tag überschreibt den Bericht des ersten nicht
+      const at = startedAt.toISOString().slice(0, 19).replace(/:/g, "-")
+      const file = join(setup.reportDir, `transfer-${at}-${accountHash(args.from)}${mode}.md`)
       writeFileSync(file, `${reportMarkdown(report, startedAt)}\n`)
       process.stdout.write(`Bericht: ${file}\n`)
       return report.check.findings ? 1 : 0

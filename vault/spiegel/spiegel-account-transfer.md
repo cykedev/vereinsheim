@@ -53,7 +53,7 @@ Schnittstelle (`TreffsicherSource`). `--files` zeigt auf die entpackten Dateien 
 Treffsicher, nur unter `tools/private/`. Kennt das Hauptbuch Ausdrucke oder Belege, braucht jeder weitere Lauf
 `--files` (sonst `filesMissing`): Ohne die Dateien kennt er ihre Prüfsummen nicht. Exit-Codes: 0 fertig, 1 Befund im Prüfbestand, 2 Aufruf falsch, 3 Abbruch,
 4 Fehler (nichts geschrieben), 5 gespeichert, aber Ausgabe oder Bericht fehlt. Die Ausgabe hat nur Zahlen, Gründe und Namen von Disziplinen; der Bericht mit Tagen und
-Texten der Stichprobe geht nach `reports/tis-3a/transfer-<Tag>-<acht Zeichen sha256 der E-Mail>.md` (gitignored, nie
+Texten der Stichprobe geht nach `reports/tis-3a/transfer-<Zeitpunkt in UTC>-<acht Zeichen sha256 der E-Mail>.md` (gitignored, nie
 E-Mail oder Passwort, [[adr-029]]).
 
 ### Schlüssel

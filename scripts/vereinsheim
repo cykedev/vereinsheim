@@ -1876,8 +1876,11 @@ transfer_one() (
 	set -e
 	psql_rc="${codes[0]}" rc="${codes[1]}"
 
+	# ein Werkzeug, das mit 0 oder 1 endet, hat immer einen Bericht geschrieben (sonst endet es mit 5)
+	reported=0
 	for report in "$work"/*.md; do
 		[[ -e "$report" ]] || continue
+		reported=1
 		if install -m 600 "$report" "$TRANSFER_REPORTS/"; then
 			echo "Bericht liegt unter: $TRANSFER_REPORTS/${report##*/}"
 		else
@@ -1886,7 +1889,7 @@ transfer_one() (
 	done
 
 	mark_hint="Nachholen: vereinsheim transfer mark --from <E-Mail in Treffsicher>"
-	if [[ -f "$work/saved" ]]; then
+	if ((!dry)) && [[ -f "$work/saved" ]]; then
 		# gespeichert: das Merkmal gehört dazu, auch wenn der Container danach anders endete
 		code="$rc"
 		if [[ "$rc" != 0 && "$rc" != 1 ]]; then code=5; fi
@@ -1894,26 +1897,33 @@ transfer_one() (
 			err "Übernahme gespeichert, Merkmal in Treffsicher nicht gesetzt. $mark_hint"
 			code=6
 		fi
+	elif [[ "$rc" == 2 ]]; then
+		# Aufruf falsch: Das Werkzeug liest stdin dann nicht, psql endet bei einem großen Konto mit SIGPIPE
+		code=2
 	elif [[ "$psql_rc" != 0 ]]; then
 		err "Treffsicher nicht lesbar (psql endete mit Code $psql_rc)."
 		code=4
 	else
 		case "$rc" in
 		0 | 1)
-			code="$rc"
-			if ((!dry)); then
-				err "Der Lauf meldet nicht, dass er gespeichert hat: Merkmal nicht gesetzt. Erst prüfen, dann: $mark_hint"
+			if ((!reported)); then
+				err "Der Container lief nicht durch (kein Bericht): nichts geschrieben."
+				code=4
+			elif ((dry)); then
+				code="$rc"
+			else
+				err "Bericht da, aber der Lauf meldet nicht, dass er gespeichert hat: Merkmal nicht gesetzt. Erst prüfen, dann: $mark_hint"
 				code=6
 			fi
 			;;
-		2 | 3 | 4) code="$rc" ;;
+		3 | 4) code="$rc" ;;
 		5)
 			code=5
 			if ((!dry)); then err "Merkmal nicht gesetzt. $mark_hint"; fi
 			;;
 		137)
 			err "Speichergrenze des Containers erreicht: nichts geschrieben."
-			code=4
+			code=137
 			;;
 		*)
 			err "Container endete mit Code $rc: nichts geschrieben."
@@ -2003,6 +2013,19 @@ transfer_mapping() {
 		info "Keine Zeile läuft."
 		return 0
 	fi
+	# dieselbe Prüfung wie ein einzelner Aufruf auf dem VPS, damit die Übung lokal nicht weiter kommt als Prod
+	local entry line from to hash bad=0
+	for entry in "${runs[@]}"; do
+		IFS=$'\t' read -r line from to hash <<<"$entry"
+		if ! is_email "$from" || ! is_email "$to"; then
+			err "Zeile $line ($hash): keine gültige E-Mail für das CLI."
+			bad=1
+		fi
+	done
+	if ((bad)); then
+		err "Nichts läuft: erst die Datei klären."
+		return 2
+	fi
 	local mode="echter Lauf"
 	if ((dry)); then mode="Probelauf"; fi
 	info "${#runs[@]} Konten aus der Zuordnung, $mode, über --$TRANSFER_TARGET"
@@ -2025,7 +2048,7 @@ transfer_mapping() {
 	if [[ "$TRANSFER_TARGET" == local ]]; then transfer_preflight || return; fi
 
 	local -a summary=()
-	local entry line from to hash code all=0
+	local code all=0
 	for entry in "${runs[@]}"; do
 		IFS=$'\t' read -r line from to hash <<<"$entry"
 		hr
@@ -2101,7 +2124,14 @@ cmd_transfer() {
 				[[ -z "$mapping" ]] || { transfer_usage; return 2; }
 				mapping="$2"
 				;;
-			*) extra+=("$1" "$2") ;;
+			*)
+				# "<links>=<rechts>", geteilt am letzten =, beide Seiten nicht leer (wie pairOf in tools/transfer/args.ts)
+				if [[ "$2" != *=* || -z "${2%=*}" || -z "${2##*=}" ]]; then
+					err "$1 braucht die Form \"<Name>=<Wert>\"."
+					return 2
+				fi
+				extra+=("$1" "$2")
+				;;
 			esac
 			shift 2
 			;;
