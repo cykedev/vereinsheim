@@ -208,6 +208,7 @@ services:
     entrypoint: ["node", "transfer.mjs"]
     environment:
       DATABASE_URL: postgresql://spiegel:${SPIEGEL_DB_PASSWORD}@db:5432/spiegel
+      DISPLAY_TIME_ZONE: ${DISPLAY_TIME_ZONE:-Europe/Berlin}
       UPLOAD_DIR: /app/uploads
       TRANSFER_DIR: /transfer
       TRANSFER_FILES: /treffsicher-uploads
