@@ -273,7 +273,8 @@ DELETE FROM "Card" WHERE "importKey" LIKE 'treffsicher:preview-%';
   anderen, nimmt ein späteres Neulesen (neue Version des Lesers, andere Disziplin) nur einen, dessen Lesung zu den
   Zahlen der Revision aus Treffsicher passt (`fitsEnteredTotal` in `src/lib/printouts/values.ts`: Schusszahl und
   Ergebnis, in Zehnteln, wenn eingetragen, sonst in Ringen; der Abend nicht, die Ausdrucke hängen schon an der Scheibe).
-  Passt keiner, bleibt die Scheibe, wie sie ist (`applyPrintoutValues` gibt `none`, ohne neue Revision).
+  Passt keiner oder gibt der passende keine Werte mehr (etwa nach einer anderen Disziplin `inconsistent`), bleibt die
+  Scheibe, wie sie ist (`applyPrintoutValues` gibt `none`, keine Revision ohne Angaben).
 
 - Ein zweiter Lauf am selben Tag bricht ab, solange `zuordnung-<Tag>.csv` existiert: Sonst überschriebe er die
   Bearbeitung des Users. Umbenennen oder löschen, dann neu laufen lassen.

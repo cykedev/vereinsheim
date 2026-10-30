@@ -280,6 +280,28 @@ describe("applyPrintoutValues an einer Scheibe aus Treffsicher", () => {
     )
   })
 
+  it("der passende Ausdruck passt nicht mehr zum Scheibenbild: none, keine Revision ohne Angaben", async () => {
+    const { cardId, printoutId } = await adoptedCard()
+    const other = await db.discipline.create({
+      data: {
+        siteId: site.siteId,
+        meytonId: 10_199_778,
+        name: "LP 40 als Luftgewehr eingeordnet",
+        familyId: site.familyId,
+        targetId: "lg-10m",
+      },
+    })
+    await db.card.update({ where: { id: cardId }, data: { disciplineId: other.id } })
+    const before = await cardOf(cardId)
+    const count = await revisions(cardId)
+    expect(await apply(cardId)).toBe("none")
+    expect((await cardOf(cardId)).currentRevisionId).toBe(before.currentRevisionId)
+    expect(await revisions(cardId)).toBe(count)
+    expect(await db.printout.findUniqueOrThrow({ where: { id: printoutId } })).toMatchObject({
+      valuesStatus: "inconsistent",
+    })
+  })
+
   it("nur ein fremder Ausdruck: none, die aktuelle Revision bleibt", async () => {
     const { cardId, printoutId } = await adoptedCard()
     await db.printout.delete({ where: { id: printoutId } })

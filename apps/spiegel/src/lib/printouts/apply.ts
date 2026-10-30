@@ -5,8 +5,8 @@
 // Revision. Ändert sich die Disziplin, ruft `recomputeDisciplineCard` dies erneut. Eine Scheibe aus Treffsicher, die die
 // Werte ihres Ausdrucks übernommen hat (Schlüssel `treffsicher:`), liest einen Ausdruck im Modus Probe als Wertung wie
 // bei der Übernahme (`scoringReading`); sonst würde sie beim nächsten Lesen eine Scheibe nur aus Probe. Sie nimmt nur
-// Ausdrucke, deren Lesung zu den Zahlen ihrer Revision aus Treffsicher passt (`fitsEnteredTotal`); passt keiner, bleibt
-// sie, wie sie ist.
+// Ausdrucke, deren Lesung zu den Zahlen ihrer Revision aus Treffsicher passt (`fitsEnteredTotal`); passt keiner oder
+// gibt keiner Werte (etwa nach einer anderen Disziplin), bleibt sie, wie sie ist, ohne Revision ohne Angaben.
 
 import type { PrintoutReading } from "@vereinsheim/meyton-pdf/reading"
 import { TARGETS, type TargetId } from "@vereinsheim/shot-core/targets"
@@ -105,7 +105,6 @@ export async function applyPrintoutValues(tx: Tx, cardId: string): Promise<Apply
     (printout) =>
       !entered || fitsEnteredTotal(printout.reading as unknown as PrintoutReading, entered)
   )
-  if (entered && !candidates.length) return "none"
   for (const printout of candidates) {
     const reading = printout.reading as unknown as PrintoutReading
     const result = detailsFromReading(transferred ? scoringReading(reading) : reading, targetId)
@@ -121,6 +120,8 @@ export async function applyPrintoutValues(tx: Tx, cardId: string): Promise<Apply
     }
     await markPrintoutValues(tx, printout.id, "inconsistent")
   }
+  // eine Scheibe aus Treffsicher ohne passenden Ausdruck, der Werte gibt, bleibt, wie sie ist
+  if (entered) return "none"
 
   const revision = card.currentRevision
   const hasValues =
