@@ -436,6 +436,11 @@ mit Migration (ersetzt `updatedAt` gegen `movedToSpiegelAt`). Für 3b mitnehmen:
 - `kindChoice` setzt ein neuer Lauf nicht neu.
 - Probe nur für das Konto des Users echt gelaufen; die übrigen Konten nur als Probelauf (alle Exit 0).
 
+Alle drei erledigt in 3b (30. Oktober 2026, Nachtrag 3b in [[adr-033]]): Die Übung gegen die Prod-Kopie lief für alle
+neun Konten der Zuordnung ohne Befund. Offen für den ersten Lauf in Prod: `--vps` gegen den echten VPS (Quoting über
+`ssh`, Login-Shell), Speicher auf amd64 (gemessen nur arm64, im Container höchstens 142 MiB von 320); vorher auf dem VPS
+`git pull`, Ablauf in [[operations]] „Übernahme aus Treffsicher“.
+
 ### Stufe 4 · Ruhestand von Treffsicher
 
 Erst nur lesend mit Hinweis und Weiterleitung, dann abgeschaltet. Berührt Deploy-Vertrag, Caddy und das CLI. Mit dem
@@ -520,7 +525,7 @@ Befund aus dem Review von 2a).
 | 2c   | `plans/2026-10-29-tis-2c-diary-analysis.md`  | `feat/tis-2c-diary-analysis` (vom Basis)   | `tis-2c-diary-analysis`  | im Basisbranch (`69bedd2a`), Plan entfernt              |
 | R    | `plans/2026-10-29-tis-r-tab-bar.md`          | `feat/tis-r-tab-bar` (von `main`)          | `tis-r-tab-bar`          | in `main` (`290da9e5`, mit R2), noch nicht deployt; Plan entfernt |
 | 3a   | `plans/2026-10-29-tis-3a-transfer.md`        | `feat/tis-3a-transfer` (vom Basis)         | `tis-3a-transfer`        | im Basisbranch (`b8ae4506`), Plan entfernt              |
-| 3b   | `plans/2026-10-30-tis-3b-transfer-ops.md`    | `feat/tis-3b-transfer-ops` (vom Basis)     | `tis-3b-transfer-ops`    | freigegeben (30.10.), Kindsession läuft                 |
+| 3b   | `plans/2026-10-30-tis-3b-transfer-ops.md`    | `feat/tis-3b-transfer-ops` (vom Basis)     | `tis-3b-transfer-ops`    | im Basisbranch (`b75352f1`), Plan entfernt              |
 | 3c   | `plans/2026-10-29-tis-3c-warmup.md`          | `feat/tis-3c-warmup` (von `main`)          | `tis-3c-warmup`          | in `main` (`52dffad1`), noch nicht deployt; Plan entfernt |
 | 3d   |                                              | (vom Basis)                                |                          | entschieden (29.10.), Plan offen                        |
 | 3e   | `plans/2026-10-29-tis-3e-read-only.md`       | `feat/tis-3e-read-only` (von `main`)       | `tis-3e-read-only`       | in `main` (`0000933f`), noch nicht deployt; Plan entfernt |
