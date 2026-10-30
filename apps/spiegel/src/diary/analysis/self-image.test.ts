@@ -3,14 +3,19 @@ import { describe, expect, it } from "vitest"
 import { beforeAfter, expectedRows, stagePosition } from "./self-image"
 
 const result = (value: number) => ({ value, scoring: "rings" as const, digits: 0 })
+const scored = (value: number | null) => ({
+  result: value === null ? null : result(value),
+  probeOnly: false,
+})
+const probe = (value: number) => ({ result: result(value), probeOnly: true })
 
 describe("expectedRows", () => {
   it("nimmt Einträge mit genau einer Scheibe mit Ergebnis, neueste oben, und mittelt die Abstände", () => {
     const { rows, mean, left } = expectedRows([
-      { id: "a", day: "2026-03-01", expectedScore: 365, cards: [{ result: result(358) }] },
-      { id: "b", day: "2026-03-08", expectedScore: 360, cards: [{ result: result(362) }] },
-      { id: "c", day: "2026-03-05", expectedScore: 370, cards: [{ result: result(360) }] },
-      { id: "d", day: "2026-03-06", expectedScore: null, cards: [{ result: result(350) }] },
+      { id: "a", day: "2026-03-01", expectedScore: 365, cards: [scored(358)] },
+      { id: "b", day: "2026-03-08", expectedScore: 360, cards: [scored(362)] },
+      { id: "c", day: "2026-03-05", expectedScore: 370, cards: [scored(360)] },
+      { id: "d", day: "2026-03-06", expectedScore: null, cards: [scored(350)] },
     ])
     expect(rows.map((r) => r.entryId)).toEqual(["b", "c", "a"])
     expect(rows.map((r) => r.delta)).toEqual([2, -10, -7])
@@ -24,12 +29,33 @@ describe("expectedRows", () => {
         id: "a",
         day: "2026-03-01",
         expectedScore: 365,
-        cards: [{ result: result(358) }, { result: result(90) }],
+        cards: [scored(358), scored(90)],
       },
-      { id: "b", day: "2026-03-02", expectedScore: 365, cards: [{ result: null }] },
+      { id: "b", day: "2026-03-02", expectedScore: 365, cards: [scored(null)] },
     ])
     expect(rows).toEqual([])
     expect(mean).toBeNull()
+    expect(left).toBe(2)
+  })
+
+  it("nimmt neben einer Probe-Scheibe die Wertung, ohne Wertung genau eine Probe", () => {
+    const { rows, left } = expectedRows([
+      { id: "a", day: "2026-03-01", expectedScore: 365, cards: [probe(92), scored(358)] },
+      { id: "b", day: "2026-03-02", expectedScore: 365, cards: [scored(361), probe(95)] },
+      { id: "c", day: "2026-03-03", expectedScore: 90, cards: [probe(93)] },
+      { id: "d", day: "2026-03-04", expectedScore: 90, cards: [probe(93), probe(94)] },
+      {
+        id: "e",
+        day: "2026-03-05",
+        expectedScore: 365,
+        cards: [probe(92), scored(358), scored(360)],
+      },
+    ])
+    expect(rows.map((r) => [r.entryId, r.shot.value, r.delta])).toEqual([
+      ["c", 93, 3],
+      ["b", 361, -4],
+      ["a", 358, -7],
+    ])
     expect(left).toBe(2)
   })
 })

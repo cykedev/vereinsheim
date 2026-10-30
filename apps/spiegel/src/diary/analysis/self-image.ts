@@ -3,7 +3,7 @@
 import type { ResultValue } from "@/lib/results-read"
 
 import { SCALE_ASPECTS, type ScaleAspect, type ScalePart } from "../scales"
-import { shotResult } from "../summaries"
+import { type EntryResultCard, shotResult } from "../summaries"
 
 export interface ExpectedRow {
   entryId: string
@@ -15,15 +15,16 @@ export interface ExpectedRow {
 }
 
 /**
- * Erwartet gegen geschossen: je Eintrag mit erwartetem Ergebnis und genau einer Scheibe mit Ergebnis (`shotResult`, die
- * Regel der Seite eines Eintrags) eine Zeile, neueste oben; dazu das Mittel der Abstände und wie viele fehlen
+ * Erwartet gegen geschossen: je Eintrag mit erwartetem und geschossenem Ergebnis (`shotResult`, die Regel der Seite
+ * eines Eintrags: genau eine Scheibe mit Wertung, ohne Wertung genau eine Probe) eine Zeile, neueste oben; dazu das
+ * Mittel der Abstände und wie viele fehlen
  */
 export function expectedRows(
   entries: readonly {
     id: string
     day: string
     expectedScore: number | null
-    cards: readonly { result: ResultValue | null }[]
+    cards: readonly EntryResultCard[]
   }[]
 ): { rows: ExpectedRow[]; mean: number | null; left: number } {
   const rows: ExpectedRow[] = []

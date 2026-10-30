@@ -12,6 +12,15 @@ import {
 
 const ZONE = "Europe/Berlin"
 const r = (value: number, digits = 1) => ({ value, scoring: "decimal" as const, digits })
+/** eine Scheibe mit Wertung bzw. nur aus Probe */
+const scored = (value: number | null) => ({
+  result: value === null ? null : r(value),
+  probeOnly: false,
+})
+const probe = (value: number | null) => ({
+  result: value === null ? null : r(value),
+  probeOnly: true,
+})
 
 describe("Zeilen eines Eintrags", () => {
   it("nennt den Tag wie die Listen", () => {
@@ -24,16 +33,35 @@ describe("Zeilen eines Eintrags", () => {
   })
 
   it("nimmt als geschossen nur das Ergebnis genau einer Scheibe", () => {
-    expect(shotResult([{ result: r(374.3) }])).toEqual(r(374.3))
-    expect(shotResult([{ result: null }])).toBeNull()
+    expect(shotResult([scored(374.3)])).toEqual(r(374.3))
+    expect(shotResult([scored(null)])).toBeNull()
     expect(shotResult([])).toBeNull()
-    expect(shotResult([{ result: r(374.3) }, { result: r(370) }])).toBeNull()
+    expect(shotResult([scored(374.3), scored(370)])).toBeNull()
   })
 
-  it("nennt die Scheiben: eine mit Ergebnis, mehrere als Zahl, keine, oder die Art", () => {
-    expect(cardsText("shooting", [{ result: r(374.3) }])).toBe("1 Scheibe · 374,3 Ringe")
-    expect(cardsText("shooting", [{ result: null }])).toBe("1 Scheibe")
-    expect(cardsText("shooting", [{ result: r(1) }, { result: r(2) }])).toBe("2 Scheiben")
+  it("zählt neben einer Wertung nur die Wertung, in jeder Reihenfolge", () => {
+    expect(shotResult([probe(92.4), scored(374.3)])).toEqual(r(374.3))
+    expect(shotResult([scored(374.3), probe(92.4)])).toEqual(r(374.3))
+    expect(shotResult([probe(92.4), scored(374.3), probe(95.1)])).toEqual(r(374.3))
+    expect(shotResult([probe(92.4), scored(null)])).toBeNull()
+  })
+
+  it("zwei Wertungen geben auch mit Probe kein Ergebnis", () => {
+    expect(shotResult([probe(92.4), scored(374.3), scored(370)])).toBeNull()
+  })
+
+  it("nimmt ohne Wertung genau eine Probe-Scheibe", () => {
+    expect(shotResult([probe(92.4)])).toEqual(r(92.4))
+    expect(shotResult([probe(92.4), probe(95.1)])).toBeNull()
+  })
+
+  it("nennt die Scheiben: alle als Zahl mit dem Ergebnis des Eintrags, keine, oder die Art", () => {
+    expect(cardsText("shooting", [scored(374.3)])).toBe("1 Scheibe · 374,3 Ringe")
+    expect(cardsText("shooting", [scored(null)])).toBe("1 Scheibe")
+    expect(cardsText("shooting", [scored(1), scored(2)])).toBe("2 Scheiben")
+    expect(cardsText("shooting", [probe(92.4), scored(374.3)])).toBe("2 Scheiben · 374,3 Ringe")
+    expect(cardsText("shooting", [probe(92.4), probe(95.1)])).toBe("2 Scheiben")
+    expect(cardsText("shooting", [probe(92.4)])).toBe("1 Scheibe · 92,4 Ringe")
     expect(cardsText("shooting", [])).toBe("Noch keine Scheibe")
     expect(cardsText("dry", [])).toBe("Trockentraining")
     expect(cardsText("mental", [])).toBe("Mentaltraining")
@@ -50,7 +78,7 @@ describe("Zeilen eines Eintrags", () => {
   })
 
   it("schreibt die Disziplin in die Zeile, wenn das Vorhaben Titel ist", () => {
-    const base = { day: "2026-03-13", kind: "shooting" as const, cards: [{ result: r(374.3) }] }
+    const base = { day: "2026-03-13", kind: "shooting" as const, cards: [scored(374.3)] }
     expect(entryLine({ ...base, intention: "Ruhe im Kopf", family: "Luftpistole" }, ZONE)).toBe(
       "Fr 13.03. · Luftpistole · 1 Scheibe · 374,3 Ringe"
     )
@@ -63,6 +91,12 @@ describe("Zeilen eines Eintrags", () => {
         ZONE
       )
     ).toBe("Mi 21.10.")
+    expect(
+      entryLine(
+        { ...base, intention: null, family: "Luftpistole", cards: [probe(92.4), scored(374.3)] },
+        ZONE
+      )
+    ).toBe("Fr 13.03. · 2 Scheiben · 374,3 Ringe")
     expect(
       entryLine(
         { day: "2026-10-14", kind: "dry", cards: [], intention: "Halten", family: "Luftpistole" },

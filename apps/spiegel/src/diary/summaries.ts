@@ -16,12 +16,19 @@ export function dayLabel(day: string, timeZone: string): string {
 export const resultText = (result: ResultValue) =>
   `${formatValue(result.value, result.digits)} Ringe`
 
+/** eine Scheibe eines Eintrags, soweit das Ergebnis des Eintrags sie braucht */
+export type EntryResultCard = { result: ResultValue | null; probeOnly: boolean }
+
 /**
- * Was ein Eintrag geschossen hat: das Ergebnis seiner einen Scheibe (verknüpft oder dazugekommen); null ohne Scheibe,
- * bei mehreren oder ohne Ergebnis. Die Seite eines Eintrags und „Erwartet und geschossen“ nehmen diese eine Regel.
+ * Was ein Eintrag geschossen hat. Hängt mindestens eine Scheibe mit Wertung am Eintrag (verknüpft oder dazugekommen),
+ * zählen nur diese; eine Probe-Scheibe daneben nimmt ihm kein Ergebnis. Ohne Wertung zählen die Probe-Scheiben. Ist es
+ * dann genau eine, ist ihr Ergebnis das des Eintrags; null ohne Scheibe, bei mehreren oder ohne Ergebnis. Die Seite
+ * eines Eintrags, die Zeile der Liste und „Erwartet und geschossen“ nehmen diese eine Regel.
  */
-export function shotResult(cards: readonly { result: ResultValue | null }[]): ResultValue | null {
-  return cards.length === 1 ? cards[0].result : null
+export function shotResult(cards: readonly EntryResultCard[]): ResultValue | null {
+  const scored = cards.filter((card) => !card.probeOnly)
+  const counted = scored.length ? scored : cards
+  return counted.length === 1 ? counted[0].result : null
 }
 
 export const KIND_WORDS: Readonly<Record<Exclude<DiaryKindValue, "shooting">, string>> = {
@@ -29,16 +36,16 @@ export const KIND_WORDS: Readonly<Record<Exclude<DiaryKindValue, "shooting">, st
   mental: "Mentaltraining",
 }
 
-/** die Scheiben eines Eintrags in Worten: Art ohne Scheibe, eine mit Ergebnis, mehrere als Zahl */
-export function cardsText(
-  kind: DiaryKindValue,
-  cards: readonly { result: ResultValue | null }[]
-): string {
+/**
+ * die Scheiben eines Eintrags in Worten: Art ohne Scheibe, sonst die Zahl aller Scheiben und das Ergebnis des Eintrags
+ * (`shotResult`), wenn er eins hat („2 Scheiben · 374,3 Ringe“)
+ */
+export function cardsText(kind: DiaryKindValue, cards: readonly EntryResultCard[]): string {
   if (kind !== "shooting") return KIND_WORDS[kind]
   if (cards.length === 0) return "Noch keine Scheibe"
-  if (cards.length === 1)
-    return cards[0].result ? `1 Scheibe · ${resultText(cards[0].result)}` : "1 Scheibe"
-  return `${cards.length} Scheiben`
+  const count = cards.length === 1 ? "1 Scheibe" : `${cards.length} Scheiben`
+  const result = shotResult(cards)
+  return result ? `${count} · ${resultText(result)}` : count
 }
 
 /** der Titel einer Karte in der Liste: das Vorhaben, sonst die Disziplin, sonst die Art */
@@ -62,7 +69,7 @@ export function entryLine(
     intention: string | null
     family: string | null
     kind: DiaryKindValue
-    cards: readonly { result: ResultValue | null }[]
+    cards: readonly EntryResultCard[]
   },
   timeZone: string
 ): string {
