@@ -90,5 +90,10 @@ export async function transferCli(
     }
   } finally {
     await db.$disconnect()
+    // `maxRSS` in KiB; der Leser der Ausdrucke läuft als Kindprozess und misst sich selbst
+    if (setup.memoryLine)
+      process.stdout.write(
+        `Speicher: Spitze ${Math.round(process.resourceUsage().maxRSS / 1024)} MiB\n`
+      )
   }
 }
