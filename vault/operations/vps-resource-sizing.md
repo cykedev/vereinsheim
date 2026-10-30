@@ -4,7 +4,7 @@ type: concept
 title: "vps-resource-sizing"
 keywords: [Ressourcen, RAM, Sizing, Speicher, VPS-Größe, Arbeitsspeicher, resource sizing, memory, mem_limit, IONOS, Dimensionierung, memory.peak, Spitze, Messung, cgroup, OOM, Leistung, Performance, bun, Multithreading, CPU, Postgres-Tuning]
 tags: [ops-constraint]
-relates_to: ["[[overview]]", "[[node-heap-above-container-limit]]"]
+relates_to: ["[[overview]]", "[[node-heap-above-container-limit]]", "[[spiegel-account-transfer]]"]
 part_of: ["[[operations]]"]
 documented_in: ["[[overview#VPS-Sizing]]"]
 ---
@@ -149,6 +149,13 @@ docker compose exec -T app-spiegel node --max-old-space-size=48 --max-semi-space
 
 Erwartet: `"kind":"found"` und `"maxRssKb":<kB>`, danach in der zweiten Zeile die Werte mit `"kind":"ok"` und
 ihrem `"maxRssKb"` (der höhere zählt).
+
+## Wegwerf-Container der Übernahme aus Treffsicher
+
+`vereinsheim transfer` startet je Konto den Container `transfer-spiegel` (Profil `ops`, [[spiegel-account-transfer]]):
+320 MB wie `app-spiegel`, Heap 160, der Leser der Ausdrucke darin als Kindprozess mit eigener Grenze. Er läuft nur für
+die Dauer eines Laufs neben dem Stack, also kommen auf dem VPS für Minuten bis zu 320 MB dazu; eine ruhige Zeit wählen.
+Das Werkzeug gibt am Ende `Speicher: Spitze <n> MiB` aus (`maxRSS` des Prozesses, ohne den Kindprozess).
 
 ## Später: Leistung der Container
 

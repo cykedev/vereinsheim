@@ -3,9 +3,10 @@ id: spiegel-account-transfer
 type: operation
 title: "Spiegel — Übernahme aus Treffsicher: Abgleich der Konten und Lauf je Konto"
 aliases: [kontenabgleich, account-match, zuordnung-der-konten, übernahme-eines-kontos, account-transfer]
-keywords: [runtransfer, decidecard, checktransfer, prüfbestand, geändertes bleibt, movedtospiegelat, umgezogen, --family, nodiscipline, unknownfamily, exit-code, probelauf, dry-run, ausdruck übernehmen, printoutfits, vorschau, treffsicher:preview-, entryfromsession, treffsicherdetails, übernahme, treffsicher, konten, e-mail, zuordnung, mapping, csv, transfer, verdacht, levenshtein, stufe 3, personendaten, reports]
+keywords: [vereinsheim transfer, transfer-spiegel, transfer.mjs, transfer-ops, transfer-mapping, zuordnungsdatei, owners.txt, saved, exit 6, transfer mark, transfer status, fitsenteredtotal, kindchoice, betrieb, vps, runtransfer, decidecard, checktransfer, prüfbestand, geändertes bleibt, movedtospiegelat, umgezogen, --family, nodiscipline, unknownfamily, exit-code, probelauf, dry-run, ausdruck übernehmen, printoutfits, vorschau, treffsicher:preview-, entryfromsession, treffsicherdetails, übernahme, treffsicher, konten, e-mail, zuordnung, mapping, csv, transfer, verdacht, levenshtein, stufe 3, personendaten, reports]
 part_of: ["[[spiegel]]"]
 governed_by: ["[[adr-033]]", "[[adr-029]]", "[[adr-002]]"]
+documented_in: ["[[operations#Übernahme aus Treffsicher]]"]
 ---
 
 **TL;DR** `pnpm --filter spiegel transfer:accounts dev|prod` holt die Konten beider Apps als CSV (je Datenbank eine
@@ -13,7 +14,9 @@ Abfrage, keine Verbindung dazwischen) und schreibt nach `reports/tis-v1/` einen 
 Zuordnung `zuordnung-<Tag>.csv`. Diese Datei bearbeitet der User; sie ist der Vertrag mit dem CLI, das in Stufe 3 von
 [[adr-033]] Konto für Konto übernimmt. Beide Dateien enthalten Namen und E-Mails und bleiben gitignored ([[adr-029]]).
 Danach übernimmt `pnpm --filter spiegel transfer --from … --to …` ein Konto in einer Transaktion: Scheiben, Einträge,
-Ziele, Abläufe, Ausdrucke und Belege, mit Prüfbestand und Bericht; wiederholbar, Geändertes bleibt.
+Ziele, Abläufe, Ausdrucke und Belege, mit Prüfbestand und Bericht; wiederholbar, Geändertes bleibt. In Prod läuft
+dasselbe über `vereinsheim transfer` in einem Wegwerf-Container aus dem Image von Spiegel, Konto für Konto aus der
+geprüften Zuordnungsdatei (Abschnitt „Betrieb auf dem VPS“).
 
 ## Gruppen
 
@@ -42,7 +45,8 @@ pnpm --filter spiegel transfer --from <E-Mail in Treffsicher> --to <E-Mail in Sp
   [--dry-run] [--files <Ordner unter tools/private/>] [--family "<Name>=<Kennung der Familie>"]…
 ```
 
-Nur gegen die lokale Dev-Datenbank (`assertDevDatabase`). Treffsicher liest `tools/transfer/source-dev.ts` über `psql`
+Nur gegen die lokale Dev-Datenbank (`assertDevDatabase`); in Prod über `vereinsheim transfer` (Abschnitt „Betrieb auf
+dem VPS“). Treffsicher liest `tools/transfer/source-dev.ts` über `psql`
 im Dev-Container (`tools/transfer/treffsicher-account.sql`, eine Zeile JSON je Konto, keine Verbindung der App zur
 fremden Datenbank, [[adr-002]]); `runTransfer` (`apps/spiegel/src/parts/transfer/run.ts`) bekommt die Quelle als
 Schnittstelle (`TreffsicherSource`). `--files` zeigt auf die entpackten Dateien der Anhänge aus der Sicherung von
@@ -178,6 +182,11 @@ einer zweiten Scheibe.
 Der Export des Kontos enthält die Läufe (Zeit, Version, Zahlen), nicht die Stücke. Konto löschen nimmt beide Tabellen
 über die Kaskade vom Konto mit. Nur `src/parts/transfer` liest und schreibt sie (`boundary.test.ts`).
 
+Wechselt eine Einheit in Treffsicher zwischen zwei Läufen die Art (Training, Wettkampf), setzt der nächste Lauf Art und
+Wahl der Art (`kindChoice`) einer unveränderten Scheibe neu (`writeTransferCard`); die Wahl steht dabei, damit die Art
+bleibt, wenn die Brücke die Scheibe füllt. Hat der Schütze die Art in der App selbst gewählt, ist die Scheibe geändert
+und bleibt.
+
 ### Merkmal „umgezogen“
 
 Das Merkmal `movedToSpiegelAt` in Treffsicher ([[treffsicher-read-only]]) heißt nur noch „umgezogen“; was geändert
@@ -221,11 +230,50 @@ DELETE FROM "Card" WHERE "importKey" LIKE 'treffsicher:preview-%';
   je übrigem Feld, Werte genau wie gespeichert) und `executionsOnCard`. Geschrieben über `src/diary/transfer/write.ts`
   (anlegen oder über den Schlüssel ersetzen).
 
+## Betrieb auf dem VPS
+
+`vereinsheim transfer` übernimmt Konten in Prod, ohne dass der Prozess von Spiegel die Datenbank von Treffsicher berührt
+([[adr-002]]). Ablauf in Prod und Befehle: [[operations]] „Übernahme aus Treffsicher“.
+
+- **Werkzeug im Image:** `tools/transfer-ops.ts` gebündelt zu `transfer.mjs` neben `printout-reader.mjs`
+  (`tools/build-transfer.ts`, im Skript `build` nach `next build`), mit Prisma-Client und `pg`. Dev und Container teilen
+  den Kern `tools/transfer/cli.ts` (Aufruf, Exit-Codes, Bericht). Im Container fehlt `--files`: Die Dateien kommen aus
+  dem Volume.
+- **Dienst `transfer-spiegel`** in `compose.yml`: Profil `ops` (`deploy` und `up` starten ihn nicht), Image von Spiegel,
+  nur Netz `data`, nur `DATABASE_URL` von Spiegel, `uploads_spiegel` schreibbar, `uploads_treffsicher` nur lesend,
+  320 MB und Heap 160 wie `app-spiegel`.
+- **Ein Konto:** Der Host liest mit `psql` als `postgres` die Besitzer aller Einheiten, Ziele und Abläufe
+  (`treffsicher-owners.sql`, nur Kennungen) in eine Datei `owners.txt` und gibt das Konto (`treffsicher-account.sql`)
+  per Pipe in den Container (`docker compose run -T`). Auf dem VPS liegt nie eine Datei mit E-Mail, Passwort-Hash oder
+  Texten. Der Container prüft, dass der Export zur E-Mail passt (`exportTreffsicherSource`), läuft wie in Dev und legt
+  nach dem Commit eine leere Datei `saved` an. Nur mit `saved` setzt der Host das Merkmal „umgezogen“
+  (`treffsicher-mark.sql`, nur wenn genau ein Konto passt); ein Probelauf setzt nie eines. Seit dem Hauptbuch heißt
+  das Merkmal nur „umgezogen“, deshalb darf es nach dem Commit kommen (`runTransfer` mit einer Quelle ohne
+  `markMoved`: `marked: "caller"`).
+- **Exit-Codes** wie in Dev 0 bis 5, dazu 6 „gespeichert, Merkmal fehlt“: nachholen mit `vereinsheim transfer mark`.
+  137 heißt Speichergrenze des Containers, ohne `saved` ist nichts geschrieben.
+- **Ausgabe** nur mit Zahlen, Codes und acht Zeichen sha256 der E-Mail (`accountHash` in
+  `tools/transfer/account-hash.ts`, dieselbe Normalisierung wie `lower(btrim())` in SQL), am Ende die Spitze des
+  Speichers. Der Bericht mit Texten geht nach `reports/tis-3b/` im Repo-Verzeichnis des Rechners (gitignored, Ordner
+  700, Dateien 600), in kein Volume und kein Backup.
+- **Auf dem Mac** braucht jeder Aufruf `--local` (der lokale Stack aus `local-up --restore`, für die Übung gegen die
+  Prod-Kopie auf demselben Weg wie Prod) oder `--vps` (über `ssh`). Die Zuordnungsdatei bleibt auf dem Mac:
+  `transfer --mapping <datei>` prüft sie (`tools/transfer/mapping.ts`, über `tools/transfer-mapping.ts plan`) und ruft
+  je Zeile ein Konto auf. Ein `from` mit zwei `to` oder zwei `from` auf ein `to` brechen die ganze Datei ab, bevor ein
+  Lauf startet (dieselbe Regel wie `foreignInTarget`, nur früher). `check`-Zeilen laufen nicht, ebenso `ok`/`new` eines
+  `from`, zu dem noch eine `check`-Zeile steht; gleiche Zeilen laufen einmal. Mit `--vps` und echtem Lauf kommt vorher
+  ein Backup (`SKIP_BACKUP=1` schaltet es ab). Die Übersicht nennt je Zeile Nummer, Hash, Exit und Text.
+- **`transfer status --mapping <datei>`** holt nur Hashes (`treffsicher-status.sql`, `spiegel-status.sql`) und zeigt je
+  Zeile übernommen, Merkmal fehlt, Merkmal ohne Lauf, offen, zu prüfen oder fehlt in Treffsicher, dazu die Zahl der
+  Konten in Treffsicher, die nicht in der Datei stehen.
+
 ## Fallstricke
 
-- Offen (für 3b): Trägt eine übernommene Scheibe zwei Ausdrucke, einen passenden (seine Werte wurden übernommen) und
-  einen anderen, kann ein späteres Neulesen (neue Version des Lesers, andere Disziplin) mit `readingOrder` die Werte
-  des anderen nehmen; `applyPrintoutValues` kennt den übernommenen nicht.
+- Gelöst in 3b: Trägt eine übernommene Scheibe zwei Ausdrucke, einen passenden (seine Werte wurden übernommen) und einen
+  anderen, nimmt ein späteres Neulesen (neue Version des Lesers, andere Disziplin) nur einen, dessen Lesung zu den
+  Zahlen der Revision aus Treffsicher passt (`fitsEnteredTotal` in `src/lib/printouts/values.ts`: Schusszahl und
+  Ergebnis, in Zehnteln, wenn eingetragen, sonst in Ringen; der Abend nicht, die Ausdrucke hängen schon an der Scheibe).
+  Passt keiner, bleibt die Scheibe, wie sie ist (`applyPrintoutValues` gibt `none`, ohne neue Revision).
 
 - Ein zweiter Lauf am selben Tag bricht ab, solange `zuordnung-<Tag>.csv` existiert: Sonst überschriebe er die
   Bearbeitung des Users. Umbenennen oder löschen, dann neu laufen lassen.

@@ -111,8 +111,8 @@ Ein Tool, zwei Modi. Erkennung: ist `.vereinsheim.local` da?
 
 | Mode  | Trigger                        | Subcommands                                                                                                   |
 | ----- | ------------------------------ | ------------------------------------------------------------------------------------------------------------- |
-| Lokal | `.vereinsheim.local` existiert | dev-setup, local-setup, build, release, ssh, remote, upload, download, local-build/-pull/-up/-down, dev-restore |
-| VPS   | Default                        | setup, deploy, rollback, backup, restore, restore-probe, db-ensure, migrations, status, cron, psql, logs, shell, env-check, up/down/restart |
+| Lokal | `.vereinsheim.local` existiert | dev-setup, local-setup, build, release, ssh, remote, upload, download, local-build/-pull/-up/-down, dev-restore, transfer (mit `--local` oder `--vps`, auch `--mapping` und `status`) |
+| VPS   | Default                        | setup, deploy, rollback, backup, restore, restore-probe, db-ensure, migrations, status, cron, psql, logs, shell, env-check, up/down/restart, transfer (ein Konto, `mark`) |
 
 Aufruf: `./scripts/vereinsheim` (Menü) oder `./scripts/vereinsheim <subcmd>`. Volle Liste: `./scripts/vereinsheim help`.
 

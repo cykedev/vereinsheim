@@ -3,7 +3,7 @@ id: operations
 type: guide
 title: "Operations — vereinsheim"
 aliases: ["Operations — vereinsheim"]
-keywords: [operations, betrieb, vereinsheim, cli, deploy, backup, restore, rollback, migrationen, recovery, vps, bootstrap, brücke]
+keywords: [operations, betrieb, vereinsheim, cli, deploy, backup, restore, rollback, migrationen, recovery, vps, bootstrap, brücke, transfer, übernahme, treffsicher, zuordnung]
 part_of: ["[[overview]]"]
 ---
 
@@ -40,6 +40,7 @@ automatisch erkennen:
 ./scripts/vereinsheim local-pull   # Backups + Image-Tags vom VPS → ./backups/
 ./scripts/vereinsheim local-up [--restore]   # Prod-Stack lokal (braucht .env.local)
 ./scripts/vereinsheim dev-restore [app]      # Prod-Dump aus ./backups/ → Dev-DB
+./scripts/vereinsheim transfer … --local|--vps   # Übernahme aus Treffsicher (unten), auch --mapping und status
 
 # === VPS-Mode ===
 ./scripts/vereinsheim status       # Services, Volumes, Backups, Cron, .env
@@ -57,6 +58,7 @@ automatisch erkennen:
 ./scripts/vereinsheim cron         # Backup-Cron
 ./scripts/vereinsheim shell <svc>  # Shell im Container
 ./scripts/vereinsheim up | down | restart <svc>
+./scripts/vereinsheim transfer --from <a> --to <b>   # ein Konto aus Treffsicher (auch mark)
 ```
 
 **Konfigurations-Dateien** (alle gitignored):
@@ -85,6 +87,7 @@ auch ohne das Tool zurechtkommst (z.B. wenn das CLI selbst kaputt ist).
   - [Restore-Test](#restore-test-regelmäßig-empfohlen)
 - [Recovery von fehlgeschlagenen Migrationen](#recovery-von-fehlgeschlagenen-migrationen)
 - [Rollback](#rollback)
+- [Übernahme aus Treffsicher](#übernahme-aus-treffsicher)
 - [Brücke im Schützenhaus](#brücke-im-schützenhaus)
 
 ---
@@ -539,6 +542,45 @@ Schema-Stand. Reihenfolge:
 ```
 
 Voraussetzung: Pre-Deploy-Backup hat funktioniert (= Default).
+
+---
+
+## Übernahme aus Treffsicher
+
+Konten aus Treffsicher ziehen nach Spiegel um ([[adr-033]], [[spiegel-account-transfer]] „Betrieb auf dem VPS“). Ein
+Wegwerf-Container aus dem Image von Spiegel (`transfer-spiegel`, Profil `ops`) übernimmt je Konto; die Datenbank von
+Treffsicher liest nur der Host. Die geprüfte Zuordnungsdatei (`reports/tis-v1/zuordnung-<Tag>.csv`, der User entscheidet
+die `check`-Zeilen) bleibt auf dem Mac.
+
+```bash
+# auf dem Mac, je Aufruf --local (lokaler Stack) oder --vps (über ssh)
+./scripts/vereinsheim transfer status --mapping <datei> --vps            # je Zeile übernommen oder offen
+./scripts/vereinsheim transfer --mapping <datei> --vps --dry-run [--family "<Name>=<Kennung>"]… [--discipline "<Name>=<Disziplin>"]…
+./scripts/vereinsheim transfer --from <a> --to <b> --vps [--dry-run]     # ein Konto
+./scripts/vereinsheim transfer mark --from <a> --vps [--clear]           # Merkmal nachholen (Exit 6) oder aufheben
+```
+
+Ablauf in Prod, nach dem Merge des Basisbranchs:
+
+1. `git pull` im Repo auf dem VPS (`vereinsheim ssh`). Sonst fehlen dort `compose.yml` mit dem Dienst, das CLI und die
+   SQL-Dateien unter `apps/spiegel/tools/transfer/`.
+2. `vereinsheim release`, dann läuft der Deploy. Das Image von Spiegel trägt danach `transfer.mjs`; ohne meldet das CLI
+   „Image von Spiegel ohne Übernahme“.
+3. Die Übung gegen die Prod-Kopie lokal, mit denselben Befehlen und `--local` (`local-pull`, `local-build`,
+   `local-up --restore`).
+4. `transfer status --mapping <datei> --vps`: Alle `ok`/`new`-Zeilen stehen auf „offen“.
+5. `transfer --mapping <datei> --vps --dry-run` mit den `--family`/`--discipline` aus der Übung; jede Zeile Exit 0
+   oder ein bekannter Grund.
+6. Erst das Konto des Users allein (`transfer --from … --to … --vps`), in der App prüfen, dann die übrigen über
+   `transfer --mapping <datei> --vps`. Vorher legt das CLI ein Backup an (`SKIP_BACKUP=1` schaltet es ab). Eine ruhige
+   Zeit wählen: Der Container kommt mit bis zu 320 MB zum Stack dazu ([[vps-resource-sizing]]).
+7. `transfer status … --vps`: Jede gelaufene Zeile steht auf „übernommen“. „Merkmal fehlt“ heißt gespeichert, aber das
+   Merkmal fehlt: `transfer mark --from … --vps`.
+
+Exit-Codes je Zeile: 0 übernommen, 1 übernommen mit Befund im Prüfbestand (Bericht lesen), 2 Aufruf falsch (die
+Schleife hält an), 3 abgebrochen vor dem Schreiben, 4 Fehler (nichts geschrieben), 5 gespeichert, aber Ausgabe oder
+Bericht fehlt, 6 gespeichert, Merkmal fehlt, 255 keine Verbindung (die Schleife hält an). Berichte liegen unter
+`reports/tis-3b/` im Repo-Verzeichnis des Rechners, der den Container startet (auf dem VPS dort, nicht auf dem Mac).
 
 ---
 
