@@ -4,7 +4,7 @@ import { join } from "node:path"
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 
-import { filesUnder } from "./files"
+import { filesIn, filesUnder } from "./files"
 
 let base: string
 let privateRoot: string
@@ -42,5 +42,20 @@ describe("filesUnder", () => {
   it("nur ein Ordner unter dem privaten Ordner", async () => {
     await expect(filesUnder(base, privateRoot)).rejects.toThrow()
     await expect(filesUnder(privateRoot, privateRoot)).rejects.toThrow()
+  })
+})
+
+describe("filesIn", () => {
+  it("liest im Ordner; fehlend, `..` und ein Link nach draußen gelten als fehlend", async () => {
+    const files = await filesIn(uploads)
+    expect(new TextDecoder().decode((await files.read("a.pdf"))!)).toBe("%PDF-a")
+    expect(await files.read("sub/b.jpg")).not.toBeNull()
+    expect(await files.read("fehlt.pdf")).toBeNull()
+    expect(await files.read("../../geheim.txt")).toBeNull()
+    expect(await files.read("link.txt")).toBeNull()
+  })
+
+  it("ein Ordner, den es nicht gibt, wirft", async () => {
+    await expect(filesIn(join(base, "fehlt"))).rejects.toThrow()
   })
 })

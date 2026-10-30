@@ -1,5 +1,6 @@
-// Die Dateien der Anhänge aus Treffsicher: ein Ordner unter `tools/private/` (gitignored), in den der Betreiber das
-// Backup entpackt. Gelesen wird nur darin; ein Pfad, der über einen Link oder `..` hinausführt, gilt als fehlend.
+// Die Dateien der Anhänge aus Treffsicher: in Dev ein Ordner unter `tools/private/` (gitignored), in den der Betreiber
+// das Backup entpackt; im Container des Betriebs das Volume `uploads_treffsicher`, nur lesend eingehängt. Gelesen wird
+// nur darin; ein Pfad, der über einen Link oder `..` hinausführt, gilt als fehlend.
 
 import { readFile, realpath } from "node:fs/promises"
 import { isAbsolute, join, relative, resolve } from "node:path"
@@ -16,6 +17,12 @@ export async function filesUnder(dir: string, privateRoot: string): Promise<Atta
   const allowed = await realpath(privateRoot)
   const root = await realpath(resolve(dir))
   if (!inside(allowed, root)) throw new Error("--files nur für einen Ordner unter tools/private/")
+  return filesIn(root)
+}
+
+/** der Ordner `dir` als Quelle der Anhänge, ohne Prüfung, wo er liegt; wirft, wenn es ihn nicht gibt */
+export async function filesIn(dir: string): Promise<AttachmentFiles> {
+  const root = await realpath(resolve(dir))
   return {
     async read(filePath) {
       try {
