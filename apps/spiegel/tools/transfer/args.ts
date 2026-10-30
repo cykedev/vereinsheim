@@ -7,9 +7,19 @@ export interface TransferArgs {
   /** der Ordner mit den Dateien aus Treffsicher; null ohne `--files` */
   files: string | null
   families: { name: string; slug: string }[]
+  /** `--discipline "<Disziplin in Treffsicher>=<Disziplin in Spiegel>"`, je Name einmal */
+  disciplines: { name: string; target: string }[]
 }
 
-const FLAGS_WITH_VALUE = new Set(["--from", "--to", "--files", "--family"])
+const FLAGS_WITH_VALUE = new Set(["--from", "--to", "--files", "--family", "--discipline"])
+
+/** `"<links>=<rechts>"`, geteilt am letzten `=`; null, wenn eine Seite leer ist */
+function pairOf(raw: string): [string, string] | null {
+  const at = raw.lastIndexOf("=")
+  const left = raw.slice(0, at).trim()
+  const right = raw.slice(at + 1).trim()
+  return at === -1 || !left || !right ? null : [left, right]
+}
 
 export function argsOf(argv: readonly string[]): TransferArgs | null {
   const values: Record<string, string[]> = {}
@@ -33,11 +43,15 @@ export function argsOf(argv: readonly string[]): TransferArgs | null {
   if ((values["--files"]?.length ?? 0) > 1) return null
   const families: TransferArgs["families"] = []
   for (const raw of values["--family"] ?? []) {
-    const at = raw.lastIndexOf("=")
-    const name = raw.slice(0, at).trim()
-    const slug = raw.slice(at + 1).trim()
-    if (at === -1 || !name || !slug) return null
-    families.push({ name, slug })
+    const pair = pairOf(raw)
+    if (!pair) return null
+    families.push({ name: pair[0], slug: pair[1] })
   }
-  return { from, to, dryRun, files: one("--files"), families }
+  const disciplines: TransferArgs["disciplines"] = []
+  for (const raw of values["--discipline"] ?? []) {
+    const pair = pairOf(raw)
+    if (!pair) return null
+    disciplines.push({ name: pair[0], target: pair[1] })
+  }
+  return { from, to, dryRun, files: one("--files"), families, disciplines }
 }

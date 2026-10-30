@@ -53,14 +53,26 @@ export function abortText(abort: TransferAbort): string {
           ? "  pnpm --filter treffsicher moved --clear <E-Mail in Treffsicher>"
           : `  in Treffsicher: UPDATE "User" SET "movedToSpiegelAt" = '${abort.previous.replace("T", " ").replace("Z", "")}' WHERE email = '<E-Mail in Treffsicher>';`,
       ].join("\n")
+    case "badDisciplineOption":
+      return [
+        "--discipline stimmt nicht:",
+        ...abort.unknownTargets.map(
+          (name) => `  keine eingeordnete Disziplin ${name} an der ersten Anlage, oder mehrere`
+        ),
+        ...abort.outsideFamily.map(
+          (pair) => `  ${pair}: die Disziplin liegt in einer anderen Familie`
+        ),
+        ...abort.duplicateNames.map((name) => `  der Name ${name} steht zweimal da`),
+      ].join("\n")
     case "noDiscipline":
       return [
-        "Keine Disziplin der ersten Anlage passt zur Schusszahl (unter Admin → Disziplinen anlegen oder eine meistgenutzte schaffen):",
+        "Keine Disziplin der ersten Anlage lässt sich wählen:",
         ...abort.cases.map((c) =>
           c.reason === "tie"
             ? `  ${c.family}, ${c.shots} Schuss: ${c.sessions} Einheiten (mehrere Disziplinen mit ${c.plannedShots} Schuss, keine meistgenutzt)`
-            : `  ${c.family}, ${c.shots} Schuss: ${c.sessions} Einheiten (keine Disziplin mit so vielen Schüssen oder mehr)`
+            : `  ${c.family}, ${c.shots} Schuss: ${c.sessions} Einheiten (keine Disziplin der Familie mit fester Schusszahl)`
         ),
+        'Zuordnung angeben: --discipline "<Disziplin in Treffsicher>=<Disziplin in Spiegel>", oder unter Admin → Disziplinen anlegen',
       ].join("\n")
   }
 }
@@ -72,7 +84,8 @@ export function summaryLines(report: TransferReport): string[] {
     `# Übernahme aus Treffsicher (${report.dryRun ? "Probelauf, nichts geschrieben" : "geschrieben"})`,
     "",
     `Konto ${report.accountCreated ? "angelegt" : "vorhanden"}, Tagebuch ${report.diaryEnabled ? "an" : "aus"}`,
-    `Einheiten: ${report.sessions}, davon ${report.largerDiscipline} auf einer Disziplin mit mehr Schüssen (unvollständig)`,
+    `Einheiten: ${report.sessions}`,
+    `Disziplin nicht mit gleicher Schusszahl: größere ${report.disciplines.larger} (unvollständig), größte der Familie ${report.disciplines.largest} (mehr Schüsse als geplant), aus --discipline ${report.disciplines.option}`,
     `Je Einheit: ${tally(report.decisions)}`,
     `Scheiben: angelegt ${report.cards.created}, ersetzt ${report.cards.revised}, unverändert ${report.cards.unchanged}, entfernt ${report.cards.removed}, geändert und bleibt ${report.cards.kept}`,
     `Scheiben mit ungültigen Angaben: ${tally(report.cards.invalid)}`,

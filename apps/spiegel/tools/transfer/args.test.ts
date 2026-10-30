@@ -17,6 +17,8 @@ describe("argsOf", () => {
         "Luftgewehr (Zehntel)=lg-freihand",
         "--family",
         "LP Training vor RWK = lp-freihand",
+        "--discipline",
+        "Luftpistole=LP 60",
       ])
     ).toEqual({
       from: "a@example.com",
@@ -27,6 +29,7 @@ describe("argsOf", () => {
         { name: "Luftgewehr (Zehntel)", slug: "lg-freihand" },
         { name: "LP Training vor RWK", slug: "lp-freihand" },
       ],
+      disciplines: [{ name: "Luftpistole", target: "LP 60" }],
     })
   })
 
@@ -37,6 +40,7 @@ describe("argsOf", () => {
       dryRun: false,
       files: null,
       families: [],
+      disciplines: [],
     })
   })
 
@@ -50,6 +54,8 @@ describe("argsOf", () => {
     [["--from", "a@example.com", "--to", "b@example.com", "--family", "ohne Kennung"]],
     [["--from", "a@example.com", "--to", "b@example.com", "--family", "=lg"]],
     [["--from", "a@example.com", "--to", "b@example.com", "--family", "LG="]],
+    [["--from", "a@example.com", "--to", "b@example.com", "--discipline", "LP 60"]],
+    [["--from", "a@example.com", "--to", "b@example.com", "--discipline", "=LP 60"]],
     [["--from", "a@example.com", "--to", "b@example.com", "--files"]],
     [["--from", "a@example.com", "--to", "b@example.com", "--files", "a", "--files", "b"]],
     [["--from", " ", "--to", "b@example.com"]],

@@ -63,16 +63,18 @@ In dieser Reihenfolge, je mit festem Text im CLI: kein Konto in Treffsicher (`no
 (`preview`, siehe unten); Übernommenes eines anderen Treffsicher-Kontos im Ziel (`foreignInTarget`); Übernommenes
 dieses Kontos an einem anderen Spiegel-Konto (`sourceElsewhere`); `--family` mit unbekannter Kennung oder doppeltem
 Namen (`badFamilyOption`); eine Disziplin aus Treffsicher ohne Familie (`unknownFamily`, Namen mit Zahl der Einheiten);
-eine Einheit braucht eine neue Scheibe, aber die Familie hat weder eine Disziplin mit ihrer Schusszahl noch eine mit
-mehr Schüssen, oder mehrere passen gleich und keine ist die meistgenutzte (`noDiscipline`, Familie, Schusszahl und
-Grund). Die Familie gibt `--family` an, eine fehlende Disziplin legt der Admin unter Admin → Disziplinen an.
+`--discipline` nennt eine Disziplin in Spiegel, die es unter den eingeordneten nicht genau einmal gibt, eine in einer
+anderen Familie oder denselben Namen zweimal (`badDisciplineOption`); für eine neue Scheibe lässt sich keine Disziplin
+wählen (`noDiscipline`, Familie, Schusszahl und Grund: Gleichstand oder keine Disziplin mit fester Schusszahl). Die
+Familie gibt `--family` an, die Disziplin `--discipline "<Disziplin in Treffsicher>=<Disziplin in Spiegel>"`; die
+Option ersetzt die Wahl nach Schusszahl für alle Einheiten dieser Disziplin.
 
-Eine Einheit ohne Disziplin mit genau ihrer Schusszahl geht auf die Disziplin der Familie mit der kleinsten
-Schusszahl darüber (entschieden mit dem User am 30. Oktober 2026). Die Scheibe ist dann unvollständig (Merkmal
-`unvollstaendig`, nicht `complete`): Sie zählt für keinen Rekord, ein Ziel über die ganze Scheibe lässt sie als
-„andere Schusszahl“ aus, der Fortschritt rechnet ohnehin je Schuss. Der Bericht zählt diese Einheiten. Mehr Schüsse
-als die Disziplin würde Spiegel annehmen (Merkmal `ueber-soll`, die Scheibe zählte als vollständig); dafür gibt es
-keine Regel, der Lauf bricht ab.
+Die Wahl nach Schusszahl hat drei Stufen (entschieden mit dem User am 30. Oktober 2026): eine Disziplin der Familie mit
+genau der Schusszahl der Einheit; sonst die mit der kleinsten größeren, die Scheibe ist dann unvollständig
+(`unvollstaendig`, nicht `complete`: kein Rekord, ein Ziel über die ganze Scheibe lässt sie als „andere Schusszahl“
+aus, der Fortschritt rechnet ohnehin je Schuss); sonst die mit der größten, die Scheibe hat dann mehr Schüsse als
+geplant (`ueber-soll`, zählt als vollständig und für Rekorde ihrer Schusszahl). Passen auf einer Stufe mehrere gleich,
+gilt die vom Konto meistgenutzte, bei Gleichstand bricht der Lauf ab. Der Bericht zählt die Einheiten je Stufe.
 
 ### Je Einheit
 
@@ -159,8 +161,8 @@ DELETE FROM "Card" WHERE "importKey" LIKE 'treffsicher:preview-%';
 
 - **Scheibe** (`apps/spiegel/src/lib/transfer/treffsicher-card.ts`, rein): `familyForName` (Name der Treffsicher-Disziplin
   gleich dem der Familie, ohne Groß- und Kleinschreibung, genau eine; `--family` geht vor), `disciplineForShots`
-  (Disziplin der ersten Anlage mit derselben Schusszahl, ohne sie die mit der kleinsten Schusszahl darüber; bei
-  mehreren die meistgenutzte des Kontos, sonst keine),
+  (Disziplin der ersten Anlage mit derselben Schusszahl, sonst die kleinste größere, sonst die größte; bei mehreren
+  die meistgenutzte des Kontos, sonst keine),
   `treffsicherDetails` (Wertungsserien mit Wert neu nummeriert; Einzelschüsse nur, wenn jede Serie sie hat und ihre
   Summe zum Wert passt, sonst Serien-Summen; Probeserien als Probe; Trefferlage mit Richtung).
 - **Eintrag** (`apps/spiegel/src/diary/transfer/treffsicher-entry.ts`, rein): `entryFromSession` (Abend, Art, Vorhaben aus
@@ -178,7 +180,7 @@ DELETE FROM "Card" WHERE "importKey" LIKE 'treffsicher:preview-%';
 - Ein Abend nur aus Probe oder eine Einheit ohne Ergebnis mit Meyton-Ausdruck: Lauf 1 legt die Scheibe vom Ausdruck
   an. Passt sie nicht zum Ergebnis in Treffsicher, sähe Lauf 2 sie als unsicher und legte eine Scheibe „aus
   Treffsicher“ daneben. In den Daten der Probe kam der Fall nicht vor.
-- Meyton-Ausdrucke im Modus Probe haben kein Gesamtergebnis und passen nie (`printoutFits`). Die Ausdrucke des Users in
-  Treffsicher sind beide so gedruckt; die Übernahme der Werte vom Ausdruck ist nur durch Tests belegt.
-- Vor einem Lauf über alle Konten fehlen Disziplinen: Fünf von neun Konten (Probelauf am 29. Oktober 2026) haben
-  Einheiten mit Schusszahlen, für die ihre Familie in der ersten Anlage keine Disziplin hat (`noDiscipline`).
+- Die Ausdrucke des Users in Treffsicher sind beide im Modus Probe gedruckt (kein Gesamtergebnis). Sie geben Werte erst
+  seit der Regel „Summe der Schüsse“ (`scoringReading`, 30. Oktober 2026).
+- In der ersten Anlage gibt es „LP 60“ und „LP 60 alt“, „LG 60“ und „LG 60 alt“ mit derselben Schusszahl: Ohne eigene
+  Scheiben im Konto ist das ein Gleichstand, `--discipline` wählt.

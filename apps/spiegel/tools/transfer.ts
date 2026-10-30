@@ -5,6 +5,7 @@
 //
 //   pnpm --filter spiegel transfer --from <E-Mail in Treffsicher> --to <E-Mail in Spiegel>
 //     [--dry-run] [--files <Ordner unter tools/private/>] [--family "<Name>=<Kennung der Familie>"]…
+//     [--discipline "<Disziplin in Treffsicher>=<Disziplin in Spiegel>"]…
 //
 // Exit-Codes: 0 fertig ohne Befund, 1 Befund im Prüfbestand, 2 Aufruf falsch, 3 Abbruch der Vorprüfung, 4 Fehler (nichts
 // geschrieben: die Transaktion rollt zurück).
@@ -29,6 +30,7 @@ const CALL = [
   "Aufruf:",
   "  pnpm --filter spiegel transfer --from <E-Mail in Treffsicher> --to <E-Mail in Spiegel>",
   '    [--dry-run] [--files <Ordner unter tools/private/>] [--family "<Name>=<Kennung der Familie>"]…',
+  '    [--discipline "<Disziplin in Treffsicher>=<Disziplin in Spiegel>"]…',
 ].join("\n")
 
 async function main() {
@@ -60,6 +62,7 @@ async function main() {
       dryRun: args.dryRun,
       files,
       families: args.families,
+      disciplines: args.disciplines,
     })
     if (outcome.kind === "aborted") {
       process.stderr.write(`${abortText(outcome.abort)}\n`)

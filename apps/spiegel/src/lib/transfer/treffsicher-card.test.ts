@@ -148,31 +148,44 @@ describe("disciplineForShots", () => {
     { id: 5, plannedShots: null, ownCards: 9 },
   ]
 
-  it("nimmt die Disziplin mit dieser Schusszahl, bei mehreren die meistgenutzte", () => {
-    expect(disciplineForShots(candidates, 40)).toEqual({ kind: "found", id: 1, larger: false })
-    expect(disciplineForShots(candidates, 60)).toEqual({ kind: "found", id: 3, larger: false })
-    expect(disciplineForShots(candidates, 20)).toEqual({ kind: "found", id: 4, larger: false })
+  it("Stufe 1: die Disziplin mit dieser Schusszahl, bei mehreren die meistgenutzte", () => {
+    expect(disciplineForShots(candidates, 40)).toEqual({ kind: "found", id: 1, step: "exact" })
+    expect(disciplineForShots(candidates, 60)).toEqual({ kind: "found", id: 3, step: "exact" })
+    expect(disciplineForShots(candidates, 20)).toEqual({ kind: "found", id: 4, step: "exact" })
   })
 
-  it("ohne genaue die mit der kleinsten Schusszahl darüber, nicht die meistgenutzte und nicht die ohne Zahl", () => {
-    expect(disciplineForShots(candidates, 10)).toEqual({ kind: "found", id: 4, larger: true })
-    expect(disciplineForShots(candidates, 30)).toEqual({ kind: "found", id: 1, larger: true })
-    expect(disciplineForShots(candidates, 52)).toEqual({ kind: "found", id: 3, larger: true })
+  it("Stufe 2: ohne genaue die mit der kleinsten Schusszahl darüber, nicht die meistgenutzte", () => {
+    expect(disciplineForShots(candidates, 10)).toEqual({ kind: "found", id: 4, step: "larger" })
+    expect(disciplineForShots(candidates, 30)).toEqual({ kind: "found", id: 1, step: "larger" })
+    expect(disciplineForShots(candidates, 52)).toEqual({ kind: "found", id: 3, step: "larger" })
   })
 
-  it("ohne genaue und ohne größere keine", () => {
-    expect(disciplineForShots(candidates, 70)).toEqual({ kind: "none" })
+  it("Stufe 3: keine mit so vielen Schüssen, dann die mit der größten, nicht die ohne Zahl", () => {
+    expect(disciplineForShots(candidates, 70)).toEqual({ kind: "found", id: 3, step: "largest" })
+    const small = [
+      { id: 6, plannedShots: 30, ownCards: 0 },
+      { id: 7, plannedShots: 20, ownCards: 5 },
+    ]
+    expect(disciplineForShots(small, 40)).toEqual({ kind: "found", id: 6, step: "largest" })
+  })
+
+  it("ohne Disziplin mit fester Schusszahl keine", () => {
     expect(disciplineForShots([], 40)).toEqual({ kind: "none" })
+    expect(disciplineForShots([{ id: 5, plannedShots: null, ownCards: 9 }], 40)).toEqual({
+      kind: "none",
+    })
   })
 
-  it("bei Gleichstand keine, auch wenn es eine größere gäbe", () => {
+  it("bei Gleichstand auf einer Stufe keine, auch wenn eine spätere Stufe eine hätte", () => {
     const tied = [
       { id: 2, plannedShots: 60, ownCards: 4 },
       { id: 3, plannedShots: 60, ownCards: 4 },
       { id: 6, plannedShots: 80, ownCards: 0 },
+      { id: 7, plannedShots: 20, ownCards: 0 },
     ]
     expect(disciplineForShots(tied, 60)).toEqual({ kind: "tie", plannedShots: 60 })
     expect(disciplineForShots(tied, 50)).toEqual({ kind: "tie", plannedShots: 60 })
-    expect(disciplineForShots(tied, 70)).toEqual({ kind: "found", id: 6, larger: true })
+    expect(disciplineForShots(tied, 70)).toEqual({ kind: "found", id: 6, step: "larger" })
+    expect(disciplineForShots(tied.slice(0, 2), 70)).toEqual({ kind: "tie", plannedShots: 60 })
   })
 })

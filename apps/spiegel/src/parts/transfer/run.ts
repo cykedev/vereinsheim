@@ -81,6 +81,12 @@ export interface FamilyOption {
   slug: string
 }
 
+/** eine Zuordnung `--discipline "<Disziplin in Treffsicher>=<Disziplin in Spiegel>"`; ersetzt die Wahl nach Schusszahl */
+export interface DisciplineOption {
+  name: string
+  target: string
+}
+
 export interface TransferInput {
   source: TreffsicherSource
   /** E-Mail in Treffsicher */
@@ -91,6 +97,7 @@ export interface TransferInput {
   /** null: ohne `--files`, jeder Anhang steht unter „Datei fehlt“ */
   files: AttachmentFiles | null
   families: readonly FamilyOption[]
+  disciplines?: readonly DisciplineOption[]
   /** die Anlage der Disziplinen; ohne die erste (`requestSiteId`), Tests geben ihre eigene */
   siteId?: number
   /** Ausdrucke lesen und speichern; ohne `storePrintout` im Kindprozess (Tests geben eine eigene) */
@@ -108,6 +115,16 @@ export type TransferAbort =
   | { kind: "foreignInTarget"; rows: number }
   | { kind: "sourceElsewhere"; rows: number }
   | { kind: "badFamilyOption"; unknownSlugs: string[]; duplicateNames: string[] }
+  /**
+   * `--discipline` nennt eine Disziplin in Spiegel, die es unter den eingeordneten der ersten Anlage nicht genau einmal
+   * gibt, eine in einer anderen Familie als die Disziplin aus Treffsicher, oder denselben Namen zweimal
+   */
+  | {
+      kind: "badDisciplineOption"
+      unknownTargets: string[]
+      outsideFamily: string[]
+      duplicateNames: string[]
+    }
   | { kind: "unknownFamily"; names: Record<string, number> }
   | {
       kind: "noDiscipline"
@@ -134,8 +151,11 @@ export interface TransferReport {
   accountCreated: boolean
   diaryEnabled: boolean
   sessions: number
-  /** neue Scheiben auf einer Disziplin mit mehr Schüssen als die Einheit (unvollständig) */
-  largerDiscipline: number
+  /**
+   * neue Scheiben nicht auf einer Disziplin mit ihrer Schusszahl: `larger` mehr Schüsse (unvollständig), `largest` die
+   * größte der Familie mit weniger (`ueber-soll`), `option` aus `--discipline`
+   */
+  disciplines: Tally<"larger" | "largest" | "option">
   decisions: Tally<"existing" | "new" | "uncertain" | "probeEvening" | "noResult" | "notShooting">
   cards: {
     created: number
@@ -280,7 +300,7 @@ const blankReport = (dryRun: boolean): Omit<TransferReport, "check"> => ({
   accountCreated: false,
   diaryEnabled: false,
   sessions: 0,
-  largerDiscipline: 0,
+  disciplines: { larger: 0, largest: 0, option: 0 },
   decisions: { existing: 0, new: 0, uncertain: 0, probeEvening: 0, noResult: 0, notShooting: 0 },
   cards: { created: 0, revised: 0, unchanged: 0, removed: 0, kept: 0, invalid: {} },
   entries: { created: 0, updated: 0, kept: 0, removed: 0 },
@@ -400,7 +420,7 @@ export async function runTransfer(db: Db, input: TransferInput): Promise<Transfe
             targetId: { not: null },
             familyId: { not: null },
           },
-          select: { id: true, familyId: true, meytonId: true, plannedShots: true },
+          select: { id: true, name: true, familyId: true, meytonId: true, plannedShots: true },
         }),
     targetId === null
       ? []
@@ -420,6 +440,33 @@ export async function runTransfer(db: Db, input: TransferInput): Promise<Transfe
         plannedShots: plannedShotsOf(d.meytonId, d.plannedShots),
         ownCards: ownCards.get(d.id) ?? 0,
       }))
+  // 7. `--discipline`: die genannte genau einmal unter den eingeordneten, in der Familie der Disziplin aus Treffsicher
+  const disciplineOptions = input.disciplines ?? []
+  const seenOptions = new Set<string>()
+  const optionDuplicates = disciplineOptions
+    .map((o) => normalize(o.name))
+    .filter((name) => (seenOptions.has(name) ? true : (seenOptions.add(name), false)))
+  const unknownTargets: string[] = []
+  const outsideFamily: string[] = []
+  const chosen = new Map<string, number>()
+  for (const option of disciplineOptions) {
+    const named = disciplines.filter((d) => normalize(d.name) === normalize(option.target))
+    if (named.length !== 1) unknownTargets.push(option.target)
+    else if (named[0].familyId !== familyOf(option.name))
+      outsideFamily.push(`${option.name}=${option.target}`)
+    else chosen.set(normalize(option.name), named[0].id)
+  }
+  if (optionDuplicates.length || unknownTargets.length || outsideFamily.length)
+    return {
+      kind: "aborted",
+      abort: {
+        kind: "badDisciplineOption",
+        unknownTargets,
+        outsideFamily,
+        duplicateNames: optionDuplicates,
+      },
+    }
+
   const byEvening = new Map<string, typeof visible>()
   for (const card of visible)
     if (card.family && sourceIdOf(card.importKey) === null) {
@@ -427,13 +474,13 @@ export async function runTransfer(db: Db, input: TransferInput): Promise<Transfe
       byEvening.set(key, [...(byEvening.get(key) ?? []), card])
     }
 
-  // je Einheit entscheiden; 7. Disziplin für jede neue Scheibe
+  // je Einheit entscheiden; 8. Disziplin für jede neue Scheibe
   const units: Unit[] = []
   const missing = new Map<
     string,
     Extract<TransferAbort, { kind: "noDiscipline" }>["cases"][number]
   >()
-  let largerDiscipline = 0
+  const steps = { larger: 0, largest: 0, option: 0 }
   const familyName = new Map(families.map((f) => [f.id, f.name]))
   for (const session of [...account.sessions].sort((a, b) => a.date.localeCompare(b.date))) {
     const dateMs = Date.parse(session.date)
@@ -449,10 +496,15 @@ export async function runTransfer(db: Db, input: TransferInput): Promise<Transfe
     )
     let disciplineId: number | null = null
     if ((decision.kind === "new" || decision.kind === "uncertain") && card && familyId !== null) {
-      const choice = disciplineForShots(candidates(familyId), card.shots)
+      const option = chosen.get(normalize(session.discipline!.name))
+      const choice: ReturnType<typeof disciplineForShots> =
+        option === undefined
+          ? disciplineForShots(candidates(familyId), card.shots)
+          : { kind: "found", id: option, step: "exact" }
+      if (option !== undefined) steps.option += 1
       if (choice.kind === "found") {
         disciplineId = choice.id
-        if (choice.larger) largerDiscipline += 1
+        if (option === undefined && choice.step !== "exact") steps[choice.step] += 1
       } else {
         const k = `${familyId}|${card.shots}`
         const row = missing.get(k) ?? {
@@ -507,7 +559,7 @@ export async function runTransfer(db: Db, input: TransferInput): Promise<Transfe
 
   // die Anhänge lesen, außerhalb der Transaktion (Kindprozess, Dateien)
   const report = blankReport(input.dryRun)
-  report.largerDiscipline = largerDiscipline
+  report.disciplines = steps
   const readPrintout =
     input.readPrintout ??
     ((bytes: Uint8Array, fileName: string, zone: string) =>

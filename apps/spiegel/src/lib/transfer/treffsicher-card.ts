@@ -45,36 +45,40 @@ function mostUsed(
   return top.length === 1 ? { id: top[0].id } : "tie"
 }
 
-/** die Disziplin einer neuen Scheibe; `larger`, wenn sie mehr Schüsse hat als die Einheit (die Scheibe ist unvollständig) */
+/**
+ * die Disziplin einer neuen Scheibe und die Stufe, auf der sie gefunden wurde: `exact` gleiche Schusszahl, `larger` die
+ * kleinste größere (die Scheibe ist unvollständig), `largest` die größte der Familie, wenn keine so viele Schüsse hat
+ * (die Scheibe hat mehr als geplant, `ueber-soll`)
+ */
 export type DisciplineChoice =
-  | { kind: "found"; id: number; larger: boolean }
-  /** keine Disziplin mit dieser Schusszahl und keine mit mehr */
+  | { kind: "found"; id: number; step: "exact" | "larger" | "largest" }
+  /** keine Disziplin der Familie mit fester Schusszahl */
   | { kind: "none" }
   /** mehrere passen gleich gut, keine ist die meistgenutzte */
   | { kind: "tie"; plannedShots: number }
 
 /**
  * Die Disziplin für eine Einheit mit dieser Schusszahl unter den Kandidaten einer Familie (eingeordnet, nicht ignoriert,
- * mit Scheibenbild, an der ersten Anlage): eine mit genau dieser Schusszahl; gibt es keine, die mit der kleinsten
- * Schusszahl darüber. Passen mehrere gleich, die vom Konto meistgenutzte, bei Gleichstand keine. Eine Disziplin ohne
- * feste Schusszahl ist kein Kandidat.
+ * mit Scheibenbild, an der ersten Anlage), in drei Stufen: eine mit genau dieser Schusszahl; sonst die mit der kleinsten
+ * Schusszahl darüber; sonst die mit der größten. Passen auf einer Stufe mehrere gleich, die vom Konto meistgenutzte, bei
+ * Gleichstand keine (die nächste Stufe gilt dann nicht). Eine Disziplin ohne feste Schusszahl ist kein Kandidat.
  */
 export function disciplineForShots(
   candidates: readonly { id: number; plannedShots: number | null; ownCards: number }[],
   shots: number
 ): DisciplineChoice {
-  const exact = candidates.filter((candidate) => candidate.plannedShots === shots)
-  const above = candidates.filter(
-    (candidate) => candidate.plannedShots !== null && candidate.plannedShots > shots
-  )
-  const next = Math.min(...above.map((candidate) => candidate.plannedShots!))
-  const fitting = exact.length
-    ? exact
-    : above.filter((candidate) => candidate.plannedShots === next)
-  const choice = mostUsed(fitting)
+  const counted = candidates.filter((candidate) => candidate.plannedShots !== null)
+  const counts = counted.map((candidate) => candidate.plannedShots!)
+  const above = counts.filter((n) => n > shots)
+  const [step, wanted] = counts.includes(shots)
+    ? (["exact", shots] as const)
+    : above.length
+      ? (["larger", Math.min(...above)] as const)
+      : (["largest", Math.max(...counts)] as const)
+  const choice = mostUsed(counted.filter((candidate) => candidate.plannedShots === wanted))
   if (choice === null) return { kind: "none" }
-  if (choice === "tie") return { kind: "tie", plannedShots: exact.length ? shots : next }
-  return { kind: "found", id: choice.id, larger: !exact.length }
+  if (choice === "tie") return { kind: "tie", plannedShots: wanted }
+  return { kind: "found", id: choice.id, step }
 }
 
 /** ein Schuss aus Treffsicher („9“, „10,4“) als Zahl; null, wenn er keine ist */

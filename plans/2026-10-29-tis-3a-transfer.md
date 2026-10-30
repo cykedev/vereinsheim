@@ -118,6 +118,10 @@ Gefunden bei den Wiederholungen mit den Daten des Users (30. Oktober 2026), der 
    blieb; jetzt bleibt sie auf ihr.
 10. **Ein Ausdruck, den ein früherer Lauf an die Scheibe der Einheit hängte,** galt als „eigene Scheibe“ und gab nie
     Werte; jetzt geht er wie beim ersten Lauf über die Scheibe der Einheit.
+11. **Größte Disziplin und `--discipline`** (mit dem User entschieden, 30. Oktober 2026): Ohne gleiche oder größere
+    Schusszahl nimmt die Übernahme die größte der Familie (`ueber-soll`). Ein Gleichstand bricht ab; `--discipline
+    "<Disziplin in Treffsicher>=<Disziplin in Spiegel>"` wählt, eine Disziplin außerhalb der Familie oder nicht
+    eingeordnet bricht vorher ab (`badDisciplineOption`). Der Bericht zählt Einheiten je Stufe.
 
 ## Ansatz
 

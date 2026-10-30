@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 
+import { setScale } from "@/diary/entries"
 import { createPrismaClient } from "@/lib/db"
 import { writeEnteredCard } from "@/lib/db/entered"
 import { createTestSite, type TestSite } from "../../../test/fixtures"
@@ -289,6 +290,37 @@ describe("runTransfer: erster Lauf", () => {
   })
 })
 
+describe("runTransfer: über drei Läufe", () => {
+  it("eine Änderung in der App nach Lauf 1 steht auch nach Lauf 2 und Lauf 3", async () => {
+    const c = newCase("drei")
+    c.account([c.session("s1", "2026-06-24"), c.session("s2", "2026-06-25")])
+    done(await c.run())
+    const ownerId = (await userOf(c.to)).id
+    const key = `treffsicher:${c.id("s1")}`
+    const entry = await db.diaryEntry.findUniqueOrThrow({ where: { importKey: key } })
+    // in Treffsicher Schlaf 70, in der App auf „schlecht“ (Stufe 1) getippt
+    expect(
+      await setScale(db, ownerId, entry.id, { part: "wellbeing", aspect: "sleep", stage: 1 })
+    ).toBeNull()
+    const sleep = async () =>
+      (
+        await db.diaryScale.findUniqueOrThrow({
+          where: { entryId_part_aspect: { entryId: entry.id, part: "wellbeing", aspect: "sleep" } },
+        })
+      ).value
+    const tipped = await sleep()
+    expect(tipped).not.toBe(70)
+
+    const second = done(await c.run())
+    expect(second.entries).toMatchObject({ kept: 1, updated: 1 })
+    expect(await sleep()).toBe(tipped)
+    const third = done(await c.run())
+    expect(third.entries).toMatchObject({ kept: 1, updated: 1 })
+    expect(third.check.findings).toBe(0)
+    expect(await sleep()).toBe(tipped)
+  })
+})
+
 describe("runTransfer: zweiter Lauf", () => {
   it("ohne Änderung ändert er nichts", async () => {
     const c = newCase("zwei")
@@ -544,35 +576,104 @@ describe("runTransfer: Abbruch vor dem Schreiben", () => {
     })
   })
 
-  it("keine Disziplin der Familie mit der Schusszahl einer neuen Scheibe oder mehr", async () => {
-    const c = newCase("schuss")
-    const five = c.session("s1", "2026-08-07")
-    five.series = [...five.series, { ...five.series[0], position: 5 }]
-    c.account([five])
-    expect(await c.run()).toEqual({
-      kind: "aborted",
-      abort: {
-        kind: "noDiscipline",
-        cases: [{ family: familyName, shots: 50, sessions: 1, reason: "none", plannedShots: null }],
+  it("ein Gleichstand ohne meistgenutzte bricht ab; `--discipline` wählt, eine falsche Option bricht vorher ab", async () => {
+    const tag = `${site.siteId}-${fixture++}`
+    const alt = await db.discipline.create({
+      data: {
+        siteId: site.siteId,
+        name: `LP 40 alt ${tag}`,
+        familyId: site.familyId,
+        targetId: "lp-10m",
+        plannedShots: 40,
+        seriesShots: 10,
+        officialScoring: "rings",
+        confirmedAt: new Date(),
       },
     })
-    expect(await db.user.findUnique({ where: { email: c.to } })).toBeNull()
+    const other = await db.family.create({ data: { slug: `fremd-${tag}`, name: `Fremd ${tag}` } })
+    const foreign = await db.discipline.create({
+      data: {
+        siteId: site.siteId,
+        name: `Fremd 40 ${tag}`,
+        familyId: other.id,
+        targetId: "lp-10m",
+        plannedShots: 40,
+        officialScoring: "rings",
+        confirmedAt: new Date(),
+      },
+    })
+    try {
+      const c = newCase("gleich")
+      c.account([c.session("s1", "2026-08-09")])
+      expect(await c.run()).toEqual({
+        kind: "aborted",
+        abort: {
+          kind: "noDiscipline",
+          cases: [{ family: familyName, shots: 40, sessions: 1, reason: "tie", plannedShots: 40 }],
+        },
+      })
+      expect(
+        await c.run({
+          disciplines: [
+            { name: familyName, target: "Gibt es nicht" },
+            { name: familyName.toUpperCase(), target: foreign.name },
+          ],
+        })
+      ).toEqual({
+        kind: "aborted",
+        abort: {
+          kind: "badDisciplineOption",
+          unknownTargets: ["Gibt es nicht"],
+          outsideFamily: [`${familyName.toUpperCase()}=${foreign.name}`],
+          duplicateNames: [familyName.toLowerCase()],
+        },
+      })
+      const report = done(
+        await c.run({ disciplines: [{ name: familyName, target: alt.name.toUpperCase() }] })
+      )
+      expect(report.disciplines).toEqual({ larger: 0, largest: 0, option: 1 })
+      expect(
+        await db.card.findFirstOrThrow({
+          where: { importKey: `treffsicher:${c.id("s1")}` },
+          select: { disciplineId: true },
+        })
+      ).toEqual({ disciplineId: alt.id })
+    } finally {
+      await db.card.deleteMany({ where: { disciplineId: { in: [alt.id, foreign.id] } } })
+      await db.discipline.deleteMany({ where: { id: { in: [alt.id, foreign.id] } } })
+      await db.family.delete({ where: { id: other.id } })
+    }
   })
 })
 
-describe("runTransfer: Disziplin mit mehr Schüssen", () => {
+describe("runTransfer: Disziplin nach Schusszahl", () => {
   it("legt eine Einheit mit 30 Schuss auf die Disziplin mit 40 an, als unvollständig", async () => {
     const c = newCase("groesser")
     const three = c.session("s1", "2026-08-08")
     three.series = three.series.slice(0, 3)
     c.account([three])
     const report = done(await c.run())
-    expect(report.largerDiscipline).toBe(1)
+    expect(report.disciplines).toEqual({ larger: 1, largest: 0, option: 0 })
     expect(report.check.findings).toBe(0)
     const card = await db.card.findFirstOrThrow({
       where: { importKey: `treffsicher:${c.id("s1")}` },
       select: { disciplineId: true, flags: true, complete: true },
     })
     expect(card).toEqual({ disciplineId, flags: ["unvollstaendig"], complete: false })
+  })
+
+  it("legt eine Einheit mit 50 Schuss auf die größte Disziplin (40) an, mit mehr Schüssen als geplant", async () => {
+    const c = newCase("groesste")
+    const five = c.session("s1", "2026-08-10")
+    five.series = [...five.series, { ...five.series[0], position: 5 }]
+    c.account([five])
+    const report = done(await c.run())
+    expect(report.disciplines).toEqual({ larger: 0, largest: 1, option: 0 })
+    expect(report.check.findings).toBe(0)
+    const card = await db.card.findFirstOrThrow({
+      where: { importKey: `treffsicher:${c.id("s1")}` },
+      select: { disciplineId: true, flags: true, complete: true },
+    })
+    expect(card).toEqual({ disciplineId, flags: ["ueber-soll"], complete: true })
   })
 })
