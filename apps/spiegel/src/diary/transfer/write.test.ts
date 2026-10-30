@@ -16,6 +16,8 @@ import {
 } from "./write"
 
 const db = createPrismaClient()
+/** die Zeit des Laufs, mit der die Übernahme schreibt */
+const AT = new Date("2026-10-30T06:00:00.000Z")
 let site: TestSite
 let otherId: string
 
@@ -53,8 +55,14 @@ const entry = (key: string, over: Partial<ImportedEntry> = {}): ImportedEntry =>
 
 describe("upsertImportedEntry", () => {
   it("legt an und ersetzt beim zweiten Mal Felder und Werte, die Kennung bleibt", async () => {
-    const first = await db.$transaction((tx) => upsertImportedEntry(tx, site.ownerId, entry("a")))
+    const first = await db.$transaction((tx) =>
+      upsertImportedEntry(tx, site.ownerId, entry("a"), AT)
+    )
     expect(first.created).toBe(true)
+    // `updatedAt` ist die Zeit des Laufs, daran erkennt der nächste Lauf den Eintrag als unverändert
+    expect((await db.diaryEntry.findUniqueOrThrow({ where: { id: first.id } })).updatedAt).toEqual(
+      AT
+    )
     const second = await db.$transaction((tx) =>
       upsertImportedEntry(
         tx,
@@ -65,7 +73,8 @@ describe("upsertImportedEntry", () => {
             { part: "wellbeing", aspect: "energy", value: 41 },
             { part: "feedback", aspect: "technique", value: 60 },
           ],
-        })
+        }),
+        AT
       )
     )
     expect(second).toEqual({ id: first.id, created: false })
@@ -84,7 +93,7 @@ describe("upsertImportedEntry", () => {
 
   it("ein Schlüssel eines anderen Kontos ist ein Fehler", async () => {
     await expect(
-      db.$transaction((tx) => upsertImportedEntry(tx, otherId, entry("a")))
+      db.$transaction((tx) => upsertImportedEntry(tx, otherId, entry("a"), AT))
     ).rejects.toThrow()
   })
 })
@@ -102,11 +111,11 @@ const goal = (over: Partial<ImportedGoal> = {}): ImportedGoal => ({
 
 describe("upsertImportedGoal", () => {
   it("legt an und setzt beim zweiten Mal die Felder; Messung und Antwort bleiben", async () => {
-    const first = await db.$transaction((tx) => upsertImportedGoal(tx, site.ownerId, goal()))
+    const first = await db.$transaction((tx) => upsertImportedGoal(tx, site.ownerId, goal(), AT))
     expect(first.created).toBe(true)
     await db.diaryGoal.update({ where: { id: first.id }, data: { outcome: "partly" } })
     const second = await db.$transaction((tx) =>
-      upsertImportedGoal(tx, site.ownerId, goal({ title: "385 Ringe", familyId: null }))
+      upsertImportedGoal(tx, site.ownerId, goal({ title: "385 Ringe", familyId: null }), AT)
     )
     expect(second).toEqual({ id: first.id, created: false })
     const row = await db.diaryGoal.findUniqueOrThrow({ where: { id: first.id } })
@@ -123,7 +132,9 @@ describe("upsertImportedGoal", () => {
   })
 
   it("ein Schlüssel eines anderen Kontos ist ein Fehler", async () => {
-    await expect(db.$transaction((tx) => upsertImportedGoal(tx, otherId, goal()))).rejects.toThrow()
+    await expect(
+      db.$transaction((tx) => upsertImportedGoal(tx, otherId, goal(), AT))
+    ).rejects.toThrow()
   })
 })
 
@@ -137,13 +148,16 @@ describe("upsertImportedRoutine", () => {
   })
 
   it("legt an und ersetzt beim zweiten Mal Name, Familie und Schritte", async () => {
-    const first = await db.$transaction((tx) => upsertImportedRoutine(tx, site.ownerId, routine()))
+    const first = await db.$transaction((tx) =>
+      upsertImportedRoutine(tx, site.ownerId, routine(), AT)
+    )
     expect(first.created).toBe(true)
     const second = await db.$transaction((tx) =>
       upsertImportedRoutine(
         tx,
         site.ownerId,
-        routine({ familyId: site.familyId, steps: [{ title: "Abziehen" }] })
+        routine({ familyId: site.familyId, steps: [{ title: "Abziehen" }] }),
+        AT
       )
     )
     expect(second).toEqual({ id: first.id, created: false })
@@ -156,37 +170,43 @@ describe("upsertImportedRoutine", () => {
 
   it("ein Schlüssel eines anderen Kontos ist ein Fehler", async () => {
     await expect(
-      db.$transaction((tx) => upsertImportedRoutine(tx, otherId, routine()))
+      db.$transaction((tx) => upsertImportedRoutine(tx, otherId, routine(), AT))
     ).rejects.toThrow()
   })
 })
 
 describe("isTouched", () => {
-  const at = new Date("2026-10-29T20:00:00Z")
+  const at = new Date("2026-10-29T20:00:00.123Z")
   const row = (updatedAt: Date, deletedAt: Date | null = null) => ({ updatedAt, deletedAt })
 
-  it("nach dem letzten Lauf geändert oder im Papierkorb", () => {
-    expect(isTouched(row(new Date("2026-10-29T20:00:01Z")), at)).toBe(true)
-    expect(isTouched(row(new Date("2026-10-29T19:00:00Z"), at), at)).toBe(true)
+  it("vom letzten Lauf geschrieben: `updatedAt` genau die Zeit seines Merkmals, unverändert", () => {
+    expect(isTouched(row(new Date(at)), at)).toBe(false)
   })
 
-  it("vor oder genau beim letzten Lauf geändert: unverändert", () => {
-    expect(isTouched(row(new Date("2026-10-29T19:59:59Z")), at)).toBe(false)
-    expect(isTouched(row(at), at)).toBe(false)
+  it("danach geändert, auch eine Millisekunde, oder im Papierkorb", () => {
+    expect(isTouched(row(new Date("2026-10-29T20:00:00.124Z")), at)).toBe(true)
+    expect(isTouched(row(new Date(at), at), at)).toBe(true)
+  })
+
+  it("älter als der letzte Lauf: ein früherer Lauf ließ die Zeile stehen, sie bleibt", () => {
+    expect(isTouched(row(new Date("2026-10-29T20:00:00.122Z")), at)).toBe(true)
+    expect(isTouched(row(new Date("2026-10-28T20:00:00Z")), at)).toBe(true)
   })
 
   it("beim ersten Lauf zählt nur der Papierkorb", () => {
     expect(isTouched(row(new Date("2030-01-01T00:00:00Z")), null)).toBe(false)
-    expect(isTouched(row(new Date(), new Date()), null)).toBe(true)
+    expect(isTouched(row(new Date("2020-01-01T00:00:00Z"), at), null)).toBe(true)
   })
 })
 
 describe("Zeilen und Ausführung", () => {
   it("verknüpft Scheiben und ersetzt die Ausführung", async () => {
-    const { id } = await db.$transaction((tx) => upsertImportedEntry(tx, site.ownerId, entry("b")))
+    const { id } = await db.$transaction((tx) =>
+      upsertImportedEntry(tx, site.ownerId, entry("b"), AT)
+    )
     const cardId = `card-${site.siteId}`
     await db.$transaction(async (tx) => {
-      await setImportedLinks(tx, id, [cardId])
+      await setImportedLinks(tx, id, [cardId], AT)
       await replaceExecutions(tx, id, [
         { cardId, series: 1, value: 10 },
         { cardId, series: 2, value: 90 },

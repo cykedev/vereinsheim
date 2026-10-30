@@ -50,6 +50,9 @@ union all select id, "userId" from "ShotRoutine" where id = any(:'ids'::text[]);
 const MARK = `
 update "User" set "movedToSpiegelAt" = (:'at'::timestamptz at time zone 'UTC') where id = :'id';
 `
+const UNMARK = `
+update "User" set "movedToSpiegelAt" = null where id = :'id';
+`
 
 export const devTreffsicherSource: TreffsicherSource = {
   async readAccount(email) {
@@ -69,6 +72,7 @@ export const devTreffsicherSource: TreffsicherSource = {
     return owners
   },
   async markMoved(userId, at) {
-    psql(MARK, { id: userId, at: at.toISOString() })
+    if (at === null) psql(UNMARK, { id: userId })
+    else psql(MARK, { id: userId, at: at.toISOString() })
   },
 }

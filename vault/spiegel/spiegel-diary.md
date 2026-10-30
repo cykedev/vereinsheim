@@ -174,7 +174,9 @@ Einträge, Ziele und Abläufe eines Kontos aus Treffsicher schreibt die Übernah
 [[spiegel-account-transfer]]) mit Schlüssel `treffsicher:<Kennung>`: je Einheit ein Eintrag (`entryFromSession`),
 feste Verknüpfungen zu den Scheiben „aus Treffsicher“ oder den passenden vorhandenen, die Ausführung je Serie auf die
 eine Scheibe des Eintrags. Die Bausteine dafür stehen in `src/diary/transfer/` (`treffsicher-entry.ts`,
-`treffsicher-goal.ts`, `write.ts`); ein zweiter Lauf ersetzt nur, was seit dem letzten unverändert ist (`isTouched`).
+`treffsicher-goal.ts`, `write.ts`); ein weiterer Lauf ersetzt nur, was seit dem letzten unverändert ist (`isTouched`).
+Damit das gilt, setzt jede Änderung an Werten und Ausführung in der App `updatedAt` des Eintrags (`touch` in
+`src/diary/entries.ts`).
 
 ## Scheiben vom selben Abend
 

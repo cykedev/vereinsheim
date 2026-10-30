@@ -6,6 +6,9 @@ export interface TreffsicherSource {
   readAccount(email: string): Promise<unknown | null>
   /** je Kennung einer Einheit, eines Ziels oder Ablaufs das Konto in Treffsicher; unbekannte fehlen */
   sessionOwners(ids: readonly string[]): Promise<Map<string, string>>
-  /** das Konto als umgezogen markieren (`User.movedToSpiegelAt`, Treffsicher zeigt es dann nur lesend) */
-  markMoved(userId: string, at: Date): Promise<void>
+  /**
+   * das Konto als umgezogen markieren (`User.movedToSpiegelAt`, Treffsicher zeigt es dann nur lesend); null nimmt das
+   * Merkmal zurück (der erste Lauf, dessen Speichern scheiterte)
+   */
+  markMoved(userId: string, at: Date | null): Promise<void>
 }

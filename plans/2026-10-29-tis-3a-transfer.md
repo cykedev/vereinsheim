@@ -107,6 +107,18 @@ Mit dem User entschieden (30. Oktober 2026), nach der Probe mit echten Daten:
    Wertung (Revision 2, Herkunft `pdf`). `applyPrintoutValues` liest an einer Scheibe mit Schlüssel `treffsicher:`
    ebenso, damit ein späteres Neulesen sie nicht zu einer Scheibe nur aus Probe macht.
 
+Gefunden bei den Wiederholungen mit den Daten des Users (30. Oktober 2026), der koordinierenden Session gemeldet:
+
+8. **Geändertes bleibt in jedem Lauf:** `updatedAt` > Merkmal hielt eine Änderung nur einen Lauf, weil das Merkmal
+   vorrückt; Werte und Ausführung, in der App getippt, änderten `updatedAt` des Eintrags gar nicht. Jetzt schreibt jeder
+   Lauf Einträge, Ziele, Abläufe und Verknüpfungen mit der Zeit seines Merkmals, unverändert ist nur genau diese;
+   `setScale`, `setExecution` und `clearSection` setzen `updatedAt` des Eintrags. Scheitert der Commit nach dem
+   Merkmal, setzt der Lauf das alte zurück, erst wenn das scheitert `markedNotSaved` mit dem alten Wert.
+9. **Ausführung auf einer Scheibe, die bleibt:** Sie ging verloren, wenn die Scheibe der Einheit geändert war und
+   blieb; jetzt bleibt sie auf ihr.
+10. **Ein Ausdruck, den ein früherer Lauf an die Scheibe der Einheit hängte,** galt als „eigene Scheibe“ und gab nie
+    Werte; jetzt geht er wie beim ersten Lauf über die Scheibe der Einheit.
+
 ## Ansatz
 
 ### Überblick

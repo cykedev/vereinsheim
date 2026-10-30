@@ -11,14 +11,17 @@ type Tx = Prisma.TransactionClient
 
 /**
  * Einen übernommenen Eintrag über seinen Schlüssel anlegen oder seine Felder setzen und seine Werte ersetzen; die
- * Kennung bleibt. Ein Schlüssel eines anderen Kontos ist ein Fehler.
+ * Kennung bleibt, `updatedAt` ist `at`, die Zeit des Laufs (`isTouched`). Ein Schlüssel eines anderen Kontos ist ein
+ * Fehler.
  */
 export async function upsertImportedEntry(
   tx: Tx,
   userId: string,
-  entry: ImportedEntry
+  entry: ImportedEntry,
+  at: Date
 ): Promise<{ id: string; created: boolean }> {
   const fields = {
+    updatedAt: at,
     day: dateOfDay(entry.day),
     kind: entry.kind,
     familyId: entry.familyId,
@@ -57,13 +60,22 @@ export async function upsertImportedEntry(
 }
 
 /**
- * Geändert seit dem letzten Lauf: im Papierkorb, oder `updatedAt` nach `lastRunAt` (`movedToSpiegelAt` in Treffsicher).
- * Beim ersten Lauf (`lastRunAt` null) gilt nur der Papierkorb. Ein zweiter Lauf lässt solche Zeilen stehen.
+ * Hat der letzte Lauf die Zeile geschrieben? Jeder Lauf setzt `updatedAt` jeder Zeile, die er schreibt, auf die Zeit
+ * seines Merkmals (`movedToSpiegelAt` in Treffsicher), und er schreibt jede, die er nicht stehen lässt.
+ */
+export const writtenInLastRun = (updatedAt: Date, lastRunAt: Date): boolean =>
+  updatedAt.getTime() === lastRunAt.getTime()
+
+/**
+ * Geändert, bleibt: im Papierkorb, oder nicht vom letzten Lauf geschrieben (`writtenInLastRun`). Danach geändert, oder
+ * schon ein früherer Lauf ließ die Zeile stehen; so bleibt eine Änderung in jedem weiteren Lauf. Beim ersten Lauf
+ * (`lastRunAt` null) gilt nur der Papierkorb.
  */
 export const isTouched = (
   row: { deletedAt: Date | null; updatedAt: Date },
   lastRunAt: Date | null
-): boolean => row.deletedAt !== null || (lastRunAt !== null && row.updatedAt > lastRunAt)
+): boolean =>
+  row.deletedAt !== null || (lastRunAt !== null && !writtenInLastRun(row.updatedAt, lastRunAt))
 
 const foreign = () => new Error("Schlüssel der Übernahme gehört zu einem anderen Konto")
 
@@ -71,9 +83,11 @@ const foreign = () => new Error("Schlüssel der Übernahme gehört zu einem ande
 export async function upsertImportedGoal(
   tx: Tx,
   userId: string,
-  goal: ImportedGoal
+  goal: ImportedGoal,
+  at: Date
 ): Promise<{ id: string; created: boolean }> {
   const fields = {
+    updatedAt: at,
     familyId: goal.familyId,
     title: goal.title,
     note: goal.note,
@@ -101,9 +115,15 @@ export async function upsertImportedGoal(
 export async function upsertImportedRoutine(
   tx: Tx,
   userId: string,
-  routine: ImportedRoutine
+  routine: ImportedRoutine,
+  at: Date
 ): Promise<{ id: string; created: boolean }> {
-  const fields = { familyId: routine.familyId, name: routine.name, steps: routine.steps }
+  const fields = {
+    updatedAt: at,
+    familyId: routine.familyId,
+    name: routine.name,
+    steps: routine.steps,
+  }
   const existing = await tx.diaryRoutine.findUnique({
     where: { importKey: routine.importKey },
     select: { id: true, userId: true },
@@ -120,17 +140,21 @@ export async function upsertImportedRoutine(
   return { id: created.id, created: true }
 }
 
-/** Scheiben fest mit dem Eintrag verknüpfen (`linked`); eine Zeile einer Scheibe hängt danach an diesem Eintrag */
+/**
+ * Scheiben fest mit dem Eintrag verknüpfen (`linked`); eine Zeile einer Scheibe hängt danach an diesem Eintrag. `at` ist
+ * die Zeit des Laufs wie bei Einträgen (`isTouched`)
+ */
 export async function setImportedLinks(
   tx: Tx,
   entryId: string,
-  cardIds: readonly string[]
+  cardIds: readonly string[],
+  at: Date
 ): Promise<void> {
   for (const cardId of cardIds)
     await tx.diaryEntryCard.upsert({
       where: { cardId },
-      create: { cardId, entryId, link: "linked" },
-      update: { entryId, link: "linked" },
+      create: { cardId, entryId, link: "linked", updatedAt: at },
+      update: { entryId, link: "linked", updatedAt: at },
     })
 }
 

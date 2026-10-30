@@ -167,7 +167,9 @@ export async function placeAttachment(
     day: eveningDay(file.printedAt.getTime(), timeZone),
     timeZone,
   })
-  if (own) {
+  // die eigene Scheibe mit dieser ID ist die der Einheit, wenn ein früherer Lauf den Ausdruck dort angehängt hat: dann
+  // wie beim ersten Lauf über die Scheibe der Einheit, damit ein passender Ausdruck seine Werte gibt
+  if (own && own.id !== card?.id) {
     const result = await importPrintoutIn(tx, { userId: ownerId, siteId, file })
     return { kind: "printoutOwnCard", cardId: own.id, result }
   }

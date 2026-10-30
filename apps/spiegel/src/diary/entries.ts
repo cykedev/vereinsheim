@@ -50,6 +50,13 @@ async function lockEntry(tx: Tx, userId: string, entryId: string) {
   })
 }
 
+/**
+ * Werte und Ausführung stehen in eigenen Tabellen: Eine Änderung dort setzt `updatedAt` des Eintrags, damit er als
+ * geändert gilt (die Übernahme aus Treffsicher lässt ihn dann stehen, `isTouched`)
+ */
+const touch = (tx: Tx, entryId: string) =>
+  tx.diaryEntry.update({ where: { id: entryId }, data: { updatedAt: new Date() } })
+
 /** Rahmen jeder Änderung: Transaktion, ein Fehler der Datenbank als Text */
 async function run(db: Db, change: (tx: Tx) => Promise<string | null>): Promise<string | null> {
   try {
@@ -375,7 +382,8 @@ export async function setScale(
     if (!(await lockEntry(tx, userId, entryId))) return ERRORS.missing
     const where = { entryId_part_aspect: { entryId, part, aspect } }
     if (stage === null) {
-      await tx.diaryScale.deleteMany({ where: { entryId, part, aspect } })
+      const { count } = await tx.diaryScale.deleteMany({ where: { entryId, part, aspect } })
+      if (count) await touch(tx, entryId)
       return null
     }
     const current = await tx.diaryScale.findUnique({ where })
@@ -385,6 +393,7 @@ export async function setScale(
       create: { entryId, part, aspect, value: valueOfStage(stage) },
       update: { value: valueOfStage(stage) },
     })
+    await touch(tx, entryId)
     return null
   })
 }
@@ -426,7 +435,10 @@ export async function setExecution(
     if (!(await lockEntry(tx, userId, entryId))) return ERRORS.missing
     const where = { entryId_cardId_series: { entryId, cardId, series } }
     if (stage === null) {
-      await tx.diarySeriesExecution.deleteMany({ where: { entryId, cardId, series } })
+      const { count } = await tx.diarySeriesExecution.deleteMany({
+        where: { entryId, cardId, series },
+      })
+      if (count) await touch(tx, entryId)
       return null
     }
     const current = await tx.diarySeriesExecution.findUnique({ where })
@@ -436,6 +448,7 @@ export async function setExecution(
       create: { entryId, cardId, series, value: valueOfStage(stage) },
       update: { value: valueOfStage(stage) },
     })
+    await touch(tx, entryId)
     return null
   })
 }
@@ -460,6 +473,9 @@ export async function clearSection(
     if (section === "disturbed")
       await tx.diaryEntry.update({ where: { id: entryId }, data: { disturbed: null } })
     if (section === "execution") await tx.diarySeriesExecution.deleteMany({ where: { entryId } })
+    // Prognose und „Was hat gestört?“ ändern den Eintrag selbst
+    if (section === "wellbeing" || section === "feedback" || section === "execution")
+      await touch(tx, entryId)
     return null
   })
 }

@@ -10,6 +10,7 @@ import { createTestSite, type TestSite } from "../../../test/fixtures"
 import { valuedSpec, type ValuedPrintoutSpec } from "../../../test/printout"
 import { importPrintout } from "../fetch-card/import"
 import { applyPrintoutValues } from "../printouts/apply"
+import { attachPrintout } from "../printouts/queries"
 import { valuesReadOf, type StoredPrintout } from "../printouts/store"
 import { scoringReading } from "../printouts/values"
 import { placeAttachment, writeTransferCard, type PreparedAttachment } from "./write"
@@ -187,6 +188,26 @@ describe("placeAttachment: Meyton-Ausdruck", () => {
     expect(await db.printout.count({ where: { cardId: imported.cardId } })).toBe(2)
     expect(await db.printout.count({ where: { cardId } })).toBe(0)
     expect((await db.card.findUniqueOrThrow({ where: { id: cardId } })).origin).toBe("treffsicher")
+  })
+
+  it("hängt schon an der Scheibe der Einheit (früherer Lauf ohne Werte): passt er jetzt, gibt er seine Werte", async () => {
+    const file = await stored(nextId++, { mode: "Probe" })
+    const rings = scoringReading(file.values.reading!).total!.rings
+    const cardId = await transferCard(rings)
+    await db.$transaction((tx) => attachPrintout(tx, file, cardId))
+    const placed = await place(cardId, { kind: "printout", file }, rings)
+    expect(placed).toEqual({ kind: "printoutUnitCard", cardId, fits: true, adopted: "adopted" })
+    expect(await db.printout.count({ where: { cardId } })).toBe(1)
+    expect((await revisionsOf(cardId)).map((r) => r.number)).toEqual([1, 2])
+    // ein weiterer Lauf ändert nichts mehr: die Scheibe hat schon Werte vom Ausdruck
+    const again = await place(cardId, { kind: "printout", file }, rings)
+    expect(again).toEqual({
+      kind: "printoutUnitCard",
+      cardId,
+      fits: true,
+      adopted: "notTreffsicher",
+    })
+    expect((await revisionsOf(cardId)).map((r) => r.number)).toEqual([1, 2])
   })
 
   it("ohne Scheibe der Einheit: wie ein alter Ausdruck eine Scheibe vom Ausdruck", async () => {

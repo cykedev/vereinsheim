@@ -17,6 +17,7 @@ import { goalFromTreffsicher, routineFromTreffsicher } from "@/diary/transfer/tr
 import {
   isTouched,
   releaseImportedLinks,
+  writtenInLastRun,
   replaceExecutions,
   setImportedLinks,
   upsertImportedEntry,
@@ -119,8 +120,11 @@ export type TransferAbort =
         plannedShots: number | null
       }[]
     }
-  /** nach dem Merkmal in Treffsicher ist der Commit in Spiegel gescheitert */
-  | { kind: "markedNotSaved" }
+  /**
+   * nach dem Merkmal in Treffsicher ist der Commit in Spiegel gescheitert, und das alte Merkmal ließ sich nicht
+   * zurücksetzen; `previous` ist es (ISO, null ohne)
+   */
+  | { kind: "markedNotSaved"; previous: string | null }
 
 type Tally<K extends string> = Record<K, number>
 
@@ -157,7 +161,10 @@ export interface TransferReport {
     unreadable: number
     tooLarge: number
     printoutRejected: Partial<Record<StoreRejection, number>>
-    printouts: Tally<"ownCard" | "adopted" | "withoutValues" | "imported" | "notPlaced">
+    /** `changedCard`: an der Scheibe der Einheit, die schon Werte vom Ausdruck hat oder von Hand geändert ist */
+    printouts: Tally<
+      "ownCard" | "adopted" | "withoutValues" | "changedCard" | "imported" | "notPlaced"
+    >
     evidence: Tally<"attached" | "duplicate" | "limit" | "gone" | "noCard">
   }
   /** Gründe für Ausdrucke, die nicht angehängt wurden (`importPrintoutIn`: taken, blocked, trashed, noDiscipline) */
@@ -292,7 +299,14 @@ const blankReport = (dryRun: boolean): Omit<TransferReport, "check"> => ({
     unreadable: 0,
     tooLarge: 0,
     printoutRejected: {},
-    printouts: { ownCard: 0, adopted: 0, withoutValues: 0, imported: 0, notPlaced: 0 },
+    printouts: {
+      ownCard: 0,
+      adopted: 0,
+      withoutValues: 0,
+      changedCard: 0,
+      imported: 0,
+      notPlaced: 0,
+    },
     evidence: { attached: 0, duplicate: 0, limit: 0, gone: 0, noCard: 0 },
   },
   printoutsNotPlaced: {},
@@ -304,9 +318,9 @@ const blankReport = (dryRun: boolean): Omit<TransferReport, "check"> => ({
 /**
  * Ein Konto aus Treffsicher übernehmen. Bricht vor dem Schreiben mit festem Grund ab (`TransferAbort`); sonst eine
  * Transaktion, die `dryRun` am Ende zurückrollt. Nach einem echten Lauf ist das Konto in Treffsicher umgezogen
- * (`markMoved` als letzter Schritt in der Transaktion: scheitert es, bleibt nichts halb; nach dem Commit wäre ein
- * Lauf, dessen Merkmal scheitert, im nächsten jünger als das alte Merkmal, und alles gälte als geändert). Scheitert
- * der Commit nach dem Merkmal, meldet der Lauf `markedNotSaved`.
+ * (`markMoved` als letzter Schritt in der Transaktion: scheitert es, bleibt nichts halb). Das Merkmal trägt die Zeit,
+ * mit der der Lauf seine Zeilen schreibt; daran erkennt der nächste, was seitdem geändert ist (`isTouched`). Scheitert
+ * der Commit nach dem Merkmal, setzt der Lauf das alte zurück; geht auch das nicht, meldet er `markedNotSaved`.
  */
 export async function runTransfer(db: Db, input: TransferInput): Promise<TransferOutcome> {
   const raw = await input.source.readAccount(input.from)
@@ -452,12 +466,20 @@ export async function runTransfer(db: Db, input: TransferInput): Promise<Transfe
         missing.set(k, row)
       }
     }
+    // die eine Scheibe für die Ausführung, wenn sie nicht die neu geschriebene ist: die passende, die eine des Abends
+    // nur aus Probe, oder die Scheibe dieser Einheit aus einem früheren Lauf, die geändert ist und bleibt (Werte vom
+    // Ausdruck, von Hand): Ihre Serien bleiben, die Ausführung gehört weiter auf sie
+    const kept = existing?.cards.find(
+      (c) => c.importKey === transferKey(session.id) && c.origin !== "treffsicher" && !c.deletedAt
+    )
     const one =
       decision.kind === "existing" && decision.cardIds.length === 1
         ? decision.cardIds[0]
         : decision.kind === "probeEvening" && decision.cardIds.length === 1
           ? decision.cardIds[0]
-          : null
+          : (decision.kind === "new" || decision.kind === "uncertain") && kept
+            ? kept.id
+            : null
     units.push({
       session,
       key: transferKey(session.id),
@@ -528,6 +550,8 @@ export async function runTransfer(db: Db, input: TransferInput): Promise<Transfe
     }
 
   const lastRunAt = account.user.movedToSpiegelAt ? new Date(account.user.movedToSpiegelAt) : null
+  // die Zeit dieses Laufs: `updatedAt` jeder Zeile, die er schreibt, und das Merkmal in Treffsicher (`isTouched`)
+  const runAt = new Date()
   const done: { check?: CheckResult; marked?: true } = {}
   try {
     await db.$transaction(
@@ -543,17 +567,29 @@ export async function runTransfer(db: Db, input: TransferInput): Promise<Transfe
           siteId: siteId ?? 0,
           timeZone,
           lastRunAt,
+          runAt,
           report,
         })
         if (input.dryRun) throw new DryRun()
-        await input.source.markMoved(account.user.id, new Date())
+        await input.source.markMoved(account.user.id, runAt)
         done.marked = true
       },
       { timeout: input.timeoutMs ?? TIMEOUT_MS, maxWait: 10_000 }
     )
   } catch (error) {
-    // das Merkmal steht in Treffsicher, aber Spiegel hat nichts gespeichert: laut melden, nie still
-    if (done.marked) return { kind: "aborted", abort: { kind: "markedNotSaved" } }
+    // das Merkmal steht in Treffsicher, aber Spiegel hat nichts gespeichert: das alte zurück, sonst trüge keine Zeile
+    // die Zeit des Merkmals und der nächste Lauf ließe alles stehen; geht auch das nicht, laut melden
+    if (done.marked) {
+      const restored = await input.source.markMoved(account.user.id, lastRunAt).then(
+        () => true,
+        () => false
+      )
+      if (!restored)
+        return {
+          kind: "aborted",
+          abort: { kind: "markedNotSaved", previous: lastRunAt?.toISOString() ?? null },
+        }
+    }
     if (!(error instanceof DryRun)) throw error
   }
   return { kind: "done", report: { ...report, check: done.check! } }
@@ -573,10 +609,11 @@ async function write(
     siteId: number
     timeZone: string
     lastRunAt: Date | null
+    runAt: Date
     report: Omit<TransferReport, "check">
   }
 ): Promise<CheckResult> {
-  const { account, units, report, lastRunAt, timeZone } = ctx
+  const { account, units, report, lastRunAt, runAt, timeZone } = ctx
   report.sessions = units.length
 
   // 1. Konto
@@ -610,10 +647,10 @@ async function write(
 
   const cardsByKey = new Map((ctx.existing?.cards ?? []).map((c) => [c.importKey!, c]))
   const entriesByKey = new Map((ctx.existing?.entries ?? []).map((e) => [e.importKey!, e]))
-  /** ein Eintrag gilt auch als geändert, wenn seit dem letzten Lauf eine Scheibe verknüpft oder gelöst wurde */
+  /** ein Eintrag gilt auch als geändert, wenn eine Zeile seiner Scheiben nicht vom letzten Lauf stammt (verknüpft, gelöst) */
   const entryTouched = (row: NonNullable<typeof ctx.existing>["entries"][number]) =>
     isTouched(row, lastRunAt) ||
-    (lastRunAt !== null && row.cards.some((link) => link.updatedAt > lastRunAt))
+    (lastRunAt !== null && row.cards.some((link) => !writtenInLastRun(link.updatedAt, lastRunAt)))
   const keptReason = (row: { deletedAt: Date | null; origin?: string }) =>
     row.deletedAt
       ? "Papierkorb"
@@ -714,7 +751,7 @@ async function write(
       if (rated.length) report.executions.skipped.keptEntry += 1
       executionsExpected.kept += rated.length
     } else {
-      const upserted = await upsertImportedEntry(tx, ownerId, entry)
+      const upserted = await upsertImportedEntry(tx, ownerId, entry, runAt)
       entryId = upserted.id
       report.entries[upserted.created ? "created" : "updated"] += 1
       // feste Zeilen: die neue Scheibe bzw. die passenden; eine Scheibe, die ein anderer Eintrag hält, bleibt dort
@@ -730,7 +767,7 @@ async function write(
       await tx.diaryEntryCard.deleteMany({
         where: { entryId: upserted.id, link: "linked", cardId: { notIn: free } },
       })
-      await setImportedLinks(tx, upserted.id, free)
+      await setImportedLinks(tx, upserted.id, free, runAt)
 
       // die Ausführung auf die eine Scheibe des Eintrags
       let rows: { cardId: string; series: number; value: number }[] = []
@@ -797,7 +834,7 @@ async function write(
         placed.kind === "printoutImported" &&
         placed.result.kind === "created"
       )
-        await setImportedLinks(tx, entryId, [placed.result.cardId])
+        await setImportedLinks(tx, entryId, [placed.result.cardId], runAt)
     }
 
     checkUnits.push({
@@ -846,7 +883,7 @@ async function write(
       })
       continue
     }
-    const { created } = await upsertImportedGoal(tx, ownerId, mapped.goal)
+    const { created } = await upsertImportedGoal(tx, ownerId, mapped.goal, runAt)
     report.goals[created ? "created" : "updated"] += 1
   }
   const routinesByKey = new Map((ctx.existing?.routines ?? []).map((r) => [r.importKey!, r]))
@@ -864,7 +901,7 @@ async function write(
       })
       continue
     }
-    const { created } = await upsertImportedRoutine(tx, ownerId, mapped.routine)
+    const { created } = await upsertImportedRoutine(tx, ownerId, mapped.routine, runAt)
     report.routines[created ? "created" : "updated"] += 1
   }
 
@@ -943,7 +980,13 @@ function countPlaced(report: Omit<TransferReport, "check">, placed: PlacedAttach
       }
       return
     case "printoutUnitCard":
-      printouts[placed.adopted === "adopted" ? "adopted" : "withoutValues"] += 1
+      printouts[
+        placed.adopted === "adopted"
+          ? "adopted"
+          : placed.adopted === "notTreffsicher"
+            ? "changedCard"
+            : "withoutValues"
+      ] += 1
       return
     case "printoutImported":
       if (placed.result.kind === "created" || placed.result.kind === "attached")
@@ -1100,7 +1143,11 @@ async function checkInput(
   })
   const a = report.attachments
   const placedPrintouts =
-    a.printouts.ownCard + a.printouts.adopted + a.printouts.withoutValues + a.printouts.imported
+    a.printouts.ownCard +
+    a.printouts.adopted +
+    a.printouts.withoutValues +
+    a.printouts.changedCard +
+    a.printouts.imported
   const placedEvidence = a.evidence.attached + a.evidence.duplicate
   const rejected = Object.values(a.printoutRejected).reduce((s, n) => s + (n ?? 0), 0)
   tables.push({

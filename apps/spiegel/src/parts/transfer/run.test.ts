@@ -65,9 +65,9 @@ class MemorySource implements TreffsicherSource {
         if (ids.includes(id)) owners.set(id, account.user.id)
     return owners
   }
-  async markMoved(userId: string, at: Date) {
+  async markMoved(userId: string, at: Date | null) {
     for (const account of this.accounts.values())
-      if (account.user.id === userId) account.user.movedToSpiegelAt = at.toISOString()
+      if (account.user.id === userId) account.user.movedToSpiegelAt = at?.toISOString() ?? null
   }
 }
 
@@ -329,10 +329,23 @@ describe("runTransfer: zweiter Lauf", () => {
       disciplineId,
       startedAtMs: card.startedAt.getTime(),
       kind: "training",
-      details: { total: { shots: 40, rings: 355 } },
+      details: {
+        series: [90, 90, 90, 85].map((rings, i) => ({ series: i + 1, shots: 10, rings })),
+        total: { shots: 40, rings: 355 },
+      },
       reason: "eingetragen",
     })
     expect(edited).toMatchObject({ kind: "saved", change: "revised" })
+    const executionsOf = async (key: string) =>
+      (
+        await db.diaryEntry.findUniqueOrThrow({
+          where: { importKey: key },
+          include: { executions: { orderBy: { series: "asc" } } },
+        })
+      ).executions.map((e) => [e.cardId, e.series])
+    const s2Key = `treffsicher:${c.id("s2")}`
+    const before = await executionsOf(s2Key)
+    expect(before).toHaveLength(4)
 
     const report = done(await c.run())
     expect(report.entries.kept).toBe(1)
@@ -349,6 +362,16 @@ describe("runTransfer: zweiter Lauf", () => {
       origin: "manual",
       currentRevisionId: edited.kind === "saved" ? edited.revisionId : null,
     })
+    // die Ausführung bleibt auf der geänderten Scheibe, ihre Serien sind dieselben
+    expect(await executionsOf(s2Key)).toEqual(before)
+
+    // auch jeder weitere Lauf lässt beide stehen, obwohl das Merkmal weiterrückt
+    const third = done(await c.run())
+    expect(third.entries).toMatchObject({ kept: 1, updated: 1 })
+    expect(third.cards.kept).toBe(1)
+    expect(
+      (await db.diaryEntry.findUniqueOrThrow({ where: { importKey: entryKey } })).intention
+    ).toBe("selbst")
   })
 
   it("eine in Treffsicher verschwundene Einheit nimmt ihre unveränderten Zeilen mit", async () => {
@@ -401,18 +424,39 @@ describe("runTransfer: Merkmal in Treffsicher", () => {
     expect(await db.diaryEntry.count({ where: { importKey: `treffsicher:${c.id("s1")}` } })).toBe(0)
   })
 
-  it("scheitert der Commit nach dem Merkmal, sagt der Lauf es und nichts ist geschrieben", async () => {
+  /** das Merkmal gelingt, braucht aber länger als die Transaktion darf; das Zurücksetzen gelingt oder nicht */
+  function slowMark(c: ReturnType<typeof newCase>, restore: "ok" | "fails") {
+    const mark = c.source.markMoved.bind(c.source)
+    let calls = 0
+    c.source.markMoved = async (userId, at) => {
+      calls += 1
+      if (calls === 1) {
+        await mark(userId, at)
+        await new Promise((resolve) => setTimeout(resolve, 3_000))
+        return
+      }
+      if (restore === "fails") throw new Error("psql nicht erreichbar")
+      await mark(userId, at)
+    }
+  }
+
+  it("scheitert der Commit nach dem Merkmal, nimmt der Lauf es zurück und nichts ist geschrieben", async () => {
     const c = newCase("commit")
     c.account([c.session("s1", "2026-09-02")])
-    const mark = c.source.markMoved.bind(c.source)
-    // das Merkmal gelingt, braucht aber länger als die Transaktion darf
-    c.source.markMoved = async (userId, at) => {
-      await mark(userId, at)
-      await new Promise((resolve) => setTimeout(resolve, 3_000))
-    }
+    slowMark(c, "ok")
+    await expect(c.run({ timeoutMs: 2_000 })).rejects.toThrow()
+    expect(c.source.accounts.get(c.from)!.user.movedToSpiegelAt).toBeNull()
+    expect(await db.user.findUnique({ where: { email: c.to } })).toBeNull()
+    expect(await db.card.count({ where: { importKey: `treffsicher:${c.id("s1")}` } })).toBe(0)
+  }, 15_000)
+
+  it("geht auch das Zurücknehmen nicht, sagt der Lauf es laut", async () => {
+    const c = newCase("commit2")
+    c.account([c.session("s1", "2026-09-03")])
+    slowMark(c, "fails")
     expect(await c.run({ timeoutMs: 2_000 })).toEqual({
       kind: "aborted",
-      abort: { kind: "markedNotSaved" },
+      abort: { kind: "markedNotSaved", previous: null },
     })
     expect(c.source.accounts.get(c.from)!.user.movedToSpiegelAt).not.toBeNull()
     expect(await db.user.findUnique({ where: { email: c.to } })).toBeNull()

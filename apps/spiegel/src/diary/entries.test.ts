@@ -282,6 +282,31 @@ describe("Werte eines Eintrags", () => {
     expect(await value()).toBeNull()
   })
 
+  it("Werte, Ausführung und Leeren eines Abschnitts setzen `updatedAt` des Eintrags (Übernahme: geändert)", async () => {
+    const old = new Date("2026-01-01T00:00:00Z")
+    const age = async () => {
+      await db.diaryEntry.update({ where: { id }, data: { updatedAt: old } })
+    }
+    const changed = async () =>
+      (await db.diaryEntry.findUniqueOrThrow({ where: { id } })).updatedAt > old
+    await age()
+    await setScale(db, site.ownerId, id, { part: "wellbeing", aspect: "energy", stage: 2 })
+    expect(await changed()).toBe(true)
+    await age()
+    await setScale(db, site.ownerId, id, { part: "wellbeing", aspect: "energy", stage: null })
+    expect(await changed()).toBe(true)
+    await age()
+    await setExecution(db, site.ownerId, id, { cardId: c, series: 1, stage: 3, timeZone: ZONE })
+    expect(await changed()).toBe(true)
+    await age()
+    await clearSection(db, site.ownerId, id, "execution")
+    expect(await changed()).toBe(true)
+    // nichts geändert: bleibt
+    await age()
+    await setScale(db, site.ownerId, id, { part: "wellbeing", aspect: "energy", stage: null })
+    expect(await changed()).toBe(false)
+  })
+
   it("nimmt nur Aspekte aus der festen Liste je Teil", async () => {
     expect(
       await setScale(db, site.ownerId, id, { part: "wellbeing", aspect: "technique", stage: 3 })

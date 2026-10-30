@@ -112,19 +112,26 @@ Passwortwechsel; beim ersten Lauf wird das Tagebuch eingeschaltet.
 
 ### Geändertes bleibt
 
-Ein zweiter Lauf ersetzt nur, was seit dem letzten unverändert ist. Der letzte Lauf ist `movedToSpiegelAt` in
-Treffsicher. Scheiben zeigen es an der Herkunft (von Hand `manual`, mit Werten vom Ausdruck `pdf`), Einträge, Ziele und
-Abläufe an `updatedAt` (ein Eintrag auch an seinen Verknüpfungen); was im Papierkorb liegt, bleibt dort. Was in
-Treffsicher verschwunden ist, geht, wenn es unverändert ist. Der Bericht nennt, was stehen blieb und warum.
+Ein weiterer Lauf ersetzt nur, was seit dem letzten unverändert ist, und lässt Geändertes in jedem weiteren Lauf stehen.
+Scheiben zeigen es an der Herkunft (von Hand `manual`, mit Werten vom Ausdruck `pdf`). Einträge, Ziele, Abläufe und die
+Verknüpfungen eines Eintrags zeigen es an `updatedAt`: Jeder Lauf schreibt sie mit derselben Zeit, die er als Merkmal
+`movedToSpiegelAt` in Treffsicher setzt. Unverändert ist nur, was genau diese Zeit trägt (`isTouched`); eine
+Änderung danach und eine Zeile, die schon ein früherer Lauf stehen ließ, tragen eine andere. Werte (Befinden, Prognose,
+Feedback) und Ausführung stehen in eigenen Tabellen; ändert der Schütze sie in der App, setzt das `updatedAt` des
+Eintrags (`touch` in `src/diary/entries.ts`). Was im Papierkorb liegt, bleibt dort. Ist die Scheibe einer Einheit
+geändert und bleibt, gehört die Ausführung weiter auf sie. Was in Treffsicher verschwunden ist, geht, wenn es
+unverändert ist. Der Bericht nennt, was stehen blieb und warum.
+
+Ein Vergleich `updatedAt` > Merkmal reicht nicht: Das Merkmal rückt mit jedem Lauf vor, eine Änderung überstünde nur
+den nächsten Lauf (aufgefallen am 30. Oktober 2026 an den Wiederholungen mit den Daten des Users).
 
 ### Merkmal „umgezogen“
 
 Der letzte Schritt der Transaktion setzt `movedToSpiegelAt` in Treffsicher ([[treffsicher-read-only]]); der
-Probelauf setzt nichts. Scheitert danach das Speichern in Spiegel, meldet das CLI „Merkmal in Treffsicher gesetzt,
-Übernahme in Spiegel nicht gespeichert“ (Exit 3): Den Lauf wiederholen, dann gilt nichts als geändert, oder das
-Merkmal mit `pnpm --filter treffsicher moved --clear <E-Mail>` zurücknehmen. Stünde das Merkmal erst nach dem Speichern
-und scheiterte es nach einem zweiten Lauf, wären alle Zeilen dieses Laufs jünger als das alte Merkmal; der dritte Lauf
-hielte sie für geändert und ersetzte nichts mehr.
+Probelauf setzt nichts. Scheitert danach das Speichern in Spiegel, setzt der Lauf das alte Merkmal zurück (beim ersten
+Lauf: keins). Geht auch das nicht, meldet das CLI „Merkmal in Treffsicher gesetzt, Übernahme in Spiegel nicht
+gespeichert“ (Exit 3) und nennt den alten Wert: Vor dem nächsten Lauf muss er wieder stehen, sonst trägt keine Zeile die
+Zeit des Merkmals und der Lauf lässt alles stehen.
 
 ### Prüfbestand
 
