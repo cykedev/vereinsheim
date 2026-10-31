@@ -143,10 +143,10 @@ export function ListScreen({
   return (
     <Page>
       <section data-card-list-page className={cn("grid gap-4", PAGE_SINGLE)}>
-        {tabs}
         <ListHeader
           familyLabel={option.label}
           cards={model.cards}
+          tabs={tabs}
           controls={
             <ListControls
               query={query}

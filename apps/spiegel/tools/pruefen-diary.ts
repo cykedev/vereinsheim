@@ -178,13 +178,18 @@ async function run(page: Page, { base, check, record }: Context) {
   // die Scheiben sind ein Reiter des Tagebuchs: Er führt zur Liste, dort ist er gewählt, die Leiste markiert das Tagebuch
   await page.click(`link("Scheiben", $("[data-diary-switch]"))`)
   check(
-    "Tagebuch: der Reiter „Scheiben“ führt zur Liste, dort ist „Scheiben“ gewählt",
+    "Tagebuch: der Reiter „Scheiben“ führt zur Liste, dort ist „Scheiben“ gewählt, unter dem Titel",
     (await page.waitFor(`location.pathname === "/cards"`, 10_000)) &&
       (await page.waitFor(
         `$('[data-diary-switch] a[aria-current="page"]')?.textContent === "Scheiben"`,
         10_000
       )) &&
-      (await page.ev<boolean>(`!!$("[data-card-list-page] [data-diary-switch]")`)),
+      // wie im Tagebuch unter dem Titel: Titelblock, Reiter, dann die Filter
+      (await page.ev<boolean>(
+        `(() => { const tabs = $("[data-list-header] [data-diary-switch]"), title = $("[data-list-header] h1")
+          const filter = $("[data-list-header] [data-list-controls]")
+          return !!tabs && !!title && !!(title.compareDocumentPosition(tabs) & 4) && !!filter && !!(tabs.compareDocumentPosition(filter) & 4) })()`
+      )),
     await page.ev<string>(`location.href`)
   )
   check(
