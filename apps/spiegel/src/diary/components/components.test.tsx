@@ -331,6 +331,10 @@ describe("Liste und Faden", () => {
     )
     expect(html.indexOf("öfters zu akzeptieren?")).toBeLessThan(html.indexOf("diese Sicherheit"))
     expect(html).toContain("Ich habe gelernt, dass der Griff hilft.")
+    expect(html.indexOf("Ich habe gelernt, dass der Griff hilft.")).toBeLessThan(
+      html.indexOf("Wie schaffe ich es, diese Sicherheit")
+    )
+    expect(html).toMatch(/font-semibold">Wie schaffe ich es, diese Sicherheit/)
     expect(html).toContain('href="/diary/b"')
   })
 })

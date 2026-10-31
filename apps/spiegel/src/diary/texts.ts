@@ -92,7 +92,7 @@ export const LIST_TEXTS = {
     "Ein Eintrag gehört zu einem Tag und einer Disziplin. Er kann die Scheiben dieses Abends tragen.",
   ],
   noticeOk: "Verstanden",
-  threadLead: "Deine Fragen und was du gelernt hast, neueste oben.",
+  threadLead: "Was du gelernt hast und deine Fragen, neueste oben.",
   threadEmpty: "Noch keine Frage. Im Eintrag unter Nachher steht „Wie schaffe ich es, …?“.",
   threadEntry: "Eintrag ›",
 } as const

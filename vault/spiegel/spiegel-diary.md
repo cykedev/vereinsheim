@@ -71,7 +71,8 @@ Alle in einer Spalte (`PAGE_SINGLE`), Bereich „Tagebuch“ mit `BookOpen` ([[s
   ist ganz der Link; Titel ist das Vorhaben, sonst die Disziplin. Beim ersten Öffnen steht darüber der Hinweis „Nur du
   siehst dein Tagebuch“ bis „Verstanden“.
 - **`/diary/thread` (Fragen):** je Disziplin die Einträge mit Frage als Zeitstrahl, neueste oben, die Disziplin mit der
-  jüngsten Frage vorgewählt; darunter je Punkt „Ich habe gelernt, dass …“.
+  jüngsten Frage vorgewählt. Je Punkt steht erst „Ich habe gelernt, dass …“ und darunter fett die Frage, die daraus
+  folgt (dieselbe Reihenfolge wie unter Nachher im Eintrag).
 - **`/diary/new`:** oben „Heute“ (Tag vorbelegt und änderbar, Art, Disziplin, ein Knopf „Anlegen“), der Weg für
   Vorhaben und Prognose vor dem Training; die Scheiben des Tages kommen von selbst dazu. Darunter „Abende ohne Eintrag“
   als Karten, die ganz anlegen: jeder Abend, egal wie alt (kein Zeitfenster, dieselbe Regel wie an der Scheibe), neueste

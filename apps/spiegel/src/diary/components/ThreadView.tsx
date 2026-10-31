@@ -61,10 +61,10 @@ export function ThreadView({
                   >
                     {`${dayLabel(item.day, timeZone)} · ${LIST_TEXTS.threadEntry}`}
                   </Link>
-                  <span className="text-[15px] font-semibold">{`Wie schaffe ich es, ${item.question}`}</span>
                   {item.learned && (
                     <span className="text-sm text-foreground-2">{`Ich habe gelernt, dass ${item.learned}`}</span>
                   )}
+                  <span className="text-[15px] font-semibold">{`Wie schaffe ich es, ${item.question}`}</span>
                 </span>
               </li>
             ))}
