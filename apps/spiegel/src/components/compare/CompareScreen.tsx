@@ -72,8 +72,28 @@ export function CompareScreen({
   const onHelp = useCallback((id: string) => help(id), [help])
   const [pending, startTransition] = useTransition()
   const [picking, setPicking] = useState<CompareSideKey | null>(null)
-  // die Scheibe, die das Lineal im Verlauf zeigt; nur auf dieser Seite, nicht in der Adresse
+  // die Scheibe, die das Lineal im Verlauf zeigt; nur auf dieser Seite, nicht in der Adresse. Eine andere Menge der
+  // Scheiben (Zeiträume, Art, Einschießen, Wertung) hängt den Verlauf neu ein und beginnt ohne Wahl
   const [chosen, setChosen] = useState<string | null>(null)
+  const asked = data.query
+  const chartKey =
+    data.period && asked.type === "periods"
+      ? [
+          data.family,
+          asked.kind,
+          asked.includeWarmup,
+          data.scoring,
+          data.period.range.fromMs,
+          data.period.range.toMs,
+          data.period.compareRange?.fromMs ?? "",
+          data.period.compareRange?.toMs ?? "",
+        ].join(":")
+      : ""
+  const [seenChart, setSeenChart] = useState(chartKey)
+  if (chartKey !== seenChart) {
+    setSeenChart(chartKey)
+    setChosen(null)
+  }
   const active = useActiveSection(SECTION_IDS)
   // die Wertung der Familie wie im Fortschritt: sichtbar und umschaltbar, gespeichert für alle Übersichten
   const familyScoring = useSavedChoice({
@@ -221,8 +241,7 @@ export function CompareScreen({
                               <ChartSlot height={300}>
                                 {(width) => (
                                   <PeriodChart
-                                    // je Paar der Zeiträume neu: das Lineal fängt ohne Wahl an
-                                    key={`${data.family}:${period.range.fromMs}:${period.range.toMs}:${period.compareRange?.fromMs ?? ""}:${period.compareRange?.toMs ?? ""}`}
+                                    key={chartKey}
                                     width={width}
                                     model={period}
                                     timeZone={context.timeZone}

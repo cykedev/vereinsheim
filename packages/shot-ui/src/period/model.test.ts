@@ -111,6 +111,32 @@ describe("Vergleich und Satz", () => {
   const now = [60, 70, 80, 90, 100].map((t, i) => periodCard(`n${i}`, 10 + i, [t]))
   const before = [10, 20, 30, 40, 50].map((t, i) => periodCard(`v${i}`, 100 + i, [t]))
 
+  it("ein schon aufgelöster Vergleichszeitraum (`compareTo`) gilt statt `state.compare`, null heißt keiner", () => {
+    const previous = model([...now, ...before], { compare: { type: "previous" } })
+    const range = previous.compareRange!
+    const given = periodModel({
+      items: [...now, ...before].map(item),
+      state: { ...initialPeriodState({ family: "lg-10m" }), compare: { type: "none" } },
+      compareTo: { ...range, label: "B" },
+      nowMs: NOW,
+      timeZone: TZ,
+      named: NAMED,
+    })
+    expect(given.compareRange).toEqual({ ...range, label: "B" })
+    expect(given.compareValues?.map((v) => v.id)).toEqual(previous.compareValues?.map((v) => v.id))
+    expect(given.tiles[0].compare?.value).toBeCloseTo(previous.tiles[0].compare?.value ?? NaN, 12)
+    const none = periodModel({
+      items: [...now, ...before].map(item),
+      state: { ...initialPeriodState({ family: "lg-10m" }), compare: { type: "previous" } },
+      compareTo: null,
+      nowMs: NOW,
+      timeZone: TZ,
+      named: NAMED,
+    })
+    expect(none.compareRange).toBeNull()
+    expect(none.compareValues).toBeNull()
+  })
+
   it("mit Urteil: höher, ein klarer Unterschied (dieselben Worte wie das Urteil)", () => {
     const m = model([...now, ...before], { compare: { type: "previous" } })
     expect(m.compareRange?.label).toBe("Zeitraum davor")
