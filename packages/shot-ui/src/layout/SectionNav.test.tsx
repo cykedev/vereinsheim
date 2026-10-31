@@ -75,6 +75,22 @@ describe("aktiver Abschnitt", () => {
     ).toBe("cards")
   })
 
+  it("nebeneinander (gleicher Anfang) gilt der angesprungene, sonst der späteste", () => {
+    // Vergleichen ab 768 px: Bild und Zahlen in einer Zeile, darunter Verlauf und Werte
+    const row = [box("picture", 56), box("numbers", 56), box("history", 700), box("values", 1100)]
+    expect(activeSection(row, false, "picture")).toBe("picture")
+    expect(activeSection(row, false, "numbers")).toBe("numbers")
+    expect(activeSection(row)).toBe("numbers")
+    // weiter gescrollt bleibt der angesprungene, solange die Zeile die späteste ist
+    const scrolled = row.map((b) => ({ ...b, top: b.top - 300 }))
+    expect(activeSection(scrolled, false, "picture")).toBe("picture")
+    // ein späterer Abschnitt an der Leiste geht vor, ein Anker eines anderen Abschnitts zählt nicht
+    const later = row.map((b) => ({ ...b, top: b.top - 650 }))
+    expect(activeSection(later, false, "picture")).toBe("history")
+    // die Scheibe: Schüsse rechts beginnen tiefer, sie lösen die Scheibe weiter ab
+    expect(activeSection([box("target", 56), box("shots", 90)], false, "target")).toBe("shots")
+  })
+
   it("über den Serien bleibt die Scheibe aktiv; ganz oben die Scheibe, am Ende der letzte", () => {
     expect(activeSection([box("target", -200), box("shots", 600), box("analysis", 1300)])).toBe(
       "target"

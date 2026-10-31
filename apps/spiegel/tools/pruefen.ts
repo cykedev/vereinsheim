@@ -2478,6 +2478,49 @@ const compareReady = (part: string) =>
 const sheetChoice = (label: string) =>
   `$$("dialog[open] label").find((l) => txt(l).startsWith(${JSON.stringify(label)}))`
 
+/** der markierte Abschnitt der Sprungleiste */
+const activeJump = `$$('nav[aria-label="Abschnitte"] [aria-current]').map(txt).join()`
+
+/**
+ * Sprungleiste auf Vergleichen (zwei Zeiträume), am Telefon und am Desktop: oben „Bild“, ein Tipp auf „Zahlen“ markiert
+ * „Zahlen“ (am Desktop in einer Zeile mit dem Bild), „Werte“ markiert „Werte“, „Bild“ führt zurück und markiert „Bild“,
+ * Scrollen zum Verlauf markiert „Verlauf“
+ */
+async function compareJumps(page: Page): Promise<Check[]> {
+  const checks: Check[] = []
+  const url = await page.ev<string>(`location.pathname + location.search`)
+  for (const width of [390, 1280]) {
+    await page.viewport(width, width < 768 ? 844 : 900)
+    await page.goto(`${BASE}${url}`)
+    const top = await page.ev<string>(activeJump)
+    await page.click(`$('nav[aria-label="Abschnitte"] a[href="#numbers"]')`, { settle: 400 })
+    const numbers = await page.ev<string>(activeJump)
+    await page.click(`$('nav[aria-label="Abschnitte"] a[href="#values"]')`, { settle: 400 })
+    const values = await page.ev<string>(activeJump)
+    await page.click(`$('nav[aria-label="Abschnitte"] a[href="#picture"]')`, { settle: 400 })
+    const picture = await page.ev<{ active: string; top: number }>(
+      `({ active: ${activeJump}, top: $("#picture").getBoundingClientRect().top })`
+    )
+    await page.ev(`scrollTo(0, $("#history").getBoundingClientRect().top + scrollY - 56)`)
+    await page.wait(200)
+    const history = await page.ev<string>(activeJump)
+    checks.push({
+      name: `Vergleichen ${width} px: die Sprungleiste folgt (oben Bild, Zahlen, Werte, zurück zu Bild, Verlauf)`,
+      ok:
+        top === "Bild" &&
+        numbers === "Zahlen" &&
+        values === "Werte" &&
+        picture.active === "Bild" &&
+        near(picture.top, 56, 3) &&
+        history === "Verlauf",
+      detail: JSON.stringify({ top, numbers, values, picture, history }),
+    })
+  }
+  await page.viewport(1280, 900)
+  await page.goto(`${BASE}${url}`)
+  return checks
+}
+
 /**
  * Seite Vergleichen: der Umschalter und der Weg aus dem Fortschritt, zwei Zeiträume mit Bild, Lupe, Tabelle, Verlauf und
  * Werten, das Blatt für B, eine alte Adresse mit `compare=`, Wettkampf und Training, zwei Scheiben von der Seite einer Scheibe mit dem Blatt
@@ -2547,6 +2590,7 @@ async function compare(page: Page, href: string) {
       trend.compared > 0,
     trend
   )
+  record(await compareJumps(page))
   const before = await page.ev<string | null>(
     `$("[data-compare-picture]")?.getAttribute("viewBox") ?? null`
   )
