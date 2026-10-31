@@ -52,7 +52,7 @@ Reiter einer App; das Rückgrat ist die Liste der Scheiben. Die Seiten einer Sch
 | Profil | untere Leiste, für Admins oben die Bereiche des Admins | Seitenleiste | `/profile` |
 | Admin | in Profil oben (Abschnitt „Admin“ mit allen Bereichen), nur für Admins | letzter Eintrag der Seitenleiste, nur für Admins | `/admin{/users,/disciplines,/lists,/site}` |
 | Scheibe holen | Mitte der unteren Leiste, nur das Symbol (`ScanQrCode`), der Name für Screenreader | Pille „Scheibe holen“ in der Seitenleiste | `/scan` |
-| Tagebuch | nur mit Tagebuch: untere Leiste statt Scheiben (die stehen dann in Profil als „Alle Scheiben“) | nur mit Tagebuch: Seitenleiste nach Scheiben (`BookOpen`) | `/diary`, Fragen `/diary/thread`, Ziele `/diary/goals`, Abläufe `/diary/routines`, Neuer Eintrag `/diary/new`, Eintrag `/diary/<id>` ([[spiegel-diary]]) |
+| Tagebuch | nur mit Tagebuch: untere Leiste statt Scheiben (die sind dann der Reiter „Scheiben“ im Tagebuch) | nur mit Tagebuch: Seitenleiste nach Scheiben (`BookOpen`) | `/diary`, Fragen `/diary/thread`, Ziele `/diary/goals`, Abläufe `/diary/routines`, Neuer Eintrag `/diary/new`, Eintrag `/diary/<id>` ([[spiegel-diary]]) |
 
 Seiten ohne eigenen Bereich:
 
@@ -125,8 +125,12 @@ und über `nav/navigate`.
   - Telefon quer (unter 500 px hoch): eine schmale Leiste links. Eine untere Leiste nähme dort 72 von 375 px, die
     Scheibe passte nicht mehr unter die Sprungleiste.
   - **Mit Tagebuch** ([[spiegel-diary]]) ist die untere Leiste Start, Tagebuch, Scheibe holen, Fortschritt, Profil;
-    die Liste der Scheiben öffnet am Telefon „Alle Scheiben“ in Profil, und ist sie offen, ist Profil markiert
-    (`barAreaOf`). Die Seitenleiste nennt Tagebuch nach Scheiben. Ohne Tagebuch bleibt alles wie oben.
+    die Scheiben sind der zweite Reiter des Tagebuchs. Er führt zur zuletzt besuchten Liste (`useCardsLink`), auf
+    `/cards` steht dieselbe Reiterzeile mit „Scheiben“ gewählt, und auf der Liste und der Seite einer Scheibe ist in der
+    Leiste Tagebuch markiert (`barAreaOf`). Die Seite einer Scheibe hat keine Reiterzeile, sie hat ihren Rückweg. Die
+    Seitenleiste nennt Tagebuch nach Scheiben, Scheiben bleiben dort. Ohne Tagebuch bleibt alles wie oben, auch ohne
+    Reiterzeile auf `/cards`. Bis zum 31. Oktober 2026 standen die Scheiben am Telefon als „Alle Scheiben“ in Profil;
+    der User fand sie dort am iPhone zu tief.
   - Admin sieht nur ein Admin; auf dem Telefon steckt Admin in Profil, und ist Admin offen, ist dort Profil markiert.
     Profil nennt dafür ganz oben alle Bereiche des Admins (Übersicht, Konten, Disziplinen, Listen, Anlage und Brücke,
     `ADMIN_SECTIONS`), so ist jeder zwei Tipps entfernt. Jede Admin-Seite trägt dieselben Reiter (`AdminTabs`, eine Zeile, die wischt), auch

@@ -89,10 +89,10 @@ Alle in einer Spalte (`PAGE_SINGLE`), Bereich „Tagebuch“ mit `BookOpen` ([[s
   nicht davon ab, was jemand bisher genutzt hat (Konsistenz als Grundsatz, [[adr-035]]).
 - Texte sind gesteuerte Felder mit „Speichern“ und „Verwerfen“; wer mit Ungespeichertem geht, wird gefragt.
 
-- **Reiter** „Einträge · Fragen · Ziele · Abläufe · Auswertung“ (`DiaryHeader`), am Telefon in einer Zeile, die in sich
+- **Reiter** „Einträge · Scheiben · Fragen · Ziele · Abläufe · Auswertung“ (`DiaryHeader`), am Telefon in einer Zeile, die in sich
   wischt, wenn sie breiter ist als die Seite; der Knopf oben folgt dem Reiter („Neuer Eintrag“, „Neues Ziel“, „Neuer
   Ablauf“, in der Auswertung „Neuer Eintrag“).
-- **`/diary/goals` (Ziele):** dritter Reiter, Knopf „Neues Ziel“; Gruppen Laufend, Kommend, Vorbei; je Karte Satz,
+- **`/diary/goals` (Ziele):** vierter Reiter, Knopf „Neues Ziel“; Gruppen Laufend, Kommend, Vorbei; je Karte Satz,
   Disziplin und Ende, der Stand in einer Zeile und der Zustand (die Antwort, sonst läuft, beginnt am …, vorbei).
 - **`/diary/goals/[id]`:** für jedes Ziel dieselbe Folge: Stand, Notiz, „Hat es geklappt?“, Einträge im Zeitraum,
   „Dieses Ziel“ (Ändern, Löschen). „Stand“ zeigt mit Messung die große Zahl, die letzten zehn, das Beste, den Schnitt,
@@ -105,7 +105,7 @@ Alle in einer Spalte (`PAGE_SINGLE`), Bereich „Tagebuch“ mit `BookOpen` ([[s
   mit“: Scheibe, Serie oder Schnitt ab einer Ringzahl, Wertung und Schusszahl als eine Zeile mit „Ändern“ (vorbelegt
   aus `resultGoalDefaults`), welche Scheiben; darunter die Vorschau (`previewGoalAction`, 300 ms nach der letzten
   Änderung). Klebende Leiste, Wächter beim Verlassen.
-- **`/diary/routines` (Abläufe):** vierter Reiter, Knopf „Neuer Ablauf“; je Disziplin eine Gruppe nach Name,
+- **`/diary/routines` (Abläufe):** fünfter Reiter, Knopf „Neuer Ablauf“; je Disziplin eine Gruppe nach Name,
   „Ohne Disziplin“ zuletzt (auch eine Disziplin, die es für das Konto nicht mehr gibt, `routineGroups`); je Karte Name
   und Zahl der Schritte. Die Rückwege von einem Ablauf führen hierher (`ROUTINES_PATH` in `src/diary/paths.ts`). Der
   Reiter „Fragen“ zeigt keine Abläufe. In der Oberfläche heißt der Faden „Fragen“; Adresse und Namen im Code bleiben
@@ -132,7 +132,7 @@ Alle in einer Spalte (`PAGE_SINGLE`), Bereich „Tagebuch“ mit `BookOpen` ([[s
 
 ## Auswertung: Einflüsse und Selbstbild
 
-Gebaut in 2c (29. Oktober 2026, Nachtrag zu [[adr-033]]). Fünfter Reiter **„Auswertung“** (`/diary/analysis`), je
+Gebaut in 2c (29. Oktober 2026, Nachtrag zu [[adr-033]]). Sechster Reiter **„Auswertung“** (`/diary/analysis`), je
 Disziplin (Chips der Disziplinen mit Einträgen, `?family=`) und Zeitraum („Alles“ oder eine Saison vom 1. September bis
 31. August, `?season=2025` ist das Startjahr). Der Zeitraum wählt die Einträge, nie die Form. Alles wird beim Lesen
 gerechnet (`src/diary/analysis/`), ohne Schema. Die Scheiben einer Familie liest `resultFormCards` aus
@@ -205,8 +205,10 @@ angeboten. Eine gelöschte Scheibe steht als „Scheibe gelöscht“. Das Einles
   zeigt keine.
 - Start, je Block neben „Abend in Scheiben ›“: „Tagebuch · Eintrag öffnen ›“ oder „… anlegen ›“ (`startLines`, anlegen
   ebenso direkt).
-- Profil: Kasten „Tagebuch“ mit Ein- und Ausschalten; ist es an, am Telefon „Alle Scheiben“, weil die Liste der
-  Scheiben dann nicht in der Leiste steht. Papierkorb: „Einträge im Tagebuch“.
+- Profil: Kasten „Tagebuch“ mit Ein- und Ausschalten. Papierkorb: „Einträge im Tagebuch“.
+- Liste der Scheiben: Ist das Tagebuch an, steht über ihr die Reiterzeile des Tagebuchs mit „Scheiben“ gewählt
+  (`src/parts/diary-tabs.tsx`, `cardsDiaryTabs`; die Seite reicht sie als `tabs` an `ListScreen`). Der Reiter führt zur
+  zuletzt besuchten Liste, die `AppShell` über `useCardsLink` (`src/components/shell/cards-link.tsx`) bereitstellt.
 
 ## Abschaltbar, Papierkorb, Datenschutz
 

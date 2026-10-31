@@ -84,7 +84,15 @@ Fortschritt und am Desktop über einen Untereintrag. Der Vergleich aus dem Forts
    Schuss, 1 ohne Werte.“
 3. **Raster wie Scheibe und Fortschritt:** linksbündig, nicht zentriert; ab 768 px links das Bild, rechts Tabelle und
    Grundlage (`PAGE_COLUMNS`).
-4. **Verworfen nach dem ersten Bau:** drei Zeilen mit einem Urteilssatz je Zeile und „Alle Kennzahlen“ eingeklappt. Der
+4. **Verlauf und Werte bei zwei Zeiträumen** (31. Oktober 2026, Befund des Users am iPhone): Unter Bild und Tabelle
+   stehen wieder der Verlauf A gegen B (`PeriodChart` mit `compareRange`, Scheiben übereinander, Legende mit beiden
+   Namen) und die Kacheln „Zahlen über den Zeitraum“ mit dem Wert von B (`PeriodTiles`), je mit „?“ wie im Fortschritt.
+   Darüber eine Sprungleiste „Bild · Zahlen · Verlauf · Werte“ (`COMPARE_SECTIONS`). Beides gab es im Fortschritt, bis
+   der Vergleich hierher zog. Der Server rechnet dafür in `comparePageData` ein `periodModel` über dieselben Scheiben der
+   Familie (A als Zeitraum, B schon aufgelöst als `compareTo`, Art, Einschießen und Wertung der Seite) und gibt
+   `lightPeriodModel` weiter, ohne Schüsse. Die Kennzahl des Verlaufs ist der Ø je Schuss, eine Wahl gibt es hier nicht.
+   Zwei Scheiben und Wettkampf/Training zeigen beides nicht.
+5. **Verworfen nach dem ersten Bau:** drei Zeilen mit einem Urteilssatz je Zeile und „Alle Kennzahlen“ eingeklappt. Der
    User fand das doppelt und unruhig (21. Oktober 2026).
 
 ## Das Bild
