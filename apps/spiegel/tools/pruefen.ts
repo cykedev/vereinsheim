@@ -2457,8 +2457,8 @@ const sheetChoice = (label: string) =>
   `$$("dialog[open] label").find((l) => txt(l).startsWith(${JSON.stringify(label)}))`
 
 /**
- * Seite Vergleichen: der Umschalter und der Weg aus dem Fortschritt, zwei Zeiträume mit Bild, Lupe und Tabelle, das
- * Blatt für B, eine alte Adresse mit `compare=`, Wettkampf und Training, zwei Scheiben von der Seite einer Scheibe mit dem Blatt
+ * Seite Vergleichen: der Umschalter und der Weg aus dem Fortschritt, zwei Zeiträume mit Bild, Lupe, Tabelle, Verlauf und
+ * Werten, das Blatt für B, eine alte Adresse mit `compare=`, Wettkampf und Training, zwei Scheiben von der Seite einer Scheibe mit dem Blatt
  * der Scheiben, und jedes Thema der Hilfe der Seite hat ein „?“.
  */
 async function compare(page: Page, href: string) {
@@ -2500,6 +2500,31 @@ async function compare(page: Page, href: string) {
     periods
   )
   await collect()
+  const trend = await page.ev<{
+    sections: string
+    legend: string[]
+    a: number
+    b: number
+    tiles: number
+    compared: number
+  }>(`({
+    sections: $$('nav[aria-label="Abschnitte"] a').map(txt).join(" · "),
+    legend: $$("[data-compare-history] [data-legend] > span").map(txt),
+    a: $$("[data-compare-history] svg[role] circle:not([data-compare-point])").length,
+    b: $$("[data-compare-history] [data-compare-point]").length,
+    tiles: $$('[data-section="values"] [data-period-tile]').length,
+    compared: $$('[data-section="values"] [data-tile-compare]').length,
+  })`)
+  check(
+    "Zwei Zeiträume: Sprungleiste, Verlauf mit beiden Zeiträumen, Werte mit Vergleich",
+    trend.sections === "Bild · Zahlen · Verlauf · Werte" &&
+      trend.legend.length === 2 &&
+      trend.a > 0 &&
+      trend.b > 0 &&
+      trend.tiles > 0 &&
+      trend.compared > 0,
+    trend
+  )
   const before = await page.ev<string | null>(
     `$("[data-compare-picture]")?.getAttribute("viewBox") ?? null`
   )

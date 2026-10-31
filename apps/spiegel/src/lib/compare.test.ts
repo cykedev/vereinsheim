@@ -132,6 +132,42 @@ describe("comparePageData: Gruppen", () => {
     expect(page?.ranges?.a.label).toBe("07.06.2026 – 10.07.2026")
   })
 
+  it("zwei Zeiträume: Verlauf und Werte wie im Fortschritt, A gegen B über dieselben Scheiben", async () => {
+    const query = {
+      type: "periods",
+      family: lpFamily,
+      a: { type: "free", from: "2026-06-07", to: "2026-07-10" },
+      b: { type: "free", from: "2026-06-01", to: "2026-06-07" },
+      kind: "all",
+      includeWarmup: false,
+    } as const
+    const page = await data(query)
+    const period = page?.period
+    // der Verlauf: A ist der Zeitraum, B der Vergleich (`compareRange`), B ohne die Scheiben von A
+    expect(period?.range).toEqual(page?.ranges?.a)
+    expect(period?.compareRange).toEqual(page?.ranges?.b)
+    const inA = new Set(period?.cards.map((card) => card.id))
+    expect(period?.compareValues?.length).toBeGreaterThan(0)
+    expect(period?.compareValues?.some((value) => inA.has(value.id))).toBe(false)
+    // die Kacheln tragen den Vergleich: Ø je Schuss wie die Zeile der Tabelle, der Zeitraum A, verglichen mit B
+    const [mean] = period?.tiles ?? []
+    expect(mean.key).toBe(page?.model?.result.key)
+    expect(mean.value).not.toBeNull()
+    expect(mean.value).toBeCloseTo(page?.model?.result.a ?? Number.NaN, 9)
+    expect(mean.compare?.value).toBeCloseTo(page?.model?.result.b ?? Number.NaN, 9)
+    expect(mean.compare?.comparison).not.toBeNull()
+    // leicht für den Browser: keine Werte und Rekorde an den Scheiben
+    expect(period?.cards.every((card) => Object.keys(card.metrics).length === 0)).toBe(true)
+  })
+
+  it("andere Arten des Vergleichs ohne Modell des Fortschritts", async () => {
+    expect(
+      (await data({ ...DEFAULT_COMPARE, type: "kind", range: { type: "all" } } as CompareQuery))
+        ?.period
+    ).toBeNull()
+    expect((await data({ type: "cards", family: null, a: null, b: null }))?.period).toBeNull()
+  })
+
   it("ohne zwei Scheiben nur die neuesten zwei fürs Blatt", async () => {
     const page = await data({ ...DEFAULT_COMPARE, family: lpFamily } as CompareQuery)
     expect(page?.choices.map((c) => c.id)).toEqual([ids.lp[11], ids.lp[10]])

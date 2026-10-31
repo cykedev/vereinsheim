@@ -20,7 +20,7 @@ import {
   type CardProblem,
 } from "@vereinsheim/shot-ui/compare/words"
 import { formatValue } from "@vereinsheim/shot-ui/format"
-import type { CompareQuery } from "@vereinsheim/shot-ui/nav/routes"
+import { DEFAULT_PROGRESS, type CompareQuery } from "@vereinsheim/shot-ui/nav/routes"
 import {
   compareRange,
   inRange,
@@ -28,7 +28,13 @@ import {
   type DateRange,
 } from "@vereinsheim/shot-ui/period/calendar"
 import { fromProjection } from "@vereinsheim/shot-ui/period/fromProjection"
-import { byStart, type PeriodItem } from "@vereinsheim/shot-ui/period/model"
+import {
+  byStart,
+  lightPeriodModel,
+  periodModel,
+  type PeriodItem,
+  type PeriodModel,
+} from "@vereinsheim/shot-ui/period/model"
 
 import type { Db } from "@/lib/db"
 import { cardWithShots, patternCardsOf, type OverviewCard, type PageCard } from "@/lib/db/reads"
@@ -38,7 +44,8 @@ import { familiesOf, type FamilyOption } from "@/lib/pages"
 
 // Seite Vergleichen (`vault/spiegel/spiegel-vergleichen.md`): was der Server für A gegen B rechnet. Zeiträume und Arten
 // aus den Projektionen der eigenen Scheiben (wie der Fortschritt) und den gespeicherten Lagen, zwei Scheiben aus ihren
-// Schüssen. Gerechnet wird in der Wertung der Familie. An den Browser geht das Modell, nie die Schüsse.
+// Schüssen. Gerechnet wird in der Wertung der Familie. An den Browser geht das Modell, nie die Schüsse. Zwei Zeiträume
+// bringen dazu das Modell des Fortschritts (A gegen B, leicht gemacht) für Verlauf und Werte.
 
 type Context = Pick<PageContext, "timeZone" | "nowMs" | "named">
 
@@ -68,6 +75,11 @@ export interface ComparePageData {
   scoring: Scoring
   /** Scheibe A, wenn sie geladen ist (Rückweg „Zur Scheibe“); sonst null, auch bei Zeiträumen */
   backCard: string | null
+  /**
+   * bei zwei Zeiträumen das Modell des Fortschritts für A mit B als Vergleich (`lightPeriodModel`): Verlauf und Werte
+   * wie im Fortschritt; sonst null
+   */
+  period: PeriodModel | null
 }
 
 const metric = (key: string) => metricByKey(key) as Readonly<MetricDefinition>
@@ -191,6 +203,7 @@ export async function comparePageData(
       targetId: a?.targetId ?? option.targetId,
       scoring,
       backCard: a?.id ?? null,
+      period: null,
     }
   }
 
@@ -229,6 +242,7 @@ export async function comparePageData(
       targetId: option.targetId,
       scoring,
       backCard: null,
+      period: null,
     }
   }
 
@@ -244,6 +258,24 @@ export async function comparePageData(
   const bAll = within(rangeB, ofKind)
   const b = bAll.filter((item) => !inA.has(item.id))
   const names = { a: periodSideName(query.a, rangeA), b: periodSideName(query.b, rangeB) }
+  // dieselben Scheiben, Art, Einschießen und Wertung wie die Seiten; B schon aufgelöst, A gewinnt geteilte Scheiben
+  const period = lightPeriodModel(
+    periodModel({
+      items,
+      state: {
+        ...DEFAULT_PROGRESS,
+        choice: query.a,
+        family,
+        kind: query.kind,
+        includeWarmup: query.includeWarmup,
+        scoring,
+      },
+      compareTo: rangeB,
+      nowMs: context.nowMs,
+      timeZone: context.timeZone,
+      named: context.named,
+    })
+  )
   return {
     model: groupCompareModel({
       type: "periods",
@@ -266,5 +298,6 @@ export async function comparePageData(
     targetId: option.targetId,
     scoring,
     backCard: null,
+    period,
   }
 }

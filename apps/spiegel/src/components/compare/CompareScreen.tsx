@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation"
 import { useCallback, useState, useTransition } from "react"
 
 import { TARGETS } from "@vereinsheim/shot-core/targets"
+import { helpForMetric } from "@vereinsheim/shot-help/lookup"
+import { ChartSlot } from "@vereinsheim/shot-ui/analysis/charts/frame"
 import { CardChoiceSheet, PeriodChoiceSheet } from "@vereinsheim/shot-ui/compare/ChoiceSheets"
 import { CompareControls, type CompareSideKey } from "@vereinsheim/shot-ui/compare/CompareControls"
 import { ComparePicture, SideLegend } from "@vereinsheim/shot-ui/compare/ComparePicture"
@@ -13,6 +15,10 @@ import { ScoringChip } from "@vereinsheim/shot-ui/controls/ScoringChip"
 import { HelpButton } from "@vereinsheim/shot-ui/help/HelpButton"
 import { CardContextBar } from "@vereinsheim/shot-ui/nav/CardContextBar"
 import { PAGE_COLUMNS } from "@vereinsheim/shot-ui/layout/columns"
+import { SectionBlock } from "@vereinsheim/shot-ui/layout/SectionBlock"
+import { SectionNav } from "@vereinsheim/shot-ui/layout/SectionNav"
+import { COMPARE_SECTIONS, type CompareSection } from "@vereinsheim/shot-ui/layout/sections"
+import { useActiveSection } from "@vereinsheim/shot-ui/layout/useActiveSection"
 import { ProgressSwitch } from "@vereinsheim/shot-ui/nav/ProgressSwitch"
 import {
   DEFAULT_PROGRESS,
@@ -20,6 +26,8 @@ import {
   type CompareQuery,
   type Route,
 } from "@vereinsheim/shot-ui/nav/routes"
+import { PeriodChart } from "@vereinsheim/shot-ui/period/PeriodChart"
+import { PeriodTiles } from "@vereinsheim/shot-ui/period/PeriodTiles"
 import { useHelp } from "@vereinsheim/ui/design2/help-sheet"
 import { Page } from "@vereinsheim/ui/design2/page"
 import { cn } from "@vereinsheim/lib/utils"
@@ -28,6 +36,8 @@ import { useSavedChoice } from "@/components/shell/useSavedChoice"
 import type { ComparePageData } from "@/lib/compare"
 import type { PageContext } from "@/lib/page-context"
 import { setFamilyScoring } from "@/lib/scoring-actions"
+
+const SECTION_IDS: readonly CompareSection[] = COMPARE_SECTIONS.map((s) => s.id)
 
 /** der Rückweg zur Scheibe A, wenn sie geladen ist (eigene, sichtbare); sonst führt der Umschalter oben zurück */
 function backToCard(data: ComparePageData): Route | null {
@@ -47,7 +57,8 @@ function backToCard(data: ComparePageData): Route | null {
 /**
  * Seite Vergleichen: oben der Umschalter „Zeitraum · Vergleichen“, der Kopf mit Art, Familie, den Seiten A und B und der
  * Wertung, dann die Antwort als Satz und im Raster der Seite das Bild beider Seiten neben der Tabelle aller Zahlen und
- * der Grundlage. Jede Wahl ist eine neue Adresse, der Server rechnet neu; bis dahin wird die Seite leiser.
+ * der Grundlage. Bei zwei Zeiträumen darunter Verlauf und Werte wie im Fortschritt (A gegen B), mit Sprungleiste. Jede
+ * Wahl ist eine neue Adresse, der Server rechnet neu; bis dahin wird die Seite leiser.
  */
 export function CompareScreen({
   data,
@@ -61,6 +72,9 @@ export function CompareScreen({
   const onHelp = useCallback((id: string) => help(id), [help])
   const [pending, startTransition] = useTransition()
   const [picking, setPicking] = useState<CompareSideKey | null>(null)
+  // die Scheibe, die das Lineal im Verlauf zeigt; nur auf dieser Seite, nicht in der Adresse
+  const [chosen, setChosen] = useState<string | null>(null)
+  const active = useActiveSection(SECTION_IDS)
   // die Wertung der Familie wie im Fortschritt: sichtbar und umschaltbar, gespeichert für alle Übersichten
   const familyScoring = useSavedChoice({
     value: data.scoring,
@@ -68,7 +82,7 @@ export function CompareScreen({
     save: (scoring) => setFamilyScoring(data.family, scoring),
     notSaved: "Die Wertung ließ sich nicht speichern.",
   })
-  const { query, model } = data
+  const { query, model, period } = data
   const go = (next: CompareQuery) =>
     startTransition(() =>
       router.push(urlFromRoute({ page: "compare", query: next }), { scroll: false })
@@ -77,6 +91,8 @@ export function CompareScreen({
   const target = TARGETS[data.targetId]
   const sentence = model ? compareSentence(model) : null
   const close = () => setPicking(null)
+  // Verlauf und Werte nur bei zwei Zeiträumen: Sie lesen das Modell des Fortschritts für A gegen B
+  const withTrend = query.type === "periods" && period !== null
 
   return (
     <Page>
@@ -148,26 +164,96 @@ export function CompareScreen({
                 </p>
               )}
               {model.a.cards > 0 && model.b.cards > 0 && (
-                // wie Scheibe und Fortschritt: ab 768 px links das Bild, rechts die Zahlen
-                <div className={cn("grid gap-5", PAGE_COLUMNS)}>
-                  <div className="grid min-w-0 content-start gap-2">
-                    <ComparePicture
-                      picture={model.picture}
-                      target={target}
-                      label={sentence?.lead ?? ""}
+                <>
+                  {withTrend && <SectionNav active={active} sections={COMPARE_SECTIONS} />}
+                  {/* wie Scheibe und Fortschritt: ab 768 px links das Bild, rechts die Zahlen */}
+                  <div className={cn("grid gap-5", PAGE_COLUMNS)}>
+                    <SectionBlock
+                      section={{
+                        id: "picture",
+                        node: (
+                          <div className="grid min-w-0 content-start gap-2">
+                            <ComparePicture
+                              picture={model.picture}
+                              target={target}
+                              label={sentence?.lead ?? ""}
+                            />
+                            <SideLegend a={model.a.name} b={model.b.name} />
+                            <p className="text-[13px] text-muted-foreground">
+                              {pictureLegend(model.picture)}
+                            </p>
+                          </div>
+                        ),
+                      }}
                     />
-                    <SideLegend a={model.a.name} b={model.b.name} />
-                    <p className="text-[13px] text-muted-foreground">
-                      {pictureLegend(model.picture)}
-                    </p>
+                    <SectionBlock
+                      section={{
+                        id: "numbers",
+                        node: (
+                          <div className="grid min-w-0 content-start gap-2">
+                            <CompareTable model={model} onHelp={onHelp} />
+                            <p data-compare-basis className="text-[13px] text-muted-foreground">
+                              {basisText(model)}
+                            </p>
+                          </div>
+                        ),
+                      }}
+                    />
                   </div>
-                  <div className="grid min-w-0 content-start gap-2">
-                    <CompareTable model={model} onHelp={onHelp} />
-                    <p data-compare-basis className="text-[13px] text-muted-foreground">
-                      {basisText(model)}
-                    </p>
-                  </div>
-                </div>
+                  {withTrend && period && (
+                    <>
+                      <SectionBlock
+                        section={{
+                          id: "history",
+                          node: (
+                            <div
+                              data-compare-history
+                              className="grid min-w-0 gap-3 rounded-2xl border border-border bg-card p-3.5"
+                            >
+                              <div className="flex items-center justify-between gap-2">
+                                <h2 className="font-display text-base font-bold">Verlauf</h2>
+                                <HelpButton
+                                  label="Verlauf und Form"
+                                  helpId="verlauf-und-form"
+                                  onClick={() => onHelp("verlauf-und-form")}
+                                />
+                              </div>
+                              <ChartSlot height={300}>
+                                {(width) => (
+                                  <PeriodChart
+                                    // je Paar der Zeiträume neu: das Lineal fängt ohne Wahl an
+                                    key={`${data.family}:${period.range.fromMs}:${period.range.toMs}:${period.compareRange?.fromMs ?? ""}:${period.compareRange?.toMs ?? ""}`}
+                                    width={width}
+                                    model={period}
+                                    timeZone={context.timeZone}
+                                    chosen={chosen}
+                                    onChoose={setChosen}
+                                  />
+                                )}
+                              </ChartSlot>
+                            </div>
+                          ),
+                        }}
+                      />
+                      <SectionBlock
+                        last
+                        section={{
+                          id: "values",
+                          node: (
+                            <PeriodTiles
+                              tiles={period.tiles}
+                              compareLabel={period.compareRange?.label ?? null}
+                              onHelp={(key) => {
+                                const id = helpForMetric(key)?.id
+                                if (id) onHelp(id)
+                              }}
+                            />
+                          ),
+                        }}
+                      />
+                    </>
+                  )}
+                </>
               )}
             </>
           )}

@@ -312,6 +312,11 @@ export function periodModel(input: {
   nowMs: number
   timeZone: string
   named: readonly NamedPeriod[]
+  /**
+   * der Vergleichszeitraum schon aufgelöst, statt aus `state.compare`: Auf der Seite Vergleichen ist B jeder Zeitraum,
+   * nicht nur der davor oder ein benannter
+   */
+  compareTo?: DateRange | null
 }): PeriodModel {
   const { state, nowMs, timeZone, named } = input
   const options = { includeWarmup: state.includeWarmup }
@@ -319,7 +324,10 @@ export function periodModel(input: {
   const ofKind = (card: PeriodItem) => state.kind === "all" || card.kind === state.kind
   const firstMs = input.items.length ? Math.min(...input.items.map((c) => c.startedAtMs)) : null
   const range = resolveRange(state.choice, { nowMs, timeZone, named, firstMs })
-  const other = compareRange(state.compare, range, { nowMs, timeZone, named })
+  const other =
+    input.compareTo !== undefined
+      ? input.compareTo
+      : compareRange(state.compare, range, { nowMs, timeZone, named })
   const within = (r: DateRange) =>
     input.items.filter((c) => inRange(c.startedAtMs, r) && ofKind(c)).sort(byStart)
   const cards = within(range)
