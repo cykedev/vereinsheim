@@ -398,6 +398,13 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
   zieht `visualViewport` die Scrollbar ab, `innerWidth` nicht: Dort gegen `document.documentElement.clientWidth` prüfen
   (Abschnitt „Reiter“ in `apps/ringwerk/tools/pruefen.ts`).
 
+- **Felder am Telefon mit mindestens 16 px Schrift**: iOS Safari (auch als Web-App vom Home-Bildschirm) zoomt beim
+  Fokus in ein Feld unter 16 px hinein und danach nicht zurück. Die Seite wirkt dann breiter als der Bildschirm, bis man
+  von Hand herauszoomt; `scrollWidth` bleibt dabei gleich, eine Messung der Breite sieht es nicht. Spiegel setzt
+  deshalb unter 768 px jedes Feld auf 16 px (`apps/spiegel/src/app/fields.css`), wie die shadcn-Felder mit
+  `text-base md:text-sm`. Kein `maximum-scale` im Viewport, das nähme Sehschwachen das Zoomen. Aufgefallen am
+  31. Oktober 2026 am iPhone in den Masken des Tagebuchs (15 px); am Gerät nach dem Release zu bestätigen.
+
 - **Ein Toast liegt über einer klebenden Leiste unten**: Toasts stehen über der unteren Leiste der App, genau dort, wo
   eine klebende Leiste mit „Speichern“ steht; ein Toast der vorigen Seite schluckte den Klick. Ein Formular mit so einer
   Leiste schließt Toasts beim Öffnen (`toast.dismiss()`) und zeigt Fehler an der Leiste statt als Toast. Aufgefallen

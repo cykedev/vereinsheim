@@ -115,6 +115,10 @@ Stand mit `past` (`MAX_OBSERVED_LAG_MS`, SF-79).
 - **Nach der Anmeldung** nur Pfade derselben Herkunft (`safeCallback`, aufgelöst wie im Browser). Abmelden mit `signOut({ redirect: false })` und eigener Navigation: Mit Umleitung
   baut `next-auth/react` die Adresse aus `NEXTAUTH_URL`, ohne sie `localhost:3000` (Ringwerk), am Handy über die
   Netzadresse ins Leere. `proxy.ts` lässt alles unter `_next/` frei (sonst fängt es die Verbindung des Dev-Servers ab).
+- **Felder am Telefon mit 16 px** (`src/app/fields.css`): iOS Safari zoomt beim Fokus in ein Feld unter 16 px hinein
+  und danach nicht zurück, die Seite wirkt dann zu breit. Eine Regel ohne Ebene setzt unter 768 px jedes `input`,
+  `textarea` und `select` (außer Kästchen, Knöpfe, Dateien) auf 16 px, auch in den Paketen; ab 768 px gilt die Klasse
+  des Felds. Kein `maximum-scale` im Viewport. Die Skriptprüfung prüft es auf jeder Seite, die sie am Telefon misst.
 - **Formulare mit Server Action gesteuert** (`value` + `onChange`): React setzt ungesteuerte Felder nach dem Absenden
   zurück, ein Feldfehler löschte sonst die Eingaben.
 - **Skript im `<head>` nur aus dem HTML** (`ThemeScript`): Es rendert nur auf dem Server und beim Hydrieren. Nach einem
@@ -274,7 +278,7 @@ Stand mit `past` (`MAX_OBSERVED_LAG_MS`, SF-79).
   ohne Abhängigkeit; Klicks, Ziehen und Tasten sind echte Eingaben (`Input.dispatch*`), Fokus und `next/link` verhalten
   sich wie beim Menschen. Angemeldet mit dem Demo-Konto (vorher `seed:own --demo`). Geprüft wird ohne feste Zahlen
   (echte Daten): Sprungleiste, Kleben, Rücksprung mit Pille, „Alle Beobachtungen“, Blatt der Hilfe, Lineal mit Zeiger
-  und Tastatur, Platz der Scheibe bei mehreren Fenstergrößen, kein seitliches Scrollen am Telefon, Anker beim Laden,
+  und Tastatur, Platz der Scheibe bei mehreren Fenstergrößen, kein seitliches Scrollen am Telefon und Felder ab 16 px (`minFieldPx`), Anker beim Laden,
   Blättern, Rückwege, Rekorde, Blatt „Filter“, Reiter in einer Zeile am Telefon, Fachbegriffe auf den ersten Ebenen, ein „?“ je Thema des Fortschritts,
   keine Skriptfehler; „Detailtiefen“ (Herkunft in Liste und Kopf, „–“ mit Grund, Filter nach Herkunft, Seiten aus Summen,
   Grundlage in Fortschritt, Trefferbild und Start, Vergleichen) mit den Demo-Scheiben aus `seed:own --demo`; `pickCard`
