@@ -549,6 +549,7 @@ Befund aus dem Review von 2a).
 | 3c   | `plans/2026-10-29-tis-3c-warmup.md`          | `feat/tis-3c-warmup` (von `main`)          | `tis-3c-warmup`          | in `main` (`52dffad1`), deployt (bis 30.10.); Plan entfernt |
 | 3d   |                                              | (vom Basis)                                |                          | entschieden (29.10.), Plan offen                        |
 | 3e   | `plans/2026-10-29-tis-3e-read-only.md`       | `feat/tis-3e-read-only` (von `main`)       | `tis-3e-read-only`       | in `main` (`0000933f`), deployt (bis 30.10.); Plan entfernt |
+| U1   | `plans/2026-10-31-tis-u1-nav-compare.md`     | `feat/tis-u1-nav-compare` (vom Basis)      |                          | Plan geschrieben (31.10.), Konzept freigegeben           |
 | 4    |                                              |                                            |                          | offen                                                   |
 
 ## Verification
