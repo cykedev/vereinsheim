@@ -10,7 +10,6 @@ export const PROFILE_TEXTS = {
   turnOff: "Ausschalten",
   turnedOn: "Tagebuch eingeschaltet.",
   turnedOff: "Tagebuch ausgeschaltet.",
-  allCards: "Alle Scheiben",
   /** Überschrift des Tagebuchs im Papierkorb */
   trashHeading: "Im Tagebuch",
   /** der Satz oben im Papierkorb, wenn auch Einträge darin liegen können */
@@ -81,6 +80,7 @@ export const LIST_TEXTS = {
   title: "Tagebuch",
   newEntry: "Neuer Eintrag",
   entries: "Einträge",
+  cards: "Scheiben",
   thread: "Fragen",
   emptyTitle: "Noch kein Eintrag",
   emptyText:

@@ -1,8 +1,8 @@
 // Skriptprüfung des Tagebuchs ([[spiegel-diary]]), Abschnitt „Tagebuch“ in `pruefen.ts`: mit dem Demo-Konto am
 // Telefon einschalten, Hinweis, ein Eintrag aus dem ersten Vorschlag, Texte, Befinden, Satzanfänge, ein zweiter Eintrag
-// mit der Frage des ersten, Fragen (`/diary/thread`), die Zeilen an Scheibe und Start, Scheibe lösen, Löschen mit Rückgängig, Papierkorb,
+// mit der Frage des ersten, Fragen (`/diary/thread`), der Reiter „Scheiben“ mit der Leiste, die Zeilen an Scheibe und Start, Scheibe lösen, Löschen mit Rückgängig, Papierkorb,
 // Export und der Dialog „Konto löschen“ mit falschem Passwort; Ziele (anlegen mit Messung und Vorschau, Stand, Notiz,
-// „Hat es geklappt?“, ändern, Zeile auf Start, Löschen mit Rückgängig) und Abläufe im eigenen Reiter (fünf Reiter in
+// „Hat es geklappt?“, ändern, Zeile auf Start, Löschen mit Rückgängig) und Abläufe im eigenen Reiter (sechs Reiter in
 // einer Zeile, anlegen als Text, Leseseite, bearbeiten, Wächter, Fragen ohne Abläufe, Löschen mit Rückgängig) und die
 // Auswertung (Reiter, Leersätze, Befinden an einem Eintrag, Zeile „Energie“ und ihre Seite, Blatt der Hilfe). Am Ende sind alle Einträge, Ziele und Abläufe des
 // Demo-Kontos endgültig gelöscht und das Tagebuch ist aus, auch nach einem Abbruch.
@@ -154,8 +154,8 @@ async function run(page: Page, { base, check, record }: Context) {
     asked.slice(0, 120)
   )
   check(
-    "Tagebuch: im Profil am Telefon „Alle Scheiben“",
-    await page.ev<boolean>(`!!link("Alle Scheiben", $("[data-all-cards]"))`)
+    "Tagebuch: im Profil kein Knopf „Alle Scheiben“",
+    await page.ev<boolean>(`!$("[data-all-cards]") && !link("Alle Scheiben")`)
   )
 
   // Hinweis beim ersten Öffnen, nach „Verstanden“ und Neuladen weg; ein früherer Lauf hat ihn beim Demo-Konto vielleicht
@@ -174,6 +174,43 @@ async function run(page: Page, { base, check, record }: Context) {
       : "Tagebuch: der Hinweis ist schon bestätigt und bleibt weg",
     await page.ev<boolean>(`!$("[data-diary-notice]")`)
   )
+
+  // die Scheiben sind ein Reiter des Tagebuchs: Er führt zur Liste, dort ist er gewählt, die Leiste markiert das Tagebuch
+  await page.click(`link("Scheiben", $("[data-diary-switch]"))`)
+  check(
+    "Tagebuch: der Reiter „Scheiben“ führt zur Liste, dort ist „Scheiben“ gewählt",
+    (await page.waitFor(`location.pathname === "/cards"`, 10_000)) &&
+      (await page.waitFor(
+        `$('[data-diary-switch] a[aria-current="page"]')?.textContent === "Scheiben"`,
+        10_000
+      )) &&
+      (await page.ev<boolean>(`!!$("[data-card-list-page] [data-diary-switch]")`)),
+    await page.ev<string>(`location.href`)
+  )
+  check(
+    "Tagebuch: am Telefon markiert die Leiste auf der Liste „Tagebuch“",
+    await page.ev<boolean>(
+      `$('[data-app-bar] a[aria-current="page"]')?.getAttribute("data-area") === "diary"`
+    ),
+    await page.ev<string | null>(
+      `$('[data-app-bar] a[aria-current="page"]')?.getAttribute("data-area") ?? null`
+    )
+  )
+  // auf der Seite einer Scheibe keine Reiterzeile, die Leiste markiert weiter das Tagebuch
+  const listed = await page.ev<string | null>(
+    `$("[data-card-row]")?.getAttribute("data-card-row") ?? null`
+  )
+  if (listed) {
+    await page.goto(`${base}/cards/${listed}`)
+    check(
+      "Tagebuch: die Seite einer Scheibe aus der Liste ohne Reiterzeile, in der Leiste „Tagebuch“",
+      (await page.ev<boolean>(`!$("[data-diary-switch]")`)) &&
+        (await page.ev<boolean>(
+          `$('[data-app-bar] a[aria-current="page"]')?.getAttribute("data-area") === "diary"`
+        ))
+    )
+  }
+  await page.goto(`${base}/diary`)
 
   // ein Eintrag aus dem ersten Vorschlag
   await page.click(`link("Neuer Eintrag")`)
@@ -605,7 +642,7 @@ async function goals(page: Page, { base, check, record }: Context) {
 async function routines(page: Page, { base, check, record }: Context) {
   await page.goto(`${base}/diary/routines`)
   check(
-    "Abläufe: vierter Reiter, ohne Ablauf der Leerzustand und „Neuer Ablauf“ oben",
+    "Abläufe: fünfter Reiter, ohne Ablauf der Leerzustand und „Neuer Ablauf“ oben",
     (await page.ev<boolean>(
       `$('[data-diary-switch] a[aria-current="page"]')?.textContent === "Abläufe"`
     )) &&
@@ -621,8 +658,8 @@ async function routines(page: Page, { base, check, record }: Context) {
           count: links.length, inner: innerWidth, visual: visualViewport.width } })()`
     )
     check(
-      `Abläufe: Telefon ${width} px, die fünf Reiter in einer Zeile, die Seite nicht breiter`,
-      tabs.rows === 1 && tabs.count === 5 && tabs.inner === tabs.visual,
+      `Abläufe: Telefon ${width} px, die sechs Reiter in einer Zeile, die Seite nicht breiter`,
+      tabs.rows === 1 && tabs.count === 6 && tabs.inner === tabs.visual,
       JSON.stringify(tabs)
     )
   }
@@ -733,7 +770,7 @@ async function analysis(page: Page, { base, check, record }: Context) {
   await page.goto(`${base}/diary`)
   await page.click(`link("Auswertung", $("[data-diary-switch]"))`)
   check(
-    "Auswertung: fünfter Reiter, erreichbar und gewählt",
+    "Auswertung: sechster Reiter, erreichbar und gewählt",
     (await page.waitFor(`location.pathname === "/diary/analysis"`, 10_000)) &&
       (await page.waitFor(
         `$('[data-diary-switch] a[aria-current="page"]')?.textContent === "Auswertung"`

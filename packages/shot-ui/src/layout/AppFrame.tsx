@@ -31,17 +31,17 @@ const ITEMS: Readonly<Record<Area, { label: string; short: string; Icon: LucideI
 
 /** die untere und die schmale Leiste: Scheibe holen in der Mitte, Admin steckt in Profil */
 const BAR: readonly Area[] = ["start", "cards", "scan", "progress", "profile"]
-/** mit Tagebuch steht es statt Scheiben in der Leiste; die Scheiben stehen dann am Telefon in Profil ([[adr-033]]) */
+/** mit Tagebuch steht es statt Scheiben in der Leiste; die Scheiben sind dann ein Reiter des Tagebuchs ([[adr-033]]) */
 const DIARY_BAR: readonly Area[] = ["start", "diary", "scan", "progress", "profile"]
 
 /**
  * der Bereich, den die Leisten des Telefons markieren: Admin steckt in Profil, Vergleichen gehört zum Fortschritt, mit
- * Tagebuch stehen die Scheiben in Profil
+ * Tagebuch gehören die Scheiben zum Tagebuch
  */
 export function barAreaOf(current: Area | null, diary: boolean): Area | null {
   if (current === "admin") return "profile"
   if (current === "compare") return "progress"
-  if (diary && current === "cards") return "profile"
+  if (diary && current === "cards") return "diary"
   return current
 }
 

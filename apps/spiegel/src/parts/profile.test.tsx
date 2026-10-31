@@ -35,14 +35,11 @@ describe("Tagebuch im Profil", () => {
     expect(markup).not.toContain("data-all-cards")
   })
 
-  it("an: „Alle Scheiben“ am Telefon über dem Kasten, der Ausschalten bietet", async () => {
+  it("an: der Kasten bietet Ausschalten; die Scheiben stehen im Tagebuch, nicht im Profil", async () => {
     await setDiaryEnabled(db, userId, true)
     const markup = await html()
-    expect(markup).toMatch(
-      /<nav aria-label="Alle Scheiben" data-all-cards="true" class="lg:hidden">/
-    )
-    expect(markup).toContain('href="/cards"')
-    expect(markup.indexOf("data-all-cards")).toBeLessThan(markup.indexOf("data-diary-profile"))
+    expect(markup).not.toContain("data-all-cards")
+    expect(markup).not.toContain('href="/cards"')
     expect(markup).toContain("An. In der unteren Leiste steht Tagebuch statt Scheiben.")
     expect(markup).toContain(">Ausschalten<")
   })

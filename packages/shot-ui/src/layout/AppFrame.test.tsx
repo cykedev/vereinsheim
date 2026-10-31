@@ -160,8 +160,8 @@ describe("Rahmen der App", () => {
     )
   })
 
-  it("mit Tagebuch markieren die Leisten des Telefons bei den Scheiben Profil", () => {
-    expect(barAreaOf("cards", true)).toBe("profile")
+  it("mit Tagebuch markieren die Leisten des Telefons bei den Scheiben das Tagebuch", () => {
+    expect(barAreaOf("cards", true)).toBe("diary")
     expect(barAreaOf("cards", false)).toBe("cards")
     expect(barAreaOf("diary", true)).toBe("diary")
     expect(barAreaOf("admin", false)).toBe("profile")

@@ -13,6 +13,8 @@ vi.mock("next/navigation", () => ({
 const { StageRow } = await import("./StageRow")
 const { EntryScreen } = await import("./EntryScreen")
 const { DiaryHeader, DiaryList } = await import("./DiaryList")
+const { DiaryTabs } = await import("./DiaryTabs")
+const { CardsLinkProvider } = await import("@/components/shell/cards-link")
 const { ThreadView } = await import("./ThreadView")
 const { NewEntryScreen } = await import("./NewEntryScreen")
 
@@ -237,18 +239,35 @@ describe("Seite eines Eintrags", () => {
 })
 
 describe("Liste und Faden", () => {
-  it("fünf Reiter als TabBar, gewählt „Auswertung“ mit „Neuer Eintrag“ oben", () => {
+  it("sechs Reiter als TabBar, gewählt „Auswertung“ mit „Neuer Eintrag“ oben", () => {
     const html = renderToStaticMarkup(createElement(DiaryHeader, { current: "analysis" }))
     const switchHtml = html.slice(html.indexOf("data-diary-switch"))
     expect(
       [...switchHtml.matchAll(/<a[^>]*href="([^"]*)"[^>]*>([^<]*)</g)].map((m) => m[2])
-    ).toEqual(["Einträge", "Fragen", "Ziele", "Abläufe", "Auswertung"])
+    ).toEqual(["Einträge", "Scheiben", "Fragen", "Ziele", "Abläufe", "Auswertung"])
     expect(html).toMatch(/<a(?=[^>]*href="\/diary\/analysis")(?=[^>]*aria-current="page")/)
     expect(html.match(/aria-current="page"/g)).toHaveLength(1)
     expect(html).toMatch(/<a[^>]*href="\/diary\/new"[^>]*>.*Neuer Eintrag/)
     // die gemeinsame Reiterleiste: eine Zeile, die wischt
     expect(switchHtml).toContain("data-tab-bar")
-    expect(switchHtml.match(/<a /g)).toHaveLength(5)
+    expect(switchHtml.match(/<a /g)).toHaveLength(6)
+  })
+
+  it("„Scheiben“ führt zur gemerkten Liste, ohne Rahmen zu /cards; auf der Liste ist es gewählt", () => {
+    const tabs = (current: "entries" | "cards", link?: string) =>
+      renderToStaticMarkup(
+        link === undefined
+          ? createElement(DiaryTabs, { current })
+          : createElement(CardsLinkProvider, { value: link }, createElement(DiaryTabs, { current }))
+      )
+    expect(tabs("entries")).toMatch(/<a[^>]*href="\/cards"[^>]*>Scheiben</)
+    const remembered = tabs("entries", "/cards?family=lp&kind=competition")
+    expect(remembered).toMatch(
+      /<a[^>]*href="\/cards\?family=lp&amp;kind=competition"[^>]*>Scheiben</
+    )
+    const onList = tabs("cards", "/cards?family=lp")
+    expect(onList).toMatch(/<a(?=[^>]*href="\/cards\?family=lp")(?=[^>]*aria-current="page")/)
+    expect(onList.match(/aria-current="page"/g)).toHaveLength(1)
   })
 
   it("leer: der Leerzustand mit „Neuer Eintrag“", () => {

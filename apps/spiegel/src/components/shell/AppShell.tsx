@@ -14,6 +14,8 @@ import { ThemeSwitch } from "@vereinsheim/ui/design2/theme-switch"
 import { isAdminPath } from "@/lib/admin-path"
 import { isDiaryPath } from "@/lib/diary-path"
 
+import { CardsLinkProvider } from "./cards-link"
+
 import { HelpProvider } from "@vereinsheim/ui/design2/help-sheet"
 import { UndoHost } from "@vereinsheim/ui/design2/undo"
 
@@ -23,7 +25,8 @@ const memoryKey = (route: Route | null) => (route ? urlFromRoute(route) : "")
 /**
  * Rahmen der App: `AppFrame` aus shot-ui mit echten Links (`next/link`, Klicks über den Router), dem Bereich der
  * Adresse und der zuletzt besuchten Adresse je Bereich (Scheiben, Fortschritt), wie Reiter einer App. Dazu das Blatt
- * der Hilfe, das jede Seite über `useHelp` öffnet, und der Hinweis „Rückgängig“ (`useUndo`).
+ * der Hilfe, das jede Seite über `useHelp` öffnet, und der Hinweis „Rückgängig“ (`useUndo`). Die gemerkte Liste gibt
+ * es auch für den Reiter „Scheiben“ im Tagebuch (`useCardsLink`).
  */
 export function AppShell({
   isAdmin,
@@ -64,6 +67,9 @@ export function AppShell({
       : null
   if (routeFamily && routeFamily !== family) setFamily(routeFamily)
 
+  const areas = useMemo(() => areaLinks(memory, family), [memory, family])
+  const cardsLink = useMemo(() => urlFromRoute(areas.cards), [areas])
+
   const [helpId, setHelpId] = useState<string | null>(null)
   const links = useMemo(
     () => ({
@@ -82,14 +88,16 @@ export function AppShell({
             areaOf(route) ??
             (isAdminPath(pathname) ? "admin" : isDiaryPath(pathname) ? "diary" : null)
           }
-          links={areaLinks(memory, family)}
+          links={areas}
           openCount={openCount}
           isAdmin={isAdmin}
           diary={diary}
           sidebarFooter={<ThemeSwitch />}
         >
           {/* im Rahmen, damit der Hinweis „Rückgängig“ über der unteren Leiste steht (`--app-bar`) */}
-          <UndoHost>{children}</UndoHost>
+          <UndoHost>
+            <CardsLinkProvider value={cardsLink}>{children}</CardsLinkProvider>
+          </UndoHost>
         </AppFrame>
         <HelpSheet helpId={helpId} onClose={() => setHelpId(null)} />
       </HelpProvider>

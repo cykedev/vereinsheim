@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { useEffect, useMemo, useReducer, useSyncExternalStore } from "react"
+import { useEffect, useMemo, useReducer, useSyncExternalStore, type ReactNode } from "react"
 
 import type { CardMark } from "@vereinsheim/shot-core/projection"
 import { TARGETS } from "@vereinsheim/shot-core/targets"
@@ -65,6 +65,7 @@ export function ListScreen({
   serverSearch,
   families,
   context,
+  tabs = null,
 }: {
   /** null ohne Scheiben */
   list: { model: CardListModel; marks: Record<string, CardMark[]>; option: FamilyOption } | null
@@ -73,6 +74,8 @@ export function ListScreen({
   serverSearch: string
   families: FamilyOption[]
   context: PageContext
+  /** über dem Inhalt, mit Tagebuch dessen Reiterzeile; die Seite holt sie über eine Nahtstelle */
+  tabs?: ReactNode
 }) {
   const router = useRouter()
   const onHelp = useHelp()
@@ -126,6 +129,7 @@ export function ListScreen({
   if (!list)
     return (
       <Page>
+        {tabs && <div className={PAGE_SINGLE}>{tabs}</div>}
         <NoCards />
       </Page>
     )
@@ -139,6 +143,7 @@ export function ListScreen({
   return (
     <Page>
       <section data-card-list-page className={cn("grid gap-4", PAGE_SINGLE)}>
+        {tabs}
         <ListHeader
           familyLabel={option.label}
           cards={model.cards}
