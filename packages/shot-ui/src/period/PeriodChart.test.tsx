@@ -10,7 +10,8 @@ import { item, NOW, periodCard, TZ } from "./testSeason"
 const render = (
   cards: ReturnType<typeof periodCard>[],
   state: Partial<PeriodState> = {},
-  chosen: string | null = null
+  chosen: string | null = null,
+  colors?: { a: string; b: string }
 ) =>
   renderToStaticMarkup(
     createElement(PeriodChart, {
@@ -25,6 +26,7 @@ const render = (
       timeZone: TZ,
       chosen,
       onChoose: () => {},
+      colors,
     })
   )
 
@@ -97,5 +99,37 @@ describe("Verlauf je Monat und im Vergleich", () => {
     expect(count(html, /data-compare-point="true"/g)).toBe(3)
     expect(count(html, /data-card-point="/g)).toBe(6)
     expect(html).not.toContain("data-band")
+  })
+
+  it("mit Farben der Seiten: A gefüllt, B als Ring, Legende gleich; Achsen und Lineal bleiben", () => {
+    const now = TWELVE.slice(6)
+    const before = [9, 10, 9].map((v, i) => periodCard(`v${i}`, 100 + i, [v * 10]))
+    const cards = [...now, ...before]
+    const plain = render(cards, { compare: { type: "previous" } }, now[2].id)
+    const html = render(cards, { compare: { type: "previous" } }, now[2].id, {
+      a: "var(--compare-a)",
+      b: "var(--compare-b)",
+    })
+    // vorher: Farbe der App und leiser Ring
+    expect(plain).toContain('fill="var(--primary)"')
+    expect(plain).toMatch(/data-compare-point="true"[^>]*stroke="var\(--muted-foreground\)"/)
+    // mit Farben: keine Seite mehr in der Farbe der App oder leise
+    expect(html).not.toContain("var(--primary)")
+    expect(html).not.toContain('stroke="var(--muted-foreground)"')
+    const legend = html.slice(
+      html.indexOf("data-legend"),
+      html.indexOf("</svg>", html.indexOf("data-legend") + 400) + 6
+    )
+    expect(legend).toContain('fill="var(--compare-a)"')
+    expect(html).toMatch(/<circle[^>]*fill="none"[^>]*stroke="var\(--compare-b\)"/)
+    expect(
+      count(html, /data-compare-point="true"[^>]*fill="none"[^>]*stroke="var\(--compare-b\)"/g)
+    ).toBe(3)
+    expect(
+      count(html, /<g data-card-point="[^"]*"[^>]*><circle[^>]*fill="var\(--compare-a\)"/g)
+    ).toBe(6)
+    // Lineal und Achsen wie vorher
+    expect(html).toContain('data-ruler="true"')
+    expect(html.match(/data-ruler="true"[^>]*stroke="([^"]*)"/)?.[1]).toBe("var(--foreground-2)")
   })
 })

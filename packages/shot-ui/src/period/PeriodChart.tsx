@@ -49,7 +49,14 @@ export interface PeriodChartProps {
   chosen: string | null
   /** das Lineal wählt eine Scheibe (null: keine), ohne Umschalten (Aktion „pick“) */
   onChoose: (id: string | null) => void
+  /**
+   * Farben der Seiten: `a` der Zeitraum (Punkte, Linie, Band), `b` der Vergleich (Ringe, gestrichelte Linie). Vorgabe:
+   * die Farbe der App und ein leiser Ring. Vergleichen gibt die Farben seines Bilds mit (`SIDE_COLORS`)
+   */
+  colors?: { a: string; b: string }
 }
+
+const COLORS = { a: "var(--primary)", b: "var(--muted-foreground)" }
 
 const path = (points: readonly (readonly [number, number])[]) =>
   points.map(([x, y], i) => `${i ? "L" : "M"}${x.toFixed(1)} ${y.toFixed(1)}`).join("")
@@ -75,7 +82,14 @@ export function monthStarts(fromMs: number, toMs: number, timeZone: string): num
  * der Vergleich hohl und grau, ohne Band. Das Lineal wählt in „je Scheibe“ die Scheibe der Seite, sonst liest es
  * nur ab; darunter „Werte als Tabelle“. Ohne zwei Werte ein Satz statt des Diagramms.
  */
-export function PeriodChart({ width, model, timeZone, chosen, onChoose }: PeriodChartProps) {
+export function PeriodChart({
+  width,
+  model,
+  timeZone,
+  chosen,
+  onChoose,
+  colors = COLORS,
+}: PeriodChartProps) {
   const words = usePeriodWords()
   const { values, trend, months, metric, range, compareRange } = model
   const compare = model.compareValues
@@ -223,20 +237,13 @@ export function PeriodChart({ width, model, timeZone, chosen, onChoose }: Period
         <div data-legend className="flex flex-wrap gap-x-4 gap-y-1 text-[13px] text-foreground-2">
           <span className="inline-flex items-center gap-[7px]">
             <svg viewBox="0 0 14 14" aria-hidden="true" className="size-3.5 shrink-0">
-              <circle cx={7} cy={7} r={4} fill="var(--primary)" stroke="var(--shot-edge)" />
+              <circle cx={7} cy={7} r={4} fill={colors.a} stroke="var(--shot-edge)" />
             </svg>
             {range.label}
           </span>
           <span className="inline-flex items-center gap-[7px]">
             <svg viewBox="0 0 14 14" aria-hidden="true" className="size-3.5 shrink-0">
-              <circle
-                cx={7}
-                cy={7}
-                r={4}
-                fill="none"
-                stroke="var(--muted-foreground)"
-                strokeWidth={1.5}
-              />
+              <circle cx={7} cy={7} r={4} fill="none" stroke={colors.b} strokeWidth={1.5} />
             </svg>
             {compareRange?.label}
           </span>
@@ -265,7 +272,7 @@ export function PeriodChart({ width, model, timeZone, chosen, onChoose }: Period
           </g>
         ))}
         {bandPath && (
-          <path data-band d={bandPath} fill="var(--primary)" fillOpacity={0.12} stroke="none" />
+          <path data-band d={bandPath} fill={colors.a} fillOpacity={0.12} stroke="none" />
         )}
         {mode === "months" &&
           months.map((m, i) => (
@@ -278,7 +285,7 @@ export function PeriodChart({ width, model, timeZone, chosen, onChoose }: Period
                   width={3}
                   height={Math.max(1, y(m.p10) - y(m.p90))}
                   rx={1.5}
-                  fill="var(--primary)"
+                  fill={colors.a}
                   fillOpacity={0.45}
                 />
               )}
@@ -286,7 +293,7 @@ export function PeriodChart({ width, model, timeZone, chosen, onChoose }: Period
                 cx={xMonth(i)}
                 cy={y(m.median)}
                 r={4.5}
-                fill="var(--primary)"
+                fill={colors.a}
                 stroke="var(--shot-edge)"
               />
               <text x={xMonth(i)} y={HEIGHT - 22} textAnchor="middle">
@@ -302,7 +309,7 @@ export function PeriodChart({ width, model, timeZone, chosen, onChoose }: Period
             <path
               d={path(compareTrend.map((p, i) => [xIndex(i), y(p.mean)] as const))}
               fill="none"
-              stroke="var(--muted-foreground)"
+              stroke={colors.b}
               strokeWidth={2}
               strokeDasharray="5 4"
               strokeLinejoin="round"
@@ -315,7 +322,7 @@ export function PeriodChart({ width, model, timeZone, chosen, onChoose }: Period
                 cy={cy}
                 r={4}
                 fill="none"
-                stroke="var(--muted-foreground)"
+                stroke={colors.b}
                 strokeWidth={1.5}
               />
             ))}
@@ -328,7 +335,7 @@ export function PeriodChart({ width, model, timeZone, chosen, onChoose }: Period
                 data-mean="partial"
                 d={path(line.partial)}
                 fill="none"
-                stroke="var(--primary)"
+                stroke={colors.a}
                 strokeWidth={2}
                 strokeDasharray="4 4"
                 strokeLinejoin="round"
@@ -339,7 +346,7 @@ export function PeriodChart({ width, model, timeZone, chosen, onChoose }: Period
                 data-mean="full"
                 d={path(line.full)}
                 fill="none"
-                stroke="var(--primary)"
+                stroke={colors.a}
                 strokeWidth={2}
                 strokeLinejoin="round"
                 strokeLinecap="round"
@@ -371,8 +378,8 @@ export function PeriodChart({ width, model, timeZone, chosen, onChoose }: Period
                     cx={cx}
                     cy={cy}
                     r={picked ? 5 : 4}
-                    fill={probeOnly ? "var(--card)" : "var(--primary)"}
-                    stroke={probeOnly ? "var(--primary)" : "var(--shot-edge)"}
+                    fill={probeOnly ? "var(--card)" : colors.a}
+                    stroke={probeOnly ? colors.a : "var(--shot-edge)"}
                     strokeWidth={probeOnly ? 1.5 : 1}
                   />
                 </g>

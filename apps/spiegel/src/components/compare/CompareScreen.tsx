@@ -8,7 +8,11 @@ import { helpForMetric } from "@vereinsheim/shot-help/lookup"
 import { ChartSlot } from "@vereinsheim/shot-ui/analysis/charts/frame"
 import { CardChoiceSheet, PeriodChoiceSheet } from "@vereinsheim/shot-ui/compare/ChoiceSheets"
 import { CompareControls, type CompareSideKey } from "@vereinsheim/shot-ui/compare/CompareControls"
-import { ComparePicture, SideLegend } from "@vereinsheim/shot-ui/compare/ComparePicture"
+import {
+  ComparePicture,
+  SIDE_COLORS,
+  SideLegend,
+} from "@vereinsheim/shot-ui/compare/ComparePicture"
 import { CompareTable } from "@vereinsheim/shot-ui/compare/CompareTable"
 import { basisText, compareSentence, pictureLegend } from "@vereinsheim/shot-ui/compare/words"
 import { ScoringChip } from "@vereinsheim/shot-ui/controls/ScoringChip"
@@ -247,6 +251,8 @@ export function CompareScreen({
                                     timeZone={context.timeZone}
                                     chosen={chosen}
                                     onChoose={setChosen}
+                                    // A und B in den Farben von Bild und Legende darüber
+                                    colors={SIDE_COLORS}
                                   />
                                 )}
                               </ChartSlot>
