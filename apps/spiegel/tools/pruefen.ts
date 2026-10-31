@@ -637,8 +637,18 @@ const record = (checks: Check[]) => {
 async function phoneNoSideScroll(page: Page) {
   record(
     await noSideScroll(page, {
+      minFieldPx: 16,
       base: BASE,
-      paths: ["/", "/cards", "/progress", "/compare", "/compare?type=cards", "/compare?type=kind"],
+      paths: [
+        "/",
+        "/cards",
+        "/progress",
+        "/compare",
+        "/compare?type=cards",
+        "/compare?type=kind",
+        "/scan",
+        "/profile",
+      ],
       widths: [390, 375],
     })
   )
@@ -2192,7 +2202,14 @@ async function warmup(page: Page) {
       wide.join(" | ")
     )
   }
-  record(await noSideScroll(page, { base: BASE, paths: ["/cards"], widths: [390, 360] }))
+  record(
+    await noSideScroll(page, {
+      minFieldPx: 16,
+      base: BASE,
+      paths: ["/cards"],
+      widths: [390, 360],
+    })
+  )
 
   await page.viewport(390, 844)
   await page.goto(`${BASE}/progress?range=all`)
@@ -2234,7 +2251,12 @@ async function warmup(page: Page) {
   await page.click(`button("Übernehmen", ${picker})`, { settle: 300 })
   await page.waitFor(`!location.search.includes("warmup=1")`, 10_000)
   record(
-    await noSideScroll(page, { base: BASE, paths: ["/progress?range=all"], widths: [390, 360] })
+    await noSideScroll(page, {
+      minFieldPx: 16,
+      base: BASE,
+      paths: ["/progress?range=all"],
+      widths: [390, 360],
+    })
   )
 
   const errors = page.errors.length
@@ -2731,6 +2753,7 @@ async function detailLevels(page: Page, href: string) {
     )
     record(
       await noSideScroll(page, {
+        minFieldPx: 16,
         base: BASE,
         paths: [`/cards?provenance=${provenance}`],
         widths: [375],
@@ -2848,7 +2871,14 @@ async function detailLevels(page: Page, href: string) {
     states.map((s) => s.meta)
   )
   if (series[0]) {
-    record(await noSideScroll(page, { base: BASE, paths: [series[0].href], widths: [375] }))
+    record(
+      await noSideScroll(page, {
+        minFieldPx: 16,
+        base: BASE,
+        paths: [series[0].href],
+        widths: [375],
+      })
+    )
     await page.viewport(1280, 900)
   }
 

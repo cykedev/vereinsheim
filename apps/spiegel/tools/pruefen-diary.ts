@@ -353,6 +353,7 @@ async function run(page: Page, { base, check, record }: Context) {
   // kein seitliches Scrollen
   record(
     await noSideScroll(page, {
+      minFieldPx: 16,
       base,
       paths: ["/diary", "/diary/thread", "/diary/new", `/diary/${first}`, `/diary/${second}`],
       widths: [390, 360],
@@ -605,6 +606,7 @@ async function goals(page: Page, { base, check, record }: Context) {
   // Telefon, schmal: kein seitliches Scrollen
   record(
     await noSideScroll(page, {
+      minFieldPx: 16,
       base,
       paths: ["/diary/goals", goalPath, "/diary/goals/new", `${goalPath}/edit`],
       widths: [390, 360],
@@ -731,6 +733,7 @@ async function routines(page: Page, { base, check, record }: Context) {
 
   record(
     await noSideScroll(page, {
+      minFieldPx: 16,
       base,
       paths: [
         "/diary/routines",
@@ -859,6 +862,7 @@ async function analysis(page: Page, { base, check, record }: Context) {
 
   record(
     await noSideScroll(page, {
+      minFieldPx: 16,
       base,
       paths: ["/diary/analysis", "/diary/analysis/energy"],
       widths: [390, 360],

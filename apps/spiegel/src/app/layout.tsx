@@ -5,6 +5,7 @@ import { ThemeProvider, ThemeScript } from "@vereinsheim/ui/design2/theme"
 import { Toaster } from "@vereinsheim/ui/design2/toaster"
 
 import "./globals.css"
+import "./fields.css"
 
 // Schriften von Design 2, beim Build geladen und selbst ausgeliefert (keine Anfrage an Google beim Aufruf)
 const archivo = Archivo({ subsets: ["latin"], axes: ["wdth"], variable: "--font-archivo" })

@@ -10,7 +10,18 @@ export interface Check {
   detail: string
 }
 
-/** jede Seite bei jeder Breite ohne seitliches Scrollen; das Detail nennt die drei Elemente, die am weitesten ragen */
+/** die Felder zum Schreiben oder Wählen einer Seite, deren Schrift kleiner ist als `px`, als „input:text 15px“ */
+const smallFields = (px: number) =>
+  `$$("input, textarea, select")
+    .filter((el) => !["checkbox", "radio", "range", "file", "color", "hidden", "submit", "button", "reset", "image"].includes(el.type))
+    .filter((el) => parseFloat(getComputedStyle(el).fontSize) < ${px})
+    .map((el) => el.tagName.toLowerCase() + (el.tagName === "INPUT" ? ":" + el.type : "") + (el.name ? "#" + el.name : "") + " " + getComputedStyle(el).fontSize)`
+
+/**
+ * jede Seite bei jeder Breite ohne seitliches Scrollen; das Detail nennt die drei Elemente, die am weitesten ragen. Mit
+ * `minFieldPx` dazu unter 768 px jedes Feld mit mindestens dieser Schrift: iOS Safari zoomt beim Fokus in ein Feld unter
+ * 16 px hinein und danach nicht zurück.
+ */
 export async function noSideScroll(
   page: Page,
   {
@@ -18,7 +29,8 @@ export async function noSideScroll(
     paths,
     widths,
     height = 844,
-  }: { base: string; paths: string[]; widths: number[]; height?: number }
+    minFieldPx,
+  }: { base: string; paths: string[]; widths: number[]; height?: number; minFieldPx?: number }
 ): Promise<Check[]> {
   const checks: Check[] = []
   for (const width of widths) {
@@ -33,6 +45,14 @@ export async function noSideScroll(
         ok: s.sw <= width,
         detail: `${s.sw} ${s.widest.join(" | ")}`,
       })
+      if (minFieldPx !== undefined && width < 768) {
+        const small = await page.ev<string[]>(smallFields(minFieldPx))
+        checks.push({
+          name: `Telefon ${width} px: ${path} Felder ab ${minFieldPx} px Schrift`,
+          ok: small.length === 0,
+          detail: small.join(" | "),
+        })
+      }
     }
   }
   return checks

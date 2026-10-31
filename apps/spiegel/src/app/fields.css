@@ -1,0 +1,25 @@
+/*
+ * Schrift der Felder am Telefon: iOS Safari zoomt beim Fokus in ein Feld mit weniger als 16 px Schrift hinein und
+ * danach nicht zurück, die Seite wirkt dann breiter als der Bildschirm. Unter 768 px hat deshalb jedes Feld zum
+ * Schreiben oder Wählen 16 px, ab 768 px gilt die Größe aus seinen Klassen. Die Regel steht ohne Ebene und geht so
+ * jeder Klasse von Tailwind vor (`text-sm`, `text-[15px]`), auch in den Bausteinen der Pakete. Der Viewport bleibt
+ * zoombar (kein `maximum-scale`).
+ */
+@media (width < 48rem) {
+  input:not(
+    [type="checkbox"],
+    [type="radio"],
+    [type="range"],
+    [type="file"],
+    [type="color"],
+    [type="hidden"],
+    [type="submit"],
+    [type="button"],
+    [type="reset"],
+    [type="image"]
+  ),
+  textarea,
+  select {
+    font-size: 16px;
+  }
+}
