@@ -454,7 +454,7 @@ Stand mit `past` (`MAX_OBSERVED_LAG_MS`, SF-79).
   `renderLink` geht nicht von der Server-Komponente aus). Der zweite Reiter „Scheiben“ führt zur zuletzt besuchten
   Liste (`useCardsLink` aus `src/components/shell/cards-link.tsx`, gesetzt in `AppShell`); auf `/cards` setzt die Seite
   dieselbe Reiterzeile über die Nahtstelle `cardsDiaryTabs` (`src/parts/diary-tabs.tsx`) als `tabs` in `ListScreen`, nur
-  mit Tagebuch. Die Leiste markiert dann auf Liste und Scheibe „Tagebuch“ (`barAreaOf`). Die Übernahme aus Treffsicher schreibt über
+  mit Tagebuch; `ListHeader` setzt sie wie im Tagebuch unter den Titel, vor die Filter. Die Leiste markiert dann auf Liste und Scheibe „Tagebuch“ (`barAreaOf`). Die Übernahme aus Treffsicher schreibt über
   `src/parts/transfer/run.ts`.
 - **Deine Daten** (Profil, `src/parts/account.ts`): `GET /api/account/export` gibt eine JSON-Datei als Strom
   (`resultsExport` in `src/lib/export/results.ts`, je 200 Scheiben eine Abfrage, und `diaryExport`), nur mit eigener

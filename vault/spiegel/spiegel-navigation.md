@@ -126,7 +126,7 @@ und über `nav/navigate`.
     Scheibe passte nicht mehr unter die Sprungleiste.
   - **Mit Tagebuch** ([[spiegel-diary]]) ist die untere Leiste Start, Tagebuch, Scheibe holen, Fortschritt, Profil;
     die Scheiben sind der zweite Reiter des Tagebuchs. Er führt zur zuletzt besuchten Liste (`useCardsLink`), auf
-    `/cards` steht dieselbe Reiterzeile mit „Scheiben“ gewählt, und auf der Liste und der Seite einer Scheibe ist in der
+    `/cards` steht dieselbe Reiterzeile mit „Scheiben“ gewählt, wie im Tagebuch unter dem Titel (vor den Filtern), und auf der Liste und der Seite einer Scheibe ist in der
     Leiste Tagebuch markiert (`barAreaOf`). Die Seite einer Scheibe hat keine Reiterzeile, sie hat ihren Rückweg. Die
     Seitenleiste nennt Tagebuch nach Scheiben, Scheiben bleiben dort. Ohne Tagebuch bleibt alles wie oben, auch ohne
     Reiterzeile auf `/cards`. Bis zum 31. Oktober 2026 standen die Scheiben am Telefon als „Alle Scheiben“ in Profil;

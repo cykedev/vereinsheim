@@ -207,7 +207,8 @@ angeboten. Eine gelöschte Scheibe steht als „Scheibe gelöscht“. Das Einles
   ebenso direkt).
 - Profil: Kasten „Tagebuch“ mit Ein- und Ausschalten. Papierkorb: „Einträge im Tagebuch“.
 - Liste der Scheiben: Ist das Tagebuch an, steht über ihr die Reiterzeile des Tagebuchs mit „Scheiben“ gewählt
-  (`src/parts/diary-tabs.tsx`, `cardsDiaryTabs`; die Seite reicht sie als `tabs` an `ListScreen`). Der Reiter führt zur
+  (`src/parts/diary-tabs.tsx`, `cardsDiaryTabs`; die Seite reicht sie als `tabs` an `ListScreen`, `ListHeader` setzt sie
+  wie im Tagebuch unter den Titel und vor die Filter). Der Reiter führt zur
   zuletzt besuchten Liste, die `AppShell` über `useCardsLink` (`src/components/shell/cards-link.tsx`) bereitstellt.
 
 ## Abschaltbar, Papierkorb, Datenschutz
