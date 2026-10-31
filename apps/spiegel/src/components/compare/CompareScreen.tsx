@@ -61,7 +61,7 @@ function backToCard(data: ComparePageData): Route | null {
 /**
  * Seite Vergleichen: oben der Umschalter „Zeitraum · Vergleichen“, der Kopf mit Art, Familie, den Seiten A und B und der
  * Wertung, dann die Antwort als Satz und im Raster der Seite das Bild beider Seiten neben der Tabelle aller Zahlen und
- * der Grundlage. Bei zwei Zeiträumen darunter Verlauf und Werte wie im Fortschritt (A gegen B), mit Sprungleiste. Jede
+ * der Grundlage. Bei zwei Zeiträumen darunter Verlauf und Zahlen wie im Fortschritt (A gegen B), mit Sprungleiste. Jede
  * Wahl ist eine neue Adresse, der Server rechnet neu; bis dahin wird die Seite leiser.
  */
 export function CompareScreen({
@@ -115,7 +115,7 @@ export function CompareScreen({
   const target = TARGETS[data.targetId]
   const sentence = model ? compareSentence(model) : null
   const close = () => setPicking(null)
-  // Verlauf und Werte nur bei zwei Zeiträumen: Sie lesen das Modell des Fortschritts für A gegen B
+  // Verlauf und Zahlen nur bei zwei Zeiträumen: Sie lesen das Modell des Fortschritts für A gegen B
   const withTrend = query.type === "periods" && period !== null
 
   return (
@@ -212,7 +212,7 @@ export function CompareScreen({
                     />
                     <SectionBlock
                       section={{
-                        id: "numbers",
+                        id: "comparison",
                         node: (
                           <div className="grid min-w-0 content-start gap-2">
                             <CompareTable model={model} onHelp={onHelp} />
@@ -263,7 +263,7 @@ export function CompareScreen({
                       <SectionBlock
                         last
                         section={{
-                          id: "values",
+                          id: "numbers",
                           node: (
                             <PeriodTiles
                               tiles={period.tiles}

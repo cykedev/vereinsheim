@@ -2482,8 +2482,9 @@ const sheetChoice = (label: string) =>
 const activeJump = `$$('nav[aria-label="Abschnitte"] [aria-current]').map(txt).join()`
 
 /**
- * Sprungleiste auf Vergleichen (zwei Zeiträume), am Telefon und am Desktop: oben „Bild“, ein Tipp auf „Zahlen“ markiert
- * „Zahlen“ (am Desktop in einer Zeile mit dem Bild), „Werte“ markiert „Werte“, „Bild“ führt zurück und markiert „Bild“,
+ * Sprungleiste auf Vergleichen (zwei Zeiträume), am Telefon und am Desktop: oben „Bild“, ein Tipp auf „Vergleich“
+ * markiert „Vergleich“ (am Desktop in einer Zeile mit dem Bild), „Zahlen“ markiert „Zahlen“, „Bild“ führt zurück und
+ * markiert „Bild“,
  * Scrollen zum Verlauf markiert „Verlauf“
  */
 async function compareJumps(page: Page): Promise<Check[]> {
@@ -2493,10 +2494,10 @@ async function compareJumps(page: Page): Promise<Check[]> {
     await page.viewport(width, width < 768 ? 844 : 900)
     await page.goto(`${BASE}${url}`)
     const top = await page.ev<string>(activeJump)
+    await page.click(`$('nav[aria-label="Abschnitte"] a[href="#comparison"]')`, { settle: 400 })
+    const comparison = await page.ev<string>(activeJump)
     await page.click(`$('nav[aria-label="Abschnitte"] a[href="#numbers"]')`, { settle: 400 })
     const numbers = await page.ev<string>(activeJump)
-    await page.click(`$('nav[aria-label="Abschnitte"] a[href="#values"]')`, { settle: 400 })
-    const values = await page.ev<string>(activeJump)
     await page.click(`$('nav[aria-label="Abschnitte"] a[href="#picture"]')`, { settle: 400 })
     const picture = await page.ev<{ active: string; top: number }>(
       `({ active: ${activeJump}, top: $("#picture").getBoundingClientRect().top })`
@@ -2505,15 +2506,15 @@ async function compareJumps(page: Page): Promise<Check[]> {
     await page.wait(200)
     const history = await page.ev<string>(activeJump)
     checks.push({
-      name: `Vergleichen ${width} px: die Sprungleiste folgt (oben Bild, Zahlen, Werte, zurück zu Bild, Verlauf)`,
+      name: `Vergleichen ${width} px: die Sprungleiste folgt (oben Bild, Vergleich, Zahlen, zurück zu Bild, Verlauf)`,
       ok:
         top === "Bild" &&
+        comparison === "Vergleich" &&
         numbers === "Zahlen" &&
-        values === "Werte" &&
         picture.active === "Bild" &&
         near(picture.top, 56, 3) &&
         history === "Verlauf",
-      detail: JSON.stringify({ top, numbers, values, picture, history }),
+      detail: JSON.stringify({ top, comparison, numbers, picture, history }),
     })
   }
   await page.viewport(1280, 900)
@@ -2523,7 +2524,7 @@ async function compareJumps(page: Page): Promise<Check[]> {
 
 /**
  * Seite Vergleichen: der Umschalter und der Weg aus dem Fortschritt, zwei Zeiträume mit Bild, Lupe, Tabelle, Verlauf und
- * Werten, das Blatt für B, eine alte Adresse mit `compare=`, Wettkampf und Training, zwei Scheiben von der Seite einer Scheibe mit dem Blatt
+ * Zahlen, das Blatt für B, eine alte Adresse mit `compare=`, Wettkampf und Training, zwei Scheiben von der Seite einer Scheibe mit dem Blatt
  * der Scheiben, und jedes Thema der Hilfe der Seite hat ein „?“.
  */
 async function compare(page: Page, href: string) {
@@ -2577,12 +2578,12 @@ async function compare(page: Page, href: string) {
     legend: $$("[data-compare-history] [data-legend] > span").map(txt),
     a: $$("[data-compare-history] svg[role] circle:not([data-compare-point])").length,
     b: $$("[data-compare-history] [data-compare-point]").length,
-    tiles: $$('[data-section="values"] [data-period-tile]').length,
-    compared: $$('[data-section="values"] [data-tile-compare]').length,
+    tiles: $$('[data-section="numbers"] [data-period-tile]').length,
+    compared: $$('[data-section="numbers"] [data-tile-compare]').length,
   })`)
   check(
-    "Zwei Zeiträume: Sprungleiste, Verlauf mit beiden Zeiträumen, Werte mit Vergleich",
-    trend.sections === "Bild · Zahlen · Verlauf · Werte" &&
+    "Zwei Zeiträume: Sprungleiste, Verlauf mit beiden Zeiträumen, Zahlen mit Vergleich",
+    trend.sections === "Bild · Vergleich · Verlauf · Zahlen" &&
       trend.legend.length === 2 &&
       trend.a > 0 &&
       trend.b > 0 &&

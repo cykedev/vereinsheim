@@ -76,11 +76,16 @@ describe("aktiver Abschnitt", () => {
   })
 
   it("nebeneinander (gleicher Anfang) gilt der angesprungene, sonst der späteste", () => {
-    // Vergleichen ab 768 px: Bild und Zahlen in einer Zeile, darunter Verlauf und Werte
-    const row = [box("picture", 56), box("numbers", 56), box("history", 700), box("values", 1100)]
+    // Vergleichen ab 768 px: Bild und Vergleich in einer Zeile, darunter Verlauf und Zahlen
+    const row = [
+      box("picture", 56),
+      box("comparison", 56),
+      box("history", 700),
+      box("numbers", 1100),
+    ]
     expect(activeSection(row, false, "picture")).toBe("picture")
-    expect(activeSection(row, false, "numbers")).toBe("numbers")
-    expect(activeSection(row)).toBe("numbers")
+    expect(activeSection(row, false, "comparison")).toBe("comparison")
+    expect(activeSection(row)).toBe("comparison")
     // weiter gescrollt bleibt der angesprungene, solange die Zeile die späteste ist
     const scrolled = row.map((b) => ({ ...b, top: b.top - 300 }))
     expect(activeSection(scrolled, false, "picture")).toBe("picture")

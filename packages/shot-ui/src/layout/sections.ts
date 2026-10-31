@@ -33,12 +33,12 @@ export function periodSections(show: PeriodShow) {
   )
 }
 
-/** Abschnitte der Seite Vergleichen bei zwei Zeiträumen: Bild und Zahlen nebeneinander, darunter Verlauf und Werte */
+/** Abschnitte der Seite Vergleichen bei zwei Zeiträumen: Bild und Vergleich nebeneinander, darunter Verlauf und Zahlen */
 export const COMPARE_SECTIONS = [
   { id: "picture", label: "Bild" },
-  { id: "numbers", label: "Zahlen" },
+  { id: "comparison", label: "Vergleich" },
   { id: "history", label: "Verlauf" },
-  { id: "values", label: "Werte" },
+  { id: "numbers", label: "Zahlen" },
 ] as const
 
 export type CompareSection = (typeof COMPARE_SECTIONS)[number]["id"]

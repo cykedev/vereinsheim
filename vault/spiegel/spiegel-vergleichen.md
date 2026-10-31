@@ -84,11 +84,12 @@ Fortschritt und am Desktop über einen Untereintrag. Der Vergleich aus dem Forts
    Schuss, 1 ohne Werte.“
 3. **Raster wie Scheibe und Fortschritt:** linksbündig, nicht zentriert; ab 768 px links das Bild, rechts Tabelle und
    Grundlage (`PAGE_COLUMNS`).
-4. **Verlauf und Werte bei zwei Zeiträumen** (31. Oktober 2026, Befund des Users am iPhone): Unter Bild und Tabelle
+4. **Verlauf und Zahlen bei zwei Zeiträumen** (31. Oktober 2026, Befund des Users am iPhone): Unter Bild und Tabelle
    stehen wieder der Verlauf A gegen B (`PeriodChart` mit `compareRange`, Scheiben übereinander, Legende mit beiden
    Namen, A und B in den Farben von Bild und Legende: `PeriodChart.colors` mit `SIDE_COLORS`, A gefüllt, B als Ring) und
    die Kacheln „Zahlen über den Zeitraum“ mit dem Wert von B (`PeriodTiles`), je mit „?“ wie im Fortschritt.
-   Darüber eine Sprungleiste „Bild · Zahlen · Verlauf · Werte“ (`COMPARE_SECTIONS`). Beides gab es im Fortschritt, bis
+   Darüber eine Sprungleiste „Bild · Vergleich · Verlauf · Zahlen“ (`COMPARE_SECTIONS`, Anker `#picture`,
+   `#comparison`, `#history`, `#numbers`; Wortlaut vom User freigegeben). Beides gab es im Fortschritt, bis
    der Vergleich hierher zog. Der Server rechnet dafür in `comparePageData` ein `periodModel` über dieselben Scheiben der
    Familie (A als Zeitraum, B schon aufgelöst als `compareTo`, Art, Einschießen und Wertung der Seite) und gibt
    `lightPeriodModel` weiter, ohne Schüsse. Die Kennzahl des Verlaufs ist der Ø je Schuss, eine Wahl gibt es hier nicht.

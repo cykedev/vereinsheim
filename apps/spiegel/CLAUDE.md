@@ -89,7 +89,7 @@ Stand mit `past` (`MAX_OBSERVED_LAG_MS`, SF-79).
   Modell aus `shot-ui/compare` und die Scheiben der Familie fürs Blatt, nie Schüsse. Jede Wahl ist eine neue Adresse
   (`router.push`). Bei zwei Zeiträumen rechnet der Server dazu das Modell des Fortschritts (`period`: `periodModel` mit
   A als Zeitraum und B als `compareTo`, weitergegeben als `lightPeriodModel`); die Seite zeigt damit unter Bild und
-  Tabelle Verlauf und Werte wie im Fortschritt, mit Sprungleiste (`COMPARE_SECTIONS`). Die Seite einer Scheibe bietet
+  Tabelle Verlauf und Zahlen wie im Fortschritt, mit Sprungleiste „Bild · Vergleich · Verlauf · Zahlen“ (`COMPARE_SECTIONS`). Die Seite einer Scheibe bietet
   „Mit der Scheibe davor vergleichen“ (`CompareWithPrevious`).
 - **Privat ist Standard** ([[spiegel-privacy]]): Jeder Lesezugriff filtert nach dem angemeldeten Schützen, auch für
   Admins. Admin verwaltet Konten und sieht keine fremden Schüsse. Einzige Ausnahme: eine Scheibe, die ihr Schütze per
