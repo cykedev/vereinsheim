@@ -11,7 +11,7 @@ export function diaryOn(): Decision {
     about: "Du schaltest das Tagebuch ein.",
     happens: [
       "In der unteren Leiste steht dann „Tagebuch“ statt „Scheiben“.",
-      "Alle Scheiben findest du dann im Profil und über Start. Am Computer stehen sie weiter in der Seitenleiste.",
+      "Deine Scheiben findest du dann im Tagebuch unter ‚Scheiben‘. Am Computer stehen sie weiter in der Seitenleiste.",
       "Nur du siehst dein Tagebuch. Der Admin sieht nichts davon.",
     ],
     notHappening: ["An deinen Scheiben ändert sich nichts."],

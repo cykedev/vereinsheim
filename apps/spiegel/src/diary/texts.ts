@@ -5,7 +5,7 @@
 export const PROFILE_TEXTS = {
   title: "Tagebuch",
   off: "Aus. Im Tagebuch hältst du fest, was du dir vornimmst, wie es lief und was du daraus lernst.",
-  on: "An. In der unteren Leiste steht Tagebuch statt Scheiben. Alle Scheiben findest du oben und über Start.",
+  on: "An. In der unteren Leiste steht Tagebuch statt Scheiben. Deine Scheiben findest du im Tagebuch unter ‚Scheiben‘.",
   turnOn: "Einschalten",
   turnOff: "Ausschalten",
   turnedOn: "Tagebuch eingeschaltet.",
