@@ -498,6 +498,14 @@ sind 6 Konten, je Exit 0 ohne Befund, Speicher je Lauf höchstens 186 MiB. Folge
 `vereinsheim_uploads_spiegel` ohne seine Labels angelegt ist; die `DeprecationWarning` von `pg` (zwei Abfragen zugleich
 auf einer Verbindung der Übernahme, scheitert erst mit `pg` 9); 3d; Stufe 4 mit Zeitplan für die Mitglieder.
 
+**Fünftes Release am 31. Oktober 2026: U1** (`main` per Fast-forward auf `c30676d5`, nur Spiegel über
+`APPS="spiegel"`, vom User): Scheiben als Reiter des Tagebuchs, Felder am Telefon in 16 px, Verlauf und Zahlen zweier
+Zeiträume in Vergleichen, unter „Fragen“ das Gelernte vor der Frage. Keine Migration, kein neuer Vertrag, keine neue
+Brücke. Vorher Stack-Test mit den echten Images in Ordnung (Spiegel Spitze 132 MiB). Ringwerk und Treffsicher liefen
+unverändert weiter; Treffsicher nutzt `shot-ui` und bekommt dessen Stand erst mit seinem nächsten Image, ohne andere
+Bedienung. Offen: am iPhone prüfen (kein Zoom beim Tippen in ein Feld des Tagebuchs, Reiter „Scheiben“, Sprungleiste in
+Vergleichen). Speicher erst nach einigen Tagen auf dem VPS messen und mit Stufe 4 neu verteilen ([[vps-resource-sizing]]).
+
 ## Wie es weitergeht
 
 1. **1d Handeingabe** ist in `main` (`dbc9e45c`, Migration `20261028120000_hand_entry`, keine neue Brücke) und wartet
@@ -549,7 +557,7 @@ Befund aus dem Review von 2a).
 | 3c   | `plans/2026-10-29-tis-3c-warmup.md`          | `feat/tis-3c-warmup` (von `main`)          | `tis-3c-warmup`          | in `main` (`52dffad1`), deployt (bis 30.10.); Plan entfernt |
 | 3d   |                                              | (vom Basis)                                |                          | entschieden (29.10.), Plan offen                        |
 | 3e   | `plans/2026-10-29-tis-3e-read-only.md`       | `feat/tis-3e-read-only` (von `main`)       | `tis-3e-read-only`       | in `main` (`0000933f`), deployt (bis 30.10.); Plan entfernt |
-| U1   | `plans/2026-10-31-tis-u1-nav-compare.md`     | `feat/tis-u1-nav-compare` (vom Basis)      | `tis-u1-nav-compare`     | Basisbranch (`27527ac0`), Plan entfernt; nicht deployt    |
+| U1   | `plans/2026-10-31-tis-u1-nav-compare.md`     | `feat/tis-u1-nav-compare` (vom Basis)      | `tis-u1-nav-compare`     | deployt 31.10. (`main` `c30676d5`), Plan entfernt         |
 | 4    |                                              |                                            |                          | offen                                                   |
 
 ## Verification
