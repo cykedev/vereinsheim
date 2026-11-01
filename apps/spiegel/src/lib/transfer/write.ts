@@ -10,11 +10,15 @@ import type { DetailsInput } from "../entered/details"
 import { attachEvidenceIn, type Attached } from "../evidence/attach"
 import type { EvidenceType } from "../evidence/files"
 import { importPrintoutIn, type ImportResult } from "../fetch-card/import"
-import { newCardValues, ownCardOfEvening } from "../fetch-card/queries"
-import { attachPrintout, markPrintoutValues } from "../printouts/queries"
+import { ownCardOfEvening } from "../fetch-card/queries"
+import {
+  adoptPrintoutValues,
+  printoutFits,
+  type AdoptOutcome,
+  type TransferredUnit,
+} from "../fetch-card/transferred"
+import { attachPrintout } from "../printouts/queries"
 import type { StoredPrintout } from "../printouts/store"
-import { scoringReading } from "../printouts/values"
-import { printoutFits } from "./printout-fit"
 
 type Tx = Prisma.TransactionClient
 
@@ -61,52 +65,6 @@ export async function writeTransferCard(
       })
   }
   return written
-}
-
-/**
- * Die Werte eines passenden Ausdrucks als neue Revision über den Zahlen aus Treffsicher: Die Scheibe wird „vom Ausdruck“
- * (`detailsWriter` erlaubt `treffsicher` → `pdf`), Revision 1 bleibt. Beginn und Art bleiben wie bei
- * `applyPrintoutValues`. Ein Ausdruck im Modus Probe gibt seine Schüsse als Wertung (`scoringReading`, wie in
- * `printoutFits`). Ohne Werte, die das Scheibenbild annimmt, nichts (`noValues`, der Ausdruck `inconsistent`).
- */
-export type AdoptOutcome = "adopted" | "noValues" | Exclude<EnteredResult["kind"], "saved">
-
-export async function adoptPrintoutValues(
-  tx: Tx,
-  input: { cardId: string; ownerId: string; file: StoredPrintout; printoutId: string }
-): Promise<AdoptOutcome> {
-  const card = await tx.card.findUniqueOrThrow({
-    where: { id: input.cardId },
-    select: {
-      disciplineId: true,
-      startedAt: true,
-      kind: true,
-      discipline: { select: { targetId: true } },
-    },
-  })
-  const reading = input.file.values.reading
-  const file =
-    reading === null
-      ? input.file
-      : { ...input.file, values: { ...input.file.values, reading: scoringReading(reading) } }
-  const values = newCardValues(file, card.discipline.targetId)
-  if (!Object.keys(values.details).length) {
-    if (values.inconsistent) await markPrintoutValues(tx, input.printoutId, "inconsistent")
-    return "noValues"
-  }
-  const saved = await writeEnteredCardIn(tx, {
-    cardId: input.cardId,
-    ownerId: input.ownerId,
-    origin: "pdf",
-    disciplineId: card.disciplineId,
-    startedAtMs: card.startedAt.getTime(),
-    kind: card.kind,
-    details: values.details,
-    ...(values.stand === undefined ? {} : { stand: values.stand }),
-    reason: "printout",
-  })
-  if (saved.kind === "invalid") await markPrintoutValues(tx, input.printoutId, "inconsistent")
-  return saved.kind === "saved" ? "adopted" : saved.kind
 }
 
 /** ein Anhang aus Treffsicher, gelesen und geprüft vor der Transaktion */
@@ -156,12 +114,7 @@ export async function placeAttachment(
     timeZone: string
     /** die Scheibe der Einheit (neu, unsicher oder die erste passende); null ohne */
     card: { id: string } | null
-    unit: {
-      day: string
-      scoring: "WHOLE" | "TENTH"
-      shots: number
-      total: { rings?: number | null; decimalTenths?: number | null } | null
-    } | null
+    unit: TransferredUnit | null
     attachment: PreparedAttachment
   }
 ): Promise<PlacedAttachment> {
