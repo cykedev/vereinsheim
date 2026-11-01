@@ -3,7 +3,7 @@ id: spiegel-account-transfer
 type: operation
 title: "Spiegel — Übernahme aus Treffsicher: Abgleich der Konten und Lauf je Konto"
 aliases: [kontenabgleich, account-match, zuordnung-der-konten, übernahme-eines-kontos, account-transfer]
-keywords: [vereinsheim transfer, transfer-spiegel, transfer.mjs, transfer-ops, transfer-mapping, zuordnungsdatei, owners.txt, saved, exit 6, transfer mark, transfer status, fitsenteredtotal, kindchoice, betrieb, vps, runtransfer, decidecard, checktransfer, prüfbestand, geändertes bleibt, movedtospiegelat, umgezogen, --family, nodiscipline, unknownfamily, exit-code, probelauf, dry-run, ausdruck übernehmen, printoutfits, vorschau, treffsicher:preview-, entryfromsession, treffsicherdetails, übernahme, treffsicher, konten, e-mail, zuordnung, mapping, csv, transfer, verdacht, levenshtein, stufe 3, personendaten, reports]
+keywords: [vereinsheim transfer, transfer-spiegel, transfer.mjs, transfer-ops, transfer-mapping, zuordnungsdatei, owners.txt, saved, exit 6, transfer mark, transfer status, fitsenteredtotal, kindchoice, betrieb, vps, runtransfer, decidecard, checktransfer, prüfbestand, geändertes bleibt, movedtospiegelat, umgezogen, --family, nodiscipline, unknownfamily, exit-code, probelauf, dry-run, ausdruck übernehmen, printoutfits, später geholter ausdruck, transferredcardsfitting, adoptintotransferred, matchtransferred, vorschau, treffsicher:preview-, entryfromsession, treffsicherdetails, übernahme, treffsicher, konten, e-mail, zuordnung, mapping, csv, transfer, verdacht, levenshtein, stufe 3, personendaten, reports]
 part_of: ["[[spiegel]]"]
 governed_by: ["[[adr-033]]", "[[adr-029]]", "[[adr-002]]"]
 documented_in: ["[[operations#Übernahme aus Treffsicher]]"]
@@ -129,6 +129,32 @@ Bericht; Schritte eines Ablaufs in ihrer Reihenfolge, ungültige als ein Schritt
 
 Ein neues Konto bekommt Name, Passwort-Hash und Aktiv-Status aus Treffsicher, die Rolle Schütze und keinen verlangten
 Passwortwechsel; beim ersten Lauf wird das Tagebuch eingeschaltet.
+
+### Später geholter Ausdruck
+
+Die meisten übernommenen Scheiben haben keinen Ausdruck. Holt der Schütze ihn später (Kamera, Link, Upload unter
+„Scheibe holen“ oder `printout-import`), sucht Spiegel die passende Scheibe aus Treffsicher, statt eine zweite
+anzulegen (3d, freigegeben am 1. November 2026). Die Regel ist dieselbe wie in der Übernahme, beide Wege nutzen
+`src/lib/fetch-card/transferred.ts`:
+
+- **Welche:** eigene Scheiben mit Herkunft `treffsicher`, nicht im Papierkorb, ohne Brücke, am Abend des Ausdrucks
+  (`transferredCardsFitting`). Ob eine passt, entscheidet `printoutFits`. Wertung und Schusszahl kommen aus der
+  aktuellen Revision: Zehntel, wenn sie ein Gesamtergebnis in Zehnteln hat, sonst ganze Ringe; ohne Schusszahl passt
+  keine. An 8 Abenden der Prod-Kopie gibt es mehrere übernommene Scheiben derselben Disziplin, deshalb entscheidet das
+  Ergebnis, nicht Tag und Disziplin.
+- **Wann:** erst wenn keine eigene Scheibe des Abends da ist und nichts sperrt; in `fetchCard` nur ohne eigene
+  Löschsperre an diesem Abend und nur mit PDF (eine getippte ID hat keine Werte).
+- **Genau eine:** `adoptIntoTransferred` sperrt die Scheibe, hängt den Ausdruck an und übernimmt seine Werte
+  (`adoptPrintoutValues`, Revision dazu, Herkunft `pdf`). Die ID bleibt, Verknüpfungen im Tagebuch also auch. Mit
+  Werten bekommt sie unter „Scheibe holen“ einen Auftrag an die Brücke (ein älterer offener ohne Scheibe für dieselbe
+  ID und denselben Tag bekommt sie). Ohne Werte bleibt sie aus Treffsicher und bekommt keinen Auftrag: Die Brücke füllt
+  nur Scheiben vom Ausdruck, ein Auftrag ergäbe eine zweite Scheibe. `printout-import` legt wie sonst keinen an.
+- **Mehrere:** Spiegel rät nicht und legt wie bisher eine neue Scheibe an; das Blatt „Neue Scheibe“ sagt es,
+  `printout-import` zählt den Fall. Keine der passenden ändert sich.
+- **Die Übernahme sucht nicht:** `placeAttachment` ruft `importPrintoutIn` mit `matchTransferred: false`. Sonst hinge
+  ein Ausdruck ohne Scheibe seiner Einheit an der einer anderen Einheit.
+
+Seriensummen vergleicht `printoutFits` nicht, wie in der Übernahme.
 
 ### Hauptbuch: geändert, gelöscht, nie platziert
 

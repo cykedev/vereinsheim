@@ -366,6 +366,12 @@ Stand mit `past` (`MAX_OBSERVED_LAG_MS`, SF-79).
     Scheibe bekommt sie). Öffnet oder holt es eine Scheibe vom Ausdruck ohne Brücke zurück, nimmt sie die Werte ihrer
     Ausdrucke an (`applyPrintoutValues`). Die eigene Scheibe des Abends sucht `ownCardOfEvening`, auch für den Import
     alter Ausdrucke (`fetch-card/import.ts`, ohne Auftrag).
+  - **Scheibe aus Treffsicher** (`fetch-card/transferred.ts`, [[spiegel-account-transfer]] „Später geholter Ausdruck“):
+    Ohne eigene Scheibe des Abends, nicht gesperrt, mit PDF und ohne eigene Löschsperre sucht `fetchCard` vor `choose`
+    die übernommenen Scheiben des Abends (`transferredCardsFitting`, Regel `printoutFits`). Genau eine: `matched`,
+    `adoptIntoTransferred` (Sperre, Ausdruck, Werte als Revision), mit Werten ein Auftrag. Mehrere: `choose` mit
+    `several`, das Blatt sagt es (`SEVERAL_TRANSFERRED`). `importPrintoutIn` sucht ebenso (`matched`, `created` mit
+    `several`); die Übernahme ruft es mit `matchTransferred: false`.
   - Actions in `fetch-card/actions.ts` (`fetchCardByLink`, `fetchCardByUpload`, `fetchCardById`, `stopCardFetch`), Texte
     in `fetch-card/texts.ts`, Dialoge `cardFetchStop`, `cardFetchDismiss`.
   - **Gefüllt** heißt: Die Scheibe des Auftrags hat eine Quelle (`UNFILLED` in `card-requests/queries.ts`). Heartbeat

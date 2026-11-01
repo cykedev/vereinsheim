@@ -3,10 +3,10 @@ id: spiegel-assignment
 type: concept
 title: "Spiegel — Zuordnung von Scheiben zu Schützen"
 aliases: [zuordnung, claim, scheibe-holen, fundbüro]
-keywords: [zuordnung, werte vom ausdruck, vorbelegung, schuss für schuss, printedshotsfit, printout-import, claim, kamera-scan, scheibe holen, holen, scan, qr scannen, link einfügen, pdf hochladen, id eintippen, neue scheibe, wartet auf die anlage, passt nicht zum ausdruck, printMismatch, nicht mehr holen, fenster der aufträge, warteschlange, grenze von zehn, windowat, teilen, druckzeit, metadaten, layout-unabhängig, besitzer, meyton-qr, qr-code, ausdruck, pdf, scheibenid, sportpass, schützenliste, frei getippte namen, fundbüro, scheibe holen, check-in, stand-aufkleber, admin, konflikt, das war ich, frist, auswärts, erste scheibe bestätigen, nicht meine, mehrdeutige sportpassid, überlauf, zwischenstand, gäste-lan]
+keywords: [zuordnung, werte vom ausdruck, scheibe aus treffsicher, später geholter ausdruck, mehrere passen, vorbelegung, schuss für schuss, printedshotsfit, printout-import, claim, kamera-scan, scheibe holen, holen, scan, qr scannen, link einfügen, pdf hochladen, id eintippen, neue scheibe, wartet auf die anlage, passt nicht zum ausdruck, printMismatch, nicht mehr holen, fenster der aufträge, warteschlange, grenze von zehn, windowat, teilen, druckzeit, metadaten, layout-unabhängig, besitzer, meyton-qr, qr-code, ausdruck, pdf, scheibenid, sportpass, schützenliste, frei getippte namen, fundbüro, scheibe holen, check-in, stand-aufkleber, admin, konflikt, das war ich, frist, auswärts, erste scheibe bestätigen, nicht meine, mehrdeutige sportpassid, überlauf, zwischenstand, gäste-lan]
 part_of: ["[[spiegel]]"]
 governed_by: ["[[adr-028]]"]
-relates_to: ["[[meyton-printout]]", "[[spiegel-bridge]]", "[[spiegel-privacy]]", "[[spiegel-edge-cases]]"]
+relates_to: ["[[meyton-printout]]", "[[spiegel-bridge]]", "[[spiegel-privacy]]", "[[spiegel-edge-cases]]", "[[spiegel-account-transfer]]"]
 ---
 
 **TL;DR** Meyton kennt Schützen über Namen, SportpassID und Startnummer, Spiegel kennt Konten. Standard ist das **Opt-in per Sportpass**: Wer seine Sportpassnummer einmal verknüpft und zustimmt, dessen Scheiben lädt die Brücke noch am Trainingsabend automatisch hoch. Für alles andere gibt es die Seite **„Scheibe holen“** (`/scan`): QR-Code des Meyton-Ausdrucks, eingefügter Link, ein PDF oder die eingetippte ID, jeder Weg gleich. Das Fundbüro (SP-2.4, später) heißt nur noch Fundbüro. Hochgeladen wird erst, wenn ein Besitzer feststeht. An jeder Scheibe steht, auf welchem Weg sie zum Konto kam.
@@ -63,6 +63,15 @@ Spiegel hängt dabei nicht vom Layout des Meyton-PDFs ab ([[adr-028]], Änderung
    dabei die Werte des zuletzt gedruckten stimmigen.
    Ausdrückliches Holen hebt die eigene Löschsperre dieses Abends auf („Diese Scheibe hattest du gelöscht. Spiegel
    holt sie wieder.“); Grabsteine und Sperren anderer Konten bleiben („lässt sich nicht holen“).
+   **Scheibe aus Treffsicher:** Mit einem PDF (Kamera, Link, Upload) und ohne eigene Löschsperre an diesem Abend sucht
+   Spiegel vor dem Blatt die übernommenen Scheiben des Abends, zu denen der Ausdruck passt (`printoutFits`, wie in der
+   Übernahme, [[spiegel-account-transfer]] „Später geholter Ausdruck“). Passt genau eine, hängt der Ausdruck an ihr,
+   ohne Blatt: Sie behält ihre ID, seine Werte werden eine neue Revision („Ausdruck an die Scheibe aus Treffsicher vom
+   {Tag} gehängt. Seine Werte gelten jetzt.“), und sie bekommt einen Auftrag wie jede Scheibe vom Ausdruck. Nimmt sie
+   seine Werte nicht, hängt er ohne an und ohne Auftrag („Ausdruck an die Scheibe gehängt.“). Passen mehrere, rät
+   Spiegel nicht: Das Blatt sagt es oben („Mehrere Scheiben aus Treffsicher von diesem Abend passen zu diesem Ausdruck.
+   Spiegel legt eine neue Scheibe an. Die übrigen bleiben, wie sie sind.“), und es entsteht eine neue Scheibe. Die
+   getippte ID ohne PDF hat keine Werte und sucht nicht.
 4. **Auftrag und Prüfung:** An der Scheibe hängt ein Auftrag an die Brücke (`CardRequest.cardId`; ID als
    vorzeichenbehaftete 32-Bit-Zahl, `ff914420` → −7257056, und der Abend aus der Druckzeit). Beim Einlesen prüft
    Spiegel selbst, solange die Scheibe noch keine Rohdaten hat: gleicher Abend und ein Stand, der höchstens fünf

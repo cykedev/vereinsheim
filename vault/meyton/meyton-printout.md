@@ -5,7 +5,7 @@ title: "Meyton-Ergebnisausdruck und QR-Code"
 aliases: [meyton-ausdruck, meyton-qr, print-pdf, qrcode-meyton]
 keywords: [ausdruck, werte lesen, meyton-values, reader_version, printoutreading, selbstprüfung, valuesstatus, werte nicht lesbar, neu lesen, printout-import, alte ausdrucke, ergebnisausdruck, pdf, qr-code, meyton-pdf, readprintout, creationdate, erstellzeit, druckzeit, xmp, pdf.js, unpdf, identity-h, ghostscript, qrcode.meyton.eu, 195.201.88.185, http, lighttpd, uuid, id im fuß, scheibenid, hex, vorzeichenbehaftet, qt 5.12.8, trefferkreis, trefferlage, streuwert, trefferbild, gegenprobe, printout-check, readprintoutvalues, zähler, innenzehner, beste teiler, weiteste, startnr, standnr]
 part_of: ["[[meyton]]"]
-relates_to: ["[[treffsicher-meyton-import]]", "[[meyton-pdf-format-change]]", "[[spiegel-assignment]]"]
+relates_to: ["[[treffsicher-meyton-import]]", "[[meyton-pdf-format-change]]", "[[spiegel-assignment]]", "[[spiegel-account-transfer]]"]
 ---
 
 **TL;DR** Der QR-Code am Meyton-Stand führt per HTTP auf ein PDF bei Meyton (`http://195.201.88.185/print_<UUID>.pdf`, eine Woche abrufbar). Das PDF enthält Stand, Zeiten, Name mit #Nummer, alle Werte, Teiler, Trefferkreis bzw. Streuwert und Trefferlage; Koordinaten nicht als Zahl, aber im Trefferbild als Vektorgrafik auf 0,01 mm genau (gemessen am 27. Oktober 2026). Im Fuß steht eine Hex-ID, die ScheibenID (am 9. Oktober 2026 an der eigenen Anlage belegt), die Spiegel für die exakte Zuordnung nutzt. Für die Zuordnung liest Spiegel nur diese ID und die Erstellzeit aus den Metadaten, unabhängig vom Layout ([[adr-028]]). Getrennt davon liest Spiegel seit 1c die Werte und die Lage jedes Schusses aus dem Trefferbild, mit Selbstprüfung und Version des Lesers (siehe „Werte lesen“).
@@ -153,9 +153,12 @@ mit einem Schnappschuss daneben und verlangt mindestens 90 % mit Werten; ohne Or
 ## Alte Ausdrucke einlesen
 
 Ein Ordner alter Ausdrucke wird zu Scheiben eines Kontos, derselbe Weg wie ein Upload, ohne Auftrag an die Brücke: die
-eigene Scheibe des Abends bekommt das PDF (eine Scheibe vom Ausdruck auch seine Werte), sonst entsteht eine Scheibe vom
-Ausdruck (Training, ohne Ort) mit der Disziplin aus dem Kopf, wenn genau eine wählbare so heißt; ohne Disziplin
-übersprungen. Idempotent über sha256, der Bericht nur mit Zahlen.
+eigene Scheibe des Abends bekommt das PDF (eine Scheibe vom Ausdruck auch seine Werte). Passt er zu genau einer Scheibe
+aus Treffsicher dieses Abends (`printoutFits`, [[spiegel-account-transfer]] „Später geholter Ausdruck“), ergänzt er
+sie (im Bericht „an Scheibe aus Treffsicher“). Sonst entsteht eine Scheibe vom Ausdruck (Training, ohne Ort) mit der
+Disziplin aus dem Kopf, wenn genau eine wählbare so heißt; ohne Disziplin übersprungen. Passen mehrere, entsteht
+ebenso eine neue, und der Bericht zählt sie („mehrere passend, neu angelegt“). Idempotent über sha256, der Bericht nur
+mit Zahlen.
 
 - **Dev:** `pnpm --filter spiegel printout-import <ordner> --email <adresse> --dry-run`, dann ohne `--dry-run`. Die
   Dateien landen unter `apps/spiegel/uploads/printouts/` des Checkouts, aus dem der Dev-Server läuft.
