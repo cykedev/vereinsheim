@@ -558,7 +558,7 @@ Befund aus dem Review von 2a).
 | 3d   | `plans/2026-11-01-tis-3d-late-printout.md`   | `feat/tis-3d-late-printout` (vom Basis)    | `tis-3d-late-printout`   | freigegeben (1.11.), in Arbeit                          |
 | 3e   | `plans/2026-10-29-tis-3e-read-only.md`       | `feat/tis-3e-read-only` (von `main`)       | `tis-3e-read-only`       | in `main` (`0000933f`), deployt (bis 30.10.); Plan entfernt |
 | U1   | `plans/2026-10-31-tis-u1-nav-compare.md`     | `feat/tis-u1-nav-compare` (vom Basis)      | `tis-u1-nav-compare`     | deployt 31.10. (`main` `c30676d5`), Plan entfernt         |
-| U2   | `plans/2026-11-01-tis-u2-place-row.md`       | `feat/tis-u2-place-row` (vom Basis)        |                          | Plan geschrieben (1.11.), Freigabe offen                  |
+| U2   | `plans/2026-11-01-tis-u2-place-row.md`       | `feat/tis-u2-place-row` (vom Basis)        | `tis-u2-place-row`       | freigegeben (1.11.), in Arbeit                            |
 | 4    |                                              |                                            |                          | offen                                                   |
 
 ## Verification
