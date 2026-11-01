@@ -26,6 +26,7 @@ import { applyPrintoutValues } from "../printouts/apply"
 import { attachPrintout, markPrintoutValues } from "../printouts/queries"
 import type { StoredPrintout } from "../printouts/store"
 import { detailsFromReading } from "../printouts/values"
+import { adoptIntoTransferred, transferredCardsFitting } from "./transferred"
 
 /** eine Disziplin, die der Schütze für eine neue Scheibe wählen kann */
 export interface NewCardOption {
@@ -126,8 +127,16 @@ export type FetchResult =
   | { kind: "restored"; cardId: string }
   /** die eigene Scheibe wartet in „Offen“ */
   | { kind: "pending" }
-  /** neu: erst Disziplin und Art wählen; `relifts`: Der Schütze hatte sie gelöscht, Holen hebt die Sperre auf */
-  | { kind: "choose"; relifts: boolean }
+  /**
+   * neu: erst Disziplin und Art wählen; `relifts`: Der Schütze hatte sie gelöscht, Holen hebt die Sperre auf; `several`:
+   * mehrere Scheiben aus Treffsicher dieses Abends passen zum Ausdruck, Spiegel legt eine neue an
+   */
+  | { kind: "choose"; relifts: boolean; several: boolean }
+  /**
+   * der Ausdruck passt zu genau einer Scheibe aus Treffsicher dieses Abends und hängt jetzt an ihr; `values`: Seine Werte
+   * gelten jetzt
+   */
+  | { kind: "matched"; cardId: string; day: string; values: boolean }
   /** neu angelegt; `values`: mit den Werten vom Ausdruck */
   | { kind: "created"; cardId: string; relifted: boolean; values: boolean }
   /** die Scheibe des Abends gehört einem anderen Konto */
@@ -222,7 +231,8 @@ export function newCardValues(file: StoredPrintout | null, targetId: string | nu
  * nicht über Kreuz wartet). Die eigene Scheibe des Abends findet Spiegel zuerst als Scheibe der Brücke (Quelle, ScheibenID), dann als
  * eigene Scheibe vom Ausdruck mit einem Auftrag dieser ID und dieses Tags, dann über einen Ausdruck dieser ID. Ohne Wahl
  * schreibt eine neue Scheibe nichts (`choose`); die Seite fragt und ruft noch einmal. Mit Ausdruck legt Holen immer an;
- * die Grenze der Aufträge gilt nur für die getippte ID.
+ * die Grenze der Aufträge gilt nur für die getippte ID. Passt ein Ausdruck zu genau einer Scheibe aus Treffsicher dieses
+ * Abends, hängt er an ihr (`matched`) statt an einer neuen ([[spiegel-account-transfer]] „Später geholter Ausdruck“).
  */
 export async function fetchCard(db: Db, input: FetchInput): Promise<FetchResult> {
   const { userId, siteId, scheibenId, day, file, choice } = input
@@ -308,7 +318,41 @@ export async function fetchCard(db: Db, input: FetchInput): Promise<FetchResult>
     )
       return { kind: "blocked" }
     const relifts = eveningLocks.length > 0
-    if (!choice) return { kind: "choose", relifts }
+    // ein älterer offener Auftrag ohne Scheibe für dieselbe ID und denselben Tag bekommt die Scheibe
+    const legacyRequest = () =>
+      tx.cardRequest.findFirst({
+        where: { userId, siteId, scheibenId, day, status: "open", cardId: null },
+        orderBy: { id: "asc" },
+        select: { id: true },
+      })
+    const requestFor = async (cardId: string, legacy: { id: number } | null) => {
+      // die Bedingung im Befehl: Einlesen und „Nicht mehr holen“ nehmen die Sperre der Kontozeile nicht (§9)
+      const adopted = legacy
+        ? await tx.cardRequest.updateMany({
+            where: { id: legacy.id, status: "open", cardId: null },
+            data: { cardId },
+          })
+        : { count: 0 }
+      if (adopted.count !== 1)
+        await tx.cardRequest.create({
+          data: { userId, siteId, scheibenId, day, cardId, createdAt: new Date(nowMs) },
+        })
+    }
+
+    // ein Ausdruck ergänzt die eine passende Scheibe aus Treffsicher, außer der Schütze hatte die Scheibe gelöscht. Mit
+    // seinen Werten ist sie eine Scheibe vom Ausdruck und bekommt einen Auftrag, den die Brücke füllen kann; ohne bleibt
+    // sie aus Treffsicher, und die Brücke füllt sie nicht.
+    const transferred =
+      file && !relifts
+        ? await transferredCardsFitting(tx, { userId, day, timeZone, file })
+        : ({ kind: "none" } as const)
+    if (file && transferred.kind === "one") {
+      const { cardId } = transferred
+      const { values } = await adoptIntoTransferred(tx, { cardId, ownerId: userId, file })
+      if (values) await requestFor(cardId, await legacyRequest())
+      return { kind: "matched", cardId, day, values }
+    }
+    if (!choice) return { kind: "choose", relifts, several: transferred.kind === "several" }
 
     const [discipline] = await tx.$queryRaw<{ targetId: string | null }[]>`
       SELECT "targetId" FROM "Discipline"
@@ -316,12 +360,7 @@ export async function fetchCard(db: Db, input: FetchInput): Promise<FetchResult>
          AND "ignoredAt" IS NULL AND "familyId" IS NOT NULL AND "targetId" IS NOT NULL
        FOR SHARE`
     if (!discipline || !knownTarget(discipline.targetId)) return { kind: "notAllowed" }
-    // ein älterer offener Auftrag ohne Scheibe für dieselbe ID und denselben Tag bekommt die neue Scheibe
-    const legacy = await tx.cardRequest.findFirst({
-      where: { userId, siteId, scheibenId, day, status: "open", cardId: null },
-      orderBy: { id: "asc" },
-      select: { id: true },
-    })
+    const legacy = await legacyRequest()
     if (!legacy && (await overLimit())) return { kind: "tooMany" }
 
     if (relifts)
@@ -348,17 +387,7 @@ export async function fetchCard(db: Db, input: FetchInput): Promise<FetchResult>
     const printoutId = await attach(saved.cardId)
     if (printoutId && (values.inconsistent || refused))
       await markPrintoutValues(tx, printoutId, "inconsistent")
-    // die Bedingung im Befehl: Einlesen und „Nicht mehr holen“ nehmen die Sperre der Kontozeile nicht (§9)
-    const adopted = legacy
-      ? await tx.cardRequest.updateMany({
-          where: { id: legacy.id, status: "open", cardId: null },
-          data: { cardId: saved.cardId },
-        })
-      : { count: 0 }
-    if (adopted.count !== 1)
-      await tx.cardRequest.create({
-        data: { userId, siteId, scheibenId, day, cardId: saved.cardId, createdAt: new Date(nowMs) },
-      })
+    await requestFor(saved.cardId, legacy)
     return {
       kind: "created",
       cardId: saved.cardId,

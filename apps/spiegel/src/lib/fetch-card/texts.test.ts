@@ -9,8 +9,11 @@ import {
   fetchErrorText,
   fetchToast,
   newCardIntro,
+  SEVERAL_TRANSFERRED,
   type FetchOutcome,
 } from "./texts"
+
+const dayText = (day: string) => `Mo ${day.split("-").reverse().join(".")}`
 
 describe("Texte zu „Scheibe holen“", () => {
   it("jeder Grund hat einen Text, gleiche Ursachen sagen dasselbe", () => {
@@ -27,7 +30,7 @@ describe("Texte zu „Scheibe holen“", () => {
   })
 
   it("Meldungen nach dem Holen", () => {
-    const toast = (outcome: FetchOutcome) => fetchToast(outcome)
+    const toast = (outcome: FetchOutcome) => fetchToast(outcome, dayText)
     expect(toast({ kind: "created", cardId: "c", values: false })).toBe(
       "Scheibe angelegt. Spiegel holt die Werte von der Anlage."
     )
@@ -50,8 +53,26 @@ describe("Texte zu „Scheibe holen“", () => {
         relifts: false,
         disciplineId: null,
         values: false,
+        several: false,
       })
     ).toBeNull()
+  })
+
+  it("Meldungen an der Scheibe aus Treffsicher: mit Werten der Tag wie im Blatt, ohne wie jeder Ausdruck", () => {
+    expect(
+      fetchToast({ kind: "matched", cardId: "c", day: "2026-08-03", values: true }, dayText)
+    ).toBe(
+      "Ausdruck an die Scheibe aus Treffsicher vom Mo 03.08.2026 gehängt. Seine Werte gelten jetzt."
+    )
+    expect(
+      fetchToast({ kind: "matched", cardId: "c", day: "2026-08-03", values: false }, dayText)
+    ).toBe("Ausdruck an die Scheibe gehängt.")
+  })
+
+  it("Blatt „Neue Scheibe“: mehrere Scheiben aus Treffsicher passen", () => {
+    expect(SEVERAL_TRANSFERRED).toBe(
+      "Mehrere Scheiben aus Treffsicher von diesem Abend passen zu diesem Ausdruck. Spiegel legt eine neue Scheibe an. Die übrigen bleiben, wie sie sind."
+    )
   })
 
   it("Blatt „Neue Scheibe“: ohne und mit Werten vom Ausdruck", () => {
@@ -72,9 +93,17 @@ describe("Texte zu „Scheibe holen“", () => {
         { kind: "opened", cardId: "c", attached: false },
         { kind: "restored", cardId: "c" },
         { kind: "pending" },
+        { kind: "matched", cardId: "c", day: "2026-08-03", values: true },
+        { kind: "matched", cardId: "c", day: "2026-08-03", values: false },
       ] as const
-    ).map((outcome) => fetchToast(outcome)!)
-    const texts = [...ALL_ERROR_TEXTS, ...toasts, newCardIntro(false), newCardIntro(true)]
+    ).map((outcome) => fetchToast(outcome, dayText)!)
+    const texts = [
+      ...ALL_ERROR_TEXTS,
+      ...toasts,
+      newCardIntro(false),
+      newCardIntro(true),
+      SEVERAL_TRANSFERRED,
+    ]
     expect(forbiddenIn(texts)).toEqual([])
     for (const text of texts) expect(text).not.toMatch(OLD_WORDS)
   })

@@ -10,7 +10,8 @@ const OPTIONS = [
 ]
 const render = (
   preset: { disciplineId: number | null; kind: "training" | "competition" },
-  relifts = false
+  relifts = false,
+  several = false
 ) =>
   renderToStaticMarkup(
     createElement(NewCardSheet, {
@@ -18,6 +19,7 @@ const render = (
       onClose: () => {},
       idLine: "ID ff914420 vom Di 27.10.2026",
       relifts,
+      several,
       options: OPTIONS,
       preset,
       pending: false,
@@ -44,6 +46,15 @@ describe("Blatt „Neue Scheibe“ (Markup)", () => {
     )
     expect(html).not.toContain("Wähle eine Disziplin.")
     expect(html).not.toContain("hattest du gelöscht")
+    expect(html).not.toContain("data-new-card-several")
+    expect(html).not.toContain("Mehrere Scheiben aus Treffsicher")
+  })
+
+  it("mehrere Scheiben aus Treffsicher passen: der Satz dazu direkt unter dem Satz oben", () => {
+    const html = render({ disciplineId: 1, kind: "training" }, false, true)
+    expect(html).toMatch(
+      /data-new-card-intro="true"[^>]*>[^<]+<\/p><p data-new-card-several="true"[^>]*>Mehrere Scheiben aus Treffsicher von diesem Abend passen zu diesem Ausdruck\. Spiegel legt eine neue Scheibe an\. Die übrigen bleiben, wie sie sind\.<\/p>/
+    )
   })
 
   it("ohne Vorbelegung aktiv, ohne Hinweis vor dem Tippen; nach aufgehobener Sperre der Satz dazu", () => {

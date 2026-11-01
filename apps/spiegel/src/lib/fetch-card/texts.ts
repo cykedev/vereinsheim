@@ -62,7 +62,11 @@ export type FetchOutcome =
       disciplineId: number | null
       /** der Ausdruck ist stimmig gelesen: Die Scheibe entsteht mit seinen Werten, wenn sie zur Disziplin passen */
       values: boolean
+      /** mehrere Scheiben aus Treffsicher dieses Abends passen zum Ausdruck: Spiegel legt eine neue an */
+      several: boolean
     }
+  /** der Ausdruck hängt an der einen passenden Scheibe aus Treffsicher; `values`: Seine Werte gelten jetzt */
+  | { kind: "matched"; cardId: string; day: string; values: boolean }
   /** `values`: mit den Werten vom Ausdruck */
   | { kind: "created"; cardId: string; values: boolean }
   /** die eigene Scheibe; `attached`: mit einem Ausdruck */
@@ -70,11 +74,15 @@ export type FetchOutcome =
   | { kind: "restored"; cardId: string }
   | { kind: "pending" }
 
-/** die Meldung nach dem Holen; beim Fragen keine */
-export function fetchToast(outcome: FetchOutcome): string | null {
+/** die Meldung nach dem Holen; beim Fragen keine. `dayText`: der Tag wie in der Zeile des Blatts („Di 27.10.2026“) */
+export function fetchToast(outcome: FetchOutcome, dayText: (day: string) => string): string | null {
   switch (outcome.kind) {
     case "choose":
       return null
+    case "matched":
+      return outcome.values
+        ? `Ausdruck an die Scheibe aus Treffsicher vom ${dayText(outcome.day)} gehängt. Seine Werte gelten jetzt.`
+        : "Ausdruck an die Scheibe gehängt."
     case "created":
       return outcome.values
         ? "Scheibe mit den Werten vom Ausdruck angelegt."
@@ -96,6 +104,10 @@ export function newCardIntro(withValues: boolean): string {
     ? "Diese Scheibe liegt noch nicht in Spiegel. Spiegel legt sie mit den Werten vom Ausdruck an. Liefert die Anlage die Scheibe, kommen ihre Messwerte und die Zeiten der Schüsse dazu, und ihre Disziplin gilt. Wähle Disziplin und Art."
     : "Diese Scheibe liegt noch nicht in Spiegel. Spiegel legt sie an und holt die Werte von der Anlage. Wähle Disziplin und Art. Liefert die Anlage die Scheibe, gilt ihre Disziplin."
 }
+
+/** der Satz unter dem Satz oben im Blatt „Neue Scheibe“, wenn mehrere Scheiben aus Treffsicher zum Ausdruck passen */
+export const SEVERAL_TRANSFERRED =
+  "Mehrere Scheiben aus Treffsicher von diesem Abend passen zu diesem Ausdruck. Spiegel legt eine neue Scheibe an. Die übrigen bleiben, wie sie sind."
 
 /** der Satz oben im Blatt „Neue Scheibe“ auf dem Weg von Hand */
 export const HAND_INTRO = "Wähle Disziplin und Art. Danach trägst du die Werte ein."

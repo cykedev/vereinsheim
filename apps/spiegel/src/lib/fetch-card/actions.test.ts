@@ -102,6 +102,7 @@ describe("Scheibe holen (Actions)", () => {
         relifts: false,
         disciplineId: null,
         values: false,
+        several: false,
       },
     })
     const site = await db.site.findFirstOrThrow({ orderBy: { id: "asc" }, select: { id: true } })

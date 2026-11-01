@@ -12,6 +12,7 @@ import { dismissRequest, MAX_OPEN_REQUESTS } from "../card-requests/queries"
 import { writeRevision } from "../db/cards"
 import { kindOfRow } from "../db/reads"
 import { NO_VALUES, valuesReadOf, type StoredPrintout } from "../printouts/store"
+import { writeTransferCard } from "../transfer/write"
 import { valuedSpec, type ValuedPrintoutSpec } from "../../../test/printout"
 
 import {
@@ -109,6 +110,7 @@ describe("fetchCard", () => {
     expect(await fetchCard(db, input(id, { file: file(id) }))).toEqual({
       kind: "choose",
       relifts: false,
+      several: false,
     })
     expect(await cardsWithPrintout(id)).toEqual([])
     expect(await requestsOf(id)).toEqual([])
@@ -244,7 +246,11 @@ describe("fetchCard", () => {
   it("eigene Sperre: fragen mit Hinweis; mit Wahl ist sie weg; mit fremder daneben bleibt alles", async () => {
     const id = nextId++
     const own = await lock(id, site.ownerId)
-    expect(await fetchCard(db, input(id))).toEqual({ kind: "choose", relifts: true })
+    expect(await fetchCard(db, input(id))).toEqual({
+      kind: "choose",
+      relifts: true,
+      several: false,
+    })
     expect(await fetchCard(db, withChoice(id))).toMatchObject({ kind: "created", relifted: true })
     expect(await db.deleteLock.count({ where: { id: own.id } })).toBe(0)
 
@@ -593,6 +599,158 @@ describe("fetchCard mit Werten vom Ausdruck", () => {
     const again = await fetchCard(db, input(id, { file: await valuedFile(id) }))
     expect(again).toEqual({ kind: "opened", cardId: first.cardId, attached: true })
     expect((await shotsOf(first.cardId)).shots).toHaveLength(40)
+  })
+})
+
+describe("fetchCard mit Scheiben aus Treffsicher", () => {
+  let nextEvening = 0
+  /** ein eigener Abend im August 2026 mit einem stimmigen Ausdruck um 19:52 Uhr in Berlin */
+  async function evening(id: number) {
+    const n = nextEvening++
+    const at = (hour: number, minute = 0) => Date.UTC(2026, 7, 1 + 2 * n, hour, minute)
+    const printed = { ...(await valuedFile(id)), printedAt: new Date(at(17, 52)) }
+    return { day: new Date(at(12)).toISOString().slice(0, 10), printed, at }
+  }
+  /** eine Scheibe aus Treffsicher mit dem Ergebnis des Ausdrucks in ganzen Ringen */
+  async function transferCard(startedAtMs: number, printed: StoredPrintout) {
+    const saved = await db.$transaction((tx) =>
+      writeTransferCard(tx, {
+        ownerId: site.ownerId,
+        disciplineId: site.disciplineId,
+        startedAtMs,
+        kind: "training",
+        place: null,
+        importKey: `treffsicher:fetch-${RUN}-${startedAtMs}-${nextId++}`,
+        details: { total: { shots: 40, rings: printed.values.reading!.total!.rings } },
+      })
+    )
+    if (saved.kind !== "saved") throw new Error(saved.kind)
+    return saved.cardId
+  }
+  const transferState = (cardId: string) =>
+    db.card.findUniqueOrThrow({
+      where: { id: cardId },
+      select: {
+        origin: true,
+        _count: { select: { printouts: true, revisions: true, requests: true } },
+      },
+    })
+  const UNTOUCHED = {
+    origin: "treffsicher",
+    _count: { printouts: 0, revisions: 1, requests: 0 },
+  }
+
+  it("genau eine passt: der Ausdruck hängt an ihr mit Auftrag, keine neue Scheibe; noch einmal öffnet sie", async () => {
+    const id = nextId++
+    const { day, printed, at } = await evening(id)
+    const cardId = await transferCard(at(17), printed)
+    expect(await fetchCard(db, input(id, { day, file: printed }))).toEqual({
+      kind: "matched",
+      cardId,
+      day,
+      values: true,
+    })
+    expect((await cardsWithPrintout(id)).map((card) => [card.id, card.origin])).toEqual([
+      [cardId, "pdf"],
+    ])
+    expect((await requestsOf(id)).map((r) => [r.status, r.cardId, r.day])).toEqual([
+      ["open", cardId, day],
+    ])
+    const revisions = await db.cardRevision.count({ where: { cardId } })
+    expect(revisions).toBe(2)
+    expect(await fetchCard(db, input(id, { day, file: printed }))).toEqual({
+      kind: "opened",
+      cardId,
+      attached: true,
+    })
+    expect(await requestsOf(id)).toHaveLength(1)
+    expect(await db.cardRevision.count({ where: { cardId } })).toBe(revisions)
+  })
+
+  it("die getippte ID ohne Ausdruck sucht nicht", async () => {
+    const id = nextId++
+    const { day, printed, at } = await evening(id)
+    const cardId = await transferCard(at(17), printed)
+    expect(await fetchCard(db, input(id, { day }))).toEqual({
+      kind: "choose",
+      relifts: false,
+      several: false,
+    })
+    expect(await transferState(cardId)).toEqual(UNTOUCHED)
+  })
+
+  it("ein älterer offener Auftrag ohne Scheibe bekommt die gefundene", async () => {
+    const id = nextId++
+    const { day, printed, at } = await evening(id)
+    const cardId = await transferCard(at(17), printed)
+    const legacy = await db.cardRequest.create({
+      data: { userId: site.ownerId, siteId: site.siteId, scheibenId: id, day },
+    })
+    expect(await fetchCard(db, input(id, { day, file: printed }))).toMatchObject({
+      kind: "matched",
+      cardId,
+    })
+    expect((await requestsOf(id)).map((r) => [r.id, r.cardId])).toEqual([[legacy.id, cardId]])
+  })
+
+  it("mehrere passen: fragen mit Hinweis, mit Wahl eine neue Scheibe, die übrigen bleiben, wie sie sind", async () => {
+    const id = nextId++
+    const { day, printed, at } = await evening(id)
+    const first = await transferCard(at(17), printed)
+    const second = await transferCard(at(18, 30), printed)
+    expect(await fetchCard(db, input(id, { day, file: printed }))).toEqual({
+      kind: "choose",
+      relifts: false,
+      several: true,
+    })
+    const created = await fetchCard(db, withChoice(id, { day, file: printed }))
+    if (created.kind !== "created") throw new Error(created.kind)
+    expect([first, second]).not.toContain(created.cardId)
+    expect(await transferState(first)).toEqual(UNTOUCHED)
+    expect(await transferState(second)).toEqual(UNTOUCHED)
+  })
+
+  it("eigene Löschsperre an diesem Abend: keine Suche, wie bisher", async () => {
+    const id = nextId++
+    const { day, printed, at } = await evening(id)
+    const cardId = await transferCard(at(17), printed)
+    await lock(id, site.ownerId, new Date(at(17)))
+    expect(await fetchCard(db, input(id, { day, file: printed }))).toEqual({
+      kind: "choose",
+      relifts: true,
+      several: false,
+    })
+    expect(await fetchCard(db, withChoice(id, { day, file: printed }))).toMatchObject({
+      kind: "created",
+      relifted: true,
+    })
+    expect(await transferState(cardId)).toEqual(UNTOUCHED)
+  })
+
+  it("Werte, die die Scheibe nicht nimmt: angehängt ohne Werte und ohne Auftrag, die Brücke füllt sie nicht", async () => {
+    const id = nextId++
+    const { day, printed, at } = await evening(id)
+    const cardId = await transferCard(at(17), printed)
+    const rifle = await db.discipline.create({
+      data: {
+        siteId: site.siteId,
+        meytonId: 10_199_776,
+        name: "LG 40",
+        familyId: site.familyId,
+        targetId: "lg-10m",
+      },
+    })
+    await db.card.update({ where: { id: cardId }, data: { disciplineId: rifle.id } })
+    expect(await fetchCard(db, input(id, { day, file: printed }))).toEqual({
+      kind: "matched",
+      cardId,
+      day,
+      values: false,
+    })
+    expect(await transferState(cardId)).toEqual({
+      origin: "treffsicher",
+      _count: { printouts: 1, revisions: 1, requests: 0 },
+    })
   })
 })
 

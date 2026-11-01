@@ -113,6 +113,8 @@ export function ScanScreen({
     source: Source
     idLine: string
     relifts: boolean
+    /** mehrere Scheiben aus Treffsicher passen zum Ausdruck */
+    several: boolean
     /** die Disziplin aus dem Kopf des Ausdrucks; null: die der letzten Scheibe */
     disciplineId: number | null
     /** der Ausdruck ist stimmig gelesen */
@@ -185,6 +187,7 @@ export function ScanScreen({
           source,
           idLine: `ID ${outcome.hex} vom ${dayText(outcome.day)}`,
           relifts: outcome.relifts,
+          several: outcome.several,
           disciplineId: outcome.disciplineId,
           values: outcome.values,
           key: Date.now(),
@@ -192,7 +195,7 @@ export function ScanScreen({
         return
       }
       setSheet(null)
-      const text = fetchToast(outcome)
+      const text = fetchToast(outcome, dayText)
       if (text) toast.success(text)
       router.push(outcome.kind === "pending" ? "/open" : `/cards/${outcome.cardId}`)
     })
@@ -396,6 +399,7 @@ export function ScanScreen({
           onClose={() => setSheet(null)}
           idLine={sheet.idLine}
           relifts={sheet.relifts}
+          several={sheet.several}
           withValues={sheet.values}
           options={options}
           preset={sheetPreset(preset, sheet.disciplineId)}

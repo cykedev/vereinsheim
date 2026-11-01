@@ -10,7 +10,7 @@ import { Sheet } from "@vereinsheim/ui/design2/sheet"
 
 import type { CardKind } from "@/generated/prisma/enums"
 import type { NewCardChoice, NewCardOption } from "@/lib/fetch-card/queries"
-import { newCardIntro } from "@/lib/fetch-card/texts"
+import { newCardIntro, SEVERAL_TRANSFERRED } from "@/lib/fetch-card/texts"
 
 import { DisciplineChoice } from "../card/DisciplineChoice"
 
@@ -29,6 +29,7 @@ export function NewCardSheet({
   onClose,
   idLine,
   relifts,
+  several = false,
   withValues = false,
   intro,
   confirmLabel,
@@ -43,6 +44,8 @@ export function NewCardSheet({
   idLine?: string
   /** der Schütze hatte die Scheibe gelöscht; Holen hebt die Sperre auf */
   relifts: boolean
+  /** mehrere Scheiben aus Treffsicher dieses Abends passen zum Ausdruck: Spiegel legt eine neue an */
+  several?: boolean
   /** der Ausdruck ist stimmig gelesen: Spiegel legt die Scheibe mit seinen Werten an */
   withValues?: boolean
   /** ein eigener Satz oben (Weg von Hand); fehlt: der zum Ausdruck */
@@ -64,6 +67,11 @@ export function NewCardSheet({
         <p data-new-card-intro className="text-sm text-foreground-2">
           {intro ?? newCardIntro(withValues)}
         </p>
+        {several && (
+          <p data-new-card-several className="text-sm text-foreground-2">
+            {SEVERAL_TRANSFERRED}
+          </p>
+        )}
         {idLine && (
           <p data-new-card-id className="text-sm font-semibold">
             {idLine}
