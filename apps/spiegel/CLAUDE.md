@@ -223,7 +223,9 @@ Stand mit `past` (`MAX_OBSERVED_LAG_MS`, SF-79).
 - **Von Hand eintragen** ([[spiegel-navigation]] „Von Hand eintragen“): Formular `/cards/new` und `/cards/[id]/edit`
   (`EnteredCardForm`), die Regeln rein in `src/lib/entered/form.ts` (`formToDetails`, `detailsToForm`, `problemText`),
   gespeichert nur über `saveEnteredCard` (`src/lib/entered/actions.ts`, Herkunft `manual`). Ohne Uhrzeit 12 Uhr und
-  `Card.timeUnknown` (`timeKnown` in `reads.ts`). Ort einer Scheibe vom Ausdruck über `setCardPlace`.
+  `Card.timeUnknown` (`timeKnown` in `reads.ts`). Der Ort entsteht im Formular nur beim Anlegen. Danach ändert man ihn
+  bei jeder eigenen Scheibe ohne Brücke an einer Stelle, der Zeile „Ort“ im Kasten „Diese Scheibe“ (`CardPlace`,
+  `setCardPlace`); `saveEnteredCard` lässt ihn beim Ändern stehen.
 - **Belege** ([[adr-033]], Nachtrag 1f): bis zu `EVIDENCE_LIMIT` (10) Fotos oder PDFs an jeder eigenen, sichtbaren
   Scheibe, gleich welcher Herkunft (`CardEvidence`, eindeutig je Scheibe und Prüfsumme, Dateien unter
   `UPLOAD_DIR/evidence/`, alles in `src/lib/evidence/`). Name der Datei wie vom Browser (`evidenceFileName`), Fotos

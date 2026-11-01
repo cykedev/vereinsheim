@@ -303,7 +303,7 @@ Die Liste markiert, wohin man kommt, wie der Fortschritt seine Wahl (`bg-accent-
     Darstellung ihres ersten Besuchs, ein Schreiben beim Öffnen überschriebe die zuletzt gewählte.
   - Eine Seite aus dem Cache übernimmt die gemerkte über `useSyncExternalStore` (beim Hydrieren gilt die vom Server).
 - **Kasten „Diese Scheibe“** am Ende (`CardActions`, nur für den Besitzer): Eintrag (eingetragene Scheiben), Ausdruck,
-  Von der Anlage, Ort (vom Ausdruck), Belege (jede Scheibe, direkt vor „Disziplin“), Disziplin, Teilen und Löschen als
+  Von der Anlage, Ort (jede Scheibe ohne Brücke), Belege (jede Scheibe, direkt vor „Disziplin“), Disziplin, Teilen und Löschen als
   Zeilen, je
   mit Zustand links und Aktion rechts („Ändern“, „Teilen“, „Löschen“; für Screenreader „Disziplin ändern“,
   „Scheibe teilen“, „Scheibe löschen“). Darüber „Mit der Scheibe davor vergleichen“ als eigener Kasten. Nach
@@ -335,7 +335,8 @@ Teil 1d, entschieden mit dem User am 28. Oktober 2026):
   (Disziplin und Art, ohne ID-Zeile, Knopf „Weiter“), danach das Formular `/cards/new?discipline=…&kind=…`. Angelegt
   wird erst beim Speichern; eine Disziplin, die nicht zur Wahl steht, führt zurück zu „Scheibe holen“.
 - **Formular** (`EnteredCardForm`, Logik rein in `src/lib/entered/form.ts`): Tag, Uhrzeit (wenn bekannt; ohne gilt 12 Uhr
-  und `Card.timeUnknown`, gezeigt wird nur der Tag), Ort als Freitext mit den eigenen Orten als Vorschlag, Werte in
+  und `Card.timeUnknown`, gezeigt wird nur der Tag), Ort als Freitext mit den eigenen Orten als Vorschlag (nur beim
+  Anlegen), Werte in
   Zehnteln oder ganzen Ringen (nie umgerechnet, „97“ in Zehnteln ist 97,0), dann Serien mit „Schüsse einzeln“ zum
   Aufklappen (die Summe kommt dann aus den Schüssen) oder nur das Gesamtergebnis mit Schusszahl (leer: die der
   Disziplin). Eine Disziplin ohne Serienlänge hat nur das Gesamtergebnis. Leere Serien am Ende zählen nicht, eine Lücke
@@ -352,12 +353,17 @@ Teil 1d, entschieden mit dem User am 28. Oktober 2026):
   „Speichern“ kleben über der unteren Leiste.
 - **Ändern:** Zeile „Eintrag“ im Kasten „Diese Scheibe“ („Von Hand eingetragen“, „Aus Treffsicher übernommen“) mit
   „Ändern“ zu `/cards/<id>/edit`. Geänderte Werte sind eine neue Revision (`writeEnteredCard`), Tag, Uhrzeit und Ort
-  stehen an der Scheibe ohne Verlauf, wie Disziplin und Art. Kann das Formular die Angaben nicht genau so wieder
+  stehen an der Scheibe ohne Verlauf, wie Disziplin und Art. Das Formular zum Ändern hat kein Feld „Ort“, und
+  `saveEnteredCard` lässt den Ort beim Ändern stehen: Er hat seine Zeile im Kasten. Kann das Formular die Angaben nicht genau so wieder
   speichern (Lage, Zeit oder Probe an Schüssen, Summen mit Ringen und Zehnteln, Serien einer anderen Serienlänge als
   heute, eine Mitte mit eigener Schusszahl), fehlt „Ändern“, und die Action lehnt ab (`detailsToForm` prüft den Weg
   hin und zurück). Wechselt die Disziplin im Formular, bleibt alles Getippte (`fitToDiscipline`); zugeklappt gilt die
   Summe aus den Schüssen (`toggleRow`). Bleiben Tag und Uhrzeit, bleibt der gespeicherte Beginn auf die Millisekunde. Löschen wie jede Scheibe.
-- **Ort einer Scheibe vom Ausdruck:** Zeile „Ort“ mit einem Blatt (`setCardPlace`). Scheiben der Anlage tragen ihren Ort
+- **Ort an einer Stelle** (Befund des Users vom 1. November 2026: mal ließ sich ein Ort eintragen, mal nicht): Jede
+  eigene Scheibe ohne Brücke (vom Ausdruck, von Hand eingetragen, aus Treffsicher) hat die Zeile „Ort“ mit einem Blatt
+  (`CardPlace`, `setCardPlace`), nach Eintrag, Ausdruck und Auftrag, vor den Belegen. Sie hängt nicht an „Ändern“: Auch
+  eine übernommene Scheibe, die das Formular nicht ganz zeigen kann, bekommt so ihren Ort. `cardEntryInfo` liefert dafür
+  Ort und Vorschläge für alle drei Herkünfte, den Eintrag nur für eingetragene. Scheiben der Anlage tragen ihren Ort
   über die Anlage und haben keine Zeile.
 - **Belege** (Zeile „Belege“ an jeder eigenen Scheibe, gleich welcher Herkunft, [[adr-033]] Nachtrag 1f): bis zu
   10 Fotos oder PDFs, etwa eine Ergebnisliste, nur zum Nachsehen, in keiner Zahl und ohne Revision. Leer „Fotos oder PDFs
