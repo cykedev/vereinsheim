@@ -206,17 +206,17 @@ export async function cardForEdit(
 }
 
 /** was der Kasten „Diese Scheibe“ zu Eintrag und Ort zeigt */
-export type CardEntryInfo =
-  | {
-      kind: "entered"
-      from: "manual" | "treffsicher"
-      editable: boolean
-    }
-  | { kind: "place"; place: string | null; places: string[] }
+export interface CardEntryInfo {
+  /** eingetragen (änderbar, wenn das Formular alle Angaben zeigen kann); null vom Ausdruck */
+  entry: { from: "manual" | "treffsicher"; editable: boolean } | null
+  place: string | null
+  /** die eigenen Orte als Vorschlag */
+  places: string[]
+}
 
 /**
- * Eintrag und Ort einer eigenen, sichtbaren Scheibe: eingetragen (änderbar, wenn das Formular alle Angaben zeigen
- * kann), vom Ausdruck nur der Ort mit den eigenen Orten als Vorschlag; von der Anlage nichts (ihr Ort ist die Anlage)
+ * Eintrag und Ort einer eigenen, sichtbaren Scheibe. Jede ohne Brücke hat den Ort an dieser einen Stelle, eingetragene
+ * dazu den Eintrag; von der Anlage nichts (ihr Ort ist die Anlage)
  */
 export async function cardEntryInfo(
   db: Db,
@@ -227,12 +227,15 @@ export async function cardEntryInfo(
     select: { origin: true, place: true },
   })
   if (!row || row.origin === "raw") return null
-  if (row.origin === "pdf")
-    return { kind: "place", place: row.place, places: await ownPlaces(db, ownerId) }
+  const places = await ownPlaces(db, ownerId)
+  if (row.origin === "pdf") return { entry: null, place: row.place, places }
   const card = await cardForEdit(db, { cardId, ownerId, timeZone })
   return {
-    kind: "entered",
-    from: row.origin,
-    editable: card !== null && detailsToForm(card.stored, card.discipline, card) !== null,
+    entry: {
+      from: row.origin,
+      editable: card !== null && detailsToForm(card.stored, card.discipline, card) !== null,
+    },
+    place: row.place,
+    places,
   }
 }

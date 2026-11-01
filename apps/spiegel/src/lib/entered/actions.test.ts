@@ -17,7 +17,7 @@ vi.mock("@/lib/auth-helpers", () => ({
 vi.mock("next/cache", () => ({ revalidatePath: () => {} }))
 
 const { saveEnteredCard } = await import("./actions")
-const { cardForEdit, ownPlaces } = await import("./queries")
+const { cardEntryInfo, cardForEdit, ownPlaces } = await import("./queries")
 
 // eigene Zeilen an der ersten Anlage (die Dev-Datenbank ist eine Prod-Kopie): ein Schütze, eine Familie, zwei Disziplinen
 const tag = randomUUID().slice(0, 8)
@@ -214,5 +214,80 @@ describe("saveEnteredCard", () => {
     ).toEqual({
       error: "Diese Scheibe gibt es nicht mehr.",
     })
+  })
+})
+
+describe("cardEntryInfo", () => {
+  const entered = async (origin: "pdf" | "manual" | "treffsicher", place: string | null) => {
+    const result = await writeEnteredCard(db, {
+      ownerId,
+      origin,
+      disciplineId,
+      startedAtMs: Date.UTC(2026, 9, 21, 17),
+      kind: "training",
+      place,
+      details: origin === "pdf" ? {} : { series: [{ series: 1, decimalTenths: 980 }] },
+      reason: "Test",
+    })
+    if (result.kind !== "saved") throw new Error(result.kind)
+    return result.cardId
+  }
+  const info = (cardId: string) => cardEntryInfo(db, { cardId, ownerId, timeZone: TZ })
+
+  it("jede Herkunft ohne Brücke trägt den Ort, eingetragene dazu den Eintrag", async () => {
+    await created({ series: sums("98"), place: "Schützenhaus Nord" })
+    const pdf = await entered("pdf", "Halle")
+    expect(await info(pdf)).toMatchObject({ entry: null, place: "Halle" })
+    expect((await info(pdf))?.places).toContain("Schützenhaus Nord")
+    const manual = await entered("manual", null)
+    expect(await info(manual)).toMatchObject({
+      entry: { from: "manual", editable: true },
+      place: null,
+    })
+    expect((await info(manual))?.places).toContain("Halle")
+    const treffsicher = await entered("treffsicher", "Vereinsheim")
+    expect(await info(treffsicher)).toMatchObject({
+      entry: { from: "treffsicher", editable: true },
+      place: "Vereinsheim",
+    })
+  })
+
+  it("aus Treffsicher, nicht ganz zu zeigen: kein „Ändern“, der Ort bleibt", async () => {
+    const result = await writeEnteredCard(db, {
+      ownerId,
+      origin: "treffsicher",
+      disciplineId,
+      startedAtMs: Date.UTC(2026, 9, 22, 17),
+      kind: "training",
+      place: "Halle",
+      details: {
+        shots: [{ series: 1, ring: 10, decimalTenths: null, xUm: 500, yUm: -300 }],
+        series: [{ series: 1, shots: 1, rings: 10 }],
+      },
+      reason: "Test",
+    })
+    if (result.kind !== "saved") throw new Error(result.kind)
+    expect(await info(result.cardId)).toMatchObject({
+      entry: { from: "treffsicher", editable: false },
+      place: "Halle",
+    })
+  })
+
+  it("von der Anlage nichts, fremde Scheiben nichts", async () => {
+    const raw = await db.card.create({
+      data: {
+        disciplineId,
+        ownerId,
+        startedAt: new Date(Date.UTC(2026, 9, 23, 17)),
+        kind: "training",
+        state: "final",
+        complete: false,
+        origin: "raw",
+        place: "Halle",
+      },
+    })
+    expect(await info(raw.id)).toBeNull()
+    const manual = await entered("manual", "Halle")
+    expect(await cardEntryInfo(db, { cardId: manual, ownerId: otherId, timeZone: TZ })).toBeNull()
   })
 })

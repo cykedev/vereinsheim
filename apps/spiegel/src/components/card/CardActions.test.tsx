@@ -189,35 +189,37 @@ describe("Kasten „Diese Scheibe“", () => {
 })
 
 describe("Eintrag und Ort je Herkunft", () => {
-  it("eingetragen: „Eintrag“ zuerst, mit „Ändern“ zum Formular; ohne Ort-Zeile", () => {
-    const html = render(null, {
-      kind: "entered",
-      from: "manual",
-      editable: true,
-    })
-    expect(html.indexOf("data-card-entry")).toBeLessThan(html.indexOf("data-card-discipline"))
+  const manual = { entry: { from: "manual" as const, editable: true }, place: null, places: [] }
+  const pdf = { entry: null, place: null, places: [] }
+
+  it("eingetragen: „Eintrag“ zuerst, mit „Ändern“ zum Formular; danach die Ort-Zeile", () => {
+    const html = render(null, { ...manual, place: "Halle" })
+    expect(html.indexOf("data-card-entry")).toBeLessThan(html.indexOf("data-card-place"))
+    expect(html.indexOf("data-card-place")).toBeLessThan(html.indexOf("data-card-discipline"))
     expect(rowText(html, 'data-card-entry="manual"')).toContain("Eintrag Von Hand eingetragen")
     expect(html).toContain('href="/cards/c1/edit"')
-    expect(html).not.toContain("data-card-place")
+    expect(html).toMatch(/data-place-name[^>]*>Halle</)
+    expect(html).toContain('aria-label="Ort ändern"')
   })
 
-  it("aus Treffsicher, nicht ganz zu zeigen: ohne „Ändern“", () => {
+  it("aus Treffsicher, nicht ganz zu zeigen: ohne „Ändern“ am Eintrag, mit Ort-Zeile", () => {
     const html = render(null, {
-      kind: "entered",
-      from: "treffsicher",
-      editable: false,
+      entry: { from: "treffsicher", editable: false },
+      place: null,
+      places: ["Halle"],
     })
     expect(rowText(html, 'data-card-entry="treffsicher"')).toContain("Aus Treffsicher übernommen")
     expect(html).not.toContain("/edit")
-  })
-
-  it("vom Ausdruck: Ort mit „Ändern“, ohne Ort der Satz", () => {
-    const html = render(null, { kind: "place", place: null, places: [] })
     expect(rowText(html, "data-card-place")).toContain("Ort Kein Ort angegeben")
     expect(html).toContain('aria-label="Ort ändern"')
-    expect(render(null, { kind: "place", place: "Halle", places: [] })).toMatch(
-      /data-place-name[^>]*>Halle</
-    )
+  })
+
+  it("vom Ausdruck: Ort mit „Ändern“, ohne Ort der Satz, kein Eintrag", () => {
+    const html = render(null, pdf)
+    expect(html).not.toContain("data-card-entry")
+    expect(rowText(html, "data-card-place")).toContain("Ort Kein Ort angegeben")
+    expect(html).toContain('aria-label="Ort ändern"')
+    expect(render(null, { ...pdf, place: "Halle" })).toMatch(/data-place-name[^>]*>Halle</)
   })
 
   it("von der Anlage: weder Eintrag noch Ort", () => {
@@ -266,13 +268,14 @@ describe("Belege", () => {
     expect(html).not.toContain("data-evidence-list")
   })
 
-  it("dieselbe Stelle je Herkunft: Eintrag → Belege → Disziplin, Ausdruck → Ort → Belege → Disziplin", () => {
-    before(render(null, { kind: "entered", from: "manual", editable: true }), [
+  it("dieselbe Stelle je Herkunft: Eintrag → Ort → Belege → Disziplin, Ausdruck → Ort → Belege → Disziplin", () => {
+    before(render(null, { entry: { from: "manual", editable: true }, place: null, places: [] }), [
       "data-card-entry",
+      "data-card-place",
       "data-card-evidence",
       "data-card-discipline",
     ])
-    before(render(printout, { kind: "place", place: null, places: [] }), [
+    before(render(printout, { entry: null, place: null, places: [] }), [
       "data-card-printout",
       "data-card-place",
       "data-card-evidence",

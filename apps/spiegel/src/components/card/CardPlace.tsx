@@ -21,9 +21,9 @@ const BUTTON =
   "inline-flex h-10 items-center gap-2 rounded-full px-3.5 text-[13px] font-semibold text-foreground hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-60"
 
 /**
- * Ort als Zeile im Kasten „Diese Scheibe“ einer Scheibe vom Ausdruck: der Freitext oder „Kein Ort angegeben“, „Ändern“
- * öffnet ein Blatt mit den eigenen Orten als Vorschlag. Eingetragene ändern den Ort im Formular, Scheiben der Anlage
- * tragen ihn über die Anlage.
+ * Ort als Zeile im Kasten „Diese Scheibe“ jeder Scheibe ohne Brücke (vom Ausdruck, eingetragen, aus Treffsicher): der
+ * Freitext oder „Kein Ort angegeben“, „Ändern“ öffnet ein Blatt mit den eigenen Orten als Vorschlag. Die einzige Stelle
+ * für den Ort einer bestehenden Scheibe; Scheiben der Anlage tragen ihn über die Anlage.
  */
 export function CardPlace({
   cardId,
