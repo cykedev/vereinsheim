@@ -303,9 +303,8 @@ Die Liste markiert, wohin man kommt, wie der Fortschritt seine Wahl (`bg-accent-
     Darstellung ihres ersten Besuchs, ein Schreiben beim Öffnen überschriebe die zuletzt gewählte.
   - Eine Seite aus dem Cache übernimmt die gemerkte über `useSyncExternalStore` (beim Hydrieren gilt die vom Server).
 - **Kasten „Diese Scheibe“** am Ende (`CardActions`, nur für den Besitzer): Eintrag (eingetragene Scheiben), Ausdruck,
-  Von der Anlage, Ort (jede Scheibe ohne Brücke), Belege (jede Scheibe, direkt vor „Disziplin“), Disziplin, Teilen und Löschen als
-  Zeilen, je
-  mit Zustand links und Aktion rechts („Ändern“, „Teilen“, „Löschen“; für Screenreader „Disziplin ändern“,
+  Von der Anlage, Ort (jede Scheibe ohne Brücke), Belege (jede Scheibe, direkt vor „Disziplin“), Disziplin, Teilen und
+  Löschen als Zeilen, je mit Zustand links und Aktion rechts („Ändern“, „Teilen“, „Löschen“; für Screenreader „Disziplin ändern“,
   „Scheibe teilen“, „Scheibe löschen“). Darüber „Mit der Scheibe davor vergleichen“ als eigener Kasten. Nach
   conventions §2 stünden sie oben (`DetailActionBar`); der Kopf ist aber schon voll, und man braucht sie selten. Siehe
   „Ausdruck und Holen an der Scheibe“, „Disziplin einer Scheibe“, „Teilen per Link“ und „Löschen und Papierkorb“.
@@ -336,9 +335,8 @@ Teil 1d, entschieden mit dem User am 28. Oktober 2026):
   wird erst beim Speichern; eine Disziplin, die nicht zur Wahl steht, führt zurück zu „Scheibe holen“.
 - **Formular** (`EnteredCardForm`, Logik rein in `src/lib/entered/form.ts`): Tag, Uhrzeit (wenn bekannt; ohne gilt 12 Uhr
   und `Card.timeUnknown`, gezeigt wird nur der Tag), Ort als Freitext mit den eigenen Orten als Vorschlag (nur beim
-  Anlegen), Werte in
-  Zehnteln oder ganzen Ringen (nie umgerechnet, „97“ in Zehnteln ist 97,0), dann Serien mit „Schüsse einzeln“ zum
-  Aufklappen (die Summe kommt dann aus den Schüssen) oder nur das Gesamtergebnis mit Schusszahl (leer: die der
+  Anlegen), Werte in Zehnteln oder ganzen Ringen (nie umgerechnet, „97“ in Zehnteln ist 97,0), dann Serien mit
+  „Schüsse einzeln“ zum Aufklappen (die Summe kommt dann aus den Schüssen) oder nur das Gesamtergebnis mit Schusszahl (leer: die der
   Disziplin). Eine Disziplin ohne Serienlänge hat nur das Gesamtergebnis. Leere Serien am Ende zählen nicht, eine Lücke
   ist ein Fehler. Schüsse einzeln in allen gefüllten Serien oder in keiner, wie das Modell aus 1a-1 es verlangt (in der
   Prod-Kopie von Treffsicher hat keine Einheit Schüsse nur in einigen Serien). Trefferlage als Summe waagrecht und
@@ -354,8 +352,8 @@ Teil 1d, entschieden mit dem User am 28. Oktober 2026):
 - **Ändern:** Zeile „Eintrag“ im Kasten „Diese Scheibe“ („Von Hand eingetragen“, „Aus Treffsicher übernommen“) mit
   „Ändern“ zu `/cards/<id>/edit`. Geänderte Werte sind eine neue Revision (`writeEnteredCard`), Tag, Uhrzeit und Ort
   stehen an der Scheibe ohne Verlauf, wie Disziplin und Art. Das Formular zum Ändern hat kein Feld „Ort“, und
-  `saveEnteredCard` lässt den Ort beim Ändern stehen: Er hat seine Zeile im Kasten. Kann das Formular die Angaben nicht genau so wieder
-  speichern (Lage, Zeit oder Probe an Schüssen, Summen mit Ringen und Zehnteln, Serien einer anderen Serienlänge als
+  `saveEnteredCard` lässt den Ort beim Ändern stehen: Er hat seine Zeile im Kasten. Kann das Formular die Angaben nicht
+  genau so wieder speichern (Lage, Zeit oder Probe an Schüssen, Summen mit Ringen und Zehnteln, Serien einer anderen Serienlänge als
   heute, eine Mitte mit eigener Schusszahl), fehlt „Ändern“, und die Action lehnt ab (`detailsToForm` prüft den Weg
   hin und zurück). Wechselt die Disziplin im Formular, bleibt alles Getippte (`fitToDiscipline`); zugeklappt gilt die
   Summe aus den Schüssen (`toggleRow`). Bleiben Tag und Uhrzeit, bleibt der gespeicherte Beginn auf die Millisekunde. Löschen wie jede Scheibe.

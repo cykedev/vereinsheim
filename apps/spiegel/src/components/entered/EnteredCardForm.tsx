@@ -54,8 +54,9 @@ const errorProps = (id: string, message: string | undefined) =>
 /**
  * Formular „Ergebnis eintragen“ ([[adr-033]]) für eine neue Scheibe von Hand und zum Ändern einer eingetragenen: Tag,
  * Uhrzeit (wenn bekannt), Ort mit Vorschlägen (nur beim Anlegen, danach im Kasten „Diese Scheibe“), Werte in Zehnteln
- * oder ganzen Ringen, Serien mit „Schüsse einzeln“ oder nur das Gesamtergebnis, Trefferlage als Summe. Gesteuert; Fehler je Feld aus der Action. Ungespeicherte Eingaben
- * fragen vor dem Verlassen über „Zurück“ (`enteredDiscard`), vor dem Neuladen der Browser.
+ * oder ganzen Ringen, Serien mit „Schüsse einzeln“ oder nur das Gesamtergebnis, Trefferlage als Summe. Gesteuert; Fehler
+ * je Feld aus der Action. Ungespeicherte Eingaben fragen vor dem Verlassen über „Zurück“ (`enteredDiscard`), vor dem
+ * Neuladen der Browser.
  */
 export function EnteredCardForm({
   mode,

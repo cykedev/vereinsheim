@@ -66,8 +66,8 @@ export function CardActions({
         {lines.map((line) => (
           <PartLineRow key={line.key} line={line} />
         ))}
-        {entry?.entry && (
-          <CardEntry cardId={cardId} from={entry.entry.from} editable={entry.entry.editable} />
+        {entry?.entered && (
+          <CardEntry cardId={cardId} from={entry.entered.from} editable={entry.entered.editable} />
         )}
         {fetch && (fetch.hex || fetch.printouts.length > 0) && (
           <CardPrintout hex={fetch.hex} printouts={fetch.printouts} timeZone={timeZone} />

@@ -208,7 +208,7 @@ export async function cardForEdit(
 /** was der Kasten „Diese Scheibe“ zu Eintrag und Ort zeigt */
 export interface CardEntryInfo {
   /** eingetragen (änderbar, wenn das Formular alle Angaben zeigen kann); null vom Ausdruck */
-  entry: { from: "manual" | "treffsicher"; editable: boolean } | null
+  entered: { from: "manual" | "treffsicher"; editable: boolean } | null
   place: string | null
   /** die eigenen Orte als Vorschlag */
   places: string[]
@@ -228,10 +228,10 @@ export async function cardEntryInfo(
   })
   if (!row || row.origin === "raw") return null
   const places = await ownPlaces(db, ownerId)
-  if (row.origin === "pdf") return { entry: null, place: row.place, places }
+  if (row.origin === "pdf") return { entered: null, place: row.place, places }
   const card = await cardForEdit(db, { cardId, ownerId, timeZone })
   return {
-    entry: {
+    entered: {
       from: row.origin,
       editable: card !== null && detailsToForm(card.stored, card.discipline, card) !== null,
     },

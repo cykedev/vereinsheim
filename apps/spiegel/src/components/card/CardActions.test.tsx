@@ -189,8 +189,8 @@ describe("Kasten „Diese Scheibe“", () => {
 })
 
 describe("Eintrag und Ort je Herkunft", () => {
-  const manual = { entry: { from: "manual" as const, editable: true }, place: null, places: [] }
-  const pdf = { entry: null, place: null, places: [] }
+  const manual = { entered: { from: "manual" as const, editable: true }, place: null, places: [] }
+  const pdf = { entered: null, place: null, places: [] }
 
   it("eingetragen: „Eintrag“ zuerst, mit „Ändern“ zum Formular; danach die Ort-Zeile", () => {
     const html = render(null, { ...manual, place: "Halle" })
@@ -204,12 +204,13 @@ describe("Eintrag und Ort je Herkunft", () => {
 
   it("aus Treffsicher, nicht ganz zu zeigen: ohne „Ändern“ am Eintrag, mit Ort-Zeile", () => {
     const html = render(null, {
-      entry: { from: "treffsicher", editable: false },
+      entered: { from: "treffsicher", editable: false },
       place: null,
-      places: ["Halle"],
+      places: [],
     })
     expect(rowText(html, 'data-card-entry="treffsicher"')).toContain("Aus Treffsicher übernommen")
     expect(html).not.toContain("/edit")
+    expect(html.indexOf("data-card-entry")).toBeLessThan(html.indexOf("data-card-place"))
     expect(rowText(html, "data-card-place")).toContain("Ort Kein Ort angegeben")
     expect(html).toContain('aria-label="Ort ändern"')
   })
@@ -269,13 +270,13 @@ describe("Belege", () => {
   })
 
   it("dieselbe Stelle je Herkunft: Eintrag → Ort → Belege → Disziplin, Ausdruck → Ort → Belege → Disziplin", () => {
-    before(render(null, { entry: { from: "manual", editable: true }, place: null, places: [] }), [
+    before(render(null, { entered: { from: "manual", editable: true }, place: null, places: [] }), [
       "data-card-entry",
       "data-card-place",
       "data-card-evidence",
       "data-card-discipline",
     ])
-    before(render(printout, { entry: null, place: null, places: [] }), [
+    before(render(printout, { entered: null, place: null, places: [] }), [
       "data-card-printout",
       "data-card-place",
       "data-card-evidence",

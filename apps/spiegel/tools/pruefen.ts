@@ -1429,6 +1429,12 @@ async function handEntry(page: Page) {
       saved && body.includes("Von Hand eingetragen") && body.includes("40,1"),
       body.slice(0, 120)
     )
+    check(
+      "Von Hand: der Ort steht in seiner Zeile mit „Ort ändern“",
+      await page.ev<boolean>(
+        `txt($("[data-card-place] [data-place-name]")) === "Prüfhalle" && !!$('[data-card-place] [aria-label="Ort ändern"]')`
+      )
+    )
 
     await page.click(`link("Eintrag ändern")`)
     check(

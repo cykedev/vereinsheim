@@ -248,17 +248,17 @@ describe("cardEntryInfo", () => {
   it("jede Herkunft ohne Brücke trägt den Ort, eingetragene dazu den Eintrag", async () => {
     await created({ series: sums("98"), place: "Schützenhaus Nord" })
     const pdf = await entered("pdf", "Halle")
-    expect(await info(pdf)).toMatchObject({ entry: null, place: "Halle" })
+    expect(await info(pdf)).toMatchObject({ entered: null, place: "Halle" })
     expect((await info(pdf))?.places).toContain("Schützenhaus Nord")
     const manual = await entered("manual", null)
     expect(await info(manual)).toMatchObject({
-      entry: { from: "manual", editable: true },
+      entered: { from: "manual", editable: true },
       place: null,
     })
     expect((await info(manual))?.places).toContain("Halle")
     const treffsicher = await entered("treffsicher", "Vereinsheim")
     expect(await info(treffsicher)).toMatchObject({
-      entry: { from: "treffsicher", editable: true },
+      entered: { from: "treffsicher", editable: true },
       place: "Vereinsheim",
     })
   })
@@ -279,7 +279,7 @@ describe("cardEntryInfo", () => {
     })
     if (result.kind !== "saved") throw new Error(result.kind)
     expect(await info(result.cardId)).toMatchObject({
-      entry: { from: "treffsicher", editable: false },
+      entered: { from: "treffsicher", editable: false },
       place: "Halle",
     })
   })
