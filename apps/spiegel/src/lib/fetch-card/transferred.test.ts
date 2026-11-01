@@ -208,7 +208,7 @@ describe("transferredCardsFitting", () => {
     await transferCard(e.at(17, 0, -1), { shots: 40, rings })
     const trashed = await transferCard(e.startedAtMs, { shots: 40, rings })
     await db.card.update({ where: { id: trashed }, data: { deletedAt: new Date() } })
-    await transferCard(e.startedAtMs, { shots: 40, rings }, other)
+    const foreign = await transferCard(e.startedAtMs, { shots: 40, rings }, other)
     // in Zehnteln zählen die Zehntel: dieselben Ringe, ein Zehntel mehr
     await transferCard(e.startedAtMs, { shots: 40, rings, decimalTenths: decimalTenths + 1 })
     // eine Scheibe vom Ausdruck mit demselben Ergebnis
@@ -225,8 +225,8 @@ describe("transferredCardsFitting", () => {
       })
     )
     expect(await search(e.day, file(e.printedAt))).toEqual({ kind: "one", cardId: fitting })
-    // fremdes Konto: seine eine
-    expect(await search(e.day, file(e.printedAt), other)).toMatchObject({ kind: "one" })
+    // das andere Konto: seine eine
+    expect(await search(e.day, file(e.printedAt), other)).toEqual({ kind: "one", cardId: foreign })
   })
 
   it("zwei passende: mehrere, Spiegel rät nicht", async () => {

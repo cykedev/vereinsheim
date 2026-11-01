@@ -10,6 +10,7 @@ import { generateSeason } from "../../../test/generate"
 import { createTestSite, type TestSite } from "../../../test/fixtures"
 import { dismissRequest, MAX_OPEN_REQUESTS } from "../card-requests/queries"
 import { writeRevision } from "../db/cards"
+import { lockCard } from "../db/purge"
 import { kindOfRow } from "../db/reads"
 import { NO_VALUES, valuesReadOf, type StoredPrintout } from "../printouts/store"
 import { writeTransferCard } from "../transfer/write"
@@ -727,10 +728,14 @@ describe("fetchCard mit Scheiben aus Treffsicher", () => {
     expect(await transferState(cardId)).toEqual(UNTOUCHED)
   })
 
-  it("Werte, die die Scheibe nicht nimmt: angehängt ohne Werte und ohne Auftrag, die Brücke füllt sie nicht", async () => {
+  it("Werte, die die Scheibe nicht nimmt: angehängt ohne Werte und ohne Auftrag, ein älterer Auftrag endet", async () => {
     const id = nextId++
     const { day, printed, at } = await evening(id)
     const cardId = await transferCard(at(17), printed)
+    // ohne Scheibe vom Ausdruck legte die Brücke für diesen Auftrag eine zweite Scheibe an
+    const legacy = await db.cardRequest.create({
+      data: { userId: site.ownerId, siteId: site.siteId, scheibenId: id, day },
+    })
     const rifle = await db.discipline.create({
       data: {
         siteId: site.siteId,
@@ -751,6 +756,37 @@ describe("fetchCard mit Scheiben aus Treffsicher", () => {
       origin: "treffsicher",
       _count: { printouts: 1, revisions: 1, requests: 0 },
     })
+    expect((await requestsOf(id)).map((r) => [r.id, r.status, r.cardId])).toEqual([
+      [legacy.id, "withdrawn", null],
+    ])
+  })
+
+  it("unter der Sperre geprüft: liegt die gefundene Scheibe danach im Papierkorb, hängt nichts an", async () => {
+    const id = nextId++
+    const { day, printed, at } = await evening(id)
+    const cardId = await transferCard(at(17), printed)
+    let release = () => {}
+    const held = new Promise<void>((resolve) => (release = resolve))
+    let locked = () => {}
+    const isLocked = new Promise<void>((resolve) => (locked = resolve))
+    const holder = db.$transaction(
+      async (tx) => {
+        await lockCard(tx, cardId)
+        locked()
+        await held
+        await tx.card.update({ where: { id: cardId }, data: { deletedAt: new Date() } })
+      },
+      { timeout: 20_000 }
+    )
+    await isLocked
+    // das Holen findet die Scheibe und wartet auf ihre Sperre
+    const fetching = fetchCard(db, input(id, { day, file: printed }))
+    await new Promise((resolve) => setTimeout(resolve, 500))
+    release()
+    await holder
+    await expect(fetching).rejects.toThrow()
+    expect(await db.printout.count({ where: { cardId } })).toBe(0)
+    expect(await requestsOf(id)).toEqual([])
   })
 })
 

@@ -134,8 +134,8 @@ Passwortwechsel; beim ersten Lauf wird das Tagebuch eingeschaltet.
 
 Die meisten übernommenen Scheiben haben keinen Ausdruck. Holt der Schütze ihn später (Kamera, Link, Upload unter
 „Scheibe holen“ oder `printout-import`), sucht Spiegel die passende Scheibe aus Treffsicher, statt eine zweite
-anzulegen (3d, freigegeben am 1. November 2026). Die Regel ist dieselbe wie in der Übernahme, beide Wege nutzen
-`src/lib/fetch-card/transferred.ts`:
+anzulegen ([[adr-033]] Stufe 3, freigegeben am 1. November 2026). Die Regel ist dieselbe wie in der Übernahme, beide
+Wege nutzen `src/lib/fetch-card/transferred.ts`:
 
 - **Welche:** eigene Scheiben mit Herkunft `treffsicher`, nicht im Papierkorb, ohne Brücke, am Abend des Ausdrucks
   (`transferredCardsFitting`). Ob eine passt, entscheidet `printoutFits`. Wertung und Schusszahl kommen aus der
@@ -148,13 +148,19 @@ anzulegen (3d, freigegeben am 1. November 2026). Die Regel ist dieselbe wie in d
   (`adoptPrintoutValues`, Revision dazu, Herkunft `pdf`). Die ID bleibt, Verknüpfungen im Tagebuch also auch. Mit
   Werten bekommt sie unter „Scheibe holen“ einen Auftrag an die Brücke (ein älterer offener ohne Scheibe für dieselbe
   ID und denselben Tag bekommt sie). Ohne Werte bleibt sie aus Treffsicher und bekommt keinen Auftrag: Die Brücke füllt
-  nur Scheiben vom Ausdruck, ein Auftrag ergäbe eine zweite Scheibe. `printout-import` legt wie sonst keinen an.
+  nur Scheiben vom Ausdruck, ein Auftrag ergäbe eine zweite Scheibe. Aus demselben Grund endet dann ein älterer offener
+  Auftrag dieser ID und dieses Tags wie nach „Nicht mehr holen“. `printout-import` legt wie sonst keinen an.
+  Unter der Sperre der Scheibe prüft `adoptIntoTransferred` noch einmal, ob sie aus Treffsicher und nicht im Papierkorb
+  ist; ein Löschen oder Ändern dazwischen bricht das Holen ab.
 - **Mehrere:** Spiegel rät nicht und legt wie bisher eine neue Scheibe an; das Blatt „Neue Scheibe“ sagt es,
   `printout-import` zählt den Fall. Keine der passenden ändert sich.
 - **Die Übernahme sucht nicht:** `placeAttachment` ruft `importPrintoutIn` mit `matchTransferred: false`. Sonst hinge
   ein Ausdruck ohne Scheibe seiner Einheit an der einer anderen Einheit.
 
-Seriensummen vergleicht `printoutFits` nicht, wie in der Übernahme.
+Seriensummen vergleicht `printoutFits` nicht, wie in der Übernahme. Eine übernommene Scheibe, an der schon ein Ausdruck
+hängt, der in der Übernahme nicht passte, kann trotzdem passen; sie trägt dann zwei IDs. Im Probelauf von
+`printout-import` rollt jeder Ausdruck einzeln zurück: Passen zwei Ausdrucke eines Abends zur selben Scheibe, zählt er
+beide als „an Scheibe aus Treffsicher“, im echten Lauf legt der zweite eine neue Scheibe an.
 
 ### Hauptbuch: geändert, gelöscht, nie platziert
 

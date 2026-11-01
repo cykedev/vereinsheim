@@ -14,7 +14,8 @@ import { lockCard } from "../db/purge"
 import { applyPrintoutValues } from "../printouts/apply"
 import { attachPrintout, markPrintoutValues } from "../printouts/queries"
 import type { StoredPrintout } from "../printouts/store"
-import { headerDisciplineId, newCardValues, ownCardOfEvening } from "./queries"
+import { newCardValues } from "./card-values"
+import { headerDisciplineId, ownCardOfEvening } from "./queries"
 import { adoptIntoTransferred, transferredCardsFitting } from "./transferred"
 
 export type ImportResult =

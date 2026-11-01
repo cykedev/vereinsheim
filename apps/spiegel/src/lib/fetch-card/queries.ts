@@ -8,7 +8,7 @@
 // anderer Konten bleiben.
 
 import { zonedWallTimeMs } from "@vereinsheim/lib/format"
-import { TARGETS, type TargetId } from "@vereinsheim/shot-core/targets"
+import { TARGETS } from "@vereinsheim/shot-core/targets"
 import { eveningDay } from "@vereinsheim/shot-ui/period/calendar"
 
 import { Prisma, type CardKind, type CardRequestStatus } from "@/generated/prisma/client"
@@ -25,7 +25,7 @@ import { VISIBLE_CARD } from "../db/visible"
 import { applyPrintoutValues } from "../printouts/apply"
 import { attachPrintout, markPrintoutValues } from "../printouts/queries"
 import type { StoredPrintout } from "../printouts/store"
-import { detailsFromReading } from "../printouts/values"
+import { newCardValues } from "./card-values"
 import { adoptIntoTransferred, transferredCardsFitting } from "./transferred"
 
 /** eine Disziplin, die der Schütze für eine neue Scheibe wählen kann */
@@ -210,22 +210,6 @@ export async function ownCardOfEvening(
 }
 
 /**
- * Die Angaben einer neuen Scheibe aus dem Ausdruck: stimmt die Lesung mit dem Scheibenbild der Disziplin, ihre Werte
- * und die Standnummer; sonst keine (`inconsistent`, wenn der Ausdruck eine Lesung hatte)
- */
-export function newCardValues(file: StoredPrintout | null, targetId: string | null) {
-  const reading = file?.values.reading ?? null
-  if (reading === null) return { details: {}, stand: undefined, inconsistent: false }
-  const result = detailsFromReading(
-    reading,
-    targetId !== null && Object.hasOwn(TARGETS, targetId) ? (targetId as TargetId) : null
-  )
-  return result.ok
-    ? { details: result.details, stand: result.stand, inconsistent: false }
-    : { details: {}, stand: undefined, inconsistent: true }
-}
-
-/**
  * Eine Scheibe holen, in einer Transaktion unter der Sperre der Kontozeile (zwei gleichzeitige Holen derselben Scheibe
  * ergeben eine; `FOR NO KEY UPDATE`, damit das Einlesen beim Anlegen einer Scheibe des Kontos über den Fremdschlüssel
  * nicht über Kreuz wartet). Die eigene Scheibe des Abends findet Spiegel zuerst als Scheibe der Brücke (Quelle, ScheibenID), dann als
@@ -340,8 +324,9 @@ export async function fetchCard(db: Db, input: FetchInput): Promise<FetchResult>
     }
 
     // ein Ausdruck ergänzt die eine passende Scheibe aus Treffsicher, außer der Schütze hatte die Scheibe gelöscht. Mit
-    // seinen Werten ist sie eine Scheibe vom Ausdruck und bekommt einen Auftrag, den die Brücke füllen kann; ohne bleibt
-    // sie aus Treffsicher, und die Brücke füllt sie nicht.
+    // seinen Werten ist sie eine Scheibe vom Ausdruck und bekommt einen Auftrag, den die Brücke füllen kann. Ohne bleibt
+    // sie aus Treffsicher, die Brücke füllt sie nicht, und ein älterer offener Auftrag dieses Abends ließe die Brücke
+    // eine zweite Scheibe anlegen: Er endet wie nach „Nicht mehr holen“.
     const transferred =
       file && !relifts
         ? await transferredCardsFitting(tx, { userId, day, timeZone, file })
@@ -349,7 +334,13 @@ export async function fetchCard(db: Db, input: FetchInput): Promise<FetchResult>
     if (file && transferred.kind === "one") {
       const { cardId } = transferred
       const { values } = await adoptIntoTransferred(tx, { cardId, ownerId: userId, file })
-      if (values) await requestFor(cardId, await legacyRequest())
+      const legacy = await legacyRequest()
+      if (values) await requestFor(cardId, legacy)
+      else if (legacy)
+        await tx.cardRequest.updateMany({
+          where: { id: legacy.id, status: "open", cardId: null },
+          data: { status: "withdrawn", closedAt: new Date(nowMs) },
+        })
       return { kind: "matched", cardId, day, values }
     }
     if (!choice) return { kind: "choose", relifts, several: transferred.kind === "several" }

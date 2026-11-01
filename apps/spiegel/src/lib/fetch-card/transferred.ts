@@ -14,7 +14,7 @@ import { lockCard } from "../db/purge"
 import { attachPrintout, markPrintoutValues } from "../printouts/queries"
 import type { PrintoutValuesRead, StoredPrintout } from "../printouts/store"
 import { scoringReading } from "../printouts/values"
-import { newCardValues } from "./queries"
+import { newCardValues } from "./card-values"
 
 type Tx = Prisma.TransactionClient
 
@@ -48,14 +48,14 @@ export function printoutFits(
   return wanted !== undefined && wanted !== null && wanted === printed
 }
 
+export type AdoptOutcome = "adopted" | "noValues" | Exclude<EnteredResult["kind"], "saved">
+
 /**
  * Die Werte eines passenden Ausdrucks als neue Revision über den Zahlen aus Treffsicher: Die Scheibe wird „vom Ausdruck“
  * (`detailsWriter` erlaubt `treffsicher` → `pdf`), Revision 1 bleibt. Beginn und Art bleiben wie bei
  * `applyPrintoutValues`. Ein Ausdruck im Modus Probe gibt seine Schüsse als Wertung (`scoringReading`, wie in
  * `printoutFits`). Ohne Werte, die das Scheibenbild annimmt, nichts (`noValues`, der Ausdruck `inconsistent`).
  */
-export type AdoptOutcome = "adopted" | "noValues" | Exclude<EnteredResult["kind"], "saved">
-
 export async function adoptPrintoutValues(
   tx: Tx,
   input: { cardId: string; ownerId: string; file: StoredPrintout; printoutId: string }
