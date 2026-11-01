@@ -36,6 +36,7 @@ describe("Ergebnis eintragen (Markup)", () => {
     expect(html).toContain(">Ändern<")
     expect(html).toMatch(/id="entered-day"[^>]*max="2026-10-28"/)
     expect(html).toContain("Uhrzeit (wenn bekannt)")
+    expect(html).toMatch(/<label[^>]*for="entered-place"[^>]*>Ort</)
     expect(html).toContain('placeholder="etwa Schützenhaus Musterdorf"')
     expect(html).toContain('<option value="Schützenhaus Nord">')
     expect(html).toContain('aria-label="Werte in"')
@@ -71,9 +72,21 @@ describe("Ergebnis eintragen (Markup)", () => {
     expect(html).toMatch(/id="entered-total-shots"[^>]*placeholder="40"/)
   })
 
-  it("ändern: anderer Titel, kein Wechsel der Disziplin", () => {
-    const html = render({ mode: "edit", cardId: "c1", choices: undefined, back: "/cards/c1" })
+  it("ändern: anderer Titel, kein Wechsel der Disziplin, kein Feld „Ort“", () => {
+    const html = render({
+      mode: "edit",
+      cardId: "c1",
+      choices: undefined,
+      back: "/cards/c1",
+      places: undefined,
+      initial: { ...emptyForm(LG40, "2026-10-28"), place: "Halle" },
+    })
     expect(html).toContain(">Eintrag ändern<")
     expect(html).not.toContain(">Ändern<")
+    expect(html).toContain('id="entered-day"')
+    expect(html).toContain("Uhrzeit (wenn bekannt)")
+    expect(html).not.toContain('id="entered-place"')
+    expect(html).not.toContain("entered-places")
+    expect(html).not.toContain("Halle")
   })
 })

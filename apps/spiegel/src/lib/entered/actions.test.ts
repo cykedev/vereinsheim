@@ -98,20 +98,20 @@ describe("saveEnteredCard", () => {
     expect(await ownPlaces(db, ownerId)).toEqual(["Schützenhaus Nord"])
   })
 
-  it("ändern: neue Revision bei neuen Werten, gleiche Werte nur Tag und Ort", async () => {
+  it("ändern: neue Revision bei neuen Werten, gleiche Werte nur Tag und Uhrzeit", async () => {
     const cardId = await created({ series: sums("98", "97") })
     const edit = await cardForEdit(db, { cardId, ownerId, timeZone: TZ })
     expect(edit).toMatchObject({ day: "2026-10-20", time: "", kind: "competition" })
     const again = await saveEnteredCard({
       cardId,
-      form: form({ series: sums("98", "97"), time: "19:30", place: "Halle" }),
+      form: form({ series: sums("98", "97"), time: "19:30" }),
     })
     expect(again).toEqual({ success: true, data: { cardId } })
     let card = await db.card.findUniqueOrThrow({
       where: { id: cardId },
       include: { currentRevision: true },
     })
-    expect(card).toMatchObject({ timeUnknown: false, place: "Halle" })
+    expect(card).toMatchObject({ timeUnknown: false })
     expect(card.startedAt).toEqual(new Date(Date.UTC(2026, 9, 20, 17, 30)))
     expect(card.currentRevision?.number).toBe(1)
     await saveEnteredCard({ cardId, form: form({ series: sums("98", "97,5") }) })
@@ -120,6 +120,18 @@ describe("saveEnteredCard", () => {
       include: { currentRevision: true },
     })
     expect(card.currentRevision).toMatchObject({ number: 2, reason: "von Hand geändert" })
+  })
+
+  it("ändern lässt den Ort stehen: er hat seine Zeile an der Scheibe, das Formular nur beim Anlegen", async () => {
+    const cardId = await created({ series: sums("98"), place: "Halle" })
+    expect(
+      await saveEnteredCard({ cardId, form: form({ series: sums("97"), place: "" }) })
+    ).toEqual({ success: true, data: { cardId } })
+    expect(await db.card.findUniqueOrThrow({ where: { id: cardId } })).toMatchObject({
+      place: "Halle",
+    })
+    await saveEnteredCard({ cardId, form: form({ series: sums("97"), place: "Anderswo" }) })
+    expect((await db.card.findUniqueOrThrow({ where: { id: cardId } })).place).toBe("Halle")
   })
 
   it("Fehler je Feld, nichts geschrieben", async () => {
@@ -190,11 +202,10 @@ describe("saveEnteredCard", () => {
     expect(edit).toMatchObject({ day: "2026-10-18", time: "19:00" })
     await saveEnteredCard({
       cardId: plain.cardId,
-      form: form({ day: "2026-10-18", time: "19:00", series: sums("98,0"), place: "Halle" }),
+      form: form({ day: "2026-10-18", time: "19:00", series: sums("98,0") }),
     })
     const kept = await db.card.findUniqueOrThrow({ where: { id: plain.cardId } })
     expect(kept.startedAt.getTime()).toBe(Date.UTC(2026, 9, 18, 17, 0, 42, 123))
-    expect(kept.place).toBe("Halle")
   })
 
   it("eine Scheibe vom Ausdruck lässt sich hier nicht ändern", async () => {

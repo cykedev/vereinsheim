@@ -53,8 +53,8 @@ const errorProps = (id: string, message: string | undefined) =>
 
 /**
  * Formular „Ergebnis eintragen“ ([[adr-033]]) für eine neue Scheibe von Hand und zum Ändern einer eingetragenen: Tag,
- * Uhrzeit (wenn bekannt), Ort mit Vorschlägen, Werte in Zehnteln oder ganzen Ringen, Serien mit „Schüsse einzeln“ oder
- * nur das Gesamtergebnis, Trefferlage als Summe. Gesteuert; Fehler je Feld aus der Action. Ungespeicherte Eingaben
+ * Uhrzeit (wenn bekannt), Ort mit Vorschlägen (nur beim Anlegen, danach im Kasten „Diese Scheibe“), Werte in Zehnteln
+ * oder ganzen Ringen, Serien mit „Schüsse einzeln“ oder nur das Gesamtergebnis, Trefferlage als Summe. Gesteuert; Fehler je Feld aus der Action. Ungespeicherte Eingaben
  * fragen vor dem Verlassen über „Zurück“ (`enteredDiscard`), vor dem Neuladen der Browser.
  */
 export function EnteredCardForm({
@@ -63,7 +63,7 @@ export function EnteredCardForm({
   discipline,
   kind,
   initial,
-  places,
+  places = [],
   today,
   back,
   choices,
@@ -74,7 +74,8 @@ export function EnteredCardForm({
   discipline: FormDiscipline & { id: number; name: string }
   kind: CardKind
   initial: EnteredFormState
-  places: readonly string[]
+  /** die eigenen Orte als Vorschlag, nur beim Anlegen */
+  places?: readonly string[]
   /** heute in der Anzeige-Zone (`YYYY-MM-DD`), Grenze des Tags */
   today: string
   /** der Rückweg: „Scheibe holen“ oder die Scheibe */
@@ -224,30 +225,32 @@ export function EnteredCardForm({
                 {...errorProps("entered-time-error", errorOf("time"))}
               />
             )}
-            {field(
-              "entered-place",
-              "Ort",
-              errorOf("place"),
-              <>
-                <Input
-                  id="entered-place"
-                  list="entered-places"
-                  autoComplete="off"
-                  maxLength={PLACE_MAX}
-                  placeholder="etwa Schützenhaus Musterdorf"
-                  value={form.place}
-                  disabled={pending}
-                  onChange={(e) => set("place", e.target.value)}
-                  {...errorProps("entered-place-error", errorOf("place"))}
-                />
-                <datalist id="entered-places">
-                  {places.map((place) => (
-                    <option key={place} value={place} />
-                  ))}
-                </datalist>
-              </>,
-              "min-w-0 grow basis-56"
-            )}
+            {/* beim Ändern hat der Ort seine Zeile an der Scheibe (`CardPlace`), hier entsteht er nur mit ihr */}
+            {mode === "new" &&
+              field(
+                "entered-place",
+                "Ort",
+                errorOf("place"),
+                <>
+                  <Input
+                    id="entered-place"
+                    list="entered-places"
+                    autoComplete="off"
+                    maxLength={PLACE_MAX}
+                    placeholder="etwa Schützenhaus Musterdorf"
+                    value={form.place}
+                    disabled={pending}
+                    onChange={(e) => set("place", e.target.value)}
+                    {...errorProps("entered-place-error", errorOf("place"))}
+                  />
+                  <datalist id="entered-places">
+                    {places.map((place) => (
+                      <option key={place} value={place} />
+                    ))}
+                  </datalist>
+                </>,
+                "min-w-0 grow basis-56"
+              )}
           </div>
         </section>
 

@@ -9,7 +9,7 @@ import { isCardIdInput } from "@/lib/action-guards"
 import { requireSession } from "@/lib/auth-helpers"
 import { db } from "@/lib/db"
 import { detailsToForm } from "@/lib/entered/form"
-import { cardForEdit, ownPlaces } from "@/lib/entered/queries"
+import { cardForEdit } from "@/lib/entered/queries"
 
 export const metadata: Metadata = { title: "Eintrag ändern" }
 
@@ -35,7 +35,6 @@ export default async function EditEnteredCardRoute({
       discipline={card.discipline}
       kind={card.shownKind}
       initial={initial}
-      places={await ownPlaces(db, session.user.id)}
       today={formatIsoDate(new Date(), timeZone)}
       back={`/cards/${id}`}
     />

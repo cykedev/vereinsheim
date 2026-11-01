@@ -1407,6 +1407,7 @@ async function handEntry(page: Page) {
       "Von Hand: aufgeklappt rechnet die Summe aus den Schüssen",
       await page.waitFor(`$("#series-1-sum").value === "20,2"`)
     )
+    await fill(page, "#entered-place", "Prüfhalle")
     await page.click(`$("[data-entered-save]")`)
     check(
       "Von Hand: Summe neben Schüssen einzeln ist ein Fehler an der Summe",
@@ -1431,12 +1432,12 @@ async function handEntry(page: Page) {
 
     await page.click(`link("Eintrag ändern")`)
     check(
-      "Ändern: das Formular trägt die Schüsse",
+      "Ändern: das Formular trägt die Schüsse, ohne Feld „Ort“ (der Ort steht an der Scheibe)",
       (await page.waitFor(`!!$('[data-entered-form="edit"]')`, 10_000)) &&
-        (await page.ev<string>(`$("#series-0-shot-0").value`)) === "10,0"
+        (await page.ev<string>(`$("#series-0-shot-0").value`)) === "10,0" &&
+        (await page.ev<boolean>(`!$("#entered-place")`))
     )
     await fill(page, "#series-0-shot-0", "1", 1)
-    await fill(page, "#entered-place", "Prüfhalle")
     await page.click(`button("Zurück")`)
     check(
       "Ändern: mit Eingaben fragt „Zurück“ erst",
@@ -1451,7 +1452,7 @@ async function handEntry(page: Page) {
     const shown = `(() => { const t = txt($("main") ?? document.body); return t.includes("40,2") && t.includes("Prüfhalle") })()`
     const first = await page.ev<boolean>(shown)
     check(
-      "Ändern: der neue Schuss und der Ort stehen auf der Seite",
+      "Ändern: der neue Schuss steht auf der Seite, der Ort bleibt",
       back && (first || (await page.waitFor(shown, 10_000))),
       first
         ? "sofort"

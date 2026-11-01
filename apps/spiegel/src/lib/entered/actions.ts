@@ -54,9 +54,9 @@ const fieldErrors = (errors: Record<string, string>) => ({
 })
 
 /**
- * Eine Scheibe von Hand speichern. Neu: mit Disziplin (wählbar auf der Anlage) und Art; ändern: eine eigene,
- * eingetragene Scheibe, Disziplin und Art bleiben. Die Werte werden eine neue Revision, wenn sie sich ändern; Tag,
- * Uhrzeit und Ort stehen an der Scheibe.
+ * Eine Scheibe von Hand speichern. Neu: mit Disziplin (wählbar auf der Anlage), Art und Ort; ändern: eine eigene,
+ * eingetragene Scheibe, Disziplin, Art und Ort bleiben. Die Werte werden eine neue Revision, wenn sie sich ändern; Tag
+ * und Uhrzeit stehen an der Scheibe.
  */
 export async function saveEnteredCard(input: {
   cardId?: string
@@ -108,7 +108,9 @@ export async function saveEnteredCard(input: {
       ...(kept && kept.day === form.day && kept.time === form.time.trim()
         ? { startedAtMs: kept.startedAtMs, timeUnknown: kept.timeUnknown }
         : { startedAtMs: when.startedAtMs, timeUnknown: when.timeUnknown }),
-      place: form.place,
+      // der Ort zählt nur beim Anlegen; danach hat er seine Zeile an der Scheibe (`setCardPlace`), und ein Formular
+      // zum Ändern (auch ein alter Tab) lässt ihn stehen
+      place: target.cardId ? undefined : form.place,
       details: details.details,
       reason: target.cardId ? "von Hand geändert" : "von Hand eingetragen",
     })
