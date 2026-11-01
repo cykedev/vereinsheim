@@ -215,6 +215,23 @@ describe("placeAttachment: Meyton-Ausdruck", () => {
     const placed = await place(null, { kind: "printout", file }, null)
     expect(placed).toMatchObject({ kind: "printoutImported", result: { kind: "created" } })
   })
+
+  it("ohne Scheibe der Einheit: keine Suche, eine andere übernommene Scheibe mit gleichem Ergebnis bleibt", async () => {
+    const file = await stored(nextId++)
+    const other = await transferCard(file.values.reading!.total!.rings)
+    const placed = await place(null, { kind: "printout", file }, null)
+    expect(placed).toMatchObject({
+      kind: "printoutImported",
+      result: { kind: "created", several: false },
+    })
+    const card = await db.card.findUniqueOrThrow({
+      where: { id: other },
+      include: { printouts: true },
+    })
+    expect(card.origin).toBe("treffsicher")
+    expect(card.printouts).toEqual([])
+    expect((await revisionsOf(other)).map((r) => r.number)).toEqual([1])
+  })
 })
 
 describe("placeAttachment: Beleg", () => {

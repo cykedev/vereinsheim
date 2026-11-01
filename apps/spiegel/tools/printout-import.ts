@@ -1,8 +1,9 @@
 // Einen Ordner alter Meyton-Ausdrucke (PDF) in Scheiben eines Kontos einlesen ([[meyton-printout]] „Alte Ausdrucke
 // einlesen“): je PDF derselbe Weg wie ein Upload unter „Scheibe holen“ (Kindprozess, Datei nach sha256 unter
-// `UPLOAD_DIR`), dann `importPrintout` ohne Auftrag an die Brücke. Idempotent: Eine Datei, die schon an einer eigenen
-// Scheibe hängt, liest es nicht noch einmal. Der Bericht enthält nur Zahlen (ADR-029): keinen Namen, keine ID, kein
-// Datum, keinen Dateinamen. Nur gegen die lokale Dev-Datenbank (`--force` für eine andere lokale); den Weg in Prod
+// `UPLOAD_DIR`), dann `importPrintout` ohne Auftrag an die Brücke. Passt ein Ausdruck zu genau einer Scheibe aus
+// Treffsicher des Abends, ergänzt er sie; passen mehrere, legt es eine neue an und zählt den Fall. Idempotent: Eine
+// Datei, die schon an einer eigenen Scheibe hängt, liest es nicht noch einmal. Der Bericht enthält nur Zahlen (ADR-029):
+// keinen Namen, keine ID, kein Datum, keinen Dateinamen. Nur gegen die lokale Dev-Datenbank (`--force` für eine andere lokale); den Weg in Prod
 // beschreibt der Vault.
 //
 //   pnpm --filter spiegel printout-import <ordner> [--email <adresse>] [--dry-run] [--force]
@@ -67,6 +68,7 @@ async function main() {
     const withoutValues = new Counts()
     const rejected = new Counts()
     let withValues = 0
+    let several = 0
     let maxRssKb = 0
     for (const name of files) {
       const bytes = new Uint8Array(readFileSync(join(folder, name)))
@@ -93,6 +95,7 @@ async function main() {
       })
       const labels: Record<typeof result.kind, string> = {
         attached: "angehängt",
+        matched: "an Scheibe aus Treffsicher",
         created: "angelegt",
         trashed: "im Papierkorb",
         taken: "fremd",
@@ -100,7 +103,8 @@ async function main() {
         noDiscipline: "ohne Disziplin",
       }
       outcome.add(labels[result.kind])
-      if (result.kind === "attached" || result.kind === "created") {
+      if (result.kind === "created" && result.several) several++
+      if (result.kind === "attached" || result.kind === "matched" || result.kind === "created") {
         if (result.values) withValues++
         else
           withoutValues.add(
@@ -113,6 +117,7 @@ async function main() {
       `${dryRun ? "Probelauf, nichts geschrieben. " : ""}${files.length} PDFs im Ordner`,
       "Ergebnis:",
       ...outcome.lines(),
+      `mehrere passend, neu angelegt: ${several}`,
       `mit Werten: ${withValues}`,
       "ohne Werte je Status:",
       ...withoutValues.lines(),

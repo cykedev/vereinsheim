@@ -103,8 +103,8 @@ export type PlacedAttachment =
 /**
  * Wohin ein Anhang einer Einheit geht. Ein Meyton-Ausdruck: an die eigene Scheibe mit seiner ID an seinem Abend; sonst
  * an `card` (die Scheibe der Einheit), mit seinen Werten, wenn sie „aus Treffsicher“ ist und er passt
- * (`printoutFits`); ohne `card` wie ein alter Ausdruck (`importPrintoutIn`). Ein Foto oder gewöhnliches PDF wird Beleg
- * an `card`.
+ * (`printoutFits`); ohne `card` wie ein alter Ausdruck (`importPrintoutIn`), aber ohne Suche nach einer anderen Scheibe
+ * aus Treffsicher. Ein Foto oder gewöhnliches PDF wird Beleg an `card`.
  */
 export async function placeAttachment(
   tx: Tx,
@@ -148,6 +148,7 @@ export async function placeAttachment(
       siteId,
       file,
       fallbackDisciplineId: attachment.disciplineId,
+      matchTransferred: false,
     })
     return { kind: "printoutOwnCard", cardId: own.id, result }
   }
@@ -159,6 +160,7 @@ export async function placeAttachment(
         siteId,
         file,
         fallbackDisciplineId: attachment.disciplineId,
+        matchTransferred: false,
       }),
     }
 

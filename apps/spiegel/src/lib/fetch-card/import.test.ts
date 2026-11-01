@@ -11,7 +11,8 @@ import { generateSeason } from "../../../test/generate"
 import { valuedSpec, type ValuedPrintoutSpec } from "../../../test/printout"
 import { writeRevision } from "../db/cards"
 import { valuesReadOf, type StoredPrintout } from "../printouts/store"
-import { importPrintout } from "./import"
+import { writeTransferCard } from "../transfer/write"
+import { importPrintout, importPrintoutIn } from "./import"
 
 // Gegen die Dev-Datenbank, eigene Anlage mit eingeordneter Disziplin „LP 40“; je Fall eine eigene ScheibenID.
 
@@ -143,5 +144,94 @@ describe("importPrintout", () => {
       },
     })
     expect(await run(await stored(id))).toEqual({ kind: "blocked" })
+  })
+})
+
+describe("importPrintout und Scheiben aus Treffsicher", () => {
+  let nextEvening = 0
+  /** ein eigener Abend im Juli 2026 mit einem stimmigen Ausdruck um 19:52 Uhr in Berlin */
+  async function evening(id: number) {
+    const n = nextEvening++
+    const at = (hour: number, minute = 0) => Date.UTC(2026, 6, 1 + 2 * n, hour, minute)
+    const file = { ...(await stored(id)), printedAt: new Date(at(17, 52)) }
+    return { file, at }
+  }
+  /** eine Scheibe aus Treffsicher mit dem Ergebnis des Ausdrucks in ganzen Ringen */
+  async function transferCard(startedAtMs: number, file: StoredPrintout) {
+    const saved = await db.$transaction((tx) =>
+      writeTransferCard(tx, {
+        ownerId: site.ownerId,
+        disciplineId: site.disciplineId,
+        startedAtMs,
+        kind: "training",
+        place: null,
+        importKey: `treffsicher:import-${RUN}-${nextId++}`,
+        details: { total: { shots: 40, rings: file.values.reading!.total!.rings } },
+      })
+    )
+    if (saved.kind !== "saved") throw new Error(saved.kind)
+    return saved.cardId
+  }
+  const stateOf = (cardId: string) =>
+    db.card.findUniqueOrThrow({
+      where: { id: cardId },
+      select: {
+        origin: true,
+        _count: { select: { printouts: true, revisions: true, requests: true } },
+      },
+    })
+  const UNTOUCHED = {
+    origin: "treffsicher",
+    _count: { printouts: 0, revisions: 1, requests: 0 },
+  }
+
+  it("genau eine passt: der Ausdruck ergänzt sie ohne Auftrag; noch einmal hängt er nur an", async () => {
+    const id = nextId++
+    const { file, at } = await evening(id)
+    const cardId = await transferCard(at(17), file)
+    expect(await run(file)).toEqual({ kind: "matched", cardId, values: true })
+    expect(await stateOf(cardId)).toEqual({
+      origin: "pdf",
+      _count: { printouts: 1, revisions: 2, requests: 0 },
+    })
+    expect((await cardsOf(id)).map((card) => card.id)).toEqual([cardId])
+    expect(await run(file)).toMatchObject({ kind: "attached", cardId })
+    expect((await stateOf(cardId))._count).toEqual({ printouts: 1, revisions: 2, requests: 0 })
+  })
+
+  it("Probelauf: matched, nichts geschrieben", async () => {
+    const id = nextId++
+    const { file, at } = await evening(id)
+    const cardId = await transferCard(at(17), file)
+    expect(await run(file, true)).toEqual({ kind: "matched", cardId, values: true })
+    expect(await stateOf(cardId)).toEqual(UNTOUCHED)
+  })
+
+  it("mehrere passen: eine neue Scheibe, der Fall gezählt, die übrigen bleiben, wie sie sind", async () => {
+    const id = nextId++
+    const { file, at } = await evening(id)
+    const first = await transferCard(at(17), file)
+    const second = await transferCard(at(18, 30), file)
+    const result = await run(file)
+    expect(result).toMatchObject({ kind: "created", values: true, several: true })
+    expect([first, second]).not.toContain((result as { cardId: string }).cardId)
+    expect(await stateOf(first)).toEqual(UNTOUCHED)
+    expect(await stateOf(second)).toEqual(UNTOUCHED)
+  })
+
+  it("ohne Suche (matchTransferred: false): eine neue Scheibe, die aus Treffsicher bleibt", async () => {
+    const id = nextId++
+    const { file, at } = await evening(id)
+    const cardId = await transferCard(at(17), file)
+    const result = await db.$transaction((tx) =>
+      importPrintoutIn(tx, {
+        userId: site.ownerId,
+        siteId: site.siteId,
+        file,
+        matchTransferred: false,
+      })
+    )
+    expect(result).toMatchObject({ kind: "created", values: true, several: false })
+    expect(await stateOf(cardId)).toEqual(UNTOUCHED)
   })
 })

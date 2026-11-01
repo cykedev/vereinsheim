@@ -1,7 +1,8 @@
 // Alte Ausdrucke einlesen ([[meyton-printout]] „Alte Ausdrucke einlesen“): derselbe Weg wie ein hochgeladenes PDF, nur
 // ohne Auftrag an die Brücke (alte Abende) und ohne Frage im Blatt. Die eigene Scheibe des Abends bekommt den Ausdruck
-// (und an einer Scheibe vom Ausdruck seine Werte); sonst entsteht eine Scheibe vom Ausdruck mit der Disziplin aus dem
-// Kopf, wenn genau eine wählbare so heißt. Eine Transaktion je Ausdruck unter der Sperre der Kontozeile wie `fetchCard`.
+// (und an einer Scheibe vom Ausdruck seine Werte); passt er zu genau einer Scheibe aus Treffsicher dieses Abends, ergänzt
+// er sie (`transferredCardsFitting`); sonst entsteht eine Scheibe vom Ausdruck mit der Disziplin aus dem Kopf, wenn genau
+// eine wählbare so heißt. Eine Transaktion je Ausdruck unter der Sperre der Kontozeile wie `fetchCard`.
 
 import { eveningDay } from "@vereinsheim/shot-ui/period/calendar"
 
@@ -14,12 +15,18 @@ import { applyPrintoutValues } from "../printouts/apply"
 import { attachPrintout, markPrintoutValues } from "../printouts/queries"
 import type { StoredPrintout } from "../printouts/store"
 import { headerDisciplineId, newCardValues, ownCardOfEvening } from "./queries"
+import { adoptIntoTransferred, transferredCardsFitting } from "./transferred"
 
 export type ImportResult =
   /** an die eigene Scheibe des Abends gehängt; `values`: sie hat danach Werte (Rohdaten oder Ausdruck) */
   | { kind: "attached"; cardId: string; values: boolean }
-  /** neue Scheibe vom Ausdruck; `values`: mit seinen Werten */
-  | { kind: "created"; cardId: string; values: boolean }
+  /** an die eine passende Scheibe aus Treffsicher des Abends gehängt; `values`: Seine Werte gelten jetzt */
+  | { kind: "matched"; cardId: string; values: boolean }
+  /**
+   * neue Scheibe vom Ausdruck; `values`: mit seinen Werten; `several`: Mehrere Scheiben aus Treffsicher des Abends passten,
+   * keine wurde geändert
+   */
+  | { kind: "created"; cardId: string; values: boolean; several: boolean }
   /** die eigene Scheibe liegt im Papierkorb: nichts geändert */
   | { kind: "trashed" }
   /** die Scheibe des Abends gehört einem anderen Konto */
@@ -55,7 +62,8 @@ export async function importPrintout(
 
 /**
  * Einen Ausdruck in der Transaktion des Aufrufers einlesen (auch für die Übernahme aus Treffsicher), unter der Sperre der
- * Kontozeile
+ * Kontozeile. Die Übernahme sucht keine Scheibe aus Treffsicher (`matchTransferred: false`): Ein Ausdruck ohne Scheibe
+ * seiner Einheit hinge sonst an der einer anderen Einheit.
  */
 export async function importPrintoutIn(
   tx: Prisma.TransactionClient,
@@ -65,6 +73,8 @@ export async function importPrintoutIn(
     file: StoredPrintout
     /** die Disziplin, wenn der Kopf des Ausdrucks keine bekannte nennt (die Übernahme kennt sie aus Treffsicher) */
     fallbackDisciplineId?: number | null
+    /** die passende Scheibe aus Treffsicher des Abends suchen; Vorgabe ja */
+    matchTransferred?: boolean
   }
 ): Promise<ImportResult> {
   const { userId, siteId, file } = input
@@ -114,6 +124,16 @@ export async function importPrintoutIn(
   if ([...tombstones, ...locks].some((row) => sameEvening(row.startedAt)))
     return { kind: "blocked" }
 
+  const transferred =
+    input.matchTransferred === false
+      ? ({ kind: "none" } as const)
+      : await transferredCardsFitting(tx, { userId, day, timeZone, file })
+  if (transferred.kind === "one") {
+    const { cardId } = transferred
+    const { values } = await adoptIntoTransferred(tx, { cardId, ownerId: userId, file })
+    return { kind: "matched", cardId, values }
+  }
+
   const disciplineId =
     (await headerDisciplineId(tx, {
       siteId,
@@ -146,5 +166,10 @@ export async function importPrintoutIn(
   if (saved.kind !== "saved") throw new Error(`Scheibe vom Ausdruck: ${saved.kind}`)
   const printoutId = await attachPrintout(tx, file, saved.cardId)
   if (values.inconsistent || refused) await markPrintoutValues(tx, printoutId, "inconsistent")
-  return { kind: "created", cardId: saved.cardId, values: tried && !refused }
+  return {
+    kind: "created",
+    cardId: saved.cardId,
+    values: tried && !refused,
+    several: transferred.kind === "several",
+  }
 }
