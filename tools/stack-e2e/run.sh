@@ -22,6 +22,15 @@ PROJECT=vereinsheim-e2e
 export COMPOSE_PROJECT_NAME="$PROJECT"
 export COMPOSE_FILE="compose.yml:tools/stack-e2e/compose.e2e.yml"
 
+# Volumes des Projekts ohne Label von Compose: uploads_treffsicher hängt kein laufender Dienst mehr ein, das Backup legt
+# es mit `docker run` an, und `down -v` sieht es nicht
+remove_loose_volumes() {
+	local volume
+	for volume in $(docker volume ls -q --filter "name=^${PROJECT}_"); do
+		docker volume rm "$volume" >/dev/null || true
+	done
+}
+
 KEEP=0 BUILD=1 BRIDGE=0 LOAD=0 DOWN=0 CLEAN=0 OPS=0
 while [[ $# -gt 0 ]]; do
 	case "$1" in
@@ -48,6 +57,7 @@ done
 
 if [[ "$DOWN" == "1" ]]; then
 	docker compose down -v --remove-orphans 2>&1 | grep -v 'variable is not set' || true
+	remove_loose_volumes
 	echo "Stack $PROJECT entfernt."
 	if [[ "$CLEAN" == "1" ]]; then
 		images="$(docker images --filter reference='vereinsheim-e2e/*' -q | sort -u)"
@@ -77,6 +87,7 @@ cleanup() {
 		echo "  Entfernen: tools/stack-e2e/run.sh --down && rm -rf $DIR"
 	else
 		[[ -f "$ENV_FILE" ]] && compose down -v --remove-orphans >/dev/null 2>&1 || true
+		remove_loose_volumes
 		rm -rf "$DIR"
 	fi
 }
