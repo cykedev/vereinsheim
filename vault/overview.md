@@ -6,7 +6,7 @@ aliases: ["Spec — vereinsheim"]
 keywords: [spec, vereinsheim, anforderungen, zielarchitektur, sizing, vps, drei apps, deploy, backup, scope]
 ---
 
-**TL;DR** Der Verein betreibt drei Web-Apps (Ringwerk, Treffsicher, Spiegel) gemeinsam auf einem VPS: Caddy mit automatischem TLS, ein Postgres mit getrennten Datenbanken, Images lokal gebaut und über Docker Hub verteilt, Backups per Cron. Diese Note beschreibt Anforderungen, Zielarchitektur und Sizing.
+**TL;DR** Der Verein betreibt Ringwerk und Spiegel gemeinsam auf einem VPS (Treffsicher läuft seit Stufe 4 von ADR-033 nicht mehr, unter seinem Host steht eine Hinweisseite): Caddy mit automatischem TLS, ein Postgres mit getrennten Datenbanken, Images lokal gebaut und über Docker Hub verteilt, Backups per Cron. Diese Note beschreibt Anforderungen, Zielarchitektur und Sizing.
 
 # Spec — vereinsheim
 

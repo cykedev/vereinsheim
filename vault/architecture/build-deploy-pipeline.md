@@ -11,7 +11,7 @@ informed_by: ["[[adr-006]]"]
 documented_in: ["[[architecture#Build & Deploy (ADR-005/006/007/015)]]"]
 ---
 
-**TL;DR** Lokaler Build aus dem Monorepo (turbo prune → Root-Dockerfile → Docker Hub), VPS pullt; migrate-* vor app-*; Caddy terminiert TLS, proxyt drei Subdomains (ringwerk, treffsicher, spiegel); lokal Ende zu Ende mit `tools/stack-e2e/run.sh`.
+**TL;DR** Lokaler Build aus dem Monorepo (turbo prune → Root-Dockerfile → Docker Hub), VPS pullt; migrate-* vor app-*; Caddy terminiert TLS, proxyt zwei Subdomains (ringwerk, spiegel) und zeigt unter treffsicher eine statische Hinweisseite; lokal Ende zu Ende mit `tools/stack-e2e/run.sh`.
 
 **Persistenter local-Build-Cache.** Der Release-Pfad (`PUSH=1`) baut über einen dedizierten
 `docker-container`-Builder (`vereinsheim-cache`, idempotent in `build-and-push.sh` angelegt) mit

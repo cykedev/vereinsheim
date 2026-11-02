@@ -90,7 +90,8 @@ ist dieser Ausweg.
 - **Stack-Test** (`tools/stack-e2e/run.sh --ops` und `--load 3`): in Ordnung. Spitzen Ringwerk 63, Spiegel 141 (unter
   Last 118 bis 125), Treffsicher 137, Caddy 68, Postgres 201 MiB; die Grenzen stehen dort mit 256, 320 und 256.
 
-Auf den VPS kommt die neue `compose.yml` nur über `git pull` im Repo-Verzeichnis; `vereinsheim release` zieht kein Git,
+Damals, mit Treffsicher im Stack (heute gibt es `app-treffsicher` nicht mehr, siehe „Ohne Treffsicher“): Auf den VPS
+kommt die neue `compose.yml` nur über `git pull` im Repo-Verzeichnis; `vereinsheim release` zieht kein Git,
 es ruft dort nur `vereinsheim deploy` auf. Liegt sie da, übernimmt der nächste Deploy die Grenzen von selbst, weil
 `deploy.sh` jede App mit `docker compose up -d app-<app>` neu anlegt. Ohne Release reicht ein Befehl, Treffsicher
 zuerst, damit die Summe nie über 1.312 MiB steigt. `vereinsheim restart` reicht nicht, denn `docker compose restart`

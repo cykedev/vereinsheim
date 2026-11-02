@@ -62,7 +62,7 @@ fi
 	exit 1
 }
 
-# Treffsicher läuft nicht mehr (nur in DATA_APPS): kein Container zu stoppen oder danach zu starten
+# Apps nur in DATA_APPS (Treffsicher) haben keinen Container: nichts stoppen, danach nichts starten
 running_app=0
 in_list "$APP" "${APPS[@]}" && running_app=1
 

@@ -1,8 +1,9 @@
 # vereinsheim
 
-> **Open-source, self-hosted software for sport-shooting clubs.** Three web apps that run side by side on a single
-> server: **Ringwerk** for leagues & competitions, **Treffsicher** as a training log, and **Spiegel** for the raw shot
-> data of a Meyton electronic target system, fed by a small bridge in the clubhouse.
+> **Open-source, self-hosted software for sport-shooting clubs.** Web apps that run side by side on a single server:
+> **Ringwerk** for leagues & competitions and **Spiegel** for the raw shot data of a Meyton electronic target system,
+> fed by a small bridge in the clubhouse, with a training diary. **Treffsicher**, the former training log, is retired:
+> its data moved into Spiegel, its code is still in the repo.
 
 ![License](https://img.shields.io/badge/license-Apache--2.0-blue)
 ![Next.js](https://img.shields.io/badge/Next.js-16-black)
@@ -34,7 +35,10 @@ Run your club's entire competitive program from one place.
 - **Meyton** electronic-target import (URL & PDF)
 - **Public result PDFs** at a stable URL — link standings straight from your club website
 
-### 📈 Treffsicher — training log for shooters
+### 📈 Treffsicher — training log for shooters (retired)
+
+No longer deployed: sessions, goals and routines moved into Spiegel's diary, and the Treffsicher host now shows a notice
+page that links to Spiegel. The code stays in the repo for now.
 
 A training diary that takes mental training as seriously as the score.
 
@@ -120,7 +124,7 @@ Installing the bridge at the range: [apps/spiegel-bridge/README.md](apps/spiegel
 ```
 apps/
   ringwerk/          leagues & competitions
-  treffsicher/       training log
+  treffsicher/       training log (retired, not deployed)
   spiegel/           Meyton shot data
   spiegel-bridge/    bridge at the range (Go)
 packages/
@@ -155,12 +159,12 @@ identifiers and commit messages are in English, docs in `vault/` are German.
 
 ## Auf Deutsch
 
-**Open-Source-Software für Schützenvereine, selbst gehostet.** Drei Web-Apps auf einem Server: **Ringwerk**
+**Open-Source-Software für Schützenvereine, selbst gehostet.** Web-Apps auf einem Server: **Ringwerk**
 (Wettkämpfe & Liga: Spielplan, Tabelle, K.-o.-Playoffs, 8 Wertungsmodi, Event- & Saison-Wettbewerbe, öffentliche
-Ergebnis-PDFs, Meyton-Import), **Treffsicher** (Trainingstagebuch: Einheiten, Ergebniserfassung, Mentaltraining,
-Befinden, Statistiken) und **Spiegel** (jeder Schuss aus der Meyton-Anlage mit Schussbild, Serien, Kennzahlen und
-Verlauf, zugeordnet per Sportpassnummer nach Zustimmung). Die Daten für Spiegel liefert eine Brücke im Schützenhaus,
-die nur liest und nur ausgehend verbindet.
+Ergebnis-PDFs, Meyton-Import) und **Spiegel** (jeder Schuss aus der Meyton-Anlage mit Schussbild, Serien, Kennzahlen und
+Verlauf, zugeordnet per Sportpassnummer nach Zustimmung, dazu ein Tagebuch). Die Daten für Spiegel liefert eine Brücke
+im Schützenhaus, die nur liest und nur ausgehend verbindet. **Treffsicher** (Trainingstagebuch) läuft nicht mehr: Seine
+Daten stehen in Spiegel, unter seiner Adresse steht ein Hinweis, der Code bleibt vorerst im Repo.
 
 Lokal starten: `./scripts/vereinsheim dev-setup` → `pnpm dev`. Deployment & Betrieb:
 [vault/operations/operations.md](vault/operations/operations.md). Brücke einrichten:

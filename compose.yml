@@ -108,8 +108,8 @@ services:
       DISPLAY_TIME_ZONE: ${DISPLAY_TIME_ZONE:-Europe/Berlin}
       AUTH_TRUST_PROXY_HEADERS: "true"
       # Heap unter der Grenze des Containers: Node setzt ihn bei 256m sonst auf rund 260 MiB
-      # (vault/incidents/node-heap-above-container-limit.md). Gilt für beide Apps;
-      # Spiegel hat mehr Luft für den Leser der Ausdrucke (vault/operations/vps-resource-sizing.md).
+      # (vault/incidents/node-heap-above-container-limit.md). Gilt für beide Apps; Spiegel hat Heap 192
+      # und mehr Luft für den Leser der Ausdrucke (vault/operations/vps-resource-sizing.md).
       NODE_OPTIONS: --max-old-space-size=160
     depends_on:
       db:

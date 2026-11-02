@@ -376,7 +376,7 @@ Ringwerk und Treffsicher enthalten zwei zusammenwirkende Skripte (`apps/<app>/sc
   `_prisma_migrations`, entscheidet je nach Eintrag in der
   `KNOWN_RECOVERY_HANDLERS`-Tabelle automatisch.
 
-In `compose.yml` ist für Ringwerk und Treffsicher konfiguriert:
+In `compose.yml` ist für Ringwerk konfiguriert:
 
 | Variable                                          | Wert    | Bedeutung                                                  |
 | ------------------------------------------------- | ------- | ---------------------------------------------------------- |
@@ -606,12 +606,15 @@ Code von Treffsicher bleibt vorerst im Repo, das Konsistenz-Gate prüft ihn weit
 
 ### Umschalten auf dem VPS
 
-Einmalig, im Repo-Verzeichnis auf dem VPS (`vereinsheim ssh`). Ringwerk wird dabei nicht neu gestartet. Deshalb kein
-`vereinsheim deploy` für diesen Schritt: Es zieht und startet auch Ringwerk neu.
+Einmalig, im Repo-Verzeichnis auf dem VPS (`vereinsheim ssh`), an einem Tag ohne Wettkampf. Ringwerk wird dabei nicht
+neu gestartet. Deshalb kein `vereinsheim deploy` für diesen Schritt: Es zieht Images, legt eine Sicherung an und
+startet den Migrator von Ringwerk.
 
-1. Nach dem Release von 3d und U2 und dem Fast-forward von `main`: `git pull`.
-2. `docker compose up -d caddy`. Caddy kommt mit dem Mount der Hinweisseite und dem neuen Block. Compose meldet die
-   Container von Treffsicher als verwaist (`orphan containers`); das erledigt der nächste Schritt.
+1. Nach dem letzten Release von Spiegel vor dem Umschalten und dem Fast-forward von `main` auf diesen Stand:
+   `git pull`.
+2. `docker compose up -d caddy`. Caddy kommt mit dem Mount der Hinweisseite und dem neuen Block. Dabei startet Caddy
+   neu, alle Hosts sind für Sekunden nicht erreichbar. Compose meldet die Container von Treffsicher als verwaist
+   (`orphan containers`); das erledigt der nächste Schritt.
 3. Die Container von Treffsicher entfernen. Erst ansehen, dann die angezeigten Namen löschen:
 
    ```bash
@@ -642,11 +645,12 @@ VPS, sonst legt die nächtliche Sicherung das Volume beim Archivieren leer wiede
 1. Ein Commit nimmt `treffsicher` aus `DATA_APPS` und `UPLOAD_APPS` (`scripts/lib/apps.sh`), aus `db-init/` und aus
    `.env.example` (`TREFFSICHER_DB_PASSWORD`), dazu aus `compose.yml` die Variable `TREFFSICHER_DB_PASSWORD` am Dienst
    `db` und das Volume `uploads_treffsicher` (mit dem Mount in `transfer-spiegel`, wenn die Übernahme dann noch im Repo
-   ist). Auf dem VPS danach `git pull`.
+   ist). Auf dem VPS danach `git pull`. Der nächste Deploy legt `db` neu an (die Umgebung ändert sich), Postgres
+   startet kurz neu: an einem Tag ohne Wettkampf deployen.
 2. Datenbank und Owner löschen, im Repo-Verzeichnis auf dem VPS (`VPS_REPO_PATH` aus `.vereinsheim.local`):
 
    ```bash
-   docker compose exec db psql -U postgres -d postgres -c 'DROP DATABASE treffsicher WITH (FORCE)' -c 'DROP ROLE treffsicher'
+   docker compose exec db psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c 'DROP DATABASE IF EXISTS treffsicher_restore' -c 'DROP DATABASE treffsicher WITH (FORCE)' -c 'DROP ROLE treffsicher'
    ```
 
 3. Das Volume der Anhänge löschen:
@@ -655,14 +659,27 @@ VPS, sonst legt die nächtliche Sicherung das Volume beim Archivieren leer wiede
    docker volume rm vereinsheim_uploads_treffsicher
    ```
 
-4. Die Backups löschen (Backup-Verzeichnis, Vorgabe `/var/backups/vereinsheim`):
+4. Die Backups und übrigen Kopien auf dem VPS löschen: das Backup-Verzeichnis (Vorgabe `/var/backups/vereinsheim`), die
+   Dateien vom Umzug in `~/migration/` (Ziel von `vereinsheim upload`) und die Berichte der Übernahme im
+   Repo-Verzeichnis:
 
    ```bash
    rm -f /var/backups/vereinsheim/treffsicher-*.dump /var/backups/vereinsheim/uploads-treffsicher-*.tar.gz
+   rm -f ~/migration/treffsicher-* ~/migration/uploads-treffsicher-*
+   rm -rf reports/tis-3b
    ```
 
-5. Auf dem Mac dieselben Dateien in `./backups/` (aus `local-pull`) löschen. Die Dev-Datenbank `treffsicher` ist eine
-   Kopie aus Prod; sie geht mit dem Code von Treffsicher.
+5. Auf dem Mac im Repo:
+   - `./backups/treffsicher-*.dump` und `./backups/uploads-treffsicher-*.tar.gz` (aus `local-pull`) löschen;
+   - `reports/tis-v1/` (Zuordnung der Konten), `reports/tis-3a/` und `reports/tis-3b/` löschen;
+   - den lokalen Prod-Stack leeren: `./scripts/vereinsheim local-down --volumes` (`local-up --restore` baut ihn danach
+     ohne Treffsicher neu auf);
+   - die Dev-Datenbank `treffsicher` (eine Kopie aus Prod) leer neu anlegen, solange der Code noch im Repo ist:
+
+     ```bash
+     docker compose -f docker-compose.dev.yml exec db psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c 'DROP DATABASE treffsicher WITH (FORCE)' -c 'CREATE DATABASE treffsicher OWNER treffsicher' -c 'REVOKE ALL ON DATABASE treffsicher FROM PUBLIC'
+     pnpm --filter treffsicher exec prisma db push
+     ```
 
 Danach `TREFFSICHER_DB_PASSWORD` aus der `.env` auf dem VPS löschen. Die Hinweisseite und `TREFFSICHER_HOST` bleiben,
 bis jemand sie eigens abschaltet.

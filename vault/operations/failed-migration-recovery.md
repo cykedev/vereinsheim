@@ -10,4 +10,4 @@ relates_to: ["[[manual-migration-intervention]]"]
 documented_in: ["[[operations#Eingebauter Recovery-Mechanismus]]"]
 ---
 
-**TL;DR** Prisma blockt bis failed-state gelöst; Auto-Recovery known=true/unknown=false (ADR-008) für Ringwerk und Treffsicher; neue Fälle als Handler in KNOWN_RECOVERY_HANDLERS (--applied/--rolled-back). Spiegel hat keine Auto-Recovery (nur migrate deploy), dort `vereinsheim migrations spiegel` von Hand.
+**TL;DR** Prisma blockt bis failed-state gelöst; Auto-Recovery known=true/unknown=false (ADR-008) für Ringwerk (Treffsicher hatte sie auch, läuft aber nicht mehr); neue Fälle als Handler in KNOWN_RECOVERY_HANDLERS (--applied/--rolled-back). Spiegel hat keine Auto-Recovery (nur migrate deploy), dort `vereinsheim migrations spiegel` von Hand.
