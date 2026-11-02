@@ -559,7 +559,7 @@ Befund aus dem Review von 2a).
 | 3e   | `plans/2026-10-29-tis-3e-read-only.md`       | `feat/tis-3e-read-only` (von `main`)       | `tis-3e-read-only`       | in `main` (`0000933f`), deployt (bis 30.10.); Plan entfernt |
 | U1   | `plans/2026-10-31-tis-u1-nav-compare.md`     | `feat/tis-u1-nav-compare` (vom Basis)      | `tis-u1-nav-compare`     | deployt 31.10. (`main` `c30676d5`), Plan entfernt         |
 | U2   | `plans/2026-11-01-tis-u2-place-row.md`       | `feat/tis-u2-place-row` (vom Basis)        | `tis-u2-place-row`       | Basisbranch (`94952855`, 2.11.), Plan entfernt            |
-| 4    | `plans/2026-11-02-tis-4-retire-treffsicher.md` | `feat/tis-4-retire-treffsicher` (vom Basis) | `tis-4-retire-treffsicher` | geplant (2.11.), wartet auf Freigabe                    |
+| 4    | `plans/2026-11-02-tis-4-retire-treffsicher.md` | `feat/tis-4-retire-treffsicher` (vom Basis) | `tis-4-retire-treffsicher` | freigegeben (2.11.), in Arbeit                          |
 
 ## Verification
 
