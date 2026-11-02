@@ -69,9 +69,15 @@ automatisch erkennen:
 | `.vereinsheim.local` | lokal     | VPS_HOST (SSH-Ziel), VPS_REPO_PATH, DOCKER_USER    |
 | `.env.local`         | lokal     | Platzhalter für den lokalen Stack; `local-pull` und `local-up` ergänzen fehlende Schlüssel |
 
-Die Apps stehen an einer Stelle, `scripts/lib/apps.sh` (`APPS=(ringwerk treffsicher spiegel)`, Upload-Volumes
-`UPLOAD_APPS=(treffsicher spiegel)`); das CLI und alle Skripte (Deploy, Backup, Restore, Restore-Probe, `db-ensure`, Build)
-binden sie ein.
+Die Apps stehen an einer Stelle, `scripts/lib/apps.sh`; das CLI und alle Skripte binden sie ein. Seit Treffsicher nicht
+mehr läuft ([Treffsicher im Ruhestand](#treffsicher-im-ruhestand)), sind es drei Listen:
+
+- `APPS=(ringwerk spiegel)`: die Apps, die laufen. Build, Release, Deploy, Rollback, Status, Logs, `migrations`.
+- `DATA_APPS=(ringwerk treffsicher spiegel)`: die Datenbanken, die gesichert werden. Backup, Restore, Restore-Probe,
+  `db-ensure`, `psql`, `local-pull`, `dev-restore`.
+- `CODE_APPS=(ringwerk treffsicher spiegel)`: der Code im Repo. Konsistenz-Gate, `dev-setup`.
+
+Dazu `UPLOAD_APPS=(treffsicher spiegel)`, die Apps mit Upload-Volume.
 
 Die folgenden Abschnitte beschreiben **was technisch passiert**, damit du
 auch ohne das Tool zurechtkommst (z.B. wenn das CLI selbst kaputt ist).
@@ -88,6 +94,7 @@ auch ohne das Tool zurechtkommst (z.B. wenn das CLI selbst kaputt ist).
 - [Recovery von fehlgeschlagenen Migrationen](#recovery-von-fehlgeschlagenen-migrationen)
 - [Rollback](#rollback)
 - [Übernahme aus Treffsicher](#übernahme-aus-treffsicher)
+- [Treffsicher im Ruhestand](#treffsicher-im-ruhestand)
 - [Brücke im Schützenhaus](#brücke-im-schützenhaus)
 
 ---
@@ -128,7 +135,7 @@ Lokal, ein Befehl:
 ```
 
 `release` führt aus:
-1. `build-and-push.sh` (alle Apps, runner+migrator, → Docker Hub; `APPS="ringwerk treffsicher"` für eine Auswahl)
+1. `build-and-push.sh` (alle Apps, die laufen, runner+migrator, → Docker Hub; `APPS="ringwerk"` für eine Auswahl)
 2. `ssh -t $VPS_HOST "cd $VPS_REPO_PATH && ./scripts/vereinsheim deploy"`
 3. `vereinsheim deploy` auf dem VPS macht Pre-Backup → Pull → Up.
 
@@ -198,7 +205,7 @@ Für eine weitere App im Stack (eingetragen in `scripts/lib/apps.sh`, `compose.y
 
 ### Release von Ringwerk
 
-Ringwerk trägt den laufenden Wettkampfbetrieb und geht allein raus, nie im selben Release mit Treffsicher
+Ringwerk trägt den laufenden Wettkampfbetrieb und geht allein raus, nie im selben Release mit einer anderen App
 ([[adr-032]]). Vor dem Release:
 
 1. **Abgleich** nach [[ringwerk-pruefbestand]]: `pruefen:vergleichen` am Prüfbestand ohne Fehler,
@@ -248,8 +255,9 @@ Ringwerk trägt den laufenden Wettkampfbetrieb und geht allein raus, nie im selb
 `scripts/backup.sh` legt je Lauf fünf Files in `${BACKUP_DIR:-/var/backups/vereinsheim}` ab:
 
 - `ringwerk-<TS>.dump` — Postgres custom-format Dump der `ringwerk`-DB
-- `treffsicher-<TS>.dump`, `spiegel-<TS>.dump` — analog
-- `uploads-treffsicher-<TS>.tar.gz` — Inhalt des `uploads_treffsicher`-Volumes
+- `treffsicher-<TS>.dump`, `spiegel-<TS>.dump` — analog; Treffsicher läuft nicht mehr, seine Datenbank wird bis zum
+  Löschtermin am 1. Februar 2027 weiter gesichert
+- `uploads-treffsicher-<TS>.tar.gz` — Inhalt des `uploads_treffsicher`-Volumes (Anhänge, ebenso bis zum Löschtermin)
 - `uploads-spiegel-<TS>.tar.gz` — Ausdrucke (PDF) aus dem `uploads_spiegel`-Volume
 
 Ringwerk hat keine persistierten Uploads und wird daher nicht archiviert. Gibt es die Datenbank
@@ -304,12 +312,6 @@ Restore:
 Direkt-Aufruf (für Skripte oder wenn das Tool nicht greifbar ist):
 
 ```bash
-docker compose stop app-treffsicher migrate-treffsicher
-./scripts/restore.sh treffsicher \
-  /var/backups/vereinsheim/treffsicher-2026-05-10_0300.dump \
-  /var/backups/vereinsheim/uploads-treffsicher-2026-05-10_0300.tar.gz
-docker compose up -d migrate-treffsicher app-treffsicher
-
 docker compose stop app-spiegel migrate-spiegel
 ./scripts/restore.sh spiegel \
   /var/backups/vereinsheim/spiegel-2026-10-20_0300.dump \
@@ -317,7 +319,9 @@ docker compose stop app-spiegel migrate-spiegel
 docker compose up -d migrate-spiegel app-spiegel
 ```
 
-Ringwerk ohne Uploads-Tar (`restore.sh` lehnt einen ab: Ringwerk hat kein Upload-Volume).
+Ringwerk ohne Uploads-Tar (`restore.sh` lehnt einen ab: Ringwerk hat kein Upload-Volume). Treffsicher hat keinen
+Container mehr: `./scripts/restore.sh treffsicher <dump> [uploads-tar]` spielt nur Datenbank und Anhänge ein, ohne
+etwas zu stoppen oder zu starten.
 
 `restore.sh`:
 
@@ -522,8 +526,8 @@ Tag rollen willst, der nicht in der History steht):
 ./scripts/vereinsheim setup     # Wahl 2: einzelne Werte bearbeiten
 #  → RINGWERK_TAG = <vorherige-sha>
 #  → RINGWERK_MIGRATOR_TAG = <vorherige-sha>-migrator
-#  (ebenso TREFFSICHER_* und SPIEGEL_*; fehlen einem Eintrag der History
-#   die Tags einer App, bleibt sie auf dem aktuellen Tag)
+#  (ebenso SPIEGEL_*; fehlen einem Eintrag der History die Tags einer App,
+#   bleibt sie auf dem aktuellen Tag; Tags von Treffsicher in alten Einträgen zählen nicht mehr)
 SKIP_BACKUP=1 ./scripts/vereinsheim deploy
 ```
 
@@ -581,6 +585,53 @@ Exit-Codes je Zeile: 0 übernommen, 1 übernommen mit Befund im Prüfbestand (Be
 Schleife hält an), 3 abgebrochen vor dem Schreiben, 4 Fehler (nichts geschrieben), 5 gespeichert, aber Ausgabe oder
 Bericht fehlt, 6 gespeichert, Merkmal fehlt, 255 keine Verbindung (die Schleife hält an). Berichte liegen unter
 `reports/tis-3b/` im Repo-Verzeichnis des Rechners, der den Container startet (auf dem VPS dort, nicht auf dem Mac).
+
+---
+
+## Treffsicher im Ruhestand
+
+Treffsicher läuft nicht mehr ([[adr-033]], Stufe 4). Die Übernahme ist durch, alle Daten stehen in Spiegel. Unter dem
+Host von Treffsicher zeigt Caddy für jede Adresse dieselbe Hinweisseite, auch für alte Links auf eine Einheit und das
+Symbol auf dem Home-Bildschirm. Die Seite liegt als `caddy/treffsicher/index.html` im Repo und ist nach
+`/srv/treffsicher` in den Container `caddy` gemountet. Den Link auf Spiegel setzt Caddy über `templates` aus
+`SPIEGEL_HOST`. Es gibt keinen Container `app-treffsicher` und keinen Migrator mehr. Build, Release und Deploy kennen
+nur Ringwerk und Spiegel (`APPS`).
+
+Die Datenbank `treffsicher` mit ihrem Owner, das Volume `uploads_treffsicher` und die Backups bleiben bis zum
+Löschtermin am 1. Februar 2027. Die tägliche Sicherung sichert sie weiter (`DATA_APPS`),
+`vereinsheim restore` und `restore-probe` spielen sie ein, `vereinsheim psql treffsicher` öffnet sie. Die Übernahme
+(`vereinsheim transfer`) liest Treffsicher mit `psql` auf dem Host und braucht keinen Container von Treffsicher. Der
+Code von Treffsicher bleibt vorerst im Repo, das Konsistenz-Gate prüft ihn weiter (`CODE_APPS`).
+
+### Umschalten auf dem VPS
+
+Einmalig, im Repo-Verzeichnis auf dem VPS (`vereinsheim ssh`). Ringwerk wird dabei nicht neu gestartet. Deshalb kein
+`vereinsheim deploy` für diesen Schritt: Es zieht und startet auch Ringwerk neu.
+
+1. Nach dem Release von 3d und U2 und dem Fast-forward von `main`: `git pull`.
+2. `docker compose up -d caddy`. Caddy kommt mit dem Mount der Hinweisseite und dem neuen Block. Compose meldet die
+   Container von Treffsicher als verwaist (`orphan containers`); das erledigt der nächste Schritt.
+3. Die Container von Treffsicher entfernen. Erst ansehen, dann die angezeigten Namen löschen:
+
+   ```bash
+   docker ps -a --filter name=treffsicher --format '{{.Names}}  {{.Status}}'
+   docker rm -f <name von app-treffsicher> <name von migrate-treffsicher>
+   ```
+
+4. `docker compose up -d --no-deps --pull never app-spiegel`. Spiegel kommt mit 384 MB und Heap 192 (dasselbe Image,
+   `--no-deps` lässt den Migrator aus).
+5. Prüfen:
+   - die Hinweisseite im Browser unter dem Host von Treffsicher, auch mit einem alten Link auf eine Einheit; der Knopf
+     „Zu Spiegel“ führt auf den Host von Spiegel;
+   - `vereinsheim status`: kein Container von Treffsicher, Ringwerk mit unveränderter Startzeit;
+   - der Messbefehl aus [[vps-resource-sizing]]: Spiegel mit der Grenze 384;
+   - die nächste nächtliche Sicherung: Es gibt einen neuen Dump `treffsicher-*.dump` und ein neues
+     `uploads-treffsicher-*.tar.gz`.
+
+`vereinsheim env-check` meldet danach `TREFFSICHER_TAG`, `TREFFSICHER_MIGRATOR_TAG`, `TREFFSICHER_NEXTAUTH_SECRET`,
+`TREFFSICHER_ADMIN_EMAIL` und `TREFFSICHER_ADMIN_PASSWORD` als „Unbekannt“. Das ist nur eine Warnung; bei Gelegenheit
+diese fünf Zeilen aus der `.env` löschen. `TREFFSICHER_HOST` (Hinweisseite) und `TREFFSICHER_DB_PASSWORD` (Datenbank)
+bleiben.
 
 ---
 
