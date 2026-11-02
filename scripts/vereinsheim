@@ -28,6 +28,10 @@ DEV_COMPOSE_FILE="$REPO_DIR/docker-compose.dev.yml"
 LOCAL_BACKUP_DIR="$REPO_DIR/backups"
 BACKUP_DIR_DEFAULT="/var/backups/vereinsheim"
 
+# Auswahl für Build und Release (`APPS="spiegel" vereinsheim release`), gesichert vor apps.sh: Das setzt APPS als
+# Array, und ein Array erbt ein Kindprozess nicht. build-and-push.sh bekommt BUILD_APPS als APPS, leer heißt alle Apps,
+# die laufen.
+BUILD_APPS="${APPS:-}"
 # Apps des Stacks (APPS laufen, DATA_APPS werden gesichert, CODE_APPS, UPLOAD_APPS, in_list): eine Stelle für das CLI
 # und alle Skripte
 # shellcheck source=lib/apps.sh
@@ -386,19 +390,19 @@ cmd_local_setup() {
 }
 
 # ---------- local-build ----------
-# Baut alle 6 Images lokal aus dem Monorepo (--load, kein Push, native Plattform)
+# Baut App und Migrator der Apps lokal aus dem Monorepo (--load, kein Push, native Plattform)
 # via build-and-push.sh im PUSH=0-Modus. Uncommittete Änderungen sind erlaubt —
 # der Subcommand ist explizit für lokale Testbuilds gedacht.
 cmd_local_build() {
 	require_local_config
 	require_docker
 	echo "${BOLD}=== local-build ===${RESET}"
-	echo "  Baut App und Migrator von ${APPS[*]} lokal (--load, kein Push) aus dem Monorepo (turbo prune)."
+	echo "  Baut App und Migrator von ${BUILD_APPS:-${APPS[*]}} lokal (--load, kein Push) aus dem Monorepo (turbo prune)."
 	echo "  Uncommittete Änderungen sind erlaubt — nur für lokale Tests."
 	echo "  Docker-User : ${DOCKER_USER}"
 	echo
 	export DOCKER_USER
-	PUSH=0 "$SCRIPT_DIR/build-and-push.sh"
+	PUSH=0 APPS="$BUILD_APPS" "$SCRIPT_DIR/build-and-push.sh"
 	echo
 	info "Stack starten:  ./scripts/vereinsheim local-up"
 }
@@ -406,22 +410,22 @@ cmd_local_build() {
 # ---------- build ----------
 cmd_build() {
 	require_local_config
-	info "Build + Push aller Apps (target=runner und target=migrator) als $DOCKER_USER"
+	info "Build + Push von ${BUILD_APPS:-${APPS[*]}} (target=runner und target=migrator) als $DOCKER_USER"
 	export DOCKER_USER
-	exec "$SCRIPT_DIR/build-and-push.sh" "$@"
+	APPS="$BUILD_APPS" exec "$SCRIPT_DIR/build-and-push.sh" "$@"
 }
 
 # ---------- release ----------
 cmd_release() {
 	require_local_config
-	info "Release: build → push → SSH-Deploy auf $VPS_HOST"
+	info "Release von ${BUILD_APPS:-${APPS[*]}}: build → push → SSH-Deploy auf $VPS_HOST"
 	echo
 	confirm "Starten?" Y || {
 		info "Abgebrochen."
 		return
 	}
 	export DOCKER_USER
-	"$SCRIPT_DIR/build-and-push.sh"
+	APPS="$BUILD_APPS" "$SCRIPT_DIR/build-and-push.sh"
 	echo
 	info "Triggere Deploy auf $VPS_HOST …"
 	# shellcheck disable=SC2029
