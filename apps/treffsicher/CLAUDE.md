@@ -1,5 +1,9 @@
 # Treffsicher
 
+**Nicht mehr deployt** (ADR-033, Stufe 4): In Prod zeigt Caddy unter dem Host von Treffsicher nur noch eine Hinweisseite
+auf Spiegel (`caddy/treffsicher/index.html`), die Datenbank bleibt bis zum 1. Februar 2027. Der Code bleibt vorerst im
+Repo, läuft in Dev und steht weiter im Konsistenz-Gate.
+
 Trainings-App für Schiesssportler (Tagebuch, Ergebniserfassung, Mentaltraining, Statistiken).
 Self-hosted, Einzelnutzer bis Vereinsbetrieb, Design 2 hell und dunkel (ADR-032), ausschliesslich Deutsch in der UI.
 Rahmen, Dialoge, Hilfe und Skriptprüfung: `vault/apps/treffsicher/treffsicher-design2.md`.

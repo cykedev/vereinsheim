@@ -84,28 +84,26 @@ Vollständige Begründungen mit verworfenen Alternativen → [[decisions]]. Kurz
 
 ```
 Internet ──(443/80)── Caddy ─┬── RINGWERK_HOST     → app-ringwerk:3000
-                             ├── TREFFSICHER_HOST  → app-treffsicher:3000
+                             ├── TREFFSICHER_HOST  → Hinweisseite (caddy/treffsicher, statisch)
                              └── SPIEGEL_HOST      → app-spiegel:3000   (max. 5 MiB je Anfrage)
 
 Netzwerke:
-  web   = caddy + app-ringwerk + app-treffsicher + app-spiegel
+  web   = caddy + app-ringwerk + app-spiegel
   data  = db + apps + migrate-services      (DB nicht im web-Netzwerk!)
 
 Services:
   caddy                caddy:2-alpine                    (TLS, Reverse Proxy)
   db                   postgres:15-alpine                (1 Container, 3 DBs, 3 User)
   migrate-ringwerk     <DOCKER_USER>/ringwerk:<sha>-migrator     (one-shot, prisma migrate deploy)
-  migrate-treffsicher  <DOCKER_USER>/treffsicher:<sha>-migrator  (one-shot)
   migrate-spiegel      <DOCKER_USER>/spiegel:<sha>-migrator      (one-shot)
   app-ringwerk         <DOCKER_USER>/ringwerk:<sha>
-  app-treffsicher      <DOCKER_USER>/treffsicher:<sha>
   app-spiegel          <DOCKER_USER>/spiegel:<sha>
 
 Volumes:
   postgres_data        → /var/lib/postgresql/data
   caddy_data           → /data        (LE-Zertifikate – kritisch!)
   caddy_config         → /config
-  uploads_treffsicher  → /app/uploads (im treffsicher-Container)
+  uploads_treffsicher  Anhänge von Treffsicher, nur gesichert (bis 1. Februar 2027)
   uploads_spiegel      → /app/uploads (im spiegel-Container)
 ```
 
@@ -135,8 +133,7 @@ keinen Build-Puffer.
 | Caddy                   |         64 MB |      96 M | —           |
 | Postgres 15 (shared)    |  ~120 MB[^pg] |     384 M | 1–2 GB Data |
 | Ringwerk (Next.js)      |        188 MB |     256 M | —           |
-| Treffsicher (Next.js)   |        163 MB |     256 M | —           |
-| Spiegel (Next.js)       |        201 MB |     320 M | —           |
+| Spiegel (Next.js)       |        201 MB |     384 M | —           |
 | Migratoren (one-shot)   | ~130 MB je    |  192 M je | —           |
 | Uploads                 |             — |         — | 10–20 GB    |
 | Backups (14 Tage)       |             — |         — | 5–10 GB     |
@@ -144,10 +141,10 @@ keinen Build-Puffer.
 [^pg]: Realistischer Worst-Case mit shared_buffers (128 MB) + ~10 MB pro Connection × typisch 10–20 aktive
 Connections: 250–350 MB.
 
-**Steady-State: ~0,9 GB RAM, ~25–40 GB Disk.** Die Grenzen der Dauerdienste summieren sich auf 1.312 MiB; neben
-System und Docker (~500 MiB) bleibt Luft. Die Migratoren laufen beim Deploy nacheinander. Die Apps laufen mit
-Heap-Grenze 160 ([[node-heap-above-container-limit]]); Spiegel hat 64 MiB mehr für den Leser der Ausdrucke, der als
-Kindprozess zur Grenze seines Containers zählt. Messungen und eine Swap-Datei als Sicherheitsnetz:
+**Steady-State: ~0,9 GB RAM, ~25–40 GB Disk.** Treffsicher läuft nicht mehr ([[adr-033]], Stufe 4); die Grenzen der
+Dauerdienste summieren sich auf 1.120 MiB, neben System und Docker (~500 MiB) bleibt Luft. Die Migratoren laufen beim
+Deploy nacheinander. Ringwerk läuft mit Heap-Grenze 160, Spiegel mit 192 ([[node-heap-above-container-limit]]); Spiegel
+hat dazu Luft für den Leser der Ausdrucke, der als Kindprozess zur Grenze seines Containers zählt. Messungen und eine Swap-Datei als Sicherheitsnetz:
 [[vps-resource-sizing]].
 
 ## Was NICHT im Scope

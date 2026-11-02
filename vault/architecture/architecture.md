@@ -7,7 +7,7 @@ keywords: [architektur, high-level-karte, repo-karte, monorepo, apps, pakete, ro
 part_of: ["[[overview]]"]
 ---
 
-**TL;DR** Hand-gepflegte Orientierung über das Monorepo: drei Next.js-Apps, eine Go-Brücke, geteilte Pakete, ein VPS. Die Detail-Architektur je App steht im Vault (`vault/apps/<app>/`, `vault/spiegel/`); den lebenden Symbol- und Call-Graph liefert der CodeGraph-MCP.
+**TL;DR** Hand-gepflegte Orientierung über das Monorepo: drei Next.js-Apps (Treffsicher läuft nicht mehr, unter seinem Host steht eine Hinweisseite), eine Go-Brücke, geteilte Pakete, ein VPS. Die Detail-Architektur je App steht im Vault (`vault/apps/<app>/`, `vault/spiegel/`); den lebenden Symbol- und Call-Graph liefert der CodeGraph-MCP.
 
 # Architektur — High-Level-Karte
 
@@ -20,7 +20,8 @@ CodeGraph-MCP (`codegraph_explore`). Diese Datei ist die schnelle Karte, kein Vo
 ```
 vereinsheim/                Code- + Deployment-Monorepo (pnpm + Turborepo)
 ├── apps/ringwerk/          Liga & Wettkämpfe (Next.js 16, Prisma 7, NextAuth v4)  → :3000
-├── apps/treffsicher/       Trainings-App      (Next.js 16, Prisma 7, NextAuth v4)  → :3001
+├── apps/treffsicher/       Trainings-App      (Next.js 16, Prisma 7, NextAuth v4)  → :3001, nur noch Dev: läuft
+│                           nicht mehr in Prod (ADR-033 Stufe 4), Daten bis 1. Februar 2027
 ├── apps/spiegel/           Schussrohdaten aus Meyton (Next.js 16, Prisma 7, NextAuth v4)  → :3002: Rohdaten als
 │                           Zeilenversionen, Revisionen und Projektion je Scheibe (ADR-031); Start, Scheiben, Seite einer
 │                           Scheibe, Fortschritt, Profil, Admin; Übersichten rechnen auf dem Server aus der Projektion;
@@ -60,7 +61,8 @@ vereinsheim/                Code- + Deployment-Monorepo (pnpm + Turborepo)
 ├── plans/                  offene Pläne (PIV-Handoff); reports/ lokal, gitignored
 ├── .claude/                Harness: settings (+hooks), skills/, agents/, vault-loader/-lint, Suche
 ├── .mcp.json               codegraph + memory MCP
-├── compose.yml + Caddyfile + db-init/   Prod-Deploy-Vertrag (VPS): drei Apps, drei DBs
+├── compose.yml + Caddyfile + db-init/   Prod-Deploy-Vertrag (VPS): zwei Apps, drei DBs
+├── caddy/treffsicher/      Hinweisseite unter dem Host von Treffsicher (statisch, von Caddy ausgeliefert)
 ├── compose.local.yml       Override für den Prod-Stack auf der lokalen Maschine (`local-up`)
 ├── docker-compose.dev.yml  geteilter Dev-Postgres (DBs: ringwerk, treffsicher, spiegel)
 ├── Dockerfile              EIN parametrisiertes Build-File (turbo prune, --build-arg APP)
@@ -73,17 +75,20 @@ vereinsheim/                Code- + Deployment-Monorepo (pnpm + Turborepo)
 Lokaler Build aus dem Monorepo: `vereinsheim build` → `turbo prune <app> --docker` → Root-`Dockerfile`
 (deps→builder→runner/migrator) → Docker Hub (`<user>/<app>:<sha>` + `:<sha>-migrator` + `:latest*`). Der VPS pullt;
 `compose.yml` startet pro App `migrate-*` (one-shot `prisma migrate deploy`) **vor** `app-*` (Next standalone,
-`node server.js`), die Apps nacheinander. Caddy terminiert TLS und proxyt die drei Subdomains. Grenzen: Ringwerk und
-Treffsicher 256 MB (Heap 160), Spiegel 320 MB (Heap 160, die Luft darüber für den Leser der Ausdrucke), Migratoren
-192 MB, Caddy 96 MB, Postgres 384 MB ([[vps-resource-sizing]]). Lokal prüft `tools/stack-e2e/run.sh` den ganzen Stack
+`node server.js`), die Apps nacheinander; gebaut und deployt werden Ringwerk und Spiegel (`APPS` in
+`scripts/lib/apps.sh`). Caddy terminiert TLS, proxyt zwei Subdomains und liefert unter der von Treffsicher eine
+statische Hinweisseite aus ([[operations]] „Treffsicher im Ruhestand“). Grenzen: Ringwerk 256 MB (Heap 160), Spiegel
+384 MB (Heap 192, die Luft darüber für den Leser der Ausdrucke), Migratoren 192 MB, Caddy 96 MB, Postgres 384 MB
+([[vps-resource-sizing]]). Lokal prüft `tools/stack-e2e/run.sh` den ganzen Stack
 mit den echten Images, bevor etwas auf den VPS geht.
 
 ```
 Internet ──443──> Caddy ─┬─ ringwerk.<domain>    → app-ringwerk:3000
-                         ├─ treffsicher.<domain> → app-treffsicher:3000
+                         ├─ treffsicher.<domain> → Hinweisseite (caddy/treffsicher, jede Adresse)
                          └─ spiegel.<domain>     → app-spiegel:3000   (max. 5 MiB je Anfrage)
 Netze: web {caddy, app-*}   data {db, app-*, migrate-*}   (db NICHT im web-Netz, ADR-003)
-DB: 1 Postgres, 3 DBs + 3 Owner-User (ringwerk, treffsicher, spiegel), Cross-DB technisch unmöglich (ADR-002)
+DB: 1 Postgres, 3 DBs + 3 Owner-User (ringwerk, treffsicher, spiegel), Cross-DB technisch unmöglich (ADR-002);
+    treffsicher nur gesichert, ohne App, bis zum Löschtermin am 1. Februar 2027
 
 Schützenhaus: Meyton-Server (SSMDB2) ←nur lesend── Brücke ──HTTPS, nur ausgehend──> spiegel.<domain>/api/ingest/v1
 ```
@@ -92,7 +97,7 @@ Schützenhaus: Meyton-Server (SSMDB2) ←nur lesend── Brücke ──HTTPS, n
 
 - **ringwerk:** `/` · `/competitions/[id]{/schedule,/standings,/ranking,/playoffs}` · `/participants` ·
   `/disciplines` · `/admin` · `/account` · `/api/public/c/[slug]/pdf` (öffentlich).
-- **treffsicher:** `/` → `/dashboard` · `/sessions{/[id]{/edit,/export/pdf},/new}` · `/shot-routines` · `/statistics` · `/goals` ·
+- **treffsicher** (nur noch Dev; in Prod jede Adresse die Hinweisseite): `/` → `/dashboard` · `/sessions{/[id]{/edit,/export/pdf},/new}` · `/shot-routines` · `/statistics` · `/goals` ·
   `/disciplines` · `/admin` · `/profile` (`/account` leitet weiter; alles auth-gated, Design 2 hell und dunkel).
 - **spiegel:** `/` (Start) · `/cards{/[id]}` · `/progress` · `/open` · `/profile{/trash}` · `/admin{/users,/disciplines,/site}` ·
   `/share/[shareId]` (geteilte Scheibe, ohne Anmeldung) · `/api/ingest/v1/{pair,state,snapshots,heartbeat}` (Brücke,

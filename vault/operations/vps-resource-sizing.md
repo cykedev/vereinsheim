@@ -9,7 +9,7 @@ part_of: ["[[operations]]"]
 documented_in: ["[[overview#VPS-Sizing]]"]
 ---
 
-**TL;DR** RAM ist Engpass, der VPS bleibt bei 2 GB (IONOS VPS S). Grenzen für drei Apps seit dem 27. Oktober 2026: Ringwerk und Treffsicher 256 MB, Spiegel 320 MB (der Leser der Ausdrucke zählt als Kindprozess dazu), alle mit Heap-Grenze 160, Migratoren 192 MB, Caddy 96 MB, Postgres 384 MB; die Summe (1.312 MiB) passt neben System und Docker. Gemessen am 14. Oktober 2026 nach neun Tagen Betrieb (vor Spiegel): Spitzen Ringwerk 188, Treffsicher 163, Caddy 44, Postgres 96 MiB, 980 MiB verfügbar, kein Swap, keine OOM-Kills. Nach dem ersten Deploy mit Spiegel: 905 MiB verfügbar, alle Apps klar unter ihrer Grenze.
+**TL;DR** RAM ist Engpass, der VPS bleibt bei 2 GB (IONOS VPS S). Seit Treffsicher nicht mehr läuft ([[adr-033]], Stufe 4): Ringwerk 256 MB mit Heap 160, Spiegel 384 MB mit Heap 192 (der Leser der Ausdrucke zählt als Kindprozess dazu), Migratoren 192 MB, Caddy 96 MB, Postgres 384 MB; die Summe sinkt von 1.312 auf 1.120 MiB. Davor (seit dem 27. Oktober 2026) Ringwerk und Treffsicher 256 MB, Spiegel 320 MB, alle mit Heap 160. Gemessen am 14. Oktober 2026 nach neun Tagen Betrieb (vor Spiegel): Spitzen Ringwerk 188, Treffsicher 163, Caddy 44, Postgres 96 MiB, 980 MiB verfügbar, kein Swap, keine OOM-Kills. Nach dem ersten Deploy mit Spiegel: 905 MiB verfügbar, alle Apps klar unter ihrer Grenze.
 
 ## Messung 14. Oktober 2026
 
@@ -153,7 +153,7 @@ ihrem `"maxRssKb"` (der höhere zählt).
 ## Wegwerf-Container der Übernahme aus Treffsicher
 
 `vereinsheim transfer` startet je Konto den Container `transfer-spiegel` (Profil `ops`, [[spiegel-account-transfer]]):
-320 MB wie `app-spiegel`, Heap 160, der Leser der Ausdrucke darin als Kindprozess mit eigener Grenze. Er läuft nur für
+320 MB, Heap 160, der Leser der Ausdrucke darin als Kindprozess mit eigener Grenze. Er läuft nur für
 die Dauer eines Laufs neben dem Stack, also kommen auf dem VPS für Minuten bis zu 320 MB dazu; eine ruhige Zeit wählen.
 Das Werkzeug gibt am Ende `Speicher: Spitze <n> MiB` aus (`maxRSS` des Prozesses, ohne den Kindprozess).
 
@@ -163,13 +163,36 @@ Lauf und Wiederholung): `maxRSS` 196 bis 234 MiB, der Container laut `docker sta
 Node 50). `maxRSS` zählt die gemappten Dateien von Node mit; für die Grenze zählt der cgroup-Wert. Kein Lauf endete mit 137. Auf
 amd64 liegt das höher (siehe den Leser oben): Den ersten Lauf in Prod mit `--dry-run` messen.
 
+## Ohne Treffsicher (Stufe 4, November 2026)
+
+Treffsicher läuft nicht mehr, unter seinem Host steht eine statische Seite in Caddy ([[operations]] „Treffsicher im
+Ruhestand“). Seine 256 MB werden frei. Spiegel bekommt davon 64 MB, die übrigen 192 MB bleiben Reserve.
+
+| Dienst | Grenze | Heap |
+| --- | ---: | ---: |
+| Ringwerk | 256 MB | 160 |
+| Spiegel | 384 MB | 192 |
+| Caddy | 96 MB | — |
+| Postgres | 384 MB | — |
+| Summe | 1.120 MiB | |
+
+Migratoren (192 MB) laufen nur beim Deploy, nacheinander, und zählen nicht zur Summe. `transfer-spiegel` behält 320 MB
+und Heap 160 (unten).
+
+Rechnung für Spiegel: 192 MiB Heap, rund 60 MiB außerhalb des Heaps und ein Leser der Ausdrucke bis zur Wache von
+96 MiB ergeben rund 348 MiB, unter der Grenze von 384 MB bleiben rund 36 MiB ([[node-heap-above-container-limit]]). Ob
+Spiegel mehr braucht, entscheidet eine Messung mit dem Messbefehl unten nach einigen Tagen Betrieb. Die Caddy-Seite
+braucht keinen eigenen Speicher; Caddy liest die Datei bei jeder Anfrage.
+
+Umgeschaltet wird ohne `vereinsheim deploy`, damit Ringwerk nicht neu startet: `docker compose up -d --no-deps
+--pull never app-spiegel` legt Spiegel mit der neuen Grenze an ([[operations]] „Treffsicher im Ruhestand“).
+
 ## Später: Leistung der Container
 
 Festgehalten am 26. Oktober 2026 auf Wunsch des Users, ohne Messung. Engpass ist der Speicher, nicht die CPU. Die Hebel
 in dieser Reihenfolge:
 
-1. **Treffsicher abschalten** ([[adr-033]], Stufe 4): Das macht das größte Limit der drei Apps frei (320 MB). Spiegel
-   bekommt danach mehr als 256 MB.
+1. **Treffsicher abschalten** ([[adr-033]], Stufe 4): erledigt, siehe „Ohne Treffsicher“. Spiegel hat jetzt 384 MB.
 2. **Messen** mit `tools/stack-e2e/run.sh --load` und dem Messbefehl unten, erst danach Feinarbeit.
 3. **Feinarbeit an Node und Next**, wenn eine App an ihre Grenze kommt: Heap-Grenzen je App, den Cache von Next im
    Speicher verkleinern oder abschalten (`cacheMaxMemorySize`), weniger Daten an den Browser.

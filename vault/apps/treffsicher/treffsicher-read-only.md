@@ -13,6 +13,8 @@ relates_to: ["[[treffsicher-design2]]", "[[treffsicher-access-model]]"]
 ändert nichts mehr: Hinweis oben auf jeder Seite mit „Zu Spiegel“, keine Knöpfe zum Ändern, die Seite „Das geht jetzt
 in Spiegel.“ statt der Formulare, und der Server lehnt jede Änderung an eigenen Daten ab. Admin bleibt für Admins
 bedienbar. Gesetzt wird das Merkmal von der Übernahme in Spiegels CLI (Stufe 3 von [[adr-033]]), nie von der App.
+Seit Stufe 4 läuft Treffsicher nicht mehr; unter seinem Host steht nur eine Hinweisseite ([[operations]] „Treffsicher im
+Ruhestand“).
 
 # Treffsicher lesend je Konto
 

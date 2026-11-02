@@ -6,16 +6,17 @@
 ## Was dieses Repo ist
 
 Monorepo (pnpm + Turborepo, Catalog für geteilte Versionen) mit **drei Next.js-Apps** und ihrem Produktions-Deployment
-auf einem einzelnen VPS:
+auf einem einzelnen VPS. Treffsicher läuft nicht mehr (ADR-033, Stufe 4): Unter seinem Host zeigt Caddy eine
+Hinweisseite auf Spiegel, sein Code bleibt vorerst im Repo, seine Datenbank bis zum 1. Februar 2027.
 
 - [`apps/ringwerk`](apps/ringwerk) — Liga und Wettkämpfe (:3000)
-- [`apps/treffsicher`](apps/treffsicher) — Trainingstagebuch (:3001)
+- [`apps/treffsicher`](apps/treffsicher) — Trainingstagebuch (:3001), nur noch Dev, nicht mehr deployt
 - [`apps/spiegel`](apps/spiegel) — Schussrohdaten aus der Meyton-Anlage (:3002), gefüttert von der Brücke
   [`apps/spiegel-bridge`](apps/spiegel-bridge) (Go, läuft im Schützenhaus)
 
 Geteilter Code liegt in `packages/*`. Produktion: lokal gebaute Images (`turbo prune`, Root-`Dockerfile`) → Docker Hub
 → der VPS pullt; `compose.yml` mit Caddy, einem Postgres (eine DB und ein Owner je App) und je App einem Migrator vor
-dem App-Container. Bedient wird alles über das Ops-CLI `scripts/vereinsheim`.
+dem App-Container (Ringwerk und Spiegel). Bedient wird alles über das Ops-CLI `scripts/vereinsheim`.
 
 Dev auf dem Host: `./scripts/vereinsheim dev-setup` (einmalig, idempotent), dann `pnpm dev`. Dev-Postgres aus
 `docker-compose.dev.yml`. Go ≥ 1.24 ist Pflicht, das Gate prüft auch die Brücke.

@@ -4,7 +4,7 @@ Dritte App im Monorepo: Schussrohdaten der Meyton-Anlage (SSMDB2) über eine lok
 Sportpass-Opt-in und Meyton-QR ([`vault/spiegel/spiegel.md`](../../vault/spiegel/spiegel.md)). Datenbank, Zugriffe
 und Messung: [ADR-031](../../vault/decisions/adr-031.md), [`spiegel-db-schema`](../../vault/spiegel/spiegel-db-schema.md);
 Seiten und Navigation: [`spiegel-navigation`](../../vault/spiegel/spiegel-navigation.md). Spiegel ist deployt:
-`migrate-spiegel` (192 MB) und `app-spiegel` (320 MB, Heap 160, Volume `uploads_spiegel` für Ausdrucke) in `compose.yml`, eine Subdomain mit höchstens 5 MiB
+`migrate-spiegel` (192 MB) und `app-spiegel` (384 MB, Heap 192, Volume `uploads_spiegel` für Ausdrucke) in `compose.yml`, eine Subdomain mit höchstens 5 MiB
 je Anfrage im `Caddyfile`, die Datenbank aus `db-init/` bzw. `scripts/db-ensure.sh`; Betrieb in
 [`vault/operations/operations.md`](../../vault/operations/operations.md). Lokal prüft `tools/stack-e2e/run.sh` den
 Stack Ende zu Ende.
