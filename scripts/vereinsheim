@@ -28,7 +28,8 @@ DEV_COMPOSE_FILE="$REPO_DIR/docker-compose.dev.yml"
 LOCAL_BACKUP_DIR="$REPO_DIR/backups"
 BACKUP_DIR_DEFAULT="/var/backups/vereinsheim"
 
-# Apps des Stacks (APPS, UPLOAD_APPS, in_list): eine Liste für das CLI und alle Skripte
+# Apps des Stacks (APPS laufen, DATA_APPS werden gesichert, CODE_APPS, UPLOAD_APPS, in_list): eine Stelle für das CLI
+# und alle Skripte
 # shellcheck source=lib/apps.sh
 source "$SCRIPT_DIR/lib/apps.sh"
 # Einspielen eines Dumps über eine frische Datenbank (restore_db), für dev-restore und local-up --restore
@@ -159,25 +160,29 @@ env_keys_from_example() {
 	awk -F= '/^[A-Z][A-Z0-9_]*=/ { print $1 }' "$ENV_EXAMPLE"
 }
 
-is_valid_app() { in_list "${1:-}" "${APPS[@]}"; }
+# Apps, die laufen (Migrationen), und Apps mit Datenbank (Restore, psql, dev-restore); Treffsicher hat nur noch die
+# Datenbank ([[adr-033]], Stufe 4)
+is_running_app() { in_list "${1:-}" "${APPS[@]}"; }
+is_data_app() { in_list "${1:-}" "${DATA_APPS[@]}"; }
 
 has_uploads() { in_list "${1:-}" "${UPLOAD_APPS[@]}"; }
 
-# Nummeriertes Menü aus APPS (auf stderr); gibt die gewählte App aus, leer bei ungültiger Wahl
+# pick_app <app…>: nummeriertes Menü (auf stderr); gibt die gewählte App aus, leer bei ungültiger Wahl
 pick_app() {
-	local i c
-	for i in "${!APPS[@]}"; do
-		echo "    $((i + 1))) ${APPS[$i]}" >&2
+	local apps=("$@") i c
+	for i in "${!apps[@]}"; do
+		echo "    $((i + 1))) ${apps[$i]}" >&2
 	done
 	read -r -p "  Wahl: " c
-	if [[ "$c" =~ ^[0-9]+$ ]] && ((c >= 1 && c <= ${#APPS[@]})); then
-		echo "${APPS[$((c - 1))]}"
+	if [[ "$c" =~ ^[0-9]+$ ]] && ((c >= 1 && c <= ${#apps[@]})); then
+		echo "${apps[$((c - 1))]}"
 	fi
 }
 
+# apps_list <app…>: die Apps mit | getrennt, für Aufrufzeilen
 apps_list() {
 	local IFS="|"
-	echo "${APPS[*]}"
+	echo "$*"
 }
 
 # ---------- local config ----------
@@ -276,7 +281,7 @@ cmd_help() {
 
 		${BOLD}── RELEASE-WORKFLOW${RESET} ${DIM}(lokal → VPS, braucht .vereinsheim.local)${RESET}
 		  ${GREEN}local-setup${RESET}           Einmalig: VPS-Verbindung konfigurieren
-		  ${GREEN}build${RESET}                 Alle Apps bauen + nach Docker Hub pushen
+		  ${GREEN}build${RESET}                 Alle Apps, die laufen, bauen + nach Docker Hub pushen
 		  ${GREEN}release${RESET}               build + ssh-Deploy in einem Schritt
 		  ${GREEN}ssh${RESET}                   Shell auf dem VPS
 		  ${GREEN}remote${RESET} <cmd>          Befehl auf dem VPS via SSH
@@ -284,7 +289,7 @@ cmd_help() {
 		  ${GREEN}download${RESET} [datei]      Backup ← VPS  (ohne Arg: Liste)
 
 		${BOLD}── LOKALE TESTUMGEBUNG${RESET} ${DIM}(braucht zusätzlich .env.local)${RESET}
-		  ${GREEN}local-build${RESET}               Alle 6 Images lokal bauen (kein Push, native Plattform)
+		  ${GREEN}local-build${RESET}               Die Images der Apps, die laufen, lokal bauen (kein Push, native Plattform)
 		  ${GREEN}local-pull${RESET}                Backups + Image-Tags vom VPS holen → ./backups/
 		  ${GREEN}local-up${RESET}                  Lokalen Stack starten (vorhandene Volumes)
 		  ${GREEN}local-up --restore${RESET}         Volumes löschen + aus ./backups/ neu laden
@@ -302,8 +307,8 @@ cmd_help() {
 		  ${GREEN}restore${RESET}               Interaktiver Restore aus Backup
 		  ${GREEN}restore-probe${RESET}         Neueste Sicherungen probeweise einspielen (Wegwerf-DB)
 		  ${GREEN}logs${RESET} [service]        Logs folgen (Default: Apps + caddy)
-		  ${GREEN}psql${RESET} <app>            DB-Shell (ringwerk | treffsicher | spiegel)
-		  ${GREEN}migrations${RESET} <app>      Migration-Status + Recovery
+		  ${GREEN}psql${RESET} <app>            DB-Shell (${DATA_APPS[*]})
+		  ${GREEN}migrations${RESET} <app>      Migration-Status + Recovery (${APPS[*]})
 		  ${GREEN}db-ensure${RESET}             Fehlende App-Datenbanken anlegen  ${DIM}(idempotent)${RESET}
 		  ${GREEN}shell${RESET} <service>       Bash-Shell im Container
 		  ${GREEN}setup${RESET}                 .env-Wizard (Secrets generieren, validieren)
@@ -388,7 +393,7 @@ cmd_local_build() {
 	require_local_config
 	require_docker
 	echo "${BOLD}=== local-build ===${RESET}"
-	echo "  Baut alle 6 Images lokal (--load, kein Push) aus dem Monorepo (turbo prune)."
+	echo "  Baut App und Migrator von ${APPS[*]} lokal (--load, kein Push) aus dem Monorepo (turbo prune)."
 	echo "  Uncommittete Änderungen sind erlaubt — nur für lokale Tests."
 	echo "  Docker-User : ${DOCKER_USER}"
 	echo
@@ -514,7 +519,7 @@ cmd_local_pull() {
 	# fehlender Dump (etwa Spiegel vor dem ersten Backup) wird übersprungen
 	info "Suche neueste Backups auf $VPS_HOST …"
 	local app latest files_to_download=()
-	for app in "${APPS[@]}"; do
+	for app in "${DATA_APPS[@]}"; do
 		latest=$(ssh "$VPS_HOST" "ls -t /var/backups/vereinsheim/${app}-*.dump 2>/dev/null | head -1" || true)
 		if [[ -z "$latest" ]]; then
 			warn "Kein ${app}-Dump auf dem VPS gefunden — übersprungen."
@@ -608,8 +613,6 @@ _write_default_local_env() {
 		DOCKER_USER=${DOCKER_USER}
 		RINGWERK_TAG=latest
 		RINGWERK_MIGRATOR_TAG=latest-migrator
-		TREFFSICHER_TAG=latest
-		TREFFSICHER_MIGRATOR_TAG=latest-migrator
 		SPIEGEL_TAG=latest
 		SPIEGEL_MIGRATOR_TAG=latest-migrator
 
@@ -630,11 +633,6 @@ _write_default_local_env() {
 		RINGWERK_NEXTAUTH_SECRET=local-dev-secret-ringwerk-00000000000000
 		RINGWERK_SEED_ADMIN_EMAIL=admin@localhost
 		RINGWERK_SEED_ADMIN_PASSWORD=localdevpassword
-
-		# === Treffsicher (lokale Platzhalter) ===
-		TREFFSICHER_NEXTAUTH_SECRET=local-dev-secret-treffsicher-000000000
-		TREFFSICHER_ADMIN_EMAIL=admin@localhost
-		TREFFSICHER_ADMIN_PASSWORD=localdevpassword
 
 		# === Spiegel (lokale Platzhalter; das Secret darf nicht der Beispielwert der App sein) ===
 		SPIEGEL_NEXTAUTH_SECRET=local-dev-secret-spiegel-000000000000000
@@ -670,7 +668,7 @@ _backfill_local_env() {
 _local_up_with_restore() {
 	# Neueste lokale Dumps je App; eine App ohne Dump startet mit leerer Datenbank
 	local app dump restore_apps=() restore_dumps=() upload_apps=() upload_tars=()
-	for app in "${APPS[@]}"; do
+	for app in "${DATA_APPS[@]}"; do
 		dump=$(ls -t "$LOCAL_BACKUP_DIR/${app}"-*.dump 2>/dev/null | head -1) || true
 		if [[ -n "$dump" ]]; then
 			restore_apps+=("$app")
@@ -765,7 +763,6 @@ _local_print_urls() {
 	echo
 	ok "Lokale Umgebung läuft:"
 	echo "  Ringwerk:    http://localhost:3000"
-	echo "  Treffsicher: http://localhost:3001"
 	echo "  Spiegel:     http://localhost:3002"
 	echo "  DB (psql):   localhost:5432"
 	echo
@@ -829,11 +826,11 @@ cmd_dev_restore() {
 	# Ziel-App(s): optionales Argument schränkt auf eine App ein, sonst alle.
 	local apps
 	if [[ -z "${1:-}" ]]; then
-		apps=("${APPS[@]}")
-	elif is_valid_app "$1"; then
+		apps=("${DATA_APPS[@]}")
+	elif is_data_app "$1"; then
 		apps=("$1")
 	else
-		err "Aufruf: vereinsheim dev-restore [$(apps_list)]"
+		err "Aufruf: vereinsheim dev-restore [$(apps_list "${DATA_APPS[@]}")]"
 		return 1
 	fi
 
@@ -1213,7 +1210,7 @@ cmd_status() {
 		echo "  Neueste je App:"
 		local app pattern latest
 		local patterns=()
-		for app in "${APPS[@]}"; do patterns+=("${app}-*.dump"); done
+		for app in "${DATA_APPS[@]}"; do patterns+=("${app}-*.dump"); done
 		for app in "${UPLOAD_APPS[@]}"; do patterns+=("uploads-${app}-*.tar.gz"); done
 		for pattern in "${patterns[@]}"; do
 			latest="$(find "$BACKUP_DIR_DEFAULT" -maxdepth 1 -type f -name "$pattern" -printf '%TY-%Tm-%Td %TH:%TM  %s  %f\n' 2>/dev/null | sort -r | head -1 || true)"
@@ -1487,7 +1484,7 @@ cmd_restore() {
 	echo "${BOLD}=== restore ===${RESET}"
 	echo "  Welche App?"
 	local app
-	app="$(pick_app)"
+	app="$(pick_app "${DATA_APPS[@]}")"
 	if [[ -z "$app" ]]; then
 		err "Ungültig."
 		return 1
@@ -1539,15 +1536,24 @@ cmd_restore() {
 
 	echo
 	warn "Folgende Schritte werden ausgeführt:"
-	echo "  1) docker compose stop app-${app} migrate-${app}"
-	echo "  2) restore.sh ${app} $(basename "$dump")"
-	[[ -n "$uploads" ]] && echo "     + Uploads aus $(basename "$uploads")"
-	echo "  3) docker compose up -d migrate-${app} app-${app}"
+	if is_running_app "$app"; then
+		echo "  1) docker compose stop app-${app} migrate-${app}"
+		echo "  2) restore.sh ${app} $(basename "$dump")"
+		[[ -n "$uploads" ]] && echo "     + Uploads aus $(basename "$uploads")"
+		echo "  3) docker compose up -d migrate-${app} app-${app}"
+	else
+		echo "  1) restore.sh ${app} $(basename "$dump")  ${DIM}(${app} läuft nicht mehr, nur die Datenbank)${RESET}"
+		[[ -n "$uploads" ]] && echo "     + Uploads aus $(basename "$uploads")"
+	fi
 	echo
 	confirm "Wirklich restoren?" || {
 		info "Abgebrochen."
 		return
 	}
+	if ! is_running_app "$app"; then
+		"$SCRIPT_DIR/restore.sh" "$app" "$dump" ${uploads:+"$uploads"}
+		return
+	fi
 	docker compose stop "app-${app}" "migrate-${app}" || true
 	"$SCRIPT_DIR/restore.sh" "$app" "$dump" ${uploads:+"$uploads"}
 	docker compose up -d "migrate-${app}" "app-${app}"
@@ -1572,8 +1578,8 @@ cmd_psql() {
 	require_env
 	require_docker
 	local app="${1:-}"
-	is_valid_app "$app" || {
-		err "Aufruf: vereinsheim psql <$(apps_list)>"
+	is_data_app "$app" || {
+		err "Aufruf: vereinsheim psql <$(apps_list "${DATA_APPS[@]}")>"
 		return 1
 	}
 	exec docker compose exec db psql -U postgres -d "$app"
@@ -1584,9 +1590,9 @@ cmd_migrations() {
 	require_env
 	require_docker
 	local app="${1:-}"
-	if ! is_valid_app "$app"; then
+	if ! is_running_app "$app"; then
 		echo "  Welche App?"
-		app="$(pick_app)"
+		app="$(pick_app "${APPS[@]}")"
 		if [[ -z "$app" ]]; then
 			err "Ungültig"
 			return 1
@@ -2242,7 +2248,7 @@ interactive_menu_local() {
 		echo "  d) dev-setup  Workstation arbeitsfähig machen  ${DIM}(idempotent)${RESET}"
 		echo
 		echo "  ${BOLD}Release-Workflow${RESET}"
-		echo "  1) build      Alle Apps bauen + pushen"
+		echo "  1) build      Alle Apps, die laufen, bauen + pushen"
 		echo "  2) release    build + ssh-Deploy  ${DIM}(Standard-Release)${RESET}"
 		echo "  3) ssh        Shell auf dem VPS"
 		echo "  4) remote …   Befehl auf dem VPS"
@@ -2373,7 +2379,7 @@ interactive_remote_pick() {
 
 cmd_psql_interactive() {
 	local app
-	app="$(pick_app)"
+	app="$(pick_app "${DATA_APPS[@]}")"
 	if [[ -n "$app" ]]; then
 		cmd_psql "$app"
 	else
