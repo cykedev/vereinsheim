@@ -95,6 +95,7 @@ auch ohne das Tool zurechtkommst (z.B. wenn das CLI selbst kaputt ist).
 - [Rollback](#rollback)
 - [Übernahme aus Treffsicher](#übernahme-aus-treffsicher)
 - [Treffsicher im Ruhestand](#treffsicher-im-ruhestand)
+  - [Löschtermin am 1. Februar 2027](#löschtermin-am-1-februar-2027)
 - [Brücke im Schützenhaus](#brücke-im-schützenhaus)
 
 ---
@@ -256,7 +257,7 @@ Ringwerk trägt den laufenden Wettkampfbetrieb und geht allein raus, nie im selb
 
 - `ringwerk-<TS>.dump` — Postgres custom-format Dump der `ringwerk`-DB
 - `treffsicher-<TS>.dump`, `spiegel-<TS>.dump` — analog; Treffsicher läuft nicht mehr, seine Datenbank wird bis zum
-  Löschtermin am 1. Februar 2027 weiter gesichert
+  [Löschtermin](#löschtermin-am-1-februar-2027) weiter gesichert
 - `uploads-treffsicher-<TS>.tar.gz` — Inhalt des `uploads_treffsicher`-Volumes (Anhänge, ebenso bis zum Löschtermin)
 - `uploads-spiegel-<TS>.tar.gz` — Ausdrucke (PDF) aus dem `uploads_spiegel`-Volume
 
@@ -598,7 +599,7 @@ Symbol auf dem Home-Bildschirm. Die Seite liegt als `caddy/treffsicher/index.htm
 nur Ringwerk und Spiegel (`APPS`).
 
 Die Datenbank `treffsicher` mit ihrem Owner, das Volume `uploads_treffsicher` und die Backups bleiben bis zum
-Löschtermin am 1. Februar 2027. Die tägliche Sicherung sichert sie weiter (`DATA_APPS`),
+[Löschtermin](#löschtermin-am-1-februar-2027). Die tägliche Sicherung sichert sie weiter (`DATA_APPS`),
 `vereinsheim restore` und `restore-probe` spielen sie ein, `vereinsheim psql treffsicher` öffnet sie. Die Übernahme
 (`vereinsheim transfer`) liest Treffsicher mit `psql` auf dem Host und braucht keinen Container von Treffsicher. Der
 Code von Treffsicher bleibt vorerst im Repo, das Konsistenz-Gate prüft ihn weiter (`CODE_APPS`).
@@ -632,6 +633,39 @@ Einmalig, im Repo-Verzeichnis auf dem VPS (`vereinsheim ssh`). Ringwerk wird dab
 `TREFFSICHER_ADMIN_EMAIL` und `TREFFSICHER_ADMIN_PASSWORD` als „Unbekannt“. Das ist nur eine Warnung; bei Gelegenheit
 diese fünf Zeilen aus der `.env` löschen. `TREFFSICHER_HOST` (Hinweisseite) und `TREFFSICHER_DB_PASSWORD` (Datenbank)
 bleiben.
+
+### Löschtermin am 1. Februar 2027
+
+Am 1. Februar 2027 entfernt der User die Daten von Treffsicher. Die Reihenfolge zählt: Erst kommt der Commit auf den
+VPS, sonst legt die nächtliche Sicherung das Volume beim Archivieren leer wieder an.
+
+1. Ein Commit nimmt `treffsicher` aus `DATA_APPS` und `UPLOAD_APPS` (`scripts/lib/apps.sh`), aus `db-init/` und aus
+   `.env.example` (`TREFFSICHER_DB_PASSWORD`), dazu aus `compose.yml` die Variable `TREFFSICHER_DB_PASSWORD` am Dienst
+   `db` und das Volume `uploads_treffsicher` (mit dem Mount in `transfer-spiegel`, wenn die Übernahme dann noch im Repo
+   ist). Auf dem VPS danach `git pull`.
+2. Datenbank und Owner löschen, im Repo-Verzeichnis auf dem VPS (`VPS_REPO_PATH` aus `.vereinsheim.local`):
+
+   ```bash
+   docker compose exec db psql -U postgres -d postgres -c 'DROP DATABASE treffsicher WITH (FORCE)' -c 'DROP ROLE treffsicher'
+   ```
+
+3. Das Volume der Anhänge löschen:
+
+   ```bash
+   docker volume rm vereinsheim_uploads_treffsicher
+   ```
+
+4. Die Backups löschen (Backup-Verzeichnis, Vorgabe `/var/backups/vereinsheim`):
+
+   ```bash
+   rm -f /var/backups/vereinsheim/treffsicher-*.dump /var/backups/vereinsheim/uploads-treffsicher-*.tar.gz
+   ```
+
+5. Auf dem Mac dieselben Dateien in `./backups/` (aus `local-pull`) löschen. Die Dev-Datenbank `treffsicher` ist eine
+   Kopie aus Prod; sie geht mit dem Code von Treffsicher.
+
+Danach `TREFFSICHER_DB_PASSWORD` aus der `.env` auf dem VPS löschen. Die Hinweisseite und `TREFFSICHER_HOST` bleiben,
+bis jemand sie eigens abschaltet.
 
 ---
 
