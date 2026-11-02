@@ -16,6 +16,8 @@ services:
       - "443:443/udp"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # Hinweisseite unter dem Host von Treffsicher ([[adr-033]], Stufe 4)
+      - ./caddy/treffsicher:/srv/treffsicher:ro
       - caddy_data:/data
       - caddy_config:/config
     environment:

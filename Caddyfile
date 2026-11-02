@@ -23,14 +23,16 @@
 	}
 }
 
+# Treffsicher läuft nicht mehr ([[adr-033]], Stufe 4): Jede Adresse des Hosts, auch ein alter Link auf eine Einheit,
+# zeigt dieselbe Hinweisseite (caddy/treffsicher/index.html, gemountet nach /srv/treffsicher). `templates` setzt dort
+# den Host von Spiegel in den Link.
 {$TREFFSICHER_HOST} {
 	encode zstd gzip
-	request_body {
-		max_size 20MB
-	}
-	reverse_proxy app-treffsicher:3000 {
-		import proxy_real_ip
-	}
+	root * /srv/treffsicher
+	rewrite * /index.html
+	templates
+	header Cache-Control "no-store"
+	file_server
 }
 
 # Spiegel nimmt Stapel der Brücke bis 4 MiB an (MAX_SNAPSHOTS_BYTES). Caddy liegt knapp darüber: Ein etwas zu großer
