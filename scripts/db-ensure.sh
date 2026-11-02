@@ -97,7 +97,7 @@ ensure_app() {
 }
 
 failed=0
-for app in "${APPS[@]}"; do
+for app in "${DATA_APPS[@]}"; do
 	ensure_app "$app" || failed=1
 done
 exit "$failed"

@@ -9,7 +9,8 @@
 #   - gemeinsame Dependencies haben unterschiedliche Versionen
 #   - native Dialoge, MoreHorizontal in Detail-Aktionen
 #
-# Die Apps kommen aus scripts/lib/apps.sh. Alle drei laufen auf Design 2 und prüfen dieselben Regeln.
+# Die Apps kommen aus CODE_APPS in scripts/lib/apps.sh, auch Treffsicher, solange sein Code im Repo liegt. Alle drei
+# laufen auf Design 2 und prüfen dieselben Regeln.
 #
 # Aufruf: ./scripts/consistency-check.sh   (vor jedem Release via build-and-push.sh)
 set -euo pipefail
@@ -45,7 +46,7 @@ rate_limit_wrapper() {
 }
 # Hinweis: vault/conventions.md ist EINE Quelle am Root, nicht pro App.
 
-ref="${APPS[0]}"
+ref="${CODE_APPS[0]}"
 
 # same_file <label> <pfad der Referenz-App> <pfad der App>
 same_file() {
@@ -58,9 +59,9 @@ same_file() {
   fi
 }
 
-echo "== Byte-identische Shared-Dateien (${APPS[*]}) =="
+echo "== Byte-identische Shared-Dateien (${CODE_APPS[*]}) =="
 before=$fail
-for app in "${APPS[@]:1}"; do
+for app in "${CODE_APPS[@]:1}"; do
   for f in "${MUST_MATCH[@]}"; do
     same_file "$f" "apps/$ref/$f" "apps/$app/$f"
   done
@@ -70,7 +71,7 @@ done
 
 echo "== Gemeinsame Dependency-Versionen =="
 pkgs=()
-for app in "${APPS[@]}"; do pkgs+=("apps/$app/package.json"); done
+for app in "${CODE_APPS[@]}"; do pkgs+=("apps/$app/package.json"); done
 dep_report=$(python3 - "${pkgs[@]}" <<'PY'
 import json, os, sys
 apps = {}
@@ -108,7 +109,7 @@ conv_fail=0
 report() { echo "  FATAL $1: $2"; conv_fail=1; fail=1; }
 
 targets=()
-for app in "${APPS[@]}"; do targets+=("apps/$app/src"); done
+for app in "${CODE_APPS[@]}"; do targets+=("apps/$app/src"); done
 targets+=(packages/ui/src packages/shot-ui/src packages/shot-help/src)
 
 # hits <dir> <grep-Optionen…> <muster>: Treffer ohne Tests (Optionen vor dem Muster, auch unter POSIXLY_CORRECT)
@@ -174,7 +175,7 @@ if [[ "$conv_fail" == "0" ]]; then
 fi
 
 echo "== Anti-Pattern (Warnungen) =="
-for app in "${APPS[@]}"; do
+for app in "${CODE_APPS[@]}"; do
   repo="apps/$app"
   n=$(hits "$repo/src" -E "window\.(alert|confirm|prompt)\(")
   if [[ "$n" != "0" ]]; then echo "  WARN $app: $n native Dialoge (window.alert/confirm/prompt)"; warn=1; fi

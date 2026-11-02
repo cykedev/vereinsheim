@@ -131,7 +131,7 @@ prune_pattern() {
 failed=()
 
 echo "==> [$TS] Postgres dumps → $OUT"
-for app in "${APPS[@]}"; do
+for app in "${DATA_APPS[@]}"; do
 	exists="$(compose exec -T db psql -U postgres -d postgres -Atc "SELECT 1 FROM pg_database WHERE datname = '$app'")"
 	if [[ "$exists" != "1" ]]; then
 		echo "  skip: Datenbank $app gibt es nicht (anlegen: ./scripts/vereinsheim db-ensure)"
@@ -155,7 +155,7 @@ for app in "${UPLOAD_APPS[@]}"; do
 done
 
 echo "==> Pruning (retain ${RETAIN_DAYS}d, floor ${MIN_KEEP} per app)"
-for app in "${APPS[@]}"; do
+for app in "${DATA_APPS[@]}"; do
 	prune_pattern "${app}-*.dump"
 done
 for app in "${UPLOAD_APPS[@]}"; do

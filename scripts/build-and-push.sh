@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build + Push der Apps (Ringwerk, Treffsicher, Spiegel) AUS DEM MONOREPO via
+# Build + Push der Apps, die laufen (APPS in scripts/lib/apps.sh: Ringwerk, Spiegel), AUS DEM MONOREPO via
 # `turbo prune --docker` (ADR-015). Das Tag-Schema gehört zum Deploy-Vertrag
 # (compose.yml/.env).
 #
@@ -17,7 +17,7 @@
 # Voraussetzungen: docker buildx, `pnpm install` im Repo-Root (turbo verfügbar),
 # DOCKER_USER gesetzt (siehe .env oder export).
 #
-# APPS wählt die Apps (Vorgabe alle drei), etwa `APPS="ringwerk treffsicher"` für einen
+# APPS wählt die Apps (Vorgabe alle Apps, die laufen), etwa `APPS="ringwerk"` für einen
 # Hotfix, solange Spiegel nicht mitgehen soll: Ein Build bricht sonst beim ersten
 # Fehler ab, nachdem frühere Apps schon gepusht sind.
 set -euo pipefail
@@ -26,7 +26,7 @@ cd "$(dirname "$0")/.."
 : "${DOCKER_USER:?Set DOCKER_USER (Docker Hub user, e.g. cyke)}"
 PLATFORM="${PLATFORM:-linux/amd64}"
 PUSH="${PUSH:-1}"
-# die Auswahl aus der Umgebung sichern, bevor scripts/lib/apps.sh die Liste aller Apps setzt
+# die Auswahl aus der Umgebung sichern, bevor scripts/lib/apps.sh die Liste der Apps setzt, die laufen
 SELECTED="${APPS:-}"
 # shellcheck source=lib/apps.sh
 . scripts/lib/apps.sh
@@ -49,7 +49,7 @@ if [[ "$PUSH" == "1" ]]; then
 	fi
 	# Das Gate prüft immer alle Apps, auch wenn APPS nur einen Teil baut: Die geteilten Dateien
 	# müssen in allen gleich sein.
-	echo "==> Konsistenz-Check (${APPS[*]})"
+	echo "==> Konsistenz-Check (${CODE_APPS[*]})"
 	"$(dirname "$0")/consistency-check.sh"
 fi
 
@@ -135,6 +135,7 @@ if [[ "$PUSH" == "1" ]]; then
 	echo "On the VPS, run: ./scripts/deploy.sh"
 else
 	echo "Done (lokal, --load, kein Push):"
+	app_pattern="$(IFS='|'; echo "${APPS[*]}")"
 	docker images --format "  {{.Repository}}:{{.Tag}}  ({{.Size}})" \
-		| grep -E "${DOCKER_USER}/(ringwerk|treffsicher|spiegel):(latest|${SHA})(-migrator)?  \(" || true
+		| grep -E "${DOCKER_USER}/(${app_pattern}):(latest|${SHA})(-migrator)?  \(" || true
 fi

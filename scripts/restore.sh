@@ -24,7 +24,7 @@ compose() { docker compose --env-file "$ENV_FILE" "$@"; }
 
 usage() {
 	cat <<-EOF
-		Usage: $0 <ringwerk|treffsicher|spiegel> <dump-file> [uploads-tar.gz]
+		Usage: $0 <$(IFS='|'; echo "${DATA_APPS[*]}")> <dump-file> [uploads-tar.gz]
 
 		Ein Uploads-Tar nur für Treffsicher und Spiegel (Ringwerk hat kein Upload-Volume).
 
@@ -44,8 +44,8 @@ APP="$1"
 DUMP="$2"
 UPLOADS="${3:-}"
 
-if ! in_list "$APP" "${APPS[@]}"; then
-	echo "Unknown app: $APP (${APPS[*]})" >&2
+if ! in_list "$APP" "${DATA_APPS[@]}"; then
+	echo "Unknown app: $APP (${DATA_APPS[*]})" >&2
 	usage
 fi
 
@@ -62,8 +62,14 @@ fi
 	exit 1
 }
 
-echo "==> Stopping app-${APP} and migrate-${APP} (if running)"
-compose stop "app-${APP}" "migrate-${APP}" 2>/dev/null || true
+# Treffsicher läuft nicht mehr (nur in DATA_APPS): kein Container zu stoppen oder danach zu starten
+running_app=0
+in_list "$APP" "${APPS[@]}" && running_app=1
+
+if ((running_app)); then
+	echo "==> Stopping app-${APP} and migrate-${APP} (if running)"
+	compose stop "app-${APP}" "migrate-${APP}" 2>/dev/null || true
+fi
 
 DUMP_ABS="$(realpath "$DUMP")"
 VOLUME_PREFIX="${COMPOSE_PROJECT_NAME:-vereinsheim}"
@@ -91,6 +97,10 @@ if [[ -n "$UPLOADS" ]]; then
 fi
 
 echo
-echo "Restore done. Next steps:"
-echo "  docker compose up -d migrate-${APP}    # nachfahren etwaiger neuer Migrations"
-echo "  docker compose up -d app-${APP}"
+if ((running_app)); then
+	echo "Restore done. Next steps:"
+	echo "  docker compose up -d migrate-${APP}    # nachfahren etwaiger neuer Migrations"
+	echo "  docker compose up -d app-${APP}"
+else
+	echo "Restore done. ${APP} läuft nicht mehr als App, die Datenbank ist nur gesichert."
+fi

@@ -109,7 +109,7 @@ probe_app() {
 
 echo "==> Restore-Probe aus $BACKUP_DIR"
 failed=0
-for app in "${APPS[@]}"; do
+for app in "${DATA_APPS[@]}"; do
 	probe_app "$app" || failed=1
 done
 if ((failed)); then

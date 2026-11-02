@@ -159,7 +159,7 @@ ok "Dev-Rollen dürfen Shadow-DBs anlegen (prisma migrate dev)"
 
 # ---------- 6) .env je App (nur wenn fehlend — nie überschreiben) ----------
 step ".env je App (aus .env.example, nur wenn fehlend)"
-for app in "${APPS[@]}"; do
+for app in "${CODE_APPS[@]}"; do
 	if [[ -f "apps/$app/.env" ]]; then
 		ok "apps/$app/.env vorhanden — unverändert"
 	else
@@ -173,7 +173,7 @@ done
 # divergentem Schema (z.B. nach pg_restore echter Prod-Daten) bricht der Push kontrolliert
 # ab, statt Daten zu verlieren — dann die Dev-DB erst zurücksetzen.
 step "Prisma-Schema in die Dev-DB pushen"
-for app in "${APPS[@]}"; do
+for app in "${CODE_APPS[@]}"; do
 	echo "    ${DIM}$app …${RESET}"
 	pnpm --filter "$app" exec prisma db push
 done
