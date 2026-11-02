@@ -555,10 +555,10 @@ Befund aus dem Review von 2a).
 | 3a   | `plans/2026-10-29-tis-3a-transfer.md`        | `feat/tis-3a-transfer` (vom Basis)         | `tis-3a-transfer`        | deployt 30.10., Basisbranch (`b8ae4506`), Plan entfernt              |
 | 3b   | `plans/2026-10-30-tis-3b-transfer-ops.md`    | `feat/tis-3b-transfer-ops` (vom Basis)     | `tis-3b-transfer-ops`    | deployt 30.10., Basisbranch (`b75352f1`), Plan entfernt              |
 | 3c   | `plans/2026-10-29-tis-3c-warmup.md`          | `feat/tis-3c-warmup` (von `main`)          | `tis-3c-warmup`          | in `main` (`52dffad1`), deployt (bis 30.10.); Plan entfernt |
-| 3d   | `plans/2026-11-01-tis-3d-late-printout.md`   | `feat/tis-3d-late-printout` (vom Basis)    | `tis-3d-late-printout`   | freigegeben (1.11.), in Arbeit                          |
+| 3d   | `plans/2026-11-01-tis-3d-late-printout.md`   | `feat/tis-3d-late-printout` (vom Basis)    | `tis-3d-late-printout`   | Basisbranch (`bfdc134e`, 2.11.), Plan entfernt          |
 | 3e   | `plans/2026-10-29-tis-3e-read-only.md`       | `feat/tis-3e-read-only` (von `main`)       | `tis-3e-read-only`       | in `main` (`0000933f`), deployt (bis 30.10.); Plan entfernt |
 | U1   | `plans/2026-10-31-tis-u1-nav-compare.md`     | `feat/tis-u1-nav-compare` (vom Basis)      | `tis-u1-nav-compare`     | deployt 31.10. (`main` `c30676d5`), Plan entfernt         |
-| U2   | `plans/2026-11-01-tis-u2-place-row.md`       | `feat/tis-u2-place-row` (vom Basis)        | `tis-u2-place-row`       | freigegeben (1.11.), in Arbeit                            |
+| U2   | `plans/2026-11-01-tis-u2-place-row.md`       | `feat/tis-u2-place-row` (vom Basis)        | `tis-u2-place-row`       | Basisbranch (`94952855`, 2.11.), Plan entfernt            |
 | 4    |                                              |                                            |                          | offen                                                   |
 
 ## Verification
