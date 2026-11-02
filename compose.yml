@@ -79,22 +79,6 @@ services:
     networks:
       - data
 
-  migrate-treffsicher:
-    image: ${DOCKER_USER}/treffsicher:${TREFFSICHER_MIGRATOR_TAG:-latest-migrator}
-    restart: "no"
-    pull_policy: always
-    environment:
-      DATABASE_URL: postgresql://treffsicher:${TREFFSICHER_DB_PASSWORD}@db:5432/treffsicher
-      PRISMA_AUTO_RESOLVE_FAILED_MIGRATIONS: "true"
-      PRISMA_AUTO_RESOLVE_UNKNOWN_FAILED_MIGRATIONS: "false"
-    depends_on:
-      db:
-        condition: service_healthy
-    mem_limit: 192m
-    logging: *default-logging
-    networks:
-      - data
-
   migrate-spiegel:
     image: ${DOCKER_USER}/spiegel:${SPIEGEL_MIGRATOR_TAG:-latest-migrator}
     restart: "no"
@@ -124,43 +108,13 @@ services:
       DISPLAY_TIME_ZONE: ${DISPLAY_TIME_ZONE:-Europe/Berlin}
       AUTH_TRUST_PROXY_HEADERS: "true"
       # Heap unter der Grenze des Containers: Node setzt ihn bei 256m sonst auf rund 260 MiB
-      # (vault/incidents/node-heap-above-container-limit.md). Gilt für alle drei Apps;
+      # (vault/incidents/node-heap-above-container-limit.md). Gilt für beide Apps;
       # Spiegel hat mehr Luft für den Leser der Ausdrucke (vault/operations/vps-resource-sizing.md).
       NODE_OPTIONS: --max-old-space-size=160
     depends_on:
       db:
         condition: service_healthy
       migrate-ringwerk:
-        condition: service_completed_successfully
-    mem_limit: 256m
-    logging: *default-logging
-    networks:
-      - web
-      - data
-
-  app-treffsicher:
-    image: ${DOCKER_USER}/treffsicher:${TREFFSICHER_TAG:-latest}
-    restart: unless-stopped
-    pull_policy: always
-    environment:
-      DATABASE_URL: postgresql://treffsicher:${TREFFSICHER_DB_PASSWORD}@db:5432/treffsicher
-      NEXTAUTH_SECRET: ${TREFFSICHER_NEXTAUTH_SECRET}
-      NEXTAUTH_URL: https://${TREFFSICHER_HOST}
-      # Ziel des Knopfs „Zu Spiegel“ für Konten, die nach Spiegel umgezogen sind ([[adr-033]], Stufe 3)
-      SPIEGEL_URL: https://${SPIEGEL_HOST}
-      ADMIN_EMAIL: ${TREFFSICHER_ADMIN_EMAIL}
-      ADMIN_PASSWORD: ${TREFFSICHER_ADMIN_PASSWORD}
-      UPLOAD_DIR: /app/uploads
-      DISPLAY_TIME_ZONE: ${DISPLAY_TIME_ZONE:-Europe/Berlin}
-      AUTH_TRUST_PROXY_HEADERS: "true"
-      # Uploads bis 10 MB und der PDF-Import mit pdf.js laufen im Prozess; die Spitze lag bisher bei 163 MiB.
-      NODE_OPTIONS: --max-old-space-size=160
-    volumes:
-      - uploads_treffsicher:/app/uploads
-    depends_on:
-      db:
-        condition: service_healthy
-      migrate-treffsicher:
         condition: service_completed_successfully
     mem_limit: 256m
     logging: *default-logging
@@ -182,8 +136,9 @@ services:
       AUTH_TRUST_PROXY_HEADERS: "true"
       UPLOAD_DIR: /app/uploads
       # PDFs liest ein Kindprozess mit eigener Grenze, nicht dieser Heap. Er zählt aber zur Grenze
-      # des Containers (bis 96 MiB); die 64 MiB über den anderen Apps sind für ihn, nicht für den Heap.
-      NODE_OPTIONS: --max-old-space-size=160
+      # des Containers: 192 MiB Heap, rund 60 MiB außerhalb des Heaps und der Leser bis zu seiner
+      # Wache bei 96 MiB ergeben rund 348 MiB unter 384m (vault/operations/vps-resource-sizing.md).
+      NODE_OPTIONS: --max-old-space-size=192
     volumes:
       - uploads_spiegel:/app/uploads
     depends_on:
@@ -191,7 +146,7 @@ services:
         condition: service_healthy
       migrate-spiegel:
         condition: service_completed_successfully
-    mem_limit: 320m
+    mem_limit: 384m
     logging: *default-logging
     networks:
       - web
@@ -231,5 +186,6 @@ volumes:
   postgres_data:
   caddy_data:
   caddy_config:
+  # Anhänge von Treffsicher bis zum Löschtermin am 1. Februar 2027, gemountet von `transfer-spiegel`
   uploads_treffsicher:
   uploads_spiegel:
