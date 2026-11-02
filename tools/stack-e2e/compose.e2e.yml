@@ -1,6 +1,7 @@
 # Override für den lokalen Ende-zu-Ende-Test (tools/stack-e2e/run.sh), immer zusammen mit compose.yml und einer
 # Wegwerf-Umgebung aus run.sh. Caddy hört auf Ports statt Hosts (RINGWERK_HOST=:8080 usw.), so geht es ohne DNS und
-# TLS. Die Apps nehmen die lokal gebauten Images (vereinsheim-e2e/*) und holen nichts von Docker Hub.
+# TLS; 8081 ist die Hinweisseite von Treffsicher. Die Apps nehmen die lokal gebauten Images (vereinsheim-e2e/*) und
+# holen nichts von Docker Hub. Die Grenzen kommen unverändert aus compose.yml.
 services:
   caddy:
     ports: !override
@@ -15,9 +16,6 @@ services:
   migrate-ringwerk:
     pull_policy: never
 
-  migrate-treffsicher:
-    pull_policy: never
-
   migrate-spiegel:
     pull_policy: never
 
@@ -25,13 +23,6 @@ services:
     pull_policy: never
     environment:
       NEXTAUTH_URL: "http://localhost:18080"
-
-  app-treffsicher:
-    pull_policy: never
-    environment:
-      NEXTAUTH_URL: "http://localhost:18081"
-      # SPIEGEL_HOST ist hier `:8082`, daraus wird keine gültige Adresse
-      SPIEGEL_URL: "http://localhost:18082"
 
   app-spiegel:
     pull_policy: never

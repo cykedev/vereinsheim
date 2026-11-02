@@ -7,11 +7,14 @@ dem Monorepo, `compose.yml` mit `compose.e2e.yml`, eine Wegwerf-Umgebung mit Zuf
 tools/stack-e2e/run.sh
 ```
 
-Das Skript baut die sechs Images als `vereinsheim-e2e/*`, startet das Compose-Projekt `vereinsheim-e2e` und prüft:
+Das Skript baut die vier Images von Ringwerk und Spiegel als `vereinsheim-e2e/*`, startet das Compose-Projekt
+`vereinsheim-e2e` und prüft:
 
-- Ringwerk (`:18080`), Treffsicher (`:18081`) und Spiegel (`:18082`) antworten über Caddy;
-- die drei Migratoren enden mit 0;
-- drei Datenbanken mit eigenem Owner, `PUBLIC` ohne Rechte;
+- Ringwerk (`:18080`) und Spiegel (`:18082`) antworten über Caddy;
+- die Hinweisseite von Treffsicher (`:18081`, ADR-033 Stufe 4): `/` und `/sessions/abc` antworten mit 200, mit
+  Titel und Link auf den Host von Spiegel, ohne Platzhalter `{{`;
+- die zwei Migratoren enden mit 0, kein Container von Treffsicher;
+- drei Datenbanken mit eigenem Owner, `PUBLIC` ohne Rechte (die von Treffsicher bleibt bis zum Löschtermin);
 - Grenzen hinter Caddy (`pnpm --filter spiegel stack-probe`): 413 der App ab 4 MiB, 413 von Caddy ab 5 MiB, keine
   gefälschte Adresse in der Ratenbegrenzung;
 - Speicher je Container seit dem Start, kein Abbruch wegen Speicher.
@@ -24,8 +27,7 @@ Danach entfernt es Stack, Volumes und Umgebung.
 | `--no-build` | vorhandene `vereinsheim-e2e/*`-Images nehmen |
 | `--bridge` | die echte Brücke gegen Spiegel (`bridge-e2e`, braucht Go) |
 | `--load <min>` | Last auf Spiegel (`ingest-load`) und Speicher unter Last |
-| `--ops` | der Betrieb (`ops.sh`): `db-ensure` und `env-check` über das CLI, Deploy nacheinander mit Pre-Deploy-Backup und sechs Tags in der Historie, Vorprüfung ohne Rolle, Backup ohne Datenbank `spiegel`, Backup mit drei Apps, Restore-Probe (auch mit abgeschnittenem Dump), Restore von Spiegel (ein abgeschnittener Dump lässt die Datenbank unverändert; auf ein neueres Schema mit Fremdschlüssel auf eine Tabelle des Dumps steht danach genau der Stand des Dumps), Rollback auf einen alten Eintrag ohne Spiegel-Tags |
-| `--transfer` | die Übernahme aus Treffsicher über `vereinsheim transfer` im VPS-Modus (`transfer.sh`): ein erfundenes Konto, Probelauf ohne Merkmal, echter Lauf mit Lauf im Hauptbuch, Merkmal und Bericht (Modus 600), zweiter Lauf, `mark --clear`, unbekanntes Konto mit Exit 3, die Spitze des Speichers; braucht ein Repo ohne `.vereinsheim.local` (etwa einen Worktree) |
+| `--ops` | der Betrieb (`ops.sh`): `db-ensure` und `env-check` über das CLI, die Datenbank von Treffsicher mit einem Stand wie nach dem letzten Migrator (ohne App), Deploy von Ringwerk und Spiegel nacheinander mit Pre-Deploy-Backup und vier Tags in der Historie, Vorprüfung ohne Rolle, Backup ohne Datenbank `spiegel`, Backup mit drei Datenbanken, Restore-Probe (auch mit abgeschnittenem Dump), Restore von Spiegel (ein abgeschnittener Dump lässt die Datenbank unverändert; auf ein neueres Schema mit Fremdschlüssel auf eine Tabelle des Dumps steht danach genau der Stand des Dumps), Restore von Treffsicher samt Anhängen ohne Container, Rollback auf einen alten Eintrag ohne Spiegel-Tags |
 | `--down` | einen mit `--keep` stehen gelassenen Stack entfernen |
 | `--clean` | wie `--down`, dazu die `vereinsheim-e2e/*`-Images löschen (sie sammeln sich je Commit an) |
 

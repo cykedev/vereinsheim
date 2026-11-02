@@ -2,7 +2,7 @@
 # Lokaler Ende-zu-Ende-Test des ganzen Stacks: die echten Images aus dem Monorepo, compose.yml mit
 # tools/stack-e2e/compose.e2e.yml, eine Wegwerf-Umgebung mit Zufallswerten. Eigenes Compose-Projekt (vereinsheim-e2e)
 # und eigene Images (vereinsheim-e2e/*): .env, .env.local, Volumes und Images des Users bleiben unberührt. Caddy hört
-# auf Ports statt Hosts (18080 Ringwerk, 18081 Treffsicher, 18082 Spiegel), Postgres auf 15432.
+# auf Ports statt Hosts (18080 Ringwerk, 18081 Hinweisseite von Treffsicher, 18082 Spiegel), Postgres auf 15432.
 #
 #   tools/stack-e2e/run.sh                  bauen, starten, prüfen, alles wieder entfernen
 #   tools/stack-e2e/run.sh --keep           Stack und Umgebung stehen lassen (Pfad und Befehle am Ende)
@@ -11,8 +11,6 @@
 #   tools/stack-e2e/run.sh --load <min>     dazu Last auf Spiegel (ingest-load) und Speicher unter Last
 #   tools/stack-e2e/run.sh --ops            dazu der Betrieb (tools/stack-e2e/ops.sh): Deploy nacheinander,
 #                                           Vorprüfung, Backup, Restore-Probe, Restore, Rollback (gut 5 Minuten)
-#   tools/stack-e2e/run.sh --transfer       dazu die Übernahme aus Treffsicher über das CLI (tools/stack-e2e/transfer.sh);
-#                                           braucht ein Repo ohne .vereinsheim.local (VPS-Modus, etwa ein Worktree)
 #   tools/stack-e2e/run.sh --down           einen mit --keep stehen gelassenen Stack entfernen
 #   tools/stack-e2e/run.sh --clean          wie --down, dazu die vereinsheim-e2e/*-Images löschen
 #
@@ -24,14 +22,13 @@ PROJECT=vereinsheim-e2e
 export COMPOSE_PROJECT_NAME="$PROJECT"
 export COMPOSE_FILE="compose.yml:tools/stack-e2e/compose.e2e.yml"
 
-KEEP=0 BUILD=1 BRIDGE=0 LOAD=0 DOWN=0 CLEAN=0 OPS=0 TRANSFER=0
+KEEP=0 BUILD=1 BRIDGE=0 LOAD=0 DOWN=0 CLEAN=0 OPS=0
 while [[ $# -gt 0 ]]; do
 	case "$1" in
 	--keep) KEEP=1 ;;
 	--no-build) BUILD=0 ;;
 	--bridge) BRIDGE=1 ;;
 	--ops) OPS=1 ;;
-	--transfer) TRANSFER=1 ;;
 	--load)
 		LOAD="${2:?--load braucht die Minuten}"
 		shift
@@ -75,6 +72,7 @@ cleanup() {
 		echo
 		echo "Stack bleibt stehen (--keep). Umgebung: $ENV_FILE"
 		echo "  Spiegel: http://localhost:18082 (Admin admin@example.com, Passwort in der Umgebung)"
+		echo "  Hinweisseite von Treffsicher: http://localhost:18081"
 		echo "  Datenbank Spiegel für die Werkzeuge: DATABASE_URL aus SPIEGEL_DB_PASSWORD, Port 15432"
 		echo "  Entfernen: tools/stack-e2e/run.sh --down && rm -rf $DIR"
 	else
@@ -102,8 +100,6 @@ ACME_EMAIL=e2e@example.com
 DOCKER_USER=vereinsheim-e2e
 RINGWERK_TAG=latest
 RINGWERK_MIGRATOR_TAG=latest-migrator
-TREFFSICHER_TAG=latest
-TREFFSICHER_MIGRATOR_TAG=latest-migrator
 SPIEGEL_TAG=latest
 SPIEGEL_MIGRATOR_TAG=latest-migrator
 POSTGRES_PASSWORD=$(secret 32)
@@ -113,9 +109,6 @@ SPIEGEL_DB_PASSWORD=$(secret 32)
 RINGWERK_NEXTAUTH_SECRET=$(secret 48)
 RINGWERK_SEED_ADMIN_EMAIL=admin@example.com
 RINGWERK_SEED_ADMIN_PASSWORD=$(secret 24)
-TREFFSICHER_NEXTAUTH_SECRET=$(secret 48)
-TREFFSICHER_ADMIN_EMAIL=admin@example.com
-TREFFSICHER_ADMIN_PASSWORD=$(secret 24)
 SPIEGEL_NEXTAUTH_SECRET=$(secret 48)
 SPIEGEL_SEED_ADMIN_EMAIL=admin@example.com
 SPIEGEL_SEED_ADMIN_PASSWORD=$(secret 24)
@@ -167,12 +160,28 @@ wait_http() {
 }
 
 echo "==> Apps über Caddy"
-for target in "Ringwerk http://localhost:18080/" "Treffsicher http://localhost:18081/" "Spiegel http://localhost:18082/login"; do
+for target in "Ringwerk http://localhost:18080/" "Spiegel http://localhost:18082/login"; do
 	name="${target%% *}"
 	url="${target#* }"
 	code="$(wait_http "$url")"
 	echo "  $name $url -> $code"
 	[[ "$code" != "000" && "$code" -lt 500 ]] || problem "$name antwortet nicht ($code)"
+done
+
+# Treffsicher läuft nicht mehr ([[adr-033]], Stufe 4): Jede Adresse seines Hosts zeigt die Hinweisseite mit einem
+# Link auf Spiegel, den Caddy über `templates` einsetzt
+echo "==> Hinweisseite von Treffsicher"
+spiegel_host="$(grep -m1 '^SPIEGEL_HOST=' "$ENV_FILE" | cut -d= -f2-)"
+for path in / /sessions/abc; do
+	url="http://localhost:18081$path"
+	wait_http "$url" >/dev/null
+	code="$(curl -s --max-time 5 -o "$DIR/notice.html" -w '%{http_code}' "$url" || true)"
+	echo "  $url -> $code"
+	[[ "$code" == "200" ]] || problem "Hinweisseite $path antwortet mit $code"
+	grep -qF '<title>Treffsicher ist jetzt Teil von Spiegel</title>' "$DIR/notice.html" ||
+		problem "Hinweisseite $path ohne Titel"
+	grep -qF "href=\"https://${spiegel_host}\"" "$DIR/notice.html" || problem "Hinweisseite $path ohne Link auf Spiegel"
+	! grep -qF '{{' "$DIR/notice.html" || problem "Hinweisseite $path mit Platzhalter {{"
 done
 
 echo "==> Migratoren"
@@ -182,8 +191,11 @@ while read -r service code; do
 	echo "  $service: Exit $code"
 	[[ "$code" == "0" ]] || problem "$service endete mit $code"
 done < <(compose ps -a --format '{{.Service}} {{.ExitCode}}' | grep '^migrate-' || true)
-[[ "$migrators" -eq 3 ]] || problem "erwartet 3 Migratoren, gefunden $migrators"
+[[ "$migrators" -eq 2 ]] || problem "erwartet 2 Migratoren, gefunden $migrators"
+treffsicher_services="$(compose ps -a --format '{{.Service}}' | grep treffsicher || true)"
+[[ -z "$treffsicher_services" ]] || problem "Container von Treffsicher laufen noch: $treffsicher_services"
 
+# die Datenbank von Treffsicher bleibt bis zum Löschtermin, db-init legt sie weiter an
 echo "==> Datenbanken (Owner, Rechte)"
 compose exec -T db psql -U postgres -d postgres -Atc \
 	"SELECT datname || ' Owner ' || pg_get_userbyid(datdba) || ' ' || coalesce(datacl::text, '-') FROM pg_database WHERE datname IN ('ringwerk', 'treffsicher', 'spiegel') ORDER BY 1" |
@@ -212,11 +224,6 @@ fi
 if [[ "$OPS" == "1" ]]; then
 	echo "==> Betrieb (ops.sh)"
 	ENV_FILE="$ENV_FILE" tools/stack-e2e/ops.sh || problem "ops.sh meldet Fehler"
-fi
-
-if [[ "$TRANSFER" == "1" ]]; then
-	echo "==> Übernahme aus Treffsicher (transfer.sh)"
-	ENV_FILE="$ENV_FILE" tools/stack-e2e/transfer.sh || problem "transfer.sh meldet Fehler"
 fi
 
 echo "==> Speicher (seit dem Start)"

@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Betrieb gegen den Teststack: Deploy nacheinander mit Vorprüfung, Backup, Restore-Probe, Restore und
-# Rollback, über die Skripte und das CLI.
+# Rollback, über die Skripte und das CLI. Deployt werden Ringwerk und Spiegel; Treffsicher hat nur noch Datenbank und
+# Anhänge, die gesichert und eingespielt werden ([[adr-033]], Stufe 4).
 # Läuft aus tools/stack-e2e/run.sh --ops, das ENV_FILE, COMPOSE_PROJECT_NAME und COMPOSE_FILE setzt;
 # Backups und Deploy-Historie landen in einem eigenen Temp-Ordner. Ändert nichts außerhalb des Teststacks
 # (SKIP_PRUNE: kein Aufräumen der Images des Rechners).
@@ -23,6 +24,7 @@ trap 'rm -rf "$WORK"' EXIT
 compose() { docker compose --env-file "$ENV_FILE" "$@"; }
 sql() { compose exec -T db psql -U postgres -d postgres -Atc "$1"; }
 spiegel_sql() { compose exec -T db psql -U postgres -d spiegel -v ON_ERROR_STOP=1 -Atc "$1"; }
+treffsicher_sql() { compose exec -T db psql -U postgres -d treffsicher -v ON_ERROR_STOP=1 -Atc "$1"; }
 cli() { ./scripts/vereinsheim "$@"; }
 
 PROBLEMS=()
@@ -54,7 +56,7 @@ wait_spiegel() {
 # (etwa durch ein abschließendes `up -d`). Sekunden reichen, ein Migrator braucht mehrere.
 check_migrator_order() {
 	local app id started finished prev_finished="" prev_app=""
-	for app in ringwerk treffsicher spiegel; do
+	for app in ringwerk spiegel; do
 		id="$(compose ps -a -q "migrate-$app")"
 		started="$(docker inspect -f '{{.State.StartedAt}}' "$id")"
 		finished="$(docker inspect -f '{{.State.FinishedAt}}' "$id")"
@@ -91,16 +93,33 @@ echo "==> env-check über das CLI"
 run cli env-check || problem "env-check meldet fehlende Schlüssel"
 if grep -q "Fehlend" "$WORK/plain.txt"; then problem "env-check: Schlüssel fehlen"; else echo "  nichts fehlt"; fi
 
+# Die Datenbank treffsicher legt db-init an, migriert hat sie kein Container mehr. Für Backup, Restore-Probe und
+# Restore bekommt sie einen Stand wie nach dem letzten Migrator: Tabellen und eine angewandte Migration.
+echo "==> Datenbank treffsicher wie nach dem letzten Migrator (ohne App)"
+if treffsicher_sql "SET ROLE treffsicher;
+	CREATE TABLE _prisma_migrations (id varchar(36) PRIMARY KEY, checksum varchar(64) NOT NULL,
+		finished_at timestamptz, migration_name varchar(255) NOT NULL, logs text, rolled_back_at timestamptz,
+		started_at timestamptz NOT NULL DEFAULT now(), applied_steps_count integer NOT NULL DEFAULT 0);
+	INSERT INTO _prisma_migrations (id, checksum, finished_at, migration_name, applied_steps_count)
+		VALUES ('e2e-init', '0', now(), '20260101000000_e2e_init', 1);
+	CREATE TABLE \"E2eUnit\" (id text PRIMARY KEY, note text NOT NULL);
+	INSERT INTO \"E2eUnit\" SELECT 'e2e-' || i, repeat('x', 40) FROM generate_series(1, 50) i" >/dev/null; then
+	echo "  zwei Tabellen, eine Migration"
+else
+	problem "Stand der Datenbank treffsicher ließ sich nicht anlegen"
+fi
+
 echo "==> Deploy nacheinander (mit Pre-Deploy-Backup)"
 if run ./scripts/deploy.sh; then
 	order="$(grep -E '^==> (ringwerk|treffsicher|spiegel):' "$WORK/plain.txt" | sed 's/^==> //; s/:.*//' | paste -sd ' ' -)"
 	echo "  Reihenfolge: $order"
-	[[ "$order" == "ringwerk treffsicher spiegel" ]] || problem "Deploy-Reihenfolge: $order"
+	[[ "$order" == "ringwerk spiegel" ]] || problem "Deploy-Reihenfolge: $order"
 	expect_text "==> Pre-Deploy-Backup" "Deploy"
 	check_migrator_order
 	tags="$(tail -n 1 "$HISTORY_FILE" | grep -o '_TAG=' | wc -l | tr -d ' ')"
 	echo "  Historie: $tags Tags in der letzten Zeile"
-	[[ "$tags" == "6" ]] || problem "Historie mit $tags statt 6 Tags"
+	[[ "$tags" == "4" ]] || problem "Historie mit $tags statt 4 Tags"
+	[[ -z "$(compose ps -a --format '{{.Service}}' | grep treffsicher)" ]] || problem "Deploy startete Container von Treffsicher"
 else
 	problem "deploy.sh endete mit Fehler"
 	tail -15 "$WORK/plain.txt"
@@ -155,10 +174,11 @@ else
 	tail -10 "$WORK/plain.txt"
 fi
 
-echo "==> Backup mit drei Apps"
-# eine Marke im Volume der Ausdrucke: Der Restore muss sie zurückbringen
+echo "==> Backup mit drei Datenbanken"
+# Marken in den Volumes der Ausdrucke und der Anhänge: Der Restore muss sie zurückbringen
 docker run --rm -v "${COMPOSE_PROJECT_NAME}_uploads_spiegel:/d" alpine \
 	sh -c 'mkdir -p /d/printouts && echo e2e >/d/printouts/e2e-marker.txt'
+docker run --rm -v "${COMPOSE_PROJECT_NAME}_uploads_treffsicher:/d" alpine sh -c 'echo e2e >/d/e2e-marker.txt'
 rm -f "$BACKUP_DIR"/*
 if run ./scripts/backup.sh; then
 	for pattern in 'ringwerk-*.dump' 'treffsicher-*.dump' 'spiegel-*.dump' 'uploads-treffsicher-*.tar.gz' \
@@ -247,6 +267,28 @@ else
 	problem "restore.sh spiegel endete mit Fehler"
 	tail -8 "$WORK/plain.txt"
 fi
+echo "==> Restore von Treffsicher (nur Datenbank und Anhänge)"
+treffsicher_sql "DELETE FROM \"E2eUnit\"" >/dev/null || problem "E2eUnit in treffsicher ließ sich nicht leeren"
+docker run --rm -v "${COMPOSE_PROJECT_NAME}_uploads_treffsicher:/d" alpine rm -f /d/e2e-marker.txt
+treffsicher_dump="$(ls -t "$BACKUP_DIR"/treffsicher-*.dump | head -n 1)"
+treffsicher_tar="$(ls -t "$BACKUP_DIR"/uploads-treffsicher-*.tar.gz | head -n 1)"
+if run ./scripts/restore.sh treffsicher "$treffsicher_dump" "$treffsicher_tar"; then
+	expect_text "treffsicher läuft nicht mehr als App" "Restore Treffsicher"
+	! grep -qF "Stopping app-treffsicher" "$WORK/plain.txt" || problem "restore.sh wollte app-treffsicher stoppen"
+	[[ "$(treffsicher_sql "SELECT count(*) FROM \"E2eUnit\"")" == "50" ]] ||
+		problem "Restore brachte die Zeilen von Treffsicher nicht zurück"
+	owner="$(sql "SELECT pg_get_userbyid(datdba) || ' ' || datacl::text FROM pg_database WHERE datname = 'treffsicher'")"
+	[[ "$owner" == "treffsicher {treffsicher=CTc/treffsicher}" ]] ||
+		problem "Datenbank treffsicher nach dem Restore: Owner und Rechte $owner"
+	docker run --rm -v "${COMPOSE_PROJECT_NAME}_uploads_treffsicher:/d:ro" alpine test -f /d/e2e-marker.txt ||
+		problem "Restore brachte die Anhänge von Treffsicher nicht zurück"
+	[[ -z "$(compose ps -a --format '{{.Service}}' | grep treffsicher)" ]] || problem "Restore startete Container von Treffsicher"
+	echo "  eingespielt samt Anhängen, kein Container von Treffsicher"
+else
+	problem "restore.sh treffsicher endete mit Fehler"
+	tail -8 "$WORK/plain.txt"
+fi
+
 if run ./scripts/restore.sh ringwerk "$(ls -t "$BACKUP_DIR"/ringwerk-*.dump | head -n 1)" "$spiegel_tar"; then
 	problem "restore.sh nahm einen Uploads-Tar für ringwerk an"
 else
