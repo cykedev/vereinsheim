@@ -65,7 +65,7 @@ const THEMED = [
 
 // was der Akzent einer App setzt, hell wie dunkel
 const ACCENT = ["ring", "primary", "primary-foreground", "accent", "accent-wash", "chart-1"]
-const APPS = ["ringwerk", "treffsicher"] as const
+const APPS = ["ringwerk"] as const
 
 /** relative Leuchtdichte nach WCAG 2.x aus `#rrggbb` */
 function luminance(hex: string): number {

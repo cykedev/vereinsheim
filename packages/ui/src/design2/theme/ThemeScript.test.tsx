@@ -13,10 +13,8 @@ describe("ThemeScript", () => {
   })
 
   it("reads the choice under the key of its app", () => {
-    const html = renderToStaticMarkup(
-      createElement(ThemeScript, { storageKey: "treffsicher-theme" })
-    )
-    expect(html).toContain(`localStorage.getItem("treffsicher-theme")`)
+    const html = renderToStaticMarkup(createElement(ThemeScript, { storageKey: "ringwerk-theme" }))
+    expect(html).toContain(`localStorage.getItem("ringwerk-theme")`)
     expect(html).not.toContain("spiegel-theme")
   })
 })

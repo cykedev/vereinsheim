@@ -1,6 +1,6 @@
 // Die IP des Clients für die Ratenbegrenzung der Anmeldung, aus den Headern eines Reverse-Proxys (wie Caddy). Proxy-
 // Headern wird nur vertraut, wenn die Umgebung es ausdrücklich erlaubt (`AUTH_TRUST_PROXY_HEADERS=true`), sonst könnte
-// ein Client eigene IPs schicken. Gemeinsam für Ringwerk, Treffsicher und Spiegel (vorher je App kopiert).
+// ein Client eigene IPs schicken. Gemeinsam für Ringwerk und Spiegel (vorher je App kopiert).
 
 import { isIP } from "node:net"
 

@@ -170,7 +170,7 @@
   --chart-5: #d14d82;
 }
 
-/* Akzent je App, hell: Messing und Teal, Schrift darauf weiß */
+/* Akzent je App, hell: Messing für Ringwerk, Schrift darauf weiß; Spiegel nimmt das Blau von :root */
 [data-app="ringwerk"] {
   --ring: #8a5a00;
   --primary: #8a5a00;
@@ -178,15 +178,6 @@
   --accent: rgba(138, 90, 0, 0.08);
   --accent-wash: rgba(138, 90, 0, 0.08);
   --chart-1: #8a5a00;
-}
-
-[data-app="treffsicher"] {
-  --ring: #0a766b;
-  --primary: #0a766b;
-  --primary-foreground: #ffffff;
-  --accent: rgba(10, 118, 107, 0.08);
-  --accent-wash: rgba(10, 118, 107, 0.08);
-  --chart-1: #0a766b;
 }
 
 .dark {
@@ -241,15 +232,6 @@
   --accent: rgba(245, 174, 57, 0.11);
   --accent-wash: rgba(245, 174, 57, 0.11);
   --chart-1: #f5ae39;
-}
-
-.dark[data-app="treffsicher"] {
-  --ring: #4acaad;
-  --primary: #4acaad;
-  --primary-foreground: #0d121a;
-  --accent: rgba(74, 202, 173, 0.11);
-  --accent-wash: rgba(74, 202, 173, 0.11);
-  --chart-1: #4acaad;
 }
 
 /* Platz, den der Rahmen der App (`AppFrame`, `data-app-frame`) am Rand einnimmt; nur auf Seiten mit Rahmen. Auf

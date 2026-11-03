@@ -3,8 +3,8 @@
 Liest Meyton-Ausdrucke (PDF) für Spiegel. Für die Zuordnung per QR zählen nur
 zwei Dinge, beide unabhängig vom Layout (ADR-028, Änderung vom 6. Oktober 2026): die **ID im Fuß**
 (`ID: ff914420`, vermutlich die ScheibenID als vorzeichenbehaftete 32-Bit-Zahl) und die
-**Erstellzeit** aus den Metadaten. Ein vollständiger Parser für fremde Anlagen, in den auch die Parser aus
-Treffsicher und Ringwerk ziehen sollen, ist offen (`vault/spiegel/spiegel-roadmap.md`, SP-2.6). Spiegel nutzt `printout-id` und liest `printout` nur im Kindprozess
+**Erstellzeit** aus den Metadaten. Ein vollständiger Parser für fremde Anlagen, in den auch der Parser aus Ringwerk
+ziehen soll, ist offen (`vault/spiegel/spiegel-roadmap.md`, SP-2.6). Spiegel nutzt `printout-id` und liest `printout` nur im Kindprozess
 (`apps/spiegel/src/lib/printouts/reader.ts`).
 Fachwissen: `vault/meyton/meyton-printout.md`, Sonderfälle SF-41 bis SF-48 in
 `vault/spiegel/spiegel-edge-cases.md`.
@@ -55,8 +55,7 @@ Selbstprüfung, bei jedem Widerspruch gibt es keine. Ändert sich das Verhalten 
   gitignored in `src/__fixtures__/private/printouts/` (`.prettierignore`), `src/values/private.test.ts` vergleicht jede
   Lesung mit einem Schnappschuss daneben und verlangt mindestens 90 % mit Werten; ohne Ordner läuft nichts. Nur dieser
   Test nutzt Node (`@types/node` per `/// <reference>`); `tsconfig` bleibt bei `types: []`.
-- `unpdf` in derselben festen Version wie Treffsicher (`1.9.1`); in den Katalog kommt es, sobald
-  Treffsicher das Paket nutzt.
+- `unpdf` in fester Version (`1.9.1`), nicht im Katalog: Nur dieses Paket nutzt es.
 - Muster, Dekodierung oder Datumsformate nur mit Test ändern; `toBeCloseTo` nimmt null als 0
   (`vault/conventions.md` §9).
 - Nach Änderungen: `pnpm check`; `format:check` prüft auch diese Datei.

@@ -25,7 +25,7 @@ const render = (patch: Partial<AppFrameProps> = {}) =>
     h(
       AppFrame,
       {
-        brand: "Treffsicher",
+        brand: "Ringwerk",
         primary: [start, diary, stats, goals],
         secondary: [profile, admin],
         action: create,
@@ -49,7 +49,7 @@ describe("AppFrame", () => {
   const html = render()
 
   it("Seitenleiste: Name der App, oben die Bereiche, die Aktion als Pille, nach dem Trenner Profil und Admin", () => {
-    expect(html).toContain(">Treffsicher</p>")
+    expect(html).toContain(">Ringwerk</p>")
     expect(keysIn(html, "data-app-sidebar")).toEqual([
       "start",
       "diary",

@@ -1,8 +1,8 @@
 import { cn } from "@vereinsheim/lib/utils"
 
 /**
- * Eine Erklärung in einfacher Sprache, wie sie hinter jedem „?“ steht. Spiegel holt sie aus `shot-help`, Ringwerk und
- * Treffsicher aus ihren eigenen Themen (`lib/help/topics.ts`).
+ * Eine Erklärung in einfacher Sprache, wie sie hinter jedem „?“ steht. Spiegel holt sie aus `shot-help`, Ringwerk aus
+ * seinen eigenen Themen (`lib/help/topics.ts`).
  */
 export interface HelpText {
   title: string

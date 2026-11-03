@@ -1,6 +1,6 @@
-// Der Ablauf einer Anmeldung mit E-Mail und Passwort (NextAuth `authorize`), gemeinsam für Ringwerk, Treffsicher und
-// Spiegel (vorher je App kopiert): Ratenbegrenzung prüfen, Konto suchen, Passwort vergleichen, Fehlversuch zählen
-// oder Zähler leeren. Datenbank, Ratenbegrenzung und bcrypt kommen von der App.
+// Der Ablauf einer Anmeldung mit E-Mail und Passwort (NextAuth `authorize`), gemeinsam für Ringwerk und Spiegel
+// (vorher je App kopiert): Ratenbegrenzung prüfen, Konto suchen, Passwort vergleichen, Fehlversuch zählen oder Zähler
+// leeren. Datenbank, Ratenbegrenzung und bcrypt kommen von der App.
 
 import { extractClientIp } from "./client-ip"
 import type { LoginRateLimitCheck } from "./rate-limit/types"
