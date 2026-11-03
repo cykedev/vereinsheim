@@ -59,10 +59,8 @@ export function abortText(abort: TransferAbort): string {
     case "markedNotSaved":
       return [
         "Übernahme in Spiegel nicht gespeichert, das Merkmal in Treffsicher ist vielleicht gesetzt. Das alte Merkmal ließ sich nicht zurücksetzen.",
-        "Das alte Merkmal wieder setzen, sonst zeigt Treffsicher das Konto als umgezogen, ohne dass Spiegel etwas gespeichert hat:",
-        abort.previous === null
-          ? "  pnpm --filter treffsicher moved --clear <E-Mail in Treffsicher>"
-          : `  in Treffsicher: UPDATE "User" SET "movedToSpiegelAt" = '${abort.previous.replace("T", " ").replace("Z", "")}' WHERE email = '<E-Mail in Treffsicher>';`,
+        "Das alte Merkmal wieder setzen, sonst gilt das Konto in Treffsicher als umgezogen, ohne dass Spiegel etwas gespeichert hat:",
+        `  in Treffsicher: UPDATE "User" SET "movedToSpiegelAt" = ${abort.previous === null ? "NULL" : `'${abort.previous.replace("T", " ").replace("Z", "")}'`} WHERE email = '<E-Mail in Treffsicher>';`,
       ].join("\n")
     case "badDisciplineOption":
       return [
