@@ -19,7 +19,7 @@ er *baut* nichts.
 3. **Cross-Reference-Lücken schließen** — ein neues Konzept muss erreichbar sein (sonst nur per
    Suche findbar, nicht per Graph-Walk):
    - **Membership**: `subsystem_of`/`operation_of`/`feature_of` bzw. `part_of` zum Topic-MOC
-     (`architecture`/`operations`/`monorepo`/`domain`/`incidents`/`meyton`/`spiegel` bzw. `ringwerk`/`treffsicher`).
+     (`architecture`/`operations`/`monorepo`/`domain`/`incidents`/`meyton`/`spiegel` bzw. `ringwerk`; `treffsicher` nur noch als Archiv).
    - **`governed_by`** zur ADR, falls eine die Entscheidung trägt (`informed_by`, wenn nur beeinflusst).
    - **`documented_in`** zum Guide-Abschnitt, der es ausführt (`"[[guide#Überschrift TEXT]]"` — Anker =
      Überschriften-Text, kein Slug) → die dünne Note erbt die Such-Keywords dieses Abschnitts.

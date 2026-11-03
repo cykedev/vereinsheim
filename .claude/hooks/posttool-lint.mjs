@@ -17,7 +17,7 @@ const fp = input?.tool_input?.file_path
 const m =
   fp &&
   String(fp).match(
-    /^(.*?)(apps\/(?:ringwerk|treffsicher|spiegel)|packages\/(?!config\/)[^/]+)\/(.+\.(?:ts|tsx))$/
+    /^(.*?)(apps\/(?:ringwerk|spiegel)|packages\/(?!config\/)[^/]+)\/(.+\.(?:ts|tsx))$/
   )
 if (!m) process.exit(0) // nur TS/TSX-Quelldateien der Apps und Pakete (alle mit `lint`)
 

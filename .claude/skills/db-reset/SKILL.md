@@ -1,17 +1,24 @@
 ---
 name: db-reset
-description: Fully reset the shared dev database (ALL dev data is lost) — drop + recreate all three dev DBs (ringwerk, treffsicher, spiegel) and re-apply the schema. Use only when explicitly asked to reset the dev DB.
+description: Fully reset the dev databases of Ringwerk and Spiegel (ALL their dev data is lost) — drop + recreate both and re-apply the schema; the treffsicher dev DB stays. Use only when explicitly asked to reset the dev DB.
 ---
 
-Resets the **shared** dev Postgres — affects ALL three dev DBs (`ringwerk`, `treffsicher`, `spiegel`):
+Resets the dev DBs `ringwerk` and `spiegel` in the shared dev Postgres. ALL their dev data is lost:
 
 ```bash
-docker compose -f docker-compose.dev.yml down -v   # drop the volume — ALL dev data lost!
-docker compose -f docker-compose.dev.yml up -d     # recreate; dev/db-init makes all three DBs
-pnpm --filter ringwerk    exec prisma db push      # schema → ringwerk dev DB
-pnpm --filter treffsicher exec prisma db push      # schema → treffsicher dev DB
-pnpm --filter spiegel     exec prisma db push      # schema → spiegel dev DB
+docker compose -f docker-compose.dev.yml up -d
+for app in ringwerk spiegel; do
+  docker compose -f docker-compose.dev.yml exec -T db psql -v ON_ERROR_STOP=1 -U postgres -d postgres \
+    -c "DROP DATABASE IF EXISTS $app WITH (FORCE);" -c "CREATE DATABASE $app OWNER $app;" \
+    -c "REVOKE ALL ON DATABASE $app FROM PUBLIC;"
+done
+pnpm --filter ringwerk exec prisma db push   # schema → ringwerk dev DB
+pnpm --filter spiegel  exec prisma db push   # schema → spiegel dev DB
 ```
+
+The dev DB `treffsicher` is **not** reset: Treffsicher has no code any more (ADR-033, stage 5), and the DB is a prod
+copy that the account transfer reads in dev until the deletion date (1 February 2027). Never drop the volume
+(`down -v`) for a reset, that would lose it too.
 
 The same schema push runs in `./scripts/vereinsheim dev-setup` (`scripts/bootstrap-dev.sh`).
 First app request re-initialises admin + default disciplines (startup init; Spiegel creates its

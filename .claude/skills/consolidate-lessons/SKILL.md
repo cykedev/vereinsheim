@@ -4,7 +4,7 @@ description: Triage an app's session lessons (apps/<app>/.claude/tasks/lessons.m
 ---
 
 One skill for **all apps** (ADR-017). Operate on the app you're working in; `<app>` is
-`ringwerk`, `treffsicher` or `spiegel`. The lessons buffer is `apps/<app>/.claude/tasks/lessons.md`
+`ringwerk` or `spiegel`. The lessons buffer is `apps/<app>/.claude/tasks/lessons.md`
 (currently only `apps/ringwerk` keeps one).
 
 ## Triage-Prinzip: stärkste verfügbare Permanenz zuerst
@@ -69,7 +69,7 @@ nie still nur dokumentiert.
       (Synonyme; vault-lint erzwingt sie für atomare Notes). Existiert die Note → Body/Datum ergänzen
       statt Dublette.
    b. **Verknüpfen** — typisierte Kante(n) im Frontmatter: `relates_to`/`part_of` zur App
-      (`"[[ringwerk]]"`/`"[[treffsicher]]"`/`"[[spiegel]]"`), `governed_by`/`informed_by` zur ADR bzw. zum Topic, damit
+      (`"[[ringwerk]]"`/`"[[spiegel]]"`), `governed_by`/`informed_by` zur ADR bzw. zum Topic, damit
       die Note im Graph hängt (nicht orphan; sonst nur per Suche findbar).
    c. **Validieren + committen** — `node .claude/vault-lint.mjs` (Schema/Anker/keywords) → die Note in
       den Session-Commit. Bei Cross-Ref-Aufräumen `/sync-graph`.

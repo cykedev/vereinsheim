@@ -22,7 +22,7 @@ The `test` gate needs the shared dev Postgres up (Ringwerk and Spiegel have DB-i
 docker compose -f docker-compose.dev.yml up -d
 ```
 
-Scope to one app: `pnpm check --filter ringwerk` (or `treffsicher`, `spiegel`, `spiegel-bridge`).
+Scope to one app: `pnpm check --filter ringwerk` (or `spiegel`, `spiegel-bridge`).
 
 Report concisely: which gates are green, which are red, and — if red — the relevant
 error message(s). Suggest concrete fixes when the cause is clear.

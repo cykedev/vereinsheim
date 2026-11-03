@@ -5,7 +5,7 @@ description: Run only the test suite (vitest) — no lint, format, tsc, or build
 
 ```bash
 pnpm test                      # all apps and packages (turbo-cached)
-pnpm test --filter ringwerk    # one app (or treffsicher, spiegel, spiegel-bridge, a package)
+pnpm test --filter ringwerk    # one app (or spiegel, spiegel-bridge, a package)
 ```
 
 Needs the shared dev Postgres up for the DB-integration tests of Ringwerk and Spiegel:
