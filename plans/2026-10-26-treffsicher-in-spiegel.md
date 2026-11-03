@@ -560,6 +560,7 @@ Befund aus dem Review von 2a).
 | U1   | `plans/2026-10-31-tis-u1-nav-compare.md`     | `feat/tis-u1-nav-compare` (vom Basis)      | `tis-u1-nav-compare`     | deployt 31.10. (`main` `c30676d5`), Plan entfernt         |
 | U2   | `plans/2026-11-01-tis-u2-place-row.md`       | `feat/tis-u2-place-row` (vom Basis)        | `tis-u2-place-row`       | Basisbranch (`94952855`, 2.11.), Plan entfernt            |
 | 4    | `plans/2026-11-02-tis-4-retire-treffsicher.md` | `feat/tis-4-retire-treffsicher` (vom Basis) | `tis-4-retire-treffsicher` | Basisbranch (`5b4ed0b3`, 2.11.), Plan entfernt          |
+| 5    | `plans/2026-11-03-tis-5-remove-treffsicher-code.md` | `feat/tis-5-remove-treffsicher-code` (vom Basis) | `tis-5-remove-treffsicher-code` | freigegeben (3.11.), in Arbeit |
 
 ## Verification
 
