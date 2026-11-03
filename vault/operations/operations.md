@@ -647,7 +647,9 @@ VPS, sonst legt die nächtliche Sicherung das Volume beim Archivieren leer wiede
 1. Ein Commit nimmt `treffsicher` aus `DATA_APPS` und `UPLOAD_APPS` (`scripts/lib/apps.sh`), aus `db-init/`, aus
    `dev/db-init`, aus dem `ALTER ROLE` in `scripts/bootstrap-dev.sh` und aus `.env.example`
    (`TREFFSICHER_DB_PASSWORD`), dazu aus `compose.yml` die Variable `TREFFSICHER_DB_PASSWORD` am Dienst `db`, das
-   Volume `uploads_treffsicher` und den Dienst `transfer-spiegel` mit seinem Mount. Mit ihnen gehen die Werkzeuge der
+   Volume `uploads_treffsicher` und den Dienst `transfer-spiegel` mit seinem Mount. Dazu kommen der Stacktest
+   (`tools/stack-e2e/run.sh` und `ops.sh`: Restore, Datenbank und Volume von Treffsicher) und die Platzhalter für
+   `.env.local` in `scripts/vereinsheim` (`TREFFSICHER_DB_PASSWORD=localdev`). Mit ihnen gehen die Werkzeuge der
    Übernahme, die nur bis zum Löschtermin gebraucht werden, am besten über einen eigenen Plan davor:
    `vereinsheim transfer` (mit `mark` und `status`), in Spiegel `tools/transfer/`, `tools/transfer*.ts`,
    `tools/build-transfer.ts`, `scripts/transfer/`, `src/parts/transfer`, `src/diary/transfer` und `src/lib/transfer`.

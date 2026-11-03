@@ -70,8 +70,8 @@ pnpm dev                            # Ringwerk :3000, Spiegel :3002
 ```
 
 `dev-setup` starts the shared dev Postgres from `docker-compose.dev.yml` (databases `ringwerk`, `spiegel` and, until
-1 February 2027, `treffsicher` for the account transfer) and creates each app's `.env` from its `.env.example`. Each app creates its first admin account on first
-start from the admin email and password in its `.env`.
+1 February 2027, `treffsicher` for the account transfer) and creates each app's `.env` from its `.env.example`. Each
+app creates its first admin account on first start from the admin email and password in its `.env`.
 
 The quality gate runs lint, format check, tests, type check and build for every package:
 

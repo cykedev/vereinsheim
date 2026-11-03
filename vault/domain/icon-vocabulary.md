@@ -9,4 +9,4 @@ part_of: ["[[domain]]"]
 documented_in: ["[[conventions#4. Icon-Vokabular (lucide-react)]]"]
 ---
 
-**TL;DR** Festes lucide-react-Icon-Vokabular (Target=Disziplinen, Pencil=Bearbeiten, Trash2=Löschen …); Marken-Logos: Treffsicher=Crosshair, Ringwerk=CircleDot.
+**TL;DR** Festes lucide-react-Icon-Vokabular (Target=Disziplinen, Pencil=Bearbeiten, Trash2=Löschen …); Marken-Logo: Ringwerk=CircleDot.
