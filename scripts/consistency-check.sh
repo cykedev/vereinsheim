@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# consistency-check.sh — verhindert Drift zwischen Ringwerk, Treffsicher und Spiegel.
+# consistency-check.sh — verhindert Drift zwischen Ringwerk und Spiegel.
 #
 # FATAL (Exit 1):
 #   - die app-lokalen Shared-Dateien weichen zwischen den Apps ab
@@ -9,8 +9,7 @@
 #   - gemeinsame Dependencies haben unterschiedliche Versionen
 #   - native Dialoge, MoreHorizontal in Detail-Aktionen
 #
-# Die Apps kommen aus CODE_APPS in scripts/lib/apps.sh, auch Treffsicher, solange sein Code im Repo liegt. Alle drei
-# laufen auf Design 2 und prüfen dieselben Regeln.
+# Die Apps kommen aus CODE_APPS in scripts/lib/apps.sh. Beide laufen auf Design 2 und prüfen dieselben Regeln.
 #
 # Aufruf: ./scripts/consistency-check.sh   (vor jedem Release via build-and-push.sh)
 set -euo pipefail

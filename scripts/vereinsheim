@@ -164,8 +164,8 @@ env_keys_from_example() {
 	awk -F= '/^[A-Z][A-Z0-9_]*=/ { print $1 }' "$ENV_EXAMPLE"
 }
 
-# Apps, die laufen (Migrationen), und Apps mit Datenbank (Restore, psql, dev-restore); Treffsicher hat nur noch die
-# Datenbank ([[adr-033]], Stufe 4)
+# Apps, die laufen (Migrationen), und Apps mit Datenbank (Restore, psql, dev-restore); Treffsicher hat weder App noch
+# Code, nur noch die Datenbank bis zum Löschtermin ([[adr-033]], Stufen 4 und 5)
 is_running_app() { in_list "${1:-}" "${APPS[@]}"; }
 is_data_app() { in_list "${1:-}" "${DATA_APPS[@]}"; }
 

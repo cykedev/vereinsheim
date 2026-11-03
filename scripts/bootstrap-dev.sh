@@ -184,7 +184,7 @@ echo
 echo "${BOLD}${GREEN}Fertig.${RESET} Die Workstation ist arbeitsfähig."
 echo
 echo "  Nächste Schritte:"
-echo "    pnpm dev      ${DIM}# alle Apps: ringwerk :3000, treffsicher :3001, spiegel :3002${RESET}"
+echo "    pnpm dev      ${DIM}# alle Apps: ringwerk :3000, spiegel :3002${RESET}"
 echo "    pnpm check    ${DIM}# alle 5 Quality-Gates${RESET}"
 echo
 echo "  ${DIM}Für VPS-Deploy separat: ./scripts/vereinsheim local-setup${RESET}"
