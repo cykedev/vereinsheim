@@ -31,7 +31,8 @@ export default proxy
 export const config = {
   // alles unter _next (Dateien, Bilder, die Verbindung des Dev-Servers für Neuladen) bleibt frei
   // die Ingest-API meldet Brücken über ihren Geräte-Token an, nicht über eine Sitzung
+  // die Icons braucht schon die Anmeldung, auch auf dem Home-Bildschirm (apple-icon.png)
   matcher: [
-    "/((?!login(?:/|$)|share(?:/|$)|api/auth(?:/|$)|api/ingest(?:/|$)|_next/|favicon.ico$|icon.svg$).*)",
+    "/((?!login(?:/|$)|share(?:/|$)|api/auth(?:/|$)|api/ingest(?:/|$)|_next/|favicon.ico$|icon.svg$|apple-icon.png$).*)",
   ],
 }

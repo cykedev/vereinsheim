@@ -15,6 +15,11 @@ describe("proxy: was ohne Anmeldung geht", () => {
     expect(guarded("/api/ingest/v1/state")).toBe(false)
   })
 
+  it("die Icons, die schon die Anmeldung und der Home-Bildschirm laden", () => {
+    for (const path of ["/favicon.ico", "/icon.svg", "/apple-icon.png"])
+      expect(guarded(path)).toBe(false)
+  })
+
   it("alles andere braucht eine Anmeldung, auch Pfade, die nur mit „share“ beginnen", () => {
     for (const path of ["/", "/cards", "/cards/c1", "/shares", "/sharex/1", "/admin", "/profile"])
       expect(guarded(path)).toBe(true)
