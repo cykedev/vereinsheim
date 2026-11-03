@@ -1,2 +1,0 @@
-# echte, eigene Daten: nur lokal, gitignored (ADR-029)
-src/**/__fixtures__/private/
