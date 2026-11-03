@@ -7,6 +7,7 @@ Resets the dev DBs `ringwerk` and `spiegel` in the shared dev Postgres. ALL thei
 
 ```bash
 docker compose -f docker-compose.dev.yml up -d
+until docker compose -f docker-compose.dev.yml exec -T db pg_isready -U postgres >/dev/null 2>&1; do sleep 1; done
 for app in ringwerk spiegel; do
   docker compose -f docker-compose.dev.yml exec -T db psql -v ON_ERROR_STOP=1 -U postgres -d postgres \
     -c "DROP DATABASE IF EXISTS $app WITH (FORCE);" -c "CREATE DATABASE $app OWNER $app;" \

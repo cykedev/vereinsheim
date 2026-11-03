@@ -53,7 +53,6 @@ export const FILLABLE = [
   ".claude/skills/consolidate-lessons/SKILL.md",
   ".claude/skills/migrate/SKILL.md",
   ".claude/skills/db-reset/SKILL.md",
-  ".claude/skills/seed/SKILL.md",
 ]
 
 // `<` + Großbuchstabe, dann alles bis zum nächsten `>` (kein verschachteltes `<`/`>`) —
