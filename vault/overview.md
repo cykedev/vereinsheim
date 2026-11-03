@@ -3,24 +3,27 @@ id: overview
 type: guide
 title: "Spec — vereinsheim"
 aliases: ["Spec — vereinsheim"]
-keywords: [spec, vereinsheim, anforderungen, zielarchitektur, sizing, vps, drei apps, deploy, backup, scope]
+keywords: [spec, vereinsheim, anforderungen, zielarchitektur, sizing, vps, zwei apps, deploy, backup, scope]
 ---
 
-**TL;DR** Der Verein betreibt Ringwerk und Spiegel gemeinsam auf einem VPS (Treffsicher läuft seit Stufe 4 von ADR-033 nicht mehr, unter seinem Host steht eine Hinweisseite): Caddy mit automatischem TLS, ein Postgres mit getrennten Datenbanken, Images lokal gebaut und über Docker Hub verteilt, Backups per Cron. Diese Note beschreibt Anforderungen, Zielarchitektur und Sizing.
+**TL;DR** Der Verein betreibt Ringwerk und Spiegel gemeinsam auf einem VPS (Treffsicher läuft seit Stufe 4 von ADR-033 nicht mehr, unter seinem Host steht eine Hinweisseite, sein Code ist seit Stufe 5 aus dem Repo): Caddy mit automatischem TLS, ein Postgres mit getrennten Datenbanken, Images lokal gebaut und über Docker Hub verteilt, Backups per Cron. Diese Note beschreibt Anforderungen, Zielarchitektur und Sizing.
 
 # Spec — vereinsheim
 
 ## Hintergrund
 
-Der Verein betreibt drei Web-Apps:
+Der Verein betreibt zwei Web-Apps:
 
 - **Ringwerk** — Liga- und Wettkampf-Verwaltung (Disziplinen, Teilnehmer, Matchups, Playoff, Auswertungen,
   Meyton-PDF-Import).
-- **Treffsicher** — Trainings-App (Sessions, Serien, Reflexionen, Goals, Wellbeing-Tracking).
 - **Spiegel** — Schussrohdaten aus der Meyton-Anlage: Schussbild, Serien, Verläufe, Vergleiche ([[spiegel]],
   ADR-026). Die Daten liefert eine Brücke im Schützenhaus ([[spiegel-bridge]]).
 
-Ein einzelner VPS hostet alle drei, mit minimaler Reibung beim Deploy und transparenten Backups. Die Apps leben als
+**Treffsicher**, die frühere Trainings-App ([[treffsicher]]), ist im Ruhestand ([[adr-033]]): Ihre Einheiten, Ziele und
+Abläufe stehen im Tagebuch von Spiegel. Unter ihrem Host steht eine Hinweisseite. Der Code ist seit Stufe 5 nicht mehr
+im Repo (letzter Stand am Tag `treffsicher-final`), Datenbank und Anhänge bleiben bis zum 1. Februar 2027.
+
+Ein einzelner VPS hostet beide, mit minimaler Reibung beim Deploy und transparenten Backups. Die Apps leben als
 `apps/*` in diesem Monorepo (ADR-015, [[monorepo]]); **dieses Spec beschreibt die Deploy- und Laufzeit-Architektur**.
 
 ## Anforderungen
@@ -115,8 +118,7 @@ App wäre reine RAM-Verschwendung (~250 MB je Container). Owner-getrennte User s
 
 ## App-Integration (Monorepo)
 
-Die Apps leben als [`apps/ringwerk`](../apps/ringwerk), [`apps/treffsicher`](../apps/treffsicher) und
-[`apps/spiegel`](../apps/spiegel) in diesem Repo. Jede App hat ihr eigenes Prisma-Schema, ihre Migrationen,
+Die Apps leben als [`apps/ringwerk`](../apps/ringwerk) und [`apps/spiegel`](../apps/spiegel) in diesem Repo. Jede App hat ihr eigenes Prisma-Schema, ihre Migrationen,
 `auth.ts` und `db.ts`; alle Laufzeit-Knöpfe kommen aus env vars (hinter Caddy etwa `AUTH_TRUST_PROXY_HEADERS=true`).
 Geteilte Dep-Versionen liegen im pnpm-Catalog, geteilter Code in `packages/*`. Details: [[monorepo]].
 

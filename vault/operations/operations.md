@@ -75,7 +75,8 @@ mehr läuft ([Treffsicher im Ruhestand](#treffsicher-im-ruhestand)), sind es dre
 - `APPS=(ringwerk spiegel)`: die Apps, die laufen. Build, Release, Deploy, Rollback, Status, Logs, `migrations`.
 - `DATA_APPS=(ringwerk treffsicher spiegel)`: die Datenbanken, die gesichert werden. Backup, Restore, Restore-Probe,
   `db-ensure`, `psql`, `local-pull`, `dev-restore`.
-- `CODE_APPS=(ringwerk treffsicher spiegel)`: der Code im Repo. Konsistenz-Gate, `dev-setup`.
+- `CODE_APPS=(ringwerk spiegel)`: der Code im Repo. Konsistenz-Gate, `dev-setup`. Treffsicher hat seit Stufe 5 von
+  [[adr-033]] keinen Code mehr im Repo.
 
 Dazu `UPLOAD_APPS=(treffsicher spiegel)`, die Apps mit Upload-Volume.
 
@@ -366,7 +367,7 @@ einfaches `migrate deploy` nicht weiter.
 
 ### Eingebauter Recovery-Mechanismus
 
-Ringwerk und Treffsicher enthalten zwei zusammenwirkende Skripte (`apps/<app>/scripts/`). Spiegel hat nur
+Ringwerk enthält zwei zusammenwirkende Skripte (`apps/ringwerk/scripts/`). Spiegel hat nur
 `run-migrations-with-recovery.sh` mit `prisma migrate deploy` ohne Wiederherstellung
 (`PRISMA_AUTO_RESOLVE_FAILED_MIGRATIONS=false`); scheitert dort eine, helfen Pfad 3 und 4.
 
@@ -601,8 +602,9 @@ nur Ringwerk und Spiegel (`APPS`).
 Die Datenbank `treffsicher` mit ihrem Owner, das Volume `uploads_treffsicher` und die Backups bleiben bis zum
 [Löschtermin](#löschtermin-am-1-februar-2027). Die tägliche Sicherung sichert sie weiter (`DATA_APPS`),
 `vereinsheim restore` und `restore-probe` spielen sie ein, `vereinsheim psql treffsicher` öffnet sie. Die Übernahme
-(`vereinsheim transfer`) liest Treffsicher mit `psql` auf dem Host und braucht keinen Container von Treffsicher. Der
-Code von Treffsicher bleibt vorerst im Repo, das Konsistenz-Gate prüft ihn weiter (`CODE_APPS`).
+(`vereinsheim transfer`) liest Treffsicher mit `psql` auf dem Host und braucht keinen Container von Treffsicher. Den
+Code von Treffsicher gibt es seit Stufe 5 nicht mehr im Repo, auch nicht in `CODE_APPS`. Sein letzter Stand liegt am
+Tag `treffsicher-final`. Die Werkzeuge der Übernahme bleiben bis zum Löschtermin.
 
 ### Umschalten auf dem VPS
 
@@ -642,11 +644,16 @@ bleiben.
 Am 1. Februar 2027 entfernt der User die Daten von Treffsicher. Die Reihenfolge zählt: Erst kommt der Commit auf den
 VPS, sonst legt die nächtliche Sicherung das Volume beim Archivieren leer wieder an.
 
-1. Ein Commit nimmt `treffsicher` aus `DATA_APPS` und `UPLOAD_APPS` (`scripts/lib/apps.sh`), aus `db-init/` und aus
-   `.env.example` (`TREFFSICHER_DB_PASSWORD`), dazu aus `compose.yml` die Variable `TREFFSICHER_DB_PASSWORD` am Dienst
-   `db` und das Volume `uploads_treffsicher` (mit dem Mount in `transfer-spiegel`, wenn die Übernahme dann noch im Repo
-   ist). Auf dem VPS danach `git pull`. Der nächste Deploy legt `db` neu an (die Umgebung ändert sich), Postgres
-   startet kurz neu: an einem Tag ohne Wettkampf deployen.
+1. Ein Commit nimmt `treffsicher` aus `DATA_APPS` und `UPLOAD_APPS` (`scripts/lib/apps.sh`), aus `db-init/`, aus
+   `dev/db-init`, aus dem `ALTER ROLE` in `scripts/bootstrap-dev.sh` und aus `.env.example`
+   (`TREFFSICHER_DB_PASSWORD`), dazu aus `compose.yml` die Variable `TREFFSICHER_DB_PASSWORD` am Dienst `db`, das
+   Volume `uploads_treffsicher` und den Dienst `transfer-spiegel` mit seinem Mount. Mit ihnen gehen die Werkzeuge der
+   Übernahme, die nur bis zum Löschtermin gebraucht werden, am besten über einen eigenen Plan davor:
+   `vereinsheim transfer` (mit `mark` und `status`), in Spiegel `tools/transfer/`, `tools/transfer*.ts`,
+   `tools/build-transfer.ts`, `scripts/transfer/`, `src/parts/transfer`, `src/diary/transfer` und `src/lib/transfer`.
+   Was an den Daten in Spiegel bleibt (die Herkunft `treffsicher`, die Tabellen `TransferRun` und `TransferItem`),
+   entscheidet dieser Plan. Auf dem VPS danach `git pull`. Der nächste Deploy legt `db` neu an (die Umgebung ändert
+   sich), Postgres startet kurz neu: an einem Tag ohne Wettkampf deployen.
 2. Datenbank und Owner löschen, im Repo-Verzeichnis auf dem VPS (`VPS_REPO_PATH` aus `.vereinsheim.local`):
 
    ```bash
@@ -674,11 +681,12 @@ VPS, sonst legt die nächtliche Sicherung das Volume beim Archivieren leer wiede
    - `reports/tis-v1/` (Zuordnung der Konten), `reports/tis-3a/` und `reports/tis-3b/` löschen;
    - den lokalen Prod-Stack leeren: `./scripts/vereinsheim local-down --volumes` (`local-up --restore` baut ihn danach
      ohne Treffsicher neu auf);
-   - die Dev-Datenbank `treffsicher` (eine Kopie aus Prod) leer neu anlegen, solange der Code noch im Repo ist:
+   - die Dev-Datenbank `treffsicher` (eine Kopie aus Prod) und ihre Rolle löschen. Treffsicher hat keinen Code mehr
+     im Repo, ein Schema gibt es dafür nicht mehr. Nach Schritt 1 legt `dev/db-init` sie in einem neuen Volume nicht
+     mehr an, und `dev-setup` fragt nicht mehr nach der Rolle:
 
      ```bash
-     docker compose -f docker-compose.dev.yml exec db psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c 'DROP DATABASE treffsicher WITH (FORCE)' -c 'CREATE DATABASE treffsicher OWNER treffsicher' -c 'REVOKE ALL ON DATABASE treffsicher FROM PUBLIC'
-     pnpm --filter treffsicher exec prisma db push
+     docker compose -f docker-compose.dev.yml exec db psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c 'DROP DATABASE treffsicher WITH (FORCE)' -c 'DROP ROLE treffsicher'
      ```
 
 Danach `TREFFSICHER_DB_PASSWORD` aus der `.env` auf dem VPS löschen. Die Hinweisseite und `TREFFSICHER_HOST` bleiben,

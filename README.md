@@ -3,7 +3,7 @@
 > **Open-source, self-hosted software for sport-shooting clubs.** Web apps that run side by side on a single server:
 > **Ringwerk** for leagues & competitions and **Spiegel** for the raw shot data of a Meyton electronic target system,
 > fed by a small bridge in the clubhouse, with a training diary. **Treffsicher**, the former training log, is retired:
-> its data moved into Spiegel, its code is still in the repo.
+> its data moved into Spiegel, and its code left the repo (last state at the tag `treffsicher-final`).
 
 ![License](https://img.shields.io/badge/license-Apache--2.0-blue)
 ![Next.js](https://img.shields.io/badge/Next.js-16-black)
@@ -38,17 +38,7 @@ Run your club's entire competitive program from one place.
 ### 📈 Treffsicher — training log for shooters (retired)
 
 No longer deployed: sessions, goals and routines moved into Spiegel's diary, and the Treffsicher host now shows a notice
-page that links to Spiegel. The code stays in the repo for now.
-
-A training diary that takes mental training as seriously as the score.
-
-- **Sessions** for training, competition, dry-fire and mental work; log results by series or per shot, with
-  whole-/tenth-ring validation
-- **Integrated mental training:** well-being tracking (sleep / energy / stress / motivation), pre-session forecast vs.
-  post-session feedback on a 7-dimension self-assessment radar
-- **Statistics:** result trends, shot distribution over time, well-being correlations, per-session histograms
-- Season goals, editable shot-routine documents, **Meyton** PDF import
-- Multi-user with strict per-user data isolation
+page that links to Spiegel. The code left the repo; its last state is at the tag `treffsicher-final`.
 
 ### 🔍 Spiegel — every shot from the range
 
@@ -64,7 +54,7 @@ millisecond — and shows it to the shooter who fired it.
   mini PC next to the Meyton server. It only reads, only connects outbound, keeps nothing but its config on disk, and
   survives being switched off hard after every training night.
 
-UI language is German; Spiegel uses a light/dark design (Design 2), Ringwerk and Treffsicher run in dark mode.
+UI language is German; Ringwerk and Spiegel share a light/dark design (Design 2).
 
 ---
 
@@ -76,11 +66,11 @@ Requires Node ≥ 26 (see `.nvmrc`), pnpm, Go ≥ 1.24 and Docker.
 git clone https://github.com/cykedev/vereinsheim.git
 cd vereinsheim
 ./scripts/vereinsheim dev-setup     # toolchain, dev Postgres, .env files, schema — idempotent
-pnpm dev                            # Ringwerk :3000, Treffsicher :3001, Spiegel :3002
+pnpm dev                            # Ringwerk :3000, Spiegel :3002
 ```
 
-`dev-setup` starts the shared dev Postgres from `docker-compose.dev.yml` (databases `ringwerk`, `treffsicher`,
-`spiegel`) and creates each app's `.env` from its `.env.example`. Each app creates its first admin account on first
+`dev-setup` starts the shared dev Postgres from `docker-compose.dev.yml` (databases `ringwerk`, `spiegel` and, until
+1 February 2027, `treffsicher` for the account transfer) and creates each app's `.env` from its `.env.example`. Each app creates its first admin account on first
 start from the admin email and password in its `.env`.
 
 The quality gate runs lint, format check, tests, type check and build for every package:
@@ -89,8 +79,8 @@ The quality gate runs lint, format check, tests, type check and build for every 
 pnpm check
 ```
 
-App details: [Ringwerk](apps/ringwerk/README.md) · [Treffsicher](apps/treffsicher/README.md) ·
-[Spiegel](apps/spiegel/README.md) · [Spiegel bridge](apps/spiegel-bridge/README.md)
+App details: [Ringwerk](apps/ringwerk/README.md) · [Spiegel](apps/spiegel/README.md) ·
+[Spiegel bridge](apps/spiegel-bridge/README.md)
 
 ## Deploying
 
@@ -124,7 +114,6 @@ Installing the bridge at the range: [apps/spiegel-bridge/README.md](apps/spiegel
 ```
 apps/
   ringwerk/          leagues & competitions
-  treffsicher/       training log (retired, not deployed)
   spiegel/           Meyton shot data
   spiegel-bridge/    bridge at the range (Go)
 packages/
@@ -164,7 +153,8 @@ identifiers and commit messages are in English, docs in `vault/` are German.
 Ergebnis-PDFs, Meyton-Import) und **Spiegel** (jeder Schuss aus der Meyton-Anlage mit Schussbild, Serien, Kennzahlen und
 Verlauf, zugeordnet per Sportpassnummer nach Zustimmung, dazu ein Tagebuch). Die Daten für Spiegel liefert eine Brücke
 im Schützenhaus, die nur liest und nur ausgehend verbindet. **Treffsicher** (Trainingstagebuch) läuft nicht mehr: Seine
-Daten stehen in Spiegel, unter seiner Adresse steht ein Hinweis, der Code bleibt vorerst im Repo.
+Daten stehen in Spiegel, unter seiner Adresse steht ein Hinweis, der Code ist aus dem Repo (letzter Stand am Tag
+`treffsicher-final`).
 
 Lokal starten: `./scripts/vereinsheim dev-setup` → `pnpm dev`. Deployment & Betrieb:
 [vault/operations/operations.md](vault/operations/operations.md). Brücke einrichten:

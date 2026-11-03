@@ -7,11 +7,11 @@ keywords: [ringwerk, reference, files]
 part_of: ["[[ringwerk]]"]
 ---
 
-**TL;DR** Local reference implementation: `apps/treffsicher` (same monorepo)
+**TL;DR** Local reference implementation: `apps/spiegel` (same monorepo)
 
 # Reference Files
 
-Local reference implementation: `apps/treffsicher` (same monorepo)
+Local reference implementation: `apps/spiegel` (same monorepo). Until stage 5 of [[adr-033]] it was `apps/treffsicher`.
 
 | File                      | Reference for                      |
 | ------------------------- | ---------------------------------- |
@@ -19,7 +19,6 @@ Local reference implementation: `apps/treffsicher` (same monorepo)
 | `src/lib/db.ts`           | Prisma Client Singleton (Prisma 7) |
 | `src/lib/auth-helpers.ts` | getAuthSession()                   |
 | `src/proxy.ts`            | Edge-Auth (Next.js 16)             |
-| `src/lib/disciplines/`    | Feature module pattern             |
 | `prisma/schema.prisma`    | Prisma 7 schema conventions        |
 
 ## In-Project Patterns

@@ -1,29 +1,30 @@
 ---
 id: conventions
 type: guide
-title: "Shared Conventions — Ringwerk × Treffsicher × Spiegel"
-aliases: ["Shared Conventions — Ringwerk × Treffsicher × Spiegel", "Shared Conventions — Treffsicher × Ringwerk"]
-keywords: [shared, conventions, treffsicher, ringwerk, spiegel, konventionen, design 2, drift-gate]
+title: "Shared Conventions — Ringwerk × Spiegel"
+aliases: ["Shared Conventions — Ringwerk × Spiegel", "Shared Conventions — Ringwerk × Treffsicher × Spiegel", "Shared Conventions — Treffsicher × Ringwerk"]
+keywords: [shared, conventions, ringwerk, spiegel, konventionen, design 2, drift-gate]
 ---
 
-**TL;DR** Die app-lokalen Stub-Dateien MÜSSEN in allen drei Apps byte-gleich sein, und alle drei folgen denselben Regeln von Design 2 (Gate = fatal bei Abweichung):
+**TL;DR** Die app-lokalen Stub-Dateien MÜSSEN in Ringwerk und Spiegel byte-gleich sein, und beide folgen denselben Regeln von Design 2 (Gate = fatal bei Abweichung):
 
-# Shared Conventions — Ringwerk × Treffsicher × Spiegel
+# Shared Conventions — Ringwerk × Spiegel
 
 > **Lebende Quelle der Wahrheit für app-übergreifende Konsistenz.** Eine Quelle am Root (`vault/conventions.md`),
 > per `@import` in der Root-`CLAUDE.md`. Die Gleichheit der geteilten Dateien und die Regeln von Design 2 erzwingt das
-> Drift-Gate (`scripts/consistency-check.sh`) über alle Apps aus `scripts/lib/apps.sh`.
+> Drift-Gate (`scripts/consistency-check.sh`) über alle Apps aus `CODE_APPS` in `scripts/lib/apps.sh`. Treffsicher hat
+> seit Stufe 5 von [[adr-033]] keinen Code mehr im Repo. Beispiele aus Treffsicher in §9 sind Geschichte.
 
 ## 1. Byte-identische Shared-Schicht
 
-Diese Dateien MÜSSEN in allen drei Apps identisch sein (Gate = fatal bei Abweichung):
+Diese Dateien MÜSSEN in beiden Apps identisch sein (Gate = fatal bei Abweichung):
 
 - App-lokale Reste (im Gate, Next/shadcn-erzwungen + trivial): `components.json` + der dünne
   `src/app/globals.css`-Stub (die Imports von tailwindcss, tw-animate-css, shadcn und `@vereinsheim/ui/design2.css`,
   `@source` für die App und `packages/shot-ui/src`, die Schriften aus `next/font`; die Tokens liegen im Paket).
   shadcn-CLI läuft weiter im App-Kontext.
 - Error-Boundaries: `src/app/error.tsx`, `src/app/(app)/error.tsx`, `src/app/not-found.tsx` (Design 2, Texte für
-  alle drei Apps).
+  beide Apps).
 - **Geteilt via `@vereinsheim/config`** (packages/config — Drift dort **strukturell
   unmöglich**, daher *nicht* im Gate): `tsconfig.json`, `eslint.config.mjs`, `.prettierrc`,
   `postcss.config.mjs`, `next.config.ts`, `vitest.config.ts` (inkl. `server-only`-Alias
@@ -36,7 +37,7 @@ Diese Dateien MÜSSEN in allen drei Apps identisch sein (Gate = fatal bei Abweic
   (`admin/LoginRateLimitTable`, `admin/LoginRateLimitInsights`), die Bausteine von Design 2 (`design2/*`) und
   die Tokens (`@vereinsheim/ui/design2.css`, §10). Import via `@vereinsheim/ui/<name>` bzw.
   `@vereinsheim/ui/shell/<name>`; Styles/Verhalten ändert man **im Paket**. App-spezifische `ui/*`
-  (form in Treffsicher, checkbox/rank-badge in Ringwerk) bleiben app-lokal.
+  (checkbox/rank-badge in Ringwerk) bleiben app-lokal.
 - **Geteilt via `@vereinsheim/lib`** (packages/lib — Drift **strukturell
   unmöglich**, daher *nicht* im Gate): `cn` (`utils`), `forms/fieldErrors` (inkl. `getErrorMessage`),
   die Form-Hooks `useUnsavedChangesGuard` + `useNavigationConfirm`, `dateTime` (server-only, liefert
@@ -45,15 +46,15 @@ Diese Dateien MÜSSEN in allen drei Apps identisch sein (Gate = fatal bei Abweic
   `auth/rate-limit/{config,limiter,normalization,types,adminTypes}`, dazu Anmeldeablauf
   (`auth/credentials`, mit gleich langer Antwort für unbekannte Konten), IP aus Proxy-Headern (`auth/client-ip`), Store
   (`auth/rate-limit/stores`, Tabelle als Schnittstelle) und Admin-Auswertung der Sperren (`auth/rate-limit/admin`) für
-  alle drei Apps. Import via `@vereinsheim/lib/<subpath>`; Logik ändert man **im Paket**, nicht in den Apps.
+  beide Apps. Import via `@vereinsheim/lib/<subpath>`; Logik ändert man **im Paket**, nicht in den Apps.
 
-Regel: Wer eine dieser Dateien ändert, ändert sie in **allen drei** Apps gleich. Neue, klar
+Regel: Wer eine dieser Dateien ändert, ändert sie in **beiden** Apps gleich. Neue, klar
 app-übergreifende Komponenten gehören in diese Liste (in `MUST_MATCH` des Gates ergänzen).
 
-**Zusätzlich im Gate** (byte-identisch in allen drei Apps):
+**Zusätzlich im Gate** (byte-identisch in beiden Apps):
 
 - `AdminLoginRateLimitTable.tsx` — dünner Wrapper um `@vereinsheim/ui/admin/LoginRateLimitTable`; app-lokal, weil
-  eine geteilte Datei keine Server Action re-exportieren darf. Ringwerk und Treffsicher unter
+  eine geteilte Datei keine Server Action re-exportieren darf. Ringwerk unter
   `src/components/app/admin/`, Spiegel unter `src/components/admin/`.
 
 ## 2. Komponenten-Kanon
@@ -80,17 +81,17 @@ app-übergreifende Komponenten gehören in diese Liste (in `MUST_MATCH` des Gate
 - **Hilfe:** Eine Zahl oder Überschrift, die Leser nicht von selbst verstehen, trägt ein „?“ (`HelpButton` aus
   `design2/help`). Es öffnet die Erklärung als Blatt (`HelpSheet`, einmal im Rahmen der App, geöffnet über `useHelp`),
   nie nur als Tooltip. Die Texte stehen an einer Stelle: Spiegel `@vereinsheim/shot-help` (Kennzahlen und Katalog),
-  das Tagebuch in Spiegel `src/diary/analysis/texts.ts` (`ANALYSIS_HELP`, Blatt über `DiaryHelp`), Treffsicher und
-  Ringwerk `src/lib/help/topics.ts` (Tests halten Felder und Schreibregeln, in Ringwerk auch den Wortlaut des Textbuchs).
+  das Tagebuch in Spiegel `src/diary/analysis/texts.ts` (`ANALYSIS_HELP`, Blatt über `DiaryHelp`), Ringwerk
+  `src/lib/help/topics.ts` (Tests halten Felder und Schreibregeln, in Ringwerk auch den Wortlaut des Textbuchs).
 - **„–“ mit Grund:** Wo kein Wert steht, steht „–“ und leise daneben der Grund, in schmalen Zellen als Tooltip und für
   Screenreader. Keine 0 und kein leeres Feld für „kein Wert“. Die Gründe kommen aus einer reinen Funktion der App
-  (Treffsicher `src/lib/missing.ts`, Ringwerk `src/lib/help/missing.ts`). In Ringwerk nur auf dem Bildschirm, die PDFs
+  (Ringwerk `src/lib/help/missing.ts`). In Ringwerk nur auf dem Bildschirm, die PDFs
   bleiben, wie sie sind.
 - **Feldfehler:** `getFieldError`/`getGeneralError` (`lib/forms/fieldErrors.ts`) + `<FieldError>` mit
   `aria-invalid`/`aria-describedby`.
 - **Toasts:** nach jeder mutierenden Server-Action `toast.success(...)` bzw. `toast.error(...)` (sonner).
 - **Datenverlust:** Langformulare nutzen `useUnsavedChangesGuard` + `useNavigationConfirm` + den Verwerfen-Dialog
-  der App (Treffsicher `DiscardChangesDialog`, Ringwerk im Formular des Wettbewerbs, beide mit `DecisionDialog`).
+  der App (Ringwerk im Formular des Wettbewerbs, mit `DecisionDialog`).
 
 ## 3. Typografie & Layout
 
@@ -99,7 +100,7 @@ app-übergreifende Komponenten gehören in diese Liste (in `MUST_MATCH` des Gate
 - Pending-/Lade-Texte: Unicode-Ellipsis `…` (U+2026), nie ASCII `...`.
 - App-Shell: `Page` aus `design2/page` mit einer Spalte (`grid-cols-1`) — **im Layout, nicht in der Seite**. Eine Seite setzt
   **keinen** eigenen `px-`/`py-`-Container (sonst doppeltes Padding); ein eigenes `max-w` für
-  Formularseiten (`mx-auto max-w-lg space-y-6`) ist in Treffsicher und Ringwerk erlaubt und bewusst zu setzen.
+  Formularseiten (`mx-auto max-w-lg space-y-6`) ist in Ringwerk erlaubt und bewusst zu setzen.
 - **Raster der Seiten in Spiegel:** Jede Seite steht linksbündig im Rahmen (`Page`, höchstens 80 rem). Keine Seite
   zentriert sich selbst. Es gibt zwei Formen:
   - **Zwei Spalten** für Seiten mit Bild und Zahlen (Start, Scheibe, Fortschritt, Vergleichen): `PAGE_COLUMNS` aus
@@ -124,10 +125,10 @@ app-übergreifende Komponenten gehören in diese Liste (in `MUST_MATCH` des Gate
 | Mobil-Menü  | `Menu`/`X`   |     | PDF/Download     | `Download`                 |
 | Tagebuch    | `BookOpen`   |     |                  |                            |
 
-Marken-Logos (kollisionsfrei, je App eindeutig): **Treffsicher `Crosshair`**, **Ringwerk `CircleDot`**.
+Marken-Logos (kollisionsfrei, je App eindeutig): **Ringwerk `CircleDot`**.
 `Target` ist Disziplinen, `Trophy` ist in Ringwerk Wettbewerb/Sieger — **keines davon als Logo**.
-Admin ist `Shield` (letzter Haupt-Nav-Eintrag), PDF/Download ist `Download`. Ein Link zu einer anderen App
-(Treffsicher „Zu Spiegel“ für ein umgezogenes Konto) ist `ArrowUpRight` und öffnet im selben Tab.
+Admin ist `Shield` (letzter Haupt-Nav-Eintrag), PDF/Download ist `Download`. Ein Link zu einer anderen App ist
+`ArrowUpRight` und öffnet im selben Tab.
 
 ### Farben: semantische Tokens statt Palette
 
@@ -144,16 +145,15 @@ Ringwerte, §10):
 | `chart-1` … `chart-5`  | Diagramm-Serien (`chart-1` = App-Akzent)      |
 
 **Keine Tailwind-Palette-Klassen** (`text-emerald-600`, `bg-amber-950`, …) und **keine
-`dark:`-Varianten** — Farbe kommt aus den Tokens, die in hell und dunkel je ihren Wert haben. Treffer und Ringwerte zeigen alle Apps in den Farben von Spiegel (`score-*`, im PDF `SCORE_HEX`);
-die Meyton-Skala von Treffsicher ist entfallen.
+`dark:`-Varianten** — Farbe kommt aus den Tokens, die in hell und dunkel je ihren Wert haben. Treffer und Ringwerte zeigen alle Apps in den Farben von Spiegel (`score-*`, im PDF `SCORE_HEX`).
 
 Die **Akzentfarbe** je App kommt über `data-app` am `<html>`-Element (Ringwerk = Messing,
-Treffsicher = Teal, Spiegel ohne `data-app` = Blau), in Design 2 für hell und dunkel getrennt.
+Spiegel ohne `data-app` = Blau), in Design 2 für hell und dunkel getrennt.
 
 ## 5. Navigation
 
 **Design 2 (alle Apps): `AppFrame`** aus `@vereinsheim/ui/design2/app-frame`. Am Telefon eine untere Leiste
-mit höchstens fünf Einträgen und der Aktion der App in der Mitte (Treffsicher „Neue Einheit“), im Querformat eine
+mit höchstens fünf Einträgen und der Aktion der App in der Mitte (Spiegel „Scheibe holen“), im Querformat eine
 schmale Leiste, ab 1024 px eine Seitenleiste mit Trenner vor Profil und Admin. Was nicht in die Leiste passt, steht am
 Telefon in Profil. Die Darstellung steht unten in der Seitenleiste und in Profil. Aktiv-Erkennung über eine reine
 Funktion der App (`areaOf`, Start exakt). Eine Seite wiederholt die Aktion des Rahmens nicht. Ringwerk hat keine
@@ -176,7 +176,7 @@ Reiter unter dem Namen.
   je App in `src/lib/types.ts`. Konsumenten narrowen über `"error" in result` bzw.
   `"success" in state` — **kein** `state?.success` (die Union hat die Felder nicht optional) und
   **kein** `success: false`. Einen einzeiligen Fehlertext liefert `getErrorMessage` aus
-  `@vereinsheim/lib/forms/fieldErrors`. _In allen drei Apps umgesetzt._
+  `@vereinsheim/lib/forms/fieldErrors`. _In beiden Apps umgesetzt._
 
 ## 7. Listen & Karten
 
@@ -414,7 +414,7 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
   `select: { neu: true }` ohne Fehler an; ihr Wert hat den Typ `never`, und `wert !== null` übersetzt. tsc und Tests mit
   gemockter Datenbank bleiben grün, erst die Abfrage zur Laufzeit scheitert. Code, der eine neue Spalte liest, kommt
   deshalb erst nach Migration und `db:generate` in einen Commit. Aufgefallen im Oktober 2026 in Treffsicher
-  (`movedToSpiegelAt`, [[treffsicher-read-only]]).
+  (`movedToSpiegelAt`, [[treffsicher-read-only]], Code entfernt).
 
 - **Prettier im Paket aufrufen, nicht vom Root**: Der Root hat keine Prettier-Konfiguration, `pnpm exec prettier --write
   <pfad>` vom Root formatiert deshalb mit den Vorgaben von Prettier (andere Zeilenbreite) und `format:check` des Pakets
@@ -442,14 +442,13 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
   `@vereinsheim/pruefen`. Was
   den Fachkern braucht (Scheibe, Serien), in `@vereinsheim/shot-ui`, mit Markup-Tests; die Bedienung im Browser prüft
   die Skriptprüfung der App (`pnpm --filter spiegel pruefen`).
-- Alle drei Apps laufen auf Design 2: Spiegel als Vorbild, Treffsicher ([[treffsicher-design2]]) und Ringwerk
-  ([[ringwerk-design2]]) seit Oktober 2026. Das Drift-Gate prüft sie mit denselben Regeln (§8).
+- Beide Apps laufen auf Design 2: Spiegel als Vorbild, Ringwerk ([[ringwerk-design2]]) seit Oktober 2026. Das Drift-Gate prüft sie mit denselben Regeln (§8).
 - **Symbolknöpfe** sind mindestens 24 px groß (`size="icon-xs"`), sonst `icon-sm` (32 px), `icon` (36 px) oder
   `icon-lg` (40 px); eine Klasse, die sie kleiner macht, ist verboten (Gate für `<Button size="icon…">`, §8).
 - **Kein Knopf ohne Folge:** Jede Aktion, die bestätigt, ablehnt, entfernt, widerruft, umstellt oder ein Konto ändert, fragt
   über `DecisionDialog` (`@vereinsheim/ui/design2/decision-dialog`) und sagt in Alltagsworten, worum es geht, was vorher zu
   prüfen ist, was dann passiert, was **nicht** passiert und wie es rückgängig geht. Die Texte stehen an einer Stelle
-  (`apps/spiegel/src/lib/admin/consequences.ts`, `apps/treffsicher/src/lib/consequences.ts`,
+  (`apps/spiegel/src/lib/admin/consequences.ts`,
   `apps/ringwerk/src/lib/consequences.ts`; Tests halten den Wortlaut), ohne Pronomen für Personen. Keine
   Fachbegriffe in der Oberfläche; als Aufgabe erscheint im Admin nur, was ein Mensch entscheiden muss, Technisches regelt
   Spiegel selbst und zeigt es höchstens als Zustand.

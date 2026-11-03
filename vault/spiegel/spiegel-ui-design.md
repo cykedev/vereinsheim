@@ -206,4 +206,4 @@ Aus dem Sonderfall-Katalog ([[spiegel-edge-cases]]):
 
 ## Verhältnis zu `@vereinsheim/ui`
 
-Design 2 liegt als Schicht im Paket (Tokens und Bausteine) und gilt seit [[adr-032]] für alle drei Apps. Das Drift-Gate prüft Spiegel mit Ringwerk und Treffsicher: byte-gleiche Stubs und die Regeln von Design 2 ([[conventions]] §8). Der Komponenten-Kanon ([[component-canon]]) gilt weiter: PageHeader, EmptyState, DecisionDialog, Toasts.
+Design 2 liegt als Schicht im Paket (Tokens und Bausteine) und gilt seit [[adr-032]] für alle Apps. Das Drift-Gate prüft Spiegel mit Ringwerk: byte-gleiche Stubs und die Regeln von Design 2 ([[conventions]] §8). Der Komponenten-Kanon ([[component-canon]]) gilt weiter: PageHeader, EmptyState, DecisionDialog, Toasts.

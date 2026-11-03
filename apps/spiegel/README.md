@@ -60,6 +60,5 @@ In Produktion setzt `compose.yml` diese Werte aus der Root-`.env` (`SPIEGEL_*`).
 
 ## Betrieb
 
-Spiegel läuft im selben Stack wie Ringwerk und Treffsicher (eigene Datenbank, eigener Migrator, Caddy mit
-`SPIEGEL_HOST`). Bauen, Deploy, Backup und Restore: [`vault/operations/operations.md`](../../vault/operations/operations.md).
+Spiegel läuft im selben Stack wie Ringwerk (eigene Datenbank, eigener Migrator, Caddy mit `SPIEGEL_HOST`). Bauen, Deploy, Backup und Restore: [`vault/operations/operations.md`](../../vault/operations/operations.md).
 Die Brücke im Schützenhaus einrichten: [`apps/spiegel-bridge/README.md`](../spiegel-bridge/README.md).

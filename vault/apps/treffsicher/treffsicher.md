@@ -6,7 +6,7 @@ keywords: [Treffsicher-App, Trainingsapp, Trainingstagebuch, Schießtraining, Me
 part_of: ["[[overview]]"]
 ---
 
-**TL;DR** Trainings-App (Tagebuch, Ergebnisse, Statistik, Mentaltraining). apps/treffsicher, Dev-Port 3001, Design 2 hell und dunkel ([[treffsicher-design2]]). **Im Ruhestand** seit Stufe 4 von [[adr-033]]: läuft nicht mehr in Prod, unter ihrem Host steht eine Hinweisseite auf Spiegel, die Daten bleiben bis zum 1. Februar 2027.
+**TL;DR** Trainings-App (Tagebuch, Ergebnisse, Statistik, Mentaltraining), Design 2 hell und dunkel ([[treffsicher-design2]]). **Im Ruhestand** seit Stufe 4 von [[adr-033]]: läuft nicht mehr in Prod, unter ihrem Host steht eine Hinweisseite auf Spiegel, die Daten bleiben bis zum 1. Februar 2027. Seit Stufe 5 ist der Code nicht mehr im Repo (letzter Stand am Tag `treffsicher-final`); die Notes hier sind Archiv.
 
 MOC-Hub der Treffsicher-App (Training). Führt die App-Guides und die fachlichen Notes zusammen.
 
@@ -15,8 +15,12 @@ MOC-Hub der Treffsicher-App (Training). Führt die App-Guides und die fachlichen
 Im Ruhestand seit Stufe 4 von [[adr-033]] (freigegeben am 2. November 2026). Alle Daten sind nach Spiegel umgezogen.
 In Prod läuft kein Container von Treffsicher mehr; Caddy zeigt unter seinem Host für jede Adresse eine Hinweisseite mit
 einem Link auf Spiegel. Datenbank, Anhänge und Backups bleiben bis zum Löschtermin am 1. Februar 2027 ([[operations]]
-„Treffsicher im Ruhestand“). Der Code bleibt vorerst im Repo, läuft in Dev und steht im Konsistenz-Gate; die Notes
-unten beschreiben die App, wie sie war.
+„Treffsicher im Ruhestand“).
+
+Seit Stufe 5 ist der Code nicht mehr im Repo: `apps/treffsicher` gibt es nicht mehr, auch nicht in Dev und im
+Konsistenz-Gate. Den letzten Stand findet man über den Tag `treffsicher-final`
+(`git show treffsicher-final:apps/treffsicher/…`). Die Notes unten sind Archiv. Sie beschreiben die App, wie sie war, und halten Fachwissen zu Tagebuch, Zielen, Abläufen
+und Befinden, das Spiegel weiter nutzt. Pfade in `apps/treffsicher` in ihnen gelten für diesen Tag.
 
 ## Guides & Notes
 

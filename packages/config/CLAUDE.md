@@ -1,6 +1,6 @@
 # @vereinsheim/config — Claude Scope-Notiz
 
-Geteilte **Tooling-Configs** für alle drei Apps und die Pakete (ADR-015/016). Jede Config gibt es nur
+Geteilte **Tooling-Configs** für beide Apps und die Pakete (ADR-015/016). Jede Config gibt es nur
 einmal; Drift ist damit **strukturell unmöglich**, `consistency-check.sh` prüft sie deshalb nicht.
 
 ## Was hier liegt

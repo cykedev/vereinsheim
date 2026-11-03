@@ -7,7 +7,7 @@
 
 ## Lese-Reihenfolge (Onboarding)
 
-1. [[overview]] — Was ist vereinsheim (Gesamtsystem, Monorepo, drei Apps plus Brücke).
+1. [[overview]] — Was ist vereinsheim (Gesamtsystem, Monorepo, zwei Apps plus Brücke).
 2. [[conventions]] — app-übergreifende Konventionen (@-importiert in die Root-CLAUDE.md).
 3. [[architecture]] — High-Level-Karte (Topologie, Netze, Build/Deploy).
 4. [[decisions]] — ADR-Kanon (Begründungen); vor jedem architektur-berührenden Vorschlag prüfen.

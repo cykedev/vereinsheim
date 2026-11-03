@@ -1,6 +1,6 @@
 # Spiegel — Claude Scope-Notiz
 
-Dritte App im Monorepo: Schussrohdaten der Meyton-Anlage (SSMDB2) über eine lokale Brücke, Zuordnung per
+App im Monorepo neben Ringwerk: Schussrohdaten der Meyton-Anlage (SSMDB2) über eine lokale Brücke, Zuordnung per
 Sportpass-Opt-in und Meyton-QR ([`vault/spiegel/spiegel.md`](../../vault/spiegel/spiegel.md)). Datenbank, Zugriffe
 und Messung: [ADR-031](../../vault/decisions/adr-031.md), [`spiegel-db-schema`](../../vault/spiegel/spiegel-db-schema.md);
 Seiten und Navigation: [`spiegel-navigation`](../../vault/spiegel/spiegel-navigation.md). Spiegel ist deployt:
@@ -96,7 +96,7 @@ Stand mit `past` (`MAX_OBSERVED_LAG_MS`, SF-79).
   Link geteilt hat (`sharedCard`, siehe „Teilen per Link“).
 - **Anmeldung wie Ringwerk:** `getAuthSession` prüft gegen die Datenbank (aktiv, `sessionVersion`, einmal je Anfrage
   über `cache`), Server Actions geben `ActionResult` zurück (nie werfen). Ablauf von `authorize`, Store und
-  Admin-Auswertung der Sperren kommen aus `@vereinsheim/lib/auth/*`, gemeinsam mit Ringwerk und Treffsicher. Neue
+  Admin-Auswertung der Sperren kommen aus `@vereinsheim/lib/auth/*`, gemeinsam mit Ringwerk. Neue
   Rolle, neuer Status oder neues Passwort beenden die Sitzungen eines Kontos (das JWT trägt die Rolle).
 - **Kein Knopf ohne Folge** ([[conventions]] §10): Jede Aktion mit
   Folgen fragt über `DecisionDialog` (`@vereinsheim/ui/design2/decision-dialog`); die Texte nur aus `src/lib/admin/consequences.ts`

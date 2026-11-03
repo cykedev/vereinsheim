@@ -5,12 +5,12 @@
 
 ## Was dieses Repo ist
 
-Monorepo (pnpm + Turborepo, Catalog für geteilte Versionen) mit **drei Next.js-Apps** und ihrem Produktions-Deployment
-auf einem einzelnen VPS. Treffsicher läuft nicht mehr (ADR-033, Stufe 4): Unter seinem Host zeigt Caddy eine
-Hinweisseite auf Spiegel, sein Code bleibt vorerst im Repo, seine Datenbank bis zum 1. Februar 2027.
+Monorepo (pnpm + Turborepo, Catalog für geteilte Versionen) mit **zwei Next.js-Apps** und ihrem Produktions-Deployment
+auf einem einzelnen VPS. Treffsicher, das frühere Trainingstagebuch, läuft nicht mehr und hat keinen Code mehr im Repo
+(ADR-033, Stufen 4 und 5): Unter seinem Host zeigt Caddy eine Hinweisseite auf Spiegel, seine Datenbank und Anhänge
+bleiben bis zum 1. Februar 2027. Den letzten Stand des Codes hält der Tag `treffsicher-final`.
 
 - [`apps/ringwerk`](apps/ringwerk) — Liga und Wettkämpfe (:3000)
-- [`apps/treffsicher`](apps/treffsicher) — Trainingstagebuch (:3001), nur noch Dev, nicht mehr deployt
 - [`apps/spiegel`](apps/spiegel) — Schussrohdaten aus der Meyton-Anlage (:3002), gefüttert von der Brücke
   [`apps/spiegel-bridge`](apps/spiegel-bridge) (Go, läuft im Schützenhaus)
 
@@ -44,7 +44,7 @@ Nur wenn du Code änderst:
 
 Eine geteilte Agent-Harness am Root — **ein Satz für alle Apps**:
 
-- **Skills** (`.claude/skills/`, via `/<name>` oder modellgetriggert): `check`, `test`, `migrate`, `db-reset`, `seed`,
+- **Skills** (`.claude/skills/`, via `/<name>` oder modellgetriggert): `check`, `test`, `migrate`, `db-reset`,
   `commit-msg`, `consolidate-lessons` (Lessons-Triage ENFORCE > DOCUMENT > REMEMBER, ADR-017; REMEMBER →
   `vault/incidents/`-Note), `sync-graph` (Vault validieren/aufräumen: `vault-lint` + Cross-Refs), `ingest` (externe
   Quellen → zitierte Vault-Notes) sowie der PIV-Workflow `plan → implement → validate → review` + `debug` (Root-Cause;

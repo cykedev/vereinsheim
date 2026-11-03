@@ -10,7 +10,7 @@ documented_in: ["[[conventions#5. Navigation]]"]
 governed_by: ["[[adr-032]]"]
 ---
 
-**TL;DR** Alle drei Apps nutzen den Rahmen `AppFrame` aus `@vereinsheim/ui/design2/app-frame` ([[adr-032]]): am
+**TL;DR** Ringwerk und Spiegel nutzen den Rahmen `AppFrame` aus `@vereinsheim/ui/design2/app-frame` ([[adr-032]]): am
 Telefon eine untere Leiste mit höchstens fünf Einträgen, im Querformat eine schmale Leiste, ab 1024 px eine
 Seitenleiste mit Trenner vor Profil und Admin (`Shield`, als letzter Eintrag). Was nicht in die Leiste passt, steht am
 Telefon in Profil. Aktiv-Erkennung über eine reine Funktion der App (`areaOf`, Start exakt). Treffsicher hat die

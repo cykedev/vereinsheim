@@ -107,6 +107,6 @@ Jedes sichtbare „?“ öffnet sein Thema, am Telefon und am Desktop, ohne die 
 
 ## Drift-Gate
 
-`scripts/consistency-check.sh` prüft Ringwerk mit denselben Regeln von Design 2 wie Treffsicher und Spiegel, mit
-byte-gleicher `globals.css` und gleichen Fehlerseiten in allen drei Apps ([[conventions]] §8). Schrift `text-[13px]`
+`scripts/consistency-check.sh` prüft Ringwerk mit denselben Regeln von Design 2 wie Spiegel, mit byte-gleicher
+`globals.css` und gleichen Fehlerseiten in beiden Apps ([[conventions]] §8). Schrift `text-[13px]`
 und `text-[15px]` sind Maße von Design 2.

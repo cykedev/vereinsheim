@@ -18,7 +18,9 @@ part_of: ["[[overview]]"]
 > erste Monorepo-Deploy auf den VPS ist **gelaufen**. Phase 4: `packages/lib` (Zyklus 1) + `packages/ui`
 > (Zyklus 2) echt geteilt → Drift-Gate auf triviale Reste geschrumpft (siehe §8). Gates grün. **Offen nur
 > Phase 5** (CI + Turbo-Remote-Cache, optional). Verbindliche Entscheidung: [[adr-015]]. Diese Note hält
-> Plan und Umsetzung; [[decisions]] hält das „Warum".
+> Plan und Umsetzung; [[decisions]] hält das „Warum". Seit Stufe 5 von [[adr-033]] (November 2026) liegt der Code
+> von Treffsicher nicht mehr im Repo; im Monorepo bleiben Ringwerk und Spiegel. Die Abschnitte zur Migration
+> beschreiben den Weg, wie er lief.
 
 ## 1. Ziel
 
@@ -269,7 +271,7 @@ Gates grün, geprunter Docker-Build verifiziert.
   `lint` hängen in der Root-`turbo.json` trotzdem an `"^build"`: Der leere `build`-Knoten eines Pakets trägt
   den Hash seiner Quellen. Ändert sich ein Paket, laufen Tests und Lint jeder App und jedes Pakets neu, die
   davon abhängen. Ohne `^build` kämen sie grün aus dem Cache. Prüfen mit `turbo run test lint --dry=json`:
-  Eine Änderung in `lib` ändert die Hashes aller drei Apps, eine in `shot-core` nur die von Spiegel.
+  Eine Änderung in `lib` ändert die Hashes beider Apps, eine in `shot-core` nur die von Spiegel.
 - **Build der Brücke ohne Cache** (`"cache": false` in `apps/spiegel-bridge/turbo.json`, Test
   `TestBuildBypassesTurboCache`): Die Version im Binary kommt aus `git describe`, und das kennt der Hash nicht. Am
   26. Oktober 2026 legte `pnpm build` auf `main` ein Binary aus dem Cache nach `dist/`, das das Gate in einer anderen
@@ -336,7 +338,7 @@ maschinengebunden:
   passt gut in `packages/lib`.
 - Env-Var-Angleichung `ADMIN_*` ↔ `SEED_ADMIN_*` (deploy-breaking, separat).
 - CI/Remote-Cache (Phase 5).
-- **Session-Cookies kollidieren lokal:** Alle drei Apps laufen auf `localhost` mit demselben NextAuth-Cookie; wer sich
+- **Session-Cookies kollidieren lokal:** Beide Apps laufen auf `localhost` mit demselben NextAuth-Cookie; wer sich
   in einer anmeldet, wird in den anderen abgemeldet. Im Dev-Betrieb je App einen eigenen Cookie-Namen setzen.
 - **Ratenbegrenzung in `@vereinsheim/lib`:** Bei vollem Speicher (10.000 Einträge) verdrängt der Datenbank-Store nach
   `lastAttemptAt`, der Speicher-Store nach dem späteren Wert aus Sperre und letztem Versuch; die Datenbank könnte eine
@@ -345,8 +347,7 @@ maschinengebunden:
   liefert bei einem Objekt mit Feldfehlern `undefined`. Ein Rückfall auf eine allgemeine Meldung ([[conventions]] §2).
 - **`chart-4` als Bedeutungsfarbe:** „Mentaltraining“ und die Playoff-Kategorie im Protokoll nutzen das Diagramm-Token;
   ein eigenes semantisches Token ([[conventions]] §4).
-- **Angleichen beim Umzug auf Design 2:** PDF-Technik (Ringwerk react-pdf, Treffsicher eigener Aufbau), Startroute
-  (Ringwerk `/`, Treffsicher `/dashboard`), Fehlerseiten als dünne Wrapper statt Kopien im Drift-Gate.
+- **Fehlerseiten** als dünne Wrapper statt Kopien im Drift-Gate.
 - **Optional:** ein schnelles Gate in `/check` (Idee aus der Harness-Vorlage), sonst verwerfen.
 - **Dev-Tooling-Baseline vereinheitlicht (erledigt, [[adr-020]]):** **ein** Satz am Root für
   alle Apps — der native **PIV-Workflow** (`/plan → /implement → /validate → /review` + `/debug`) mit

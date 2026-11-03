@@ -1,6 +1,6 @@
 # @vereinsheim/lib — Claude Scope-Notiz
 
-Geteilte **reine Utils, Client-Hooks, Formatierung und der Anmelde-Kern** für alle drei Apps (ADR-015/016).
+Geteilte **reine Utils, Client-Hooks, Formatierung und der Anmelde-Kern** für Ringwerk und Spiegel (ADR-015/016).
 Jedes Modul gibt es nur einmal; Drift ist damit **strukturell unmöglich**, `consistency-check.sh` prüft sie
 deshalb nicht.
 
@@ -36,7 +36,7 @@ Am Prisma-Client hängende Teile bleiben app-lokal (`auth.ts` mit den NextAuth-O
 
 ## Gemeinsamer Anmeldecode
 
-Der Anmeldecode der drei Apps (nur Server, ohne Prisma und ohne bcrypt):
+Der Anmeldecode beider Apps (nur Server, ohne Prisma und ohne bcrypt):
 
 | Export                                    | Inhalt                                                                                      |
 | ----------------------------------------- | ------------------------------------------------------------------------------------------- |

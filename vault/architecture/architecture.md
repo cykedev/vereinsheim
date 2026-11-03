@@ -7,12 +7,12 @@ keywords: [architektur, high-level-karte, repo-karte, monorepo, apps, pakete, ro
 part_of: ["[[overview]]"]
 ---
 
-**TL;DR** Hand-gepflegte Orientierung über das Monorepo: drei Next.js-Apps (Treffsicher läuft nicht mehr, unter seinem Host steht eine Hinweisseite), eine Go-Brücke, geteilte Pakete, ein VPS. Die Detail-Architektur je App steht im Vault (`vault/apps/<app>/`, `vault/spiegel/`); den lebenden Symbol- und Call-Graph liefert der CodeGraph-MCP.
+**TL;DR** Hand-gepflegte Orientierung über das Monorepo: zwei Next.js-Apps, Ringwerk und Spiegel (Treffsicher läuft nicht mehr und hat keinen Code mehr im Repo, unter seinem Host steht eine Hinweisseite), eine Go-Brücke, geteilte Pakete, ein VPS. Die Detail-Architektur je App steht im Vault (`vault/apps/<app>/`, `vault/spiegel/`); den lebenden Symbol- und Call-Graph liefert der CodeGraph-MCP.
 
 # Architektur — High-Level-Karte
 
 Hand-gepflegte Orientierung über das Monorepo (ADR-016). Die **Detail**-Architektur je App steht im Vault
-(`vault/apps/ringwerk/`, `vault/apps/treffsicher/`, `vault/spiegel/`); den **lebenden** Symbol-/Call-Graph liefert der
+(`vault/apps/ringwerk/`, `vault/spiegel/`; `vault/apps/treffsicher/` ist Archiv); den **lebenden** Symbol-/Call-Graph liefert der
 CodeGraph-MCP (`codegraph_explore`). Diese Datei ist die schnelle Karte, kein Vollindex.
 
 ## Repo-Karte
@@ -20,8 +20,6 @@ CodeGraph-MCP (`codegraph_explore`). Diese Datei ist die schnelle Karte, kein Vo
 ```
 vereinsheim/                Code- + Deployment-Monorepo (pnpm + Turborepo)
 ├── apps/ringwerk/          Liga & Wettkämpfe (Next.js 16, Prisma 7, NextAuth v4)  → :3000
-├── apps/treffsicher/       Trainings-App      (Next.js 16, Prisma 7, NextAuth v4)  → :3001, nur noch Dev: läuft
-│                           nicht mehr in Prod (ADR-033 Stufe 4), Daten bis 1. Februar 2027
 ├── apps/spiegel/           Schussrohdaten aus Meyton (Next.js 16, Prisma 7, NextAuth v4)  → :3002: Rohdaten als
 │                           Zeilenversionen, Revisionen und Projektion je Scheibe (ADR-031); Start, Scheiben, Seite einer
 │                           Scheibe, Fortschritt, Profil, Admin; Übersichten rechnen auf dem Server aus der Projektion;
@@ -33,7 +31,7 @@ vereinsheim/                Code- + Deployment-Monorepo (pnpm + Turborepo)
 ├── packages/lib/           @vereinsheim/lib — geteilte Utils + Form-Hooks: cn, forms/fieldErrors, useUnsavedChangesGuard,
 │                           useNavigationConfirm, dateTime (server-only), format (isomorph, Locale de-DE, Zeitzone als
 │                           Parameter) und der Auth-Kern (Validierung, Anmeldeablauf, IP aus Proxy-Headern,
-│                           Ratenbegrenzung mit Store und Admin-Auswertung) für alle drei Apps.
+│                           Ratenbegrenzung mit Store und Admin-Auswertung) für beide Apps.
 ├── packages/ui/            @vereinsheim/ui — ui-Primitives, shell/, admin/ (Rate-Limit-Oberfläche) und
 │                           design2.css + design2/* (ADR-030, ADR-032) für alle Apps: Tokens mit Akzent je
 │                           App, Darstellung, Rahmen, Seite, Folgen-Dialog, Rückgängig, Hilfe, Toasts, Trefferfarben.
@@ -97,8 +95,6 @@ Schützenhaus: Meyton-Server (SSMDB2) ←nur lesend── Brücke ──HTTPS, n
 
 - **ringwerk:** `/` · `/competitions/[id]{/schedule,/standings,/ranking,/playoffs}` · `/participants` ·
   `/disciplines` · `/admin` · `/account` · `/api/public/c/[slug]/pdf` (öffentlich).
-- **treffsicher** (nur noch Dev; in Prod jede Adresse die Hinweisseite): `/` → `/dashboard` · `/sessions{/[id]{/edit,/export/pdf},/new}` · `/shot-routines` · `/statistics` · `/goals` ·
-  `/disciplines` · `/admin` · `/profile` (`/account` leitet weiter; alles auth-gated, Design 2 hell und dunkel).
 - **spiegel:** `/` (Start) · `/cards{/[id]}` · `/progress` · `/open` · `/profile{/trash}` · `/admin{/users,/disciplines,/site}` ·
   `/share/[shareId]` (geteilte Scheibe, ohne Anmeldung) · `/api/ingest/v1/{pair,state,snapshots,heartbeat}` (Brücke,
   Geräte-Token).
@@ -107,10 +103,10 @@ Detail (Komponenten, lib-Module, Datenfluss): die App-Notes im Vault und die `CL
 
 ## Cross-App-Konsistenz
 
-Alle drei Apps laufen auf Design 2 (ADR-030, ADR-032) und teilen die UI-/Pattern-Schicht über `@vereinsheim/ui`,
+Beide Apps laufen auf Design 2 (ADR-030, ADR-032) und teilen die UI-/Pattern-Schicht über `@vereinsheim/ui`,
 `@vereinsheim/lib` und `@vereinsheim/config`. **Single Source der Konventionen:** [[conventions]]. Den Rest
 (`components.json`, `globals.css`-Stub, Error-Boundaries, den Wrapper der Rate-Limit-Oberfläche) und die Regeln von
-Design 2 erzwingt `scripts/consistency-check.sh` als Release-Gate über alle drei Apps ([[drift-protection]]).
+Design 2 erzwingt `scripts/consistency-check.sh` als Release-Gate über beide Apps ([[drift-protection]]).
 
 ## Knowledge & Harness (ADR-016/017/018/023/024/025)
 
