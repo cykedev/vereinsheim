@@ -8,11 +8,18 @@ import { LeaguePlayoffsFieldset } from "./LeaguePlayoffsFieldset"
 interface Props {
   form: CompetitionFormState
   competition?: CompetitionDetail
-  hasMatchups: boolean
+  hasSchedule: boolean
+  rulesetLocked: boolean
   playoffsStarted: boolean
 }
 
-export function LeagueFieldsSection({ form, competition, hasMatchups, playoffsStarted }: Props) {
+export function LeagueFieldsSection({
+  form,
+  competition,
+  hasSchedule,
+  rulesetLocked,
+  playoffsStarted,
+}: Props) {
   const {
     isPending,
     isEdit,
@@ -59,7 +66,11 @@ export function LeagueFieldsSection({ form, competition, hasMatchups, playoffsSt
       {/* ── Regelset ──────────────────────────────────────────── */}
       <div className="space-y-4 rounded-2xl border bg-card p-4">
         <p className="text-sm font-medium">Regelset</p>
-        <LeagueGroupPhaseFieldset form={form} hasMatchups={hasMatchups} />
+        <LeagueGroupPhaseFieldset
+          form={form}
+          hasSchedule={hasSchedule}
+          rulesetLocked={rulesetLocked}
+        />
         <LeaguePlayoffsFieldset form={form} playoffsStarted={playoffsStarted} />
       </div>
     </>

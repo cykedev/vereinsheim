@@ -4,6 +4,7 @@ import { getAuthSession, canManage, isAdmin } from "@/lib/auth-helpers"
 import { getDisciplines } from "@/lib/disciplines/queries"
 import { getCompetitionById } from "@/lib/competitions/queries"
 import { hasPlayoffsStarted } from "@/lib/playoffs/queries"
+import { getScheduleStatus } from "@/lib/matchups/queries"
 import { updateCompetition } from "@/lib/competitions/actions"
 import { CompetitionForm } from "@/components/app/competitions/CompetitionForm"
 import { ForceDeleteCompetitionSection } from "@/components/app/competitions/ForceDeleteCompetitionSection"
@@ -21,17 +22,19 @@ export const metadata: Metadata = {
 export default async function EditCompetitionPage({ params }: Props) {
   const { id } = await params
 
-  const [session, competition, disciplines, playoffsStarted] = await Promise.all([
+  const [session, competition, disciplines, playoffsStarted, schedule] = await Promise.all([
     getAuthSession(),
     getCompetitionById(id),
     getDisciplines(),
     hasPlayoffsStarted(id),
+    getScheduleStatus(id),
   ])
 
   if (!session || !canManage(session.user.role)) redirect("/")
   if (!competition) notFound()
 
-  const hasMatchups = competition._count.matchups > 0
+  // Das Regelset ist bis zum ersten Ergebnis bearbeitbar: dieselbe Grenze wie „Spielplan neu generieren“.
+  const rulesetLocked = schedule.regenerationBlocker !== null
 
   const action = async (prevState: ActionResult | null, formData: FormData) => {
     "use server"
@@ -45,7 +48,8 @@ export default async function EditCompetitionPage({ params }: Props) {
         competition={competition}
         disciplines={disciplines}
         action={action}
-        hasMatchups={hasMatchups}
+        hasSchedule={schedule.hasSchedule}
+        rulesetLocked={rulesetLocked}
         playoffsStarted={playoffsStarted}
       />
       {/* Löschen mit allen Daten darf nur ein Admin (forceDeleteCompetition) */}

@@ -22,10 +22,11 @@ interface Props {
   form: CompetitionFormState
   competition?: CompetitionDetail
   disciplines: SerializableDiscipline[]
-  hasMatchups: boolean
+  /** ein Ergebnis existiert (isRulesetLocked): Wertungsmodus einer Liga gesperrt */
+  rulesetLocked: boolean
 }
 
-export function BasicFieldsSection({ form, competition, disciplines, hasMatchups }: Props) {
+export function BasicFieldsSection({ form, competition, disciplines, rulesetLocked }: Props) {
   const {
     isPending,
     isEdit,
@@ -98,7 +99,7 @@ export function BasicFieldsSection({ form, competition, disciplines, hasMatchups
           value={isSeason ? seasonWertung : scoringMode}
           onValueChange={isSeason ? setSeasonWertung : setScoringMode}
           disabled={
-            isPending || (hasMatchups && (type === "LEAGUE" || competition?.type === "LEAGUE"))
+            isPending || (rulesetLocked && (type === "LEAGUE" || competition?.type === "LEAGUE"))
           }
         >
           <SelectTrigger id="scoringMode">

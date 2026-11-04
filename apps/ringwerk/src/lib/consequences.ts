@@ -572,6 +572,39 @@ export function scheduleRegenerate(): Decision {
   }
 }
 
+const FORMAT_NAME: Readonly<Record<LeagueFormat, string>> = {
+  DOUBLE_ROUND_ROBIN: "Doppelrunde",
+  BEST_OF_SINGLE: "Best-of-Begegnung",
+}
+
+/** Speichern mit anderem Format, wenn die Liga einen Spielplan und noch kein Ergebnis hat */
+export function leagueFormatChange({
+  from,
+  to,
+}: {
+  from: LeagueFormat
+  to: LeagueFormat
+}): Decision {
+  return {
+    title: "Format ändern und Spielplan neu generieren?",
+    about: `Die Liga hat einen Spielplan. Noch ist kein Ergebnis eingetragen. Das Format wechselt von „${FORMAT_NAME[from]}“ zu „${FORMAT_NAME[to]}“.`,
+    check: "Ist der Spielplan schon verteilt oder ausgedruckt? Dann ist er danach veraltet.",
+    happens: [
+      "Die Einstellungen werden gespeichert.",
+      "Der bisherige Spielplan wird gelöscht.",
+      to === "BEST_OF_SINGLE"
+        ? "Ringwerk erstellt ihn neu für alle aktiven Teilnehmer: eine Runde, jeder gegen jeden."
+        : "Ringwerk erstellt ihn neu für alle aktiven Teilnehmer: Hin- und Rückrunde, jeder gegen jeden.",
+      "Spieltage und Gegner können sich dabei ändern.",
+      "Im Protokoll des Wettbewerbs steht danach ein Eintrag.",
+    ],
+    notHappening: ["Einschreibungen bleiben."],
+    undo: "Nicht möglich. Das Format zurückzustellen erzeugt wieder einen neuen Spielplan, nicht den alten.",
+    confirmLabel: "Speichern und Spielplan neu generieren",
+    destructive: true,
+  }
+}
+
 // ---------------------------------------------------------------------------------------------------------------------
 // Playoffs und Best-of
 

@@ -14,11 +14,15 @@ import { BEST_OF_SINGLE_SCORING_MODE_LABELS } from "./constants"
 
 interface Props {
   form: CompetitionFormState
-  hasMatchups: boolean
+  /** die Liga hat einen Spielplan */
+  hasSchedule: boolean
+  /** ein Ergebnis existiert (isRulesetLocked) */
+  rulesetLocked: boolean
 }
 
-// Gruppenphase & Format — gesperrt, sobald Paarungen existieren
-export function LeagueGroupPhaseFieldset({ form, hasMatchups }: Props) {
+// Gruppenphase & Format — gesperrt, sobald ein Ergebnis existiert. Davor erzeugt ein anderes Format den Spielplan beim
+// Speichern neu ([[phase-locking-and-editability]]).
+export function LeagueGroupPhaseFieldset({ form, hasSchedule, rulesetLocked }: Props) {
   const {
     isPending,
     isBestOfSingle,
@@ -37,11 +41,11 @@ export function LeagueGroupPhaseFieldset({ form, hasMatchups }: Props) {
   } = form
 
   return (
-    <fieldset disabled={hasMatchups || isPending} className="space-y-4">
-      {hasMatchups && (
+    <fieldset disabled={rulesetLocked || isPending} className="space-y-4">
+      {rulesetLocked && (
         <span className="flex items-center gap-1 text-xs text-muted-foreground">
           <Lock className="h-3 w-3" />
-          Gruppenphase &amp; Format gesperrt — Paarungen existieren bereits
+          Regelset gesperrt: Es sind schon Ergebnisse eingetragen.
         </span>
       )}
       {/* Liga-Format */}
@@ -56,6 +60,11 @@ export function LeagueGroupPhaseFieldset({ form, hasMatchups }: Props) {
             <SelectItem value="BEST_OF_SINGLE">Best-of-Begegnung (einfache Runde)</SelectItem>
           </SelectContent>
         </Select>
+        {hasSchedule && !rulesetLocked && (
+          <p className="text-xs text-muted-foreground">
+            Es gibt schon einen Spielplan. Ein anderes Format erzeugt ihn beim Speichern neu.
+          </p>
+        )}
       </div>
 
       {/* BEST_OF_SINGLE group-phase fields */}

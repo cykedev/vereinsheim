@@ -29,6 +29,7 @@ import {
   RINGWERK_OLD_WORDS,
   scheduleGenerate,
   scheduleRegenerate,
+  leagueFormatChange,
   seasonSeriesDelete,
   unenroll,
   unenrollBlocked,
@@ -87,6 +88,8 @@ const ALL: Decision[] = [
   scheduleGenerate({ leagueFormat: "DOUBLE_ROUND_ROBIN" }),
   scheduleGenerate({ leagueFormat: "BEST_OF_SINGLE" }),
   scheduleRegenerate(),
+  leagueFormatChange({ from: "DOUBLE_ROUND_ROBIN", to: "BEST_OF_SINGLE" }),
+  leagueFormatChange({ from: "BEST_OF_SINGLE", to: "DOUBLE_ROUND_ROBIN" }),
   playoffsStart({ name: "Rundenwettkampf 2026", round: "Achtelfinale", active: 20 }),
   playoffsStart({ name: "Rundenwettkampf 2026", round: "Viertelfinale", active: 11 }),
   playoffsStart({ name: "Rundenwettkampf 2026", round: "Halbfinale", active: 4 }),
@@ -418,6 +421,7 @@ describe("Wortlaut wie im Textbuch", () => {
       nextRound({ round: "Halbfinale", previous: "Viertelfinale" }),
       scheduleGenerate({ leagueFormat: "DOUBLE_ROUND_ROBIN" }),
       scheduleRegenerate(),
+      leagueFormatChange({ from: "DOUBLE_ROUND_ROBIN", to: "BEST_OF_SINGLE" }),
     ]
     for (const decision of decisions) {
       expect(decision.happens).toContain("Im Protokoll des Wettbewerbs steht danach ein Eintrag.")
@@ -494,6 +498,33 @@ describe("Wortlaut wie im Textbuch", () => {
       confirmLabel: "Spielplan neu generieren",
       destructive: true,
     })
+  })
+
+  it("16 Format ändern bei bestehendem Spielplan, Wortlaut wie im Textbuch", () => {
+    expect(leagueFormatChange({ from: "DOUBLE_ROUND_ROBIN", to: "BEST_OF_SINGLE" })).toEqual({
+      title: "Format ändern und Spielplan neu generieren?",
+      about:
+        "Die Liga hat einen Spielplan. Noch ist kein Ergebnis eingetragen. Das Format wechselt von „Doppelrunde“ zu „Best-of-Begegnung“.",
+      check: "Ist der Spielplan schon verteilt oder ausgedruckt? Dann ist er danach veraltet.",
+      happens: [
+        "Die Einstellungen werden gespeichert.",
+        "Der bisherige Spielplan wird gelöscht.",
+        "Ringwerk erstellt ihn neu für alle aktiven Teilnehmer: eine Runde, jeder gegen jeden.",
+        "Spieltage und Gegner können sich dabei ändern.",
+        "Im Protokoll des Wettbewerbs steht danach ein Eintrag.",
+      ],
+      notHappening: ["Einschreibungen bleiben."],
+      undo: "Nicht möglich. Das Format zurückzustellen erzeugt wieder einen neuen Spielplan, nicht den alten.",
+      confirmLabel: "Speichern und Spielplan neu generieren",
+      destructive: true,
+    })
+    const back = leagueFormatChange({ from: "BEST_OF_SINGLE", to: "DOUBLE_ROUND_ROBIN" })
+    expect(back.about).toBe(
+      "Die Liga hat einen Spielplan. Noch ist kein Ergebnis eingetragen. Das Format wechselt von „Best-of-Begegnung“ zu „Doppelrunde“."
+    )
+    expect(back.happens[2]).toBe(
+      "Ringwerk erstellt ihn neu für alle aktiven Teilnehmer: Hin- und Rückrunde, jeder gegen jeden."
+    )
   })
 
   it("17 Ohne Speichern verlassen wie in Treffsicher", () => {
