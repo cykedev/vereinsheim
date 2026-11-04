@@ -127,7 +127,7 @@ Konfigurierbare Regelsets pro Liga:
 | finaleTiebreaker1       | —          | Erstes Tiebreaker-Kriterium bei Gleichstand (optional)              |
 | finaleTiebreaker2       | —          | Zweites Tiebreaker-Kriterium bei weiterem Gleichstand (optional)    |
 
-Das Regelset wird **phasenweise gesperrt**: Gruppenphase/Format (Format, Wertungsmodus, Best-of, Schuss/Serie) sind **nach Spielplan-Generierung gesperrt**; die **Playoff-/Finale-Einstellungen** (Best-of, Viertel-/Achtelfinale, Finale-Kriterien) bleiben editierbar, **bis die Playoffs gestartet sind** (`playoffMatch.count > 0`). So lässt sich z. B. eine falsch gewählte Bracket-Größe noch korrigieren, bevor die K.-o.-Phase läuft.
+Das Regelset wird **phasenweise gesperrt** ([[phase-locking-and-editability]]): Gruppenphase/Format (Format, Wertungsmodus, Best-of, Schuss/Serie) sind bearbeitbar, **bis ein Ergebnis eingetragen ist**; ein anderes Format erzeugt einen bestehenden Spielplan beim Speichern nach Rückfrage neu; die **Playoff-/Finale-Einstellungen** (Best-of, Viertel-/Achtelfinale, Finale-Kriterien) bleiben editierbar, **bis die Playoffs gestartet sind** (`playoffMatch.count > 0`). So lässt sich z. B. eine falsch gewählte Bracket-Größe noch korrigieren, bevor die K.-o.-Phase läuft.
 
 ### Spielplan-Generierung
 
