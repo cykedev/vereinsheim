@@ -1,18 +1,21 @@
 // Bilder für die README aus erfundenen Daten (ADR-029): der gebaute Stand dieses Checkouts auf :3012, angemeldet mit
-// dem Demo-Konto (`seed:own --demo`), hell und dunkel, 1280 und 390 px, als WebP nach `docs/screenshots/`. Nicht im
-// Gate: braucht Chrome, einen Build und die Demo-Scheiben.
+// dem Demo-Konto (`seed:own --demo`), hell und dunkel, 1280 und 390 px, als WebP nach `docs/screenshots/`. Danach die
+// Verbundbilder aus den Vorlagen in `readme-bilder/`: `hero.webp` (Desktop neben Telefon) und `docs/social-preview.png`
+// (1280×640, in den Einstellungen des Repositories hochzuladen). Nicht im Gate: braucht Chrome, einen Build und die
+// Demo-Scheiben.
 //
 //   pnpm --filter spiegel seed:own --demo      einmal: die Scheiben dem Demo-Konto
 //   pnpm --filter spiegel build                der Stand, der fotografiert wird
-//   pnpm --filter spiegel readme-bilder        schreibt docs/screenshots/spiegel-*.webp
-//   … --nur <wort>                             nur Bilder, deren Name das Wort enthält
+//   pnpm --filter spiegel readme-bilder        schreibt docs/screenshots/spiegel-*.webp, hero.webp, docs/social-preview.png
+//   … --nur <wort>                             nur Bilder, deren Name das Wort enthält (auch „hero“, „social“)
 
 import type { ChildProcess } from "node:child_process"
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises"
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join, resolve } from "node:path"
+import { pathToFileURL } from "node:url"
 
-import { Browser, type Page } from "@vereinsheim/pruefen/browser"
+import { Browser, type Page, type ShotFormat } from "@vereinsheim/pruefen/browser"
 import { startServer } from "@vereinsheim/pruefen/server"
 import { DEMO_EMAIL, DEMO_PASSWORD } from "./demo-account"
 
@@ -127,6 +130,36 @@ async function take(page: Page, shot: Shot) {
   out(`  ${shot.name}.webp  ${shot.width} px ${shot.theme}  ${Math.round(image.length / 1024)} KB`)
 }
 
+/**
+ * eine Vorlage aus `readme-bilder/` mit den Bildern füllen (`{{name}}` wird die Adresse der Datei), über file:// laden
+ * und als Bild der Größe der Vorlage schreiben
+ */
+async function compose(
+  page: Page,
+  template: string,
+  fill: Record<string, string>,
+  size: readonly [number, number],
+  file: string,
+  format: ShotFormat,
+  dir: string
+) {
+  let html = await readFile(join(__dirname, "readme-bilder", template), "utf8")
+  for (const [key, value] of Object.entries(fill))
+    html = html.replaceAll(`{{${key}}}`, pathToFileURL(value).href)
+  const tmp = join(dir, template)
+  await writeFile(tmp, html)
+  await page.viewport(size[0], size[1])
+  await page.goto(pathToFileURL(tmp).href, "document.body", { plain: true })
+  // die Bilder der Vorlage sind erst nach dem Laden der Seite fertig gezeichnet
+  await page.waitFor(`[...document.images].every((img) => img.complete && img.naturalWidth > 0)`)
+  await page.wait(300)
+  const image = await page.screenshot(false, format, format === "webp" ? 90 : 85)
+  await writeFile(file, image)
+  out(
+    `  ${file.slice(ROOT.length + 1)}  ${size[0]}×${size[1]}  ${Math.round(image.length / 1024)} KB`
+  )
+}
+
 async function main() {
   let server: ChildProcess | null = null
   let browser: Browser | null = null
@@ -153,6 +186,28 @@ async function main() {
     const word = only >= 0 ? (process.argv[only + 1] ?? "") : ""
     for (const shot of shots(card)) if (shot.name.includes(word)) await take(page, shot)
     await page.ev(`localStorage.removeItem(${JSON.stringify(THEME_KEY)})`)
+    const desktop = join(OUT, "spiegel-card.webp")
+    const phone = join(OUT, "spiegel-card-phone.webp")
+    if ("hero".includes(word))
+      await compose(
+        page,
+        "hero.html",
+        { desktop, phone },
+        [1600, 900],
+        join(OUT, "hero.webp"),
+        "webp",
+        uploads
+      )
+    if ("social".includes(word))
+      await compose(
+        page,
+        "social.html",
+        { phone },
+        [1280, 640],
+        join(ROOT, "docs", "social-preview.png"),
+        "png",
+        uploads
+      )
   } finally {
     await browser?.close()
     server?.kill()

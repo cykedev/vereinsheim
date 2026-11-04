@@ -260,12 +260,13 @@ export class Page {
 
   /**
    * eine Adresse laden und warten, bis React die Seite übernommen hat; danach `settle` ms Ruhe (wer selbst auf den
-   * fertigen Inhalt wartet, gibt 0)
+   * fertigen Inhalt wartet, gibt 0). `plain`: eine Seite ohne React (etwa eine Vorlage über file://), fertig, sobald
+   * `ready` da ist
    */
   async goto(
     url: string,
     ready: Locator = '$("[data-app-frame]") ?? $("form")',
-    { settle = 250 }: { settle?: number } = {}
+    { settle = 250, plain = false }: { settle?: number; plain?: boolean } = {}
   ): Promise<void> {
     const loaded = () => {
       let off = () => {}
@@ -294,7 +295,7 @@ export class Page {
     if (!(await waiting)) throw new Error(`lädt nicht: ${url}`)
     if (
       !(await this.waitFor(
-        `(() => { const el = ${ready}; return !!el && hydrated(el) })()`,
+        `(() => { const el = ${ready}; return !!el && (${plain} || hydrated(el)) })()`,
         20_000
       ))
     )
