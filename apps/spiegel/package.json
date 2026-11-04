@@ -24,6 +24,7 @@
     "printout-import": "tsx tools/printout-import.ts",
     "transfer": "tsx tools/transfer.ts",
     "pruefen": "tsx tools/pruefen.ts",
+    "readme-bilder": "tsx tools/readme-bilder.ts",
     "ingest-load": "tsx tools/ingest-load.ts",
     "stack-probe": "tsx tools/stack-probe.ts",
     "bridge-e2e": "tsx tools/bridge-e2e.ts",
