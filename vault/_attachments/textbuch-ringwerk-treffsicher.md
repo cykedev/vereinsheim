@@ -995,6 +995,36 @@ danach veraltet.“ · Knopf „Neu generieren“
 - **Rückgängig:** Nicht möglich. Der alte Spielplan kommt nicht zurück.
 - **Knopf:** Spielplan neu generieren
 
+**Format ändern bei bestehendem Spielplan.** Ort: Wettbewerb bearbeiten, Kasten „Regelset“, Knopf „Speichern“, wenn die
+Liga einen Spielplan hat, noch kein Ergebnis eingetragen ist und das Format geändert wurde. Ändert sich nur eine andere
+Einstellung, speichert der Knopf ohne Rückfrage.
+
+**alt:** keiner. Das Regelset war gesperrt, sobald der Spielplan bestand.
+
+**neu:**
+
+- **Titel:** Format ändern und Spielplan neu generieren?
+- **Worum:** Die Liga hat einen Spielplan. Noch ist kein Ergebnis eingetragen. Das Format wechselt von „Doppelrunde“
+  zu „Best-of-Begegnung“. (umgekehrt) Das Format wechselt von „Best-of-Begegnung“ zu „Doppelrunde“.
+- **Vorher prüfen:** Ist der Spielplan schon verteilt oder ausgedruckt? Dann ist er danach veraltet.
+- **Was dann passiert:**
+  - Die Einstellungen werden gespeichert.
+  - Der bisherige Spielplan wird gelöscht.
+  - Ringwerk erstellt ihn neu für alle aktiven Teilnehmer: eine Runde, jeder gegen jeden. (Doppelrunde) Ringwerk
+    erstellt ihn neu für alle aktiven Teilnehmer: Hin- und Rückrunde, jeder gegen jeden.
+  - Spieltage und Gegner können sich dabei ändern.
+  - Im Protokoll des Wettbewerbs steht danach ein Eintrag.
+- **Was nicht passiert:**
+  - Einschreibungen bleiben.
+- **Rückgängig:** Nicht möglich. Das Format zurückzustellen erzeugt wieder einen neuen Spielplan, nicht den alten.
+- **Knopf:** Speichern und Spielplan neu generieren
+
+Hinweise im Kasten „Regelset“:
+
+- Spielplan da, kein Ergebnis, unter dem Format: „Es gibt schon einen Spielplan. Ein anderes Format erzeugt ihn beim
+  Speichern neu.“
+- Ergebnis eingetragen, mit Schloss: „Regelset gesperrt: Es sind schon Ergebnisse eingetragen.“
+
 ### 17. Ohne Speichern verlassen
 
 Ort: Wettbewerb anlegen und bearbeiten, wenn mit Änderungen „Abbrechen“ getippt oder die Seite verlassen wird.
