@@ -421,7 +421,6 @@ describe("Wortlaut wie im Textbuch", () => {
       nextRound({ round: "Halbfinale", previous: "Viertelfinale" }),
       scheduleGenerate({ leagueFormat: "DOUBLE_ROUND_ROBIN" }),
       scheduleRegenerate(),
-      leagueFormatChange({ from: "DOUBLE_ROUND_ROBIN", to: "BEST_OF_SINGLE" }),
     ]
     for (const decision of decisions) {
       expect(decision.happens).toContain("Im Protokoll des Wettbewerbs steht danach ein Eintrag.")
@@ -511,10 +510,10 @@ describe("Wortlaut wie im Textbuch", () => {
         "Der bisherige Spielplan wird gelöscht.",
         "Ringwerk erstellt ihn neu für alle aktiven Teilnehmer: eine Runde, jeder gegen jeden.",
         "Spieltage und Gegner können sich dabei ändern.",
-        "Im Protokoll des Wettbewerbs steht danach ein Eintrag.",
+        "Im Protokoll des Wettbewerbs stehen danach zwei Einträge: „Wettbewerb bearbeitet“ und „Spielplan neu generiert“.",
       ],
       notHappening: ["Einschreibungen bleiben."],
-      undo: "Nicht möglich. Das Format zurückzustellen erzeugt wieder einen neuen Spielplan, nicht den alten.",
+      undo: "Das Format zurückzustellen erzeugt den Spielplan wieder neu. Bei unveränderten Einschreibungen sind es dieselben Paarungen.",
       confirmLabel: "Speichern und Spielplan neu generieren",
       destructive: true,
     })

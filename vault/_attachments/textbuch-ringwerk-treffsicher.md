@@ -1013,10 +1013,11 @@ Einstellung, speichert der Knopf ohne Rückfrage.
   - Ringwerk erstellt ihn neu für alle aktiven Teilnehmer: eine Runde, jeder gegen jeden. (Doppelrunde) Ringwerk
     erstellt ihn neu für alle aktiven Teilnehmer: Hin- und Rückrunde, jeder gegen jeden.
   - Spieltage und Gegner können sich dabei ändern.
-  - Im Protokoll des Wettbewerbs steht danach ein Eintrag.
+  - Im Protokoll des Wettbewerbs stehen danach zwei Einträge: „Wettbewerb bearbeitet“ und „Spielplan neu generiert“.
 - **Was nicht passiert:**
   - Einschreibungen bleiben.
-- **Rückgängig:** Nicht möglich. Das Format zurückzustellen erzeugt wieder einen neuen Spielplan, nicht den alten.
+- **Rückgängig:** Das Format zurückzustellen erzeugt den Spielplan wieder neu. Bei unveränderten Einschreibungen sind es
+  dieselben Paarungen.
 - **Knopf:** Speichern und Spielplan neu generieren
 
 Hinweise im Kasten „Regelset“:
