@@ -112,15 +112,16 @@ trivial/mechanical fixes go direct. Plans and reports live in the root `plans/` 
 
 ## Commands
 
-| Command                | When                                    |
-| ---------------------- | --------------------------------------- |
-| `/check`               | Before every commit — all quality gates |
-| `/test`                | Quick feedback — tests only             |
-| `/migrate <name>`      | After schema change                     |
-| `/db-reset`            | Reset dev database                      |
-| `/commit-msg`          | Generate commit message from diff       |
-| `/consolidate-lessons` | Compress lessons, promote rules to docs |
-| `/debug`               | Root-cause a bug before fixing          |
+| Command                                | When                                                                                                                |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `/check`                               | Before every commit — all quality gates                                                                             |
+| `/test`                                | Quick feedback — tests only                                                                                         |
+| `/migrate <name>`                      | After schema change                                                                                                 |
+| `/db-reset`                            | Reset dev database                                                                                                  |
+| `/commit-msg`                          | Generate commit message from diff                                                                                   |
+| `/consolidate-lessons`                 | Compress lessons, promote rules to docs                                                                             |
+| `/debug`                               | Root-cause a bug before fixing                                                                                      |
+| `pnpm --filter ringwerk readme-bilder` | README pictures from the built app on :3013 against `ringwerk_pruef` into `docs/screenshots/` ([[github-auftritt]]) |
 
 ---
 
