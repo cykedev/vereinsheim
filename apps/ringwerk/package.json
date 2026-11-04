@@ -17,6 +17,7 @@
     "db:generate": "prisma generate",
     "pruefen": "tsx --tsconfig tools/pruefdaten/tsconfig.json tools/pruefen.ts",
     "pruefdaten": "tsx --tsconfig tools/pruefdaten/tsconfig.json tools/pruefdaten/build.ts",
+    "readme-bilder": "tsx --tsconfig tools/pruefdaten/tsconfig.json tools/readme-bilder.ts",
     "pruefen:aufnehmen": "tsx --tsconfig tools/pruefdaten/tsconfig.json tools/pruefen-ringwerk.ts --aufnehmen",
     "pruefen:vergleichen": "tsx --tsconfig tools/pruefdaten/tsconfig.json tools/pruefen-ringwerk.ts --vergleichen",
     "pruefen:ablaeufe": "tsx --tsconfig tools/pruefdaten/tsconfig.json tools/pruefen-ringwerk.ts --ablaeufe",
