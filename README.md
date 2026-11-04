@@ -36,7 +36,7 @@ on one small server. Your members' data never leaves it.
 - **One card, every shot.** The target with all shots, series, the shot table with position, ring, tenth, divisor and
   time, official and tenth scoring side by side.
 - **Analysis in six tabs.** Position, spread, timing, trend and more, every metric with help in plain language. Spiegel
-  says „unclear“ where the data does not carry a conclusion.
+  says "unclear" where the data does not carry a conclusion.
 - **Progress over weeks.** Trend, volume, a training calendar, comparison against any period, personal records.
 - **Compare.** Two periods, training against competition, or two cards shot for shot.
 - **Fetch a card.** Scan the QR code on the Meyton printout, drop in the PDF, or type the ID: the card is yours.
@@ -78,7 +78,6 @@ your data any time.
   disciplines.
 - **Playoff brackets** best-of-N, finals with tiebreakers and sudden death.
 - Participants with guests, roles (admin, manager, viewer) and a full audit log.
-- **Meyton import** from the result URL or the printout PDF.
 - **Public result PDFs** at a stable link, ready for the club website.
 
 <p align="center">
