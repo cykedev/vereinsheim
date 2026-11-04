@@ -409,10 +409,13 @@ async function leagueClassic(run: Run, ui: Ui, db: Db, pass: Pass) {
     expect(pairs.size === 30, "jede Paarung je Richtung einmal", pairs.size)
   })
 
-  await run.step("Regelwerk gesperrt, Frist änderbar", async () => {
+  await run.step("Regelwerk frei bis zum ersten Ergebnis, Frist änderbar", async () => {
     await ui.open(`/competitions/${id}/edit`)
-    expect((await ui.text()).includes("Gruppenphase & Format gesperrt"), "Hinweis auf die Sperre")
-    expect(await ui.ev<boolean>(`$("#leagueFormat").matches(":disabled")`), "Format gesperrt")
+    expect(
+      (await ui.text()).includes("Ein anderes Format erzeugt ihn beim Speichern neu."),
+      "Hinweis auf den Spielplan"
+    )
+    expect(!(await ui.ev<boolean>(`$("#leagueFormat").matches(":disabled")`)), "Format frei")
     await ui.fill("hinrundeDeadline", "2026-11-22")
     await ui.press("Speichern")
     await ui.until(`!location.pathname.endsWith("/edit")`, "Speichern führt nicht weiter")
@@ -465,6 +468,15 @@ async function leagueClassic(run: Run, ui: Ui, db: Db, pass: Pass) {
       "Gast unverändert 93 / 20,1",
       away2
     )
+  })
+
+  await run.step("Regelwerk gesperrt nach dem ersten Ergebnis", async () => {
+    await ui.open(`/competitions/${id}/edit`)
+    expect(
+      (await ui.text()).includes("Regelset gesperrt: Es sind schon Ergebnisse eingetragen."),
+      "Hinweis auf die Sperre"
+    )
+    expect(await ui.ev<boolean>(`$("#leagueFormat").matches(":disabled")`), "Format gesperrt")
   })
 
   await run.step("Teilnehmer zurückziehen", async () => {
