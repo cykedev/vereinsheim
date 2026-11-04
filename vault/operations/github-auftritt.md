@@ -1,0 +1,61 @@
+---
+id: github-auftritt
+type: operation
+title: "GitHub-Auftritt: README-Bilder, Topics, Social Preview, Release"
+aliases: [readme-bilder, github-seite, social-preview, repo-topics]
+keywords: [github, readme, screenshots, bilder, webp, social preview, topics, beschreibung, release, tag, issue-vorlagen, contributing, security, hero, aufmerksamkeit, open source, demo-konto, prüfbestand, calver]
+part_of: ["[[operations]]"]
+relates_to: ["[[adr-029]]", "[[conventions]]", "[[vps-resource-sizing]]"]
+---
+
+**TL;DR** Die Bilder der README entstehen mit je einem Werkzeug je App (`readme-bilder`) aus Daten ohne fremde Personen und liegen unter `docs/screenshots/`; Beschreibung, Topics, Social Preview und Releases pflegt der User mit `gh` und in den Einstellungen des Repositories.
+
+# GitHub-Auftritt
+
+Die Seite [github.com/cykedev/vereinsheim](https://github.com/cykedev/vereinsheim) führt mit Spiegel: ein Verbundbild
+(Desktop hell neben Telefon dunkel), die Seiten von Spiegel, dann Ringwerk, ein Mermaid-Diagramm des Datenflusses,
+Ausprobieren, Betreiben, Technik, der Agent-Harness. Treffsicher steht nur noch unter „History“. Issue-Vorlagen
+(`.github/ISSUE_TEMPLATE/`), `CONTRIBUTING.md` und `SECURITY.md` sind zweisprachig, Deutsch zuerst.
+
+## Bilder nachziehen
+
+Nach einem Umbau von Design 2 oder einer Seite, die in der README steht:
+
+```bash
+pnpm --filter spiegel build && pnpm --filter spiegel seed:own --demo && pnpm --filter spiegel readme-bilder && pnpm --filter spiegel seed:own --email <eigene Adresse>
+pnpm --filter ringwerk build && pnpm --filter ringwerk pruefdaten && pnpm --filter ringwerk readme-bilder
+```
+
+Spiegel schreibt `docs/screenshots/spiegel-*.webp`, `hero.webp` und `docs/social-preview.png` (Vorlagen in
+`apps/spiegel/tools/readme-bilder/`, `--nur <wort>` für einzelne Bilder), Ringwerk `docs/screenshots/ringwerk-*.webp`
+(kein Bild des öffentlichen PDFs: Es trägt den Namen des Testfalls im Kopf). Beide Werkzeuge starten den gebauten Stand
+selbst (:3012, :3013); ein Dev-Server im Bild
+zeigte das Dev-Badge von Next. Die Daten ([[adr-029]]): Das Demo-Konto sieht nur seine Scheiben, mit
+`tools/private/own-cards.json` die eigenen des Users (als Fixture freigegeben), sonst erfundene; der Prüfbestand von
+Ringwerk hat erfundene Namen, und das Werkzeug setzt die Überschrift des Wettbewerbs im DOM auf einen Vereinsnamen.
+`seed:own --demo` hängt die eigenen Scheiben an das Demo-Konto, deshalb danach `seed:own --email` für das eigene Konto.
+Jedes Bild vor dem Commit ansehen: Theme, kein Ladezustand, keine Namen.
+
+## Beschreibung und Topics
+
+```bash
+gh repo edit cykedev/vereinsheim --description "…" --add-topic meyton --remove-topic training-log
+```
+
+Höchstens 20 Topics; Stand mit `gh repo view cykedev/vereinsheim --json description,repositoryTopics`. Wiki ist aus
+(die Doku liegt im Vault), Discussions sind an (Fragen von Vereinen, verlinkt aus `config.yml` der Issue-Vorlagen).
+
+## Social Preview
+
+`docs/social-preview.png` (1280×640) in den Einstellungen des Repositories unter „Social preview“ hochladen; `gh` kann
+das nicht. Nach neuen Bildern von Spiegel neu hochladen.
+
+## Release
+
+CalVer `vYYYY.MM`; die Notes beschreiben, was Vereine merken, nicht Commits:
+
+```bash
+gh release create v2026.11 --title "v2026.11" --notes-file <datei> --target main
+```
+
+Das Release zeigt auf `main`; die Images baut weiter `vereinsheim release` aus dem lokalen Checkout ([[operations]]).

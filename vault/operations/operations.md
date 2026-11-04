@@ -296,6 +296,10 @@ Backup nur als **Schutz vor Software-Fehlern**, nicht vor Hardware-Verlust.
 Bis dahin holt `vereinsheim local-pull` die neuesten Dumps aller Apps auf die lokale Maschine (`./backups/`). Diese
 Kopien rotieren nicht wie die Sicherungen auf dem Server.
 
+## GitHub-Seite des Repos
+
+README-Bilder, Beschreibung und Topics, Social Preview und Releases pflegt [[github-auftritt]].
+
 ---
 
 ## Restore
