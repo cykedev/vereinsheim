@@ -1,0 +1,30 @@
+name: Fehler melden
+description: Etwas funktioniert nicht wie beschrieben. / Something does not work as described.
+labels: [bug]
+body:
+  - type: dropdown
+    id: app
+    attributes:
+      label: App
+      options:
+        - Spiegel
+        - Spiegel-Brücke
+        - Ringwerk
+        - Betrieb (CLI, Deploy)
+    validations:
+      required: true
+  - type: textarea
+    id: was
+    attributes:
+      label: Was ist passiert?
+      description: Was hast du getan, was hast du erwartet, was kam stattdessen? / What did you do, expect, and get instead?
+    validations:
+      required: true
+  - type: input
+    id: stand
+    attributes:
+      label: Stand
+      description: Release oder Commit, Browser, Gerät. Bei der Brücke die Ausgabe von `spiegel-bridge version`.
+  - type: markdown
+    attributes:
+      value: Bitte keine Namen, Sportpassnummern oder Schussdaten anderer Personen anhängen. / Please attach no names, sports-pass numbers or shot data of other people.

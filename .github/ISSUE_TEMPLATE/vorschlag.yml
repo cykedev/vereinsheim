@@ -1,0 +1,15 @@
+name: Vorschlag
+description: Eine Idee für Spiegel, Ringwerk oder die Brücke. / An idea for Spiegel, Ringwerk or the bridge.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Welches Problem löst das?
+      description: Wer merkt es, wann, und was macht er heute stattdessen? / Who runs into it, when, and what do they do today?
+    validations:
+      required: true
+  - type: textarea
+    id: idee
+    attributes:
+      label: Wie könnte es aussehen?
