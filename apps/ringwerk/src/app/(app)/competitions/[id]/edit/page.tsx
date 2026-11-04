@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation"
 import { getAuthSession, canManage, isAdmin } from "@/lib/auth-helpers"
 import { getDisciplines } from "@/lib/disciplines/queries"
 import { getCompetitionById } from "@/lib/competitions/queries"
+import { offersEdit } from "@/lib/competitions/editable"
 import { hasPlayoffsStarted } from "@/lib/playoffs/queries"
 import { getScheduleStatus } from "@/lib/matchups/queries"
 import { updateCompetition } from "@/lib/competitions/actions"
@@ -32,6 +33,8 @@ export default async function EditCompetitionPage({ params }: Props) {
 
   if (!session || !canManage(session.user.role)) redirect("/")
   if (!competition) notFound()
+  // Archiviert heißt gesperrt: zurück zum Einstieg des Wettbewerbs, wie in der Übersicht ohne „Bearbeiten“.
+  if (!offersEdit(competition.status)) redirect(`/competitions/${id}`)
 
   const action = async (prevState: ActionResult | null, formData: FormData) => {
     "use server"

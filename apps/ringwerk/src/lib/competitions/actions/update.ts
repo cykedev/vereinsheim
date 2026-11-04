@@ -14,6 +14,7 @@ import type { ActionResult } from "@/lib/types"
 import type { AuditEventType } from "@/lib/auditLog/types"
 import { parseDate, parseDateForUpdate, revalidateCompetitionPaths, BaseSchema } from "./_shared"
 import { findActiveSlugConflict } from "../publicSlugQueries"
+import { offersEdit } from "../editable"
 import { revalidatePublicPdf } from "../publicPdfCache"
 import { resolveAccessTokenUpdate } from "../publicAccess"
 
@@ -156,6 +157,7 @@ export async function updateCompetition(
         where: { id },
         select: {
           type: true,
+          status: true,
           scoringMode: true,
           leagueFormat: true,
           shotsPerSeries: true,
@@ -167,6 +169,9 @@ export async function updateCompetition(
         },
       })
       if (!current) return { problem: "Wettbewerb nicht gefunden." }
+      // Archiviert heißt gesperrt, wie beim Eintragen von Serien. Der Status kommt aus der Transaktion, damit ein
+      // gleichzeitiges Archivieren zählt.
+      if (!offersEdit(current.status)) return { problem: "Archivierte Wettbewerbe sind gesperrt." }
       const type = current.type
       // Paarungen und Ergebnisse zählen nur in der Liga. Event und Saison lesen die Tabellen der Ergebnisse nicht, damit
       // ihr Speichern nicht mit dem Eintragen von Ergebnissen kollidiert (`serializable`).

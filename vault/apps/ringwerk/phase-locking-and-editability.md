@@ -47,6 +47,13 @@ würden.
 Best-of, Viertel- und Achtelfinale und die Kriterien des Finales bleiben bearbeitbar, bis die Playoffs gestartet sind
 (`playoffMatch.count > 0`).
 
+## Archivierte Wettbewerbe
+
+Archiviert heißt gesperrt, wie beim Eintragen von Serien („Archivierte Wettbewerbe sind gesperrt.“). `offersEdit`
+(`apps/ringwerk/src/lib/competitions/editable.ts`) gilt für den Knopf „Bearbeiten“ in Übersicht und Seiten, die
+Bearbeiten-Seite (leitet zum Einstieg um) und `updateCompetition` (liest den Status in der Transaktion). Wer etwas an
+einem archivierten Wettbewerb ändern will, etwa die Veröffentlichung, stellt ihn erst wieder her.
+
 ## Disziplin
 
 Nach dem Anlegen fix, unabhängig vom Spielplan ([[factor-correction]], Einschreibungen mit Disziplin).

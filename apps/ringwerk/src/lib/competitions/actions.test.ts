@@ -1546,3 +1546,52 @@ describe("updateCompetition — Event und Saison", () => {
     expect(data.shotsPerSeries).toBe(5)
   })
 })
+
+describe("updateCompetition — archiviert", () => {
+  beforeEach(() => {
+    vi.resetAllMocks()
+    useDbAsTx()
+    schedule([])
+    getAuthSessionMock.mockResolvedValue(adminSession)
+    competitionFindUniqueMock.mockResolvedValue({
+      id: "c1",
+      name: "Liga A",
+      type: "LEAGUE",
+      scoringMode: "RINGTEILER",
+      leagueFormat: "DOUBLE_ROUND_ROBIN",
+      shotsPerSeries: 10,
+      status: "ARCHIVED",
+      isPublic: true,
+      publicSlug: "liga-a",
+      publicPasswordHash: null,
+    })
+    competitionFindFirstMock.mockResolvedValue(null)
+    competitionUpdateMock.mockResolvedValue({})
+    auditLogCreateMock.mockResolvedValue({})
+  })
+
+  it("lehnt das Speichern eines archivierten Wettbewerbs ab, wie das Eintragen von Serien", async () => {
+    const result = await updateCompetition(
+      "c1",
+      null,
+      makeFormData({ name: "Liga A neu", scoringMode: "RINGTEILER" })
+    )
+    expect(result).toEqual({ error: "Archivierte Wettbewerbe sind gesperrt." })
+    expect(competitionUpdateMock).not.toHaveBeenCalled()
+    expect(auditLogCreateMock).not.toHaveBeenCalled()
+  })
+
+  it("prüft den Status in der Transaktion, damit ein gleichzeitiges Archivieren zählt", async () => {
+    // vorab noch aktiv, in der Transaktion schon archiviert
+    competitionFindUniqueMock
+      .mockResolvedValueOnce({ id: "c1", status: "ACTIVE" })
+      .mockResolvedValueOnce({ type: "LEAGUE", status: "ARCHIVED" })
+    const result = await updateCompetition(
+      "c1",
+      null,
+      makeFormData({ name: "Liga A neu", scoringMode: "RINGTEILER" })
+    )
+    expect(result).toEqual({ error: "Archivierte Wettbewerbe sind gesperrt." })
+    expect(competitionUpdateMock).not.toHaveBeenCalled()
+  })
+})
