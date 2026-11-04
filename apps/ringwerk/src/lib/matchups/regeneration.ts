@@ -32,3 +32,12 @@ export function scheduleRegenerationBlocker(c: ScheduleResultCounts): string | n
   }
   return null
 }
+
+/**
+ * Ob das Regelset einer Liga (Wertungsmodus, Format, Gruppenphase, Schuss je Serie) gesperrt ist. Dieselbe Grenze wie
+ * für „Spielplan neu generieren“: Solange kein Ergebnis existiert, lässt sich das Regelset ändern, und ein anderes
+ * Format erzeugt den Spielplan neu ([[phase-locking-and-editability]]).
+ */
+export function isRulesetLocked(c: ScheduleResultCounts): boolean {
+  return scheduleRegenerationBlocker(c) !== null
+}

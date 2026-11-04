@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { scheduleRegenerationBlocker } from "./regeneration"
+import { isRulesetLocked, scheduleRegenerationBlocker } from "./regeneration"
 
 const NONE = { completed: 0, walkover: 0, series: 0, playoffs: 0 }
 
@@ -26,5 +26,20 @@ describe("scheduleRegenerationBlocker", () => {
     expect(
       scheduleRegenerationBlocker({ completed: 4, walkover: 0, series: 8, playoffs: 2 })
     ).toContain("Playoffs")
+  })
+})
+
+describe("isRulesetLocked", () => {
+  it("leaves the ruleset editable while nothing has been recorded, even with a schedule", () => {
+    expect(isRulesetLocked(NONE)).toBe(false)
+  })
+
+  it.each([
+    ["a completed matchup", { completed: 1 }],
+    ["a walkover", { walkover: 1 }],
+    ["a series at an open matchup", { series: 1 }],
+    ["started playoffs", { playoffs: 1 }],
+  ])("locks the ruleset on %s", (_name, counts) => {
+    expect(isRulesetLocked({ ...NONE, ...counts })).toBe(true)
   })
 })
