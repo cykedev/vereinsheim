@@ -14,7 +14,10 @@ import { PlayoffBracket } from "@/components/app/playoffs/PlayoffBracket"
 import { StartPlayoffsButton } from "@/components/app/playoffs/StartPlayoffsButton"
 import { AdvanceRoundButton } from "@/components/app/playoffs/AdvanceRoundButton"
 import { PdfDownloadButton } from "@/components/app/shared/PdfDownloadButton"
-import { CompetitionDetailHeader } from "@/components/app/shell/CompetitionDetailHeader"
+import {
+  CompetitionDetailHeader,
+  EditCompetitionButton,
+} from "@/components/app/shell/CompetitionDetailHeader"
 
 interface Props {
   params: Promise<{ id: string }>
@@ -87,7 +90,10 @@ export default async function CompetitionPlayoffsPage({ params }: Props) {
         current="playoffs"
         links={canManage ? ["participants", "schedule"] : ["schedule"]}
         actions={
-          playoffsStarted && <PdfDownloadButton href={`/api/competitions/${id}/pdf/playoffs`} />
+          <>
+            <EditCompetitionButton id={id} status={competition.status} canManage={canManage} />
+            {playoffsStarted && <PdfDownloadButton href={`/api/competitions/${id}/pdf/playoffs`} />}
+          </>
         }
       />
 

@@ -1,6 +1,5 @@
 import type { Metadata } from "next"
 import { notFound, redirect } from "next/navigation"
-import { Pencil } from "lucide-react"
 import { getAuthSession } from "@/lib/auth-helpers"
 import { getEventWithSeries } from "@/lib/competitions/queries"
 import { rankEventParticipants, rankEventTeams } from "@/lib/scoring/rankEventParticipants"
@@ -8,7 +7,7 @@ import { EventRankingTable } from "@/components/app/series/EventRankingTable"
 import { EventTeamRankingTable } from "@/components/app/series/EventTeamRankingTable"
 import {
   CompetitionDetailHeader,
-  DetailNavButton,
+  EditCompetitionButton,
 } from "@/components/app/shell/CompetitionDetailHeader"
 import { Badge } from "@vereinsheim/ui/badge"
 import { PdfDownloadButton } from "@/components/app/shared/PdfDownloadButton"
@@ -66,15 +65,7 @@ export default async function EventRankingPage({ params }: Props) {
         links={canManage ? ["participants", "series"] : []}
         actions={
           <>
-            {canManage && (
-              <>
-                <DetailNavButton
-                  href={`/competitions/${id}/edit`}
-                  label="Bearbeiten"
-                  icon={Pencil}
-                />
-              </>
-            )}
+            <EditCompetitionButton id={id} status={competition.status} canManage={canManage} />
             <PdfDownloadButton href={`/api/competitions/${id}/pdf/ranking`} />
           </>
         }

@@ -1,8 +1,10 @@
 import type { ReactNode } from "react"
 import Link from "next/link"
-import { ArrowLeft, type LucideIcon } from "lucide-react"
+import { ArrowLeft, Pencil, type LucideIcon } from "lucide-react"
 import { Button } from "@vereinsheim/ui/button"
 import { DetailActionBar } from "@vereinsheim/ui/shell/DetailActionBar"
+import type { CompetitionStatus } from "@/generated/prisma/client"
+import { offersEdit } from "@/lib/competitions/editable"
 
 import { competitionPageHref, competitionTabs, type CompetitionPage } from "./competitionPages"
 import { CompetitionTabs } from "./CompetitionTabs"
@@ -23,6 +25,23 @@ export function DetailNavButton({ href, label, icon: Icon }: NavButtonProps) {
       </Link>
     </Button>
   )
+}
+
+/**
+ * „Bearbeiten“ in der Leiste der Ergebnis-Seite eines Wettbewerbs (Rangliste, Rangliste der Saison, Spielplan und
+ * Playoffs der Liga): für die Sportleitung, nicht bei archivierten Wettbewerben (`offersEdit`, wie in der Übersicht).
+ */
+export function EditCompetitionButton({
+  id,
+  status,
+  canManage,
+}: {
+  id: string
+  status: CompetitionStatus
+  canManage: boolean
+}) {
+  if (!canManage || !offersEdit(status)) return null
+  return <DetailNavButton href={`/competitions/${id}/edit`} label="Bearbeiten" icon={Pencil} />
 }
 
 interface Props {

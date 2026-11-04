@@ -7,6 +7,7 @@ import { Button } from "@vereinsheim/ui/button"
 import { DecisionDialog, NoticeDialog } from "@vereinsheim/ui/design2/decision-dialog"
 import { toast } from "sonner"
 import { competitionDelete, competitionDeleteBlocked } from "@/lib/consequences"
+import { offersEdit } from "@/lib/competitions/editable"
 import { deleteCompetition } from "@/lib/competitions/actions"
 import { DetailActionBar } from "@vereinsheim/ui/shell/DetailActionBar"
 import { CompetitionStatusActions } from "@/components/app/competitions/CompetitionStatusActions"
@@ -52,7 +53,7 @@ export function CompetitionActions({ competition, backHref }: Props) {
           <ScrollText className="h-4 w-4" />
         </Button>
 
-        {competition.status !== "ARCHIVED" && (
+        {offersEdit(competition.status) && (
           <Button
             variant="ghost"
             size="icon"

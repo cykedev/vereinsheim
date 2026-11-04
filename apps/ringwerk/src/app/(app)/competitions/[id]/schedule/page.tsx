@@ -15,7 +15,10 @@ import { ScheduleView } from "@/components/app/matchups/ScheduleView"
 import { StandingsTable } from "@/components/app/standings/StandingsTable"
 import { BestOfStandingsTable } from "@/components/app/standings/BestOfStandingsTable"
 import { PdfDownloadButton } from "@/components/app/shared/PdfDownloadButton"
-import { CompetitionDetailHeader } from "@/components/app/shell/CompetitionDetailHeader"
+import {
+  CompetitionDetailHeader,
+  EditCompetitionButton,
+} from "@/components/app/shell/CompetitionDetailHeader"
 import { HelpMark } from "@/components/app/help/HelpMark"
 
 interface Props {
@@ -62,6 +65,7 @@ export default async function CompetitionSchedulePage({ params }: Props) {
         links={canManage ? ["participants", "playoffs"] : ["playoffs"]}
         actions={
           <>
+            <EditCompetitionButton id={id} status={competition.status} canManage={canManage} />
             {scheduleStatus.hasSchedule && (
               <PdfDownloadButton href={`/api/competitions/${id}/pdf/schedule`} />
             )}
