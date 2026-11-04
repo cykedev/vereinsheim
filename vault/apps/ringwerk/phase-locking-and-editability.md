@@ -29,10 +29,18 @@ Ergebnis ändern sie am Spielplan nichts. Wechselt das Format bei bestehendem Sp
 (`leagueFormatChange` in `lib/consequences.ts`). Danach speichert `updateCompetition` die Einstellungen und erzeugt den
 Spielplan mit `replaceSchedule` neu, in **einer** serialisierbaren Transaktion mit der Prüfung „kein Ergebnis“. Kann der
 neue Spielplan nicht entstehen (etwa weniger als 4 aktive Teilnehmer), rollt alles zurück. Die Action verlangt dafür
-das Feld `replaceSchedule=true`; fehlt es, weil der Spielplan erst nach dem Öffnen des Formulars entstand, lehnt sie ab.
+das Feld `replaceSchedule=true` (ein versteckter Knopf, über den das Formular nach der Rückfrage abschickt); fehlt es,
+weil der Spielplan erst nach dem Öffnen des Formulars entstand, lehnt sie ab.
+
+Umgekehrt ebenso: Wurde das Formular vor dem ersten Ergebnis geöffnet und ändert es einen Wert des Regelsets, lehnt die
+Action ab („Inzwischen ist ein Ergebnis eingetragen …“), statt die Änderung still zu verwerfen. Sie vergleicht nur
+abgeschickte Felder mit dem gespeicherten Wert; ein gesperrtes Formular schickt nur den unveränderten Wertungsmodus.
+Event und Saison zählen beim Speichern keine Paarungen und Serien, damit ihr Speichern nicht mit dem Eintragen von
+Ergebnissen kollidiert.
 
 Felder des Regelsets, die das Formular nicht abschickt (gesperrtes `fieldset`, ausgeblendete Felder), lassen die Spalte
-unberührt. Das Schema setzt für fehlende Felder Vorgaben (Format Doppelrunde, 10 Schuss), die sonst still überschrieben.
+unberührt. Das Schema setzt für fehlende Felder Vorgaben (Format Doppelrunde, 10 Schuss), die sonst still überschreiben
+würden.
 
 ## Playoffs und Finale
 

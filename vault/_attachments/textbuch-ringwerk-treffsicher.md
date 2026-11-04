@@ -1025,6 +1025,13 @@ Hinweise im Kasten „Regelset“:
   Speichern neu.“
 - Ergebnis eingetragen, mit Schloss: „Regelset gesperrt: Es sind schon Ergebnisse eingetragen.“
 
+Meldungen beim Speichern, wenn sich die Liga seit dem Öffnen des Formulars geändert hat:
+
+- Spielplan inzwischen erzeugt, Format geändert: „Inzwischen gibt es einen Spielplan. Bitte die Seite neu laden und
+  noch einmal speichern.“
+- Ergebnis inzwischen eingetragen, Regelset geändert: „Inzwischen ist ein Ergebnis eingetragen. Das Regelset lässt sich
+  nicht mehr ändern. Bitte die Seite neu laden.“
+
 ### 17. Ohne Speichern verlassen
 
 Ort: Wettbewerb anlegen und bearbeiten, wenn mit Änderungen „Abbrechen“ getippt oder die Seite verlassen wird.
