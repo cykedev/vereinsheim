@@ -1,7 +1,11 @@
 import { db } from "@/lib/db"
 import { calculateCorrectedTeiler, effectiveTeilerFaktor } from "@/lib/scoring/calculateScore"
 import type { MatchupListItem, MatchupParticipant, ScheduleStatus } from "./types"
-import { scheduleRegenerationBlocker, type ScheduleResultCounts } from "./regeneration"
+import {
+  isRulesetLocked,
+  scheduleRegenerationBlocker,
+  type ScheduleResultCounts,
+} from "./regeneration"
 
 // Rohtyp aus Prisma-Select (inkl. verschachteltem LP-Status und Disziplin)
 type RawParticipant = {
@@ -132,5 +136,6 @@ export async function getScheduleStatus(competitionId: string): Promise<Schedule
   return {
     hasSchedule: total > 0,
     regenerationBlocker: scheduleRegenerationBlocker(counts),
+    rulesetLocked: isRulesetLocked(counts),
   }
 }

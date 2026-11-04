@@ -14,10 +14,8 @@ import { PlayoffBracket } from "@/components/app/playoffs/PlayoffBracket"
 import { StartPlayoffsButton } from "@/components/app/playoffs/StartPlayoffsButton"
 import { AdvanceRoundButton } from "@/components/app/playoffs/AdvanceRoundButton"
 import { PdfDownloadButton } from "@/components/app/shared/PdfDownloadButton"
-import {
-  CompetitionDetailHeader,
-  EditCompetitionButton,
-} from "@/components/app/shell/CompetitionDetailHeader"
+import { CompetitionDetailHeader } from "@/components/app/shell/CompetitionDetailHeader"
+import { EditCompetitionButton } from "@/components/app/shell/EditCompetitionButton"
 
 interface Props {
   params: Promise<{ id: string }>

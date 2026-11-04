@@ -2,7 +2,7 @@ import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 
-import { EditCompetitionButton } from "./CompetitionDetailHeader"
+import { EditCompetitionButton } from "./EditCompetitionButton"
 
 const render = (status: "ACTIVE" | "COMPLETED" | "ARCHIVED", canManage: boolean) =>
   renderToStaticMarkup(createElement(EditCompetitionButton, { id: "c1", status, canManage }))

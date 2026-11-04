@@ -15,10 +15,8 @@ import { ScheduleView } from "@/components/app/matchups/ScheduleView"
 import { StandingsTable } from "@/components/app/standings/StandingsTable"
 import { BestOfStandingsTable } from "@/components/app/standings/BestOfStandingsTable"
 import { PdfDownloadButton } from "@/components/app/shared/PdfDownloadButton"
-import {
-  CompetitionDetailHeader,
-  EditCompetitionButton,
-} from "@/components/app/shell/CompetitionDetailHeader"
+import { CompetitionDetailHeader } from "@/components/app/shell/CompetitionDetailHeader"
+import { EditCompetitionButton } from "@/components/app/shell/EditCompetitionButton"
 import { HelpMark } from "@/components/app/help/HelpMark"
 
 interface Props {

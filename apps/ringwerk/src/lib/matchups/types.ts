@@ -41,4 +41,6 @@ export interface ScheduleStatus {
   hasSchedule: boolean
   /** Warum (neu) generieren gesperrt ist — null, solange noch kein Ergebnis erfasst ist. */
   regenerationBlocker: string | null
+  /** Regelset der Liga gesperrt, weil ein Ergebnis existiert (`isRulesetLocked`). */
+  rulesetLocked: boolean
 }

@@ -1,7 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState, type FormEvent } from "react"
-import { flushSync } from "react-dom"
+import { useRef, useState, type FormEvent } from "react"
 import { Button } from "@vereinsheim/ui/button"
 import type { LeagueFormat } from "@/generated/prisma/client"
 import type { SerializableDiscipline } from "@/lib/disciplines/types"
@@ -43,21 +42,18 @@ export function CompetitionForm({
   const { router, formAction, isPending, markDirty, setSubmitted, nav, generalError } = form
 
   const formRef = useRef<HTMLFormElement>(null)
+  // Schickt nach der Rückfrage ab und trägt dabei `replaceSchedule=true` mit; jedes andere Absenden fragt wieder.
+  const confirmRef = useRef<HTMLButtonElement>(null)
   const [replaceOpen, setReplaceOpen] = useState(false)
-  const [replaceConfirmed, setReplaceConfirmed] = useState(false)
 
   // Ein anderes Format bei bestehendem Spielplan ersetzt ihn: erst fragen, dann speichern.
   const savedFormat = competition?.type === "LEAGUE" ? competition.leagueFormat : null
   const formatReplacesSchedule =
     hasSchedule && !rulesetLocked && savedFormat !== null && form.leagueFormat !== savedFormat
 
-  // Die Bestätigung gilt nur für dieses eine Absenden: Ein Fehler oder ein anderes Format fragt wieder.
-  useEffect(() => {
-    if (!isPending) setReplaceConfirmed(false) // eslint-disable-line react-hooks/set-state-in-effect
-  }, [isPending, form.leagueFormat])
-
   function onSubmit(e: FormEvent<HTMLFormElement>) {
-    if (formatReplacesSchedule && !replaceConfirmed) {
+    const confirmed = (e.nativeEvent as SubmitEvent).submitter === confirmRef.current
+    if (formatReplacesSchedule && !confirmed) {
       e.preventDefault()
       setReplaceOpen(true)
       return
@@ -66,12 +62,8 @@ export function CompetitionForm({
   }
 
   function confirmReplace() {
-    // Das versteckte Feld muss im DOM stehen, bevor das Formular abschickt.
-    flushSync(() => {
-      setReplaceConfirmed(true)
-      setReplaceOpen(false)
-    })
-    formRef.current?.requestSubmit()
+    setReplaceOpen(false)
+    formRef.current?.requestSubmit(confirmRef.current)
   }
 
   return (
@@ -98,7 +90,7 @@ export function CompetitionForm({
       />
       <EventFieldsSection form={form} competition={competition} />
       <PublishSection form={form} competition={competition} />
-      <input type="hidden" name="replaceSchedule" value={replaceConfirmed ? "true" : ""} />
+      <button ref={confirmRef} type="submit" name="replaceSchedule" value="true" hidden />
 
       {generalError && <p className="text-sm text-destructive">{generalError}</p>}
 

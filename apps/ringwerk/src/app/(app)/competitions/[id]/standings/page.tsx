@@ -9,10 +9,8 @@ import {
   sortSeasonStandings,
 } from "@/lib/scoring/sortSeasonStandings"
 import { SeasonStandingsTable } from "@/components/app/series/SeasonStandingsTable"
-import {
-  CompetitionDetailHeader,
-  EditCompetitionButton,
-} from "@/components/app/shell/CompetitionDetailHeader"
+import { CompetitionDetailHeader } from "@/components/app/shell/CompetitionDetailHeader"
+import { EditCompetitionButton } from "@/components/app/shell/EditCompetitionButton"
 import { Badge } from "@vereinsheim/ui/badge"
 import { PdfDownloadButton } from "@/components/app/shared/PdfDownloadButton"
 import { formatDateOnly, getDisplayTimeZone } from "@vereinsheim/lib/dateTime"

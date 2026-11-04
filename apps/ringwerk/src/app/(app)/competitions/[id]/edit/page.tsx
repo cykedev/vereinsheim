@@ -33,9 +33,6 @@ export default async function EditCompetitionPage({ params }: Props) {
   if (!session || !canManage(session.user.role)) redirect("/")
   if (!competition) notFound()
 
-  // Das Regelset ist bis zum ersten Ergebnis bearbeitbar: dieselbe Grenze wie „Spielplan neu generieren“.
-  const rulesetLocked = schedule.regenerationBlocker !== null
-
   const action = async (prevState: ActionResult | null, formData: FormData) => {
     "use server"
     return updateCompetition(id, prevState, formData)
@@ -49,7 +46,7 @@ export default async function EditCompetitionPage({ params }: Props) {
         disciplines={disciplines}
         action={action}
         hasSchedule={schedule.hasSchedule}
-        rulesetLocked={rulesetLocked}
+        rulesetLocked={schedule.rulesetLocked}
         playoffsStarted={playoffsStarted}
       />
       {/* Löschen mit allen Daten darf nur ein Admin (forceDeleteCompetition) */}
