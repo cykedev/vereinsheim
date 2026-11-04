@@ -178,6 +178,13 @@ const KEYS: Record<string, { code: string; keyCode: number }> = {
   " ": { code: "Space", keyCode: 32 },
 }
 
+/** Format eines Bildschirmfotos: PNG verlustfrei, WebP klein für Bilder im Repository */
+export type ShotFormat = "png" | "webp"
+
+/** Parameter für `Page.captureScreenshot`: PNG ohne, WebP mit Qualität */
+const shotParams = (format: ShotFormat, quality: number) =>
+  format === "png" ? { format } : { format, quality }
+
 export class Page {
   /** Fehler im Fenster (unbehandelte Ausnahmen und `console.error`) über den ganzen Lauf */
   readonly errors: string[] = []
@@ -442,26 +449,35 @@ export class Page {
     await wait(60)
   }
 
-  /** Bildschirmfoto des Fensters als PNG; `fullPage`: die ganze Seite, höchstens `MAX_SHOT_HEIGHT` hoch */
-  async screenshot(fullPage = false): Promise<Buffer> {
+  /**
+   * Bildschirmfoto des Fensters; `fullPage`: die ganze Seite, höchstens `MAX_SHOT_HEIGHT` hoch. WebP mit `quality`
+   * (0 bis 100) für Bilder im Repository, PNG für Vergleiche Pixel für Pixel.
+   */
+  async screenshot(fullPage = false, format: ShotFormat = "png", quality = 85): Promise<Buffer> {
     if (!fullPage) {
-      const { data } = await this.send<{ data: string }>("Page.captureScreenshot", {
-        format: "png",
-      })
+      const { data } = await this.send<{ data: string }>(
+        "Page.captureScreenshot",
+        shotParams(format, quality)
+      )
       return Buffer.from(data, "base64")
     }
     // die Höhe aus dem Dokument: `Page.getLayoutMetrics` beendet Chrome 155 headless
     const height = await this.ev<number>(
       "Math.max(document.documentElement.scrollHeight, document.body?.scrollHeight ?? 0)"
     )
-    return this.tallShot(Math.ceil(height))
+    return this.tallShot(Math.ceil(height), undefined, format, quality)
   }
 
   /**
    * Foto über das Fenster hinaus: Das emulierte Fenster wächst auf `height` (höchstens `MAX_SHOT_HEIGHT`), danach zurück
    * auf die Größe aus `viewport()`. `captureBeyondViewport` beendet Chrome 155 headless auf sehr hohen Seiten.
    */
-  private async tallShot(height: number, clip?: Record<string, number>): Promise<Buffer> {
+  private async tallShot(
+    height: number,
+    clip?: Record<string, number>,
+    format: ShotFormat = "png",
+    quality = 85
+  ): Promise<Buffer> {
     const mobile = this.width < 768
     await this.send("Emulation.setDeviceMetricsOverride", {
       width: this.width,
@@ -471,7 +487,7 @@ export class Page {
     })
     try {
       const { data } = await this.send<{ data: string }>("Page.captureScreenshot", {
-        format: "png",
+        ...shotParams(format, quality),
         ...(clip ? { clip: { ...clip, scale: 1 } } : {}),
       })
       return Buffer.from(data, "base64")
@@ -485,14 +501,18 @@ export class Page {
     }
   }
 
-  /** Bildschirmfoto eines Elements als PNG, auch wenn es über das Fenster hinausragt; null, wenn es fehlt */
-  async screenshotOf(locator: Locator): Promise<Buffer | null> {
+  /** Bildschirmfoto eines Elements, auch wenn es über das Fenster hinausragt; null, wenn es fehlt */
+  async screenshotOf(
+    locator: Locator,
+    format: ShotFormat = "png",
+    quality = 85
+  ): Promise<Buffer | null> {
     const box = await this.ev<{ x: number; y: number; width: number; height: number } | null>(
       `(() => { const el = ${locator}; if (!el) return null; const r = el.getBoundingClientRect()
         return { x: r.left + scrollX, y: r.top + scrollY, width: Math.max(r.width, el.scrollWidth), height: r.height } })()`
     )
     if (!box || box.width === 0 || box.height === 0) return null
-    return this.tallShot(Math.ceil(box.y + box.height), box)
+    return this.tallShot(Math.ceil(box.y + box.height), box, format, quality)
   }
 
   /** Cookies der Seite, etwa um mit derselben Anmeldung aus Node abzurufen (`name=wert; …`) */
