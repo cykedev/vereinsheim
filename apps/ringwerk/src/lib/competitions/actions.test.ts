@@ -97,6 +97,9 @@ function useDbAsTx() {
   transactionMock.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) => fn(db))
 }
 
+const RULESET_LOCKED =
+  "Inzwischen ist ein Ergebnis eingetragen. Das Regelset lässt sich nicht mehr ändern. Bitte die Seite neu laden."
+
 function makeFormData(fields: Record<string, string>): FormData {
   const fd = new FormData()
   for (const [k, v] of Object.entries(fields)) fd.set(k, v)
@@ -329,16 +332,16 @@ describe("updateCompetition — Playoff-Konfiguration editierbar bis Playoff-Sta
     expect(data.playoffHasViertelfinale).toBeUndefined()
   })
 
-  it("sperrt die Gruppenphase nach dem ersten Ergebnis, lässt die Playoff-Felder aber zu", async () => {
+  it("lässt nach dem ersten Ergebnis die Playoff-Felder zu, die Gruppenphase bleibt unberührt", async () => {
     schedule(["COMPLETED", "PENDING", "PENDING", "PENDING", "PENDING", "PENDING"])
     playoffMatchCountMock.mockResolvedValue(0)
+    // gesperrtes Formular: nur der versteckte Wertungsmodus kommt mit, unverändert
     const fd = makeFormData({
       name: "Liga P",
-      scoringMode: "RINGS",
-      shotsPerSeries: "40",
+      scoringMode: "RINGTEILER",
       playoffHasViertelfinale: "true",
     })
-    await updateCompetition("c1", null, fd)
+    expect(await updateCompetition("c1", null, fd)).toEqual({ success: true })
     const data = competitionUpdateMock.mock.calls[0][0].data
     // Gruppenphase/Format bleibt gesperrt …
     expect(data.scoringMode).toBeUndefined()
@@ -365,6 +368,11 @@ describe("updateCompetition — Regelset bis zum ersten Ergebnis", () => {
       type: "LEAGUE",
       scoringMode: "RINGTEILER",
       leagueFormat: "DOUBLE_ROUND_ROBIN",
+      shotsPerSeries: 10,
+      groupBestOf: null,
+      groupPlayAllDuels: false,
+      groupTiebreaker1: null,
+      groupTiebreaker2: null,
       status: "ACTIVE",
       isPublic: false,
       publicSlug: null,
@@ -396,22 +404,47 @@ describe("updateCompetition — Regelset bis zum ersten Ergebnis", () => {
 
   it.each([
     ["eine entschiedene Paarung", ["COMPLETED", ...PENDING_SCHEDULE.slice(1)], 0],
-    ["einen Kampflos-Sieg", ["WALKOVER", ...PENDING_SCHEDULE.slice(1)], 0],
+    ["ein Kampflos-Sieg", ["WALKOVER", ...PENDING_SCHEDULE.slice(1)], 0],
     ["eine Serie an einer offenen Paarung", PENDING_SCHEDULE, 1],
-  ])("sperrt das Regelset nach %s", async (_name, statuses, series) => {
-    schedule(statuses as string[], series as number)
+  ])(
+    "lehnt einen Formatwechsel aus einem älteren Formular ab, wenn inzwischen %s eingetragen ist",
+    async (_name, statuses, series) => {
+      schedule(statuses as string[], series as number)
+      const result = await updateCompetition(
+        "c1",
+        null,
+        rulesetForm({ leagueFormat: "BEST_OF_SINGLE", groupBestOf: "5", replaceSchedule: "true" })
+      )
+      expect(result).toEqual({ error: RULESET_LOCKED })
+      expect(competitionUpdateMock).not.toHaveBeenCalled()
+      expect(replaceScheduleMock).not.toHaveBeenCalled()
+    }
+  )
+
+  it("lehnt einen anderen Wertungsmodus aus einem älteren Formular ab, wenn inzwischen ein Ergebnis da ist", async () => {
+    schedule(["COMPLETED", ...PENDING_SCHEDULE.slice(1)])
     const result = await updateCompetition(
       "c1",
       null,
-      rulesetForm({ leagueFormat: "BEST_OF_SINGLE", groupBestOf: "5", replaceSchedule: "true" })
+      rulesetForm({ scoringMode: "RINGS", shotsPerSeries: "10" })
+    )
+    expect(result).toEqual({ error: RULESET_LOCKED })
+    expect(competitionUpdateMock).not.toHaveBeenCalled()
+  })
+
+  it("speichert aus einem älteren Formular mit unverändertem Regelset, auch wenn inzwischen ein Ergebnis da ist", async () => {
+    schedule(["COMPLETED", ...PENDING_SCHEDULE.slice(1)])
+    const result = await updateCompetition(
+      "c1",
+      null,
+      rulesetForm({ name: "Liga R neu", scoringMode: "RINGTEILER", shotsPerSeries: "10" })
     )
     expect(result).toEqual({ success: true })
     const data = competitionUpdateMock.mock.calls[0][0].data
+    expect(data.name).toBe("Liga R neu")
     expect(data.scoringMode).toBeUndefined()
     expect(data.shotsPerSeries).toBeUndefined()
     expect(data.leagueFormat).toBeUndefined()
-    expect(data.groupBestOf).toBeUndefined()
-    expect(replaceScheduleMock).not.toHaveBeenCalled()
   })
 
   it("erzeugt den Spielplan beim Formatwechsel neu, in derselben Transaktion wie das Speichern", async () => {
@@ -1395,6 +1428,11 @@ describe("updateCompetition — BEST_OF_SINGLE", () => {
       type: "LEAGUE",
       scoringMode: "RINGS",
       leagueFormat: "BEST_OF_SINGLE",
+      shotsPerSeries: 10,
+      groupBestOf: 3,
+      groupPlayAllDuels: true,
+      groupTiebreaker1: null,
+      groupTiebreaker2: null,
       status: "ACTIVE",
       isPublic: false,
       publicSlug: null,
@@ -1447,14 +1485,8 @@ describe("updateCompetition — BEST_OF_SINGLE", () => {
       leagueFormat: "DOUBLE_ROUND_ROBIN",
       groupBestOf: "3",
     })
-    const result = await updateCompetition("c1", null, fd)
-    // Action succeeds but ignores the locked fields
-    expect(result).toMatchObject({ success: true })
-    const updateCall = competitionUpdateMock.mock.calls[0][0]
-    // leagueFormat must NOT appear in the update data once locked
-    expect(updateCall.data.leagueFormat).toBeUndefined()
-    expect(updateCall.data.groupBestOf).toBeUndefined()
-    expect(updateCall.data.groupPlayAllDuels).toBeUndefined()
+    expect(await updateCompetition("c1", null, fd)).toEqual({ error: RULESET_LOCKED })
+    expect(competitionUpdateMock).not.toHaveBeenCalled()
   })
 
   it("sperrt groupBestOf-Änderung sobald ein Ergebnis existiert", async () => {
@@ -1465,9 +1497,8 @@ describe("updateCompetition — BEST_OF_SINGLE", () => {
       leagueFormat: "BEST_OF_SINGLE",
       groupBestOf: "7",
     })
-    await updateCompetition("c1", null, fd)
-    const updateCall = competitionUpdateMock.mock.calls[0][0]
-    expect(updateCall.data.groupBestOf).toBeUndefined()
+    expect(await updateCompetition("c1", null, fd)).toEqual({ error: RULESET_LOCKED })
+    expect(competitionUpdateMock).not.toHaveBeenCalled()
   })
 
   it("ändert groupBestOf bei einem Spielplan ohne Ergebnis, ohne ihn neu zu erzeugen", async () => {
@@ -1481,5 +1512,37 @@ describe("updateCompetition — BEST_OF_SINGLE", () => {
     expect(await updateCompetition("c1", null, fd)).toEqual({ success: true })
     expect(competitionUpdateMock.mock.calls[0][0].data.groupBestOf).toBe(7)
     expect(replaceScheduleMock).not.toHaveBeenCalled()
+  })
+})
+
+describe("updateCompetition — Event und Saison", () => {
+  beforeEach(() => {
+    vi.resetAllMocks()
+    useDbAsTx()
+    schedule([])
+    getAuthSessionMock.mockResolvedValue(adminSession)
+    competitionFindUniqueMock.mockResolvedValue({
+      id: "c1",
+      name: "Kranzl",
+      type: "EVENT",
+      scoringMode: "RINGS",
+      status: "ACTIVE",
+      isPublic: false,
+      publicSlug: null,
+      publicPasswordHash: null,
+    })
+    competitionFindFirstMock.mockResolvedValue(null)
+    competitionUpdateMock.mockResolvedValue({})
+    auditLogCreateMock.mockResolvedValue({})
+  })
+
+  it("liest beim Speichern keine Paarungen und Serien, damit es nicht mit dem Eintragen kollidiert", async () => {
+    const fd = makeFormData({ name: "Kranzl", scoringMode: "TEILER", shotsPerSeries: "5" })
+    expect(await updateCompetition("c1", null, fd)).toEqual({ success: true })
+    expect(matchupCountMock).not.toHaveBeenCalled()
+    expect(seriesCountMock).not.toHaveBeenCalled()
+    const data = competitionUpdateMock.mock.calls[0][0].data
+    expect(data.scoringMode).toBe("TEILER")
+    expect(data.shotsPerSeries).toBe(5)
   })
 })

@@ -4,8 +4,10 @@ import bcrypt from "bcryptjs"
 import { revalidatePath } from "next/cache"
 import { db } from "@/lib/db"
 import { isConflict, serializable } from "@/lib/serializable"
+import type { z } from "zod"
+import type { Competition } from "@/generated/prisma/client"
 import { getScheduleResultCounts } from "@/lib/matchups/queries"
-import { isRulesetLocked } from "@/lib/matchups/regeneration"
+import { isRulesetLocked, type ScheduleResultCounts } from "@/lib/matchups/regeneration"
 import { replaceSchedule } from "@/lib/matchups/replaceSchedule"
 import { getAuthSession, canManage } from "@/lib/auth-helpers"
 import type { ActionResult } from "@/lib/types"
@@ -17,6 +19,44 @@ import { resolveAccessTokenUpdate } from "../publicAccess"
 
 /** Der neue Spielplan kann nicht entstehen; verlässt die Transaktion, damit Postgres alles verwirft. */
 class ScheduleReplaceError extends Error {}
+
+const NO_RESULTS: ScheduleResultCounts = { completed: 0, walkover: 0, series: 0, playoffs: 0 }
+
+const RULESET_LOCKED =
+  "Inzwischen ist ein Ergebnis eingetragen. Das Regelset lässt sich nicht mehr ändern. Bitte die Seite neu laden."
+
+type StoredRuleset = Pick<
+  Competition,
+  | "scoringMode"
+  | "leagueFormat"
+  | "shotsPerSeries"
+  | "groupBestOf"
+  | "groupPlayAllDuels"
+  | "groupTiebreaker1"
+  | "groupTiebreaker2"
+>
+
+/**
+ * Ob das Formular einen Wert des Liga-Regelsets anders schickt, als er gespeichert ist. Nur abgeschickte Felder zählen:
+ * Ein gesperrtes Formular schickt nur den versteckten Wertungsmodus, und der ist unverändert.
+ */
+function changesRuleset(
+  stored: StoredRuleset,
+  data: z.infer<typeof BaseSchema>,
+  sent: (field: string) => boolean
+): boolean {
+  if (data.scoringMode !== stored.scoringMode) return true
+  if (sent("shotsPerSeries") && data.shotsPerSeries !== stored.shotsPerSeries) return true
+  if (!sent("leagueFormat") || !data.leagueFormat) return false
+  if (data.leagueFormat !== stored.leagueFormat) return true
+  if (data.leagueFormat !== "BEST_OF_SINGLE") return false
+  return (
+    (sent("groupBestOf") && (data.groupBestOf ?? 3) !== stored.groupBestOf) ||
+    (sent("groupPlayAllDuels") && data.groupPlayAllDuels !== stored.groupPlayAllDuels) ||
+    (sent("groupTiebreaker1") && (data.groupTiebreaker1 ?? null) !== stored.groupTiebreaker1) ||
+    (sent("groupTiebreaker2") && (data.groupTiebreaker2 ?? null) !== stored.groupTiebreaker2)
+  )
+}
 
 export async function updateCompetition(
   id: string,
@@ -103,7 +143,8 @@ export async function updateCompetition(
   }
 
   // Felder des Regelsets, die das Formular nicht abschickt (gesperrtes fieldset, ausgeblendete Felder), lassen die
-  // Spalte unberührt. Das Schema setzt für sie Vorgaben (Format Doppelrunde, 10 Schuss), die sonst still überschrieben.
+  // Spalte unberührt. Das Schema setzt für sie Vorgaben (Format Doppelrunde, 10 Schuss), die sonst still überschreiben
+  // würden.
   const sent = (field: string) => formData.get(field) !== null
   const formatSent = sent("leagueFormat") && formData.get("leagueFormat") !== ""
   const replaceConfirmed = formData.get("replaceSchedule") === "true"
@@ -113,17 +154,37 @@ export async function updateCompetition(
     outcome = await serializable(async (tx) => {
       const current = await tx.competition.findUnique({
         where: { id },
-        select: { type: true, scoringMode: true, leagueFormat: true, publicAccessToken: true },
+        select: {
+          type: true,
+          scoringMode: true,
+          leagueFormat: true,
+          shotsPerSeries: true,
+          groupBestOf: true,
+          groupPlayAllDuels: true,
+          groupTiebreaker1: true,
+          groupTiebreaker2: true,
+          publicAccessToken: true,
+        },
       })
       if (!current) return { problem: "Wettbewerb nicht gefunden." }
-      const [counts, matchupCount] = await Promise.all([
-        getScheduleResultCounts(id, tx),
-        tx.matchup.count({ where: { competitionId: id } }),
-      ])
-
       const type = current.type
+      // Paarungen und Ergebnisse zählen nur in der Liga. Event und Saison lesen die Tabellen der Ergebnisse nicht, damit
+      // ihr Speichern nicht mit dem Eintragen von Ergebnissen kollidiert (`serializable`).
+      const [counts, matchupCount] =
+        type === "LEAGUE"
+          ? await Promise.all([
+              getScheduleResultCounts(id, tx),
+              tx.matchup.count({ where: { competitionId: id } }),
+            ])
+          : [NO_RESULTS, 0]
+
       // Das Regelset ist gesperrt, sobald ein Ergebnis existiert (isRulesetLocked), nicht schon mit dem Spielplan.
       const rulesetLocked = isRulesetLocked(counts)
+      // Ein Formular, das vor dem ersten Ergebnis geöffnet wurde, schickt das Regelset noch bearbeitbar. Hat es etwas
+      // daran geändert, lehnt das Speichern ab, statt die Änderung still zu verwerfen.
+      if (type === "LEAGUE" && rulesetLocked && changesRuleset(current, parsed.data, sent)) {
+        return { problem: RULESET_LOCKED }
+      }
       // Playoff & finale config only takes effect when the playoffs start — keep it
       // editable until then, even after the group-phase schedule exists.
       const playoffsStarted = counts.playoffs > 0
