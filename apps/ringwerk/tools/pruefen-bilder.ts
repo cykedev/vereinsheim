@@ -16,6 +16,9 @@ export interface Picture {
   opener?: string
 }
 
+/** der Turnierbaum: das Element, das quer scrollt und eine Runde nennt (Ausdruck im Fenster) */
+export const BRACKET_LOCATOR = `$$("main div").find((el) => getComputedStyle(el).overflowX === "auto" && /Halbfinale/.test(el.textContent))`
+
 const THEMES = ["light", "dark"] as const
 const SIZES = [
   [390, 844],
@@ -53,10 +56,7 @@ export async function pictures(page: Page, base: string, dir: string, list: Pict
         const parts = picture.opener
           ? ([["dialog", `$('[role="alertdialog"]') ?? $$("dialog").find((d) => d.open)`]] as const)
           : ([
-              [
-                "bracket",
-                `$$("main div").find((el) => getComputedStyle(el).overflowX === "auto" && /Halbfinale/.test(el.textContent))`,
-              ],
+              ["bracket", BRACKET_LOCATOR],
               ["tabelle", `$("main table")`],
             ] as const)
         for (const [part, locator] of parts) {

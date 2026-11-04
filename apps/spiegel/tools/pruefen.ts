@@ -29,7 +29,8 @@ import {
   themeNoFlash,
 } from "@vereinsheim/pruefen/common"
 import { startServer } from "@vereinsheim/pruefen/server"
-import { DEMO_EMAIL, DEMO_PASSWORD } from "./demo-account"
+import { DEMO_EMAIL } from "./demo-account"
+import { login, pickCard } from "./demo-session"
 import { diary } from "./pruefen-diary"
 import { samplePrintout } from "./printout-sample"
 
@@ -61,44 +62,6 @@ async function section(name: string, run: () => Promise<void>) {
   } catch (error) {
     check(`${name}: Abbruch`, false, error instanceof Error ? error.message : String(error))
   }
-}
-
-async function login(page: Page) {
-  await page.viewport(1280, 900)
-  await page.goto(`${BASE}/login`, '$("form")')
-  const status = await page.ev<number>(`(async () => {
-    const { csrfToken } = await (await fetch("/api/auth/csrf")).json()
-    const body = new URLSearchParams({ csrfToken, email: ${JSON.stringify(DEMO_EMAIL)},
-      password: ${JSON.stringify(DEMO_PASSWORD)}, json: "true", callbackUrl: "/" })
-    const r = await fetch("/api/auth/callback/credentials", { method: "POST", body,
-      headers: { "content-type": "application/x-www-form-urlencoded" } })
-    return r.status
-  })()`)
-  await page.goto(`${BASE}/`)
-  const signedIn = await page.ev<boolean>(`location.pathname === "/"`)
-  if (status !== 200 || !signedIn)
-    throw new Error(
-      `Anmeldung mit dem Demo-Konto gescheitert (${status}); vorher pnpm --filter spiegel seed:own --demo`
-    )
-}
-
-/**
- * eine Scheibe aus der Liste mit mindestens 30 Wertungsschüssen, die vorige und nächste hat (Blättern), und die
- * Adresse ihrer Herkunft; nur gemessene, damit Blättern und Reiter auf Scheiben mit Schüssen bleiben
- */
-async function pickCard(page: Page): Promise<string> {
-  await page.goto(`${BASE}/cards?provenance=measured`)
-  const hrefs = await page.ev<string[]>(
-    `[...new Set($$('a[href^="/cards/c"]').map((a) => a.getAttribute("href")))].slice(0, 12)`
-  )
-  for (const href of hrefs.slice(1)) {
-    await page.goto(`${BASE}${href}`)
-    const fit = await page.ev<boolean>(`$$("#shot-table tr[data-row]").length >= 30 &&
-      !!link("Vorige Scheibe") && !!link("Nächste Scheibe") && !!tab("Lage") &&
-      !$$("[data-card-header] *").some((el) => txt(el) === "Probe")`)
-    if (fit) return href
-  }
-  throw new Error("keine passende Scheibe mit 30 Schuss in der Liste des Demo-Kontos")
 }
 
 const near = (a: number, b: number, tol: number) => Math.abs(a - b) <= tol
@@ -3072,8 +3035,8 @@ async function main() {
     browser = await Browser.launch()
     const chrome = browser
     const page = await browser.newPage()
-    await login(page)
-    const href = await pickCard(page)
+    await login(page, BASE)
+    const { href } = await pickCard(page, BASE)
     await section("Seite einer Scheibe am Desktop", () => desktopCard(page, href))
     await section("Anker und Platz der Scheibe", () => anchorsAndFit(page, href))
     await section("Seite einer Scheibe am Telefon", () => phoneCard(page, href))

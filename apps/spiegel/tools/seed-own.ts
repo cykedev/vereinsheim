@@ -10,6 +10,10 @@
 //                                                     (`demoEnteredSeeds`, über `writeEnteredCard`); die ohne Werte
 //                                                     wartet auf die Anlage (offener Auftrag), und eine eigene Sperre
 //                                                     wartet darauf, dass „Scheibe holen“ sie aufhebt
+//   … --erfunden                                      erfundene Scheiben, auch wenn own-cards.json da ist (Bilder für
+//                                                     die README, ADR-029: keine eigenen Daten im Repo); sie liegen an
+//                                                     einer eigenen Anlage, damit ihre ScheibenIDs nicht mit den
+//                                                     eigenen zusammenstoßen und die eigenen beim Konto bleiben
 
 import "dotenv/config"
 
@@ -31,6 +35,8 @@ import { assertDevDatabase } from "./dev-guard"
 import { demoCardSeeds, demoEnteredSeeds, loadOwnCards, ownCardSeeds } from "./own-cards"
 
 const DEV_SITE = "Dev-Anlage"
+/** die Anlage der erfundenen Scheiben (`--erfunden`), getrennt von den eigenen */
+const DEV_SITE_INVENTED = "Dev-Anlage (erfunden)"
 /**
  * erfundene IDs vom Ausdruck, alle aus `7fff0a00` bis `7fff0aff` (Demo und Skriptprüfung): der Auftrag der Demo-Scheibe
  * ohne Werte, die eigene Sperre für die Skriptprüfung
@@ -45,6 +51,8 @@ async function main() {
   if (process.env.NODE_ENV === "production") throw new Error("seed:own nur in der Entwicklung")
   const args = process.argv.slice(2)
   const demo = args.includes("--demo")
+  const invented = args.includes("--erfunden")
+  const siteName = invented ? DEV_SITE_INVENTED : DEV_SITE
   const at = args.indexOf("--email")
   const emailArg = at >= 0 ? args[at + 1] : undefined
   if (at >= 0 && (!emailArg || emailArg.startsWith("--")))
@@ -81,8 +89,8 @@ async function main() {
       )
 
     const site =
-      (await db.site.findFirst({ where: { name: DEV_SITE } })) ??
-      (await db.site.create({ data: { name: DEV_SITE, timeZone: "Europe/Berlin" } }))
+      (await db.site.findFirst({ where: { name: siteName } })) ??
+      (await db.site.create({ data: { name: siteName, timeZone: "Europe/Berlin" } }))
     // bestätigt: Eine Brücke, die in der Entwicklung gegen die Dev-Anlage koppelt, soll gleich einliefern können (SF-23)
     const source = await db.source.upsert({
       where: { siteId_epoch: { siteId: site.id, epoch: 1 } },
@@ -92,9 +100,14 @@ async function main() {
     if (!source.confirmedAt)
       await db.source.update({ where: { id: source.id }, data: { confirmedAt: new Date() } })
 
-    const own = loadOwnCards()
+    const own = invented ? null : loadOwnCards()
     const { seeds, omitted } = own ? ownCardSeeds(own) : { seeds: demoCardSeeds(), omitted: [] }
-    if (!own) out("Keine eigenen Scheiben (tools/private/own-cards.json fehlt): erfundene Scheiben")
+    if (!own)
+      out(
+        invented
+          ? "Erfundene Scheiben (--erfunden)"
+          : "Keine eigenen Scheiben (tools/private/own-cards.json fehlt): erfundene Scheiben"
+      )
     const changes: Record<RevisionChange, number> = {
       created: 0,
       updated: 0,
@@ -117,7 +130,7 @@ async function main() {
     })
 
     out(
-      `Eigene Scheiben in ${DEV_SITE}: ${seeds.length} geschrieben, ${count} dem Konto ${email} zugeordnet`
+      `Scheiben in ${siteName}: ${seeds.length} geschrieben, ${count} dem Konto ${email} zugeordnet`
     )
     out(
       `  neu ${changes.created}, geändert ${changes.updated}, unverändert ${changes.unchanged}, veraltet ${changes.stale}`

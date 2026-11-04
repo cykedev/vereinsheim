@@ -1,5 +1,5 @@
 // Bilder für die README aus dem Prüfbestand (erfundene Namen, ADR-029): der gebaute Stand dieses Checkouts auf :3013
-// gegen `ringwerk_pruef`, angemeldet als Admin des Prüfbestands, als WebP nach `docs/screenshots/`. Der Prüfbestand
+// gegen `ringwerk_pruef`, angemeldet als Mitglied des Prüfbestands (ohne Knöpfe der Sportleitung), als WebP nach `docs/screenshots/`. Der Prüfbestand
 // nennt Wettbewerbe nach ihrem Fall; für das Bild bekommt die Überschrift `main h1` einen Vereinsnamen. Das öffentliche
 // PDF trägt den Namen des Falls im Kopf und kommt deshalb nicht ins Bild. Nicht im Gate.
 //
@@ -19,6 +19,7 @@ import { startServer } from "@vereinsheim/pruefen/server"
 
 import { PRUEF_ACCOUNTS } from "./pruefdaten/accounts"
 import { pruefDatabaseUrl } from "./pruefdaten/db"
+import { BRACKET_LOCATOR } from "./pruefen-bilder"
 import { login } from "./pruefen-ringwerk/capture"
 
 const PORT = 3013
@@ -33,8 +34,6 @@ const TITLE = "Vereinsliga Luftgewehr 2026/27"
 const STANDINGS = "L-DRR-6 · L3 Rückrunde läuft (Hin/Rück)"
 /** eine Liga mit 16 Teilnehmern im Achtelfinale: der Turnierbaum */
 const PLAYOFFS = "L-DRR-16 · L5 Achtelfinale mitten in der Runde (Hin/Rück)"
-/** der Bracket wie in `pruefen-bilder.ts`: das Element, das quer scrollt und „Halbfinale“ enthält */
-const BRACKET = `$$("main div").find((el) => getComputedStyle(el).overflowX === "auto" && /Halbfinale/.test(el.textContent))`
 
 const PHONE = [390, 844] as const
 const DESKTOP = [1280, 900] as const
@@ -98,7 +97,7 @@ const shots = (standings: string, playoffs: string): Shot[] => [
     width: 1280,
     theme: "dark",
     title: TITLE,
-    part: { name: "ringwerk-bracket", locator: BRACKET },
+    part: { name: "ringwerk-bracket", locator: BRACKET_LOCATOR },
   },
 ]
 
@@ -110,10 +109,12 @@ async function take(page: Page, shot: Shot) {
   await page.ev(`localStorage.setItem(${JSON.stringify(THEME_KEY)}, ${JSON.stringify(shot.theme)})`)
   await page.goto(`${BASE}${shot.path}`, '$("main")')
   await page.wait(800)
-  if (shot.title)
-    await page.ev(
+  if (shot.title) {
+    const found = await page.ev<boolean>(
       `(() => { const h = $("main h1"); if (h) h.textContent = ${JSON.stringify(shot.title)}; return !!h })()`
     )
+    if (!found) throw new Error(`${shot.name}: keine Überschrift main h1 auf ${shot.path}`)
+  }
   const image = await page.screenshot(false, "webp", QUALITY)
   await writeFile(path.join(OUT, `${shot.name}.webp`), image)
   out(`  ${shot.name}.webp  ${shot.width} px ${shot.theme}  ${Math.round(image.length / 1024)} KB`)
@@ -144,14 +145,14 @@ async function main() {
     })
     const url = pruefDatabaseUrl(env)
     const byName = await competitions(url, [STANDINGS, PLAYOFFS])
-    const admin = PRUEF_ACCOUNTS.find((a) => a.role === "ADMIN")!
-    const password = env[admin.env]
-    if (!password) throw new Error(`${admin.env} fehlt in apps/ringwerk/.env: erst pruefdaten`)
+    const member = PRUEF_ACCOUNTS.find((a) => a.role === "USER")!
+    const password = env[member.env]
+    if (!password) throw new Error(`${member.env} fehlt in apps/ringwerk/.env: erst pruefdaten`)
     process.env.DATABASE_URL = url
     server = await startServer({ app: "ringwerk", port: PORT, hostname: "127.0.0.1", out })
     browser = await Browser.launch()
     const page = await browser.newPage()
-    await login(page, BASE, { email: admin.email, password })
+    await login(page, BASE, { email: member.email, password })
     await mkdir(OUT, { recursive: true })
     for (const shot of shots(byName.get(STANDINGS)!.id, byName.get(PLAYOFFS)!.id))
       await take(page, shot)

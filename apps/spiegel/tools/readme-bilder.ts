@@ -4,7 +4,8 @@
 // (1280×640, in den Einstellungen des Repositories hochzuladen). Nicht im Gate: braucht Chrome, einen Build und die
 // Demo-Scheiben.
 //
-//   pnpm --filter spiegel seed:own --demo      einmal: die Scheiben dem Demo-Konto
+//   pnpm --filter spiegel seed:own --demo --erfunden   einmal: erfundene Scheiben dem Demo-Konto (ADR-029: keine eigenen
+//                                                      Daten im Repo, auch nicht als Bild)
 //   pnpm --filter spiegel build                der Stand, der fotografiert wird
 //   pnpm --filter spiegel readme-bilder        schreibt docs/screenshots/spiegel-*.webp, hero.webp, docs/social-preview.png
 //   … --nur <wort>                             nur Bilder, deren Name das Wort enthält (auch „hero“, „social“)
@@ -17,7 +18,7 @@ import { pathToFileURL } from "node:url"
 
 import { Browser, type Page, type ShotFormat } from "@vereinsheim/pruefen/browser"
 import { startServer } from "@vereinsheim/pruefen/server"
-import { DEMO_EMAIL, DEMO_PASSWORD } from "./demo-account"
+import { type Card, login, pickCard } from "./demo-session"
 
 const PORT = 3012
 const BASE = `http://localhost:${PORT}`
@@ -28,13 +29,6 @@ const QUALITY = 88
 
 const PHONE = [390, 844] as const
 const DESKTOP = [1280, 900] as const
-
-/** die Scheibe der Bilder: ihre Adresse aus der Liste, ihre Kennung und die der Scheibe davor (Vergleich) */
-interface Card {
-  href: string
-  id: string
-  previousId: string
-}
 
 interface Shot {
   /** Dateiname ohne Endung, `spiegel-…` */
@@ -70,52 +64,6 @@ const shots = (card: Card): Shot[] => [
   { name: "spiegel-scan-phone", path: "/scan", width: 390, theme: "light" },
 ]
 
-/** Anmelden wie das Formular (CSRF-Token, Credentials-Callback); danach steht die Sitzung im Cookie */
-async function login(page: Page) {
-  await page.viewport(...DESKTOP)
-  await page.goto(`${BASE}/login`, '$("form")')
-  const status = await page.ev<number>(`(async () => {
-    const { csrfToken } = await (await fetch("/api/auth/csrf")).json()
-    const body = new URLSearchParams({ csrfToken, email: ${JSON.stringify(DEMO_EMAIL)},
-      password: ${JSON.stringify(DEMO_PASSWORD)}, json: "true", callbackUrl: "/" })
-    const r = await fetch("/api/auth/callback/credentials", { method: "POST", body,
-      headers: { "content-type": "application/x-www-form-urlencoded" } })
-    return r.status
-  })()`)
-  await page.goto(`${BASE}/`)
-  const signedIn = await page.ev<boolean>(`location.pathname === "/"`)
-  if (status !== 200 || !signedIn)
-    throw new Error(
-      `Anmeldung mit dem Demo-Konto gescheitert (${status}); vorher pnpm --filter spiegel seed:own --demo`
-    )
-}
-
-/**
- * eine volle Scheibe aus der Liste: mindestens 30 Wertungsschüsse, Vorige und Nächste, der Reiter „Lage“, keine Probe
- * im Kopf; nur gemessene, damit das Bild Schüsse zeigt
- */
-async function pickCard(page: Page): Promise<Card> {
-  await page.goto(`${BASE}/cards?provenance=measured`)
-  const hrefs = await page.ev<string[]>(
-    `[...new Set($$('a[href^="/cards/c"]').map((a) => a.getAttribute("href")))].slice(0, 12)`
-  )
-  for (const href of hrefs.slice(1)) {
-    await page.goto(`${BASE}${href}`)
-    const fit = await page.ev<boolean>(`$$("#shot-table tr[data-row]").length >= 30 &&
-      !!link("Vorige Scheibe") && !!link("Nächste Scheibe") && !!tab("Lage") &&
-      !$$("[data-card-header] *").some((el) => txt(el) === "Probe")`)
-    if (!fit) continue
-    const idOf = (path: string) => /^\/cards\/([^/?#]+)/.exec(path)?.[1] ?? null
-    const previous = await page.ev<string | null>(
-      `link("Vorige Scheibe")?.getAttribute("href") ?? null`
-    )
-    const id = idOf(href)
-    const previousId = previous ? idOf(previous) : null
-    if (id && previousId) return { href, id, previousId }
-  }
-  throw new Error("keine passende Scheibe mit 30 Schuss in der Liste des Demo-Kontos")
-}
-
 /** Darstellung über den Schlüssel der App auf einer geladenen Seite, dann die Adresse fotografieren */
 async function take(page: Page, shot: Shot) {
   const [width, height] = shot.width === 390 ? PHONE : DESKTOP
@@ -150,8 +98,12 @@ async function compose(
   await writeFile(tmp, html)
   await page.viewport(size[0], size[1])
   await page.goto(pathToFileURL(tmp).href, "document.body", { plain: true })
-  // die Bilder der Vorlage sind erst nach dem Laden der Seite fertig gezeichnet
-  await page.waitFor(`[...document.images].every((img) => img.complete && img.naturalWidth > 0)`)
+  // die Bilder der Vorlage sind erst nach dem Laden der Seite fertig gezeichnet; ein Bild, das fehlt, bliebe sonst stumm leer
+  const drawn = await page.waitFor(
+    `[...document.images].every((img) => img.complete && img.naturalWidth > 0)`,
+    10_000
+  )
+  if (!drawn) throw new Error(`Bilder der Vorlage ${template} laden nicht`)
   await page.wait(300)
   const image = await page.screenshot(false, format, format === "webp" ? 90 : 85)
   await writeFile(file, image)
@@ -164,6 +116,7 @@ async function main() {
   let server: ChildProcess | null = null
   let browser: Browser | null = null
   let uploads: string | null = null
+  let templates: string | null = null
   // höchstens fünf Minuten; hängt etwas, endet der Lauf hart mit 1
   const guard = setTimeout(() => {
     out("Zeit überschritten (5 min)")
@@ -175,12 +128,13 @@ async function main() {
     // der eigene Produktions-Server braucht ein Verzeichnis für Ausdrucke (`UPLOAD_DIR`); eines nur für den Lauf
     uploads = await mkdtemp(join(tmpdir(), "spiegel-readme-bilder-"))
     process.env.UPLOAD_DIR = uploads
+    templates = await mkdtemp(join(tmpdir(), "spiegel-readme-vorlagen-"))
     server = await startServer({ app: "spiegel", port: PORT, out })
     browser = await Browser.launch()
     const page = await browser.newPage()
-    await login(page)
+    await login(page, BASE)
     await mkdir(OUT, { recursive: true })
-    const card = await pickCard(page)
+    const card = await pickCard(page, BASE)
     out(`Scheibe ${card.href}, davor ${card.previousId}`)
     const only = process.argv.indexOf("--nur")
     const word = only >= 0 ? (process.argv[only + 1] ?? "") : ""
@@ -196,7 +150,7 @@ async function main() {
         [1600, 900],
         join(OUT, "hero.webp"),
         "webp",
-        uploads
+        templates
       )
     if ("social".includes(word))
       await compose(
@@ -206,12 +160,13 @@ async function main() {
         [1280, 640],
         join(ROOT, "docs", "social-preview.png"),
         "png",
-        uploads
+        templates
       )
   } finally {
     await browser?.close()
     server?.kill()
     if (uploads) await rm(uploads, { recursive: true, force: true })
+    if (templates) await rm(templates, { recursive: true, force: true })
     clearTimeout(guard)
   }
 }
