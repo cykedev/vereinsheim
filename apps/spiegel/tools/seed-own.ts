@@ -160,6 +160,7 @@ async function main() {
       const seeds = demoEnteredSeeds({
         newestMs,
         eveningStartMs: first?.startedAt.getTime() ?? newestMs,
+        invented,
       })
       // Der Anker wandert mit der neuesten Scheibe: Demo-Scheiben ohne Brücke, die nicht mehr zum Satz gehören, gehen
       // vorher weg, sonst häuften sie sich. Nur am Demo-Konto, nie an echten Daten.

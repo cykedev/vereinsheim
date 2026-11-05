@@ -223,11 +223,13 @@ const DAY_MS = 86_400_000
 export function demoEnteredSeeds(anchor: {
   newestMs: number
   eveningStartMs: number
+  /** neben erfundenen Scheiben (`--erfunden`) mit deren Streuung, neben eigenen mit der Vorgabe der Tests */
+  invented?: boolean
 }): DemoEnteredSeed[] {
   const generated = generateSeason({
     seed: 2027,
     cards: 12,
-    spreadUm: DEMO_SPREAD_UM,
+    spreadUm: anchor.invented ? DEMO_SPREAD_UM : undefined,
     firstMs: anchor.newestMs,
     everyDays: 7,
     sourceId: 0,
