@@ -2,6 +2,18 @@ packages:
   - "apps/*"
   - "packages/*"
 
+# Schutz gegen Angriffe über neu veröffentlichte Pakete. Kompromittierte Versionen werden meist binnen Stunden entdeckt
+# und zurückgezogen. pnpm nimmt deshalb beim Auflösen (add, update, install mit geändertem Spec) nur Versionen, die
+# mindestens sieben Tage alt sind, auch transitive. Ein Build mit --frozen-lockfile löst nichts neu auf.
+# Ein dringender Sicherheitsfix kommt über die Ausnahmeliste, mit genauer Version und nur bis zum nächsten Update
+# (vault/monorepo/dependency-cooldown.md).
+minimumReleaseAge: 10080
+minimumReleaseAgeExclude: []
+# Bricht ab, wenn eine Version mit schwächerem Herkunftsnachweis erscheint als ihre Vorgänger (typisch für ein
+# gestohlenes Token), und lässt transitive Pakete nur aus der Registry zu, nicht aus Git oder einer URL.
+trustPolicy: no-downgrade
+blockExoticSubdeps: true
+
 # Catalog = zentrale Versionsquelle für geteilte Dependencies (ADR-015: Drift
 # strukturell lösen). Jede App referenziert "catalog:" statt einer literalen
 # Version → eine Version, kein Drift, pnpm-strict (keine Phantom-Deps).

@@ -6,6 +6,7 @@
 #   - Verstöße gegen die Regeln von Design 2 (ADR-030/032, vault/conventions.md §2/§3/§4/§6/§7/§10) in den Apps
 #     und in den geteilten UI-Paketen
 #   - README.md und README.de.md binden nicht dieselben Bilder ein, oder ein Bild fehlt unter docs/
+#   - die Versionen im Migrator des Dockerfile weichen vom Catalog in pnpm-workspace.yaml ab
 # WARN (nicht blockierend):
 #   - gemeinsame Dependencies haben unterschiedliche Versionen
 #   - native Dialoge, MoreHorizontal in Detail-Aktionen
@@ -173,6 +174,39 @@ done
 if [[ "$conv_fail" == "0" ]]; then
   echo "  ok   alle Konventions-Checks (§2/§3/§4/§6/§7/§10) in ${#targets[@]} Verzeichnissen"
 fi
+
+echo "== Versionen im Migrator wie im Catalog (fatal) =="
+# Der Migrator im Dockerfile installiert prisma, pg und dotenv über npm ohne Lockfile. Seine Versionen stehen deshalb
+# exakt da und müssen denen im Catalog von pnpm-workspace.yaml gleichen, sonst läuft die Migration mit einer anderen
+# Version als die App.
+migrator_report=$(python3 - Dockerfile pnpm-workspace.yaml <<'PY2'
+import re, sys
+docker = open(sys.argv[1], encoding="utf-8").read()
+m = re.search(r"RUN npm install --no-package-lock(?:[^\n]*\\\n)*[^\n]*", docker)
+if not m:
+    print("  FAIL Dockerfile: npm install des Migrators nicht gefunden"); print("__FAIL__"); sys.exit()
+pins = re.findall(r"(?<![\w-])((?:@[\w.-]+/)?[\w.-]+)@([^\s\\]+)", m.group(0))
+catalog, inside = {}, False
+for line in open(sys.argv[2], encoding="utf-8"):
+    if line.startswith("catalog:"):
+        inside = True; continue
+    if inside and line and not line[0].isspace():
+        break
+    c = re.match(r'\s+"?([@\w./-]+)"?:\s*"([^"]+)"', line)
+    if inside and c:
+        catalog[c.group(1)] = c.group(2)
+bad = 0
+for name, version in pins:
+    if catalog.get(name) != version:
+        bad = 1
+        print(f"  FAIL Dockerfile: {name}@{version}, im Catalog {catalog.get(name, 'fehlt')}")
+if not pins:
+    bad = 1; print("  FAIL Dockerfile: keine Versionen im npm install des Migrators")
+print("__FAIL__" if bad else f"  ok   {len(pins)} Pakete im Migrator wie im Catalog")
+PY2
+)
+echo "$migrator_report" | grep -v '__FAIL__' || true
+if echo "$migrator_report" | grep -q '__FAIL__'; then fail=1; fi
 
 echo "== README in beiden Sprachen (fatal) =="
 # README.md (Englisch) und README.de.md (Deutsch) sind zwei vollständige Fassungen derselben Seite. Text-Drift sieht

@@ -49,8 +49,12 @@ COPY full/apps/${APP}/scripts ./scripts
 # Nur was migrate deploy + Recovery braucht: prisma-CLI (zieht @prisma/engines),
 # pg (Recovery-Skript), dotenv (von prisma.config.ts importiert). KEIN
 # @prisma/client/adapter (effect/electric-sql) und KEIN tsx (esbuild) → schlank.
+# Ohne Lockfile löst npm hier bei jedem Build neu auf, samt postinstall. Deshalb die Versionen exakt wie im Catalog
+# (prüft scripts/consistency-check.sh) und --before: auch transitive Pakete nur, wenn sie mindestens sieben Tage alt
+# sind, wie minimumReleaseAge in pnpm-workspace.yaml.
 RUN npm install --no-package-lock --no-save \
-      prisma@^7.10.1 pg@^8.23.1 dotenv@^18.0.9
+      --before="$(node -e 'console.log(new Date(Date.now() - 7 * 864e5).toISOString())')" \
+      prisma@7.10.1 pg@8.23.1 dotenv@18.0.9
 ENV NODE_ENV=production
 RUN chmod +x /app/scripts/run-migrations-with-recovery.sh
 CMD ["./scripts/run-migrations-with-recovery.sh"]
