@@ -1,5 +1,5 @@
 name: Fehler melden
-description: Etwas funktioniert nicht wie beschrieben. / Something does not work as described.
+description: Etwas funktioniert nicht wie beschrieben.
 labels: [bug]
 body:
   - type: dropdown
@@ -17,7 +17,7 @@ body:
     id: was
     attributes:
       label: Was ist passiert?
-      description: Was hast du getan, was hast du erwartet, was kam stattdessen? / What did you do, expect, and get instead?
+      description: Was hast du getan, was hast du erwartet, was kam stattdessen?
     validations:
       required: true
   - type: input
@@ -27,4 +27,4 @@ body:
       description: Release oder Commit, Browser, Gerät. Bei der Brücke die Ausgabe von `spiegel-bridge version`.
   - type: markdown
     attributes:
-      value: Bitte keine Namen, Sportpassnummern oder Schussdaten anderer Personen anhängen. / Please attach no names, sports-pass numbers or shot data of other people.
+      value: Bitte keine Namen, Sportpassnummern oder Schussdaten anderer Personen anhängen.

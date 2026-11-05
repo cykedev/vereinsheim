@@ -3,7 +3,7 @@ id: github-auftritt
 type: operation
 title: "GitHub-Auftritt: README-Bilder, Topics, Social Preview, Release"
 aliases: [readme-bilder, github-seite, social-preview, repo-topics]
-keywords: [github, readme, screenshots, bilder, webp, social preview, topics, beschreibung, release, tag, issue-vorlagen, contributing, security, hero, aufmerksamkeit, open source, demo-konto, prüfbestand, calver]
+keywords: [github, readme, readme.de, zweisprachig, sprache, screenshots, bilder, webp, social preview, topics, beschreibung, release, tag, issue-vorlagen, contributing, security, hero, aufmerksamkeit, open source, demo-konto, prüfbestand, calver]
 part_of: ["[[operations]]"]
 relates_to: ["[[adr-029]]", "[[conventions]]", "[[vps-resource-sizing]]"]
 ---
@@ -14,8 +14,20 @@ relates_to: ["[[adr-029]]", "[[conventions]]", "[[vps-resource-sizing]]"]
 
 Die Seite [github.com/cykedev/vereinsheim](https://github.com/cykedev/vereinsheim) führt mit Spiegel: ein Verbundbild
 (Desktop hell neben Telefon dunkel), die Seiten von Spiegel, dann Ringwerk, ein Mermaid-Diagramm des Datenflusses,
-Ausprobieren, Betreiben, Technik, der Agent-Harness. Treffsicher steht nur noch unter „History“. Issue-Vorlagen
-(`.github/ISSUE_TEMPLATE/`), `CONTRIBUTING.md` und `SECURITY.md` sind zweisprachig, Deutsch zuerst.
+Ausprobieren, Betreiben, Technik, der Agent-Harness. Treffsicher steht nur noch unter „History“.
+
+## Zwei Sprachen, zwei vollständige Fassungen
+
+`README.md` ist englisch (das Publikum auf GitHub), `README.de.md` die vollständige deutsche Fassung (die Vereine, die
+Spiegel einsetzen; Meyton-Anlagen stehen fast nur im deutschsprachigen Raum). Beide beginnen mit der Zeile „Deutsch ·
+English“ als Sprachwechsel, haben dieselbe Gliederung, dieselben Bilder und denselben Mermaid-Block. Keine gemischte
+Fassung: Ein deutsches Zitat in der englischen README bediente keine der beiden Gruppen. Wer eine ändert, ändert die
+andere mit; das Release-Gate (`scripts/consistency-check.sh`, Abschnitt „README in beiden Sprachen“) prüft, dass beide
+dieselben Bilder aus `docs/` einbinden und jedes Bild da ist. Text-Drift sieht nur ein Mensch.
+
+Die Issue-Vorlagen (`.github/ISSUE_TEMPLATE/`), die PR-Vorlage und `CONTRIBUTING.md` sind deutsch (die Kurzfassung auf
+Englisch steht im Abschnitt „Contributing“ der `README.md`); `SECURITY.md` bleibt zweisprachig, weil eine Meldung von
+außen kommen kann. Release-Notes sind zweisprachig, Deutsch zuerst.
 
 ## Bilder nachziehen
 

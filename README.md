@@ -1,3 +1,5 @@
+<p align="center"><a href="README.de.md">Deutsch</a> · <strong>English</strong></p>
+
 <p align="center">
   <img src="docs/screenshots/hero.webp" alt="Spiegel: a card with every shot, on desktop and phone" width="900">
 </p>
@@ -19,11 +21,6 @@ Open-source, self-hosted software for sport-shooting clubs.</p>
 1/100 mm, ring, tenth, divisor, time to the millisecond, and shows it to the shooter who fired it: on the phone on the
 way home, on the desktop for a closer look. **Ringwerk** runs the club's leagues and competitions. Both run side by side
 on one small server. Your members' data never leaves it.
-
-> **Für Schützenvereine:** Spiegel zeigt jedem Schützen seine Scheiben aus der Meyton-Anlage, Schuss für Schuss, mit
-> Schussbild, Serien, Kennzahlen und Verlauf über Wochen; Ringwerk führt Liga und Wettkämpfe. Beides läuft auf einem
-> eigenen Server des Vereins. Die Oberfläche ist deutsch. Einstieg: [Ausprobieren](#try-it) und
-> [Betrieb](vault/operations/operations.md).
 
 ---
 
@@ -202,7 +199,7 @@ reusable skills and a plan → implement → validate → review workflow with a
 
 Issues and pull requests are welcome, in German or English. The apps' UI is in **German** (their users are
 German-speaking shooting clubs); code, identifiers and commit messages are in English, docs in `vault/` are German.
-See [CONTRIBUTING.md](CONTRIBUTING.md).
+[CONTRIBUTING.md](CONTRIBUTING.md) is in German; this section is its short version.
 
 ## License
 

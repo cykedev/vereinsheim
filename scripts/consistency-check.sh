@@ -5,6 +5,7 @@
 #   - die app-lokalen Shared-Dateien weichen zwischen den Apps ab
 #   - Verstöße gegen die Regeln von Design 2 (ADR-030/032, vault/conventions.md §2/§3/§4/§6/§7/§10) in den Apps
 #     und in den geteilten UI-Paketen
+#   - README.md und README.de.md binden nicht dieselben Bilder ein, oder ein Bild fehlt unter docs/
 # WARN (nicht blockierend):
 #   - gemeinsame Dependencies haben unterschiedliche Versionen
 #   - native Dialoge, MoreHorizontal in Detail-Aktionen
@@ -171,6 +172,27 @@ done
 
 if [[ "$conv_fail" == "0" ]]; then
   echo "  ok   alle Konventions-Checks (§2/§3/§4/§6/§7/§10) in ${#targets[@]} Verzeichnissen"
+fi
+
+echo "== README in beiden Sprachen (fatal) =="
+# README.md (Englisch) und README.de.md (Deutsch) sind zwei vollständige Fassungen derselben Seite. Text-Drift sieht
+# nur ein Mensch; dass beide dieselben Bilder aus docs/ einbinden und jedes Bild da ist, prüft das Gate.
+readme_images() { grep -oE 'docs/[A-Za-z0-9_./-]+\.(webp|png|svg|jpg)' "$1" | sort -u; }
+if [[ -f README.md && -f README.de.md ]]; then
+  if diff <(readme_images README.md) <(readme_images README.de.md) >/dev/null; then
+    n=$(readme_images README.md | wc -l | tr -d ' ')
+    missing=0
+    while IFS= read -r img; do
+      [[ -f "$img" ]] || { echo "  FAIL README: $img fehlt"; missing=1; }
+    done < <(readme_images README.md)
+    if [[ "$missing" == "0" ]]; then echo "  ok   README.md und README.de.md binden dieselben $n Bilder ein, alle vorhanden"; else fail=1; fi
+  else
+    echo "  FAIL README.md und README.de.md binden verschiedene Bilder ein:"
+    diff <(readme_images README.md) <(readme_images README.de.md) | sed 's/^/       /' || true
+    fail=1
+  fi
+else
+  echo "  FAIL README.md oder README.de.md fehlt"; fail=1
 fi
 
 echo "== Anti-Pattern (Warnungen) =="

@@ -1,12 +1,12 @@
 name: Vorschlag
-description: Eine Idee für Spiegel, Ringwerk oder die Brücke. / An idea for Spiegel, Ringwerk or the bridge.
+description: Eine Idee für Spiegel, Ringwerk oder die Brücke.
 labels: [enhancement]
 body:
   - type: textarea
     id: problem
     attributes:
       label: Welches Problem löst das?
-      description: Wer merkt es, wann, und was macht er heute stattdessen? / Who runs into it, when, and what do they do today?
+      description: Wer merkt es, wann, und was macht die Person heute stattdessen?
     validations:
       required: true
   - type: textarea

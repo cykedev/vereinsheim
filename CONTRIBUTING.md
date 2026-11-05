@@ -1,12 +1,14 @@
-# Mitmachen / Contributing
+# Mitmachen
 
-Issues und Pull Requests sind willkommen, auf Deutsch oder Englisch.
+Issues und Pull Requests sind willkommen, auf Deutsch oder Englisch. *In English: the short version is the
+„Contributing“ section of [README.md](README.md).*
 
 ## Sprachen
 
 - Oberfläche der Apps: Deutsch (die Nutzer sind deutschsprachige Schützenvereine).
 - Code, Bezeichner, Commit-Messages: Englisch (Conventional Commits, z.B. `feat(spiegel): …`).
-- Doku im `vault/`: Deutsch.
+- Doku im `vault/`: Deutsch. Die README gibt es in beiden Sprachen (`README.md`, `README.de.md`); wer die eine ändert,
+  ändert die andere mit. Das Release-Gate prüft, dass beide dieselben Bilder einbinden.
 
 ## Vorgehen
 
@@ -26,9 +28,3 @@ Keine echten Namen, Sportpassnummern oder Schussdaten anderer Personen, auch nic
 
 Architektur-Entscheidungen stehen als ADRs unter [`vault/decisions/`](vault/decisions/decisions.md). Ein Vorschlag, der
 einer ADR widerspricht, nennt sie im Issue, dann reden wir darüber, bevor Code entsteht.
-
----
-
-**In English:** issues and PRs welcome. UI is German, code and commits English, docs German. Branch from `main`,
-run `pnpm check` before committing, look at UI changes in both themes and on a phone, never commit real personal data
-(ADR-029). Architecture decisions live in `vault/decisions/`.
