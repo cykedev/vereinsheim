@@ -102,6 +102,22 @@ describe("Ablesung einer Scheibe", () => {
     expect(html).not.toContain("data-delta")
   })
 
+  it("gleich hoch für jede Scheibe: fehlt Abstand oder Formband, hält ein leerer Platzhalter die Zeile", () => {
+    // Wechselt die Höhe mit der gewählten Scheibe, verschiebt der Browser die Seite (Verankerung an der Liste darunter):
+    // Ein Punkt in „Lage über Zeit“ rutscht dann unter dem Finger weg
+    const lines = (html: string) => (html.match(/<p\b/g) ?? []).length
+    const full = lines(render())
+    for (const props of [
+      { value: null },
+      { delta: undefined },
+      { point: { ...point, band: null } },
+      { point: null },
+    ])
+      expect(lines(render(props)), JSON.stringify(Object.keys(props))).toBe(full)
+    const placeholder = render({ point: { ...point, band: null } })
+    expect(placeholder).toContain('<p aria-hidden="true" data-readout-placeholder="true"> </p>')
+  })
+
   it("Art und Abstand in Worten", () => {
     expect(cardKindText(item(periodCard("t", 1, [100])))).toBe("Training")
     expect(cardKindText(item(periodCard("p", 1, [100], { probe: true })))).toBe(

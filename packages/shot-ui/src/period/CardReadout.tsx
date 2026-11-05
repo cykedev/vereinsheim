@@ -64,9 +64,20 @@ export function deltaText(
 }
 
 /**
+ * eine leere Zeile so hoch wie eine mit Text: Fehlen einer Scheibe Abstand oder Formband, bleibt die Ablesung gleich
+ * hoch. Sonst verschiebt der Browser beim Wählen die Seite (Verankerung an der Liste darunter), und ein Punkt im
+ * Diagramm rutscht unter dem Finger weg.
+ */
+const LinePlaceholder = () => (
+  <p aria-hidden="true" data-readout-placeholder="true">
+    {" "}
+  </p>
+)
+
+/**
  * Ablesung einer Scheibe auf der Seite eines Zeitraums: Datum und Art, der Wert der Kennzahl, die Schusszahl, der
  * Abstand zum Schnitt der bis zu fünf Scheiben davor (ohne sie selbst), ob sie im Formband liegt, die kleine Scheibe
- * der Wertung und „Scheibe öffnen“.
+ * der Wertung und „Scheibe öffnen“. Jede Scheibe hat dieselben Zeilen, damit die Seite beim Wählen stehen bleibt.
  */
 export function CardReadout({
   card,
@@ -112,7 +123,7 @@ export function CardReadout({
             {value ? metric.label : `${metric.label}: ${reason ?? "ohne Wert"}`}
           </p>
           <p>{`${card.shots} Schuss${card.probeOnly ? ` (Probe als ${KIND_TEXT[card.kind]})` : ""}`}</p>
-          {value && (
+          {value ? (
             <div className="flex items-start justify-between gap-2">
               <p data-delta className="tabular-nums">
                 {delta
@@ -127,8 +138,12 @@ export function CardReadout({
                 />
               )}
             </div>
+          ) : (
+            <LinePlaceholder />
           )}
-          {inBand !== null && (
+          {inBand === null ? (
+            <LinePlaceholder />
+          ) : (
             <p data-in-band={inBand}>
               {inBand ? "liegt im Formband" : "liegt außerhalb des Formbands"}
             </p>
