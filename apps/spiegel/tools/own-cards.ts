@@ -158,14 +158,19 @@ export function ownCardSeeds(cards: readonly OwnCard[]): {
 
 const LP_40 = { meytonId: 19210040, name: "LP 40", targetId: "lp-10m" } as const
 
+/** Streuung der Demo-Scheiben: ein guter Vereinsschütze, rund 9 Ringe im Schnitt (`test/generate.ts`) */
+const DEMO_SPREAD_UM = 9_000
+
 /**
- * erfundene Scheiben, wenn keine eigenen da sind: Luftpistole, drei je Abend über ein halbes Jahr, Training mit Probe,
- * nur Probe und Wettkampf (`test/generate.ts`, fester Seed)
+ * erfundene Scheiben, wenn keine eigenen da sind: Luftpistole, drei je Abend über ein halbes Jahr, Training mit Probe
+ * über die 40 Schuss der Disziplin, nur Probe und Wettkampf (`test/generate.ts`, fester Seed)
  */
 export function demoCardSeeds(): OwnCardSeed[] {
   return generateSeason({
     seed: 2026,
     cards: 72,
+    trainingMatch: 40,
+    spreadUm: DEMO_SPREAD_UM,
     firstMs: Date.UTC(2025, 9, 7, 16, 30),
     everyDays: 7,
     sourceId: 0,
@@ -222,6 +227,7 @@ export function demoEnteredSeeds(anchor: {
   const generated = generateSeason({
     seed: 2027,
     cards: 12,
+    spreadUm: DEMO_SPREAD_UM,
     firstMs: anchor.newestMs,
     everyDays: 7,
     sourceId: 0,

@@ -33,7 +33,7 @@ export async function login(page: Page, base: string) {
 }
 
 /**
- * eine Scheibe aus der Liste mit mindestens 30 Wertungsschüssen, die vorige und nächste hat (Blättern, Vergleich), den
+ * eine Scheibe aus der Liste mit mindestens 40 Wertungsschüssen, die vorige und nächste hat (Blättern, Vergleich), den
  * Reiter „Lage“ und keine Probe im Kopf; nur gemessene, damit Blättern und Reiter auf Scheiben mit Schüssen bleiben
  */
 export async function pickCard(page: Page, base: string): Promise<Card> {
@@ -44,7 +44,7 @@ export async function pickCard(page: Page, base: string): Promise<Card> {
   const idOf = (path: string) => /^\/cards\/([^/?#]+)/.exec(path)?.[1] ?? null
   for (const href of hrefs.slice(1)) {
     await page.goto(`${base}${href}`)
-    const fit = await page.ev<boolean>(`$$("#shot-table tr[data-row]").length >= 30 &&
+    const fit = await page.ev<boolean>(`$$("#shot-table tr[data-row]").length >= 40 &&
       !!link("Vorige Scheibe") && !!link("Nächste Scheibe") && !!tab("Lage") &&
       !$$("[data-card-header] *").some((el) => txt(el) === "Probe")`)
     if (!fit) continue
@@ -55,5 +55,5 @@ export async function pickCard(page: Page, base: string): Promise<Card> {
     const previousId = previous ? idOf(previous) : null
     if (id && previousId) return { href, id, previousId }
   }
-  throw new Error("keine passende Scheibe mit 30 Schuss in der Liste des Demo-Kontos")
+  throw new Error("keine passende Scheibe mit 40 Schuss in der Liste des Demo-Kontos")
 }

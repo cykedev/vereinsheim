@@ -39,13 +39,23 @@ export interface SeasonOptions {
   ownerId: string
   /** ScheibenIDs ab hier, fortlaufend */
   scheibenIdBase: number
+  /**
+   * Wertungsschüsse eines Trainings mit Probe; 30 für die Tests, die eine Scheibe unter der Schusszahl der Disziplin
+   * brauchen, 40 für die Demo-Scheiben, bei denen ein Training das volle Programm der Luftpistole zeigt
+   */
+  trainingMatch?: number
+  /**
+   * Streuung je Achse in µm (Sigma, je Scheibe leicht anders); 3600 für die Tests (fast alles Zehner und Neuner),
+   * 9000 für die Demo-Scheiben: ein guter Vereinsschütze mit rund 9 Ringen im Schnitt, nicht über Weltrekord
+   */
+  spreadUm?: number
 }
 
 type Shape = { kind: "training" | "competition"; probe: number; match: number }
 
-function shapeOf(rand: () => number): Shape {
+function shapeOf(rand: () => number, trainingMatch: number): Shape {
   const r = rand()
-  if (r < 0.6) return { kind: "training", probe: 6, match: 30 }
+  if (r < 0.6) return { kind: "training", probe: 6, match: trainingMatch }
   if (r < 0.85) return { kind: "training", probe: 25, match: 0 }
   return { kind: "competition", probe: 10, match: 40 }
 }
@@ -63,9 +73,10 @@ export function generateSeason(options: SeasonOptions): GeneratedCard[] {
     const evening = Math.floor(i / 3)
     const startedAtMs =
       options.firstMs + evening * options.everyDays * DAY_MS + (i % 3) * 45 * 60_000
-    const shape = shapeOf(rand)
+    const shape = shapeOf(rand, options.trainingMatch ?? 30)
     // Form schwankt von Scheibe zu Scheibe, der Mittelpunkt wandert etwas
-    const sigma = 3_600 + 900 * gaussian(rand)
+    const spread = options.spreadUm ?? 3_600
+    const sigma = spread + (spread / 4) * gaussian(rand)
     const mx = 800 * gaussian(rand)
     const my = 800 * gaussian(rand)
     const shots: ShotInput[] = []

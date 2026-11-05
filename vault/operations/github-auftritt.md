@@ -44,7 +44,9 @@ Spiegel schreibt `docs/screenshots/spiegel-*.webp`, `hero.webp` und `docs/social
 selbst (:3012, :3013); ein Dev-Server im Bild
 zeigte das Dev-Badge von Next. Die Daten ([[adr-029]], Nachtrag: auch die eigenen Daten des Users liegen nicht im
 Repo, also auch nicht als Bild): `seed:own --demo --erfunden` gibt dem Demo-Konto erfundene Scheiben, auch wenn
-`tools/private/own-cards.json` da ist; der Prüfbestand von Ringwerk hat erfundene Namen, das Werkzeug meldet sich als
+`tools/private/own-cards.json` da ist (Luftpistole über die 40 Schuss der Disziplin, Streuung eines guten
+Vereinsschützen mit rund 9 Ringen im Schnitt, `DEMO_SPREAD_UM` in `tools/own-cards.ts`; die Vorgabe des Generators
+für die Tests schießt fast nur Zehner und 30 Schuss, als Bild wäre das über Weltrekord); der Prüfbestand von Ringwerk hat erfundene Namen, das Werkzeug meldet sich als
 Mitglied an und setzt die Überschrift des Wettbewerbs im DOM auf einen Vereinsnamen. Ohne `--erfunden` hängt
 `seed:own --demo` die eigenen Scheiben an das Demo-Konto; danach `seed:own --email` für das eigene Konto.
 Jedes Bild vor dem Commit ansehen: Theme, kein Ladezustand, keine Namen.
