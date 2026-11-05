@@ -1450,8 +1450,17 @@ async function handEntry(page: Page) {
         15_000
       )
     )
+    // nach dem Anhängen bleibt „Entfernen“ gesperrt, bis die Seite neu gerechnet ist (`router.refresh()` in der
+    // Transition); erst dann fragt der Klick
+    check(
+      "Beleg: nach dem Anhängen wird „Entfernen“ wieder frei",
+      await page.waitFor(`$("[data-evidence-remove]")?.disabled === false`, 10_000)
+    )
     await page.click(`$("[data-evidence-remove]")`)
-    await page.waitFor(`!!$('[role="alertdialog"]')`)
+    check(
+      "Beleg: „Entfernen“ fragt erst",
+      await page.waitFor(`!!button("Entfernen", $('[role="alertdialog"]'))`, 5_000)
+    )
     await page.click(`button("Entfernen", $('[role="alertdialog"]'))`)
     check("Beleg: entfernt nach der Rückfrage", await page.waitFor(`${items}.length === 0`, 10_000))
   } finally {

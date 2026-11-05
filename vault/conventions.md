@@ -344,6 +344,8 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
   Knöpfe ein `pending`, zeigt „…“ nur der Knopf der Aktion, die läuft; der andere behält seinen Namen und ist höchstens
   gesperrt (`buttonLabels` in `apps/spiegel/src/components/card/ShareCard.tsx`). Sonst hieß der Knopf direkt nach dem
   Teilen rund 250 ms „Beenden…“. Aufgefallen im Oktober 2026, als die Skriptprüfung in einem von fünf Läufen scheiterte.
+  Die Skriptprüfung klickt einen solchen Knopf erst, wenn er wieder frei ist: Ein Klick auf den gesperrten tut nichts,
+  und die Rückfrage danach kommt nie (Beleg entfernen in „Von Hand eintragen“, November 2026).
 
 - **Zustand, der „…“ steuert, gehört vor `startTransition`**: Was eine async Action in ihrer Transition setzt (auch vor
   dem ersten `await`), zeigt React 19 erst, wenn die Action fertig ist. Welche Aktion läuft, der Fortschritt und das
@@ -389,6 +391,13 @@ Ganze Karte ist Link auf die Detailseite; keine „Details →"-Buttons. Ausnahm
   (`grid-rows-subgrid`, Beispiel: `EveningBlock` auf Start). Sonst rutscht der Wert einer Kachel tiefer, sobald in ihr
   ein Wort umbricht („Training nur Probe“ neben „Training“). Die Wirkung im Browser mit gemischten Texten prüfen, in den
   Dev-Daten stehen oft gleich lange. Aufgefallen im Oktober 2026 in der Liste und auf Start.
+
+- **Was beim Wählen wechselt, behält seine Höhe**: Wird ein Kasten über der Stelle, an der man tippt, mit der Wahl
+  niedriger oder höher, verschiebt der Browser die Seite (Verankerung an einem Element darunter), und das Gewählte
+  rutscht unter dem Finger weg. Fehlt einer Wahl eine Zeile, hält ein leerer Platzhalter (`aria-hidden`, ein
+  geschütztes Leerzeichen) ihre Höhe. Ein Markup-Test zählt die Zeilen über alle Zustände (`LinePlaceholder` in
+  `packages/shot-ui/src/period/CardReadout.tsx`: ohne Formband 24 px niedriger). Aufgefallen im November 2026 in „Lage
+  über Zeit“, als die Skriptprüfung stabil eine Verschiebung von 24 px maß.
 
 - **Ein Feld fester Breite in einer Zeile macht am Telefon die ganze Seite breiter**: Mobile Browser vergrößern das
   Layout-Fenster bis zur Mindestbreite des Inhalts, `scrollWidth` bleibt dann gleich `innerWidth`, nur
