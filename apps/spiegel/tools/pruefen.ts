@@ -2502,6 +2502,65 @@ async function compareJumps(page: Page): Promise<Check[]> {
 }
 
 /**
+ * Verlauf zweier Zeiträume über die Zeit seit ihrem Beginn: unter der Achse die Monate beider, das Lineal liest eine
+ * Scheibe von B ab und nennt ihre Seite, die Kennzahl wechselt in der Adresse, und der Verlauf bleibt an seiner Stelle.
+ * Danach wieder die Adresse von vorher
+ */
+async function compareTrend(page: Page) {
+  const before = await page.ev<string>(`location.pathname + location.search`)
+  await page.ev(
+    `$("[data-compare-history]").scrollIntoView({ block: "center", behavior: "instant" })`
+  )
+  await page.wait(100)
+  const pointB = await page.ev<{
+    x: number
+    y: number
+    rows: string
+    second: string
+  } | null>(`(() => {
+    const g = $("[data-compare-history] [data-compare-point]")
+    if (!g) return null
+    const r = g.querySelector("circle:last-child").getBoundingClientRect()
+    return {
+      x: r.left + r.width / 2,
+      y: r.top + r.height / 2,
+      rows: $$("[data-compare-history] [data-month-row]").map((row) => row.dataset.monthRow).join(""),
+      second: $$("[data-compare-history] [data-legend] > span").map(txt)[1] ?? "",
+    }
+  })()`)
+  if (pointB) {
+    await page.clickAt(pointB.x, pointB.y)
+    await page.wait(300)
+    const read = await page.ev<string>(`txt($("[data-compare-history] [data-readout]"))`)
+    check(
+      "Zwei Zeiträume: Monate beider Zeiträume unter der Achse, das Lineal liest eine Scheibe von B ab",
+      pointB.rows === "ab" && pointB.second.length > 0 && read.startsWith(`${pointB.second} · `),
+      { rows: pointB.rows, second: pointB.second, read }
+    )
+  } else check("Zwei Zeiträume: Verlauf mit Punkten von B", false, "keine Punkte von B")
+  const top = await page.ev<number>(`$("[data-compare-history]").getBoundingClientRect().top`)
+  await page.click(`$$("[data-compare-history] [role=radio]").find((b) => txt(b) === "Streuung")`, {
+    scroll: false,
+    settle: 300,
+  })
+  await page.waitFor(`location.search.includes("metric=sigma")`, 15_000)
+  await page.wait(300)
+  const switched = await page.ev<{ search: string; checked: string; top: number }>(`({
+    search: location.search,
+    checked: txt($$("[data-compare-history] [role=radio]").find((b) => b.getAttribute("aria-checked") === "true")),
+    top: $("[data-compare-history]").getBoundingClientRect().top,
+  })`)
+  check(
+    "Zwei Zeiträume: die Kennzahl wechselt in der Adresse, der Verlauf bleibt an seiner Stelle",
+    switched.search.includes("metric=sigma") &&
+      switched.checked === "Streuung" &&
+      Math.abs(switched.top - top) <= 2,
+    { ...switched, before: top }
+  )
+  await page.goto(`${BASE}${before}`)
+}
+
+/**
  * Seite Vergleichen: der Umschalter und der Weg aus dem Fortschritt, zwei Zeiträume mit Bild, Lupe, Tabelle, Verlauf und
  * Zahlen, das Blatt für B, eine alte Adresse mit `compare=`, Wettkampf und Training, zwei Scheiben von der Seite einer Scheibe mit dem Blatt
  * der Scheiben, und jedes Thema der Hilfe der Seite hat ein „?“.
@@ -2555,7 +2614,7 @@ async function compare(page: Page, href: string) {
   }>(`({
     sections: $$('nav[aria-label="Abschnitte"] a').map(txt).join(" · "),
     legend: $$("[data-compare-history] [data-legend] > span").map(txt),
-    a: $$("[data-compare-history] svg[role] circle:not([data-compare-point])").length,
+    a: $$("[data-compare-history] [data-card-point]").length,
     b: $$("[data-compare-history] [data-compare-point]").length,
     tiles: $$('[data-section="numbers"] [data-period-tile]').length,
     compared: $$('[data-section="numbers"] [data-tile-compare]').length,
@@ -2570,6 +2629,7 @@ async function compare(page: Page, href: string) {
       trend.compared > 0,
     trend
   )
+  await compareTrend(page)
   record(await compareJumps(page))
   const before = await page.ev<string | null>(
     `$("[data-compare-picture]")?.getAttribute("viewBox") ?? null`
