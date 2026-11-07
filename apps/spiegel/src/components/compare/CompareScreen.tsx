@@ -130,7 +130,12 @@ export function CompareScreen({
           current="compare"
           progress={{
             page: "progress",
-            query: { ...DEFAULT_PROGRESS, family: data.family },
+            // die Kennzahl des Verlaufs geht mit zurück, wie sie aus dem Fortschritt herkam
+            query: {
+              ...DEFAULT_PROGRESS,
+              family: data.family,
+              metric: query.type === "periods" ? query.metric : DEFAULT_PROGRESS.metric,
+            },
             section: null,
           }}
           compare={{ page: "compare", query }}
@@ -243,10 +248,9 @@ export function CompareScreen({
                                   query.type === "periods" ? query.metric : DEFAULT_PROGRESS.metric
                                 }
                                 view={null}
-                                onMetric={(metric) =>
-                                  query.type === "periods" && go({ ...query, metric })
-                                }
-                                onView={() => {}}
+                                onMetric={(metric) => {
+                                  if (query.type === "periods") go({ ...query, metric })
+                                }}
                                 onHelp={() => onHelp("verlauf-und-form")}
                               />
                               <ChartSlot height={300}>

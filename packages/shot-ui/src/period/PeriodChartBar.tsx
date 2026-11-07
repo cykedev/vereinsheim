@@ -15,7 +15,8 @@ export interface PeriodChartBarProps {
   /** Darstellung des Verlaufs; null mit Vergleich (dann gibt es nur Scheiben übereinander) */
   view: PeriodChartView | null
   onMetric: (metric: PeriodMetricKey) => void
-  onView: (view: PeriodChartView) => void
+  /** nur mit `view`: ohne Darstellung (Vergleichen) gibt es nichts umzuschalten */
+  onView?: (view: PeriodChartView) => void
   /** das „?“ zum Verlauf (`verlauf-und-form`) */
   onHelp: () => void
   /** die Kennzahlen zur Wahl (Vorgabe die von Spiegel, `PERIOD_CHART_METRICS`) */
@@ -104,7 +105,7 @@ export function PeriodChartBar({
                 { value: "cards", label: `je ${words.one}` },
                 { value: "months", label: "je Monat" },
               ]}
-              onChange={onView}
+              onChange={(next) => onView?.(next)}
             />
             {help}
           </div>

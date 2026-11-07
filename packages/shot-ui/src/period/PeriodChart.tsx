@@ -17,6 +17,7 @@ import {
   ValuesTable,
 } from "../analysis/charts/ChartRuler"
 import { ChartSvg, crisp, niceStep } from "../analysis/charts/frame"
+import { SideLegend } from "../compare/ComparePicture"
 import { formatSigned, formatValue, unitText } from "../format"
 import type { PeriodModel } from "./model"
 import { usePeriodWords } from "./PeriodWords"
@@ -54,8 +55,8 @@ export interface PeriodChartProps {
   /** das Lineal wählt eine Scheibe (null: keine), ohne Umschalten (Aktion „pick“) */
   onChoose: (id: string | null) => void
   /**
-   * Farben der Seiten: `a` der Zeitraum (Punkte, Linie, Band), `b` der Vergleich (Ringe, gestrichelte Linie). Vorgabe:
-   * die Farbe der App und ein leiser Ring. Vergleichen gibt die Farben seines Bilds mit (`SIDE_COLORS`)
+   * Farben der Seiten: `a` der Zeitraum (Punkte, Linie, Band, Monate), `b` der Vergleich (Punkte, Linie, Monate). Vorgabe:
+   * die Farbe der App und ein leises Grau. Vergleichen gibt die Farben seines Bilds mit (`SIDE_COLORS`)
    */
   colors?: { a: string; b: string }
 }
@@ -278,20 +279,7 @@ export function PeriodChart({
 
   return (
     <div className="grid gap-2">
-      {mode === "compare" && (
-        <div data-legend className="flex flex-wrap gap-x-4 gap-y-1 text-[13px] text-foreground-2">
-          {(["a", "b"] as const).map((side) => (
-            <span key={side} className="inline-flex items-center gap-1.5">
-              <span
-                aria-hidden="true"
-                className="size-2.5 shrink-0 rounded-full"
-                style={{ background: colors[side] }}
-              />
-              {sideName(side)}
-            </span>
-          ))}
-        </div>
-      )}
+      {mode === "compare" && <SideLegend a={sideName("a")} b={sideName("b")} colors={colors} />}
       <RulerReadout text={text} />
       <ChartSvg
         width={width}
@@ -437,7 +425,7 @@ export function PeriodChart({
                       strokeWidth={mode === "compare" ? 2 : 1}
                     />
                     <text
-                      x={xSince(at, row.fromMs) + 4}
+                      x={xSince(at, row.fromMs) + 3}
                       y={rowY}
                       dominantBaseline={mode === "compare" ? "central" : undefined}
                     >

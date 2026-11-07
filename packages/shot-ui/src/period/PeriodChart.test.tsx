@@ -2,8 +2,11 @@ import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 
+import { formatDateOnly } from "@vereinsheim/lib/format"
+
+import { DAY_MS } from "./calendar"
 import { periodModel } from "./model"
-import { PeriodChart } from "./PeriodChart"
+import { monthStarts, PeriodChart } from "./PeriodChart"
 import { initialPeriodState, type PeriodState } from "./state"
 import { item, NOW, periodCard, TZ } from "./testSeason"
 
@@ -43,7 +46,7 @@ const pointXs = (html: string, attr: string) =>
   [
     ...html.matchAll(
       new RegExp(
-        `<g ${attr}="[^"]*"[^>]*>(?:<circle[^>]*data-competition[^>]*/>)?<circle cx="(-?[\\d.]+)"`,
+        `<g ${attr}="[^"]*"[^>]*>(?:<circle[^>]*data-competition[^>]*></circle>)?<circle cx="(-?[\\d.]+)"`,
         "g"
       )
     ),
@@ -106,7 +109,7 @@ describe("Verlauf je Monat und im Vergleich", () => {
     const now = TWELVE.slice(6)
     const before = [9, 10, 9].map((v, i) => periodCard(`v${i}`, 100 + i, [v * 10]))
     const html = render([...now, ...before], { compare: { type: "previous" } })
-    expect(html).toMatch(/data-legend="true"[\s\S]*Letzte 90 Tage[\s\S]*Zeitraum davor/)
+    expect(html).toMatch(/data-side-legend="true"[\s\S]*Letzte 90 Tage[\s\S]*Zeitraum davor/)
     expect(count(html, /data-compare-point="/g)).toBe(3)
     expect(count(html, /data-card-point="/g)).toBe(6)
     expect(html).not.toContain("data-band")
@@ -140,16 +143,90 @@ describe("Verlauf je Monat und im Vergleich", () => {
     expect(
       count(
         html,
-        /data-card-point="[^"]*"[^>]*>(?:<circle[^>]*data-competition[^>]*\/>)?<circle[^>]*fill="var\(--(?:compare-a|card)\)"/g
+        /data-card-point="[^"]*"[^>]*>(?:<circle[^>]*data-competition[^>]*><\/circle>)?<circle[^>]*fill="var\(--(?:compare-a|card)\)"/g
       )
     ).toBe(6)
     // die Legende wie unter dem Bild
     expect(html).toContain("background:var(--compare-a)")
     expect(html).toContain("background:var(--compare-b)")
-    // die Ablesung der gewählten Scheibe von B nennt ihre Seite, ohne Paarung mit A
-    expect(html).toMatch(/Zeitraum davor · \d\d\.\d\d\.\d{4} · /)
+    // die Ablesung der gewählten Scheibe von B nennt ihre Seite, ihr Datum und den Abstand zur einzigen Scheibe davor
+    // (v2), ohne Paarung mit A
+    expect(html).toContain(
+      `Zeitraum davor · ${formatDateOnly(new Date(NOW - 101 * DAY_MS), TZ)} · `
+    )
+    expect(html).toMatch(/Zeitraum davor · [^<]*zum Schnitt der Scheibe davor/)
     expect(html).not.toContain("im Vergleich")
     expect(html).toMatch(/<th scope="col"[^>]*>Datum<\/th><th scope="col"[^>]*>Zeitraum<\/th>/)
     expect(html).toContain('data-ruler="true"')
+  })
+})
+
+describe("Vergleich zweier ungleich langer Zeiträume", () => {
+  // A: die letzten 30 Tage; B: 90 Tage vor einem Jahr, dreimal so lang. Die Achse ist so lang wie B
+  const a = [25, 15, 5].map((days, i) => periodCard(`a${i}`, days, [95]))
+  const b = [
+    periodCard("b1", 360, [90], { kind: "competition" }),
+    periodCard("b2", 330, [92], { probe: true }),
+    periodCard("b3", 285, [94]),
+  ]
+  const compareTo = { fromMs: NOW - 365 * DAY_MS, toMs: NOW - 275 * DAY_MS, label: "Vorjahr" }
+  const model = periodModel({
+    items: [...a, ...b].map(item),
+    state: { ...initialPeriodState({ family: "lg-10m" }), choice: { type: "rolling", days: 30 } },
+    compareTo,
+    nowMs: NOW,
+    timeZone: TZ,
+    named: [],
+  })
+  const html = renderToStaticMarkup(
+    createElement(PeriodChart, {
+      width: 600,
+      model,
+      timeZone: TZ,
+      chosen: null,
+      onChoose: () => {},
+      colors: { a: "var(--compare-a)", b: "var(--compare-b)" },
+    })
+  )
+  // wie `PAD` im Verlauf: 44 px links, 14 px rechts
+  const left = 44
+  const plot = 600 - 44 - 14
+  const span = Math.max(model.range.toMs - model.range.fromMs, compareTo.toMs - compareTo.fromMs)
+  const xOf = (id: string) =>
+    Number(
+      html.match(
+        new RegExp(
+          `<g data-[a-z-]+-point="${id}"[^>]*>(?:<circle[^>]*data-competition[^>]*></circle>)?<circle cx="(-?[\\d.]+)"`
+        )
+      )?.[1]
+    )
+
+  it("die Achse ist so lang wie der längere: A endet im ersten Drittel, B reicht fast bis rechts", () => {
+    expect(Math.max(...a.map((c) => xOf(c.id)))).toBeLessThan(left + plot / 2)
+    expect(Math.max(...b.map((c) => xOf(c.id)))).toBeGreaterThan(left + plot * 0.8)
+    // die Punkte stehen in ihrer Folge auf der Achse (Lineal und Tastatur gehen über diese Folge)
+    const order = [...html.matchAll(/<g data-[a-z-]+-point="([^"]*)"/g)].map((m) => xOf(m[1]))
+    expect(order).toHaveLength(6)
+    expect(order).toEqual([...order].sort((p, q) => p - q))
+  })
+
+  it("Linie und Monate von B ab dem Beginn von B", () => {
+    const line = html.match(/<g data-mean-side="b"><path data-mean="[a-z]+" d="M(-?[\d.]+) /)
+    expect(Number(line?.[1])).toBeCloseTo(xOf("b1"), 0)
+    const [start] = monthStarts(compareTo.fromMs, compareTo.toMs, TZ)
+    const tick = html.match(/<g data-month-row="b"><g><line x1="(-?[\d.]+)"/)
+    expect(
+      Math.abs(Number(tick?.[1]) - (left + ((start - compareTo.fromMs) / span) * plot))
+    ).toBeLessThanOrEqual(1)
+  })
+
+  it("Wettkampf und nur Probe auch in B; die Tabelle nennt jede Scheibe von B", () => {
+    expect(html).toMatch(/<g data-compare-point="b1"[^>]*><circle data-competition="true"/)
+    expect(html).toMatch(
+      /<g data-compare-point="b2"[^>]*><circle[^>]*fill="var\(--card\)"[^>]*stroke="var\(--compare-b\)"/
+    )
+    const table = html.slice(html.indexOf("<table"))
+    expect(count(table, /<td[^>]*>Vorjahr<\/td>/g)).toBe(3)
+    expect(count(table, /<td[^>]*>Letzte 30 Tage<\/td>/g)).toBe(3)
   })
 })

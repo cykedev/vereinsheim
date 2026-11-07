@@ -57,8 +57,19 @@ export function focusView(target: TargetImage, focus: Picture["focus"]): ViewBox
   return { x: focus.xUm / 1000 - half, y: -focus.yUm / 1000 - half, w: 2 * half }
 }
 
-/** die Namen der Seiten unter dem Bild, je mit dem Punkt ihrer Farbe */
-export function SideLegend({ a, b }: { a: string; b: string }) {
+/**
+ * die Namen der Seiten, je mit dem Punkt ihrer Farbe: unter dem Bild und über dem Verlauf (`colors` wie dort, Vorgabe die
+ * Farben des Bilds)
+ */
+export function SideLegend({
+  a,
+  b,
+  colors = SIDE_COLORS,
+}: {
+  a: string
+  b: string
+  colors?: { a: string; b: string }
+}) {
   const sides = [
     ["a", a],
     ["b", b],
@@ -70,7 +81,7 @@ export function SideLegend({ a, b }: { a: string; b: string }) {
           <span
             aria-hidden="true"
             className="size-2.5 shrink-0 rounded-full"
-            style={{ background: SIDE_COLORS[side] }}
+            style={{ background: colors[side] }}
           />
           {name}
         </span>

@@ -2525,7 +2525,7 @@ async function compareTrend(page: Page) {
       x: r.left + r.width / 2,
       y: r.top + r.height / 2,
       rows: $$("[data-compare-history] [data-month-row]").map((row) => row.dataset.monthRow).join(""),
-      second: $$("[data-compare-history] [data-legend] > span").map(txt)[1] ?? "",
+      second: $$("[data-compare-history] [data-side-legend] > span").map(txt)[1] ?? "",
     }
   })()`)
   if (pointB) {
@@ -2613,7 +2613,7 @@ async function compare(page: Page, href: string) {
     compared: number
   }>(`({
     sections: $$('nav[aria-label="Abschnitte"] a').map(txt).join(" · "),
-    legend: $$("[data-compare-history] [data-legend] > span").map(txt),
+    legend: $$("[data-compare-history] [data-side-legend] > span").map(txt),
     a: $$("[data-compare-history] [data-card-point]").length,
     b: $$("[data-compare-history] [data-compare-point]").length,
     tiles: $$('[data-section="numbers"] [data-period-tile]').length,
