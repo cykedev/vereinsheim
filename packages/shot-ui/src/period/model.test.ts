@@ -135,6 +135,37 @@ describe("Vergleich und Satz", () => {
     })
     expect(none.compareRange).toBeNull()
     expect(none.compareValues).toBeNull()
+    expect(none.compareCards).toBeNull()
+    expect(none.compareTrend).toBeNull()
+  })
+
+  it("Vergleich: Scheiben, Linie über die Schüsse und Abstand auch für B", () => {
+    // B mit verschieden langen Scheiben: das Mittel der Werte und der Schnitt über die Schüsse gehen auseinander
+    const unequal = [
+      periodCard("u0", 100, [100, 100, 100, 100]),
+      periodCard("u1", 101, [80]),
+      periodCard("u2", 102, [90, 90]),
+    ]
+    const m = model([...now, ...unequal], { compare: { type: "previous" } })
+    const inA = new Set(m.cards.map((c) => c.id))
+    expect(m.compareCards?.map((c) => c.id).sort()).toEqual(["u0", "u1", "u2"])
+    expect(m.compareCards?.some((c) => inA.has(c.id))).toBe(false)
+    expect(m.compareTrend?.points).toHaveLength(m.compareValues?.length ?? -1)
+    // gepoolt: an u0 über alle Schüsse (2 · 9,0 + 8,0 + 4 · 10,0) / 7, nicht das Mittel der Werte 9,0
+    const last = m.compareTrend?.points.at(-1)?.mean
+    expect(last).not.toBeNull()
+    expect(last).toBeCloseTo((2 * 9 + 8 + 4 * 10) / 7, 9)
+    // der Abstand zum Schnitt davor auch für B; u2 ist die älteste Scheibe der Familie und hat keinen
+    expect(m.deltas.get("u1")).toEqual({ delta: expect.closeTo(8 - 9, 9), n: 1 })
+    expect(m.deltas.has("u0")).toBe(true)
+    expect(m.deltas.has("u2")).toBe(false)
+    // leicht für den Browser: die Scheiben von B ohne Werte, die Linie ohne Streuung der Schusswerte
+    const light = lightPeriodModel(m)
+    expect(light.compareCards?.every((c) => Object.keys(c.metrics).length === 0)).toBe(true)
+    expect(light.compareTrend?.points.every((p) => !("sd" in p))).toBe(true)
+    expect(light.compareTrend?.points.map((p) => p.mean)).toEqual(
+      m.compareTrend?.points.map((p) => p.mean)
+    )
   })
 
   it("mit Urteil: höher, ein klarer Unterschied (dieselben Worte wie das Urteil)", () => {

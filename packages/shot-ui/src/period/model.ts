@@ -107,6 +107,10 @@ export interface PeriodModel {
   trend: { points: TrendPoint[]; spread: number | null }
   /** Werte der Kennzahl im Vergleichszeitraum, für den Verlauf; null ohne Vergleich */
   compareValues: CardValue[] | null
+  /** Scheiben des Vergleichszeitraums nach Art, ohne die geteilten (Art und „nur Probe“ im Verlauf); null ohne Vergleich */
+  compareCards: PeriodItem[] | null
+  /** Schnitt der letzten fünf im Vergleichszeitraum, gerechnet wie `trend`; null ohne Vergleich */
+  compareTrend: { points: TrendPoint[]; spread: number | null } | null
   /**
    * Scheiben, die in beiden Zeiträumen liegen: Sie zählen nur im Zeitraum, nicht im Vergleich, denn ein Test
    * braucht zwei getrennte Stichproben
@@ -344,6 +348,7 @@ export function periodModel(input: {
   const values = itemValues(cards, chartMetric, scoring, options)
   const trend = periodTrend(values, averageOf(chartMetric))
   const compareValues = otherCards ? itemValues(otherCards, chartMetric, scoring, options) : null
+  const compareTrend = compareValues ? periodTrend(compareValues, averageOf(chartMetric)) : null
 
   const day = (ms: number) => formatIsoDate(new Date(ms), timeZone)
   const better = chartMetric.better
@@ -361,7 +366,9 @@ export function periodModel(input: {
   // Scheiben der Familie in der Art der Seite, auch vor dem Zeitraum: für den Abstand zum Schnitt davor
   const family = input.items.filter(ofKind).sort(byStart)
   const familyValues = itemValues(family, chartMetric, scoring, options)
-  const deltas = deltasBefore(familyValues, inPeriod, DELTA_WINDOW, averageOf(chartMetric))
+  // mit Vergleich auch für dessen Scheiben: Das Lineal liest im Verlauf beide Seiten ab
+  const deltaIds = otherCards ? new Set([...inPeriod, ...otherCards.map((c) => c.id)]) : inPeriod
+  const deltas = deltasBefore(familyValues, deltaIds, DELTA_WINDOW, averageOf(chartMetric))
   // je Abend wie die Liste (vor 4 Uhr der Vortag), für Wochen und Kalender gleich
   const evening = (ms: number) => eveningDay(ms, timeZone)
   const volume = new Map(
@@ -506,6 +513,8 @@ export function periodModel(input: {
     values,
     trend,
     compareValues,
+    compareCards: otherCards,
+    compareTrend,
     compareShared: otherAll ? otherAll.length - (otherCards?.length ?? 0) : 0,
     excludedWarmup: state.includeWarmup ? 0 : cards.filter((c) => c.warmup).length,
     comparison: tiles[0].compare?.comparison ?? null,
@@ -572,6 +581,10 @@ export function lightPeriodModel(model: PeriodModel): PeriodModel {
     values: model.values.map(withoutSd),
     trend: { ...model.trend, points: model.trend.points.map(withoutSd) },
     compareValues: model.compareValues?.map(withoutSd) ?? null,
+    compareCards: model.compareCards?.map(lightCard) ?? null,
+    compareTrend: model.compareTrend
+      ? { ...model.compareTrend, points: model.compareTrend.points.map(withoutSd) }
+      : null,
     summary: { ...model.summary, best: model.summary.best && withoutSd(model.summary.best) },
     cards,
     reading: model.reading

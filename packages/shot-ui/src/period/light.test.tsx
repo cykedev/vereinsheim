@@ -119,8 +119,8 @@ describe("lightPeriodModel: das Modell für den Browser", () => {
         )
       return value
     }
-    const { cards: _a, reading: _b, ...rest } = light
-    const { cards: _c, reading: _d, ...restFull } = full
+    const { cards: _a, reading: _b, compareCards: _e, ...rest } = light
+    const { cards: _c, reading: _d, compareCards: _f, ...restFull } = full
     expect(rest).toEqual(noSd(restFull))
   })
 
@@ -132,6 +132,32 @@ describe("lightPeriodModel: das Modell für den Browser", () => {
   it("die Bausteine zeichnen damit dasselbe, ohne und mit Wahl (auch Wettkampf und nur Probe)", () => {
     for (const chosen of [null, "k3", "k5", "k11"])
       expect(page(light, chosen)).toEqual(page(full, chosen))
+  })
+
+  it("mit Scheiben im Vergleich: ohne Werte, und der Verlauf zeichnet dasselbe, auch mit Wahl in B", () => {
+    const before = [
+      periodCard("b0", 100, [100, 98, 97, 101]),
+      periodCard("b1", 104, [90], { kind: "competition" }),
+      periodCard("b2", 110, [95, 96], { probe: true }),
+    ]
+    const withB = periodModel({
+      items: [...RAW, ...before].map(item),
+      state: { ...initialPeriodState({ family: "lg-10m" }), compare: { type: "previous" } },
+      nowMs: NOW,
+      timeZone: TZ,
+      named: [],
+    })
+    const lightB = lightPeriodModel(withB)
+    expect(lightB.compareCards?.map((c) => c.id)).toEqual(withB.compareCards?.map((c) => c.id))
+    expect(lightB.compareCards?.length).toBe(3)
+    for (const card of lightB.compareCards ?? []) expect(card.metrics).toEqual({})
+    expect(JSON.stringify(lightB)).not.toContain('"sd"')
+    const chart = (model: PeriodModel, chosen: string | null) =>
+      renderToStaticMarkup(
+        h(PeriodChart, { width: 600, model, timeZone: TZ, chosen, onChoose: () => {} })
+      )
+    for (const chosen of [null, "k3", "b1"])
+      expect(chart(lightB, chosen)).toEqual(chart(withB, chosen))
   })
 
   it("auch ohne Vergleich, je Scheibe und je Monat", () => {

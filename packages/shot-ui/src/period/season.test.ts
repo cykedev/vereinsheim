@@ -60,6 +60,7 @@ const plain = (model: PeriodModel, withoutSd = false) => {
   const shown = {
     ...model,
     cards: model.cards.map(card),
+    compareCards: model.compareCards?.map(card) ?? null,
     reading: model.reading && { ...model.reading, card: card(model.reading.card) },
   }
   return Object.fromEntries(
