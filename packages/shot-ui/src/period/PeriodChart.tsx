@@ -1,6 +1,6 @@
 "use client"
 
-import { periodTrend, type CardValue } from "@vereinsheim/shot-core/analysis"
+import type { CardValue } from "@vereinsheim/shot-core/analysis"
 import {
   formatDateOnly,
   formatIsoDate,
@@ -26,6 +26,8 @@ const HEIGHT = 240
 const PAD = { left: 44, right: 14, top: 14, bottom: 26 }
 /** „je Monat“: Platz für den Monat und die Zahl der Scheiben unter der Achse */
 const PAD_MONTHS_BOTTOM = 40
+/** mit Vergleich: zwei Zeilen Monate unter der Achse, oben die des Zeitraums, darunter die des Vergleichs */
+const PAD_COMPARE_BOTTOM = 42
 
 export type PeriodChartModel = Pick<
   PeriodModel,
@@ -39,6 +41,8 @@ export type PeriodChartModel = Pick<
   | "metric"
   | "cards"
   | "deltas"
+  | "compareCards"
+  | "compareTrend"
 >
 
 export interface PeriodChartProps {
@@ -78,9 +82,10 @@ export function monthStarts(fromMs: number, toMs: number, timeZone: string): num
 /**
  * Verlauf über viele Scheiben: „je Scheibe“ ein Punkt je Scheibe über dem Datum (Wettkampf mit
  * Ring, nur Probe hohl), der Schnitt der letzten fünf als Linie (gestrichelt, solange „bisher“) und das Formband
- * als Fläche; „je Monat“ Median und P10–P90 je Monat (T5); mit Vergleich beide Zeiträume auf „Scheibe 1, 2, 3 …“,
- * der Vergleich hohl und grau, ohne Band. Das Lineal wählt in „je Scheibe“ die Scheibe der Seite, sonst liest es
- * nur ab; darunter „Werte als Tabelle“. Ohne zwei Werte ein Satz statt des Diagramms.
+ * als Fläche; „je Monat“ Median und P10–P90 je Monat (T5); mit Vergleich beide Zeiträume übereinander auf der Zeit
+ * seit ihrem Beginn, jeder in seiner Farbe wie im Bild der Seite Vergleichen, unter der Achse die Monate beider
+ * Zeiträume, ohne Band. Das Lineal wählt in „je Scheibe“ und im Vergleich eine Scheibe, „je Monat“ liest es nur ab;
+ * darunter „Werte als Tabelle“. Ohne zwei Werte ein Satz statt des Diagramms.
  */
 export function PeriodChart({
   width,
@@ -92,30 +97,48 @@ export function PeriodChart({
 }: PeriodChartProps) {
   const words = usePeriodWords()
   const { values, trend, months, metric, range, compareRange } = model
-  const compare = model.compareValues
+  const compare = compareRange ? model.compareValues : null
   const mode: "cards" | "months" | "compare" = compare ? "compare" : model.view
   const digits = metric.decimals
   const unit = unitText(metric.unit)
   const show = (v: number) => `${formatValue(v, digits)}${unit ? ` ${unit}` : ""}`
-  const kinds = useMemo(() => new Map(model.cards.map((c) => [c.id, c])), [model.cards])
-  const compareTrend = useMemo(() => (compare ? periodTrend(compare).points : []), [compare])
+  const kinds = useMemo(
+    () => new Map([...model.cards, ...(model.compareCards ?? [])].map((c) => [c.id, c])),
+    [model.cards, model.compareCards]
+  )
+  const compareTrend = compare ? (model.compareTrend?.points ?? []) : []
 
-  const padBottom = mode === "months" ? PAD_MONTHS_BOTTOM : PAD.bottom
+  const padBottom =
+    mode === "months" ? PAD_MONTHS_BOTTOM : mode === "compare" ? PAD_COMPARE_BOTTOM : PAD.bottom
   const plotW = Math.max(1, width - PAD.left - PAD.right)
-  const n = mode === "compare" ? Math.max(values.length, compare?.length ?? 0) : 0
-  const xTime = (ms: number) =>
-    PAD.left + ((ms - range.fromMs) / Math.max(1, range.toMs - range.fromMs)) * plotW
-  const xIndex = (i: number) => PAD.left + (n > 1 ? i / (n - 1) : 0.5) * plotW
+  // die Zeit seit dem Beginn des eigenen Zeitraums; mit Vergleich so lang wie der längere der beiden
+  const span =
+    mode === "compare" && compareRange
+      ? Math.max(range.toMs - range.fromMs, compareRange.toMs - compareRange.fromMs)
+      : range.toMs - range.fromMs
+  const xSince = (ms: number, fromMs: number) =>
+    PAD.left + ((ms - fromMs) / Math.max(1, span)) * plotW
+  const xTime = (ms: number) => xSince(ms, range.fromMs)
   const xMonth = (i: number) => PAD.left + ((i + 0.5) / Math.max(1, months.length)) * plotW
-  const xs =
+  // die Punkte beider Seiten in der Folge auf der Achse: Lineal, Tastatur und Ablesung gehen über diese Liste
+  const points: { value: CardValue; side: "a" | "b"; x: number }[] =
     mode === "months"
-      ? months.map((_, i) => xMonth(i))
-      : mode === "compare"
-        ? values.map((_, i) => xIndex(i))
-        : values.map((v) => xTime(v.atMs))
+      ? []
+      : [
+          ...values.map((value) => ({ value, side: "a" as const, x: xTime(value.atMs) })),
+          ...(compare && compareRange
+            ? compare.map((value) => ({
+                value,
+                side: "b" as const,
+                x: xSince(value.atMs, compareRange.fromMs),
+              }))
+            : []),
+        ].sort((p, q) => p.x - q.x)
+  const xs = mode === "months" ? months.map((_, i) => xMonth(i)) : points.map((p) => p.x)
   const preset =
-    mode === "months" || chosen === null ? -1 : values.findIndex((v) => v.id === chosen)
-  const enough = mode === "months" ? months.length >= 1 : values.length >= 2
+    mode === "months" || chosen === null ? -1 : points.findIndex((p) => p.value.id === chosen)
+  const enough =
+    mode === "months" ? months.length >= 1 : (mode === "compare" ? points : values).length >= 2
 
   // y über alles, was gezeichnet wird: Werte, Band, Vergleich, Monatsspannen; vor dem Lineal, das die Höhen der
   // Punkte braucht
@@ -138,17 +161,16 @@ export function PeriodChart({
   const y = (v: number) =>
     PAD.top + ((yMax - v) / Math.max(1e-9, yMax - yMin)) * (HEIGHT - PAD.top - padBottom)
 
-  // das Lineal wählt die Scheibe der Seite (nur „je Scheibe“ und Vergleich), „je Monat“ liest es nur ab; in „je
-  // Scheibe“ entscheiden die Höhen, wenn Scheiben eines Abends übereinander stehen (im Vergleich stehen sie in
-  // gleichen Abständen)
+  // das Lineal wählt eine Scheibe („je Scheibe“ und Vergleich), „je Monat“ liest es nur ab; stehen Scheiben
+  // übereinander (eines Abends, im Vergleich auch beider Zeiträume), entscheiden die Höhen
   const ruler = useRuler(
     xs,
     width,
     preset < 0 ? null : preset,
     (i) => {
-      if (mode !== "months") onChoose(i === null ? null : (values[i]?.id ?? null))
+      if (mode !== "months") onChoose(i === null ? null : (points[i]?.value.id ?? null))
     },
-    mode === "cards" && enough ? values.map((v) => y(v.value)) : undefined
+    mode !== "months" && enough ? points.map((p) => y(p.value.value)) : undefined
   )
 
   if (!enough) {
@@ -162,8 +184,6 @@ export function PeriodChart({
   for (let v = yMin; v <= yMax + step / 2; v += step) grid.push(Number(v.toFixed(6)))
   const base = HEIGHT - padBottom
 
-  const pointsOf = (list: readonly CardValue[], at: (v: CardValue, i: number) => number) =>
-    list.map((v, i) => [at(v, i), y(v.value)] as const)
   const meanLine = (
     points: readonly { mean: number; partial: boolean }[],
     at: (i: number) => number
@@ -174,9 +194,18 @@ export function PeriodChart({
     const full = firstFull < 0 ? [] : coords.slice(firstFull)
     return { partial, full }
   }
-  const atValue = (v: CardValue, i: number) => (mode === "compare" ? xIndex(i) : xTime(v.atMs))
-  const line = meanLine(trend.points, (i) => atValue(values[i], i))
-  const banded = trend.points.flatMap((p, i) => (p.band ? [{ p, x: atValue(values[i], i) }] : []))
+  const lines = [
+    { side: "a" as const, ...meanLine(trend.points, (i) => xTime(values[i].atMs)) },
+    ...(compare && compareRange
+      ? [
+          {
+            side: "b" as const,
+            ...meanLine(compareTrend, (i) => xSince(compare[i].atMs, compareRange.fromMs)),
+          },
+        ]
+      : []),
+  ]
+  const banded = trend.points.flatMap((p, i) => (p.band ? [{ p, x: xTime(values[i].atMs) }] : []))
   const bandPath =
     mode === "cards" && banded.length > 1
       ? `${path(banded.map(({ p, x }) => [x, y(p.band!.high)] as const))}${banded
@@ -186,20 +215,19 @@ export function PeriodChart({
           .join("")}Z`
       : null
 
+  const sideName = (side: "a" | "b") => (side === "a" ? range.label : (compareRange?.label ?? ""))
   const date = (ms: number) => formatDateOnly(new Date(ms), timeZone)
   const cardText = (i: number) => {
-    const v = values[i]
+    const { value: v, side } = points[i]
     const card = kinds.get(v.id)
     const kind = card?.kind === "competition" ? "Wettkampf · " : ""
-    const lead = mode === "compare" ? `${words.one} ${i + 1} · ` : ""
-    const other =
-      mode === "compare" && compare?.[i] ? ` · im Vergleich ${show(compare[i].value)}` : ""
+    const lead = mode === "compare" ? `${sideName(side)} · ` : ""
     // derselbe Abstand wie in Liste und Ablesung: zu den Scheiben davor, ohne sie selbst
     const delta = model.deltas.get(v.id)
     const before = delta
       ? `${formatSigned(delta.delta, digits)} zum Schnitt ${delta.n === 1 ? `der ${words.one}` : `der ${delta.n} ${words.many}`} davor`
       : `erste ${words.one}`
-    return `${lead}${date(v.atMs)} · ${kind}${show(v.value)} · ${before}${other}`
+    return `${lead}${date(v.atMs)} · ${kind}${show(v.value)} · ${before}`
   }
   const monthText = (i: number) => {
     const m = months[i]
@@ -220,33 +248,48 @@ export function PeriodChart({
     mode === "months"
       ? `${metric.label} je Monat`
       : mode === "compare"
-        ? `${metric.label} je ${words.one}, ${range.label} gegen ${compareRange?.label ?? ""}`
+        ? `${metric.label} je ${words.one}, ${range.label} und ${compareRange?.label ?? ""} übereinander, jeder ab seinem Beginn`
         : `${metric.label} je ${words.one} mit Schnitt der letzten fünf`
 
-  const monthTicks = mode === "cards" ? monthStarts(range.fromMs, range.toMs, timeZone) : []
-  const tickEvery = Math.max(1, Math.ceil((monthTicks.length * 34) / plotW))
-  const indexTicks: number[] = []
-  if (mode === "compare") {
-    const every = n > 30 ? 10 : 5
-    for (let k = 1; k <= n; k++) if (k === 1 || k % every === 0) indexTicks.push(k)
-  }
+  // die Monate unter der Achse: ohne Vergleich eine Zeile, mit Vergleich je Zeitraum eine, jede an ihrer Stelle
+  const monthRows =
+    mode === "months"
+      ? []
+      : [
+          {
+            side: "a" as const,
+            fromMs: range.fromMs,
+            starts: monthStarts(range.fromMs, range.toMs, timeZone),
+          },
+          ...(mode === "compare" && compareRange
+            ? [
+                {
+                  side: "b" as const,
+                  fromMs: compareRange.fromMs,
+                  starts: monthStarts(compareRange.fromMs, compareRange.toMs, timeZone),
+                },
+              ]
+            : []),
+        ]
+  const tickEvery = Math.max(
+    1,
+    Math.ceil((Math.max(0, ...monthRows.map((row) => row.starts.length)) * 34) / plotW)
+  )
 
   return (
     <div className="grid gap-2">
       {mode === "compare" && (
         <div data-legend className="flex flex-wrap gap-x-4 gap-y-1 text-[13px] text-foreground-2">
-          <span className="inline-flex items-center gap-[7px]">
-            <svg viewBox="0 0 14 14" aria-hidden="true" className="size-3.5 shrink-0">
-              <circle cx={7} cy={7} r={4} fill={colors.a} stroke="var(--shot-edge)" />
-            </svg>
-            {range.label}
-          </span>
-          <span className="inline-flex items-center gap-[7px]">
-            <svg viewBox="0 0 14 14" aria-hidden="true" className="size-3.5 shrink-0">
-              <circle cx={7} cy={7} r={4} fill="none" stroke={colors.b} strokeWidth={1.5} />
-            </svg>
-            {compareRange?.label}
-          </span>
+          {(["a", "b"] as const).map((side) => (
+            <span key={side} className="inline-flex items-center gap-1.5">
+              <span
+                aria-hidden="true"
+                className="size-2.5 shrink-0 rounded-full"
+                style={{ background: colors[side] }}
+              />
+              {sideName(side)}
+            </span>
+          ))}
         </div>
       )}
       <RulerReadout text={text} />
@@ -304,69 +347,52 @@ export function PeriodChart({
               </text>
             </g>
           ))}
-        {mode !== "months" && compare && (
-          <g data-compare>
-            <path
-              d={path(compareTrend.map((p, i) => [xIndex(i), y(p.mean)] as const))}
-              fill="none"
-              stroke={colors.b}
-              strokeWidth={2}
-              strokeDasharray="5 4"
-              strokeLinejoin="round"
-            />
-            {pointsOf(compare, (_, i) => xIndex(i)).map(([cx, cy], i) => (
-              <circle
-                key={compare[i].id}
-                data-compare-point
-                cx={cx}
-                cy={cy}
-                r={4}
-                fill="none"
-                stroke={colors.b}
-                strokeWidth={1.5}
-              />
-            ))}
-          </g>
-        )}
         {mode !== "months" && (
           <>
-            {line.partial.length > 1 && (
-              <path
-                data-mean="partial"
-                d={path(line.partial)}
-                fill="none"
-                stroke={colors.a}
-                strokeWidth={2}
-                strokeDasharray="4 4"
-                strokeLinejoin="round"
-              />
-            )}
-            {line.full.length > 1 && (
-              <path
-                data-mean="full"
-                d={path(line.full)}
-                fill="none"
-                stroke={colors.a}
-                strokeWidth={2}
-                strokeLinejoin="round"
-                strokeLinecap="round"
-              />
-            )}
-            {pointsOf(values, atValue).map(([cx, cy], i) => {
-              const card = kinds.get(values[i].id)
+            {lines.map(({ side, partial, full }) => (
+              <g key={side} data-mean-side={side}>
+                {partial.length > 1 && (
+                  <path
+                    data-mean="partial"
+                    d={path(partial)}
+                    fill="none"
+                    stroke={colors[side]}
+                    strokeWidth={2}
+                    strokeDasharray="4 4"
+                    strokeLinejoin="round"
+                  />
+                )}
+                {full.length > 1 && (
+                  <path
+                    data-mean="full"
+                    d={path(full)}
+                    fill="none"
+                    stroke={colors[side]}
+                    strokeWidth={2}
+                    strokeLinejoin="round"
+                    strokeLinecap="round"
+                  />
+                )}
+              </g>
+            ))}
+            {points.map(({ value, side, x }, i) => {
+              const card = kinds.get(value.id)
               const probeOnly = card?.probeOnly ?? false
               const competition = card?.kind === "competition"
               const picked = i === index
+              const cy = y(value.value)
+              const color = colors[side]
               return (
                 <g
-                  key={values[i].id}
-                  data-card-point={values[i].id}
+                  key={value.id}
+                  data-card-point={side === "a" ? value.id : undefined}
+                  data-compare-point={side === "b" ? value.id : undefined}
                   data-chosen={picked || undefined}
                 >
                   {competition && (
                     <circle
                       data-competition
-                      cx={cx}
+                      cx={x}
                       cy={cy}
                       r={7}
                       fill="none"
@@ -375,11 +401,11 @@ export function PeriodChart({
                     />
                   )}
                   <circle
-                    cx={cx}
+                    cx={x}
                     cy={cy}
                     r={picked ? 5 : 4}
-                    fill={probeOnly ? "var(--card)" : colors.a}
-                    stroke={probeOnly ? colors.a : "var(--shot-edge)"}
+                    fill={probeOnly ? "var(--card)" : color}
+                    stroke={probeOnly ? color : "var(--shot-edge)"}
                     strokeWidth={probeOnly ? 1.5 : 1}
                   />
                 </g>
@@ -395,28 +421,34 @@ export function PeriodChart({
           stroke="var(--line-strong)"
           strokeWidth={1}
         />
-        {monthTicks.map((at, i) =>
-          i % tickEvery ? null : (
-            <g key={at}>
-              <line
-                x1={crisp(xTime(at))}
-                x2={crisp(xTime(at))}
-                y1={base}
-                y2={base + 4}
-                stroke="var(--line-strong)"
-                strokeWidth={1}
-              />
-              <text x={xTime(at) + 3} y={HEIGHT - 6}>
-                {formatMonthShort(new Date(at), timeZone)}
-              </text>
+        {monthRows.map((row, r) => {
+          const rowY = mode === "compare" ? base + 12 + r * 17 : HEIGHT - 6
+          return (
+            <g key={row.side} data-month-row={mode === "compare" ? row.side : undefined}>
+              {row.starts.map((at, i) =>
+                i % tickEvery ? null : (
+                  <g key={at}>
+                    <line
+                      x1={crisp(xSince(at, row.fromMs))}
+                      x2={crisp(xSince(at, row.fromMs))}
+                      y1={mode === "compare" ? rowY - 6 : base}
+                      y2={mode === "compare" ? rowY + 6 : base + 4}
+                      stroke={mode === "compare" ? colors[row.side] : "var(--line-strong)"}
+                      strokeWidth={mode === "compare" ? 2 : 1}
+                    />
+                    <text
+                      x={xSince(at, row.fromMs) + 4}
+                      y={rowY}
+                      dominantBaseline={mode === "compare" ? "central" : undefined}
+                    >
+                      {formatMonthShort(new Date(at), timeZone)}
+                    </text>
+                  </g>
+                )
+              )}
             </g>
           )
-        )}
-        {indexTicks.map((k) => (
-          <text key={k} x={xIndex(k - 1)} y={HEIGHT - 6} textAnchor="middle">
-            {k}
-          </text>
-        ))}
+        })}
         {index !== null && <RulerMark x={xs[index]} top={PAD.top} bottom={base} />}
       </ChartSvg>
       <ValuesTable
@@ -425,7 +457,7 @@ export function PeriodChart({
           mode === "months"
             ? ["Monat", words.many, "Mitte", "Spanne von", "bis"]
             : mode === "compare"
-              ? [words.one, range.label, compareRange?.label ?? ""]
+              ? ["Datum", "Zeitraum", metric.label]
               : ["Datum", metric.label, "Linie: Schnitt der letzten fünf mit ihr"]
         }
         rows={
@@ -438,11 +470,10 @@ export function PeriodChart({
                 m.p90 === null ? "–" : formatValue(m.p90, digits),
               ])
             : mode === "compare"
-              ? Array.from({ length: n }, (_, i) => [
-                  String(i + 1),
-                  values[i] ? show(values[i].value) : "–",
-                  compare?.[i] ? show(compare[i].value) : "–",
-                ])
+              ? [
+                  ...values.map((v) => [date(v.atMs), sideName("a"), show(v.value)]),
+                  ...(compare ?? []).map((v) => [date(v.atMs), sideName("b"), show(v.value)]),
+                ]
               : values.map((v, i) => [
                   date(v.atMs),
                   show(v.value),

@@ -38,6 +38,16 @@ const TWELVE = [9, 10, 8, 10, 9, 11, 9, 10, 8, 10, 9, 10].map((v, i) =>
   })
 )
 const count = (html: string, pattern: RegExp) => [...html.matchAll(pattern)].length
+/** x der Punkte einer Seite (`data-card-point` A, `data-compare-point` B), ohne den Ring eines Wettkampfs */
+const pointXs = (html: string, attr: string) =>
+  [
+    ...html.matchAll(
+      new RegExp(
+        `<g ${attr}="[^"]*"[^>]*>(?:<circle[^>]*data-competition[^>]*/>)?<circle cx="(-?[\\d.]+)"`,
+        "g"
+      )
+    ),
+  ].map((m) => Number(m[1]))
 
 describe("Verlauf je Scheibe", () => {
   const html = render(TWELVE, { includeWarmup: true })
@@ -91,45 +101,55 @@ describe("Verlauf je Monat und im Vergleich", () => {
     expect(html).not.toMatch(/Median|P10|P90/)
   })
 
-  it("mit Vergleich beide Zeiträume übereinander, mit Legende, ohne Band", () => {
+  it("mit Vergleich beide Zeiträume über die Zeit seit ihrem Beginn, mit Legende und zwei Zeilen Monate", () => {
+    // A: 42 bis 27 Tage vor jetzt, also spät in den 90 Tagen; B: 100 bis 102 Tage vor jetzt, also spät im Zeitraum davor
     const now = TWELVE.slice(6)
     const before = [9, 10, 9].map((v, i) => periodCard(`v${i}`, 100 + i, [v * 10]))
     const html = render([...now, ...before], { compare: { type: "previous" } })
     expect(html).toMatch(/data-legend="true"[\s\S]*Letzte 90 Tage[\s\S]*Zeitraum davor/)
-    expect(count(html, /data-compare-point="true"/g)).toBe(3)
+    expect(count(html, /data-compare-point="/g)).toBe(3)
     expect(count(html, /data-card-point="/g)).toBe(6)
     expect(html).not.toContain("data-band")
+    expect(html).toContain('data-month-row="a"')
+    expect(html).toContain('data-month-row="b"')
+    // Gegenprobe zur Achse nach Nummer: Dort stünde die erste Scheibe von B über der ersten von A
+    const xsA = pointXs(html, "data-card-point")
+    const xsB = pointXs(html, "data-compare-point")
+    expect([xsA.length, xsB.length]).toEqual([6, 3])
+    expect(Math.min(...xsB)).toBeGreaterThan(Math.min(...xsA) + 50)
+    // und B auf der Achse, ab dem Beginn des eigenen Zeitraums
+    expect(Math.min(...xsB)).toBeGreaterThan(0)
   })
 
-  it("mit Farben der Seiten: A gefüllt, B als Ring, Legende gleich; Achsen und Lineal bleiben", () => {
+  it("Farben der Seiten wie im Bild: beide gefüllt, B ohne Ring; Ablesung nennt die Seite; Tabelle nach Datum", () => {
     const now = TWELVE.slice(6)
     const before = [9, 10, 9].map((v, i) => periodCard(`v${i}`, 100 + i, [v * 10]))
-    const cards = [...now, ...before]
-    const plain = render(cards, { compare: { type: "previous" } }, now[2].id)
-    const html = render(cards, { compare: { type: "previous" } }, now[2].id, {
+    const html = render([...now, ...before], { compare: { type: "previous" } }, "v1", {
       a: "var(--compare-a)",
       b: "var(--compare-b)",
     })
-    // vorher: Farbe der App und leiser Ring
-    expect(plain).toContain('fill="var(--primary)"')
-    expect(plain).toMatch(/data-compare-point="true"[^>]*stroke="var\(--muted-foreground\)"/)
-    // mit Farben: keine Seite mehr in der Farbe der App oder leise
     expect(html).not.toContain("var(--primary)")
-    expect(html).not.toContain('stroke="var(--muted-foreground)"')
-    const legend = html.slice(
-      html.indexOf("data-legend"),
-      html.indexOf("</svg>", html.indexOf("data-legend") + 400) + 6
-    )
-    expect(legend).toContain('fill="var(--compare-a)"')
-    expect(html).toMatch(/<circle[^>]*fill="none"[^>]*stroke="var\(--compare-b\)"/)
+    // B gefüllt in seiner Farbe mit dunklem Saum, wie die Punkte im Bild
     expect(
-      count(html, /data-compare-point="true"[^>]*fill="none"[^>]*stroke="var\(--compare-b\)"/g)
+      count(
+        html,
+        /data-compare-point="[^"]*"[^>]*><circle[^>]*fill="var\(--compare-b\)"[^>]*stroke="var\(--shot-edge\)"/g
+      )
     ).toBe(3)
+    // A gefüllt (nur Probe hohl), Wettkampf mit Ring
     expect(
-      count(html, /<g data-card-point="[^"]*"[^>]*><circle[^>]*fill="var\(--compare-a\)"/g)
+      count(
+        html,
+        /data-card-point="[^"]*"[^>]*>(?:<circle[^>]*data-competition[^>]*\/>)?<circle[^>]*fill="var\(--(?:compare-a|card)\)"/g
+      )
     ).toBe(6)
-    // Lineal und Achsen wie vorher
+    // die Legende wie unter dem Bild
+    expect(html).toContain("background:var(--compare-a)")
+    expect(html).toContain("background:var(--compare-b)")
+    // die Ablesung der gewählten Scheibe von B nennt ihre Seite, ohne Paarung mit A
+    expect(html).toMatch(/Zeitraum davor · \d\d\.\d\d\.\d{4} · /)
+    expect(html).not.toContain("im Vergleich")
+    expect(html).toMatch(/<th scope="col"[^>]*>Datum<\/th><th scope="col"[^>]*>Zeitraum<\/th>/)
     expect(html).toContain('data-ruler="true"')
-    expect(html.match(/data-ruler="true"[^>]*stroke="([^"]*)"/)?.[1]).toBe("var(--foreground-2)")
   })
 })
