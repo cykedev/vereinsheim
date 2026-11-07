@@ -458,7 +458,10 @@ beide und macht das Gate rot, wenn nur eine Seite geändert ist.
   üblicherweise um diesen Schnitt schwanken. Je Monat zeigt Spiegel dazu Boden und Decke: den Wert,
   den du an einem schwachen Tag hältst, den mittleren und den, den du an einem guten Tag erreichst.
   Unter „Scheiben“ und beim Ablesen steht, wie weit eine Scheibe vom Schnitt der bis zu fünf
-  Scheiben davor liegt, ohne sie selbst.
+  Scheiben davor liegt, ohne sie selbst. Beim Vergleichen zweier Zeiträume liegen beide
+  übereinander, jeder in seiner Farbe. Eine Scheibe steht dort, wo sie in ihrem Zeitraum liegt,
+  gezählt ab dessen Beginn. Unter der Achse stehen die Monate beider Zeiträume: oben die des
+  gewählten, darunter die des Vergleichs.
 - *So liest du es:* Liegt eine Scheibe im Band, war sie für deine Form normal: Bei einem
   gleichbleibenden Schützen liegen etwa zwei von drei Scheiben darin. Wird dein Boden über die
   Monate besser (beim Ø höher, bei σ kleiner), werden deine schwachen Tage besser, auch wenn die

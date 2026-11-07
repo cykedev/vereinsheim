@@ -3,7 +3,7 @@ id: spiegel-vergleichen
 type: concept
 title: "Spiegel — Vergleichen: A gegen B auf einer eigenen Seite"
 aliases: [vergleich-seite, a-gegen-b, scheibe-gegen-scheibe]
-keywords: [vergleichen, vergleich, a gegen b, scheibe gegen scheibe, zeitraum gegen zeitraum, wettkampf gegen training, wettkampf und training, daheim auswärts, ort, merkmal, c2, c3, c5, c6, w1, w2, w3, w4, einflüsse, eigene seite, navigation, einstieg, umrisse, zwei farben, compare, sp-2.2, sp-2.7, ohne einzelschüsse, serien-summen, ohne werte]
+keywords: [vergleichen, vergleich, a gegen b, scheibe gegen scheibe, zeitraum gegen zeitraum, wettkampf gegen training, wettkampf und training, daheim auswärts, ort, merkmal, c2, c3, c5, c6, w1, w2, w3, w4, einflüsse, eigene seite, navigation, einstieg, umrisse, zwei farben, compare, sp-2.2, sp-2.7, ohne einzelschüsse, serien-summen, ohne werte, verlauf im vergleich, zeitachse seit beginn, übereinander, monate beider zeiträume, kennzahl im vergleich]
 part_of: ["[[spiegel]]"]
 governed_by: ["[[adr-030]]", "[[adr-033]]"]
 relates_to: ["[[spiegel-langzeit]]", "[[spiegel-durchsicht]]", "[[spiegel-statistics]]", "[[spiegel-navigation]]", "[[spiegel-roadmap]]"]
@@ -85,16 +85,27 @@ Fortschritt und am Desktop über einen Untereintrag. Der Vergleich aus dem Forts
 3. **Raster wie Scheibe und Fortschritt:** linksbündig, nicht zentriert; ab 768 px links das Bild, rechts Tabelle und
    Grundlage (`PAGE_COLUMNS`).
 4. **Verlauf und Zahlen bei zwei Zeiträumen** (31. Oktober 2026, Befund des Users am iPhone): Unter Bild und Tabelle
-   stehen wieder der Verlauf A gegen B (`PeriodChart` mit `compareRange`, Scheiben übereinander, Legende mit beiden
-   Namen, A und B in den Farben von Bild und Legende: `PeriodChart.colors` mit `SIDE_COLORS`, A gefüllt, B als Ring) und
-   die Kacheln „Zahlen über den Zeitraum“ mit dem Wert von B (`PeriodTiles`), je mit „?“ wie im Fortschritt.
-   Darüber eine Sprungleiste „Bild · Vergleich · Verlauf · Zahlen“ (`COMPARE_SECTIONS`, Anker `#picture`,
-   `#comparison`, `#history`, `#numbers`; Wortlaut vom User freigegeben). Beides gab es im Fortschritt, bis
-   der Vergleich hierher zog. Der Server rechnet dafür in `comparePageData` ein `periodModel` über dieselben Scheiben der
-   Familie (A als Zeitraum, B schon aufgelöst als `compareTo`, Art, Einschießen und Wertung der Seite) und gibt
-   `lightPeriodModel` weiter, ohne Schüsse. Die Kennzahl des Verlaufs ist der Ø je Schuss, eine Wahl gibt es hier nicht.
+   stehen wieder der Verlauf A gegen B (`PeriodChart` mit `compareRange`, Punkt 5) und die Kacheln „Zahlen über den
+   Zeitraum“ mit dem Wert von B (`PeriodTiles`), je mit „?“ wie im Fortschritt. Darüber eine Sprungleiste „Bild ·
+   Vergleich · Verlauf · Zahlen“ (`COMPARE_SECTIONS`, Anker `#picture`, `#comparison`, `#history`, `#numbers`; Wortlaut
+   vom User freigegeben). Beides gab es im Fortschritt, bis der Vergleich hierher zog. Der Server rechnet dafür in
+   `comparePageData` ein `periodModel` über dieselben Scheiben der Familie (A als Zeitraum, B schon aufgelöst als
+   `compareTo`, Art, Einschießen, Wertung und Kennzahl der Seite) und gibt `lightPeriodModel` weiter, ohne Schüsse.
    Zwei Scheiben und Wettkampf/Training zeigen beides nicht.
-5. **Verworfen nach dem ersten Bau:** drei Zeilen mit einem Urteilssatz je Zeile und „Alle Kennzahlen“ eingeklappt. Der
+5. **Der Verlauf über die Zeit** (7. November 2026, Befund des Users): Beide Zeiträume liegen übereinander auf der Zeit
+   seit ihrem Beginn. Die Achse ist so lang wie der längere, ein kürzerer Vergleich endet früher. Beide Seiten sind
+   gefüllte Punkte in ihrer Farbe wie im Bild (`SIDE_COLORS`, dunkler Saum), hohl heißt nur Probe, ein Ring außen
+   Wettkampf. Je Seite steht der Schnitt der letzten fünf in ihrer Farbe, für B auf dem Server über die Schüsse
+   gerechnet wie für A (`compareTrend`, [[adr-034]]). Unter der Achse stehen die Monate beider Zeiträume, oben die von A
+   mit blauen Strichen, darunter die von B mit orangen. Das Lineal wählt Scheiben beider Seiten. Die Ablesung nennt die
+   Seite („Zeitraum davor · 13.11.2025 · …“) und den Abstand zum Schnitt der fünf Scheiben davor, auch für B. „Werte
+   als Tabelle“ hat die Spalten Datum, Zeitraum und Wert. Die Kennzahl ist wählbar wie im Fortschritt (Ø je Schuss,
+   Streuung, Zehner, Tempo über `PeriodChartBar`, ohne „je Monat“), steht als `metric` in der Adresse und kommt aus
+   dem Fortschritt mit („Genauer vergleichen“, Umschalter). Satz, Tabelle und Bild bleiben beim Ø je Schuss.
+   **Verworfen:** die Achse nach Nummer der Scheibe („Scheibe 1, 2, 3“). A endete früher, sobald A weniger Scheiben
+   hatte, Pausen verschwanden, und die Ablesung paarte Scheiben ohne Bezug („im Vergleich 8,80 Ringe“). Ebenso eine
+   durchgehende Achse mit B links und A rechts: Der User will beide Zeiträume übereinander sehen.
+6. **Verworfen nach dem ersten Bau:** drei Zeilen mit einem Urteilssatz je Zeile und „Alle Kennzahlen“ eingeklappt. Der
    User fand das doppelt und unruhig (21. Oktober 2026).
 
 ## Das Bild

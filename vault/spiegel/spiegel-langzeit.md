@@ -126,9 +126,8 @@ bleibt der eingebaute Vergleich.
 - **Antippen** wählt eine Scheibe über das Lineal ([[spiegel-mobile]]): Die Ablesung rechts (auf dem Telefon als
   Zeile unter dem Verlauf) zeigt Datum, Wert, eine kleine Scheibe und „Scheibe öffnen“. Verlauf, Liste und Ablesung
   teilen die Wahl.
-- **Mit Vergleich:** Beide Zeiträume liegen auf einer relativen Achse („Scheibe 1, 2, 3 … im Zeitraum“)
-  übereinander, der Vergleich grau und hohl. Getrennt nach Kalender ließen sich zwei Zeiträume nicht
-  übereinanderlegen.
+- **Mit Vergleich** (nur noch auf der Seite Vergleichen): Beide Zeiträume liegen übereinander auf der Zeit seit ihrem
+  Beginn, jeder in seiner Farbe. Unter der Achse stehen die Monate beider ([[spiegel-vergleichen]]).
 - **Umfang darunter**, umschaltbar „Wochen | Kalender“ (die Wahl steht nicht in der Adresse):
   - Wochen: Säulen je Woche, beschriftet mit dem Montag.
   - Kalender (T7): je Woche eine Spalte Montag bis Sonntag, getönt in vier Stufen nach den Schüssen des Abends
