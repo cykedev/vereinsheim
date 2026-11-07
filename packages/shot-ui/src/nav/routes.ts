@@ -154,6 +154,18 @@ const METRIC_CODES: readonly [PeriodMetricKey, string][] = [
   ["group.mpiDistance", "location"],
 ]
 
+/** Kennzahl des Verlaufs in der Adresse; die Vorgabe fällt weg */
+const metricParam = (metric: PeriodMetricKey) =>
+  metric === DEFAULT_PROGRESS.metric
+    ? null
+    : (METRIC_CODES.find(([key]) => key === metric)?.[1] ?? null)
+
+/** Kennzahl des Verlaufs aus der Adresse: nur eine, die die Seite anbietet, sonst die Vorgabe */
+const metricOf = (code: string | null, metrics: readonly PeriodMetricKey[]): PeriodMetricKey => {
+  const metric = METRIC_CODES.find(([, c]) => c === code)?.[0]
+  return metric && metrics.includes(metric) ? metric : DEFAULT_PROGRESS.metric
+}
+
 const slugOrNull = (value: string | null) => (value && SLUG.test(value) ? value : null)
 const idOrNull = (value: string | null) => (value && ID.test(value) ? value : null)
 /** Kennung einer Zeile der Datenbank: positiv, ohne führende Null, höchstens zehn Stellen */
@@ -212,12 +224,7 @@ function progressPairs(
     // englisch wie alle Schlüssel: Einschießen mitzählen; eine alte Adresse mit `sighters` gilt als Vorgabe
     ["warmup", query.includeWarmup ? "1" : null],
     ["scoring", query.scoring === "rings" ? "rings" : null],
-    [
-      "metric",
-      query.metric === DEFAULT_PROGRESS.metric
-        ? null
-        : (METRIC_CODES.find(([key]) => key === query.metric)?.[1] ?? null),
-    ],
+    ["metric", metricParam(query.metric)],
     ["view", query.view],
     ["show", query.show === "target" ? "target" : null],
     ["pick", query.chosen ?? null],
@@ -242,7 +249,6 @@ export function progressQueryFromParams(
   metrics: readonly PeriodMetricKey[] = PROGRESS_METRICS
 ): ProgressQuery {
   const view = params.get("view")
-  const metric = METRIC_CODES.find(([, code]) => code === params.get("metric"))?.[0]
   return {
     choice: decodeChoice(params.get("range"), DEFAULT_CHOICE),
     compare: decodeCompare(params.get("compare")),
@@ -250,7 +256,7 @@ export function progressQueryFromParams(
     kind: kindOf(params.get("kind")),
     includeWarmup: params.get("warmup") === "1",
     scoring: scoringOf(params.get("scoring")),
-    metric: metric && metrics.includes(metric) ? metric : DEFAULT_PROGRESS.metric,
+    metric: metricOf(params.get("metric"), metrics),
     view: view === "cards" || view === "months" ? view : null,
     show: params.get("show") === "target" ? "target" : "history",
     chosen: idOrNull(params.get("pick")),
@@ -271,6 +277,8 @@ export type CompareQuery =
       b: PeriodChoice | "previous"
       kind: CardKind
       includeWarmup: boolean
+      /** Kennzahl des Verlaufs, wie im Fortschritt */
+      metric: PeriodMetricKey
     }
   | { type: "kind"; family: string | null; range: PeriodChoice; includeWarmup: boolean }
 
@@ -284,6 +292,7 @@ export const DEFAULT_COMPARE: CompareQuery = {
   b: "previous",
   kind: "all",
   includeWarmup: false,
+  metric: DEFAULT_PROGRESS.metric,
 }
 
 /** Zeitraum von Wettkampf und Training ohne Angabe: die letzten zwölf Monate (Wettkämpfe sind selten) */
@@ -291,7 +300,7 @@ export const DEFAULT_KIND_RANGE: PeriodChoice = { type: "rolling", days: 365 }
 
 /**
  * Schlüssel der Seite Vergleichen: `type` (ohne: zwei Zeiträume, mit B immer genannt), `family`, `a`, `b`, `range`,
- * `kind`, `warmup=1`. Vorgaben fallen weg.
+ * `kind`, `warmup=1`, `metric` (Kennzahl des Verlaufs, Codes wie im Fortschritt). Vorgaben fallen weg.
  */
 export function compareQueryToParams(query: CompareQuery): Param[] {
   if (query.type === "cards")
@@ -319,6 +328,7 @@ export function compareQueryToParams(query: CompareQuery): Param[] {
     ["b", query.b === "previous" ? null : encodeChoice(query.b)],
     ["kind", kindParams(query.kind)],
     ["warmup", query.includeWarmup ? "1" : null],
+    ["metric", metricParam(query.metric)],
   ])
 }
 
@@ -350,6 +360,7 @@ export function compareQueryFromParams(params: URLSearchParams): CompareQuery {
     b: b === "previous" ? "previous" : (decodeChoice(b, null) ?? "previous"),
     kind: kindOf(params.get("kind")),
     includeWarmup,
+    metric: metricOf(params.get("metric"), PROGRESS_METRICS),
   }
 }
 

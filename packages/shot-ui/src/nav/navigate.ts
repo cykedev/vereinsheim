@@ -170,11 +170,11 @@ const FORM_CHOICE = { type: "rolling", days: 90 } as const
 
 /**
  * Vom Fortschritt auf die Seite Vergleichen mit dem Paar seines Satzes: der Zeitraum gegen den davor, bei „Alles“ die
- * letzten 90 Tage gegen die 90 davor; Familie, Art und Einschießen gehen mit. Eine alte Adresse mit gewähltem Vergleich
+ * letzten 90 Tage gegen die 90 davor; Familie, Art, Einschießen und die Kennzahl des Verlaufs gehen mit. Eine alte Adresse mit gewähltem Vergleich
  * (`compare=`) bringt ihren: ein benannter Zeitraum wird B.
  */
 export function compareFromProgress(
-  query: Pick<ProgressQuery, "choice" | "compare" | "kind" | "includeWarmup">,
+  query: Pick<ProgressQuery, "choice" | "compare" | "kind" | "includeWarmup" | "metric">,
   family: string | null
 ): Route {
   const compare: CompareQuery = {
@@ -184,6 +184,7 @@ export function compareFromProgress(
     b: query.compare.type === "named" ? { type: "named", id: query.compare.id } : "previous",
     kind: query.kind,
     includeWarmup: query.includeWarmup,
+    metric: query.metric,
   }
   return { page: "compare", query: compare }
 }

@@ -267,6 +267,11 @@ describe("Wege zur Seite Vergleichen", () => {
     expect(urlFromRoute(route)).toBe("/compare?family=lg-10m&a=6m&kind=training&warmup=1")
   })
 
+  it("aus dem Fortschritt nimmt der Verlauf die Kennzahl mit", () => {
+    const route = compareFromProgress({ ...DEFAULT_PROGRESS, metric: "group.sigma" }, "lg-10m")
+    expect(urlFromRoute(route)).toBe("/compare?family=lg-10m&metric=sigma")
+  })
+
   it("bei „Alles“ die letzten 90 Tage gegen die 90 davor, wie der Satz", () => {
     const route = compareFromProgress({ ...DEFAULT_PROGRESS, choice: { type: "all" } }, "lp-10m")
     expect(urlFromRoute(route)).toBe("/compare?family=lp-10m")
@@ -274,11 +279,11 @@ describe("Wege zur Seite Vergleichen", () => {
 
   it("eine alte Adresse mit gewähltem Vergleich: ein benannter Zeitraum wird B", () => {
     expect(urlFromRoute(compareFromProgress(PROGRESS.query, "lg-10m"))).toBe(
-      "/compare?family=lg-10m&a=neue-munition&kind=training"
+      "/compare?family=lg-10m&a=neue-munition&kind=training&metric=sigma"
     )
     const named = { ...PROGRESS.query, compare: { type: "named", id: "saison-2025" } as const }
     expect(urlFromRoute(compareFromProgress(named, "lg-10m"))).toBe(
-      "/compare?type=periods&family=lg-10m&a=neue-munition&b=saison-2025&kind=training"
+      "/compare?type=periods&family=lg-10m&a=neue-munition&b=saison-2025&kind=training&metric=sigma"
     )
   })
 })

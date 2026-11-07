@@ -119,6 +119,7 @@ describe("comparePageData: Gruppen", () => {
       a: { type: "free", from: "2026-06-07", to: "2026-07-10" },
       b: { type: "free", from: "2026-06-01", to: "2026-06-07" },
       kind: "all",
+      metric: "result.decimalMean",
     } as const
     // mit Einschießen alle Scheiben, ohne (die Vorgabe) zählen die drei aus dem Fall davor auf keiner Seite
     const withWarmup = await data({ ...query, includeWarmup: true })
@@ -140,6 +141,7 @@ describe("comparePageData: Gruppen", () => {
       b: { type: "free", from: "2026-06-01", to: "2026-06-07" },
       kind: "all",
       includeWarmup: false,
+      metric: "result.decimalMean",
     } as const
     const page = await data(query)
     const period = page?.period

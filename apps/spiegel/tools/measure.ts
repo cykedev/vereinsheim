@@ -194,6 +194,7 @@ async function main() {
           b: "previous",
           kind: "all",
           includeWarmup: false,
+          metric: "result.decimalMean",
         },
         pageContext
       )

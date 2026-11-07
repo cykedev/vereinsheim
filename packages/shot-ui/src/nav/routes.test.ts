@@ -577,9 +577,38 @@ describe("Seite Vergleichen", () => {
       b: "previous",
       kind: "all",
       includeWarmup: false,
+      metric: "result.decimalMean",
     })
     for (const old of ["?sighters=0", "?sighters=1", "?type=kind&sighters=0"])
       expect(compare(old), old).toMatchObject({ includeWarmup: false })
+  })
+
+  it("Kennzahl des Verlaufs: Codes wie im Fortschritt, nach `warmup`, die Vorgabe fällt weg", () => {
+    const periods = DEFAULT_COMPARE as CompareQuery & { type: "periods" }
+    expect(compare("?metric=sigma")).toEqual({ ...periods, metric: "group.sigma" })
+    expect(compare("?metric=tens")).toMatchObject({ metric: "result.tensRate" })
+    expect(compare("?metric=tempo")).toMatchObject({ metric: "time.intervalMedian" })
+    expect(urlFromRoute({ page: "compare", query: { ...periods, metric: "group.sigma" } })).toBe(
+      "/compare?metric=sigma"
+    )
+    expect(
+      urlFromRoute({
+        page: "compare",
+        query: { ...periods, includeWarmup: true, metric: "result.tensRate" },
+      })
+    ).toBe("/compare?warmup=1&metric=tens")
+    expect(urlFromRoute({ page: "compare", query: periods })).toBe("/compare")
+    // die Lage bietet der Verlauf nicht an, Unbekanntes gilt als Vorgabe
+    for (const search of ["?metric=location", "?metric=quatsch", "?metric="])
+      expect(compare(search), search).toMatchObject({ metric: "result.decimalMean" })
+    // nur zwei Zeiträume haben einen Verlauf
+    expect(compare("?type=cards&a=c1&b=c2&metric=sigma")).toEqual({
+      type: "cards",
+      family: null,
+      a: "c1",
+      b: "c2",
+    })
+    expect(compare("?type=kind&metric=sigma")).not.toHaveProperty("metric")
   })
 
   it("Rundreise: jede Art übersteht Schreiben und Lesen, Vorgaben fallen weg", () => {
@@ -595,6 +624,7 @@ describe("Seite Vergleichen", () => {
         b: { type: "named", id: "saison-2025" },
         kind: "competition",
         includeWarmup: true,
+        metric: "group.sigma",
       },
       {
         type: "periods",
@@ -603,6 +633,7 @@ describe("Seite Vergleichen", () => {
         b: { type: "rolling", days: 30 },
         kind: "training",
         includeWarmup: false,
+        metric: "time.intervalMedian",
       },
       {
         type: "kind",
