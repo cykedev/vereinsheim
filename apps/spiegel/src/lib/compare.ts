@@ -258,7 +258,8 @@ export async function comparePageData(
   const bAll = within(rangeB, ofKind)
   const b = bAll.filter((item) => !inA.has(item.id))
   const names = { a: periodSideName(query.a, rangeA), b: periodSideName(query.b, rangeB) }
-  // dieselben Scheiben, Art, Einschießen und Wertung wie die Seiten; B schon aufgelöst, A gewinnt geteilte Scheiben
+  // dieselben Scheiben, Art, Einschießen und Wertung wie die Seiten; B schon aufgelöst, A gewinnt geteilte Scheiben;
+  // die Kennzahl gilt nur für den Verlauf
   const period = lightPeriodModel(
     periodModel({
       items,
@@ -269,6 +270,7 @@ export async function comparePageData(
         kind: query.kind,
         includeWarmup: query.includeWarmup,
         scoring,
+        metric: query.metric,
       },
       compareTo: rangeB,
       nowMs: context.nowMs,

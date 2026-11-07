@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 
+import { inScoring, metricByKey } from "@vereinsheim/shot-core/metrics"
 import { DEFAULT_COMPARE, type CompareQuery } from "@vereinsheim/shot-ui/nav/routes"
 
 import { createPrismaClient } from "@/lib/db"
@@ -160,6 +161,14 @@ describe("comparePageData: Gruppen", () => {
     expect(mean.compare?.comparison).not.toBeNull()
     // leicht für den Browser: keine Werte und Rekorde an den Scheiben
     expect(period?.cards.every((card) => Object.keys(card.metrics).length === 0)).toBe(true)
+    // der Verlauf: Ø je Schuss als Vorgabe (in der Wertung der Familie), die Linie von B je Scheibe von B
+    const shown = (key: string) => inScoring(metricByKey(key)!, page!.scoring).key
+    expect(period?.metric.key).toBe(shown("result.decimalMean"))
+    expect(period?.compareTrend?.points).toHaveLength(period?.compareValues?.length ?? -1)
+    // die Kennzahl der Abfrage gilt für den Verlauf, Satz und Tabelle bleiben beim Ø je Schuss
+    const sigma = await data({ ...query, metric: "group.sigma" })
+    expect(sigma?.period?.metric.key).toBe(shown("group.sigma"))
+    expect(sigma?.model?.result.key).toBe(page?.model?.result.key)
   })
 
   it("andere Arten des Vergleichs ohne Modell des Fortschritts", async () => {

@@ -31,6 +31,7 @@ import {
   type Route,
 } from "@vereinsheim/shot-ui/nav/routes"
 import { PeriodChart } from "@vereinsheim/shot-ui/period/PeriodChart"
+import { PeriodChartBar } from "@vereinsheim/shot-ui/period/PeriodChartBar"
 import { PeriodTiles } from "@vereinsheim/shot-ui/period/PeriodTiles"
 import { useHelp } from "@vereinsheim/ui/design2/help-sheet"
 import { Page } from "@vereinsheim/ui/design2/page"
@@ -91,6 +92,7 @@ export function CompareScreen({
           data.period.range.toMs,
           data.period.compareRange?.fromMs ?? "",
           data.period.compareRange?.toMs ?? "",
+          asked.metric,
         ].join(":")
       : ""
   const [seenChart, setSeenChart] = useState(chartKey)
@@ -234,14 +236,19 @@ export function CompareScreen({
                               data-compare-history
                               className="grid min-w-0 gap-3 rounded-2xl border border-border bg-card p-3.5"
                             >
-                              <div className="flex items-center justify-between gap-2">
-                                <h2 className="font-display text-base font-bold">Verlauf</h2>
-                                <HelpButton
-                                  label="Verlauf und Form"
-                                  helpId="verlauf-und-form"
-                                  onClick={() => onHelp("verlauf-und-form")}
-                                />
-                              </div>
+                              <h2 className="font-display text-base font-bold">Verlauf</h2>
+                              {/* dieselbe Wahl der Kennzahl wie im Fortschritt, ohne „je Monat“ */}
+                              <PeriodChartBar
+                                metric={
+                                  query.type === "periods" ? query.metric : DEFAULT_PROGRESS.metric
+                                }
+                                view={null}
+                                onMetric={(metric) =>
+                                  query.type === "periods" && go({ ...query, metric })
+                                }
+                                onView={() => {}}
+                                onHelp={() => onHelp("verlauf-und-form")}
+                              />
                               <ChartSlot height={300}>
                                 {(width) => (
                                   <PeriodChart
