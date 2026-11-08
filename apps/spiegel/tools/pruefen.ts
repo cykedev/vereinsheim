@@ -2191,7 +2191,8 @@ async function warmup(page: Page) {
   )
 
   await page.viewport(390, 844)
-  await page.goto(`${BASE}/progress?range=all`)
+  // je Scheibe ausdrücklich: Ab 60 Scheiben zeigt der Verlauf ohne Wahl je Monat, ohne einen Punkt je Scheibe
+  await page.goto(`${BASE}/progress?range=all&view=cards`)
   const count = `txt($("[data-period-count]"))`
   const points = `$$("[data-card-point]").length`
   const before = { head: await page.ev<string>(count), points: await page.ev<number>(points) }
@@ -2260,7 +2261,9 @@ async function periodPattern(page: Page) {
   const show = (label: string) =>
     `$$('[role="radiogroup"][aria-label="Hauptbild"] [role="radio"]').find((b) => txt(b) === ${JSON.stringify(label)})`
   await page.viewport(1440, 1400)
-  await page.goto(`${BASE}/progress`)
+  // Zeitraum und Darstellung ausdrücklich: Ohne Abfrage gälte der Zeitraum, den eine frühere Prüfung gemerkt hat, und ab
+  // 60 Scheiben zeigt der Verlauf je Monat, ohne die Punkte je Scheibe, an denen die Prüfung von Zurück ihn erkennt
+  await page.goto(`${BASE}/progress?range=all&view=cards`)
   await page.click(show("Trefferbild"), { settle: 300 })
   const drawn = await page.waitFor(`$("[data-pattern-target]")`, 15_000)
   const state = await page.ev<{ search: string; kind: string | null; nav: string }>(`({
